@@ -22,6 +22,10 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
+    if (typeof window !== "undefined") {
+      console.info("🔒 Admin Login: Using configuration for " + auth.app.options.projectId);
+    }
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
