@@ -299,14 +299,14 @@ export function LeadGate() {
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Access Proposal"}
             </button>
             
-            <div className="flex flex-col gap-4 items-center">
+            <div className="flex flex-col gap-6 items-center pt-4">
               <button 
                 type="button" 
                 disabled={!canResend || loading}
                 onClick={handleSendOtp}
-                className="text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40 enabled:text-blue-600 dark:enabled:text-blue-400 enabled:hover:underline"
+                className={`text-xs font-black uppercase tracking-[0.1em] transition-all ${countdown > 0 ? "text-zinc-400" : "text-blue-600 dark:text-blue-400 hover:underline hover:scale-105 active:scale-95"}`}
               >
-                {countdown > 0 ? `Resend code in ${countdown}s` : "Resend Security Code"}
+                {countdown > 0 ? `Resend Code in ${countdown}s` : "Resend Security Code"}
               </button>
 
               <button 

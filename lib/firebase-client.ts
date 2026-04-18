@@ -37,12 +37,12 @@ import {
 // ─────────────────────────────────────────────
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+  apiKey: "AIzaSyDAvp81yMXAI1kuz5XXzbG_us-Owcncuzc",
+  authDomain: "team-cctv-live-8294.firebaseapp.com",
+  projectId: "team-cctv-live-8294",
+  storageBucket: "team-cctv-live-8294.firebasestorage.app",
+  messagingSenderId: "361687878258",
+  appId: "1:361687878258:web:2c2e94829557cc42e9d0eb",
 };
 
 // ─────────────────────────────────────────────
