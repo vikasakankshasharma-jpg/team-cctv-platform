@@ -45,7 +45,7 @@ export function OptionCard({ label, isSelected, isMulti, onClick }: OptionCardPr
       </div>
 
       {isSelected && (
-        <div className="absolute top-4 right-4 bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-tight z-20">
+        <div className="absolute top-8 right-8 bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-tight z-20">
           Selected
         </div>
       )}
