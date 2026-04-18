@@ -54,6 +54,9 @@ function getClientApp(): FirebaseApp {
   // Always initialize with hard-coded production config to avoid env-var injection issues.
   // Using a try-catch to handle the "already exists" case safely during hot-reloads.
   try {
+    if (typeof window !== "undefined") {
+      console.info("🔒 Firebase Client Init: Project " + firebaseConfig.projectId + " | AuthDomain " + firebaseConfig.authDomain);
+    }
     return initializeApp(firebaseConfig);
   } catch (error) {
     if (getApps().length > 0) return getApp();

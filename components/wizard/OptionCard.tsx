@@ -14,7 +14,7 @@ export function OptionCard({ label, isSelected, isMulti, onClick }: OptionCardPr
     <button
       onClick={onClick}
       className={`
-        relative flex items-center gap-4 p-5 rounded-3xl text-left transition-all duration-300 group overflow-hidden
+        relative flex items-center gap-4 p-5 rounded-3xl text-left transition-all duration-300 group
         ${isSelected 
           ? "bg-blue-600/5 dark:bg-blue-600/10 border-2 border-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.1)] ring-1 ring-blue-600/20" 
           : "bg-white dark:bg-zinc-900/40 border-2 border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-lg hover:-translate-y-0.5 shadow-sm"
