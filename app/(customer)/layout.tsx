@@ -71,7 +71,7 @@ export default function CustomerLayout({
       </main>
 
       {/* Premium Elite Footer */}
-      <footer className="border-t border-zinc-100 dark:border-zinc-900 bg-white dark:bg-zinc-950/50 py-16 pb-32 px-6 transition-colors">
+      <footer className="border-t border-zinc-100 dark:border-zinc-900 bg-white dark:bg-zinc-950/50 py-16 px-6 transition-colors">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div className="text-left space-y-4">
             <div className="flex items-center gap-2 text-zinc-900 dark:text-white font-black tracking-tighter text-xl">

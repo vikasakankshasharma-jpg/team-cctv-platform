@@ -120,7 +120,7 @@ export default function WizardPage() {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-50/50 dark:bg-indigo-600/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
       {/* Blurred overlay if Gate is active */}
-      <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-6 pt-12 pb-96 md:pt-16 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
+      <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-6 pt-12 pb-8 md:pt-16 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
         
         <ProgressBar currentStepIndex={current_step_index} totalSteps={steps.length} />
 
@@ -166,10 +166,10 @@ export default function WizardPage() {
         </div>
       </div>
 
-      {/* Fixed Premium Navigation Footer */}
+      {/* Inline Navigation Bar — sits just below the options */}
       {!showGate && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 flex justify-center pointer-events-none">
-          <div className="w-full max-w-4xl bg-white/70 dark:bg-zinc-950/70 backdrop-blur-2xl border border-white/20 dark:border-zinc-800/20 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-3xl flex items-center justify-between p-3 md:p-4 pointer-events-auto ring-1 ring-zinc-900/5 dark:ring-white/5 transition-all">
+        <div className="max-w-4xl mx-auto w-full px-6 pb-16">
+          <div className="w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border border-zinc-100 dark:border-zinc-800 shadow-[0_8px_30px_rgba(0,0,0,0.08)] rounded-3xl flex items-center justify-between p-3 md:p-4 ring-1 ring-zinc-900/5 dark:ring-white/5 transition-all">
             <button
               onClick={previousStep}
               disabled={current_step_index === 0}
@@ -177,8 +177,8 @@ export default function WizardPage() {
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back
             </button>
-            
-            {/* Trust Banner (Mobile Hidden) */}
+
+            {/* Trust Banner (Hidden on Mobile) */}
             <div className="hidden lg:flex items-center gap-6 px-8 border-x border-zinc-100 dark:border-zinc-800">
                <div className="flex items-center gap-2">
                   <Lock className="w-3.5 h-3.5 text-zinc-400" />
@@ -192,7 +192,7 @@ export default function WizardPage() {
 
             <button
               onClick={handleContinue}
-              className="h-12 md:h-14 px-8 md:px-12 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-2xl shadow-xl shadow-zinc-900/20 dark:shadow-blue-500/30 transition-all flex items-center gap-3 transform active:scale-95 translate-y-0 hover:-translate-y-0.5"
+              className="h-12 md:h-14 px-8 md:px-12 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-2xl shadow-xl shadow-zinc-900/20 dark:shadow-blue-500/30 transition-all flex items-center gap-3 active:scale-95"
             >
               {isLastStep ? "Generate Quote" : "Continue"}
               {isLastStep ? <ShieldCheck className="w-4 h-4" /> : <ArrowRight className="w-4 h-4 translate-y-[1px]" />}
