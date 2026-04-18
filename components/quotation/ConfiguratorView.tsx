@@ -435,7 +435,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
           leadId={lead.id!}
           quoteId={savedQuoteId || "draft"}
           customerName={lead.customer_name}
-          customerMobile={lead.mobile_number || lead.mobile || ""}
+          customerMobile={lead.mobile_number || ""}
           lowestPrice={pricing_results.budget.total_payable}
           propertyType={lead.property_type}
           onClose={() => setShowShareDialog(false)}
