@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, MapPin, Navigation, CheckCircle2, Lock, ArrowRight } from "lucide-react";
+import { X, MapPin, Navigation, CheckCircle2, Lock, ArrowRight, Loader2 } from "lucide-react";
 import type { Address } from "@/types";
 
 interface SiteDetailsModalProps {
@@ -17,6 +17,10 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
   const [fullAddress, setFullAddress] = useState("");
   const [coords, setCoords] = useState({ lat: 19.0760, lng: 72.8777 });
   const [isMapReady, setIsMapReady] = useState(false);
+  const [postOffices, setPostOffices] = useState<any[]>([]);
+  const [selectedPostOffice, setSelectedPostOffice] = useState("");
+  const [areaInfo, setAreaInfo] = useState("");
+  const [isFetchingPincode, setIsFetchingPincode] = useState(false);
 
   useEffect(() => {
     if (pincode.length === 6) {
@@ -26,17 +30,51 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
         lng: 72.8777 + (num % 50) * 0.001
       });
       setIsMapReady(true);
+      
+      const fetchPincode = async () => {
+        setIsFetchingPincode(true);
+        try {
+          const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+          const data = await res.json();
+          if (data && data[0] && data[0].Status === "Success") {
+             const offices = data[0].PostOffice;
+             setPostOffices(offices);
+             setAreaInfo(`${offices[0].District}, ${offices[0].State}`);
+             if (offices.length > 0) {
+                setSelectedPostOffice(offices[0].Name);
+             }
+          } else {
+             setPostOffices([]);
+             setAreaInfo("");
+             setSelectedPostOffice("");
+          }
+        } catch (e) {
+          console.error(e);
+          setPostOffices([]);
+        } finally {
+          setIsFetchingPincode(false);
+        }
+      };
+      fetchPincode();
     } else {
       setIsMapReady(false);
+      setPostOffices([]);
+      setAreaInfo("");
+      setSelectedPostOffice("");
     }
   }, [pincode]);
 
   const handleConfirm = () => {
+    let finalAddress = fullAddress;
+    if (selectedPostOffice && areaInfo) {
+       finalAddress = `${fullAddress ? fullAddress + ', ' : ''}${selectedPostOffice}, ${areaInfo}`;
+    }
+    
     onConfirm({
       pincode,
       landmark1,
       landmark2,
-      full_address: fullAddress,
+      full_address: finalAddress,
       coordinates: coords
     });
   };
@@ -101,6 +139,53 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                 )}
               </div>
             </div>
+
+            {/* Smart Area & Location Autofill */}
+            {pincode.length === 6 && (
+              <div className="space-y-4 animate-in fade-in duration-300 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                {isFetchingPincode ? (
+                  <div className="flex items-center gap-2 text-blue-600 text-xs font-bold">
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                    Fetching regional details...
+                  </div>
+                ) : postOffices.length > 0 ? (
+                  <>
+                    <div className="space-y-1.5">
+                       <label className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] ml-1">Area Details</label>
+                       <div className="w-full bg-blue-100/50 border border-transparent rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 border-dashed border-blue-200">
+                         {areaInfo}
+                       </div>
+                    </div>
+                    {postOffices.length > 1 ? (
+                      <div className="space-y-1.5">
+                         <label className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] ml-1">Pinpoint Location</label>
+                         <select 
+                           value={selectedPostOffice}
+                           onChange={(e) => setSelectedPostOffice(e.target.value)}
+                           className="w-full bg-white border border-blue-200 hover:border-blue-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-3 outline-none transition-all text-sm font-bold text-zinc-900 cursor-pointer"
+                         >
+                           {postOffices.map((po, idx) => (
+                             <option key={idx} value={po.Name}>{po.Name}</option>
+                           ))}
+                         </select>
+                         <p className="text-[10px] text-blue-600/80 font-medium ml-1">Multiple areas found. Please select yours.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                         <label className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] ml-1">Pinpoint Location</label>
+                         <div className="w-full bg-blue-100/50 border border-transparent rounded-xl px-4 py-3 text-sm font-bold text-zinc-900">
+                           {selectedPostOffice}
+                         </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-xs font-bold text-amber-600 bg-amber-50 p-2 rounded-lg">
+                    System could not auto-fetch the area. Please ensure pincode is valid or enter details manually.
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Primary Landmark */}
             <div className="space-y-1.5">
