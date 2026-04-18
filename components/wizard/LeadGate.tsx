@@ -205,18 +205,35 @@ export function LeadGate() {
               </div>
             </div>
 
+            <div className="space-y-6">
+               <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1">Send OTP via</label>
+               <div className="flex flex-wrap gap-4">
+                  {[
+                    { id: "sms", label: "SMS", icon: Phone, active: true },
+                    { id: "whatsapp", label: "WhatsApp", icon: CheckCircle2, active: false },
+                    { id: "email", label: "Email", icon: ShieldCheck, active: false }
+                  ].map((chan) => (
+                    <label key={chan.id} className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${chan.active ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-60'}`}>
+                      <input type="radio" name="otp_channel" defaultChecked={chan.id === "sms"} disabled={!chan.active} className="hidden" />
+                      <chan.icon className="w-4 h-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">{chan.label}</span>
+                    </label>
+                  ))}
+               </div>
+            </div>
+
             <button 
               type="submit"
               disabled={loading}
-              className="w-full h-16 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white font-black uppercase text-xs tracking-[0.2em] rounded-[24px] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+              className="w-full h-16 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white font-black uppercase text-xs tracking-[0.2em] rounded-[24px] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 mt-4"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Generate Elite Quote <ArrowRight className="w-4 h-4" /></>}
             </button>
 
             <button 
               type="button"
-              onClick={() => setOtpSent(true)}
-              className="w-full text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline text-center"
+              onClick={() => { setOtpSent(true); }}
+              className="w-full mt-6 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline text-center pointer-events-auto relative z-[100]"
             >
               Already have a verification code?
             </button>

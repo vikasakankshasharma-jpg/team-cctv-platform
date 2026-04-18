@@ -71,6 +71,16 @@ export default async function QuoteResultPage({
     if (settingsSnap.exists) {
       settings = settingsSnap.data() as AppSettings;
     }
+
+    // 2. SERIALIZATION FOR CLIENT COMPONENTS ─────────────────────────────────
+    // Essential for Next.js Server Components to pass data to Client Components
+    const { serializeDoc } = await import("@/lib/serialize");
+    lead = serializeDoc(lead);
+    products = serializeDoc(products);
+    addons = serializeDoc(addons);
+    addon_rules = serializeDoc(addon_rules);
+    settings = serializeDoc(settings);
+
   } catch (err) {
     console.error("Error fetching quote data:", err);
   }
