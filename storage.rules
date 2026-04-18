@@ -1,0 +1,109 @@
+/**
+ * Firebase Storage Security Rules for TEAM CCTV Platform
+ *
+ * Version: 1.0.0
+ *
+ * BUCKET STRUCTURE:
+ *   /logos/{filename}             — Company logo uploads (super_admin only)
+ *   /quotes/{userId}/{filename}   — Generated quote PDFs (owner or admin)
+ *   /misc/{filename}              — Other admin uploads
+ *
+ * RULES:
+ *   - PDF quotes: only the customer who generated it (by UID) or an admin can read
+ *   - Logo: authenticated admin write, public read (used on landing page)
+ *   - All uploads enforce 10MB max file size
+ *   - PDF uploads must be application/pdf content type
+ *   - Image uploads must be image/* content type
+ */
+
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ──────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ──────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && request.auth.token.role == "super_admin";
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+             (request.auth.token.role == "super_admin" ||
+              request.auth.token.role == "sales_staff");
+    }
+
+    /** Max 10MB file size */
+    function isUnder10MB() {
+      return request.resource.size <= 10 * 1024 * 1024;
+    }
+
+    /** Max 2MB for images */
+    function isUnder2MB() {
+      return request.resource.size <= 2 * 1024 * 1024;
+    }
+
+    function isPdf() {
+      return request.resource.contentType == "application/pdf";
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches("image/.*");
+    }
+
+    // ──────────────────────────────────────────
+    // /logos/** — Company logo uploads
+    // Write: super_admin only
+    // Read: public (logo appears on landing page and PDFs)
+    // ──────────────────────────────────────────
+
+    match /logos/{filename} {
+      allow read: if true;
+      allow write: if isSuperAdmin() && isImage() && isUnder2MB();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // /quotes/{userId}/{filename} — Customer quote PDFs
+    // Write: authenticated user writing to their own folder
+    // Read: the owner (UID match) or any admin
+    // ──────────────────────────────────────────
+
+    match /quotes/{userId}/{filename} {
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+      allow create: if isAuthenticated()
+                    && request.auth.uid == userId
+                    && isPdf()
+                    && isUnder10MB();
+      allow update: if false; // PDFs are immutable once written
+      allow delete: if isSuperAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // /misc/** — General admin uploads
+    // Write/read: admin only
+    // ──────────────────────────────────────────
+
+    match /misc/{allPaths=**} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && isUnder10MB();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // Default deny all — explicit allow required
+    // ──────────────────────────────────────────
+
+    match /{allPaths=**} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+  }
+}

@@ -1,0 +1,243 @@
+/**
+ * Firestore Security Rules for TEAM CCTV Platform
+ *
+ * Version: 1.0.0
+ * Last updated: 2025
+ *
+ * ROLE ENFORCEMENT:
+ *   - Customers: authenticated via Firebase Phone Auth (role = null)
+ *   - Sales Staff: Email/Password auth with custom claim { role: "sales_staff" }
+ *   - Super Admin: Email/Password auth with custom claim { role: "super_admin" }
+ *
+ * RULE FLOW (evaluated top-to-bottom, first match wins for each path):
+ *   1. Public reads for product/wizard/settings data (needed for landing page)
+ *   2. Customer-only writes for leads and bookings (OTP verified)
+ *   3. Admin reads for all collections
+ *   4. Super Admin writes for sensitive collections
+ */
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ──────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ──────────────────────────────────────────
+
+    /** Returns true if the user is signed in */
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    /** Returns the user's custom role claim (null if not set) */
+    function userRole() {
+      return request.auth.token.role;
+    }
+
+    /** Returns true if the user is a super_admin */
+    function isSuperAdmin() {
+      return isAuthenticated() && userRole() == "super_admin";
+    }
+
+    /** Returns true if the user is a sales_staff or super_admin */
+    function isAdmin() {
+      return isAuthenticated() && (userRole() == "super_admin" || userRole() == "sales_staff");
+    }
+
+    /** Returns true if the requesting user owns this lead (matched by firebase_uid) */
+    function isLeadOwner(leadData) {
+      return isAuthenticated() && request.auth.uid == leadData.firebase_uid;
+    }
+
+    /** Returns true if the incoming data does NOT set soft-delete fields on creation */
+    function notSoftDeleted() {
+      return !("is_deleted" in request.resource.data) || request.resource.data.is_deleted == false;
+    }
+
+    // ──────────────────────────────────────────
+    // /users/{userId}
+    // Only admins can read/write user records.
+    // A user can read their own document.
+    // ──────────────────────────────────────────
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin();
+      allow delete: if false; // Soft delete only via update
+    }
+
+    // ──────────────────────────────────────────
+    // /leads/{leadId}
+    // Customers can create leads and read their own.
+    // Admins can read all leads and update status.
+    // ──────────────────────────────────────────
+
+    match /leads/{leadId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.firebase_uid == request.auth.uid);
+      allow create: if isAuthenticated() && notSoftDeleted()
+                       && request.resource.data.firebase_uid == request.auth.uid;
+      allow update: if isAdmin()
+                       || (isAuthenticated() && resource.data.firebase_uid == request.auth.uid
+                           && onlyAllowedFieldsUpdated(["follow_up_notes"]));
+      allow delete: if false; // Soft delete only
+
+      // /leads/{leadId}/quotes/{quoteId}
+      match /quotes/{quoteId} {
+        allow read: if isAdmin() || (isAuthenticated() && get(/databases/$(database)/documents/leads/$(leadId)).data.firebase_uid == request.auth.uid);
+        allow create: if isAuthenticated();
+        allow update: if isAdmin();
+        allow delete: if false;
+      }
+    }
+
+    // ──────────────────────────────────────────
+    // /products/{productId}
+    // Public read (needed for price display on landing page).
+    // Only admins can write.
+    // ──────────────────────────────────────────
+
+    match /products/{productId} {
+      allow read: if true; // Public — needed for wizard pricing
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if false; // Soft delete only
+    }
+
+    // ──────────────────────────────────────────
+    // /addons/{addonId}
+    // Public read, admin write.
+    // ──────────────────────────────────────────
+
+    match /addons/{addonId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ──────────────────────────────────────────
+    // /addon_rules/{ruleId}
+    // Public read (rule evaluation runs client-side using cached data).
+    // Admin write only.
+    // ──────────────────────────────────────────
+
+    match /addon_rules/{ruleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // /wizard_steps/{stepId} + subcollections
+    // Public read (wizard config fetched on page load).
+    // Admin write only.
+    // ──────────────────────────────────────────
+
+    match /wizard_steps/{stepId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /questions/{questionId} {
+        allow read: if true;
+        allow write: if isAdmin();
+
+        match /options/{optionId} {
+          allow read: if true;
+          allow write: if isAdmin();
+        }
+      }
+    }
+
+    // ──────────────────────────────────────────
+    // /promoters/{promoterId}
+    // Admin read/write only.
+    // Customers should never see promoter documents directly.
+    // Referral code validation goes through an API route, not direct Firestore access.
+    // ──────────────────────────────────────────
+
+    match /promoters/{promoterId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ──────────────────────────────────────────
+    // /commission_rules/{ruleId}
+    // Super admin read/write only.
+    // Sales staff can read (not write) commission rules.
+    // ──────────────────────────────────────────
+
+    match /commission_rules/{ruleId} {
+      allow read: if isAdmin();
+      allow write: if isSuperAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // /commission_records/{recordId}
+    // Admin read/write only.
+    // Approval (status change to "approved") restricted to super_admin.
+    // ──────────────────────────────────────────
+
+    match /commission_records/{recordId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin(); // Created by Cloud Function on lead won
+      allow update: if isSuperAdmin(); // Only super_admin can approve/pay
+      allow delete: if false;
+    }
+
+    // ──────────────────────────────────────────
+    // /commission_payouts/{payoutId}
+    // Super admin only — payout creation is a sensitive financial operation.
+    // ──────────────────────────────────────────
+
+    match /commission_payouts/{payoutId} {
+      allow read: if isAdmin();
+      allow write: if isSuperAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // /otp_verifications/{docId}
+    // Internal use only — if custom OTP fallback is implemented.
+    // No direct client access allowed; managed exclusively via API routes.
+    // ──────────────────────────────────────────
+
+    match /otp_verifications/{docId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // ──────────────────────────────────────────
+    // /site_visit_bookings/{bookingId}
+    // Authenticated customers can create bookings.
+    // Admins can read and update status.
+    // ──────────────────────────────────────────
+
+    match /site_visit_bookings/{bookingId} {
+      allow create: if isAuthenticated();
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.lead_id != null);
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ──────────────────────────────────────────
+    // /settings/app_config
+    // Public read — pricing config needed client-side.
+    // Only super_admin can write.
+    // ──────────────────────────────────────────
+
+    match /settings/{docId} {
+      allow read: if true; // Public — pricing cache, GST rate, company info
+      allow write: if isSuperAdmin();
+    }
+
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// NOTE: onlyAllowedFieldsUpdated() is a placeholder for a rule helper.
+// In practice, implement field-level update restrictions using:
+//   request.resource.data.diff(resource.data).affectedKeys()
+//     .hasOnly(["follow_up_notes"])
+// ──────────────────────────────────────────────────────────────────────────

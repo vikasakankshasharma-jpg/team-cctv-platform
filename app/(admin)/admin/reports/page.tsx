@@ -1,0 +1,85 @@
+import { adminDb } from "@/lib/firebase-admin";
+import { TrendingUp } from "lucide-react";
+import type { Lead, PricingResult } from "@/types";
+import { ReportsClient } from "@/components/admin/ReportsClient";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Analytics & Transactions | Intelligence Hub",
+  description: "Deep dive into sales trends, conversion metrics, and transaction ledgers.",
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function ReportsAdminPage() {
+  // Fetch Leads with status "won"
+  const leadsSnapshot = await adminDb.collection("leads")
+    .where("status", "==", "won")
+    .orderBy("created_at", "desc")
+    .limit(100)
+    .get();
+
+  const reportEntries: { lead: Lead; quote: PricingResult }[] = [];
+
+  // Parallel fetch the latest quote for each won lead
+  const fetchPromises = leadsSnapshot.docs.map(async (doc) => {
+    const leadData = { id: doc.id, ...doc.data() } as Lead;
+    
+    // Fetch the most recent quote from the subcollection
+    const quotesSnapshot = await doc.ref.collection("quotes")
+      .orderBy("created_at", "desc")
+      .limit(1)
+      .get();
+    
+    if (!quotesSnapshot.empty) {
+      const quoteData = quotesSnapshot.docs[0].data() as PricingResult;
+      return { lead: leadData, quote: quoteData };
+    }
+    return null;
+  });
+
+  const results = await Promise.all(fetchPromises);
+  results.forEach(res => {
+    if (res) reportEntries.push(res);
+  });
+
+  // Calculate Aggregates
+  const totalQuoteValue = reportEntries.reduce((acc, curr) => acc + curr.quote.total_payable, 0);
+  const avgQuoteValue = reportEntries.length > 0 ? Math.round(totalQuoteValue / reportEntries.length) : 0;
+  
+  const ipCount = reportEntries.filter(e => e.lead.technology_choice === 'IP').length;
+  const hdCount = reportEntries.filter(e => e.lead.technology_choice === 'HD').length;
+
+  // Find dominant add-on
+  const addonFrequency: Record<string, number> = {};
+  reportEntries.forEach(e => {
+    e.quote.addons.forEach(addon => {
+      addonFrequency[addon.display_name] = (addonFrequency[addon.display_name] || 0) + 1;
+    });
+  });
+
+  let topAddonName = "N/A";
+  let topAddonPercent = "0%";
+  
+  const sortedAddons = Object.entries(addonFrequency).sort((a, b) => b[1] - a[1]);
+  if (sortedAddons.length > 0 && reportEntries.length > 0) {
+    topAddonName = sortedAddons[0][0];
+    topAddonPercent = `${Math.round((sortedAddons[0][1] / reportEntries.length) * 100)}%`;
+  }
+
+  const aggregates = {
+    avgQuoteValue,
+    ipCount,
+    hdCount,
+    topAddon: { name: topAddonName, percentage: topAddonPercent }
+  };
+
+  return (
+    <div className="animate-in fade-in duration-700">
+      <ReportsClient 
+        data={reportEntries} 
+        aggregates={aggregates} 
+      />
+    </div>
+  );
+}
