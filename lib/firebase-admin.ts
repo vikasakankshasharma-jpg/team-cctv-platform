@@ -42,9 +42,16 @@ function getAdminApp(): App {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
   const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
 
-  const isPlaceholder = !privateKey || privateKey.includes("YOUR_PRIVATE_KEY_HERE");
-
   if (isPlaceholder || !projectId || !clientEmail || !storageBucket) {
+    // On Cloud Run/GCP, we can skip explicit credentials and use ADC (Application Default Credentials)
+    if (process.env.NODE_ENV === "production" && projectId) {
+      console.log("🚀 Production detected. Initializing Firebase Admin with Application Default Credentials (ADC).");
+      return initializeApp({
+        projectId,
+        storageBucket: storageBucket || `${projectId}.appspot.com`,
+      });
+    }
+
     console.warn("⚠️ Firebase Admin credentials are using placeholders or are missing. Admin Panel will run in Read-Only / Mock mode.");
     
     // Attempt to return a minimal app to prevent total crash
@@ -66,6 +73,10 @@ function getAdminApp(): App {
       storageBucket,
     });
   } catch (error: any) {
+    if (process.env.NODE_ENV === "production" && projectId) {
+       console.log("🚀 Cert failed. Falling back to ADC in production.");
+       return initializeApp({ projectId, storageBucket });
+    }
     console.warn("⚠️ Firebase Admin Key Invalid. Initializing unauthenticated mock app.", error.message);
     return initializeApp({ projectId }, "mock-app");
   }
