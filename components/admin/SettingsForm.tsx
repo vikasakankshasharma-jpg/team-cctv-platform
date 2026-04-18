@@ -180,6 +180,111 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
+
+        {/* Section: Brand Tier Management */}
+        <div className="lg:col-span-2 bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl dark:shadow-2xl backdrop-blur-sm group hover:border-blue-500/20 transition-all">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-500 border border-blue-100 dark:border-blue-500/20 shadow-inner">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Brand Tier Management</h2>
+              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-0.5">Control Profits & Display Names</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Budget Tier */}
+            <div className="space-y-4 p-5 rounded-[24px] bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800/50">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 rounded-full bg-zinc-300 animate-pulse" />
+                <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest text-[9px]">Budget Tier (Value)</h3>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest ml-1">Label Prefix</label>
+                <input 
+                  type="text" 
+                  name="tier_budget_label"
+                  value={formData.tier_budget_label}
+                  onChange={handleChange}
+                  placeholder="VALUE:"
+                  className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 outline-none transition-all font-bold text-xs shadow-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest ml-1">Multiplier <span className="text-blue-500">(0.85 = -15%)</span></label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  name="tier_budget_multiplier"
+                  value={formData.tier_budget_multiplier}
+                  onChange={handleChange}
+                  className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 outline-none transition-all font-black text-sm shadow-sm"
+                />
+              </div>
+            </div>
+
+            {/* Recommended Tier */}
+            <div className="space-y-4 p-5 rounded-[24px] bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-800/30">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <h3 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest text-[9px]">Standard Tier (Professional)</h3>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-blue-400 uppercase tracking-widest ml-1">Label Prefix</label>
+                <input 
+                  type="text" 
+                  name="tier_recommended_label"
+                  value={formData.tier_recommended_label}
+                  onChange={handleChange}
+                  placeholder="PROFESSIONAL:"
+                  className="w-full bg-white dark:bg-zinc-900 border border-blue-200/50 dark:border-blue-800/50 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 outline-none transition-all font-bold text-xs shadow-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-blue-400 uppercase tracking-widest ml-1">Multiplier <span className="text-zinc-500">(1.0 = Base)</span></label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  name="tier_recommended_multiplier"
+                  value={formData.tier_recommended_multiplier}
+                  onChange={handleChange}
+                  className="w-full bg-white dark:bg-zinc-900 border border-blue-200/50 dark:border-blue-800/50 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 outline-none transition-all font-black text-sm shadow-sm"
+                />
+              </div>
+            </div>
+
+            {/* Premium Tier */}
+            <div className="space-y-4 p-5 rounded-[24px] bg-indigo-50/30 dark:bg-indigo-900/10 border border-indigo-100/50 dark:border-indigo-800/30">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                <h3 className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest text-[9px]">Elite Tier (Premium)</h3>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-1">Label Prefix</label>
+                <input 
+                  type="text" 
+                  name="tier_premium_label"
+                  value={formData.tier_premium_label}
+                  onChange={handleChange}
+                  placeholder="ELITE:"
+                  className="w-full bg-white dark:bg-zinc-900 border border-indigo-200/50 dark:border-indigo-800/50 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 outline-none transition-all font-bold text-xs shadow-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-1">Multiplier <span className="text-blue-500">(1.25 = +25%)</span></label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  name="tier_premium_multiplier"
+                  value={formData.tier_premium_multiplier}
+                  onChange={handleChange}
+                  className="w-full bg-white dark:bg-zinc-900 border border-indigo-200/50 dark:border-indigo-800/50 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 outline-none transition-all font-black text-sm shadow-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Section: Communications */}

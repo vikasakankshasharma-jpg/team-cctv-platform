@@ -25,6 +25,12 @@ export default async function SettingsAdminPage() {
     labor_fitting_only_rate: 500,
     labor_full_installation_rate: 1200,
     wire_cost_per_meter: 25,
+    tier_budget_label: "VALUE:",
+    tier_budget_multiplier: 0.85,
+    tier_recommended_label: "PROFESSIONAL:",
+    tier_recommended_multiplier: 1.0,
+    tier_premium_label: "ELITE:",
+    tier_premium_multiplier: 1.25,
     updated_at: null,
     updated_by: null,
   };

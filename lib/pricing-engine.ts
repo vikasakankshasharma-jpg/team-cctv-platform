@@ -38,12 +38,21 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   } = params;
 
   // ─────────────────────────────────────────────
-  // STEP 0: Define Brand Tier Modifiers
+  // STEP 0: Define Brand Tier Modifiers (Dynamic from Settings)
   // ─────────────────────────────────────────────
   const tierSettings = {
-    budget: { prefix: "VALUE:", multiplier: 0.85 },      // 15% Cheaper
-    recommended: { prefix: "PROFESSIONAL:", multiplier: 1.0 }, // Base Price
-    premium: { prefix: "ELITE:", multiplier: 1.25 }      // 25% Premium
+    budget: { 
+      prefix: settings.tier_budget_label || "VALUE:", 
+      multiplier: settings.tier_budget_multiplier || 0.85 
+    },
+    recommended: { 
+      prefix: settings.tier_recommended_label || "PROFESSIONAL:", 
+      multiplier: settings.tier_recommended_multiplier || 1.0 
+    },
+    premium: { 
+      prefix: settings.tier_premium_label || "ELITE:", 
+      multiplier: settings.tier_premium_multiplier || 1.25 
+    }
   };
   const { prefix, multiplier: brandMultiplier } = tierSettings[selection.plan_type] || tierSettings.recommended;
 

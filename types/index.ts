@@ -141,6 +141,15 @@ export interface AppSettings {
   whatsapp_template: string;
   pricing_cache_ttl_seconds: number;
   otp_provider: "firebase_phone" | "other";
+  
+  // Brand Tier Management
+  tier_budget_label: string;
+  tier_budget_multiplier: number;
+  tier_recommended_label: string;
+  tier_recommended_multiplier: number;
+  tier_premium_label: string;
+  tier_premium_multiplier: number;
+
   updated_at?: any;
   updated_by?: string | null;
 }
