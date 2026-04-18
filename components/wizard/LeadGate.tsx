@@ -212,6 +212,14 @@ export function LeadGate() {
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Generate Elite Quote <ArrowRight className="w-4 h-4" /></>}
             </button>
+
+            <button 
+              type="button"
+              onClick={() => setOtpSent(true)}
+              className="w-full text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline text-center"
+            >
+              Already have a verification code?
+            </button>
           </form>
         ) : (
           <form onSubmit={handleVerifyOtp} className="space-y-10 text-center">

@@ -46,7 +46,10 @@ function getAdminApp(): App {
 
   if (isPlaceholder || !projectId || !clientEmail || !storageBucket) {
     // On Cloud Run/GCP, we can skip explicit credentials and use ADC (Application Default Credentials)
-    if (process.env.NODE_ENV === "production" && projectId) {
+    const isProduction = process.env.NODE_ENV === "production";
+    const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+
+    if (isProduction && projectId && !isBuildPhase) {
       console.log("🚀 Production detected. Initializing Firebase Admin with Application Default Credentials (ADC).");
       return initializeApp({
         projectId,
@@ -54,12 +57,12 @@ function getAdminApp(): App {
       });
     }
 
-    console.warn("⚠️ Firebase Admin credentials are using placeholders or are missing. Admin Panel will run in Read-Only / Mock mode.");
+    console.warn("⚠️ Firebase Admin credentials missing. Initializing mock app for build compatibility.");
     
-    // Attempt to return a minimal app to prevent total crash
+    // Return a safe app instance that won't throw during build or development
     return initializeApp({
       projectId: projectId || "mock-project",
-    }, "mock-safe-app");
+    }, "build-safe-admin-app");
   }
 
   // privateKey from .env has literal \n — replace with actual newlines

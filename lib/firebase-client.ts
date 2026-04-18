@@ -54,6 +54,20 @@ function getClientApp(): FirebaseApp {
   if (getApps().length > 0) {
     return getApp();
   }
+
+  // Build-time safety: If API key is missing (during next build), return a mock app
+  // This prevents the 'auth/invalid-api-key' error from crashing the pre-rendering phase.
+  const isBuildPhase = !firebaseConfig.apiKey || firebaseConfig.apiKey === "undefined";
+  
+  if (isBuildPhase) {
+    console.log("🚀 Next.js Build Phase detected. Initializing Firebase Mock App.");
+    return initializeApp({
+      apiKey: "mock-api-key",
+      authDomain: "mock.firebaseapp.com",
+      projectId: "mock-project",
+    }, "build-mock-app");
+  }
+
   return initializeApp(firebaseConfig);
 }
 
