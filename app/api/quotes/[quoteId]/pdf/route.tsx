@@ -12,6 +12,7 @@ export async function GET(
   try {
     const { searchParams } = new URL(request.url);
     const leadId = searchParams.get('leadId');
+    const sharedTo = searchParams.get('shared_to') || undefined;
     const { quoteId } = await params;
 
     if (!leadId) {
@@ -49,7 +50,7 @@ export async function GET(
       // Ideally, the client should POST the quote data for the preview.
       
       const pdfStream = await renderToStream(
-        <QuotePDFDocument quote={mockQuote} lead={mockLead} settings={mockSettings} quoteId={quoteId} />
+        <QuotePDFDocument quote={mockQuote} lead={mockLead} settings={mockSettings} quoteId={quoteId} sharedToNumber={sharedTo} />
       );
 
       return new Response(pdfStream as any, {
@@ -79,7 +80,7 @@ export async function GET(
 
     // 2. Render PDF to memory
     const pdfStream = await renderToStream(
-      <QuotePDFDocument quote={quote} lead={lead} settings={settings} quoteId={quoteId} />
+      <QuotePDFDocument quote={quote} lead={lead} settings={settings} quoteId={quoteId} sharedToNumber={sharedTo} />
     );
 
     // Convert NodeJS Readable stream to ArrayBuffer for Storage upload

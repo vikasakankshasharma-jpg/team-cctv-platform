@@ -166,9 +166,10 @@ interface QuotePDFProps {
   lead: Lead;
   settings: AppSettings;
   quoteId: string;
+  sharedToNumber?: string;  // Secondary recipient number for WhatsApp share
 }
 
-export function QuotePDFDocument({ quote, lead, settings, quoteId }: QuotePDFProps) {
+export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumber }: QuotePDFProps) {
   const dateStr = new Date().toLocaleDateString('en-IN', {
     day: '2-digit', month: 'long', year: 'numeric'
   });
@@ -303,6 +304,13 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId }: QuotePDFPro
 
         {/* Footer */}
         <View style={styles.footer}>
+          {sharedToNumber && (
+            <View style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid #e2e8f0' }}>
+              <Text style={[styles.footerText, { color: '#2563eb', fontWeight: 'bold', fontSize: 9 }]}>
+                This quote was also shared with: +91 {sharedToNumber}
+              </Text>
+            </View>
+          )}
           <Text style={styles.footerText}>Thank you for choosing {settings.company_name} for your security needs.</Text>
           <Text style={[styles.footerText, { fontSize: 7 }]}>
             This is a computer-generated quotation and does not require a physical signature.

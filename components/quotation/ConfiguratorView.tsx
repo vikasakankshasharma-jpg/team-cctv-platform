@@ -7,6 +7,7 @@ import { calculatePricing } from "@/lib/pricing-engine";
 import { evaluateAddonRules } from "@/lib/addon-rules";
 import { SlidersHorizontal, Share2, Download, Calendar, ArrowRight, ShieldCheck, Zap, Info, Check } from "lucide-react";
 import { SiteDetailsModal } from "./SiteDetailsModal";
+import { ShareDialog } from "./ShareDialog";
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address } from "@/types";
 import { useRouter } from "next/navigation";
 
@@ -28,6 +29,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
   const [lead, setLead] = useState<Lead>(initialLead);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<"download" | "whatsapp" | "booking" | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
 
   const { 
     setPricingCache, 
@@ -147,6 +150,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
 
       if (!res.ok) throw new Error("Failed to save quote");
       const { id: generatedQuoteId } = await res.json();
+      setSavedQuoteId(generatedQuoteId);
       setSaveSuccess(true);
       
       const pdfRes = await fetch(`/api/quotes/${generatedQuoteId}/pdf?leadId=${currentLead.id}`);
@@ -191,11 +195,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
   };
 
   const handleWhatsappShare = (currentLead: Lead) => {
-    const res = pricing_results.recommended!;
-    const addr = currentLead.address;
-    const message = `*📄 TEAM CCTV - Site Visit & Quote*\n--------------------------\n*Hi ${currentLead.customer_name},*\n\nHere is your tailored setup details:\n\n📍 *Site Address:* ${addr?.pincode}, ${addr?.landmark1}\n🎯 *Pinpoint:* ${addr?.coordinates.lat.toFixed(4)}, ${addr?.coordinates.lng.toFixed(4)}\n🎥 *Cameras:* ${selection.camera_count}x (${selection.picture_quality.toUpperCase()})\n\n*💰 TOTAL ESTIMATE:* *₹${res.total_payable.toLocaleString()}*\n\n--------------------------\n*View Full Details:* ${window.location.href}\n--------------------------`;
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/91${currentLead.mobile_number}?text=${encoded}`, "_blank");
+    // Open the premium ShareDialog instead of direct WhatsApp link
+    setShowShareDialog(true);
   };
 
   if (!pricing_results.recommended) return <div className="animate-pulse flex space-y-4 flex-col h-96 bg-zinc-200 rounded-xl" />;
@@ -426,6 +427,18 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
           initialPincode={lead.address?.pincode}
           onConfirm={handleAddressConfirm}
           onClose={() => setShowAddressModal(false)}
+        />
+      )}
+
+      {showShareDialog && pricing_results.budget && (
+        <ShareDialog
+          leadId={lead.id!}
+          quoteId={savedQuoteId || "draft"}
+          customerName={lead.customer_name}
+          customerMobile={lead.mobile_number || lead.mobile || ""}
+          lowestPrice={pricing_results.budget.total_payable}
+          propertyType={lead.property_type}
+          onClose={() => setShowShareDialog(false)}
         />
       )}
 
