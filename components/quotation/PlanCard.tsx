@@ -11,10 +11,24 @@ interface PlanCardProps {
   pricing: PricingResult;
   onSelect: () => void;
   isSelected?: boolean;
+  showDetails?: boolean;
+  onToggleDetails?: (show: boolean) => void;
 }
 
-export function PlanCard({ title, badge, recommendation, pricing, onSelect, isSelected }: PlanCardProps) {
-  const [showItemized, setShowItemized] = useState(false);
+export function PlanCard({ 
+  title, 
+  badge, 
+  recommendation, 
+  pricing, 
+  onSelect, 
+  isSelected,
+  showDetails,
+  onToggleDetails
+}: PlanCardProps) {
+  const [internalShow, setInternalShow] = useState(false);
+  
+  const showItemized = showDetails !== undefined ? showDetails : internalShow;
+  const setShowItemized = onToggleDetails ? onToggleDetails : setInternalShow;
 
   return (
     <div 

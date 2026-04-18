@@ -43,6 +43,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
 
   useEffect(() => {
     setPricingCache(pricingCache);
@@ -238,6 +239,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
               recording_days: STORAGE_TIERS[Math.max(0, currentStorageIdx - 1)]
             });
           }}
+          showDetails={isDetailsExpanded}
+          onToggleDetails={setIsDetailsExpanded}
         />
         
         <PlanCard 
@@ -247,6 +250,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
           pricing={pricing_results.recommended!} 
           isSelected={true} 
           onSelect={() => {}}
+          showDetails={isDetailsExpanded}
+          onToggleDetails={setIsDetailsExpanded}
         />
         
         <PlanCard 
@@ -260,6 +265,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
               recording_days: STORAGE_TIERS[Math.min(STORAGE_TIERS.length - 1, currentStorageIdx + 1)]
             });
           }}
+          showDetails={isDetailsExpanded}
+          onToggleDetails={setIsDetailsExpanded}
         />
       </div>
 
