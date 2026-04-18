@@ -335,6 +335,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
             </div>
           </div>
         </div>
+        </div>
 
         {/* Footer */}
         <div className="px-8 py-5 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between gap-4">
