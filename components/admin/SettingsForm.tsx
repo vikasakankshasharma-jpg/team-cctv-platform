@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Save, Settings2, Image as ImageIcon, Loader2, CheckCircle2, BadgePercent, Ruler, HardHat, MessageSquare } from "lucide-react";
+import { Save, Settings2, Image as ImageIcon, Loader2, CheckCircle2, BadgePercent, Ruler, HardHat, MessageSquare, Zap } from "lucide-react";
 import type { AppSettings } from "@/types";
 import { updateSettings } from "@/app/actions/settings";
 import Image from "next/image";
