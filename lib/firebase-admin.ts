@@ -42,6 +42,8 @@ function getAdminApp(): App {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
   const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
 
+  const isPlaceholder = !privateKey || privateKey.includes("YOUR_PRIVATE_KEY_HERE");
+
   if (isPlaceholder || !projectId || !clientEmail || !storageBucket) {
     // On Cloud Run/GCP, we can skip explicit credentials and use ADC (Application Default Credentials)
     if (process.env.NODE_ENV === "production" && projectId) {
