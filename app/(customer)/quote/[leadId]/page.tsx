@@ -115,7 +115,13 @@ export default async function QuoteResultPage({
     labor_fitting_only_rate: 650,
     labor_full_installation_rate: 1800,
     wire_cost_per_meter: 45,
-    whatsapp_template: "Hi {{customer_name}}, your quote for ₹{{total_amount}} is ready."
+    whatsapp_template: "Hi {{customer_name}}, your quote for ₹{{total_amount}} is ready.",
+    tier_budget_label: "VALUE:",
+    tier_budget_multiplier: 0.85,
+    tier_recommended_label: "PROFESSIONAL:",
+    tier_recommended_multiplier: 1.0,
+    tier_premium_label: "ELITE:",
+    tier_premium_multiplier: 1.25
   } as any;
 
   const pricingCache = {
