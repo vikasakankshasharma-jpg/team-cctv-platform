@@ -132,7 +132,7 @@ export default function WizardPage() {
             <p className="text-zinc-500 dark:text-zinc-400 text-xl mt-4 font-medium max-w-2xl">{currentStep.description}</p>
           )}
 
-        <div className="flex-1 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex-1 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 min-h-[50vh]">
           {currentStep.questions?.map((q) => {
             const isMulti = q.input_type === "multi";
             const currentAns = answers[q.id!] || (isMulti ? [] : "");
