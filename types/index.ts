@@ -45,6 +45,8 @@ export interface Product {
   category: "camera" | "recorder" | "accessory" | "cable";
   technology: "HD" | "IP" | "both";
   unit_price: number;
+  unit_price_budget?: number;   // NEW: Manual Budget price override
+  unit_price_premium?: number;  // NEW: Manual Premium price override
   is_active: boolean;
   
   // NEW: Logic Hardening Fields

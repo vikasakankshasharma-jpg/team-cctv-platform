@@ -172,20 +172,56 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                  <BadgeIndianRupee className="w-3 h-3" /> Base Unit Price
-                </label>
-                <div className="relative">
-                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">₹</span>
-                  <input
-                    required
-                    type="number"
-                    min="0"
-                    value={formData.unit_price}
-                    onChange={(e) => setFormData({ ...formData, unit_price: Number(e.target.value) })}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
-                  />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                    <BadgeIndianRupee className="w-3 h-3" /> Recommended Brand Price
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">₹</span>
+                    <input
+                      required
+                      type="number"
+                      min="0"
+                      value={formData.unit_price}
+                      onChange={(e) => setFormData({ ...formData, unit_price: Number(e.target.value) })}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2">
+                    Value / Budget Price <span className="normal-case tracking-normal font-normal opacity-70">(Optional)</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.unit_price_budget || ""}
+                      onChange={(e) => setFormData({ ...formData, unit_price_budget: e.target.value ? Number(e.target.value) : undefined })}
+                      placeholder="Auto-calculated if empty"
+                      className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl pl-10 pr-6 py-3 text-zinc-300 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all placeholder:text-zinc-700"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2">
+                    Elite / Premium Price <span className="normal-case tracking-normal font-normal opacity-70">(Optional)</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.unit_price_premium || ""}
+                      onChange={(e) => setFormData({ ...formData, unit_price_premium: e.target.value ? Number(e.target.value) : undefined })}
+                      placeholder="Auto-calculated if empty"
+                      className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl pl-10 pr-6 py-3 text-zinc-300 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all placeholder:text-zinc-700"
+                    />
+                  </div>
                 </div>
               </div>
 

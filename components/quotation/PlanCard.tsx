@@ -13,6 +13,8 @@ interface PlanCardProps {
   isSelected?: boolean;
   showDetails?: boolean;
   onToggleDetails?: (show: boolean) => void;
+  differenceAmount?: number;
+  differenceType?: "save" | "extra";
 }
 
 export function PlanCard({ 
@@ -23,7 +25,9 @@ export function PlanCard({
   onSelect, 
   isSelected,
   showDetails,
-  onToggleDetails
+  onToggleDetails,
+  differenceAmount,
+  differenceType
 }: PlanCardProps) {
   const [internalShow, setInternalShow] = useState(false);
   
@@ -62,6 +66,19 @@ export function PlanCard({
           </span>
           <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-2.5 ml-1">Final Price</span>
         </div>
+
+        {/* Difference Amount Badge */}
+        {differenceAmount !== undefined && differenceType && (
+          <div className="mb-8 flex items-center justify-center">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border shadow-inner ${
+              differenceType === 'save' 
+                ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20' 
+                : 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-500/20'
+            }`}>
+              {differenceType === 'save' ? <span>Save ₹{differenceAmount.toLocaleString('en-IN')}</span> : <span>Extra ₹{differenceAmount.toLocaleString('en-IN')}</span>}
+            </span>
+          </div>
+        )}
 
         {/* Feature List */}
         <div className="space-y-5 flex-1 mb-8">

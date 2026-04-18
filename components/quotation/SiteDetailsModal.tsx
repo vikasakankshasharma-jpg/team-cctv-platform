@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, MapPin, Navigation, CheckCircle2, Lock, ArrowRight, Loader2 } from "lucide-react";
 import type { Address } from "@/types";
+import { useJsApiLoader, GoogleMap, MarkerF } from "@react-google-maps/api";
 
 interface SiteDetailsModalProps {
   onConfirm: (address: Address) => void;
@@ -22,14 +23,29 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
   const [areaInfo, setAreaInfo] = useState("");
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
 
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+  });
+
+  const [map, setMap] = useState(null);
+
+  const onLoad = useCallback(function callback(map: any) {
+    setMap(map);
+  }, []);
+
+  const onUnmount = useCallback(function callback(map: any) {
+    setMap(null);
+  }, []);
+
   useEffect(() => {
     if (pincode.length === 6) {
-      const num = parseInt(pincode);
-      setCoords({
-        lat: 19.0760 + (num % 100) * 0.001,
-        lng: 72.8777 + (num % 50) * 0.001
-      });
       setIsMapReady(true);
+      
+      // Default to Mumbai until geocoding responds
+      if (!isFetchingPincode) {
+         setCoords({ lat: 19.0760, lng: 72.8777 });
+      }
       
       const fetchPincode = async () => {
         setIsFetchingPincode(true);
@@ -48,6 +64,18 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
              setAreaInfo("");
              setSelectedPostOffice("");
           }
+          
+          // Geocode using OpenStreetMap Nominatim API (Free and robust)
+          try {
+             const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${pincode}+India`);
+             const geoData = await geoRes.json();
+             if (geoData && geoData.length > 0) {
+                setCoords({ lat: parseFloat(geoData[0].lat), lng: parseFloat(geoData[0].lon) });
+             }
+          } catch (geoErr) {
+             console.error("Geocoding failed:", geoErr);
+          }
+          
         } catch (e) {
           console.error(e);
           setPostOffices([]);
@@ -230,41 +258,63 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
             <div className="flex-1 relative rounded-3xl overflow-hidden bg-zinc-100 border border-zinc-200 min-h-[220px]">
 
               {isMapReady ? (
-                <>
-                  {/* Animated grid map background */}
-                  <div
-                    className="absolute inset-0 opacity-30"
-                    style={{
-                      backgroundImage: "linear-gradient(rgba(59,130,246,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,.3) 1px, transparent 1px)",
-                      backgroundSize: "28px 28px",
-                    }}
-                  />
-                  {/* Ripple rings */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-32 h-32 rounded-full border border-blue-300/40 animate-ping absolute" />
-                    <div className="w-20 h-20 rounded-full border border-blue-400/30 animate-ping absolute [animation-delay:0.5s]" />
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-400/50 absolute" />
-                  </div>
-                  {/* Pin */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="flex flex-col items-center -translate-y-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-600 border-4 border-white shadow-2xl shadow-blue-600/50 flex items-center justify-center">
-                        <MapPin className="w-5 h-5 text-white fill-white" />
+                <div className="w-full h-[220px] sm:h-full relative">
+                  {isLoaded ? (
+                    <GoogleMap
+                      mapContainerStyle={{ width: '100%', height: '100%' }}
+                      center={coords}
+                      zoom={15}
+                      options={{
+                        disableDefaultUI: true,
+                        zoomControl: true,
+                        mapTypeControl: false,
+                        streetViewControl: false,
+                        fullscreenControl: true,
+                        styles: [
+                          {
+                            featureType: "poi",
+                            elementType: "labels",
+                            stylers: [{ visibility: "off" }]
+                          }
+                        ]
+                      }}
+                      onLoad={onLoad}
+                      onUnmount={onUnmount}
+                      onClick={(e) => {
+                        if (e.latLng) {
+                          setCoords({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+                        }
+                      }}
+                    >
+                      <MarkerF 
+                        position={coords}
+                        draggable={true}
+                        onDragEnd={(e) => {
+                          if (e.latLng) {
+                            setCoords({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+                          }
+                        }}
+                      />
+                    </GoogleMap>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-zinc-50">
+                      <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+                    </div>
+                  )}
+
+                  {/* Coords badge overlay */}
+                  <div className="absolute bottom-3 left-3 right-3 z-10 pointer-events-none">
+                    <div className="bg-white/95 backdrop-blur-sm border border-zinc-100 rounded-2xl px-4 py-2.5 flex items-center justify-between shadow-lg">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span className="text-[10px] font-black text-zinc-700 tracking-wider">
+                          {coords.lat.toFixed(4)}°N, {coords.lng.toFixed(4)}°E
+                        </span>
                       </div>
-                      <div className="w-2 h-4 bg-blue-600/60 rounded-b-full" />
-                      <div className="w-4 h-1 bg-zinc-900/10 rounded-full blur-[2px]" />
+                      <span className="text-[9px] font-medium text-zinc-400 bg-zinc-100 px-2 py-1 rounded-md">Draggable Target</span>
                     </div>
                   </div>
-                  {/* Coords badge */}
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <div className="bg-white/95 backdrop-blur-sm border border-zinc-100 rounded-2xl px-4 py-2.5 flex items-center gap-2 shadow-lg">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span className="text-[10px] font-black text-zinc-700 tracking-wider">
-                        {coords.lat.toFixed(4)}°N, {coords.lng.toFixed(4)}°E
-                      </span>
-                    </div>
-                  </div>
-                </>
+                </div>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
                   <div className="w-12 h-12 rounded-2xl bg-zinc-200 flex items-center justify-center">

@@ -60,6 +60,17 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   // STEP 1: Process Base Hardware Products
   // ─────────────────────────────────────────────
   
+  const getProductTierPrice = (product: Product, planType: "budget" | "recommended" | "premium"): number => {
+    if (planType === "budget" && product.unit_price_budget != null) {
+      return product.unit_price_budget;
+    }
+    if (planType === "premium" && product.unit_price_premium != null) {
+      return product.unit_price_premium;
+    }
+    // Fallback: Use standard unit_price with the global brand multiplier
+    return Math.round(product.unit_price * brandMultiplier);
+  };
+
   const lineItems: QuoteLineItem[] = [];
   let baseHardwareCost = 0;
 
@@ -88,7 +99,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
   if (selectedCamera) {
     const qty = selection.camera_count;
-    const adjustedUnitPrice = Math.round(selectedCamera.unit_price * brandMultiplier);
+    const adjustedUnitPrice = getProductTierPrice(selectedCamera, selection.plan_type);
     const lineTotal = adjustedUnitPrice * qty;
     baseHardwareCost += lineTotal;
     lineItems.push({
@@ -110,7 +121,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   const selectedRecorder = recorders.find(r => (r.channels || 0) >= selection.camera_count) || recorders[recorders.length - 1];
 
   if (selectedRecorder) {
-    const adjustedUnitPrice = Math.round(selectedRecorder.unit_price * brandMultiplier);
+    const adjustedUnitPrice = getProductTierPrice(selectedRecorder, selection.plan_type);
     baseHardwareCost += adjustedUnitPrice;
     lineItems.push({
       product_id: selectedRecorder.id!,
@@ -143,7 +154,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   const selectedHdd = hdds.find(s => getTB(s) >= requiredTB) || hdds[hdds.length - 1];
 
   if (selectedHdd) {
-    const adjustedUnitPrice = Math.round(selectedHdd.unit_price * brandMultiplier);
+    const adjustedUnitPrice = getProductTierPrice(selectedHdd, selection.plan_type);
     baseHardwareCost += adjustedUnitPrice;
     lineItems.push({
       product_id: selectedHdd.id!,

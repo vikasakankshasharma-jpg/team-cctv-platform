@@ -231,6 +231,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
         <PlanCard 
           title="Essential" 
           pricing={pricing_results.budget!} 
+          differenceAmount={Math.max(0, pricing_results.recommended!.total_payable - pricing_results.budget!.total_payable)}
+          differenceType="save"
           onSelect={() => {
             const currentQualityIdx = QUALITY_TIERS.indexOf(selection.picture_quality);
             const currentStorageIdx = STORAGE_TIERS.indexOf(selection.recording_days);
@@ -257,6 +259,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
         <PlanCard 
           title="Best Quality" 
           pricing={pricing_results.premium!} 
+          differenceAmount={Math.max(0, pricing_results.premium!.total_payable - pricing_results.recommended!.total_payable)}
+          differenceType="extra"
           onSelect={() => {
             const currentQualityIdx = QUALITY_TIERS.indexOf(selection.picture_quality);
             const currentStorageIdx = STORAGE_TIERS.indexOf(selection.recording_days);

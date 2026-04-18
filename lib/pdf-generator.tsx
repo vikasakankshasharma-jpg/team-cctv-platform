@@ -7,7 +7,7 @@ import type { PricingResult, Lead, AppSettings } from '@/types';
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 30,
     fontFamily: 'Helvetica',
     backgroundColor: '#ffffff',
   },
@@ -16,11 +16,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderBottom: '2px solid #2563eb',
-    paddingBottom: 24,
-    marginBottom: 24,
+    paddingBottom: 16,
+    marginBottom: 16,
   },
   brandName: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1e3a8a', // Deep Blue
     letterSpacing: 1,
@@ -36,10 +36,10 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   quoteTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#0f172a',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   quoteSub: {
     fontSize: 9,
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   // Customer & Info Grid
   infoGrid: {
     flexDirection: 'row',
-    marginBottom: 32,
+    marginBottom: 20,
     gap: 20,
   },
   infoCol: {
@@ -77,13 +77,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#334155',
-    marginBottom: 12,
+    marginBottom: 8,
     paddingLeft: 4,
     borderLeft: '4px solid #3b82f6',
   },
   table: {
     width: '100%',
-    marginBottom: 32,
+    marginBottom: 20,
   },
   tableHeader: {
     flexDirection: 'row',
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
 
   // Professional Sections
   professionalBlock: {
-    marginTop: 32,
+    marginTop: 20,
     padding: 12,
     backgroundColor: '#fffdfa',
     border: '1px solid #fed7aa',
@@ -147,17 +147,17 @@ const styles = StyleSheet.create({
 
   footer: {
     position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    paddingTop: 15,
+    bottom: 20,
+    left: 30,
+    right: 30,
+    paddingTop: 10,
     borderTop: '1px solid #e2e8f0',
     textAlign: 'center',
   },
   footerText: {
     fontSize: 8,
     color: '#94a3b8',
-    marginBottom: 4,
+    marginBottom: 2,
   }
 });
 
