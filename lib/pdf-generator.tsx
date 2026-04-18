@@ -285,10 +285,11 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
           <View style={[styles.infoCol, { backgroundColor: '#fff' }]}>
             <Text style={styles.infoLabel}>Terms & Conditions</Text>
             <Text style={[styles.blockText, { fontSize: 8 }]}>
-              1. 50% Advance for material procurement.{"\n"}
-              2. 50% Balance on completion/handover.{"\n"}
-              3. 1-Year Comprehensive On-Site Warranty.{"\n"}
-              4. Validity: 10 Days from {dateStr}.
+              1. 10% as an advance.{"\n"}
+              2. 80% at the time of material received at Site and before starting Installation work.{"\n"}
+              3. Remaining 10% after completion of work and handover the Site.{"\n"}
+              4. 1-Year Comprehensive On-Site Warranty.{"\n"}
+              5. Validity: 10 Days from {dateStr}.
             </Text>
           </View>
           <View style={[styles.infoCol, { backgroundColor: '#fff' }]}>
