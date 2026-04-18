@@ -55,22 +55,7 @@ function getClientApp(): FirebaseApp {
     return getApp();
   }
 
-  // Build-time safety: 
-  // ONLY use the mock app if we are strictly on the SERVER during the build process AND have no keys.
-  // In the browser (window defined), ALWAYS attempt real initialization.
-  const isBrowser = typeof window !== "undefined";
-  const hasKeys = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== "undefined";
-  
-  if (!isBrowser && !hasKeys) {
-    console.log("🚀 Server Build Phase: Initializing Firebase Mock App.");
-    return initializeApp({
-      apiKey: "mock-api-key",
-      authDomain: "mock.firebaseapp.app",
-      projectId: "mock-project",
-    }, "build-mock-app");
-  }
-
-  // Browser or Server with keys -> Real App
+  // Always use the hard-coded config in production to prevent environment leak issues.
   return initializeApp(firebaseConfig);
 }
 

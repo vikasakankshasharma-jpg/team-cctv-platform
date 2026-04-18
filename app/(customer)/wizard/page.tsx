@@ -120,7 +120,7 @@ export default function WizardPage() {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-50/50 dark:bg-indigo-600/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
       {/* Blurred overlay if Gate is active */}
-      <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-6 pt-12 pb-44 md:pt-16 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
+      <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-6 pt-12 pb-60 md:pt-16 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
         
         <ProgressBar currentStepIndex={current_step_index} totalSteps={steps.length} />
 
