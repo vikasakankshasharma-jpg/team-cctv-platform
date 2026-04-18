@@ -147,10 +147,10 @@ const styles = StyleSheet.create({
 
   footer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 15,
     left: 30,
     right: 30,
-    paddingTop: 10,
+    paddingTop: 8,
     borderTop: '1px solid #e2e8f0',
     textAlign: 'center',
   },
@@ -249,7 +249,7 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
         </View>
 
         {/* Financial Summary Box */}
-        <View style={styles.summaryContainer}>
+        <View style={styles.summaryContainer} wrap={false}>
           <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <Text style={styles.summLabel}>Hardware Subtotal</Text>
@@ -281,7 +281,7 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
         </View>
 
         {/* Professional T&C and Bank Details */}
-        <View style={styles.infoGrid}>
+        <View style={styles.infoGrid} wrap={false}>
           <View style={[styles.infoCol, { backgroundColor: '#fff' }]}>
             <Text style={styles.infoLabel}>Terms & Conditions</Text>
             <Text style={[styles.blockText, { fontSize: 8 }]}>

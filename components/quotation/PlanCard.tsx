@@ -60,11 +60,11 @@ export function PlanCard({
            {recommendation && <TrendingUp className="w-4 h-4 text-blue-500 dark:text-blue-400" />}
         </div>
         
-        <div className="flex items-end gap-1.5 mb-10 pb-8 border-b border-zinc-50 dark:border-zinc-800/60">
-          <span className="text-5xl font-black text-zinc-900 dark:text-white tracking-tighter">
+        <div className="flex items-end gap-1.5 mb-8 md:mb-10 pb-6 md:pb-8 border-b border-zinc-50 dark:border-zinc-800/60">
+          <span className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter">
             ₹{pricing.total_payable.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </span>
-          <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-2.5 ml-1">Final Price</span>
+          <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-1.5 md:mb-2.5 ml-1">Final Price</span>
         </div>
 
         {/* Difference Amount Badge */}

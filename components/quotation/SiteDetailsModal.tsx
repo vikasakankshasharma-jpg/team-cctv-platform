@@ -118,33 +118,34 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
       />
 
       {/* Modal Card */}
-      <div className="relative w-full sm:max-w-2xl bg-white sm:rounded-[40px] overflow-hidden shadow-[0_60px_120px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-bottom-4 duration-300 z-10">
+      <div className="relative w-full sm:max-w-2xl bg-white sm:rounded-[40px] shadow-[0_60px_120px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-bottom-4 duration-300 z-10 flex flex-col max-h-[98vh] sm:max-h-[min(800px,90vh)]">
 
         {/* Top accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600" />
+        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600 shrink-0" />
 
-        {/* Header */}
-        <div className="px-8 pt-8 pb-6 flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center">
-                <MapPin className="w-3.5 h-3.5 text-white" />
+        <div className="overflow-y-auto flex-1 custom-scrollbar">
+          {/* Header */}
+          <div className="px-8 pt-8 pb-6 flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center">
+                  <MapPin className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Site Capture</span>
               </div>
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Site Capture</span>
+              <h2 className="text-2xl font-black text-zinc-900 tracking-tighter">Pinpoint Your Site</h2>
+              <p className="text-sm text-zinc-400 font-medium mt-1">Required for PDF blueprint & installation dispatch.</p>
             </div>
-            <h2 className="text-2xl font-black text-zinc-900 tracking-tighter">Pinpoint Your Site</h2>
-            <p className="text-sm text-zinc-400 font-medium mt-1">Required for PDF blueprint & installation dispatch.</p>
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-2xl bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-colors shrink-0 mt-1"
+            >
+              <X className="w-4 h-4 text-zinc-400" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-2xl bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-colors shrink-0 mt-1"
-          >
-            <X className="w-4 h-4 text-zinc-500" />
-          </button>
-        </div>
 
-        {/* Body — two column */}
-        <div className="px-8 pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Body — two column */}
+          <div className="px-8 pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* LEFT: Form */}
           <div className="space-y-4">

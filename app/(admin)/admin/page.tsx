@@ -1,4 +1,6 @@
 import { adminDb } from "@/lib/firebase-admin";
+import { requireAdmin } from "@/lib/auth-server";
+import { redirect } from "next/navigation";
 import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard } from "lucide-react";
 import { DashboardClient, type WeeklyBucket, type SourceBreakdown, type RecentActivity } from "@/components/admin/DashboardClient";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -21,7 +23,10 @@ function getDayLabel(daysOffset = 0) {
   d.setDate(d.getDate() - daysOffset);
   return d.toLocaleDateString("en-IN", { weekday: "short" });
 }
+
 export default async function AdminDashboard() {
+  await requireAdmin();
+
   // ... (aggregation logic remains same)
   const [leadsCountRes, wonLeadsCountRes, promotersSnapshot, recentLeadsSnap] = await Promise.all([
     adminDb.collection("leads").count().get(),
