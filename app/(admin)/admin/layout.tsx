@@ -14,11 +14,13 @@ export default async function AdminLayout({
   const session = await verifySession();
   
   if (!session.isAuthenticated) {
-    // We can't easily check pathname here without headers, but 
-    // we can check if the session is null.
-    // If we are on /admin/login, we shouldn't show the layout with sidebar.
-    // However, the login page is a separate file.
-    // I'll check if there's a better way.
+    // If we are not authenticated (i.e. on the login page),
+    // do not render the sidebar or admin header.
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans text-zinc-900 dark:text-zinc-100">
+        {children}
+      </div>
+    );
   }
 
   return (
