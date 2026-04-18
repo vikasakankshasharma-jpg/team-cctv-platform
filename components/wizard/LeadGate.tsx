@@ -32,6 +32,20 @@ export function LeadGate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  
+  // Timer for Resend OTP
+  const [countdown, setCountdown] = useState(0);
+  const [canResend, setCanResend] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    } else if (countdown === 0 && otpSent) {
+      setCanResend(true);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown, otpSent]);
 
   useEffect(() => {
     if (!window.recaptchaVerifier) {
@@ -50,10 +64,17 @@ export function LeadGate() {
 
     setLoading(true);
     try {
+      // Defensive logging for live debug
+      if (!auth.config) {
+        console.error("🔒 Security Config Missing: Firebase Auth failed to initialize correctly.");
+      }
+
       // E2E Visual Test Bypass (Simulation Mode)
       if (mobile === "9999999999") {
         setOtpSent(true);
         setLoading(false);
+        setCountdown(30);
+        setCanResend(false);
         return;
       }
 
@@ -63,9 +84,15 @@ export function LeadGate() {
       const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
       setConfirmationResult(result);
       setOtpSent(true);
+      setCountdown(30); // 30 second cooldown
+      setCanResend(false);
     } catch (err: any) {
-      console.error(err);
-      setError("Communication Error: Failed to transmit OTP. Please retry.");
+      console.error("🔥 OTP Transmission Fault:", err);
+      if (err.code === "auth/invalid-api-key") {
+        setError("System Configuration Error: Security keys are not correctly synchronized. Please contact support.");
+      } else {
+        setError("Communication Error: Failed to transmit OTP. Please retry.");
+      }
     } finally {
       setLoading(false);
     }
@@ -272,13 +299,24 @@ export function LeadGate() {
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Access Proposal"}
             </button>
             
-            <button 
-              type="button" 
-              onClick={() => { setOtpSent(false); setOtp(["","","","","",""]); }}
-              className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline"
-            >
-              Modify Contact Details
-            </button>
+            <div className="flex flex-col gap-4 items-center">
+              <button 
+                type="button" 
+                disabled={!canResend || loading}
+                onClick={handleSendOtp}
+                className="text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40 enabled:text-blue-600 dark:enabled:text-blue-400 enabled:hover:underline"
+              >
+                {countdown > 0 ? `Resend code in ${countdown}s` : "Resend Security Code"}
+              </button>
+
+              <button 
+                type="button" 
+                onClick={() => { setOtpSent(false); setOtp(["","","","","",""]); setCountdown(0); }}
+                className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest hover:underline"
+              >
+                Modify Contact Details
+              </button>
+            </div>
           </form>
         )}
       </div>
