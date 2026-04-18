@@ -38,6 +38,16 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   } = params;
 
   // ─────────────────────────────────────────────
+  // STEP 0: Define Brand Tier Modifiers
+  // ─────────────────────────────────────────────
+  const tierSettings = {
+    budget: { prefix: "VALUE:", multiplier: 0.85 },      // 15% Cheaper
+    recommended: { prefix: "PROFESSIONAL:", multiplier: 1.0 }, // Base Price
+    premium: { prefix: "ELITE:", multiplier: 1.25 }      // 25% Premium
+  };
+  const { prefix, multiplier: brandMultiplier } = tierSettings[selection.plan_type] || tierSettings.recommended;
+
+  // ─────────────────────────────────────────────
   // STEP 1: Process Base Hardware Products
   // ─────────────────────────────────────────────
   
@@ -69,13 +79,14 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
   if (selectedCamera) {
     const qty = selection.camera_count;
-    const lineTotal = selectedCamera.unit_price * qty;
+    const adjustedUnitPrice = Math.round(selectedCamera.unit_price * brandMultiplier);
+    const lineTotal = adjustedUnitPrice * qty;
     baseHardwareCost += lineTotal;
     lineItems.push({
       product_id: selectedCamera.id!,
-      display_name: selectedCamera.display_name,
+      display_name: `${prefix} ${selectedCamera.display_name}`,
       qty,
-      unit_price: selectedCamera.unit_price,
+      unit_price: adjustedUnitPrice,
       line_total: lineTotal
     });
   }
@@ -90,13 +101,14 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   const selectedRecorder = recorders.find(r => (r.channels || 0) >= selection.camera_count) || recorders[recorders.length - 1];
 
   if (selectedRecorder) {
-    baseHardwareCost += selectedRecorder.unit_price;
+    const adjustedUnitPrice = Math.round(selectedRecorder.unit_price * brandMultiplier);
+    baseHardwareCost += adjustedUnitPrice;
     lineItems.push({
       product_id: selectedRecorder.id!,
-      display_name: selectedRecorder.display_name,
+      display_name: `${prefix} ${selectedRecorder.display_name}`,
       qty: 1,
-      unit_price: selectedRecorder.unit_price,
-      line_total: selectedRecorder.unit_price
+      unit_price: adjustedUnitPrice,
+      line_total: adjustedUnitPrice
     });
   }
 
@@ -107,8 +119,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     "very_clear": 1.5,   // ~40GB/day
     "crystal_clear": 3  // ~75GB/day 
   };
-  const multiplier = storageMultipliers[selection.picture_quality] || 1;
-  const requiredGB = selection.camera_count * selection.recording_days * (25 * multiplier);
+  const storageReqMultiplier = storageMultipliers[selection.picture_quality] || 1;
+  const requiredGB = selection.camera_count * selection.recording_days * (25 * storageReqMultiplier);
   const requiredTB = requiredGB / 1000;
 
   const hdds = products.filter(p => p.category === "accessory" && p.is_active && p.technical_name.toLowerCase().includes("hdd"));
@@ -122,13 +134,14 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   const selectedHdd = hdds.find(s => getTB(s) >= requiredTB) || hdds[hdds.length - 1];
 
   if (selectedHdd) {
-    baseHardwareCost += selectedHdd.unit_price;
+    const adjustedUnitPrice = Math.round(selectedHdd.unit_price * brandMultiplier);
+    baseHardwareCost += adjustedUnitPrice;
     lineItems.push({
       product_id: selectedHdd.id!,
-      display_name: selectedHdd.display_name,
+      display_name: `${prefix} ${selectedHdd.display_name}`,
       qty: 1,
-      unit_price: selectedHdd.unit_price,
-      line_total: selectedHdd.unit_price
+      unit_price: adjustedUnitPrice,
+      line_total: adjustedUnitPrice
     });
   }
 

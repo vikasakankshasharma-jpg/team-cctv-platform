@@ -74,17 +74,6 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
     const calcTier = (type: "budget" | "recommended" | "premium"): PricingResult => {
       const variation = { ...selection, plan_type: type };
       
-      const currentQualityIdx = QUALITY_TIERS.indexOf(selection.picture_quality);
-      const currentStorageIdx = STORAGE_TIERS.indexOf(selection.recording_days);
-
-      if (type === "budget") {
-        variation.picture_quality = QUALITY_TIERS[Math.max(0, currentQualityIdx - 1)];
-        variation.recording_days = STORAGE_TIERS[Math.max(0, currentStorageIdx - 1)];
-      } else if (type === "premium") {
-        variation.picture_quality = QUALITY_TIERS[Math.min(QUALITY_TIERS.length - 1, currentQualityIdx + 1)];
-        variation.recording_days = STORAGE_TIERS[Math.min(STORAGE_TIERS.length - 1, currentStorageIdx + 1)];
-      }
-
       return calculatePricing({
         selection: variation,
         products: pricingCache.products,
