@@ -51,12 +51,14 @@ const firebaseConfig = {
 // ─────────────────────────────────────────────
 
 function getClientApp(): FirebaseApp {
-  if (getApps().length > 0) {
-    return getApp();
+  // Always initialize with hard-coded production config to avoid env-var injection issues.
+  // Using a try-catch to handle the "already exists" case safely during hot-reloads.
+  try {
+    return initializeApp(firebaseConfig);
+  } catch (error) {
+    if (getApps().length > 0) return getApp();
+    throw error;
   }
-
-  // Always use the hard-coded config in production to prevent environment leak issues.
-  return initializeApp(firebaseConfig);
 }
 
 /** Firebase Client App instance */
