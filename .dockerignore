@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+.firebase
+.vercel
+*.log
+.env.local
+.vscode
