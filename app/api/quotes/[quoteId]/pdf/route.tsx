@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb, adminStorage } from "@/lib/firebase-admin";
-import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
+
+const SETTINGS_DOC_ID = "app_config";
 import { renderToStream } from "@react-pdf/renderer";
 import { QuotePDFDocument } from "@/lib/pdf-generator";
 import type { Lead, Quote, AppSettings } from "@/types";

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
+
+export const dynamic = "force-dynamic";
+
+const SETTINGS_DOC_ID = "app_config";
 
 export async function GET() {
   try {
