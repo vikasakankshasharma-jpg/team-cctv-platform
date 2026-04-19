@@ -41,9 +41,11 @@ export default async function SettingsAdminPage() {
     const docRef = adminDb.collection("settings").doc(SETTINGS_DOC_ID);
     const snapshot = await docRef.get();
     if (snapshot.exists) {
+      const data = snapshot.data() as any;
       settings = {
         ...defaultSettings,
-        ...(snapshot.data() as AppSettings)
+        ...data,
+        updated_at: data.updated_at?.toDate?.()?.toISOString() || data.updated_at || null,
       };
     }
   } catch (err: any) {

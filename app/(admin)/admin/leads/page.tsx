@@ -18,10 +18,16 @@ export default async function LeadsAdminPage() {
     .limit(100)
     .get();
 
-  const leads = snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...(doc.data() as Omit<Lead, "id">)
-  })) as Lead[];
+  const leads = snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      created_at: data.created_at?.toDate?.()?.toISOString() || data.created_at || null,
+      updated_at: data.updated_at?.toDate?.()?.toISOString() || data.updated_at || null,
+      site_visit_date: data.site_visit_date?.toDate?.()?.toISOString() || data.site_visit_date || null
+    };
+  }) as Lead[];
 
   const newCount = leads.filter(l => l.status === "new").length;
 
