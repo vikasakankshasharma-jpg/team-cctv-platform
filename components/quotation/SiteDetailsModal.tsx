@@ -18,7 +18,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
   const [fullAddress, setFullAddress] = useState("");
   const [coords, setCoords] = useState({ lat: 19.0760, lng: 72.8777 });
   const [isMapReady, setIsMapReady] = useState(false);
-  const [postOffices, setPostOffices] = useState<any[]>([]);
+  const [postOffices, setPostOffices] = useState<unknown[]>([]);
   const [selectedPostOffice, setSelectedPostOffice] = useState("");
   const [areaInfo, setAreaInfo] = useState("");
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
@@ -37,13 +37,13 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
     }
   }, [loadError]);
 
-  const [map, setMap] = useState(null);
+  const [map, setMap] = useState<unknown>(null);
 
-  const onLoad = useCallback(function callback(map: any) {
+  const onLoad = useCallback(function callback(map: unknown) {
     setMap(map);
   }, []);
 
-  const onUnmount = useCallback(function callback(map: any) {
+  const onUnmount = useCallback(function callback(map: unknown) {
     setMap(null);
   }, []);
 
@@ -99,7 +99,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
       setAreaInfo("");
       setSelectedPostOffice("");
     }
-  }, [pincode]);
+  }, [pincode, isFetchingPincode]);
 
   const handleConfirm = () => {
     let finalAddress = fullAddress;

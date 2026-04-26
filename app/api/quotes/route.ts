@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Simultaneously update Lead with address and status if provided
-    const updatePayload: any = { status: "quoted" };
+    const updatePayload: unknown = { status: "quoted" };
     if (address) updatePayload.address = address;
     
     const leadPromise = leadRef.update(updatePayload);
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     await Promise.all([quotePromise, leadPromise]);
 
     return NextResponse.json({ id: quoteRef.id, message: "Quote saved successfully" }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error saving quote:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

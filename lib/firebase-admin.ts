@@ -77,12 +77,13 @@ function getAdminApp(): App {
       }),
       storageBucket,
     });
-  } catch (error: any) {
+  } catch (error) {
+    const err = error as Error;
     if (process.env.NODE_ENV === "production" && projectId) {
        console.log("🚀 Cert failed. Falling back to ADC in production.");
        return initializeApp({ projectId, storageBucket });
     }
-    console.warn("⚠️ Firebase Admin Key Invalid. Initializing unauthenticated mock app.", error.message);
+    console.warn("⚠️ Firebase Admin Key Invalid. Initializing unauthenticated mock app.", err.message);
     return initializeApp({ projectId }, "mock-app");
   }
 }

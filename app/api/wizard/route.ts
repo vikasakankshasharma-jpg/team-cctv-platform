@@ -71,7 +71,7 @@ export async function GET(request: Request) {
         count: wizardSteps.length
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ Critical System Fault in Wizard API:", error.message);
     // Explicitly return the fallback if Firebase connectivity is lost
     return NextResponse.json({ 

@@ -11,7 +11,7 @@ const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
  * Global Tracking Utility
  * Dispatches events to both GA4 and Meta Pixel simultaneously.
  */
-export const trackEvent = (eventName: string, params: Record<string, any> = {}) => {
+export const trackEvent = (eventName: string, params: Record<string, unknown> = {}) => {
   if (typeof window === "undefined") return;
 
   // 1. Google Analytics 4
@@ -37,9 +37,9 @@ export const trackEvent = (eventName: string, params: Record<string, any> = {}) 
 
 declare global {
   interface Window {
-    gtag: (...args: any[]) => void;
-    fbq: (...args: any[]) => void;
-    dataLayer: any[];
+    gtag: (...args: unknown[]) => void;
+    fbq: (...args: unknown[]) => void;
+    dataLayer: unknown[];
   }
 }
 

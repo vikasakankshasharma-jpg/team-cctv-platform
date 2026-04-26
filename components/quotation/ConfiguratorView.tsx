@@ -332,7 +332,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               <div className="relative">
                 <select 
                   value={selection.picture_quality}
-                  onChange={(e) => updateSelection({ picture_quality: e.target.value as any })}
+                  onChange={(e) => updateSelection({ picture_quality: e.target.value as "good" | "very_clear" | "crystal_clear" })}
                   className="w-full bg-zinc-50 border border-zinc-100 rounded-[24px] px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-900 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer"
                 >
                   <option value="good">1080P Full HD (Standard)</option>
@@ -349,7 +349,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                 {[7, 15, 30].map(days => (
                   <button
                     key={days}
-                    onClick={() => updateSelection({ recording_days: days as any })}
+                    onClick={() => updateSelection({ recording_days: days as 7 | 15 | 30 })}
                     className={`h-14 rounded-2xl font-black text-xs transition-all ${
                       selection.recording_days === days 
                       ? "bg-zinc-900 text-white shadow-xl shadow-zinc-900/10" 

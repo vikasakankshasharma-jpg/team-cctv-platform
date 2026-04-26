@@ -1,6 +1,6 @@
 export type Technology = "HD" | "IP";
 export type PlanType = "budget" | "recommended" | "premium";
-export type WizardAnswers = Record<string, any>;
+export type WizardAnswers = Record<string, unknown>;
 
 export interface Address {
   pincode: string;
@@ -18,9 +18,9 @@ export interface Booking {
   lead_id: string;
   quote_id: string;
   address: Address;
-  scheduled_at?: any;
+  scheduled_at?: unknown;
   status: "pending" | "confirmed" | "completed" | "cancelled";
-  created_at: any;
+  created_at: unknown;
 }
 
 export interface Lead {
@@ -32,12 +32,12 @@ export interface Lead {
   technology_choice: "HD" | "IP";
   cabling_done: boolean;
   address?: Address; // Added for Site Details
-  wizard_answers: Record<string, any>;
+  wizard_answers: Record<string, unknown>;
   referral_code?: string | null;
   status: "new" | "contacted" | "site_visit" | "quoted" | "won" | "lost";
-  created_at: any;
-  updated_at?: any;
-  site_visit_date?: any;
+  created_at: unknown;
+  updated_at?: unknown;
+  site_visit_date?: unknown;
   promoter_id?: string | null;
 }
 
@@ -55,8 +55,8 @@ export interface Product {
   // NEW: Logic Hardening Fields
   resolution_tier?: "good" | "very_clear" | "crystal_clear";
   channels?: number; // Only for Recorders
-  created_at?: any;
-  updated_at?: any;
+  created_at?: unknown;
+  updated_at?: unknown;
 }
 
 export interface Addon {
@@ -67,8 +67,8 @@ export interface Addon {
   
   // NEW: Multiplier logic
   unit_multiplier?: "none" | "camera_count";
-  created_at?: any;
-  updated_at?: any;
+  created_at?: unknown;
+  updated_at?: unknown;
 }
 
 export interface AddonRule {
@@ -159,7 +159,7 @@ export interface AppSettings {
   tier_premium_label: string;
   tier_premium_multiplier: number;
 
-  updated_at?: any;
+  updated_at?: unknown;
   updated_by?: string | null;
   admin_notification_phone?: string;
 }
@@ -178,8 +178,8 @@ export interface Promoter {
   total_ex_tax_business: number;
   discount_type?: "flat" | "percent";
   discount_value?: number;
-  created_at?: any;
-  updated_at?: any;
+  created_at?: unknown;
+  updated_at?: unknown;
 }
 
 export interface WizardOption {
@@ -205,7 +205,7 @@ export interface WizardStep {
   description: string;
   position: number;
   is_active: boolean;
-  created_at: any;
+  created_at: unknown;
   questions?: WizardQuestion[];
 }
 
@@ -217,9 +217,9 @@ export interface CommissionRecord {
   ex_tax_amount: number;
   commission_amount: number;
   status: "pending" | "paid";
-  created_at: any;
-  updated_at: any;
-  paid_at?: any;
+  created_at: unknown;
+  updated_at: unknown;
+  paid_at?: unknown;
 }
 
 export interface CommissionSlab {

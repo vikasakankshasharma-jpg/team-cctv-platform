@@ -5,7 +5,7 @@ import * as admin from "firebase-admin";
  */
 export interface NotificationProvider {
   name: string;
-  sendAdminAlert(title: string, message: string, data?: any): Promise<boolean>;
+  sendAdminAlert(title: string, message: string, data?: unknown): Promise<boolean>;
 }
 
 /**
@@ -14,7 +14,7 @@ export interface NotificationProvider {
 class ConsoleNotificationProvider implements NotificationProvider {
   name = "ConsoleLog";
 
-  async sendAdminAlert(title: string, message: string, data?: any): Promise<boolean> {
+  async sendAdminAlert(title: string, message: string, data?: unknown): Promise<boolean> {
     console.log(`\n===========================================`);
     console.log(`🔔 [ADMIN ALERT] ${title}`);
     console.log(`===========================================`);
@@ -34,7 +34,7 @@ class ConsoleNotificationProvider implements NotificationProvider {
 class WhatsAppNotificationProvider implements NotificationProvider {
   name = "WhatsAppAPI";
 
-  async sendAdminAlert(title: string, message: string, data?: any): Promise<boolean> {
+  async sendAdminAlert(title: string, message: string, data?: unknown): Promise<boolean> {
     // 1. Fetch admin phone number from settings
     const db = admin.firestore();
     const settingsSnap = await db.collection("settings").doc("app_config").get();
@@ -111,7 +111,7 @@ class NotificationServiceClass {
   /**
    * Broadcast an alert to all registered providers.
    */
-  public async notifyAdmin(title: string, message: string, data?: any): Promise<void> {
+  public async notifyAdmin(title: string, message: string, data?: unknown): Promise<void> {
     const promises = this.providers.map(async (provider) => {
       try {
         await provider.sendAdminAlert(title, message, data);

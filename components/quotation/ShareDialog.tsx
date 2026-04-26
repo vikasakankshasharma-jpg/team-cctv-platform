@@ -32,20 +32,23 @@ export function ShareDialog({
   const [sharing, setSharing] = useState(false);
   const [shared, setShared] = useState(false);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const quoteUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/quote/${leadId}`
       : `https://cctvquotation.com/quote/${leadId}`;
 
-  const buildMessage = (recipientName?: string) => {
-    let msg = whatsappTemplate
+  const buildMessage = useCallback((recipientName?: string) => {
+    const msg = whatsappTemplate
       .replace(/\{\{customer_name\}\}/g, recipientName || customerName)
       .replace(/\{\{company_name\}\}/g, "TEAM CCTV")
       .replace(/\{\{total_amount\}\}/g, `₹${lowestPrice.toLocaleString("en-IN")}`)
       .replace(/\{\{pdf_url\}\}/g, pdfUrl || quoteUrl);
     return encodeURIComponent(msg);
-  };
+  }, [whatsappTemplate, customerName, lowestPrice, pdfUrl, quoteUrl]);
 
   const shareToNumber = async (number: string, isOtherPerson: boolean) => {
     setSharing(true);
@@ -116,7 +119,7 @@ export function ShareDialog({
             <div className="text-center py-4 space-y-3 animate-in fade-in zoom-in duration-300">
               <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
               <p className="font-black text-zinc-900 text-lg tracking-tight">Quote Shared!</p>
-              <p className="text-zinc-400 text-sm">We've noted the recipient in your quote record.</p>
+              <p className="text-zinc-400 text-sm">We&apos;ve noted the recipient in your quote record.</p>
               <button
                 onClick={onClose}
                 className="w-full h-12 bg-zinc-900 text-white font-black uppercase text-xs tracking-widest rounded-2xl mt-4"

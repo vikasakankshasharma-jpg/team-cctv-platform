@@ -5,7 +5,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "fi
 import { auth } from "@/lib/firebase-client";
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/store/wizard";
-import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, Lock, Key } from "lucide-react";
+import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 
 declare global {
@@ -24,7 +24,7 @@ export function LeadGate() {
   
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
-  const [referralCode, setReferralCode] = useState("");
+  const referralCode = ""; // referralCode input to be implemented
   
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -56,7 +56,8 @@ export function LeadGate() {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
           size: "invisible",
         });
-      } catch (err: any) {
+      } catch (error) {
+        const err = error as Error;
         console.error("🔒 Recaptcha Initialization Fault:", err);
         setError("Security System Error: Recaptcha failed to initialize. Please check your connection or refresh.");
       }
@@ -94,7 +95,8 @@ export function LeadGate() {
       setOtpSent(true);
       setCountdown(30); // 30 second cooldown
       setCanResend(false);
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as { code?: string; message?: string };
       console.error("🔥 OTP Transmission Fault:", err);
       if (err.code === "auth/invalid-api-key" || err.message?.includes("invalid-api-key")) {
         setError("System Configuration Error: Security keys are not correctly synchronized. Please contact our tech team.");
@@ -145,7 +147,7 @@ export function LeadGate() {
     try {
       const result = await confirmationResult.confirm(fullOtp);
       finalizeLead(result.user.uid);
-    } catch (err: any) {
+    } catch (err) {
       setError("Security Violation: Invalid or expired OTP code.");
     } finally {
       setLoading(false);
@@ -191,7 +193,8 @@ export function LeadGate() {
       });
 
       router.push(`/quote/${resData.id}`);
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error;
       setError(err.message);
     }
   };

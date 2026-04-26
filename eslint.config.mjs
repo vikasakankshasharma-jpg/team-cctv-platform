@@ -13,7 +13,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Platform specific:
     ".firebase/**",
-    "scratch/**"
+    "scratch/**",
+    "functions/lib/**"
   ]),
 ]);
 

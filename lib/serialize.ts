@@ -16,19 +16,21 @@ export function serializeDoc<T>(data: T): T {
 
   // Handle Objects
   if (typeof data === "object") {
+    const obj = data as Record<string, unknown>;
+
     // 1. Handle Firestore Timestamp (check for toDate or _seconds)
-    if ((data as any).toDate && typeof (data as any).toDate === "function") {
-      return (data as any).toDate().toISOString() as unknown as T;
+    if (typeof obj.toDate === "function") {
+      return (obj.toDate as () => Date)().toISOString() as unknown as T;
     }
     
-    if ((data as any)._seconds !== undefined) {
+    if (obj._seconds !== undefined) {
       // It's a raw timestamp from admin SDK
-      return new Date((data as any)._seconds * 1000).toISOString() as unknown as T;
+      return new Date((obj._seconds as number) * 1000).toISOString() as unknown as T;
     }
 
     // 2. Handle standard objects (deep serialize)
-    const serialized: any = {};
-    for (const [key, value] of Object.entries(data)) {
+    const serialized: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
       serialized[key] = serializeDoc(value);
     }
     return serialized as T;

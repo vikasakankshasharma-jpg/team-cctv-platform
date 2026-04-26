@@ -212,7 +212,7 @@ export async function GET() {
 
     await batch.commit();
     return NextResponse.json({ message: "Elite Readiness Data Seeding Successful" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Seeding Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

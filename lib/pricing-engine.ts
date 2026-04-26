@@ -54,7 +54,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       multiplier: settings.tier_premium_multiplier || 1.25 
     }
   };
-  const { prefix, multiplier: brandMultiplier } = tierSettings[selection.plan_type] || tierSettings.recommended;
+  const { multiplier: brandMultiplier } = tierSettings[selection.plan_type] || tierSettings.recommended;
 
   // ─────────────────────────────────────────────
   // STEP 1: Process Base Hardware Products
@@ -204,7 +204,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   for (const addon of addons) {
     if (!addon.is_active) continue;
     const ruleResult = evaluatedAddonRules[addon.id!];
-    let action = ruleResult ? ruleResult.action : "show_optional";
+    const action = ruleResult ? ruleResult.action : "show_optional";
 
     let include = false;
     if (action === "show_mandatory") {
@@ -227,8 +227,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   }
 
   const grossSubtotal = baseHardwareCost + wireCost + laborCost + addonsTotal;
-  let referralDiscount = Math.round(grossSubtotal * (referralDiscountPercent / 100)) + referralDiscountFlat;
-  let netTaxableAmount = Math.max(0, grossSubtotal - referralDiscount);
+  const referralDiscount = Math.round(grossSubtotal * (referralDiscountPercent / 100)) + referralDiscountFlat;
+  const netTaxableAmount = Math.max(0, grossSubtotal - referralDiscount);
   const gstAmount = Math.round(netTaxableAmount * (settings.gst_rate / 100));
   const totalPayable = netTaxableAmount + gstAmount;
 

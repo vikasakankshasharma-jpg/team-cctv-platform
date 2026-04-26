@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     const leadData = validation.data;
     let promoterId: string | null = null;
-    let discountApplied = 0;
+    const discountApplied = 0;
 
     // Validate referral code if provided
     if (leadData.referral_code) {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ id: newLeadRef.id, message: "Lead created successfully" }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating lead:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

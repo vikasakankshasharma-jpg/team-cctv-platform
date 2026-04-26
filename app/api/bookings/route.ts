@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ id: bookingRef.id, message: "Site visit booked successfully" }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating booking:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

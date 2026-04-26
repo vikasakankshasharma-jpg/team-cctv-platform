@@ -22,7 +22,7 @@ export default function TermsOfServicePage() {
           <section className="mb-12">
             <h2 className="text-2xl font-bold mb-4">1. Agreement to Terms</h2>
             <p>
-              By accessing and using cctvquotation.com (the "Site") and generating a quotation using our Smart Security Configurator, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, please do not use our services.
+              By accessing and using cctvquotation.com (the &quot;Site&quot;) and generating a quotation using our Smart Security Configurator, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, please do not use our services.
             </p>
           </section>
 
@@ -36,7 +36,7 @@ export default function TermsOfServicePage() {
           <section className="mb-12">
             <h2 className="text-2xl font-bold mb-4">3. Quotation Accuracy</h2>
             <p>
-              While we strive to provide the most accurate quotations possible, the final price of installation may vary by ±5% subject to a physical site inspection. Final pricing is confirmed only after our technical team surveys your property in Jaipur.
+              While we strive to provide the most accurate quotations possible, the final price of installation may vary by &plusmn;5% subject to a physical site inspection. Final pricing is confirmed only after our technical team surveys your property in Jaipur.
             </p>
           </section>
 

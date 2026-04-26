@@ -19,16 +19,13 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import {
-  getFirestore,
-  type Firestore,
+  getFirestore
 } from "firebase/firestore";
 import {
-  getAuth,
-  type Auth,
+  getAuth
 } from "firebase/auth";
 import {
-  getStorage,
-  type FirebaseStorage,
+  getStorage
 } from "firebase/storage";
 
 // ─────────────────────────────────────────────
@@ -64,8 +61,9 @@ function getClientApp(): FirebaseApp {
     }
 
     return initializeApp(firebaseConfig);
-  } catch (error: any) {
-    console.error("🔥 Firebase Init Fault:", error.message);
+  } catch (error) {
+    const err = error as Error;
+    console.error("🔥 Firebase Init Fault:", err.message);
     // If we are in the browser, specifically check for already-initialized errors
     const apps = getApps();
     if (apps.length > 0) return getApp();

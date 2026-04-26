@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     });
 
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Session creation error:", error);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
