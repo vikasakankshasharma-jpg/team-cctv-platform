@@ -12,22 +12,38 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function LeadsAdminPage() {
-  const snapshot = await adminDb.collection("leads")
+export default async function LeadsAdminPage({
+  searchParams,
+}: {
+  searchParams: { page?: string; lastId?: string; lastDate?: string };
+}) {
+  const PAGE_SIZE = 25;
+  const lastDate = searchParams.lastDate ? new Date(searchParams.lastDate) : null;
+  
+  let query = adminDb.collection("leads")
     .orderBy("created_at", "desc")
-    .limit(100)
-    .get();
+    .limit(PAGE_SIZE);
+
+  if (lastDate) {
+    query = query.startAfter(lastDate);
+  }
+
+  const snapshot = await query.get();
 
   const leads = snapshot.docs.map(doc => {
-    const data = doc.data();
+    const data = doc.data() as Lead;
     return {
-      id: doc.id,
       ...data,
+      id: doc.id,
       created_at: data.created_at?.toDate?.()?.toISOString() || data.created_at || null,
       updated_at: data.updated_at?.toDate?.()?.toISOString() || data.updated_at || null,
       site_visit_date: data.site_visit_date?.toDate?.()?.toISOString() || data.site_visit_date || null
     };
-  }) as Lead[];
+  });
+
+  const nextCursor = snapshot.docs.length === PAGE_SIZE 
+    ? snapshot.docs[snapshot.docs.length - 1].data().created_at?.toDate?.()?.toISOString() 
+    : null;
 
   const newCount = leads.filter(l => l.status === "new").length;
 
@@ -41,7 +57,7 @@ export default async function LeadsAdminPage() {
       />
       
       <div className="pb-20">
-        <LeadsClient initialLeads={leads} />
+        <LeadsClient initialLeads={leads} nextCursor={nextCursor} />
       </div>
     </div>
   );

@@ -1,12 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import { rateLimit } from "@/lib/rate-limit";
 
 /** Note: In a true zero-trust model, we would recalculate the pricing here on the server
  * using the incoming base selections. For this scalable implementation, we receive the
  * calculated payload from the UI (which the customer has approved) and save it directly.
  * Before moving to production processing / payment gateways, ensure server-side price validation. 
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const { success } = rateLimit(request);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const body = await request.json();
     const { lead_id, quoteData, address } = body;

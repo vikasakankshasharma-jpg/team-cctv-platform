@@ -97,10 +97,10 @@ export function PromotersClient({ initialPromoters }: PromotersClientProps) {
                   <tr key={agent.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all group/row">
                     <td className="px-8 py-6">
                       <div className="font-black text-zinc-900 dark:text-white text-base leading-tight group-hover/row:text-amber-600 dark:group-hover/row:text-amber-500 transition-colors uppercase tracking-tight">{agent.name}</div>
-                      {agent.mobile && (
+                      {agent.mobile_number && (
                         <div className="flex items-center gap-2 text-[10px] text-zinc-400 dark:text-zinc-600 font-bold mt-2 uppercase tracking-widest">
                           <Phone className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" />
-                          +91 {agent.mobile}
+                          +91 {agent.mobile_number}
                         </div>
                       )}
                     </td>

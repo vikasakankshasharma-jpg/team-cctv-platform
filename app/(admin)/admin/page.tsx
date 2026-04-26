@@ -5,6 +5,7 @@ import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard } from "luc
 import { DashboardClient, type WeeklyBucket, type SourceBreakdown, type RecentActivity } from "@/components/admin/DashboardClient";
 import { PageHeader } from "@/components/admin/PageHeader";
 import type { Metadata } from "next";
+import type { Promoter, Lead } from "@/types";
 
 export const metadata: Metadata = {
   title: "Intelligence Dashboard | Admin Command Centre",
@@ -39,9 +40,11 @@ export default async function AdminDashboard() {
   const wonLeadsCount = wonLeadsCountRes.data().count;
   const conversionRate = leadsCount > 0 ? Math.round((wonLeadsCount / leadsCount) * 100) : 0;
 
+  const wonQuotesRef = adminDb.collection("commission_records");
+  const revenueSnap = await wonQuotesRef.get();
   let totalExTaxBusiness = 0;
-  promotersSnapshot.docs.forEach((doc) => {
-    totalExTaxBusiness += doc.data().total_ex_tax_business || 0;
+  revenueSnap.docs.forEach(doc => {
+    totalExTaxBusiness += doc.data().ex_tax_amount || 0;
   });
 
   // Trend logic...
@@ -101,11 +104,11 @@ export default async function AdminDashboard() {
   ];
 
   const recentLeads: RecentActivity[] = recentLeadsSnap.docs.map((doc) => {
-    const d = doc.data();
+    const d = doc.data() as Lead;
     return {
       customer_name: d.customer_name ?? "Unknown",
       status: d.status ?? "new",
-      referral_code: d.referral_code ?? null,
+      // referral_code: d.referral_code ?? null, // Removed as it's not in RecentActivity interface
       created_at: d.created_at?.toDate?.()?.toISOString() ?? "",
     };
   });

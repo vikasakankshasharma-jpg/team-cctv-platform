@@ -28,9 +28,13 @@ export function SiteFooter() {
             <Lock className="w-4 h-4 text-emerald-500" />
             <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">ISO 27001 Certified Planner</span>
           </div>
+          <div className="flex gap-6 items-center">
+             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Service Hubs:</span>
+             <Link href="/jaipur" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Jaipur</Link>
+          </div>
           <div className="flex gap-8">
-            <Link href="#" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Privacy Policy</Link>
-            <Link href="#" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Terms of Service</Link>
+            <Link href="/privacy-policy" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Privacy Policy</Link>
+            <Link href="/terms-of-service" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Terms of Service</Link>
             <Link href="/admin/login" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Partner Login</Link>
           </div>
           <p className="text-[10px] font-bold text-zinc-300 dark:text-zinc-700 uppercase tracking-[0.2em] mt-4">

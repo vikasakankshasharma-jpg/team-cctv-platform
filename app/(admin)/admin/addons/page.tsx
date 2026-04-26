@@ -13,10 +13,15 @@ export const dynamic = "force-dynamic";
 export default async function AddonsAdminPage() {
   const snapshot = await adminDb.collection("addons").where("is_deleted", "==", false).get();
   
-  const addons = snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...(doc.data() as Omit<Addon, "id">)
-  }));
+  const addons = snapshot.docs.map(doc => {
+    const data = doc.data() as Addon;
+    return {
+      ...data,
+      id: doc.id,
+      updated_at: data.updated_at?.toDate?.()?.toISOString() || data.updated_at || null,
+      created_at: data.created_at?.toDate?.()?.toISOString() || data.created_at || null,
+    };
+  });
 
   // Sort by name
   addons.sort((a, b) => a.display_name.localeCompare(b.display_name));

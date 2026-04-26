@@ -19,3 +19,26 @@ export async function updateLeadStatus(leadId: string, status: string) {
   revalidatePath("/admin/leads");
   return { success: true };
 }
+
+/**
+ * Fetches all quotes associated with a specific lead
+ */
+export async function getLeadQuotes(leadId: string) {
+  await requireAdmin();
+
+  const snapshot = await adminDb
+    .collection("leads")
+    .doc(leadId)
+    .collection("quotes")
+    .orderBy("created_at", "desc")
+    .get();
+
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      created_at: data.created_at?.toDate?.()?.toISOString() || data.created_at || null,
+    };
+  });
+}

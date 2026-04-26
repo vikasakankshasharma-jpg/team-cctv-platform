@@ -33,18 +33,18 @@ export default function LandingPage() {
           
           <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-12 shadow-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
             <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-500" />
-            <span>CCTV Quotation Home</span>
+            <span>Jaipur's #1 CCTV Estimator</span>
             <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-            <span className="text-blue-600 dark:text-emerald-500">Live Status Active</span>
+            <span className="text-blue-600 dark:text-emerald-500">100% Free & Instant</span>
           </div>
 
           <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-10 leading-[0.85] animate-in fade-in slide-in-from-bottom-8 duration-1000">
             High-Quality Security. <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">No Hidden Costs.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">For Your Jaipur Property.</span>
           </h1>
 
           <p className="text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-2xl mb-16 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
-             CCTV Quotation helps you plan your home or office security in seconds. No complex technical words. Just high-quality camera systems made simple for you.
+             Get an exact price for your CCTV setup in under 2 minutes. No technical knowledge needed—just answer a few simple questions and we'll do the rest.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 items-center w-full sm:w-auto animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
@@ -52,13 +52,13 @@ export default function LandingPage() {
               href="/wizard"
               className="group relative inline-flex justify-center items-center gap-5 px-12 py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[32px] font-black text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-2 active:scale-95"
             >
-              Get Free Quote
+              Get CCTV Quotation Online
               <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
             </Link>
             
             <div className="flex flex-col text-left px-4">
-                <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">Instant Analysis</span>
-                <span className="text-sm font-bold text-zinc-900 dark:text-zinc-300">Created in seconds</span>
+                <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">Instant Result</span>
+                <span className="text-sm font-bold text-zinc-900 dark:text-zinc-300">Ready in 2 minutes</span>
             </div>
           </div>
         </div>
@@ -79,9 +79,9 @@ export default function LandingPage() {
                
                <div className="space-y-8">
                  {[
-                   { icon: Target, title: "Perfect View", desc: "Our system looks at your building to make sure every corner is covered with no blind spots." },
-                   { icon: Cpu, title: "Best Technology", desc: "Instantly compare different camera types like HD and IP based on what you need." },
-                   { icon: Layers, title: "Simple Plans", desc: "Get three clear options (Budget, Normal, and Best) made specifically for your building." }
+                   { icon: Target, title: "Perfect Coverage", desc: "We make sure every corner of your property is covered, leaving no blind spots for complete peace of mind." },
+                   { icon: Cpu, title: "Right Cameras", desc: "We'll suggest the best camera quality for your specific needs, whether it's a small home or a large warehouse." },
+                   { icon: Layers, title: "Clear Pricing", desc: "Get three easy-to-understand price options (Value, Professional, and Elite) so you can choose what fits your budget." }
                  ].map((item, i) => (
                    <div key={i} className="flex gap-6 group">
                       <div className="w-14 h-14 rounded-[20px] bg-white/5 border border-white/10 flex items-center justify-center text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-2xl">
@@ -115,15 +115,15 @@ export default function LandingPage() {
                         <div className="flex items-center gap-4">
                            <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-500"><Globe className="w-5 h-5"/></div>
                            <div>
-                              <div className="text-sm font-black text-white">Multi-Location Sync</div>
-                              <div className="text-[10px] font-bold text-zinc-500">Working in all rooms</div>
+                              <div className="text-sm font-black text-white">View on Your Phone</div>
+                              <div className="text-[10px] font-bold text-zinc-500">Check your cameras from anywhere</div>
                            </div>
                         </div>
                         <div className="flex items-center gap-4">
                            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-500"><Zap className="w-5 h-5"/></div>
                            <div>
-                              <div className="text-sm font-black text-white">Instant Power Delivery</div>
-                              <div className="text-[10px] font-bold text-zinc-500">Easy one-wire installation</div>
+                              <div className="text-sm font-black text-white">Clean Installation</div>
+                              <div className="text-[10px] font-bold text-zinc-500">Neat wiring and professional finish</div>
                            </div>
                         </div>
                      </div>
@@ -142,20 +142,58 @@ export default function LandingPage() {
                 <Zap className="w-10 h-10 fill-current" />
             </div>
             <h2 className="text-6xl md:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter mb-8 leading-[0.85]">Secure your space <br className="hidden md:block"/> today.</h2>
-            <p className="text-zinc-500 dark:text-zinc-400 text-xl md:text-2xl mb-16 font-medium max-w-2xl text-center">Join thousands of people who made their home and business safe with CCTV Quotation.</p>
+            <p className="text-zinc-500 dark:text-zinc-400 text-xl md:text-2xl mb-16 font-medium max-w-2xl text-center">2-minute setup. No hidden costs. 18% GST included in all plans.</p>
             
             <Link 
               href="/wizard"
               className="group relative flex items-center gap-6 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white px-14 py-8 rounded-[36px] font-black text-2xl transition-all shadow-[0_32px_64px_rgba(0,0,0,0.15)] dark:shadow-blue-500/30 hover:-translate-y-2"
             >
-              Get Free Quote
+              Get CCTV Quotation Online
               <ChevronRight className="w-8 h-8 group-hover:translate-x-2 transition-transform duration-300" />
             </Link>
 
-            <div className="mt-20 flex items-center gap-8 grayscale opacity-50 dark:opacity-30">
-               <Shield className="w-12 h-12" />
-               <Star className="w-12 h-12" />
-               <Award className="w-12 h-12" />
+            {/* FAQ Section */}
+            <div className="mt-40 w-full max-w-5xl mx-auto text-left">
+              <div className="flex flex-col items-center mb-20">
+                <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4 text-center">Support & Clarification</span>
+                <h3 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter text-center">Frequently Asked Questions</h3>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-10">
+                {[
+                  { q: "Is GST included in the quote price?", a: "Yes. All our quotes include 18% GST. The price you see is the final CCTV with GST price you pay with no surprises." },
+                  { q: "Does the price include installation?", a: "Yes. Labor and wiring costs are calculated based on your property and included in the final CCTV camera price with installation." },
+                  { q: "How much does a 4 camera CCTV system cost in Jaipur?", a: `Prices are dynamic. As of ${new Date().toLocaleString('en-US', { month: 'short', year: 'numeric' })}, a standard 4-camera CP Plus system with professional installation typically ranges from ₹12,000 to ₹18,000 depending on wiring length and camera resolution.` },
+                  { q: "Are your cameras STQC compliant and government approved?", a: "Yes. We only install STQC compliant hardware like CP Plus. We strictly do not install banned or non-compliant brands (such as Hikvision) for new installations to ensure your security and data privacy." },
+                ].map((faq, i) => (
+                  <div key={i} className="space-y-4 p-8 rounded-[32px] bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 shadow-inner">
+                    <h4 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight">{faq.q}</h4>
+                    <p className="text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed text-sm">{faq.a}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-20 flex flex-col items-center gap-8">
+               <div className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Trusted Hardware Partners & Verified Installs</div>
+               <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 grayscale opacity-60 dark:opacity-50">
+                 <div className="flex items-center gap-3">
+                   <Shield className="w-8 h-8" />
+                   <span className="font-black text-xl tracking-tight">CP PLUS</span>
+                 </div>
+                 <div className="flex items-center gap-3">
+                   <ShieldCheck className="w-8 h-8" />
+                   <span className="font-black text-xl tracking-tight">STQC APPROVED</span>
+                 </div>
+                 <div className="flex items-center gap-3">
+                   <Award className="w-8 h-8" />
+                   <span className="font-black text-xl tracking-tight">SEAGATE</span>
+                 </div>
+               </div>
+               <div className="mt-4 px-6 py-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+                 <Star className="w-4 h-4 fill-emerald-500/50" />
+                 <span>Serving 500+ Properties Across Jaipur, Rajasthan</span>
+               </div>
             </div>
         </div>
       </section>

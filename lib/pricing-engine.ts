@@ -104,7 +104,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     baseHardwareCost += lineTotal;
     lineItems.push({
       product_id: selectedCamera.id!,
-      display_name: `${prefix} ${selectedCamera.display_name}`,
+      display_name: selectedCamera.display_name,
       qty,
       unit_price: adjustedUnitPrice,
       line_total: lineTotal
@@ -125,7 +125,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     baseHardwareCost += adjustedUnitPrice;
     lineItems.push({
       product_id: selectedRecorder.id!,
-      display_name: `${prefix} ${selectedRecorder.display_name}`,
+      display_name: selectedRecorder.display_name,
       qty: 1,
       unit_price: adjustedUnitPrice,
       line_total: adjustedUnitPrice
@@ -133,24 +133,40 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   }
 
   // 1.3 Setup storage (Capacity Logic based on Quality)
-  // Storage requirement multiplier based on resolution
-  const storageMultipliers = {
-    "good": 1,          // ~25GB/day
-    "very_clear": 1.5,   // ~40GB/day
-    "crystal_clear": 3  // ~75GB/day 
+  // Storage requirement calculation based on resolution using standard H.265 bitrates
+  // Standard (2MP): ~25 GB / day / camera
+  // Enhanced (5MP): ~45 GB / day / camera
+  // Crystalline (8MP): ~90 GB / day / camera
+  const dailyStorageGB = {
+    "good": 25,          // ~25GB/day (2MP H.265)
+    "very_clear": 45,    // ~45GB/day (5MP H.265)
+    "crystal_clear": 90  // ~90GB/day (8MP H.265)
   };
-  const storageReqMultiplier = storageMultipliers[selection.picture_quality] || 1;
-  const requiredGB = selection.camera_count * selection.recording_days * (25 * storageReqMultiplier);
-  const requiredTB = requiredGB / 1000;
+  const gbPerDayPerCamera = dailyStorageGB[selection.picture_quality] || 25;
+  const requiredGB = selection.camera_count * selection.recording_days * gbPerDayPerCamera;
+  
+  // Use 1024 for more accurate TB conversion (standard for disk capacity calculation in systems)
+  const requiredTB = requiredGB / 1024;
 
-  const hdds = products.filter(p => p.category === "accessory" && p.is_active && p.technical_name.toLowerCase().includes("hdd"));
+  const hdds = products.filter(p => 
+    p.category === "accessory" && 
+    p.is_active && 
+    p.technical_name.toLowerCase().includes("hdd")
+  );
+
   const getTB = (p: Product) => {
-    const match = p.technical_name.match(/(\d+)tb/i);
-    return match ? parseInt(match[1]) : 0;
+    const name = p.technical_name.toLowerCase();
+    const tbMatch = name.match(/(\d+)tb/i);
+    if (tbMatch) return parseFloat(tbMatch[1]);
+    const gbMatch = name.match(/(\d+)gb/i);
+    if (gbMatch) return parseFloat(gbMatch[1]) / 1024;
+    return 0;
   };
+
+  // Sort HDDs by capacity ascending
   hdds.sort((a, b) => getTB(a) - getTB(b));
   
-  // Find smallest HDD that covers the requirement
+  // Find the smallest HDD that covers the requirement
   const selectedHdd = hdds.find(s => getTB(s) >= requiredTB) || hdds[hdds.length - 1];
 
   if (selectedHdd) {
@@ -158,7 +174,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     baseHardwareCost += adjustedUnitPrice;
     lineItems.push({
       product_id: selectedHdd.id!,
-      display_name: `${prefix} ${selectedHdd.display_name}`,
+      display_name: selectedHdd.display_name,
       qty: 1,
       unit_price: adjustedUnitPrice,
       line_total: adjustedUnitPrice

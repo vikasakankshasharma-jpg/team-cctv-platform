@@ -16,14 +16,14 @@ export default async function ProductsAdminPage() {
   try {
     const snapshot = await adminDb.collection("products").where("is_deleted", "==", false).get();
     products = snapshot.docs.map(doc => {
-      const data = doc.data();
+      const data = doc.data() as Product;
       return {
-        id: doc.id,
         ...data,
+        id: doc.id,
         updated_at: data.updated_at?.toDate?.()?.toISOString() || data.updated_at || null,
         created_at: data.created_at?.toDate?.()?.toISOString() || data.created_at || null,
       };
-    }) as Product[];
+    });
   } catch (err: any) {
     console.warn("⚠️ Products query failed. Falling back to mock catalog for audit.", err.message);
     products = [

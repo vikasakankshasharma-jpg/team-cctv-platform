@@ -12,7 +12,7 @@ import type { NextRequest } from "next/server";
  * Deep verification happens inside the API routes and Page Server Components.
  */
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const response = NextResponse.next();
 

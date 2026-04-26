@@ -50,6 +50,11 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == leadData.firebase_uid;
     }
 
+    /** Returns true if only the specified fields are being updated */
+    function onlyAllowedFieldsUpdated(allowedFields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowedFields);
+    }
+
     /** Returns true if the incoming data does NOT set soft-delete fields on creation */
     function notSoftDeleted() {
       return !("is_deleted" in request.resource.data) || request.resource.data.is_deleted == false;
@@ -86,7 +91,7 @@ service cloud.firestore {
       // /leads/{leadId}/quotes/{quoteId}
       match /quotes/{quoteId} {
         allow read: if isAdmin() || (isAuthenticated() && get(/databases/$(database)/documents/leads/$(leadId)).data.firebase_uid == request.auth.uid);
-        allow create: if isAuthenticated();
+        allow create: if isAuthenticated() && get(/databases/$(database)/documents/leads/$(leadId)).data.firebase_uid == request.auth.uid;
         allow update: if isAdmin();
         allow delete: if false;
       }
@@ -234,10 +239,3 @@ service cloud.firestore {
 
   }
 }
-
-// ──────────────────────────────────────────────────────────────────────────
-// NOTE: onlyAllowedFieldsUpdated() is a placeholder for a rule helper.
-// In practice, implement field-level update restrictions using:
-//   request.resource.data.diff(resource.data).affectedKeys()
-//     .hasOnly(["follow_up_notes"])
-// ──────────────────────────────────────────────────────────────────────────

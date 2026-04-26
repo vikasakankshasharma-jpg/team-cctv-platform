@@ -1,7 +1,7 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
 import { ConfiguratorView } from "@/components/quotation/ConfiguratorView";
-import { Lead, Product, Addon, AddonRule, AppSettings } from "@/types";
+import { Lead, Product, Addon, AddonRule, AppSettings, Promoter } from "@/types";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +23,7 @@ export default async function QuoteResultPage({
   let addons: Addon[] = [];
   let addon_rules: AddonRule[] = [];
   let settings: AppSettings | null = null;
+  let promoter: Promoter | null = null;
 
   // HANDLE MOCK SCENARIO (DEMO/E2E)
   if (leadId === "mock-e2e-lead" || leadId === "mock-lead") {
@@ -52,8 +53,8 @@ export default async function QuoteResultPage({
       settingsSnap
     ] = await Promise.all([
       lead ? Promise.resolve(null) : adminDb.collection("leads").doc(leadId).get(),
-      adminDb.collection("products").where("is_active", "==", true).get(),
-      adminDb.collection("addons").where("is_active", "==", true).get(),
+      adminDb.collection("products").where("is_active", "==", true).where("is_deleted", "==", false).get(),
+      adminDb.collection("addons").where("is_active", "==", true).where("is_deleted", "==", false).get(),
       adminDb.collection("addon_rules").get(),
       adminDb.collection("settings").doc(SETTINGS_DOC_ID).get()
     ]);
@@ -72,6 +73,14 @@ export default async function QuoteResultPage({
       settings = settingsSnap.data() as AppSettings;
     }
 
+    // 1.5 Fetch Promoter if exists
+    if (lead?.promoter_id) {
+      const promoterSnap = await adminDb.collection("promoters").doc(lead.promoter_id).get();
+      if (promoterSnap.exists) {
+        promoter = { id: promoterSnap.id, ...promoterSnap.data() } as Promoter;
+      }
+    }
+
     // 2. SERIALIZATION FOR CLIENT COMPONENTS ─────────────────────────────────
     // Essential for Next.js Server Components to pass data to Client Components
     const { serializeDoc } = await import("@/lib/serialize");
@@ -80,6 +89,7 @@ export default async function QuoteResultPage({
     addons = serializeDoc(addons);
     addon_rules = serializeDoc(addon_rules);
     settings = serializeDoc(settings);
+    promoter = serializeDoc(promoter);
 
   } catch (err) {
     console.error("Error fetching quote data:", err);
@@ -162,6 +172,10 @@ export default async function QuoteResultPage({
            <ConfiguratorView 
              lead={lead} 
              pricingCache={pricingCache} 
+             promoterDiscount={{
+               percent: promoter?.discount_type === "percent" ? (promoter.discount_value || 0) : 0,
+               flat: promoter?.discount_type === "flat" ? (promoter.discount_value || 0) : 0
+             }}
            />
         </div>
 

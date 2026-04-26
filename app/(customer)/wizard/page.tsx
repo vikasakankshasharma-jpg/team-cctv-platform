@@ -120,7 +120,7 @@ export default function WizardPage() {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-50/50 dark:bg-indigo-600/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
       {/* Blurred overlay if Gate is active */}
-      <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-6 pt-12 pb-8 md:pt-16 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
+      <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-6 pt-12 pb-24 md:pt-16 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
         
         <ProgressBar currentStepIndex={current_step_index} totalSteps={steps.length} />
 
@@ -132,7 +132,7 @@ export default function WizardPage() {
             <p className="text-zinc-500 dark:text-zinc-400 text-xl mt-4 font-medium max-w-2xl">{currentStep.description}</p>
           )}
 
-        <div className="flex-1 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 min-h-[50vh]">
+        <div className="space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 mb-12">
           {currentStep.questions?.map((q) => {
             const isMulti = q.input_type === "multi";
             const currentAns = answers[q.id!] || (isMulti ? [] : "");
@@ -163,36 +163,38 @@ export default function WizardPage() {
               </div>
             );
           })}
-        </div>
-      </div>
+        </div>{/* end questions */}
+      </div>{/* end content wrapper */}
 
-      {/* Inline Navigation Bar — sits just below the options */}
+      {showGate && <LeadGate />}
+
+      {/* ── Sticky Navigation Bar — always visible at the bottom of the viewport ── */}
       {!showGate && (
-        <div className="max-w-4xl mx-auto w-full px-6 pb-16">
-          <div className="w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border border-zinc-100 dark:border-zinc-800 shadow-[0_8px_30px_rgba(0,0,0,0.08)] rounded-3xl flex items-center justify-between p-3 md:p-4 ring-1 ring-zinc-900/5 dark:ring-white/5 transition-all">
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pb-5 pt-3 bg-gradient-to-t from-white/95 dark:from-zinc-950/95 to-transparent backdrop-blur-sm">
+          <div className="w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-[0_-4px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_40px_rgba(0,0,0,0.3)] rounded-3xl flex items-center justify-between p-3 md:p-4 ring-1 ring-zinc-900/5 dark:ring-white/5 transition-all">
             <button
               onClick={previousStep}
               disabled={current_step_index === 0}
-              className="group h-12 md:h-14 px-6 text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 disabled:opacity-0 disabled:pointer-events-none"
+              className="group h-12 md:h-14 px-6 text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back
             </button>
 
-            {/* Trust Banner (Hidden on Mobile) */}
+            {/* Trust Banner — hidden on small screens */}
             <div className="hidden lg:flex items-center gap-6 px-8 border-x border-zinc-100 dark:border-zinc-800">
-               <div className="flex items-center gap-2">
-                  <Lock className="w-3.5 h-3.5 text-zinc-400" />
-                  <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-tight">Your Data is Safe</span>
-               </div>
-               <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
-                  <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-tight">Smart System Design</span>
-               </div>
+              <div className="flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-tight">Your Data is Safe</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+                <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-tight">Smart System Design</span>
+              </div>
             </div>
 
             <button
               onClick={handleContinue}
-              className="h-12 md:h-14 px-8 md:px-12 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-2xl shadow-xl shadow-zinc-900/20 dark:shadow-blue-500/30 transition-all flex items-center gap-3 active:scale-95"
+              className="h-12 md:h-14 px-8 md:px-12 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-2xl shadow-xl shadow-zinc-900/20 dark:shadow-blue-500/30 transition-all flex items-center gap-3 active:scale-95 cursor-pointer"
             >
               {isLastStep ? "Generate Quote" : "Continue"}
               {isLastStep ? <ShieldCheck className="w-4 h-4" /> : <ArrowRight className="w-4 h-4 translate-y-[1px]" />}
@@ -200,9 +202,6 @@ export default function WizardPage() {
           </div>
         </div>
       )}
-
-      {showGate && <LeadGate />}
-      
     </div>
   );
 }

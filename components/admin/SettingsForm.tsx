@@ -312,8 +312,24 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             />
           </div>
           
-          <div className="lg:col-span-2 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[24px] space-y-4 shadow-inner">
-            <h3 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">Available Injection Tokens</h3>
+          <div className="lg:col-span-2 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[24px] space-y-6 shadow-inner">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest ml-1">Admin Notification Mobile</label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 font-bold">+91</span>
+                <input 
+                  type="text" 
+                  name="admin_notification_phone"
+                  value={formData.admin_notification_phone || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, admin_notification_phone: e.target.value.replace(/\D/g, "") }))}
+                  placeholder="97726 99395"
+                  className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl pl-12 pr-5 py-3 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-bold shadow-sm" 
+                />
+              </div>
+              <p className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 italic">Receives real-time alerts for new leads & bookings</p>
+            </div>
+
+            <h3 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest pt-2">Available Injection Tokens</h3>
             <div className="grid gap-3">
               {[
                 { token: "{{customer_name}}", desc: "Lead full name" },
@@ -326,9 +342,6 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                   <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">{item.desc}</span>
                 </div>
               ))}
-            </div>
-            <div className="mt-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10 italic text-[10px] text-zinc-400 dark:text-zinc-500 leading-relaxed font-medium">
-              Payload is dispatched automatically via the integrated cloud API whenever a Quote PDF is generated.
             </div>
           </div>
         </div>

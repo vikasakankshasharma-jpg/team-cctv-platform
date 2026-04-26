@@ -10,6 +10,9 @@ interface ShareDialogProps {
   customerMobile: string;  // pre-filled own number
   lowestPrice: number;
   propertyType: string;
+  whatsappTemplate: string;
+  pdfUrl?: string;
+  contactPhone?: string;
   onClose: () => void;
 }
 
@@ -20,6 +23,9 @@ export function ShareDialog({
   customerMobile,
   lowestPrice,
   propertyType,
+  whatsappTemplate,
+  pdfUrl,
+  contactPhone,
   onClose,
 }: ShareDialogProps) {
   const [otherNumber, setOtherNumber] = useState("");
@@ -32,16 +38,14 @@ export function ShareDialog({
       ? `${window.location.origin}/quote/${leadId}`
       : `https://cctvquotation.com/quote/${leadId}`;
 
-  const buildMessage = (recipientName?: string) =>
-    encodeURIComponent(
-      `Hi ${recipientName || customerName}! 👋\n\nYour CCTV Security Quote from *TEAM CCTV* is ready.\n\n` +
-      `📋 *Prepared for:* ${customerName}\n` +
-      `🏠 *Property:* ${propertyType.toUpperCase()}\n` +
-      `💰 *Starting from:* ₹${lowestPrice.toLocaleString("en-IN")}\n\n` +
-      `📥 *View & Download Full Quote:*\n${quoteUrl}\n\n` +
-      `📞 For queries: +91 98765 43210\n` +
-      `© TEAM Security Systems`
-    );
+  const buildMessage = (recipientName?: string) => {
+    let msg = whatsappTemplate
+      .replace(/\{\{customer_name\}\}/g, recipientName || customerName)
+      .replace(/\{\{company_name\}\}/g, "TEAM CCTV")
+      .replace(/\{\{total_amount\}\}/g, `₹${lowestPrice.toLocaleString("en-IN")}`)
+      .replace(/\{\{pdf_url\}\}/g, pdfUrl || quoteUrl);
+    return encodeURIComponent(msg);
+  };
 
   const shareToNumber = async (number: string, isOtherPerson: boolean) => {
     setSharing(true);

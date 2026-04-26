@@ -16,6 +16,7 @@ import {
   Workflow,
   ShieldCheck,
   ChevronRight,
+  Calendar,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -33,6 +34,7 @@ const NAV_GROUPS = [
     label: "Sales Operations",
     items: [
       { name: "Leads & CRM", href: "/admin/leads", icon: Users },
+      { name: "Site Visits", href: "/admin/bookings", icon: Calendar },
       { name: "Reports", href: "/admin/reports", icon: TrendingUp },
     ]
   },

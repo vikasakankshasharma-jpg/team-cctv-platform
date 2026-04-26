@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X, MapPin, Navigation, CheckCircle2, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { X, MapPin, Navigation, CheckCircle2, Lock, ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 import type { Address } from "@/types";
 import { useJsApiLoader, GoogleMap, MarkerF } from "@react-google-maps/api";
 
@@ -23,10 +23,19 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
   const [areaInfo, setAreaInfo] = useState("");
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
 
-  const { isLoaded } = useJsApiLoader({
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyAPRR097NlrXF-8BiJ_sbnzzQw9NQYdtnA";
+  const hasValidMapKey = googleMapsApiKey && !googleMapsApiKey.includes("undefined") && googleMapsApiKey.startsWith("AIza");
+
+  const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+    googleMapsApiKey: googleMapsApiKey
   });
+
+  useEffect(() => {
+    if (loadError) {
+      console.error("🌐 Google Maps Load Fault:", loadError);
+    }
+  }, [loadError]);
 
   const [map, setMap] = useState(null);
 
@@ -260,7 +269,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
 
               {isMapReady ? (
                 <div className="w-full h-[220px] sm:h-full relative">
-                  {isLoaded ? (
+                  {(isLoaded && !loadError) ? (
                     <GoogleMap
                       mapContainerStyle={{ width: '100%', height: '100%' }}
                       center={coords}
@@ -297,6 +306,12 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                         }}
                       />
                     </GoogleMap>
+                  ) : loadError ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center bg-zinc-50">
+                       <ShieldAlert className="w-6 h-6 text-red-500/50" />
+                       <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">Map Configuration Error</p>
+                       <p className="text-[10px] text-zinc-400 font-medium">Your pinpoint is still saved via GPS coords, but the visual map is currently unavailable.</p>
+                    </div>
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-zinc-50">
                       <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />

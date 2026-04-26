@@ -61,7 +61,7 @@ export const WizardConfigQuerySchema = z.object({
 
 export const CreateLeadSchema = z.object({
   customer_name: z.string().min(2, "Name must be at least 2 characters").max(100),
-  mobile: MobileSchema,
+  mobile_number: MobileSchema,
   firebase_uid: z.string().min(1, "Firebase UID is required"),
   referral_code: ReferralCodeSchema,
   wizard_answers: WizardAnswersSchema,
@@ -107,7 +107,7 @@ export const SaveQuoteSchema = GenerateQuoteSchema.extend({
 export const CreateSiteVisitSchema = z.object({
   lead_id: z.string().min(1),
   customer_name: z.string().min(2).max(100),
-  mobile: MobileSchema,
+  mobile_number: MobileSchema,
   address: z.string().min(5, "Please enter a full address").max(300),
   preferred_date: z
     .string()
@@ -218,7 +218,7 @@ export const ReorderStepsSchema = z.array(
 export const CreatePromoterSchema = z.object({
   name: z.string().min(2).max(100),
   business_name: z.string().min(2).max(200),
-  mobile: MobileSchema,
+  mobile_number: MobileSchema,
   email: z.string().email("Enter a valid email address"),
   discount_type: z.enum(["flat", "percent"]),
   discount_value: z.number().positive(),

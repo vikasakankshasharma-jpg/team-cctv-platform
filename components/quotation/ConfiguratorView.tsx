@@ -6,8 +6,16 @@ import { PlanCard } from "./PlanCard";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { evaluateAddonRules } from "@/lib/addon-rules";
 import { SlidersHorizontal, Share2, Download, Calendar, ArrowRight, ShieldCheck, Zap, Info, Check } from "lucide-react";
-import { SiteDetailsModal } from "./SiteDetailsModal";
-import { ShareDialog } from "./ShareDialog";
+import dynamic from "next/dynamic";
+
+const SiteDetailsModal = dynamic(() => import("./SiteDetailsModal").then(mod => mod.SiteDetailsModal), {
+  loading: () => <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-[100] animate-pulse" />
+});
+
+const ShareDialog = dynamic(() => import("./ShareDialog").then(mod => mod.ShareDialog), {
+  loading: () => null
+});
+
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address } from "@/types";
 import { useRouter } from "next/navigation";
 
@@ -19,18 +27,23 @@ interface ConfiguratorViewProps {
     addon_rules: AddonRule[];
     settings: AppSettings;
   };
+  promoterDiscount?: {
+    percent: number;
+    flat: number;
+  };
 }
 
 const QUALITY_TIERS: ("good" | "very_clear" | "crystal_clear")[] = ["good", "very_clear", "crystal_clear"];
 const STORAGE_TIERS: (7 | 15 | 30)[] = [7, 15, 30];
 
-export function ConfiguratorView({ lead: initialLead, pricingCache }: ConfiguratorViewProps) {
+export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDiscount }: ConfiguratorViewProps) {
   const router = useRouter();
   const [lead, setLead] = useState<Lead>(initialLead);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<"download" | "whatsapp" | "booking" | null>(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
+  const [savedPdfUrl, setSavedPdfUrl] = useState<string | null>(null);
 
   const { 
     setPricingCache, 
@@ -81,7 +94,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
         addons: pricingCache.addons,
         settings: pricingCache.settings,
         cablingDone,
-        referralDiscountPercent: 0, 
+        referralDiscountPercent: promoterDiscount?.percent || 0,
+        referralDiscountFlat: promoterDiscount?.flat || 0,
         evaluatedAddonRules: evaluatedRules
       });
     };
@@ -149,10 +163,14 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
          if (contentType === "application/pdf") {
             const blob = await pdfRes.blob();
             const blobUrl = URL.createObjectURL(blob);
+            setSavedPdfUrl(blobUrl);
             window.open(blobUrl, "_blank");
          } else {
             const { url } = await pdfRes.json();
-            if (url) window.open(url, "_blank");
+            if (url) {
+              setSavedPdfUrl(url);
+              window.open(url, "_blank");
+            }
          }
       }
     } catch (err) {
@@ -173,7 +191,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
         body: JSON.stringify({
           lead_id: currentLead.id,
           address: currentLead.address,
-          quote_id: "mock-quote-id"
+          quote_id: savedQuoteId || "pending"
         })
       });
       if (res.ok) alert("✅ Visit Booked! Our technician will reach you shortly at your pinpoint location.");
@@ -438,6 +456,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache }: Configurat
           customerMobile={lead.mobile_number || ""}
           lowestPrice={pricing_results.budget.total_payable}
           propertyType={lead.property_type}
+          whatsappTemplate={pricingCache.settings.whatsapp_template}
+          pdfUrl={savedPdfUrl || undefined}
+          contactPhone={"+91 97726 99395"}
           onClose={() => setShowShareDialog(false)}
         />
       )}

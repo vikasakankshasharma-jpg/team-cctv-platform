@@ -1,8 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { CreateLeadSchema } from "@/lib/validators";
 import { adminDb, arrayUnion, serverTimestamp } from "@/lib/firebase-admin";
+import { rateLimit } from "@/lib/rate-limit";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const { success } = rateLimit(request);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const body = await request.json();
     
@@ -44,7 +50,7 @@ export async function POST(request: Request) {
     
     await newLeadRef.set({
       customer_name: leadData.customer_name,
-      mobile: leadData.mobile,
+      mobile_number: leadData.mobile_number,
       firebase_uid: leadData.firebase_uid,
       status: "new",
       promoter_id: promoterId,

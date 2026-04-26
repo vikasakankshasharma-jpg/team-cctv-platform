@@ -6,6 +6,7 @@ import { auth } from "@/lib/firebase-client";
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/store/wizard";
 import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, Lock, Key } from "lucide-react";
+import { trackEvent } from "@/components/shared/TrackingProvider";
 
 declare global {
   interface Window {
@@ -48,10 +49,17 @@ export function LeadGate() {
   }, [countdown, otpSent]);
 
   useEffect(() => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
-      });
+    // Defensive check: only initialize if element exists and auth is safe
+    const container = document.getElementById("recaptcha-container");
+    if (container && !window.recaptchaVerifier) {
+      try {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+        });
+      } catch (err: any) {
+        console.error("🔒 Recaptcha Initialization Fault:", err);
+        setError("Security System Error: Recaptcha failed to initialize. Please check your connection or refresh.");
+      }
     }
   }, []);
 
@@ -88,8 +96,10 @@ export function LeadGate() {
       setCanResend(false);
     } catch (err: any) {
       console.error("🔥 OTP Transmission Fault:", err);
-      if (err.code === "auth/invalid-api-key") {
-        setError("System Configuration Error: Security keys are not correctly synchronized. Please contact support.");
+      if (err.code === "auth/invalid-api-key" || err.message?.includes("invalid-api-key")) {
+        setError("System Configuration Error: Security keys are not correctly synchronized. Please contact our tech team.");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Security Throttling: Too many attempts. Please try again in a few minutes.");
       } else {
         setError("Communication Error: Failed to transmit OTP. Please retry.");
       }
@@ -152,7 +162,7 @@ export function LeadGate() {
 
       const payload = {
         customer_name: name,
-        mobile,
+        mobile_number: mobile,
         firebase_uid: firebaseUid,
         referral_code: referralCode || undefined,
         wizard_answers: answers,
@@ -169,6 +179,16 @@ export function LeadGate() {
 
       const resData = await createRes.json();
       if (!createRes.ok) throw new Error(resData.error || "Server Synchronization Failed.");
+
+      // ───────────────────────────────────────────────────────────────────────
+      // TRACK CONVERSION
+      // ───────────────────────────────────────────────────────────────────────
+      trackEvent("generate_lead", {
+        customer_name: name,
+        property_type: payload.property_type,
+        technology_choice: payload.technology_choice,
+        cabling_done: payload.cabling_done
+      });
 
       router.push(`/quote/${resData.id}`);
     } catch (err: any) {

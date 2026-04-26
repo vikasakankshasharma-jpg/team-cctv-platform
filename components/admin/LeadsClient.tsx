@@ -1,20 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Users, Eye, Phone, MapPin, Search, Filter, Loader2, Target, Zap, Waves } from "lucide-react";
+import { Users, Eye, Phone, MapPin, Search, Filter, Loader2, Target, Zap, Waves, ChevronRight, History } from "lucide-react";
 import type { Lead } from "@/types";
 import { updateLeadStatus } from "@/app/actions/leads";
 import Link from "next/link";
 import { PageHeader } from "./PageHeader";
+import { useRouter } from "next/navigation";
+import { QuoteHistoryModal } from "./QuoteHistoryModal";
 
 interface LeadsClientProps {
   initialLeads: Lead[];
+  nextCursor?: string | null;
 }
 
-export function LeadsClient({ initialLeads }: LeadsClientProps) {
+export function LeadsClient({ initialLeads, nextCursor }: LeadsClientProps) {
+  const router = useRouter();
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [historyLead, setHistoryLead] = useState<{ id: string, name: string } | null>(null);
 
   const filteredLeads = initialLeads.filter(lead => {
     const matchesSearch = 
@@ -215,11 +220,19 @@ export function LeadsClient({ initialLeads }: LeadsClientProps) {
                         <Link 
                           href={`/quote/${lead.id}`} 
                           target="_blank"
-                          className="w-12 h-12 flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-white dark:hover:text-white hover:bg-zinc-900 dark:hover:bg-blue-600 hover:border-zinc-900 dark:hover:border-blue-500/30 rounded-2xl transition-all shadow-inner active:scale-90" 
+                          className="flex items-center gap-2 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-white dark:hover:text-white bg-blue-500/10 hover:bg-zinc-900 dark:hover:bg-blue-600 border border-blue-500/20 hover:border-zinc-900 dark:hover:border-blue-500/30 rounded-xl transition-all shadow-inner active:scale-95" 
                           title="Initialize Core Manifest"
                         >
-                          <Eye className="w-5 h-5 group-hover/row:scale-110 transition-transform" />
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View Quote</span>
                         </Link>
+                        <button 
+                          onClick={() => setHistoryLead({ id: lead.id!, name: lead.customer_name })}
+                          className="w-10 h-10 flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-amber-500 hover:border-amber-500/30 rounded-xl transition-all shadow-inner active:scale-90"
+                          title="View Archive"
+                        >
+                          <History className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -229,6 +242,32 @@ export function LeadsClient({ initialLeads }: LeadsClientProps) {
           </table>
         </div>
       </div>
+
+      {/* Pagination Controller */}
+      {nextCursor && (
+        <div className="flex justify-center mt-12">
+          <button
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set("lastDate", nextCursor);
+              router.push(url.pathname + url.search);
+            }}
+            className="group flex items-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-10 py-4 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white shadow-xl active:scale-95"
+          >
+            Load Next Batch
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      )}
+
+      {historyLead && (
+        <QuoteHistoryModal
+          isOpen={!!historyLead}
+          onClose={() => setHistoryLead(null)}
+          leadId={historyLead.id}
+          customerName={historyLead.name}
+        />
+      )}
     </div>
   );
 }

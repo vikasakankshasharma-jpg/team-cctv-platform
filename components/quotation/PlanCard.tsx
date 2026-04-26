@@ -128,7 +128,7 @@ export function PlanCard({
               <div className="space-y-2 pb-4 border-b border-zinc-200 dark:border-zinc-800">
                 {pricing.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between items-start gap-3">
-                    <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 leading-tight line-clamp-1">{item.qty}x {item.display_name}</span>
+                    <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 leading-tight">{item.qty}x {item.display_name}</span>
                     <span className="text-[11px] font-black text-zinc-900 dark:text-white shrink-0">₹{item.line_total.toLocaleString('en-IN')}</span>
                   </div>
                 ))}

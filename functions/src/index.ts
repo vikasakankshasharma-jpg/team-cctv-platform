@@ -6,9 +6,11 @@
 import { onLeadStatusWon } from "./onLeadStatusWon";
 import { onBookingCreated } from "./onBookingCreated";
 import { validateCommissionSlab } from "./validateCommissionSlab";
+import { onLeadCreated } from "./onLeadCreated";
 
 export {
   onLeadStatusWon,
   onBookingCreated,
-  validateCommissionSlab
+  validateCommissionSlab,
+  onLeadCreated
 };

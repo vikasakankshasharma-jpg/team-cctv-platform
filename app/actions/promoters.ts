@@ -7,15 +7,15 @@ import type { Promoter } from "@/types";
 
 /**
  * Creates a new Promoter in Firestore
- * Initializes total_ex_tax_business to 0
  */
-export async function createPromoter(data: { name: string; referral_code: string; is_active: boolean }) {
+export async function createPromoter(data: { name: string; email: string; mobile_number: string; referral_code: string; is_active: boolean }) {
   await requireAdmin();
   
   const promoterData = {
     ...data,
     total_ex_tax_business: 0,
-    created_at: new Date()
+    created_at: new Date(),
+    updated_at: new Date()
   };
 
   const docRef = await adminDb.collection("promoters").add(promoterData);
@@ -24,13 +24,14 @@ export async function createPromoter(data: { name: string; referral_code: string
 }
 
 /**
- * Updates an existing Promoter (Name and Status)
+ * Updates an existing Promoter
  */
-export async function updatePromoter(id: string, data: { name?: string; is_active?: boolean }) {
+export async function updatePromoter(id: string, data: { name?: string; email?: string; mobile_number?: string; is_active?: boolean }) {
   await requireAdmin();
 
   const updateData = {
     ...data,
+    updated_at: new Date()
   };
 
   await adminDb.collection("promoters").doc(id).update(updateData);

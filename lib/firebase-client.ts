@@ -37,44 +37,53 @@ import {
 // ─────────────────────────────────────────────
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDAvp81yMXAI1kuz5XXzbG_us-Owcncuzc",
-  authDomain: "team-cctv-live-8294.firebaseapp.com",
-  projectId: "team-cctv-live-8294",
-  storageBucket: "team-cctv-live-8294.firebasestorage.app",
-  messagingSenderId: "361687878258",
-  appId: "1:361687878258:web:2c2e94829557cc42e9d0eb",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
 // ─────────────────────────────────────────────
 // Singleton App Instance
-// getApps() check prevents re-initialization during Next.js hot reload
 // ─────────────────────────────────────────────
 
 function getClientApp(): FirebaseApp {
-  // Always initialize with hard-coded production config to avoid env-var injection issues.
-  // Using a try-catch to handle the "already exists" case safely during hot-reloads.
+  const existingApp = getApps().find(app => app.name === "[DEFAULT]");
+  if (existingApp) return existingApp;
+
   try {
     if (typeof window !== "undefined") {
-      console.info("🔒 Firebase Client Init: Project " + firebaseConfig.projectId + " | AuthDomain " + firebaseConfig.authDomain);
+      console.info("🔒 Firebase Client Init: Project " + firebaseConfig.projectId);
     }
+    
+    // Validate config before initializing
+    if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("undefined")) {
+      throw new Error("auth/invalid-api-key: The Firebase API Key is missing or incorrectly defined.");
+    }
+
     return initializeApp(firebaseConfig);
-  } catch (error) {
-    if (getApps().length > 0) return getApp();
+  } catch (error: any) {
+    console.error("🔥 Firebase Init Fault:", error.message);
+    // If we are in the browser, specifically check for already-initialized errors
+    const apps = getApps();
+    if (apps.length > 0) return getApp();
     throw error;
   }
 }
 
 /** Firebase Client App instance */
-export const clientApp: FirebaseApp = getClientApp();
+export const clientApp = getClientApp();
 
-/** Firestore Client instance — use for real-time reads in components */
-export const db: Firestore = getFirestore(clientApp);
+/** Firestore Client instance */
+export const db = getFirestore(clientApp);
 
-/** Firebase Auth Client instance — use for Phone Auth OTP and session state */
-export const auth: Auth = getAuth(clientApp);
+/** Firebase Auth Client instance */
+export const auth = getAuth(clientApp);
 
-/** Firebase Storage Client instance — use for uploading/downloading files */
-export const storage: FirebaseStorage = getStorage(clientApp);
+/** Firebase Storage Client instance */
+export const storage = getStorage(clientApp);
 
 // ─────────────────────────────────────────────
 // Firestore Collection Path Constants

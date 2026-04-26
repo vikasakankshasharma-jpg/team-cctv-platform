@@ -15,22 +15,34 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave }: PromoterMod
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
+    mobile_number: "",
     referral_code: "",
     is_active: true,
+    discount_type: "percent" as "flat" | "percent",
+    discount_value: 0,
   });
 
   useEffect(() => {
     if (promoter && isOpen) {
       setFormData({
         name: promoter.name,
+        email: promoter.email || "",
+        mobile_number: promoter.mobile_number || "",
         referral_code: promoter.referral_code,
         is_active: promoter.is_active ?? true,
+        discount_type: promoter.discount_type || "percent",
+        discount_value: promoter.discount_value || 0,
       });
     } else {
       setFormData({
         name: "",
+        email: "",
+        mobile_number: "",
         referral_code: "",
         is_active: true,
+        discount_type: "percent",
+        discount_value: 0,
       });
     }
   }, [promoter, isOpen]);
@@ -104,13 +116,38 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave }: PromoterMod
               <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
                 <ShieldCheck className="w-3 h-3 text-amber-500" /> Professional Identity
               </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  required
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner"
+                  placeholder="Rahul Sharma"
+                />
+                <input
+                  required
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner"
+                  placeholder="rahul@example.com"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                <ShieldCheck className="w-3 h-3 text-amber-500" /> Direct Mobile
+              </label>
               <input
                 required
                 type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                maxLength={10}
+                value={formData.mobile_number}
+                onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value.replace(/\D/g, "") })}
                 className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner"
-                placeholder="e.g. Rahul Sharma"
+                placeholder="10-digit mobile number"
               />
             </div>
 
@@ -140,6 +177,41 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave }: PromoterMod
                 )}
               </div>
               {promoter && <p className="text-[10px] font-bold text-amber-500/50 uppercase tracking-widest text-center mt-2 italic flex items-center justify-center gap-2"><Fingerprint className="w-3 h-3" /> Immutable Ledger Entry</p>}
+            </div>
+
+            {/* Discount Configuration */}
+            <div className="p-6 bg-zinc-950/40 rounded-3xl border border-zinc-800/40 space-y-4">
+               <div className="flex items-center justify-between">
+                  <p className="text-xs font-black text-white uppercase tracking-widest">Client Benefit (Discount)</p>
+                  <div className="flex bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+                     <button 
+                       type="button"
+                       onClick={() => setFormData({...formData, discount_type: "percent"})}
+                       className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${formData.discount_type === "percent" ? "bg-amber-600 text-white" : "text-zinc-500 hover:text-white"}`}
+                     >
+                       Percent
+                     </button>
+                     <button 
+                       type="button"
+                       onClick={() => setFormData({...formData, discount_type: "flat"})}
+                       className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${formData.discount_type === "flat" ? "bg-amber-600 text-white" : "text-zinc-500 hover:text-white"}`}
+                     >
+                       Flat
+                     </button>
+                  </div>
+               </div>
+               <div className="relative">
+                  <input
+                    required
+                    type="number"
+                    value={formData.discount_value}
+                    onChange={(e) => setFormData({ ...formData, discount_value: Number(e.target.value) })}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-3.5 text-white font-black text-lg focus:outline-none focus:border-amber-500 transition-all shadow-inner pl-10"
+                  />
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">
+                    {formData.discount_type === "percent" ? "%" : "₹"}
+                  </span>
+               </div>
             </div>
           </div>
 

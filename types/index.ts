@@ -36,6 +36,9 @@ export interface Lead {
   referral_code?: string | null;
   status: "new" | "contacted" | "site_visit" | "quoted" | "won" | "lost";
   created_at: any;
+  updated_at?: any;
+  site_visit_date?: any;
+  promoter_id?: string | null;
 }
 
 export interface Product {
@@ -52,6 +55,8 @@ export interface Product {
   // NEW: Logic Hardening Fields
   resolution_tier?: "good" | "very_clear" | "crystal_clear";
   channels?: number; // Only for Recorders
+  created_at?: any;
+  updated_at?: any;
 }
 
 export interface Addon {
@@ -62,6 +67,8 @@ export interface Addon {
   
   // NEW: Multiplier logic
   unit_multiplier?: "none" | "camera_count";
+  created_at?: any;
+  updated_at?: any;
 }
 
 export interface AddonRule {
@@ -154,17 +161,25 @@ export interface AppSettings {
 
   updated_at?: any;
   updated_by?: string | null;
+  admin_notification_phone?: string;
 }
 
 export interface Promoter {
   id?: string;
   name: string;
+  business_name?: string;
   referral_code: string;
-  total_ex_tax_business: number;
-  mobile?: string;
+  mobile_number?: string;
   email?: string;
   is_active: boolean;
+  use_global_commission: boolean;
+  commission_slabs?: CommissionSlab[];
+  total_leads_referred: number;
+  total_ex_tax_business: number;
+  discount_type?: "flat" | "percent";
+  discount_value?: number;
   created_at?: any;
+  updated_at?: any;
 }
 
 export interface WizardOption {

@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { NotificationService } from "./services/NotificationService";
 
 // Ensure admin app is initialized once
 if (!admin.apps.length) {
@@ -17,7 +18,15 @@ export const onBookingCreated = functions.firestore
     const bookingId = context.params.bookingId;
     const leadId = data.lead_id;
 
-    console.log(`[Elite Intelligence] Operational Alert: New Site Visit booked for ${data.customer_name}. ID: ${bookingId}`);
+    // 1. Dispatch Admin Notification
+    const title = "📅 New Site Visit Scheduled";
+    const message = `Customer: ${data.customer_name}\nDate: ${data.preferred_date}\nTime: ${data.preferred_time}\nAddress: ${data.address?.full_address || "N/A"}`;
+    
+    await NotificationService.notifyAdmin(title, message, {
+      bookingId,
+      leadId,
+      pincode: data.address?.pincode
+    });
     
     if (!leadId) {
       console.warn(`[Audit] Booking ${bookingId} created without lead reference. Status shift bypassed.`);
@@ -48,10 +57,6 @@ export const onBookingCreated = functions.firestore
             updated_at: admin.firestore.FieldValue.serverTimestamp(),
             follow_up_notes: admin.firestore.FieldValue.arrayUnion(auditEntry)
           });
-
-          console.log(`[Elite Sync] Lead ${leadId} shifted to 'site_visit' status.`);
-        } else {
-          console.log(`[Audit] Lead ${leadId} is in terminal state '${currentStatus}'. Bypassing status shift.`);
         }
       });
     } catch (error: any) {

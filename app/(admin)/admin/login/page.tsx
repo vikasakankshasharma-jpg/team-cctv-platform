@@ -27,6 +27,11 @@ export default function AdminLoginPage() {
     }
 
     try {
+      // Defensive check for auth client integrity
+      if (!auth || !auth.app) {
+        throw new Error("auth/initialization-failed: Firebase Auth is not properly configured.");
+      }
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
@@ -42,8 +47,16 @@ export default function AdminLoginPage() {
       router.refresh();
       
     } catch (err: any) {
-      setError("Invalid credentials or unauthorized access.");
-      await auth.signOut();
+      console.error("🔒 Login Fault Audit:", err.code || err.message);
+      if (err.code === "auth/invalid-api-key" || err.message?.includes("api-key")) {
+        setError("Technical Fault: The administrative security keys are invalid for this domain. Please contact System Admin.");
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Network Outage: Unable to reach security servers. Check your connection.");
+      } else {
+        setError("Invalid credentials or unauthorized access.");
+      }
+      // Only sign out if auth exists
+      if (auth) await auth.signOut();
     } finally {
       setLoading(false);
     }

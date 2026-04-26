@@ -6,6 +6,14 @@ export const dynamic = "force-dynamic";
 const SETTINGS_DOC_ID = "app_config";
 
 export async function GET() {
+  // SECURITY GUARD: Block access in production to prevent data wipes
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Seeding is disabled in production. Use a local service account to seed directly." },
+      { status: 403 }
+    );
+  }
+
   try {
     const batch = adminDb.batch();
 
@@ -26,6 +34,21 @@ export async function GET() {
       { technical_name: "dvr_8ch", display_name: "8-Channel Hybrid DVR", category: "recorder", technology: "HD", unit_price: 6200, channels: 8, is_active: true, is_deleted: false, created_at: new Date() },
       { technical_name: "nvr_4ch", display_name: "4-Channel Smart NVR", category: "recorder", technology: "IP", unit_price: 5900, channels: 4, is_active: true, is_deleted: false, created_at: new Date() },
       { technical_name: "nvr_8ch", display_name: "8-Channel Smart NVR", category: "recorder", technology: "IP", unit_price: 8800, channels: 8, is_active: true, is_deleted: false, created_at: new Date() },
+      
+      // Accessories (Hard Disks)
+      { technical_name: "hdd_500gb", display_name: "500GB Surveillance HDD", category: "accessory", technology: "both", unit_price: 2500, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_1tb", display_name: "1TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 4200, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_2tb", display_name: "2TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 6800, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_3tb", display_name: "3TB Surveillance HDD", category: "accessory", technology: "both", unit_price: 8500, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_4tb", display_name: "4TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 10500, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_6tb", display_name: "6TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 14500, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_8tb", display_name: "8TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 18500, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_10tb", display_name: "10TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 22500, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_12tb", display_name: "12TB Enterprise HDD", category: "accessory", technology: "both", unit_price: 28500, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_14tb", display_name: "14TB Enterprise HDD", category: "accessory", technology: "both", unit_price: 34500, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_16tb", display_name: "16TB Enterprise HDD", category: "accessory", technology: "both", unit_price: 40500, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_18tb", display_name: "18TB Enterprise HDD", category: "accessory", technology: "both", unit_price: 46500, is_active: true, is_deleted: false, created_at: new Date() },
+      { technical_name: "hdd_20tb", display_name: "20TB Enterprise HDD", category: "accessory", technology: "both", unit_price: 52500, is_active: true, is_deleted: false, created_at: new Date() },
     ];
 
     products.forEach(p => {
@@ -34,10 +57,8 @@ export async function GET() {
     });
 
     // --- 2. SEED ELITE SYSTEM ADD-ONS ---
+    // --- 2. SEED ELITE SYSTEM ADD-ONS ---
     const addons = [
-      { technical_name: "hdd_1tb", display_name: "1TB Seagate SkyHawk", price: 4200, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_2tb", display_name: "2TB Seagate SkyHawk", price: 6800, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_4tb", display_name: "4TB Seagate SkyHawk", price: 10500, is_active: true, is_deleted: false, created_at: new Date() },
       { technical_name: "wire_mgr_mini", display_name: "Compact Wire Manager", price: 450, is_active: true, is_deleted: false, created_at: new Date() },
       { technical_name: "wire_mgr_max", display_name: "Industrial Wire Orchestrator", price: 1200, is_active: true, is_deleted: false, created_at: new Date() },
       { technical_name: "audio_mic", display_name: "Active Noise-Cancelling Mic", price: 850, is_active: true, is_deleted: false, created_at: new Date() },
