@@ -144,9 +144,9 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
                       <td className="px-8 py-6 text-right">
                         <div className="flex flex-col items-end">
                           <span className="font-black text-xl text-emerald-600 dark:text-emerald-500 tracking-tighter">₹{record.commission_amount.toLocaleString('en-IN')}</span>
-                          {record.status === 'paid' && record.paid_at && (
+                          {record.status === 'paid' && (record.paid_at as any) && (
                             <span className="text-[8px] font-black text-emerald-700 dark:text-zinc-600 bg-emerald-50 dark:bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-100 dark:border-emerald-500/10 mt-2 uppercase tracking-tight">
-                              Settled {new Date(record.paid_at.seconds * 1000).toLocaleDateString()}
+                              Settled {new Date((record.paid_at as any).seconds * 1000).toLocaleDateString()}
                             </span>
                           )}
                         </div>

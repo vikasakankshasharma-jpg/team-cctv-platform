@@ -18,8 +18,8 @@ export default async function AddonsAdminPage() {
     return {
       ...data,
       id: doc.id,
-      updated_at: data.updated_at?.toDate?.()?.toISOString() || data.updated_at || null,
-      created_at: data.created_at?.toDate?.()?.toISOString() || data.created_at || null,
+      updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
+      created_at: (data.created_at as any)?.toDate?.()?.toISOString() || data.created_at || null,
     };
   });
 

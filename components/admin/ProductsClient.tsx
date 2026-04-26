@@ -36,7 +36,7 @@ export function ProductsClient({ initialProducts }: ProductsClientProps) {
     }
   };
 
-  const handleSave = async (data: unknown) => {
+  const handleSave = async (data: any) => {
     if (editingProduct?.id) {
       await updateProduct(editingProduct.id, data);
     } else {

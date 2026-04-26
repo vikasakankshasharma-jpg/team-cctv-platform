@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MessageCircle, X, Phone, Share2, CheckCircle2, Loader2 } from "lucide-react";
 
 interface ShareDialogProps {

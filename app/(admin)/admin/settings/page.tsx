@@ -46,7 +46,7 @@ export default async function SettingsAdminPage() {
         settings = {
           ...defaultSettings,
           ...data,
-          updated_at: data.updated_at?.toDate?.()?.toISOString() || data.updated_at || null,
+          updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
         } as AppSettings;
       }
     }

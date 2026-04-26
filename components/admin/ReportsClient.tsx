@@ -43,11 +43,11 @@ export function ReportsClient({ data, aggregates }: ReportsClientProps) {
       `"${lead.mobile_number}"`,
       lead.property_type,
       lead.technology_choice,
-      lead.wizard_answers?.referral_code || "ORGANIC",
+      (lead.wizard_answers as any)?.referral_code || "ORGANIC",
       quote.net_taxable_amount,
       quote.total_payable,
       quote.plan_type,
-      new Date(lead.created_at?.seconds * 1000).toLocaleDateString()
+      new Date((lead.created_at as any)?.seconds * 1000).toLocaleDateString()
     ]);
 
     const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
@@ -203,7 +203,7 @@ export function ReportsClient({ data, aggregates }: ReportsClientProps) {
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex flex-col">
-                           <span className="text-[10px] font-black text-amber-600 dark:text-amber-500/80 uppercase tracking-[0.2em]">{lead.wizard_answers?.referral_code?.toUpperCase() || "ORGANIC"}</span>
+                           <span className="text-[10px] font-black text-amber-600 dark:text-amber-500/80 uppercase tracking-[0.2em]">{(lead.wizard_answers as any)?.referral_code?.toUpperCase() || "ORGANIC"}</span>
                            <span className="text-[8px] font-bold text-zinc-400 dark:text-zinc-700 uppercase tracking-tighter mt-1">Network Acquisition</span>
                         </div>
                       </td>

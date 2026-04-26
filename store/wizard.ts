@@ -119,7 +119,7 @@ export const useWizardStore = create<WizardStore>()(
         },
       },
       // Only persist answers and current step — not the fetched steps config
-      partialize: (state) => ({
+      partialize: (state): any => ({
         answers: state.answers,
         current_step_index: state.current_step_index,
       }),

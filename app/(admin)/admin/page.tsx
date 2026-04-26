@@ -66,7 +66,7 @@ export default async function AdminDashboard() {
 
   allRecentLeadsSnap.docs.forEach((doc) => {
     const data = doc.data();
-    const createdAt: Date = data.created_at?.toDate?.() ?? new Date(data.created_at);
+    const createdAt: Date = (data.created_at as any)?.toDate?.() ?? new Date(data.created_at);
     const dayStart = new Date(createdAt);
     dayStart.setHours(0, 0, 0, 0);
 
@@ -109,7 +109,7 @@ export default async function AdminDashboard() {
       customer_name: d.customer_name ?? "Unknown",
       status: d.status ?? "new",
       // referral_code: d.referral_code ?? null, // Removed as it's not in RecentActivity interface
-      created_at: d.created_at?.toDate?.()?.toISOString() ?? "",
+      created_at: (d.created_at as any)?.toDate?.()?.toISOString() ?? "",
     };
   });
 

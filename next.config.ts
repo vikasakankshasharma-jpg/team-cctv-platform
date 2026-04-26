@@ -44,7 +44,4 @@ export default withSentryConfig(nextConfig, {
   project: "cctv-platform",
   silent: true,
   widenClientFileUpload: true,
-  hideSourceMaps: true,
-  disableLogger: true,
-  automaticVercelMonitors: true,
 });

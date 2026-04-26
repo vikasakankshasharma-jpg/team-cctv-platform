@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Simultaneously update Lead with address and status if provided
-    const updatePayload: unknown = { status: "quoted" };
+    const updatePayload: Record<string, unknown> = { status: "quoted" };
     if (address) updatePayload.address = address;
     
     const leadPromise = leadRef.update(updatePayload);

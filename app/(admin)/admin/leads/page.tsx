@@ -35,9 +35,9 @@ export default async function LeadsAdminPage({
     return {
       ...data,
       id: doc.id,
-      created_at: data.created_at?.toDate?.()?.toISOString() || data.created_at || null,
-      updated_at: data.updated_at?.toDate?.()?.toISOString() || data.updated_at || null,
-      site_visit_date: data.site_visit_date?.toDate?.()?.toISOString() || data.site_visit_date || null
+      created_at: (data.created_at as any)?.toDate?.()?.toISOString() || data.created_at || null,
+      updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
+      site_visit_date: (data.site_visit_date as any)?.toDate?.()?.toISOString() || data.site_visit_date || null
     };
   });
 

@@ -8,7 +8,7 @@ interface AddonModalProps {
   isOpen: boolean;
   onClose: () => void;
   addon?: (Addon & { technical_name?: string }) | null;
-  onSave: (data: unknown) => Promise<void>;
+  onSave: (data: any) => Promise<void>;
 }
 
 export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) {

@@ -36,11 +36,11 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
     }
   };
 
-  const handleSave = async (data: unknown) => {
+  const handleSave = async (data: any) => {
     if (editingAddon?.id) {
-      await updateAddon(editingAddon.id, data);
+      await updateAddon(editingAddon.id, data as any);
     } else {
-      await createAddon(data);
+      await createAddon(data as any);
     }
     setIsModalOpen(false);
   };

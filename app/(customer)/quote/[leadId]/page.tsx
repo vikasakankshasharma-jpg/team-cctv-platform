@@ -114,8 +114,8 @@ export default async function QuoteResultPage({
 
   if (addons.length === 0) {
     addons = [
-      { id: "f_add_1", technical_name: "wire_mgr", display_name: "Wire Management Box", price: 450, is_active: true },
-      { id: "f_add_2", technical_name: "audio_mic", display_name: "Sound Recording Mic", price: 850, is_active: true },
+      { id: "f_add_1", display_name: "Wire Management Box", price: 450, is_active: true },
+      { id: "f_add_2", display_name: "Sound Recording Mic", price: 850, is_active: true },
     ] as Addon[];
   }
 

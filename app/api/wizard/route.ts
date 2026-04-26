@@ -71,14 +71,15 @@ export async function GET(request: Request) {
         count: wizardSteps.length
       }
     });
-  } catch (error: unknown) {
-    console.error("❌ Critical System Fault in Wizard API:", error.message);
+  } catch (error) {
+    const err = error as Error;
+    console.error("❌ Critical System Fault in Wizard API:", err.message);
     // Explicitly return the fallback if Firebase connectivity is lost
     return NextResponse.json({ 
       steps: getDefaultFallbackWizard(),
       metadata: {
         source: "fallback_emergency",
-        error: error.message
+        error: err.message
       }
     });
   }
