@@ -8,7 +8,7 @@ interface PromoterModalProps {
   isOpen: boolean;
   onClose: () => void;
   promoter?: Promoter | null;
-  onSave: (data: any) => Promise<void>;
+  onSave: (data: unknown) => Promise<void>;
 }
 
 export function PromoterModal({ isOpen, onClose, promoter, onSave }: PromoterModalProps) {

@@ -18,7 +18,7 @@ export interface SourceBreakdown {
 export interface RecentActivity {
   customer_name: string;
   status: string;
-  created_at: any;
+  created_at: unknown;
 }
 
 export interface DashboardClientProps {

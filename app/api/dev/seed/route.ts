@@ -180,12 +180,12 @@ export async function GET() {
     // Note: Batch limit is 500, but we'll manually seed carefully
     for (const step of wizardSteps) {
       const stepRef = adminDb.collection("wizard_steps").doc(step.id);
-      const { id, questions, ...stepData } = step;
+      const { id: _id, questions, ...stepData } = step;
       batch.set(stepRef, { ...stepData, created_at: new Date() });
 
       for (const question of questions) {
         const qRef = stepRef.collection("questions").doc(question.id);
-        const { id: qId, options, ...qData } = question;
+        const { id: _qId, options, ...qData } = question;
         batch.set(qRef, qData);
 
         for (const option of options) {
@@ -212,8 +212,9 @@ export async function GET() {
 
     await batch.commit();
     return NextResponse.json({ message: "Elite Readiness Data Seeding Successful" });
-  } catch (error: unknown) {
-    console.error("Seeding Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const err = error as Error;
+    console.error("Seeding Error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

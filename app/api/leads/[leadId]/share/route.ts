@@ -15,7 +15,7 @@ export async function PATCH(
 ) {
   try {
     const { leadId } = await params;
-    const body = await request.json();
+    const body = (await request.json()) as { shared_to_number: string };
     const { shared_to_number } = body;
 
     if (!shared_to_number || !/^[6-9]\d{9}$/.test(shared_to_number)) {
@@ -42,8 +42,9 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true, note: shareNote }, { status: 200 });
-  } catch (error: any) {
-    console.error("Share recording error:", error);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Share recording error:", err.message);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

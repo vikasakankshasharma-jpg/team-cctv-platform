@@ -36,7 +36,7 @@ export function PromotersClient({ initialPromoters }: PromotersClientProps) {
     }
   };
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: unknown) => {
     if (editingPromoter?.id) {
       await updatePromoter(editingPromoter.id, data);
     } else {

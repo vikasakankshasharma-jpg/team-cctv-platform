@@ -44,11 +44,11 @@ export const onBookingCreated = functions.firestore
           return;
         }
 
-        const currentStatus = leadDoc.data()?.status;
+        const currentStatus = (leadDoc.data() as { status?: string })?.status;
         const terminalStatuses = ["won", "lost"];
 
         // Only shift status if not in a terminal state
-        if (!terminalStatuses.includes(currentStatus)) {
+        if (!terminalStatuses.includes(currentStatus || "")) {
           const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
           const auditEntry = `[${timestamp}] Site visit scheduled for ${data.preferred_date} @ ${data.preferred_time}.`;
 
@@ -59,9 +59,10 @@ export const onBookingCreated = functions.firestore
           });
         }
       });
-    } catch (error: any) {
-      console.error(`[CRITICAL FAULT] Booking Orchestration Failed for Lead ${leadId}: ${error.message}`);
-    }
+      } catch (error) {
+        const err = error as Error;
+        console.error(`[CRITICAL FAULT] Booking Orchestration Failed for Lead ${leadId}: ${err.message}`);
+      }
 
     return null;
   });

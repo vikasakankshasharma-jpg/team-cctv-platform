@@ -46,7 +46,8 @@ export default function AdminLoginPage() {
       router.push(redirectTo);
       router.refresh();
       
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
       console.error("🔒 Login Fault Audit:", err.code || err.message);
       if (err.code === "auth/invalid-api-key" || err.message?.includes("api-key")) {
         setError("Technical Fault: The administrative security keys are invalid for this domain. Please contact System Admin.");

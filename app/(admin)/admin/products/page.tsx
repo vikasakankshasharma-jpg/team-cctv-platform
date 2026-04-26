@@ -24,8 +24,9 @@ export default async function ProductsAdminPage() {
         created_at: data.created_at?.toDate?.()?.toISOString() || data.created_at || null,
       };
     });
-  } catch (err: any) {
-    console.warn("⚠️ Products query failed. Falling back to mock catalog for audit.", err.message);
+    } catch (error) {
+      const err = error as Error;
+      console.warn("⚠️ Products query failed. Falling back to mock catalog for audit.", err.message);
     products = [
       {
         id: "mock-p1",

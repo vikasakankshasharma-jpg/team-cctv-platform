@@ -61,7 +61,7 @@ export const onLeadStatusWon = functions.firestore
         }
 
         const promoterData = promoterDoc.data()!;
-        let slabsToUse: any[] = [];
+        let slabsToUse: { from: number; to: number | null; type: string; value: number }[] = [];
 
         if (promoterData.use_global_commission) {
           const globalRules = await admin.firestore()
@@ -78,7 +78,7 @@ export const onLeadStatusWon = functions.firestore
 
         // C. Precision Calculation
         let commissionValue = 0;
-        const matchingSlab = slabsToUse.find((slab: any) => {
+        const matchingSlab = slabsToUse.find((slab: { from: number; to: number | null; type: string; value: number }) => {
           const isAboveOrEqual = exTaxAmount >= slab.from;
           const isBelowLimit = slab.to === null || exTaxAmount < slab.to;
           return isAboveOrEqual && isBelowLimit;
@@ -121,8 +121,9 @@ export const onLeadStatusWon = functions.firestore
 
         console.log(`[Elite Sync] Atomic payout created: ${recordRef.id} for Promoter ${promoterId}`);
       });
-    } catch (error: any) {
-      console.error(`[CRITICAL FAULT] Commission Orchestration Failed: ${error.message}`);
+    } catch (error) {
+      const err = error as Error;
+      console.error(`[CRITICAL FAULT] Commission Orchestration Failed: ${err.message}`);
       // In production, you might trigger a dead-letter record here or notify staff via WhatsApp/Email.
     }
 

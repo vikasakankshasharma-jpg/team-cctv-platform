@@ -122,7 +122,7 @@ export const useWizardStore = create<WizardStore>()(
       partialize: (state) => ({
         answers: state.answers,
         current_step_index: state.current_step_index,
-      } as any),
+      }),
     }
   )
 );

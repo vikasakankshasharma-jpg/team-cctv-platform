@@ -139,7 +139,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2">Type Category</label>
               <select
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value as "camera" | "recorder" | "accessory" | "cable" })}
                 className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
               >
                 <option value="camera">Camera Unit</option>
@@ -155,7 +155,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               </label>
               <select
                 value={formData.technology}
-                onChange={(e) => setFormData({ ...formData, technology: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, technology: e.target.value as "IP" | "HD" | "both" })}
                 className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
               >
                 <option value="IP">IP (Network)</option>
@@ -230,7 +230,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                   <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 text-emerald-500">Resolution Payload</label>
                   <select
                     value={formData.resolution_tier || "good"}
-                    onChange={(e) => setFormData({ ...formData, resolution_tier: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, resolution_tier: e.target.value as "good" | "very_clear" | "crystal_clear" })}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all appearance-none cursor-pointer"
                   >
                     <option value="good">Good (2MP)</option>

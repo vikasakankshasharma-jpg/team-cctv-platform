@@ -12,7 +12,7 @@ interface QuoteHistoryModalProps {
 }
 
 export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: QuoteHistoryModalProps) {
-  const [quotes, setQuotes] = useState<any[]>([]);
+  const [quotes, setQuotes] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

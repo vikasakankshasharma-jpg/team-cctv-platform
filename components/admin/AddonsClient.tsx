@@ -36,7 +36,7 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
     }
   };
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: unknown) => {
     if (editingAddon?.id) {
       await updateAddon(editingAddon.id, data);
     } else {
