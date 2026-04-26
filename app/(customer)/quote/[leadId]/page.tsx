@@ -109,14 +109,14 @@ export default async function QuoteResultPage({
       { id: "f_d_4", technical_name: "dvr_4ch", display_name: "4-Channel Recorder (HD)", category: "recorder", technology: "HD", unit_price: 3800, channels: 4, is_active: true },
       { id: "f_n_4", technical_name: "nvr_4ch", display_name: "4-Channel Recorder (Digital)", category: "recorder", technology: "IP", unit_price: 5900, channels: 4, is_active: true },
       { id: "f_acc_h1", technical_name: "hdd_1tb", display_name: "1TB Video Memory", category: "accessory", unit_price: 4200, is_active: true },
-    ] as any;
+    ] as Product[];
   }
 
   if (addons.length === 0) {
     addons = [
       { id: "f_add_1", technical_name: "wire_mgr", display_name: "Wire Management Box", price: 450, is_active: true },
       { id: "f_add_2", technical_name: "audio_mic", display_name: "Sound Recording Mic", price: 850, is_active: true },
-    ] as any;
+    ] as Addon[];
   }
 
   const finalSettings: AppSettings = settings || {
@@ -132,7 +132,7 @@ export default async function QuoteResultPage({
     tier_recommended_multiplier: 1.0,
     tier_premium_label: "ELITE:",
     tier_premium_multiplier: 1.25
-  } as any;
+  } as AppSettings;
 
   const pricingCache = {
     products,

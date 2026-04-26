@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Calendar, MapPin, User, Phone, CheckCircle2, Clock, Map } from "lucide-react";
 
 interface BookingsClientProps {
-  initialBookings: any[];
+  initialBookings: unknown[];
 }
 
 export function BookingsClient({ initialBookings }: BookingsClientProps) {

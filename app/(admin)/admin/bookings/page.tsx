@@ -35,7 +35,7 @@ export default async function BookingsPage() {
         description="Schedule and manage technician site visits for pinpoint location verification."
       />
       
-      <BookingsClient initialBookings={bookings as any[]} />
+      <BookingsClient initialBookings={bookings as unknown[]} />
     </div>
   );
 }

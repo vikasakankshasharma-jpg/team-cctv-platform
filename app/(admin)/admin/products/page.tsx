@@ -47,7 +47,7 @@ export default async function ProductsAdminPage() {
         is_active: true,
         channels: 8,
       }
-    ] as any;
+    ] as Product[];
   }
 
   // Simple sorting for display

@@ -43,7 +43,7 @@ export async function GET(
         gst_rate: 18,
         gst_amount: 5436,
         total_payable: 35636
-      } as any; 
+      } as unknown as Quote; 
       const mockSettings = { company_name: "TEAM CCTV" } as AppSettings;
 
       // Note: In mock mode, we don't have the full quote object from DB, 
@@ -54,7 +54,7 @@ export async function GET(
         <QuotePDFDocument quote={mockQuote} lead={mockLead} settings={mockSettings} quoteId={quoteId} sharedToNumber={sharedTo} />
       );
 
-      return new Response(pdfStream as any, {
+      return new Response(pdfStream as unknown as ReadableStream, {
         headers: {
           "Content-Type": "application/pdf",
           "Content-Disposition": `attachment; filename="TEAM_CCTV_Quote_${quoteId}.pdf"`,
@@ -87,7 +87,7 @@ export async function GET(
     // Convert NodeJS Readable stream to ArrayBuffer for Storage upload
     const chunks: Buffer[] = [];
     for await (const chunk of pdfStream) {
-      chunks.push(Buffer.from(chunk as any));
+      chunks.push(Buffer.from(chunk as Buffer));
     }
     const pdfBuffer = Buffer.concat(chunks);
 

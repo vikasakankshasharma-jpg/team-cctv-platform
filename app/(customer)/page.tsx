@@ -44,7 +44,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-2xl mb-16 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
-             Get an exact price for your CCTV setup in under 2 minutes. No technical knowledge needed—just answer a few simple questions and we'll do the rest.
+             Get an exact price for your CCTV setup in under 2 minutes. No technical knowledge needed&mdash;just answer a few simple questions and we&apos;ll do the rest.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 items-center w-full sm:w-auto animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
