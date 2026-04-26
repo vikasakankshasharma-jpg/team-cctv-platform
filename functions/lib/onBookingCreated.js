@@ -41,7 +41,7 @@ exports.onBookingCreated = functions.firestore
             const currentStatus = leadDoc.data()?.status;
             const terminalStatuses = ["won", "lost"];
             // Only shift status if not in a terminal state
-            if (!terminalStatuses.includes(currentStatus)) {
+            if (!terminalStatuses.includes(currentStatus || "")) {
                 const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
                 const auditEntry = `[${timestamp}] Site visit scheduled for ${data.preferred_date} @ ${data.preferred_time}.`;
                 transaction.update(leadRef, {
@@ -53,7 +53,8 @@ exports.onBookingCreated = functions.firestore
         });
     }
     catch (error) {
-        console.error(`[CRITICAL FAULT] Booking Orchestration Failed for Lead ${leadId}: ${error.message}`);
+        const err = error;
+        console.error(`[CRITICAL FAULT] Booking Orchestration Failed for Lead ${leadId}: ${err.message}`);
     }
     return null;
 });

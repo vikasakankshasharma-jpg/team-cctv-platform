@@ -154,10 +154,11 @@ export default function AdminLoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Email Address</label>
+              <label htmlFor="email" className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Email Address</label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-600" />
                 <input 
+                  id="email"
                   type="email"
                   required
                   value={email}
@@ -169,10 +170,11 @@ export default function AdminLoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Password</label>
+              <label htmlFor="password" className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Password</label>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-600" />
                 <input 
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}

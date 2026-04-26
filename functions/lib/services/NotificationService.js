@@ -33,12 +33,46 @@ class WhatsAppNotificationProvider {
         // 1. Fetch admin phone number from settings
         const db = admin.firestore();
         const settingsSnap = await db.collection("settings").doc("app_config").get();
-        const adminPhone = settingsSnap.data()?.admin_notification_phone || "919772699395";
+        let adminPhone = settingsSnap.data()?.admin_notification_phone || "919772699395";
+        // Ensure phone number has no '+' prefix for WhatsApp API
+        if (adminPhone.startsWith('+')) {
+            adminPhone = adminPhone.substring(1);
+        }
         // 2. Format message
         const formattedMessage = `*${title}*\n\n${message}`;
-        // 3. TODO: Implement actual HTTP call to WhatsApp provider here
-        console.log(`[WhatsAppService] Simulated message dispatched to ${adminPhone}: ${formattedMessage.substring(0, 50)}...`);
-        return true;
+        // 3. Make HTTP call to Meta Cloud API
+        const token = process.env.WHATSAPP_API_TOKEN;
+        const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        if (!token || !phoneId || token.includes("YOUR_")) {
+            console.log(`[WhatsAppService] Missing valid API credentials. Simulated message dispatched to ${adminPhone}: ${formattedMessage.substring(0, 50)}...`);
+            return true;
+        }
+        try {
+            const response = await fetch(`https://graph.facebook.com/v17.0/${phoneId}/messages`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    messaging_product: "whatsapp",
+                    to: adminPhone,
+                    type: "text",
+                    text: { preview_url: false, body: formattedMessage }
+                }),
+            });
+            const responseData = await response.json();
+            if (!response.ok) {
+                console.error("[WhatsAppService] API Error:", responseData);
+                return false;
+            }
+            console.log(`[WhatsAppService] Successfully sent alert to ${adminPhone}`);
+            return true;
+        }
+        catch (error) {
+            console.error("[WhatsAppService] Request Failed:", error);
+            return false;
+        }
     }
 }
 /**

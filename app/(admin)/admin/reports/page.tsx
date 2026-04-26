@@ -15,14 +15,20 @@ export default async function ReportsAdminPage() {
   // Fetch Leads with status "won"
   const leadsSnapshot = await adminDb.collection("leads")
     .where("status", "==", "won")
-    .orderBy("created_at", "desc")
-    .limit(100)
+    .limit(200) // Increase limit since we'll sort manually
     .get();
+
+  // Sort by created_at DESC in-memory to bypass index requirements
+  const sortedDocs = [...leadsSnapshot.docs].sort((a, b) => {
+    const timeA = (a.data().created_at as any)?.seconds || 0;
+    const timeB = (b.data().created_at as any)?.seconds || 0;
+    return timeB - timeA;
+  }).slice(0, 100); // Keep only the latest 100
 
   const reportEntries: { lead: Lead; quote: PricingResult }[] = [];
 
   // Parallel fetch the latest quote for each won lead
-  const fetchPromises = leadsSnapshot.docs.map(async (doc) => {
+  const fetchPromises = sortedDocs.map(async (doc) => {
     const leadData = { id: doc.id, ...doc.data() } as Lead;
     
     // Fetch the most recent quote from the subcollection

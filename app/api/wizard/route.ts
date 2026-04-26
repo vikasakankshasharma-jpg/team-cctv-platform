@@ -12,7 +12,6 @@ export async function GET(request: Request) {
     const stepsSnapshot = await adminDb
       .collection("wizard_steps")
       .where("is_active", "==", true)
-      .orderBy("position", "asc")
       .get();
 
     if (stepsSnapshot.empty) {
@@ -20,8 +19,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ steps: getDefaultFallbackWizard() });
     }
 
+    // Sort steps by position in-memory to bypass index requirements
+    const sortedDocs = [...stepsSnapshot.docs].sort((a, b) => 
+      (a.data().position || 0) - (b.data().position || 0)
+    );
+
     // Parallel fetch subcollections for deep hierarchy
-    const stepPromises = stepsSnapshot.docs.map(async (stepDoc) => {
+    const stepPromises = sortedDocs.map(async (stepDoc) => {
       const stepData = stepDoc.data() as Omit<WizardStep, "id" | "questions">;
       const stepId = stepDoc.id;
 

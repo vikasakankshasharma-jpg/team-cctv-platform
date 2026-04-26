@@ -6,7 +6,7 @@ test.describe('CCTV Wizard Smoke Test', () => {
     await page.goto('/');
     
     // 2. Check for the main CTA
-    const startButton = page.getByRole('link', { name: /start|get quote/i }).first();
+    const startButton = page.getByRole('link', { name: /start|get cctv quotation/i }).first();
     await expect(startButton).toBeVisible();
     
     // 3. Click and navigate to wizard
@@ -16,8 +16,9 @@ test.describe('CCTV Wizard Smoke Test', () => {
     // 4. Check if the first question loads
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     
-    // 5. Verify progress bar exists
-    await expect(page.locator('.progress-bar, [role="progressbar"]')).toBeVisible();
+    // 5. Verify progress indicator exists
+    await expect(page.getByText(/Your Quote Progress/i)).toBeVisible();
+    await expect(page.getByText(/\d+%/)).toBeVisible();
   });
 
   test('admin login page should be accessible', async ({ page }) => {

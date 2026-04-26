@@ -109,7 +109,8 @@ exports.onLeadStatusWon = functions.firestore
         });
     }
     catch (error) {
-        console.error(`[CRITICAL FAULT] Commission Orchestration Failed: ${error.message}`);
+        const err = error;
+        console.error(`[CRITICAL FAULT] Commission Orchestration Failed: ${err.message}`);
         // In production, you might trigger a dead-letter record here or notify staff via WhatsApp/Email.
     }
     return null;
