@@ -28,9 +28,12 @@ export function SiteFooter() {
             <Lock className="w-4 h-4 text-emerald-500" />
             <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">ISO 27001 Certified Planner</span>
           </div>
-          <div className="flex gap-6 items-center">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 items-center md:justify-end">
              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Service Hubs:</span>
              <Link href="/jaipur" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Jaipur</Link>
+             <Link href="/jodhpur" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Jodhpur</Link>
+             <Link href="/kota" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Kota</Link>
+             <Link href="/ajmer" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Ajmer</Link>
           </div>
           <div className="flex gap-8">
             <Link href="/privacy-policy" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Privacy Policy</Link>

@@ -8,6 +8,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '',
     '/wizard',
     '/jaipur',
+    '/jodhpur',
+    '/kota',
+    '/ajmer',
     '/privacy-policy',
     '/terms-of-service'
   ].map((route) => ({

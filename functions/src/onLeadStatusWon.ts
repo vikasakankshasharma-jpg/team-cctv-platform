@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { NotificationService } from "./services/NotificationService";
 
 // Ensure admin app is initialized once
 if (!admin.apps.length) {
@@ -121,6 +122,16 @@ export const onLeadStatusWon = functions.firestore
 
         console.log(`[Elite Sync] Atomic payout created: ${recordRef.id} for Promoter ${promoterId}`);
       });
+      
+      // 3. Dispatch Success Notification to Admin
+      const title = "💰 Project Won & Commission Generated";
+      const message = `Lead ID: ${leadId}\nAmount: ₹${afterData.net_taxable_amount || "N/A"} (ex-tax)\nPromoter: ${afterData.promoter_name || "Direct"}`;
+      
+      await NotificationService.notifyAdmin(title, message, {
+        leadId,
+        promoterId
+      });
+
     } catch (error) {
       const err = error as Error;
       console.error(`[CRITICAL FAULT] Commission Orchestration Failed: ${err.message}`);
