@@ -79,7 +79,7 @@ export function LeadGate() {
       }
 
       // E2E Visual Test Bypass (Simulation Mode)
-      if (mobile === "9999999999") {
+      if (mobile === "9999999999" || mobile === "9587980007" || mobile === "9772699395") {
         setOtpSent(true);
         setLoading(false);
         setCountdown(30);
@@ -103,7 +103,14 @@ export function LeadGate() {
       } else if (err.code === "auth/too-many-requests") {
         setError("Security Throttling: Too many attempts. Please try again in a few minutes.");
       } else {
-        setError("Communication Error: Failed to transmit OTP. Please retry.");
+        // Detailed error for domain issues or configuration
+        if (err.message?.includes("auth/operation-not-allowed")) {
+          setError("Configuration Error: Phone Authentication is not enabled in Firebase Console.");
+        } else if (err.message?.includes("auth/unauthorized-domain") || err.code === "auth/unauthorized-domain") {
+          setError(`Domain Error: ${window.location.hostname} is not whitelisted in Firebase Auth Authorized Domains.`);
+        } else {
+          setError(`Communication Error: ${err.message || "Failed to transmit OTP. Please retry."}`);
+        }
       }
     } finally {
       setLoading(false);
@@ -133,9 +140,9 @@ export function LeadGate() {
     const fullOtp = otp.join("");
     if (fullOtp.length < 6) return setError("Incomplete: Please enter the 6-digit security code.");
     
-    // E2E Bypass check
-    if (mobile === "9999999999" && fullOtp === "123456") {
-       finalizeLead("e2e-firebase-uid");
+    // E2E / Admin Bypass check
+    if ((mobile === "9999999999" || mobile === "9587980007" || mobile === "9772699395") && fullOtp === "123456") {
+       finalizeLead("admin-bypass-uid");
        return;
     }
 
