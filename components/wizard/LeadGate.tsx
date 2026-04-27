@@ -74,8 +74,8 @@ export function LeadGate() {
     if (!/^[6-9]\d{9}$/.test(mobile)) return setError("Invalid Format: 10-digit mobile number required.");
 
     setLoading(true);
-      // E2E / Admin Bypass check
-      if (mobile === "9999999999" || mobile === "9587980007" || mobile === "9772699395") {
+      // E2E / Internal Bypass check
+      if (mobile === "9999999999") {
         setOtpSent(true);
         setLoading(false);
         setCountdown(30);
@@ -136,9 +136,9 @@ export function LeadGate() {
     const fullOtp = otp.join("");
     if (fullOtp.length < 6) return setError("Incomplete: Please enter the 6-digit security code.");
     
-    // E2E / Admin Bypass check
-    if ((mobile === "9999999999" || mobile === "9587980007" || mobile === "9772699395") && fullOtp === "123456") {
-       finalizeLead("admin-bypass-uid");
+    // E2E / Internal Bypass check
+    if (mobile === "9999999999" && fullOtp === "123456") {
+       finalizeLead("e2e-bypass-uid");
        return;
     }
 
