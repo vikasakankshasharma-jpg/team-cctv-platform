@@ -179,19 +179,30 @@ export default async function QuoteResultPage({
            />
         </div>
 
-        {/* TRUST SIGNALS */}
-        <div className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-12 border-t border-zinc-100 pt-16 w-full">
-           <div className="flex flex-col gap-3">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Clear Pricing</span>
-              <p className="text-sm font-bold text-zinc-900 leading-snug">Every rupee is clearly shown. You get a full list of all parts and work.</p>
+        {/* NEXT STEPS TIMELINE */}
+        <div className="mt-32 w-full max-w-5xl">
+           <div className="text-center mb-16">
+              <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4">The Road to Security</span>
+              <h3 className="text-4xl font-black text-zinc-900 tracking-tighter">What Happens Next?</h3>
            </div>
-           <div className="flex flex-col gap-3">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Best Quality</span>
-              <p className="text-sm font-bold text-zinc-900 leading-snug">We only use top-brand cameras. 100% original products with full warranty.</p>
-           </div>
-           <div className="flex flex-col gap-3">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Expert Help</span>
-              <p className="text-sm font-bold text-zinc-900 leading-snug">Talk to our security experts if you have any questions about your plan.</p>
+           
+           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+              <div className="hidden md:block absolute top-8 left-0 w-full h-px bg-zinc-100 -z-10" />
+              
+              {[
+                { step: "01", title: "Site Survey", desc: "Book a visit for a precise wiring measurement." },
+                { step: "02", title: "Final Quote", desc: "Receive a binding contract with exact totals." },
+                { step: "03", title: "Installation", desc: "Professional setup by our certified team." },
+                { step: "04", title: "Go Live", desc: "System handover with mobile app setup." }
+              ].map((item, i) => (
+                <div key={i} className="flex flex-col items-center text-center group">
+                   <div className="w-16 h-16 rounded-3xl bg-white border border-zinc-100 shadow-xl flex items-center justify-center text-zinc-900 font-black text-xl mb-6 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500">
+                      {item.step}
+                   </div>
+                   <h4 className="text-lg font-black text-zinc-900 mb-2 tracking-tight">{item.title}</h4>
+                   <p className="text-xs font-medium text-zinc-400 leading-relaxed px-4">{item.desc}</p>
+                </div>
+              ))}
            </div>
         </div>
 
