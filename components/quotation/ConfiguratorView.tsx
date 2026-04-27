@@ -5,8 +5,9 @@ import { useConfiguratorStore } from "@/store/configurator";
 import { PlanCard } from "./PlanCard";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { evaluateAddonRules } from "@/lib/addon-rules";
-import { SlidersHorizontal, Share2, Download, Calendar, ArrowRight, ShieldCheck, Zap, Info, Check } from "lucide-react";
+import { SlidersHorizontal, Share2, Download, Calendar, ArrowRight, ShieldCheck, Zap, Info, Check, LayoutGrid, Eye } from "lucide-react";
 import dynamic from "next/dynamic";
+import { SecurityBlueprint } from "./SecurityBlueprint";
 
 const SiteDetailsModal = dynamic(() => import("./SiteDetailsModal").then(mod => mod.SiteDetailsModal), {
   loading: () => <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-[100] animate-pulse" />
@@ -311,8 +312,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-16 md:gap-24">
-          <div className="space-y-12">
+        <div className="flex flex-col lg:flex-row gap-16 lg:gap-24">
+          <div className="lg:w-1/2 space-y-12">
+            <SecurityBlueprint cameraCount={selection.camera_count} propertyType={propertyType} />
+            
             <div className="space-y-6">
               <div className="flex justify-between items-center group/label">
                 <label className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em]">Number of Cameras</label>
