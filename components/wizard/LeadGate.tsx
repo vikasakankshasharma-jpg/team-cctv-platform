@@ -74,6 +74,7 @@ export function LeadGate() {
     if (!/^[6-9]\d{9}$/.test(mobile)) return setError("Invalid Format: 10-digit mobile number required.");
 
     setLoading(true);
+    try {
       // E2E / Internal Bypass check
       if (mobile === "9999999999") {
         setOtpSent(true);
@@ -280,22 +281,20 @@ export function LeadGate() {
             <div className="space-y-6">
                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1">Send OTP via</label>
                <div className="flex flex-wrap gap-4">
-                <div className="flex flex-wrap gap-4">
-                   {[
-                     { id: "sms", label: "SMS", icon: Phone, active: true },
-                     { id: "whatsapp", label: "WhatsApp", icon: CheckCircle2, active: false }
-                   ].map((chan) => (
-                     <label 
-                       key={chan.id} 
-                       onClick={() => chan.active && setChannel(chan.id as any)}
-                       className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${channel === chan.id ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-60'}`}
-                     >
-                       <input type="radio" name="otp_channel" checked={channel === chan.id} disabled={!chan.active} className="hidden" readOnly />
-                       <chan.icon className="w-4 h-4" />
-                       <span className="text-[10px] font-black uppercase tracking-widest">{chan.label}</span>
-                     </label>
-                   ))}
-                </div>
+                  {[
+                    { id: "sms", label: "SMS", icon: Phone, active: true },
+                    { id: "whatsapp", label: "WhatsApp", icon: CheckCircle2, active: false }
+                  ].map((chan) => (
+                    <label 
+                      key={chan.id} 
+                      onClick={() => chan.active && setChannel(chan.id as any)}
+                      className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${channel === chan.id ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-60'}`}
+                    >
+                      <input type="radio" name="otp_channel" checked={channel === chan.id} disabled={!chan.active} className="hidden" readOnly />
+                      <chan.icon className="w-4 h-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">{chan.label}</span>
+                    </label>
+                  ))}
                </div>
             </div>
 
