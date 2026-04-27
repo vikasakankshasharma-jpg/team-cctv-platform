@@ -176,15 +176,9 @@ export default function LandingPage() {
 
             <div className="mt-20 flex flex-col items-center gap-8">
                <div className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Trusted Hardware Partners & Verified Installs</div>
-               <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 grayscale opacity-60 dark:opacity-50">
-                 <div className="flex items-center gap-3">
-                   <Shield className="w-8 h-8" />
-                   <span className="font-black text-xl tracking-tight uppercase">CP PLUS</span>
-                 </div>
-                 <div className="flex items-center gap-3">
-                   <Cpu className="w-8 h-8" />
-                   <span className="font-black text-xl tracking-tight uppercase">PRAMA</span>
-                 </div>
+               <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 grayscale opacity-60 dark:opacity-40">
+                 <img src="/partners/cpplus.png" alt="CP PLUS" className="h-6 md:h-8 object-contain" />
+                 <img src="/partners/prama.png" alt="PRAMA" className="h-6 md:h-8 object-contain" />
                  <div className="flex items-center gap-3">
                    <ShieldCheck className="w-8 h-8" />
                    <span className="font-black text-xl tracking-tight uppercase">BIS-ER</span>
