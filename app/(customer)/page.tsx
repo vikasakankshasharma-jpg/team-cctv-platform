@@ -164,7 +164,7 @@ export default function LandingPage() {
                   { q: "Is GST included in the quote price?", a: "Yes. All our quotes include 18% GST. The price you see is the final CCTV with GST price you pay with no surprises." },
                   { q: "Does the price include installation?", a: "Yes. Labor and wiring costs are calculated based on your property and included in the final CCTV camera price with installation." },
                   { q: "How much does a 4 camera CCTV system cost in Jaipur?", a: `Prices are dynamic. As of ${new Date().toLocaleString('en-US', { month: 'short', year: 'numeric' })}, a standard 4-camera CP Plus system with professional installation typically ranges from ₹12,000 to ₹18,000 depending on wiring length and camera resolution.` },
-                  { q: "Are your cameras STQC compliant and government approved?", a: "Yes. We only install STQC compliant hardware like CP Plus. We strictly do not install banned or non-compliant brands (such as Hikvision) for new installations to ensure your security and data privacy." },
+                  { q: "Are your cameras STQC or BIS-ER compliant?", a: "Yes. We strictly adhere to Indian security standards. We provide STQC-certified hardware for Government projects and BIS-ER compliant systems for retail and home installations. We only use trusted brands like CP Plus and Prama, ensuring full regulatory compliance and data privacy." },
                 ].map((faq, i) => (
                   <div key={i} className="space-y-4 p-8 rounded-[32px] bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 shadow-inner">
                     <h4 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight">{faq.q}</h4>
