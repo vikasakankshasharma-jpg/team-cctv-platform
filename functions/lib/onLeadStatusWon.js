@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.onLeadStatusWon = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const NotificationService_1 = require("./services/NotificationService");
 // Ensure admin app is initialized once
 if (!admin.apps.length) {
     admin.initializeApp();
@@ -106,6 +107,13 @@ exports.onLeadStatusWon = functions.firestore
                 updated_at: admin.firestore.FieldValue.serverTimestamp()
             });
             console.log(`[Elite Sync] Atomic payout created: ${recordRef.id} for Promoter ${promoterId}`);
+        });
+        // 3. Dispatch Success Notification to Admin
+        const title = "💰 Project Won & Commission Generated";
+        const message = `Lead ID: ${leadId}\nAmount: ₹${afterData.net_taxable_amount || "N/A"} (ex-tax)\nPromoter: ${afterData.promoter_name || "Direct"}`;
+        await NotificationService_1.NotificationService.notifyAdmin(title, message, {
+            leadId,
+            promoterId
         });
     }
     catch (error) {

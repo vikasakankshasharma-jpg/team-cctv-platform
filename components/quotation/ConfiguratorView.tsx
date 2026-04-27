@@ -5,7 +5,7 @@ import { useConfiguratorStore } from "@/store/configurator";
 import { PlanCard } from "./PlanCard";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { evaluateAddonRules } from "@/lib/addon-rules";
-import { SlidersHorizontal, Share2, Download, Calendar, ArrowRight, ShieldCheck, Zap, Info, Check, LayoutGrid, Eye } from "lucide-react";
+import { SlidersHorizontal, Share2, Download, Calendar, ArrowRight, ShieldCheck, Zap, Info, Check, LayoutGrid, Eye, Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { SecurityBlueprint } from "./SecurityBlueprint";
 
@@ -469,4 +469,3 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     </div>
   );
 }
-const Loader2 = ({ className }: { className?: string }) => <Zap className={className} />;
