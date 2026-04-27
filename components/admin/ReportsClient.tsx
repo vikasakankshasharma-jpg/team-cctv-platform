@@ -49,7 +49,7 @@ export function ReportsClient({ data, aggregates }: ReportsClientProps) {
       quote.net_taxable_amount,
       quote.total_payable,
       quote.plan_type,
-      new Date((lead.created_at as any)?.seconds ? (lead.created_at as any).seconds * 1000 : lead.created_at).toLocaleDateString()
+      new Date(((lead.created_at as any)?.seconds ? (lead.created_at as any).seconds * 1000 : lead.created_at) as string | number | Date).toLocaleDateString()
     ]);
 
     const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
