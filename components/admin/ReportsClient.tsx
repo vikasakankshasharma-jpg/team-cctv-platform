@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Download, Calendar, TrendingUp } from "lucide-react";
 import type { Lead, PricingResult } from "@/types";
 import { PageHeader } from "./PageHeader";
+import { AnalyticsChart } from "./AnalyticsChart";
 
 interface ReportEntry {
   lead: Lead;
@@ -17,6 +18,7 @@ interface ReportsClientProps {
     ipCount: number;
     hdCount: number;
     topAddon: { name: string; percentage: string };
+    revenueTrend: { date: string; value: number }[];
   };
 }
 
@@ -146,7 +148,35 @@ export function ReportsClient({ data, aggregates }: ReportsClientProps) {
           </div>
         </div>
       </div>
-
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AnalyticsChart 
+          data={aggregates.revenueTrend} 
+          title="Revenue Acquisition Flow" 
+        />
+        <div className="bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 backdrop-blur-md shadow-xl flex flex-col justify-center gap-6">
+           <div>
+              <h3 className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.4em] mb-1">Portfolio Balance</h3>
+              <p className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-tighter">Asset Distribution Matrix</p>
+           </div>
+           <div className="space-y-4">
+              {['Home', 'Office', 'Warehouse', 'Bungalow'].map(type => {
+                const count = data.filter(d => d.lead.property_type === type.toLowerCase()).length;
+                const percent = data.length > 0 ? (count / data.length) * 100 : 0;
+                return (
+                  <div key={type} className="space-y-2">
+                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                       <span className="text-zinc-500">{type}</span>
+                       <span className="text-zinc-900 dark:text-white">{count} Units</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-950 rounded-full overflow-hidden">
+                       <div className="h-full bg-zinc-900 dark:bg-blue-600 rounded-full" style={{ width: `${percent}%` }} />
+                    </div>
+                  </div>
+                )
+              })}
+           </div>
+        </div>
+      </div>
       <div className="space-y-6">
         <div className="flex items-center justify-between px-2">
            <h2 className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.4em] flex items-center gap-3">

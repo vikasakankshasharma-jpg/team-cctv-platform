@@ -73,11 +73,28 @@ export default async function ReportsAdminPage() {
     topAddonPercent = `${Math.round((sortedAddons[0][1] / reportEntries.length) * 100)}%`;
   }
 
+  // 3. Calculate Revenue Trend (Last 14 Days)
+  const revenueTrend: Record<string, number> = {};
+  const today = new Date();
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    revenueTrend[d.toISOString().split('T')[0]] = 0;
+  }
+
+  reportEntries.forEach(e => {
+    const dateStr = new Date((e.lead.created_at as any)?.seconds * 1000).toISOString().split('T')[0];
+    if (revenueTrend[dateStr] !== undefined) {
+      revenueTrend[dateStr] += e.quote.total_payable;
+    }
+  });
+
   const aggregates = {
     avgQuoteValue,
     ipCount,
     hdCount,
-    topAddon: { name: topAddonName, percentage: topAddonPercent }
+    topAddon: { name: topAddonName, percentage: topAddonPercent },
+    revenueTrend: Object.entries(revenueTrend).map(([date, value]) => ({ date, value }))
   };
 
   return (
