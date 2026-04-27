@@ -9,6 +9,15 @@ import type { WizardStep, WizardQuestion, WizardOption } from "@/types";
  */
 export async function GET(request: Request) {
   try {
+    // Fast-fail in CI/mock environments to prevent Playwright timeouts
+    if (!process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID === "your_project_id_here") {
+      console.warn("⚠️ Wizard Intelligence: Mock environment detected. Bypassing Firestore.");
+      return NextResponse.json({ 
+        steps: getDefaultFallbackWizard(),
+        metadata: { source: "fallback_emergency", error: "Mock Environment Detected" }
+      });
+    }
+
     const stepsSnapshot = await adminDb
       .collection("wizard_steps")
       .where("is_active", "==", true)
