@@ -179,15 +179,19 @@ export default function LandingPage() {
                <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 grayscale opacity-60 dark:opacity-50">
                  <div className="flex items-center gap-3">
                    <Shield className="w-8 h-8" />
-                   <span className="font-black text-xl tracking-tight">CP PLUS</span>
+                   <span className="font-black text-xl tracking-tight uppercase">CP PLUS</span>
+                 </div>
+                 <div className="flex items-center gap-3">
+                   <Cpu className="w-8 h-8" />
+                   <span className="font-black text-xl tracking-tight uppercase">PRAMA</span>
                  </div>
                  <div className="flex items-center gap-3">
                    <ShieldCheck className="w-8 h-8" />
-                   <span className="font-black text-xl tracking-tight">STQC APPROVED</span>
+                   <span className="font-black text-xl tracking-tight uppercase">BIS-ER</span>
                  </div>
                  <div className="flex items-center gap-3">
                    <Award className="w-8 h-8" />
-                   <span className="font-black text-xl tracking-tight">SEAGATE</span>
+                   <span className="font-black text-xl tracking-tight uppercase">STQC</span>
                  </div>
                </div>
                <div className="mt-4 px-6 py-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
