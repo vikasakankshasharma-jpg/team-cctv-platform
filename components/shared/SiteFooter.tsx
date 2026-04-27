@@ -29,11 +29,14 @@ export function SiteFooter() {
             <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">ISO 27001 Certified Planner</span>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 items-center md:justify-end">
-             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Service Hubs:</span>
+             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Operations:</span>
              <Link href="/jaipur" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Jaipur</Link>
-             <Link href="/jodhpur" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Jodhpur</Link>
-             <Link href="/kota" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Kota</Link>
-             <Link href="/ajmer" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Ajmer</Link>
+             <div className="flex gap-4 opacity-50">
+               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Expanding Next:</span>
+               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Jodhpur</span>
+               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Kota</span>
+               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Ajmer</span>
+             </div>
           </div>
           <div className="flex gap-8">
             <Link href="/privacy-policy" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Privacy Policy</Link>

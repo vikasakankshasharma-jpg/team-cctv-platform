@@ -40,7 +40,7 @@ export default function LandingPage() {
 
           <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-10 leading-[0.85] animate-in fade-in slide-in-from-bottom-8 duration-1000">
             High-Quality Security. <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">Across Rajasthan.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">Starting in Jaipur.</span>
           </h1>
 
           <p className="text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-2xl mb-16 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
@@ -192,7 +192,7 @@ export default function LandingPage() {
                </div>
                <div className="mt-4 px-6 py-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
                  <Star className="w-4 h-4 fill-emerald-500/50" />
-                 <span>Serving 500+ Properties Across Jaipur, Jodhpur, Kota & Ajmer</span>
+                 <span>Jaipur&apos;s Preferred CCTV Platform | 500+ Properties Secured</span>
                </div>
             </div>
         </div>
