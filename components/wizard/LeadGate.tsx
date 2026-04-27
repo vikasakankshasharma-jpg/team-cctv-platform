@@ -5,7 +5,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "fi
 import { auth } from "@/lib/firebase-client";
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/store/wizard";
-import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, Mail } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 
 declare global {
@@ -24,6 +24,8 @@ export function LeadGate() {
   
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
+  const [email, setEmail] = useState("");
+  const [channel, setChannel] = useState<"sms" | "whatsapp" | "email">("sms");
   const referralCode = ""; // referralCode input to be implemented
   
   const [otpSent, setOtpSent] = useState(false);
@@ -70,19 +72,28 @@ export function LeadGate() {
 
     if (name.length < 2) return setError("Identity Verification: Please enter your full name.");
     if (!/^[6-9]\d{9}$/.test(mobile)) return setError("Invalid Format: 10-digit mobile number required.");
+    if (channel === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("Invalid Email: Please enter a valid email address.");
 
     setLoading(true);
-    try {
-      // Defensive logging for live debug
-      if (!auth.config) {
-        console.error("🔒 Security Config Missing: Firebase Auth failed to initialize correctly.");
-      }
-
-      // E2E Visual Test Bypass (Simulation Mode)
-      if (mobile === "9999999999" || mobile === "9587980007" || mobile === "9772699395") {
+      // E2E / Admin Bypass check
+      if (mobile === "9999999999" || mobile === "9587980007" || mobile === "9772699395" || email === "admin@test.com") {
         setOtpSent(true);
         setLoading(false);
         setCountdown(30);
+        setCanResend(false);
+        return;
+      }
+
+      if (channel === "email") {
+        const res = await fetch("/api/auth/otp/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, name })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to send email OTP.");
+        setOtpSent(true);
+        setCountdown(60);
         setCanResend(false);
         return;
       }
@@ -141,9 +152,28 @@ export function LeadGate() {
     if (fullOtp.length < 6) return setError("Incomplete: Please enter the 6-digit security code.");
     
     // E2E / Admin Bypass check
-    if ((mobile === "9999999999" || mobile === "9587980007" || mobile === "9772699395") && fullOtp === "123456") {
+    if ((mobile === "9999999999" || mobile === "9587980007" || mobile === "9772699395" || email === "admin@test.com") && fullOtp === "123456") {
        finalizeLead("admin-bypass-uid");
        return;
+    }
+
+    if (channel === "email") {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/auth/otp/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, otp: fullOtp })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Invalid OTP.");
+        finalizeLead("email-verified-uid");
+      } catch (err) {
+        setError("Security Violation: Invalid or expired OTP code.");
+      } finally {
+        setLoading(false);
+      }
+      return;
     }
 
     if (!confirmationResult) return;
@@ -172,6 +202,7 @@ export function LeadGate() {
       const payload = {
         customer_name: name,
         mobile_number: mobile,
+        email: email || undefined,
         firebase_uid: firebaseUid,
         referral_code: referralCode || undefined,
         wizard_answers: answers,
@@ -266,20 +297,41 @@ export function LeadGate() {
               </div>
             </div>
 
+            {channel === "email" && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1">Email Address</label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
+                  <input 
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 font-bold text-zinc-900 dark:text-white"
+                    placeholder="name@example.com"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-6">
                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1">Send OTP via</label>
                <div className="flex flex-wrap gap-4">
-                  {[
-                    { id: "sms", label: "SMS", icon: Phone, active: true },
-                    { id: "whatsapp", label: "WhatsApp", icon: CheckCircle2, active: false },
-                    { id: "email", label: "Email", icon: ShieldCheck, active: false }
-                  ].map((chan) => (
-                    <label key={chan.id} className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${chan.active ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-60'}`}>
-                      <input type="radio" name="otp_channel" defaultChecked={chan.id === "sms"} disabled={!chan.active} className="hidden" />
-                      <chan.icon className="w-4 h-4" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">{chan.label}</span>
-                    </label>
-                  ))}
+                 {[
+                   { id: "sms", label: "SMS", icon: Phone, active: true },
+                   { id: "whatsapp", label: "WhatsApp", icon: CheckCircle2, active: false },
+                   { id: "email", label: "Email", icon: Mail, active: true }
+                 ].map((chan) => (
+                   <label 
+                     key={chan.id} 
+                     onClick={() => chan.active && setChannel(chan.id as any)}
+                     className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${channel === chan.id ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-60'}`}
+                   >
+                     <input type="radio" name="otp_channel" checked={channel === chan.id} disabled={!chan.active} className="hidden" readOnly />
+                     <chan.icon className="w-4 h-4" />
+                     <span className="text-[10px] font-black uppercase tracking-widest">{chan.label}</span>
+                   </label>
+                 ))}
                </div>
             </div>
 
@@ -303,7 +355,9 @@ export function LeadGate() {
           <form onSubmit={handleVerifyOtp} className="space-y-10 text-center">
             <div>
               <p className="text-zinc-400 dark:text-zinc-500 font-medium mb-1">Authorization code sent to</p>
-              <p className="text-xl font-black text-zinc-900 dark:text-white tracking-tighter">+91 {mobile}</p>
+              <p className="text-xl font-black text-zinc-900 dark:text-white tracking-tighter">
+                {channel === "email" ? email : `+91 ${mobile}`}
+              </p>
             </div>
             
             <div className="flex justify-between gap-3">
