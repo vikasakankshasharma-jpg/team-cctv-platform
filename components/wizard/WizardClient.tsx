@@ -78,18 +78,48 @@ export function WizardClient() {
 
   // Handle Option Click
   const handleOptionSelect = (questionId: string, optionValue: string, isMulti: boolean) => {
+    let newAnswers = { ...answers };
+    
     if (isMulti) {
       const currentAns = (answers[questionId] as string[]) || [];
       if (currentAns.includes(optionValue)) {
-        setAnswer(questionId, currentAns.filter(v => v !== optionValue));
+        newAnswers[questionId] = currentAns.filter(v => v !== optionValue);
       } else {
-        setAnswer(questionId, [...currentAns, optionValue]);
+        newAnswers[questionId] = [...currentAns, optionValue];
       }
+      setAnswer(questionId, newAnswers[questionId] as string[]);
     } else {
+      newAnswers[questionId] = optionValue;
       setAnswer(questionId, optionValue);
-      // UX enhancement: auto-advance on single-select if it's the only question in step
-      if (currentStep.questions?.length === 1 && !isLastStep) {
-        setTimeout(nextStep, 400);
+      
+      // UX enhancement: Smart Auto-Navigate
+      const qIndex = currentStep.questions?.findIndex(q => q.id === questionId) ?? -1;
+      const isLastQuestionInStep = qIndex === (currentStep.questions?.length || 0) - 1;
+      
+      if (!isLastQuestionInStep) {
+        // Scroll to the next question on the same page
+        const nextQId = currentStep.questions![qIndex + 1].id;
+        setTimeout(() => {
+          document.getElementById(`question-${nextQId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      } else {
+        // Last question in the step: verify all required are answered before auto-advancing to next step
+        let isValid = true;
+        currentStep.questions?.forEach((q) => {
+          if (q.is_required) {
+            const ans = newAnswers[q.id!];
+            if (!ans || (Array.isArray(ans) && ans.length === 0)) {
+              isValid = false;
+            }
+          }
+        });
+
+        if (isValid && !isLastStep) {
+          setTimeout(() => {
+            nextStep();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }, 400);
+        }
       }
     }
   };
@@ -146,7 +176,7 @@ export function WizardClient() {
             if (q.input_type === "number") {
               const currentVal = (answers[q.id!] as string) || "";
               return (
-                <div key={q.id}>
+                <div key={q.id} id={`question-${q.id}`}>
                   <div className="flex items-center gap-3 mb-6">
                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-xs">#</div>
                      <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{q.question_text}</h3>
@@ -177,7 +207,7 @@ export function WizardClient() {
             const currentAns = answers[q.id!] || (isMulti ? [] : "");
 
             return (
-              <div key={q.id}>
+              <div key={q.id} id={`question-${q.id}`}>
                 <div className="flex items-center gap-3 mb-6">
                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-xs">?</div>
                    <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{q.question_text}</h3>
