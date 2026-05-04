@@ -1,65 +1,153 @@
 "use client";
 
-import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { useState, useEffect } from "react";
+import { signInWithCustomToken, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, Mail, ShieldAlert, ShieldCheck, Eye, EyeOff, Zap, BarChart2, Users } from "lucide-react";
+import { Lock, Mail, ShieldAlert, ShieldCheck, Smartphone, Zap, BarChart2, Users, ArrowRight } from "lucide-react";
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/admin";
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const [method, setMethod] = useState<"email" | "mobile">("email");
+  const [identifier, setIdentifier] = useState("");
+  const [step, setStep] = useState<1 | 2>(1);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(120);
+
+  useEffect(() => {
+    if (step === 2 && timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [step, timeLeft]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && !(window as any).recaptchaVerifier) {
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+      });
+    }
+  }, []);
+
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    if (typeof window !== "undefined") {
-      console.info("🔒 Admin Login: Using configuration for " + auth.app.options.projectId);
-    }
-
     try {
-      // Defensive check for auth client integrity
-      if (!auth || !auth.app) {
-        throw new Error("auth/initialization-failed: Firebase Auth is not properly configured.");
+      if (method === "email") {
+        const res = await fetch("/api/auth/otp/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: identifier }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to send code.");
+      } else {
+        const res = await fetch("/api/auth/otp/mobile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mobile: identifier }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Unauthorized mobile number.");
+
+        const appVerifier = (window as any).recaptchaVerifier;
+        const confirmationResult = await signInWithPhoneNumber(auth, data.e164Mobile, appVerifier);
+        (window as any).confirmationResult = confirmationResult;
       }
 
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await userCredential.user.getIdToken();
+      setStep(2);
+      setTimeLeft(120);
+    } catch (err: any) {
+      if (err.code === "auth/invalid-app-credential" || err.message?.includes("invalid-app-credential")) {
+        setError("Mobile Verification is currently unavailable in this environment (App Check / Domain blocked). Please use the EMAIL option instead.");
+      } else {
+        setError(err.message || "An unexpected error occurred.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const response = await fetch("/api/auth/session", {
+  const handleVerifyCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const code = otp.join("");
+    if (code.length < 6) return;
+    
+    setError("");
+    setLoading(true);
+
+    try {
+      let customToken = "";
+
+      if (method === "email") {
+        const res = await fetch("/api/auth/otp/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier, otp: code, type: "email" }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Invalid verification code.");
+        customToken = data.customToken;
+        await signInWithCustomToken(auth, customToken);
+      } else {
+        const confirmationResult = (window as any).confirmationResult;
+        if (!confirmationResult) throw new Error("Verification session expired.");
+        
+        const result = await confirmationResult.confirm(code);
+        const idToken = await result.user.getIdToken();
+
+        const res = await fetch("/api/auth/otp/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier, otp: idToken, type: "mobile" }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to upgrade session.");
+        customToken = data.customToken;
+        await signInWithCustomToken(auth, customToken);
+      }
+
+      const finalIdToken = await auth.currentUser?.getIdToken();
+      const sessionRes = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ idToken: finalIdToken }),
       });
 
-      if (!response.ok) throw new Error("Failed to create secure session");
+      if (!sessionRes.ok) throw new Error("Failed to create secure session.");
 
       router.push(redirectTo);
       router.refresh();
       
-    } catch (error: unknown) {
-      const err = error as { code?: string; message?: string };
-      console.error("🔒 Login Fault Audit:", err.code || err.message);
-      if (err.code === "auth/invalid-api-key" || err.message?.includes("api-key")) {
-        setError("Technical Fault: The administrative security keys are invalid for this domain. Please contact System Admin.");
-      } else if (err.code === "auth/network-request-failed") {
-        setError("Network Outage: Unable to reach security servers. Check your connection.");
-      } else {
-        setError("Invalid credentials or unauthorized access.");
-      }
-      // Only sign out if auth exists
-      if (auth) await auth.signOut();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Verification failed.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (value && index < 5) document.getElementById(`otp-${index + 1}`)?.focus();
+    if (value && index === 5 && newOtp.every(v => v !== "")) {
+      setTimeout(() => document.getElementById("verify-btn")?.click(), 50);
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      document.getElementById(`otp-${index - 1}`)?.focus();
     }
   };
 
@@ -152,67 +240,106 @@ export default function AdminLoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-600" />
-                <input 
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-blue-500/50 text-zinc-900 dark:text-white rounded-2xl pl-11 pr-5 py-4 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium placeholder:text-zinc-300 dark:placeholder:text-zinc-700 shadow-sm"
-                  placeholder="admin@team-cctv.com"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-600" />
-                <input 
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-blue-500/50 text-zinc-900 dark:text-white rounded-2xl pl-11 pr-12 py-4 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium placeholder:text-zinc-300 dark:placeholder:text-zinc-700 shadow-sm"
-                  placeholder="••••••••••••"
-                />
+          <div id="recaptcha-container"></div>
+          {step === 1 ? (
+            <form onSubmit={handleSendCode} className="space-y-6">
+              <div className="flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-[20px]">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-600 hover:text-blue-500 transition-colors"
+                  onClick={() => { setMethod("mobile"); setIdentifier(""); }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${method === "mobile" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-400"}`}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <Smartphone className="w-3.5 h-3.5" /> Mobile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMethod("email"); setIdentifier(""); }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${method === "email" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-400"}`}
+                >
+                  <Mail className="w-3.5 h-3.5" /> Email
                 </button>
               </div>
-            </div>
 
-            <button 
-              type="submit"
-              disabled={loading}
-              className="group relative w-full h-16 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[11px] tracking-[0.3em] rounded-3xl transition-all disabled:opacity-40 disabled:cursor-not-allowed mt-6 overflow-hidden shadow-2xl shadow-blue-600/20 active:scale-[0.98] active:shadow-none"
-            >
-              <span className="relative z-10 flex items-center justify-center gap-3">
-                {loading ? (
-                  <>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">
+                  {method === "mobile" ? "Mobile Number" : "Email Address"}
+                </label>
+                <div className="relative">
+                  {method === "mobile" ? (
+                    <Smartphone className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-600" />
+                  ) : (
+                    <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-600" />
+                  )}
+                  <input 
+                    type={method === "mobile" ? "tel" : "email"}
+                    required
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-blue-500/50 text-zinc-900 dark:text-white rounded-2xl pl-11 pr-5 py-4 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium placeholder:text-zinc-300 dark:placeholder:text-zinc-700 shadow-sm"
+                    placeholder={method === "mobile" ? "9876543210" : "admin@example.com"}
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit"
+                disabled={loading || !identifier}
+                className="group relative w-full h-16 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[11px] tracking-[0.3em] rounded-3xl transition-all disabled:opacity-40 mt-6 shadow-xl shadow-blue-600/20 active:scale-[0.98]"
+              >
+                <span className="relative z-10 flex items-center justify-center gap-3">
+                  {loading ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Verifying Identity
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck className="w-4 h-4" />
-                    Secure Sign In
-                  </>
-                )}
-              </span>
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          </form>
+                  ) : (
+                    <>Send Auth Code <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></>
+                  )}
+                </span>
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyCode} className="space-y-6 animate-in fade-in slide-in-from-right-8">
+              <div className="flex justify-between gap-2">
+                {otp.map((digit, i) => (
+                  <input
+                    key={i}
+                    id={`otp-${i}`}
+                    type="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(i, e)}
+                    className="w-12 h-14 text-center text-xl font-black bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 text-zinc-900 dark:text-white rounded-xl transition-all outline-none"
+                  />
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between mt-4">
+                <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">
+                  {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')} remaining
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setStep(1); setOtp(["","","","","",""]); }}
+                  disabled={timeLeft > 0 || loading}
+                  className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest disabled:opacity-50 hover:underline"
+                >
+                  Resend Code
+                </button>
+              </div>
+
+              <button 
+                id="verify-btn"
+                type="submit"
+                disabled={loading || otp.join("").length < 6}
+                className="group relative w-full h-16 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[11px] tracking-[0.3em] rounded-3xl transition-all disabled:opacity-40 mt-6 shadow-xl shadow-blue-600/20 active:scale-[0.98]"
+              >
+                <span className="relative z-10 flex items-center justify-center gap-3">
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : "Verify Securely"}
+                </span>
+              </button>
+            </form>
+          )}
 
           <p className="text-center text-[10px] font-bold text-zinc-300 dark:text-zinc-700 uppercase tracking-widest mt-8">
             End-to-end encrypted · Firebase Auth · Session-gated

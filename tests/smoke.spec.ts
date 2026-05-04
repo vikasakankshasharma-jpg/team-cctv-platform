@@ -23,7 +23,8 @@ test.describe('CCTV Wizard Smoke Test', () => {
 
   test('admin login page should be accessible', async ({ page }) => {
     await page.goto('/admin/login');
-    await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/password/i)).toBeVisible();
+    await expect(page.getByText(/Secure\s*Sign In/i)).toBeVisible();
+    await expect(page.getByPlaceholder('admin@example.com')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Send Auth Code/i })).toBeVisible();
   });
 });

@@ -1,5 +1,5 @@
 import { adminDb } from "@/lib/firebase-admin";
-import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
+import { SETTINGS_DOC_ID } from "@/lib/constants";
 import { Settings2 } from "lucide-react";
 import type { AppSettings } from "@/types";
 import { SettingsForm } from "@/components/admin/SettingsForm";
@@ -31,6 +31,21 @@ export default async function SettingsAdminPage() {
     tier_recommended_multiplier: 1.0,
     tier_premium_label: "ELITE:",
     tier_premium_multiplier: 1.25,
+
+    // NEW: High-Fidelity Logic (Real PDF Alignment)
+    max_supported_cameras: 16,
+    labor_ip_per_camera: 500,
+    labor_hd_per_camera: 400,
+    cable_copper_coated_ip: 40,
+    cable_copper_coated_hd: 12,
+    cable_pure_copper: 38,
+    cable_overage_per_mtr: 12,
+    visit_charge: 300,
+    amc_1yr_pct: 5,
+    amc_2yr_pct: 8,
+    amc_3yr_pct: 10,
+    quote_validity_days: 8,
+
     updated_at: null,
     updated_by: null,
   };

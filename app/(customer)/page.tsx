@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { 
   ArrowRight, 
   ShieldCheck, 
@@ -20,7 +21,7 @@ export default function LandingPage() {
     <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
       
       {/* 1. Elite Hero Hub */}
-      <section className="relative px-6 pt-32 pb-40 md:pt-48 md:pb-60 overflow-hidden">
+      <section className="relative px-4 sm:px-6 pt-16 pb-20 md:pt-48 md:pb-60 overflow-hidden">
         {/* Background Depth Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-zinc-50 dark:bg-zinc-950">
           <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-blue-200/40 dark:bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
@@ -38,19 +39,19 @@ export default function LandingPage() {
             <span className="text-blue-600 dark:text-emerald-500">100% Free & Instant</span>
           </div>
 
-          <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-10 leading-[0.85] animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-8 md:mb-10 leading-[0.88] animate-in fade-in slide-in-from-bottom-8 duration-1000">
             High-Quality Security. <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">Starting in Jaipur.</span>
           </h1>
 
-          <p className="text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-2xl mb-16 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
+          <p className="text-base md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-2xl mb-10 md:mb-16 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
              Get an exact price for your CCTV setup in under 2 minutes. No technical knowledge needed&mdash;just answer a few simple questions and we&apos;ll do the rest.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 items-center w-full sm:w-auto animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
             <Link 
               href="/wizard"
-              className="group relative inline-flex justify-center items-center gap-5 px-12 py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[32px] font-black text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-2 active:scale-95"
+              className="group relative inline-flex w-full sm:w-auto justify-center items-center gap-4 px-8 sm:px-12 py-5 sm:py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[32px] font-black text-lg sm:text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-2 active:scale-95"
             >
               Get CCTV Quotation Online
               <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
@@ -177,8 +178,8 @@ export default function LandingPage() {
             <div className="mt-20 flex flex-col items-center gap-8">
                <div className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Trusted Hardware Partners & Verified Installs</div>
                <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 grayscale opacity-60 dark:opacity-40">
-                 <img src="/partners/cpplus.png" alt="CP PLUS" className="h-6 md:h-8 object-contain" />
-                 <img src="/partners/prama.png" alt="PRAMA" className="h-6 md:h-8 object-contain" />
+                 <Image src="/partners/cpplus.png" alt="CP PLUS" width={120} height={40} className="h-6 md:h-8 w-auto object-contain" />
+                 <Image src="/partners/prama.png" alt="PRAMA" width={120} height={40} className="h-6 md:h-8 w-auto object-contain" />
                  <div className="flex items-center gap-3">
                    <ShieldCheck className="w-8 h-8" />
                    <span className="font-black text-xl tracking-tight uppercase">BIS-ER</span>

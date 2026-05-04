@@ -1,16 +1,6 @@
 /**
  * @file store/configurator.ts
  * @description Zustand store for the live price configurator and pricing data cache.
- *
- * PERFORMANCE STRATEGY (from spec Section 9):
- *  - All products, addons, addon_rules, and app_settings are fetched ONCE on
- *    the result/configurator page load and stored here.
- *  - ALL price recalculations run client-side using this cached data.
- *  - ZERO Firestore reads happen on slider moves or option changes.
- *  - Only on explicit "Save Quote" / "Download PDF" actions does a Firestore write occur.
- *
- * PHASE 1 NOTE: This is the store shell with types and initial state.
- * The pricing engine integration will be wired in Phase 2 (Core Logic).
  */
 
 import { create } from "zustand";
@@ -22,20 +12,8 @@ import type {
   AddonRule,
   AppSettings,
   PricingResult,
+  ConfiguratorSelection,
 } from "@/types";
-
-// ─────────────────────────────────────────────
-// Configurator Selection State
-// ─────────────────────────────────────────────
-
-export interface ConfiguratorSelection {
-  technology: Technology;
-  plan_type: PlanType;
-  camera_count: number;         // 1–16 (slider)
-  picture_quality: "good" | "very_clear" | "crystal_clear";
-  recording_days: 7 | 15 | 30;
-  selected_addons: string[];    // addonId[]
-}
 
 // ─────────────────────────────────────────────
 // Full Store Shape
@@ -63,6 +41,10 @@ interface ConfiguratorStore {
   referral_discount: number;
   promoter_id: string | null;
 
+  // ── Compare State (New 3-Tier SaaS Layout) ──────────────────────────────
+  compare_options: Array<{ technology: "HD" | "IP"; option: number }>;
+  active_checkout_option: { technology: "HD" | "IP"; option: number } | null;
+
   // ── Actions ────────────────────────────────────────────────────────────────
 
   /** Load all pricing config from Firestore into the cache */
@@ -82,6 +64,12 @@ interface ConfiguratorStore {
   /** Store pricing calculation results */
   setPricingResults: (results: ConfiguratorStore["pricing_results"]) => void;
 
+  /** Update compare options from table */
+  setCompareOptions: (options: Array<{ technology: "HD" | "IP"; option: number }>) => void;
+
+  /** Set the active checkout option (when clicking a card) */
+  setActiveCheckoutOption: (option: { technology: "HD" | "IP"; option: number }) => void;
+
   /** Apply a referral discount from a validated promoter */
   applyReferral: (discount: number, promoterId: string) => void;
 
@@ -97,12 +85,13 @@ interface ConfiguratorStore {
 // ─────────────────────────────────────────────
 
 const defaultSelection: ConfiguratorSelection = {
-  technology: "HD",
+  technology: "IP",
   plan_type: "recommended",
   camera_count: 4,
-  picture_quality: "very_clear",
-  recording_days: 30,
+  picture_quality: "good",
+  recording_days: 7,          // 7 days → correct HDD selection (matches quotation sheets)
   selected_addons: [],
+  selected_camera_option: 4,  // IP Option 4 = CP Plus 2MP Color in Night (recommended)
 };
 
 // ─────────────────────────────────────────────
@@ -121,6 +110,8 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
   pricing_results: { budget: null, recommended: null, premium: null },
   referral_discount: 0,
   promoter_id: null,
+  compare_options: [],
+  active_checkout_option: null,
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
@@ -149,6 +140,14 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
 
   setPricingResults: (results) => set({ pricing_results: results }),
 
+  setCompareOptions: (options) => set({ compare_options: options }),
+
+  setActiveCheckoutOption: (option) => set({ 
+    active_checkout_option: option,
+    // Also sync the legacy selection state so the pricing loop picks it up
+    selection: { ...get().selection, technology: option.technology, selected_camera_option: option.option }
+  }),
+
   applyReferral: (discount, promoterId) =>
     set({ referral_discount: discount, promoter_id: promoterId }),
 
@@ -160,5 +159,7 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
       pricing_results: { budget: null, recommended: null, premium: null },
       referral_discount: 0,
       promoter_id: null,
+      compare_options: [],
+      active_checkout_option: null,
     }),
 }));

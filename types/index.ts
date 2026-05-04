@@ -34,11 +34,36 @@ export interface Lead {
   address?: Address; // Added for Site Details
   wizard_answers: Record<string, unknown>;
   referral_code?: string | null;
+  competitor_quote_url?: string;
   status: "new" | "contacted" | "site_visit" | "quoted" | "won" | "lost";
   created_at: unknown;
   updated_at?: unknown;
   site_visit_date?: unknown;
   promoter_id?: string | null;
+  promoter_name?: string | null;      // NEW: Virtual field for UI
+  promoter_business?: string | null;  // NEW: Virtual field for UI
+  
+  // Follow-Up Engine
+  followups_sent?: string[];
+  active_offer?: {
+    type: "discount_percent" | "free_amc";
+    value?: number;
+    campaign_id: string;
+  };
+}
+
+export interface FollowUpCampaign {
+  id?: string;
+  name: string;
+  trigger_status: "new" | "contacted" | "site_visit" | "quoted";
+  delay_hours: number;
+  action_channel: "whatsapp" | "email";
+  message_template: string;
+  offer_type: "discount_percent" | "free_amc" | "none";
+  offer_value?: number;
+  is_active: boolean;
+  created_at: unknown;
+  updated_at?: unknown;
 }
 
 export interface Product {
@@ -47,14 +72,40 @@ export interface Product {
   display_name: string;
   category: "camera" | "recorder" | "accessory" | "cable";
   technology: "HD" | "IP" | "both";
-  unit_price: number;
-  unit_price_budget?: number;   // NEW: Manual Budget price override
-  unit_price_premium?: number;  // NEW: Manual Premium price override
+  base_cost?: number;            // NEW: Cost to business
+  margin_percentage?: number;    // NEW: Expected profit margin
+  unit_price: number;            // Computed or manual final selling price
+  unit_price_budget?: number;    // NEW: Manual Budget price override
+  unit_price_premium?: number;   // NEW: Manual Premium price override
   is_active: boolean;
+  features?: string[];           // NEW: Array of FeatureTag IDs this product supports
   
-  // NEW: Logic Hardening Fields
+  // Compatibility System (Phase 3: Hierarchical Category Tree)
+  // 1. Where does this product live in the catalog?
+  // Example: "CCTV/Cameras/IP/4MP"
+  catalog_path?: string;
+
+  // 2. What folders is this product compatible with?
+  // Example: ["CCTV/Cameras/IP", "CCTV/Cameras/HD/2MP"]
+  compatible_paths?: string[];
+
+  // Channel / port capacity (for recorders, PoE switches, PSUs)
+  max_cameras?: number;             // Maximum cameras this product supports
+  min_cameras?: number;             // Minimum cameras this product is designed for (optional)
+
+  // Logic Hardening
   resolution_tier?: "good" | "very_clear" | "crystal_clear";
-  channels?: number; // Only for Recorders
+  channels?: number;                // Number of channels (recorder)
+  
+  // Real Quotation Alignment
+  daily_gb_per_camera?: number;     // GB/day at H.265
+  paired_dvr_id?: string;           // Legacy: For HD cameras, link to DVR suffix
+  bulk_discount_threshold?: number; // Camera count for bulk price
+  bulk_unit_price?: number;         // Lower price for bulk
+  
+  // Brand for premium-tier comparison logic
+  brand?: string;
+
   created_at?: unknown;
   updated_at?: unknown;
 }
@@ -67,6 +118,16 @@ export interface Addon {
   
   // NEW: Multiplier logic
   unit_multiplier?: "none" | "camera_count";
+  created_at?: unknown;
+  updated_at?: unknown;
+}
+
+export interface FeatureTag {
+  id?: string;
+  technical_name: string;      // e.g., "IK10", "PTZ", "Audio_In"
+  customer_label: string;      // e.g., "Hammer-Proof", "Remote Rotation", "Microphone"
+  description?: string;        // e.g., "Cannot be easily broken"
+  is_active: boolean;
   created_at?: unknown;
   updated_at?: unknown;
 }
@@ -91,10 +152,20 @@ export interface AddonRule {
 export interface ConfiguratorSelection {
   camera_count: number;
   picture_quality: "good" | "very_clear" | "crystal_clear";
-  recording_days: 7 | 15 | 30;
+  recording_days: number; // Changed from 7|15|30 to allow custom
   technology: "HD" | "IP";
   selected_addons: string[];
   plan_type: "budget" | "recommended" | "premium";
+  selected_camera_option?: number; // 1-5 for IP, 1-2 for HD
+  
+  // NEW FIELDS FROM WIZARD REDESIGN
+  surface_types?: string[];
+  ceiling_height?: "standard" | "high" | "very_high";
+  ladder_arrangement?: "customer" | "team";
+  requested_features?: string[];
+  brand_preference?: string;
+  installation_timeline?: string;
+  wants_amc?: boolean;
 }
 
 export interface QuoteLineItem {
@@ -130,6 +201,8 @@ export interface PricingResult {
   gst_rate: number;
   gst_amount: number;
   total_payable: number;
+
+  requiresIndustrialQuote?: boolean; // NEW: Flag for > 16 cameras
 }
 
 export type Quote = PricingResult & { id?: string };
@@ -159,6 +232,20 @@ export interface AppSettings {
   tier_premium_label: string;
   tier_premium_multiplier: number;
 
+  // NEW: High-Fidelity Logic (Real PDF Alignment)
+  max_supported_cameras: number;
+  labor_ip_per_camera: number;
+  labor_hd_per_camera: number;
+  cable_copper_coated_ip: number;
+  cable_copper_coated_hd: number;
+  cable_pure_copper: number;
+  cable_overage_per_mtr: number;
+  visit_charge: number;
+  amc_1yr_pct: number;
+  amc_2yr_pct: number;
+  amc_3yr_pct: number;
+  quote_validity_days: number;
+
   updated_at?: unknown;
   updated_by?: string | null;
   admin_notification_phone?: string;
@@ -171,15 +258,24 @@ export interface Promoter {
   referral_code: string;
   mobile_number?: string;
   email?: string;
+  firebase_uid?: string;         // Linked after first OTP login
   is_active: boolean;
   use_global_commission: boolean;
   commission_slabs?: CommissionSlab[];
-  total_leads_referred: number;
+  total_won_leads: number;
   total_ex_tax_business: number;
   discount_type?: "flat" | "percent";
   discount_value?: number;
   created_at?: unknown;
   updated_at?: unknown;
+}
+
+export interface PartnerSession {
+  isAuthenticated: boolean;
+  promoterId: string | null;
+  promoterName: string | null;
+  uid: string | null;
+  role: "partner" | null;
 }
 
 export interface WizardOption {
@@ -193,7 +289,7 @@ export interface WizardOption {
 export interface WizardQuestion {
   id?: string;
   question_text: string;
-  input_type: "single" | "multi";
+  input_type: "single" | "multi" | "number";
   is_required: boolean;
   position: number;
   options?: WizardOption[];
@@ -227,4 +323,45 @@ export interface CommissionSlab {
   to: number | null;
   value: number;
   type: "flat" | "percent";
+}
+
+export interface IndustrialLead {
+  id?: string;
+  phone: string;
+  requested_camera_count: number;
+  technology?: "HD" | "IP";
+  property_type?: string;
+  consent: boolean;
+  status: "new" | "site_visit_scheduled" | "quoted";
+  created_at: unknown;
+}
+
+export interface RecommendationRule {
+  id?: string;
+  priority: number;
+  is_active: boolean;
+  conditions: {
+    property_types?: string[];
+    technology?: "HD" | "IP";
+    camera_count_min?: number;
+    camera_count_max?: number;
+    recording_days_min?: number;
+    recording_days_max?: number;
+  };
+  recommendation: {
+    camera_option: number;
+    label: string;
+    reason: string;
+    is_featured: boolean;
+  };
+  created_at?: unknown;
+  updated_at?: unknown;
+}
+
+export interface RecommendedOutput {
+  camera_option: number;
+  label: string;
+  reason: string;
+  is_featured: boolean;
+  rule_id: string;
 }

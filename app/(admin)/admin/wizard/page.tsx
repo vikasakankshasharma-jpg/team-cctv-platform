@@ -21,7 +21,12 @@ export default async function WizardBuilderAdminPage() {
   const wizardSteps: WizardStep[] = [];
 
   const stepPromises = stepsSnapshot.docs.map(async (stepDoc) => {
-    const stepData = stepDoc.data() as Omit<WizardStep, "id" | "questions">;
+    const stepData = stepDoc.data();
+    const serializedStep = {
+      ...stepData,
+      created_at: stepData.created_at?.toDate?.()?.toISOString() || null,
+      updated_at: stepData.updated_at?.toDate?.()?.toISOString() || null,
+    };
     
     // Fetch questions for this step
     const questionsSnapshot = await stepDoc.ref
@@ -30,7 +35,7 @@ export default async function WizardBuilderAdminPage() {
       .get();
     
     const questionsPromises = questionsSnapshot.docs.map(async (qDoc) => {
-      const qData = qDoc.data() as Omit<WizardQuestion, "id" | "options">;
+      const qData = qDoc.data();
       
       // Fetch options for this question
       const optionsSnapshot = await qDoc.ref
@@ -47,11 +52,11 @@ export default async function WizardBuilderAdminPage() {
     });
 
     const questions = await Promise.all(questionsPromises);
-    return { id: stepDoc.id, ...stepData, questions };
+    return { id: stepDoc.id, ...serializedStep, questions };
   });
 
   const resolvedSteps = await Promise.all(stepPromises);
-  wizardSteps.push(...resolvedSteps);
+  wizardSteps.push(...resolvedSteps as unknown as WizardStep[]);
 
   return (
     <div className="space-y-6">

@@ -3,8 +3,29 @@ import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
 import { ConfiguratorView } from "@/components/quotation/ConfiguratorView";
 import { Lead, Product, Addon, AddonRule, AppSettings, Promoter } from "@/types";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ leadId: string }>
+}): Promise<Metadata> {
+  const { leadId } = await params;
+  
+  if (leadId === "mock-e2e-lead" || leadId === "mock-lead") {
+    return { title: "CCTV Quote Preview | TEAM CCTV" };
+  }
+
+  const doc = await adminDb.collection("leads").doc(leadId).get();
+  const data = doc.data() as Lead;
+
+  return {
+    title: `CCTV Quotation for ${data?.customer_name || "Client"} | TEAM CCTV`,
+    description: `Personalized security system quotation for ${data?.property_type || "your"} property. Review high-fidelity IP and HD configurations tailored for maximum coverage.`,
+  };
+}
 
 export default async function QuoteResultPage({ 
   params,
@@ -24,6 +45,7 @@ export default async function QuoteResultPage({
   let addon_rules: AddonRule[] = [];
   let settings: AppSettings | null = null;
   let promoter: Promoter | null = null;
+  let recommendation_rules: any[] = [];
 
   // HANDLE MOCK SCENARIO (DEMO/E2E)
   if (leadId === "mock-e2e-lead" || leadId === "mock-lead") {
@@ -50,13 +72,15 @@ export default async function QuoteResultPage({
       productsSnap,
       addonsSnap,
       rulesSnap,
-      settingsSnap
+      settingsSnap,
+      rulesSnap2
     ] = await Promise.all([
       lead ? Promise.resolve(null) : adminDb.collection("leads").doc(leadId).get(),
       adminDb.collection("products").where("is_active", "==", true).where("is_deleted", "==", false).get(),
       adminDb.collection("addons").where("is_active", "==", true).where("is_deleted", "==", false).get(),
       adminDb.collection("addon_rules").get(),
-      adminDb.collection("settings").doc(SETTINGS_DOC_ID).get()
+      adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
+      adminDb.collection("recommendation_rules").orderBy("priority", "asc").get()
     ]);
 
     // Populate Lead if not in mock mode
@@ -72,6 +96,10 @@ export default async function QuoteResultPage({
     if (settingsSnap.exists) {
       settings = settingsSnap.data() as AppSettings;
     }
+
+    recommendation_rules = rulesSnap2.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter((rule: any) => rule.is_active === true);
 
     // 1.5 Fetch Promoter if exists
     if (lead?.promoter_id) {
@@ -90,6 +118,7 @@ export default async function QuoteResultPage({
     addon_rules = serializeDoc(addon_rules);
     settings = serializeDoc(settings);
     promoter = serializeDoc(promoter);
+    recommendation_rules = serializeDoc(recommendation_rules);
 
   } catch (err) {
     console.error("Error fetching quote data:", err);
@@ -131,14 +160,21 @@ export default async function QuoteResultPage({
     tier_recommended_label: "PROFESSIONAL:",
     tier_recommended_multiplier: 1.0,
     tier_premium_label: "ELITE:",
-    tier_premium_multiplier: 1.25
+    tier_premium_multiplier: 1.25,
+    max_supported_cameras: 16,
+    labor_ip_per_camera: 1000,
+    labor_hd_per_camera: 800,
+    cable_copper_coated_ip: 45,
+    cable_copper_coated_hd: 35,
+    visit_charge: 500
   } as AppSettings;
 
   const pricingCache = {
     products,
     addons,
     addon_rules,
-    settings: finalSettings
+    settings: finalSettings,
+    recommendation_rules
   };
 
   return (

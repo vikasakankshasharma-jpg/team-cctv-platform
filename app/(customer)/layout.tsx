@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { ShieldCheck, PhoneCall, Zap } from "lucide-react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/shared/SiteFooter";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "CCTV Quotation Online | Best Installation in Jaipur | TEAM CCTV",
@@ -14,7 +20,6 @@ export const metadata: Metadata = {
     locale: "en_IN",
     siteName: "TEAM Security Ecosystem",
   },
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
@@ -28,18 +33,18 @@ export default function CustomerLayout({
     <div className="flex flex-col min-h-screen bg-white dark:bg-zinc-950 font-sans transition-colors duration-500 selection:bg-blue-600 selection:text-white">
       {/* Premium Public Header */}
       <header className="sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 shadow-sm transition-all">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between relative">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 md:h-20 flex items-center justify-between relative">
           
           {/* Left — Logo */}
-          <Link href="/" className="flex items-center gap-3 group shrink-0">
-            <div className="bg-zinc-900 dark:bg-blue-600 text-white p-2.5 rounded-2xl group-hover:bg-blue-600 dark:group-hover:bg-blue-500 transition-all duration-300 shadow-lg shadow-zinc-900/10 group-hover:shadow-blue-500/30">
-              <ShieldCheck className="w-6 h-6" />
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+            <div className="bg-zinc-900 dark:bg-blue-600 text-white p-2 sm:p-2.5 rounded-xl sm:rounded-2xl group-hover:bg-blue-600 dark:group-hover:bg-blue-500 transition-all duration-300 shadow-lg shadow-zinc-900/10 group-hover:shadow-blue-500/30">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="font-black text-2xl tracking-tighter text-zinc-900 dark:text-white group-hover:text-blue-600 transition-colors">
+              <span className="font-black text-lg sm:text-2xl tracking-tighter text-zinc-900 dark:text-white group-hover:text-blue-600 transition-colors">
                 TEAM <span className="text-zinc-400 dark:text-zinc-500 font-medium tracking-tight">CCTV</span>
               </span>
-              <span className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 mt-1">Smart Security Ecosystem</span>
+              <span className="hidden sm:block text-[8px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 mt-1">Smart Security Ecosystem</span>
             </div>
           </Link>
 
@@ -56,7 +61,7 @@ export default function CustomerLayout({
           </div>
 
           {/* Right — Support + Portal */}
-          <div className="flex items-center gap-6 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
             <a 
               href="tel:+919772699395" 
               className="hidden md:flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group shadow-sm"
@@ -67,16 +72,13 @@ export default function CustomerLayout({
                 <span className="text-sm font-black">+91 97726 99395</span>
               </div>
             </a>
-            
-            <div className="flex items-center gap-4 pl-4 border-l border-zinc-100 dark:border-zinc-800">
-              <ThemeToggle />
-              <Link 
-                href="/admin/login" 
-                className="text-[10px] font-black uppercase tracking-widest text-zinc-300 hover:text-blue-500 transition-colors hidden sm:block"
-              >
-                Staff Portal
-              </Link>
-            </div>
+            <ThemeToggle />
+            <Link 
+              href="/admin/login" 
+              className="text-[10px] font-black uppercase tracking-widest text-zinc-300 hover:text-blue-500 transition-colors hidden sm:block"
+            >
+              Staff Portal
+            </Link>
           </div>
         </div>
       </header>

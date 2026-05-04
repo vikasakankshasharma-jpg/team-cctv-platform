@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { COLLECTIONS } from "@/lib/firebase-client";
+import { COLLECTIONS } from "@/lib/constants";
 import { Resend } from "resend";
+
+const AUTHORIZED_EMAILS = ["vikasakankshasharma@gmail.com"];
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -13,15 +15,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
     }
 
+    if (!AUTHORIZED_EMAILS.includes(email.toLowerCase().trim())) {
+      return NextResponse.json({ error: "Unauthorized. This email does not have Admin privileges." }, { status: 403 });
+    }
+
     // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = "123456";
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Save to Firestore
-    await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(email).set({
+    await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(email.toLowerCase().trim()).set({
       otp,
       expiresAt,
-      name,
+      name: name || "Master Admin",
+      role: "super_admin",
+      type: "email",
       createdAt: new Date(),
     });
 

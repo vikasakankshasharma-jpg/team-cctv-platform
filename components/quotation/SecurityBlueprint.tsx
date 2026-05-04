@@ -15,7 +15,7 @@ export function SecurityBlueprint({ cameraCount, propertyType }: SecurityBluepri
     
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * 2 * Math.PI;
-      const radius = 35 + Math.random() * 5;
+      const radius = 35 + ((i * 13) % 5);
       positions.push({
         x: 50 + radius * Math.cos(angle),
         y: 50 + radius * Math.sin(angle),
@@ -54,11 +54,12 @@ export function SecurityBlueprint({ cameraCount, propertyType }: SecurityBluepri
             transform: `rotate(${pos.rotation}deg)`
           }}
         >
-          <div className="relative">
-            <div className="absolute top-full left-1/2 -translate-x-1/2 w-12 h-20 bg-gradient-to-b from-blue-500/20 to-transparent clip-path-cone origin-top" 
+          <div className="relative group/cam">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-blue-500/10 rounded-full scale-0 group-hover/cam:scale-100 transition-transform duration-500" />
+            <div className="absolute top-full left-1/2 -translate-x-1/2 w-16 h-32 bg-gradient-to-b from-blue-500/20 via-blue-500/5 to-transparent clip-path-cone origin-top opacity-0 group-hover/item:opacity-100 transition-opacity" 
                  style={{ transform: 'scaleY(1.5)' }} />
-            <div className="relative bg-zinc-900 dark:bg-blue-600 p-1.5 rounded-lg shadow-xl border border-white/20">
-               <Eye className="w-3 h-3 text-white" />
+            <div className="relative bg-zinc-900 dark:bg-blue-600 p-2 rounded-xl shadow-2xl border border-white/20 group-hover:scale-110 transition-transform duration-300">
+               <Eye className="w-4 h-4 text-white" />
             </div>
           </div>
         </div>

@@ -285,6 +285,108 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
+
+        {/* Section: High-Fidelity Logic (PDF Alignment) */}
+        <div className="lg:col-span-2 bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl dark:shadow-2xl backdrop-blur-sm group hover:border-amber-500/20 transition-all">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-500 border border-amber-100 dark:border-amber-500/20 shadow-inner">
+              <Ruler className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Technical Logic Alignment</h2>
+              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-0.5">Real PDF Matching Parameters</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Max System Cameras</label>
+              <input 
+                type="number" name="max_supported_cameras" value={formData.max_supported_cameras} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Labor IP (/Cam)</label>
+              <input 
+                type="number" name="labor_ip_per_camera" value={formData.labor_ip_per_camera} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Labor HD (/Cam)</label>
+              <input 
+                type="number" name="labor_hd_per_camera" value={formData.labor_hd_per_camera} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Quote Validity (Days)</label>
+              <input 
+                type="number" name="quote_validity_days" value={formData.quote_validity_days} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Cable: IP Copper</label>
+              <input 
+                type="number" name="cable_copper_coated_ip" value={formData.cable_copper_coated_ip} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Cable: HD Copper</label>
+              <input 
+                type="number" name="cable_copper_coated_hd" value={formData.cable_copper_coated_hd} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Cable: Pure Copper</label>
+              <input 
+                type="number" name="cable_pure_copper" value={formData.cable_pure_copper} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Cable Overage (/mtr)</label>
+              <input 
+                type="number" name="cable_overage_per_mtr" value={formData.cable_overage_per_mtr} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Visit Charge</label>
+              <input 
+                type="number" name="visit_charge" value={formData.visit_charge} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">AMC 1 Year (%)</label>
+              <input 
+                type="number" name="amc_1yr_pct" value={formData.amc_1yr_pct} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">AMC 2 Year (%)</label>
+              <input 
+                type="number" name="amc_2yr_pct" value={formData.amc_2yr_pct} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">AMC 3 Year (%)</label>
+              <input 
+                type="number" name="amc_3yr_pct" value={formData.amc_3yr_pct} onChange={handleChange}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all font-black" 
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Section: Communications */}

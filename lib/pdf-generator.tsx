@@ -255,14 +255,18 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
               <Text style={styles.summLabel}>Hardware Subtotal</Text>
               <Text style={styles.summVal}>₹{quote.base_hardware_cost.toLocaleString('en-IN')}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summLabel}>Installation & Labor</Text>
-              <Text style={styles.summVal}>₹{quote.labor_cost.toLocaleString('en-IN')}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summLabel}>Estimated Cabling</Text>
-              <Text style={styles.summVal}>₹{quote.cabling_cost.toLocaleString('en-IN')}</Text>
-            </View>
+            {quote.labor_cost > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summLabel}>Installation & Labor</Text>
+                <Text style={styles.summVal}>₹{quote.labor_cost.toLocaleString('en-IN')}</Text>
+              </View>
+            )}
+            {quote.cabling_cost > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summLabel}>Estimated Cabling</Text>
+                <Text style={styles.summVal}>₹{quote.cabling_cost.toLocaleString('en-IN')}</Text>
+              </View>
+            )}
             {quote.referral_discount > 0 && (
               <View style={styles.summaryRow}>
                 <Text style={[styles.summLabel, { color: '#16a34a' }]}>Referral Discount</Text>
@@ -289,15 +293,15 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
               2. 80% at the time of material received at Site and before starting Installation work.{"\n"}
               3. Remaining 10% after completion of work and handover the Site.{"\n"}
               4. 1-Year Comprehensive On-Site Warranty.{"\n"}
-              5. Validity: 10 Days from {dateStr}.
+              5. Validity: {settings.quote_validity_days || 8} Days from {dateStr}.
             </Text>
           </View>
           <View style={[styles.infoCol, { backgroundColor: '#fff' }]}>
             <Text style={styles.infoLabel}>Bank / Payment Details</Text>
             <Text style={[styles.blockText, { fontSize: 8 }]}>
               A/c Name: TEAM CCTV SOLUTIONS{"\n"}
-              A/c No: 098712345678 (HDFC BANK){"\n"}
-              IFSC: HDFC0001234{"\n"}
+              A/c No: 50200062325372 (HDFC BANK){"\n"}
+              IFSC: HDFC0001844{"\n"}
               UPI ID: teamcctv@okhdfc
             </Text>
           </View>

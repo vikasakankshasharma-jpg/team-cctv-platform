@@ -55,6 +55,23 @@ export async function deleteStep(id: string) {
   return { success: true };
 }
 
+/**
+ * Updates the positions of multiple steps in one batch.
+ */
+export async function updateStepOrder(steps: { id: string, position: number }[]) {
+  await requireAdmin();
+  const batch = adminDb.batch();
+  
+  steps.forEach(s => {
+    const ref = adminDb.collection("wizard_steps").doc(s.id);
+    batch.update(ref, { position: s.position });
+  });
+
+  await batch.commit();
+  revalidatePath("/admin/wizard");
+  return { success: true };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // QUESTION ACTIONS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -88,6 +105,24 @@ export async function upsertQuestion(stepId: string, questionId: string | null, 
 export async function deleteQuestion(stepId: string, questionId: string) {
   await requireAdmin();
   await adminDb.collection("wizard_steps").doc(stepId).collection("questions").doc(questionId).delete();
+  revalidatePath("/admin/wizard");
+  return { success: true };
+}
+
+/**
+ * Updates the positions of multiple questions within a step.
+ */
+export async function updateQuestionOrder(stepId: string, questions: { id: string, position: number }[]) {
+  await requireAdmin();
+  const batch = adminDb.batch();
+  const stepRef = adminDb.collection("wizard_steps").doc(stepId);
+  
+  questions.forEach(q => {
+    const qRef = stepRef.collection("questions").doc(q.id);
+    batch.update(qRef, { position: q.position });
+  });
+
+  await batch.commit();
   revalidatePath("/admin/wizard");
   return { success: true };
 }
@@ -145,7 +180,97 @@ export async function deleteOption(stepId: string, questionId: string, optionId:
  */
 export async function seedWizardTemplate() {
   await requireAdmin();
-  // This would be a large multi-batch write. 
-  // For now, we'll let the user manually add steps or implement it on demand.
+  const batch = adminDb.batch();
+
+  // 1. Wipe existing steps and subcollections to prevent duplicates
+  const existingSteps = await adminDb.collection("wizard_steps").get();
+  for (const stepDoc of existingSteps.docs) {
+    // Delete questions subcollection
+    const questions = await stepDoc.ref.collection("questions").get();
+    for (const qDoc of questions.docs) {
+      // Delete options subcollection
+      const options = await qDoc.ref.collection("options").get();
+      options.docs.forEach(opt => batch.delete(opt.ref));
+      batch.delete(qDoc.ref);
+    }
+    batch.delete(stepDoc.ref);
+  }
+  
+  // Commit wipe first to ensure clean state
+  await batch.commit();
+  
+  // 2. Start new batch for seeding
+  const seedBatch = adminDb.batch();
+
+  // Define Steps
+  const steps = [
+    { id: "step_property", position: 0, title: "Property Type", description: "Select the type of property you are securing.", is_active: true },
+    { id: "step_tech", position: 1, title: "Technology", description: "Choose your preferred camera technology.", is_active: true },
+    { id: "step_cameras", position: 2, title: "Coverage Requirements", description: "How many cameras do you need?", is_active: true },
+    { id: "step_wiring", position: 3, title: "Installation Status", description: "Is your property pre-wired for CCTV?", is_active: true },
+  ];
+
+  // Define Questions & Options
+  const questions = {
+    step_property: [
+      { id: "q_prop_type", position: 0, question_text: "What type of property are you securing?", input_type: "single" as const, is_required: true, options: [
+        { id: "opt_home", position: 0, label: "Home / Residential", value: "home" },
+        { id: "opt_office", position: 1, label: "Office / Commercial", value: "office" },
+        { id: "opt_factory", position: 2, label: "Factory / Warehouse", value: "factory" },
+        { id: "opt_shop", position: 3, label: "Shop / Retail", value: "shop" }
+      ] }
+    ],
+    step_tech: [
+      { id: "q_tech", position: 0, question_text: "What technology do you prefer?", input_type: "single" as const, is_required: true, options: [
+        { id: "opt_ip", position: 0, label: "IP (Digital & High-End)", value: "IP" },
+        { id: "opt_hd", position: 1, label: "HD (Analog & Budget)", value: "HD" }
+      ] }
+    ],
+    step_cameras: [
+      { id: "q_cam_count", position: 0, question_text: "How many cameras do you need?", input_type: "number" as const, is_required: true, options: [] }
+    ],
+    step_wiring: [
+      { id: "q_wiring", position: 0, question_text: "Is your property pre-wired?", input_type: "single" as const, is_required: true, options: [
+        { id: "opt_wired_yes", position: 0, label: "Yes, wiring is complete", value: "true" },
+        { id: "opt_wired_no", position: 1, label: "No, require full installation", value: "false" }
+      ] }
+    ]
+  };
+
+  steps.forEach(step => {
+    const stepRef = adminDb.collection("wizard_steps").doc(step.id);
+    seedBatch.set(stepRef, {
+      title: step.title,
+      description: step.description,
+      position: step.position,
+      is_active: step.is_active,
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+
+    const stepQuestions = questions[step.id as keyof typeof questions];
+    stepQuestions.forEach(q => {
+      const qRef = stepRef.collection("questions").doc(q.id);
+      seedBatch.set(qRef, {
+        question_text: q.question_text,
+        input_type: q.input_type,
+        is_required: q.is_required,
+        position: q.position,
+      });
+
+      q.options.forEach(opt => {
+        const optRef = qRef.collection("options").doc(opt.id);
+        seedBatch.set(optRef, {
+          label: opt.label,
+          value: opt.value,
+          position: opt.position,
+        });
+      });
+    });
+  });
+
+  await seedBatch.commit();
+  revalidatePath("/admin/wizard");
   return { success: true };
 }
+

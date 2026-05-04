@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Loader2, Package, Tag, Layers, Cpu, BadgeIndianRupee, Activity } from "lucide-react";
+import { X, Loader2, Package, Tag, Layers, Cpu, BadgeIndianRupee, Activity, Link2, ChevronDown } from "lucide-react";
 import type { Product } from "@/types";
 
 interface ProductModalProps {
@@ -33,6 +33,11 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         is_active: product.is_active ?? true,
         resolution_tier: product.resolution_tier,
         channels: product.channels,
+        catalog_path: product.catalog_path ?? "",
+        compatible_paths: product.compatible_paths ?? [],
+        max_cameras: product.max_cameras,
+        min_cameras: product.min_cameras,
+        brand: product.brand,
       });
     } else {
       setFormData({
@@ -42,9 +47,27 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         technology: "IP",
         unit_price: 0,
         is_active: true,
+        catalog_path: "",
+        compatible_paths: [],
       });
     }
   }, [product, isOpen]);
+
+  const [newCompatiblePath, setNewCompatiblePath] = useState("");
+
+  const addCompatiblePath = () => {
+    if (!newCompatiblePath.trim()) return;
+    const current = formData.compatible_paths ?? [];
+    if (!current.includes(newCompatiblePath.trim())) {
+      setFormData({ ...formData, compatible_paths: [...current, newCompatiblePath.trim()] });
+    }
+    setNewCompatiblePath("");
+  };
+
+  const removeCompatiblePath = (path: string) => {
+    const current = formData.compatible_paths ?? [];
+    setFormData({ ...formData, compatible_paths: current.filter(p => p !== path) });
+  };
 
   if (!isOpen) return null;
 
@@ -273,6 +296,102 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               </label>
             </div>
           </div>
+
+          {/* ── Compatibility Section ─────────────────────────────────────── */}
+          {(formData.category === "camera" || formData.category === "recorder" || formData.category === "accessory") && (
+            <div className="bg-zinc-950/40 p-8 rounded-[32px] border border-indigo-800/30 space-y-6">
+              <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                <Link2 className="w-3 h-3" /> Compatibility Engine
+              </h3>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1 block">
+                    Catalog Path <span className="normal-case font-normal opacity-60">(e.g., CCTV/Cameras/IP/4MP)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.catalog_path ?? ""}
+                    onChange={(e) => setFormData({ ...formData, catalog_path: e.target.value })}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all"
+                    placeholder="Category / Subcategory / Type"
+                  />
+                </div>
+
+                {(formData.category === "recorder" || formData.category === "accessory") && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1 block">
+                        Compatible Paths <span className="normal-case font-normal opacity-60">(What this device supports)</span>
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newCompatiblePath}
+                          onChange={(e) => setNewCompatiblePath(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addCompatiblePath();
+                            }
+                          }}
+                          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
+                          placeholder="e.g., CCTV/Cameras/IP"
+                        />
+                        <button
+                          type="button"
+                          onClick={addCompatiblePath}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {(formData.compatible_paths ?? []).length === 0 && (
+                          <span className="text-xs text-zinc-600 font-medium italic">No compatible paths added.</span>
+                        )}
+                        {(formData.compatible_paths ?? []).map(path => (
+                          <span key={path} className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                            {path}
+                            <button type="button" onClick={() => removeCompatiblePath(path)} className="text-emerald-500 hover:text-emerald-300">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1 block">Max Cameras</label>
+                      <select value={formData.max_cameras ?? ""}
+                        onChange={e => setFormData({ ...formData, max_cameras: e.target.value ? Number(e.target.value) : undefined })}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all appearance-none">
+                        <option value="">— Not Set —</option>
+                        <option value={1}>1 Camera</option>
+                        <option value={4}>4 Cameras</option>
+                        <option value={8}>8 Cameras</option>
+                        <option value={16}>16 Cameras</option>
+                        <option value={32}>32 Cameras</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1 block">Min Cameras</label>
+                      <select value={formData.min_cameras ?? ""}
+                        onChange={e => setFormData({ ...formData, min_cameras: e.target.value ? Number(e.target.value) : undefined })}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all appearance-none">
+                        <option value="">— Not Set —</option>
+                        <option value={1}>1 Camera</option>
+                        <option value={5}>5 Cameras</option>
+                        <option value={9}>9 Cameras</option>
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-4 pt-4 sticky bottom-0 bg-transparent">
             <button

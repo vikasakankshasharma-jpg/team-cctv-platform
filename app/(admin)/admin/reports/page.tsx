@@ -2,6 +2,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { TrendingUp } from "lucide-react";
 import type { Lead, PricingResult } from "@/types";
 import { ReportsClient } from "@/components/admin/ReportsClient";
+import { PageHeader } from "@/components/admin/PageHeader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -45,8 +46,27 @@ export default async function ReportsAdminPage() {
   });
 
   const results = await Promise.all(fetchPromises);
+  
+  // Fetch all active promoters to join data
+  const promotersSnapshot = await adminDb.collection("promoters").get();
+  const promoterMap: Record<string, { name: string, business_name?: string }> = {};
+  promotersSnapshot.docs.forEach(doc => {
+    const data = doc.data();
+    promoterMap[doc.id] = { name: data.name, business_name: data.business_name };
+  });
+
   results.forEach(res => {
-    if (res) reportEntries.push(res);
+    if (res) {
+      const promoter = res.lead.promoter_id ? promoterMap[res.lead.promoter_id] : null;
+      reportEntries.push({
+        ...res,
+        lead: {
+          ...res.lead,
+          promoter_name: promoter?.name || null,
+          promoter_business: promoter?.business_name || null
+        }
+      });
+    }
   });
 
   // Calculate Aggregates
@@ -98,7 +118,13 @@ export default async function ReportsAdminPage() {
   };
 
   return (
-    <div className="animate-in fade-in duration-700">
+    <div className="space-y-10 animate-in fade-in duration-700">
+      <PageHeader 
+        icon={TrendingUp} 
+        title="Sales Analytics" 
+        description="Deep dive into revenue trends, technology saturation, and conversion metrics."
+        badge={`${reportEntries.length} Transactions`}
+      />
       <ReportsClient 
         data={reportEntries} 
         aggregates={aggregates} 

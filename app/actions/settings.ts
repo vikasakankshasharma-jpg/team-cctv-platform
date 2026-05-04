@@ -3,7 +3,7 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
-import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
+import { SETTINGS_DOC_ID } from "@/lib/constants";
 import type { AppSettings } from "@/types";
 
 /**

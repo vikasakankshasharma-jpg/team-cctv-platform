@@ -3,218 +3,602 @@ import { adminDb } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
-const SETTINGS_DOC_ID = "app_config";
+/**
+ * GET /api/dev/seed
+ *
+ * NUCLEAR RESET + RESEED — HD + IP Production Catalog
+ * Source: Corrected quotation sheets (29-04-2026, Quotation# 20264291225)
+ *
+ * HD verified totals (camera + DVR/PSU + HDD + install):
+ *   4-cam:  Opt1=₹15,053  Opt2=₹17,133  Opt3=₹21,100
+ *   8-cam:  Opt1=₹21,703  Opt2=₹25,863  Opt3=₹33,223
+ *  16-cam:  Opt1=₹40,345  Opt2=₹48,665  Opt3=₹73,160
+ *
+ * IP: 5 camera options (Budget 2MP, Budget 4MP, CP Plus 2MP B&W,
+ *                        CP Plus 2MP Color, CP Plus 4MP Color)
+ *
+ * GST rate = 0 — quoted prices are FINAL (all-inclusive)
+ * daily_gb_per_camera = 17 → HDD auto-select matches quotation defaults:
+ *   4 cams × 17 GB × 7 days = 476 GB → picks 500GB ✓
+ *   8 cams × 17 GB × 7 days = 952 GB → picks 1TB  ✓
+ *  16 cams × 17 GB × 7 days = 1904 GB → picks 3TB  ✓
+ */
+
+const DAILY_GB = 17;
+
+// Collections to wipe on every seed run
+const toWipe = [
+  "products",
+  "addons",
+  "addon_rules",
+  "recommendation_rules",
+  "settings",
+  "price_change_log",
+  "leads",
+];
+
+// ─── Helper: wipe all docs from a collection ────────────────────────────────
+async function wipeCollection(name: string) {
+  const snap = await adminDb.collection(name).get();
+  if (snap.empty) return;
+  const batch = adminDb.batch();
+  snap.docs.forEach((d) => batch.delete(d.ref));
+  await batch.commit();
+}
 
 export async function GET() {
-  // SECURITY GUARD: Block access in production to prevent data wipes
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
-      { error: "Seeding is disabled in production. Use a local service account to seed directly." },
+      { error: "Seeding is disabled in production." },
       { status: 403 }
     );
   }
 
   try {
-    const batch = adminDb.batch();
+    // ── STEP 1: NUCLEAR WIPE ────────────────────────────────────────────────
+    await Promise.all(toWipe.map(wipeCollection));
 
-    // --- 1. SEED PROFESSIONAL PRODUCT MATRIX (WITH LOGIC FIELDS) ---
-    const products = [
-      // HD Cameras
-      { technical_name: "cam_hd_2mp", display_name: "TEAM 2MP HD Pro-Dome", category: "camera", technology: "HD", unit_price: 1450, resolution_tier: "good", is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "cam_hd_5mp", display_name: "TEAM 5MP HD Ultra-Bullet", category: "camera", technology: "HD", unit_price: 2100, resolution_tier: "very_clear", is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "cam_hd_8mp", display_name: "TEAM 8MP 4K HD Crystal", category: "camera", technology: "HD", unit_price: 3200, resolution_tier: "crystal_clear", is_active: true, is_deleted: false, created_at: new Date() },
-      
-      // IP Cameras
-      { technical_name: "cam_ip_2mp", display_name: "TEAM 2MP IP Smart-Dome", category: "camera", technology: "IP", unit_price: 2850, resolution_tier: "good", is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "cam_ip_5mp", display_name: "TEAM 5MP IP AI-Bullet", category: "camera", technology: "IP", unit_price: 3600, resolution_tier: "very_clear", is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "cam_ip_8mp", display_name: "TEAM 8MP 4K IP Elite-Node", category: "camera", technology: "IP", unit_price: 5800, resolution_tier: "crystal_clear", is_active: true, is_deleted: false, created_at: new Date() },
-      
-      // Recorders (Channels)
-      { technical_name: "dvr_4ch", display_name: "4-Channel Hybrid DVR", category: "recorder", technology: "HD", unit_price: 3800, channels: 4, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "dvr_8ch", display_name: "8-Channel Hybrid DVR", category: "recorder", technology: "HD", unit_price: 6200, channels: 8, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "nvr_4ch", display_name: "4-Channel Smart NVR", category: "recorder", technology: "IP", unit_price: 5900, channels: 4, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "nvr_8ch", display_name: "8-Channel Smart NVR", category: "recorder", technology: "IP", unit_price: 8800, channels: 8, is_active: true, is_deleted: false, created_at: new Date() },
-      
-      // Accessories (Hard Disks)
-      { technical_name: "hdd_500gb", display_name: "500GB Surveillance HDD", category: "accessory", technology: "both", unit_price: 2500, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_1tb", display_name: "1TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 4200, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_2tb", display_name: "2TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 6800, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_3tb", display_name: "3TB Surveillance HDD", category: "accessory", technology: "both", unit_price: 8500, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_4tb", display_name: "4TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 10500, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_6tb", display_name: "6TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 14500, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_8tb", display_name: "8TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 18500, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_10tb", display_name: "10TB Seagate SkyHawk", category: "accessory", technology: "both", unit_price: 22500, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_12tb", display_name: "12TB Enterprise HDD", category: "accessory", technology: "both", unit_price: 28500, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_14tb", display_name: "14TB Enterprise HDD", category: "accessory", technology: "both", unit_price: 34500, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_16tb", display_name: "16TB Enterprise HDD", category: "accessory", technology: "both", unit_price: 40500, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_18tb", display_name: "18TB Enterprise HDD", category: "accessory", technology: "both", unit_price: 46500, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "hdd_20tb", display_name: "20TB Enterprise HDD", category: "accessory", technology: "both", unit_price: 52500, is_active: true, is_deleted: false, created_at: new Date() },
+    // ── STEP 2: PRODUCTS ─────────────────────────────────────────────────────
+    const products: Record<string, any>[] = [
+
+      // ══════════════════════════════════════════════════════════════
+      //  HD CAMERAS  (3 options)
+      // ══════════════════════════════════════════════════════════════
+
+      // Option 1 — Budget Brand 2MP (IR Night)  ₹975/cam
+      {
+        id: "cam_hd_opt1",
+        technical_name: "cam_hd_opt1",
+        display_name: "Budget Brand 2MP (IR Night)",
+        category: "camera",
+        technology: "HD",
+        unit_price: 975,
+        resolution_tier: "good",
+        daily_gb_per_camera: DAILY_GB,
+        catalog_path: "CCTV/Cameras/HD/2MP",
+        brand: "Budget",
+        is_active: true,
+      },
+
+      // Option 2 — CP Plus 2.4MP Color in Night  ₹1,495/cam
+      {
+        id: "cam_hd_opt2",
+        technical_name: "cam_hd_opt2",
+        display_name: "CP Plus 2.4MP Color in Night",
+        category: "camera",
+        technology: "HD",
+        unit_price: 1495,
+        resolution_tier: "very_clear",
+        daily_gb_per_camera: DAILY_GB,
+        catalog_path: "CCTV/Cameras/HD/2MP",
+        brand: "CP Plus",
+        is_active: true,
+      },
+
+      // Option 3 — CP Plus 5MP Color in Night  ₹2,185/cam
+      {
+        id: "cam_hd_opt3",
+        technical_name: "cam_hd_opt3",
+        display_name: "CP Plus 5MP Color in Night",
+        category: "camera",
+        technology: "HD",
+        unit_price: 2185,
+        resolution_tier: "crystal_clear",
+        daily_gb_per_camera: DAILY_GB,
+        catalog_path: "CCTV/Cameras/HD/5MP",
+        brand: "CP Plus",
+        is_active: true,
+      },
+
+      // ── HD DVRs (2MP-compatible: opts 1 & 2) ──────────────────────────────
+      {
+        id: "dvr_hd_4ch_2mp",
+        technical_name: "dvr_hd_4ch_2mp",
+        display_name: "CP Plus DVR 4CH (2MP Supported, Upto 4 Cameras)",
+        category: "recorder",
+        technology: "HD",
+        unit_price: 2990,
+        channels: 4,
+        max_cameras: 4,
+        catalog_path: "CCTV/Recorders/DVR/2MP",
+        compatible_paths: ["CCTV/Cameras/HD/2MP"],
+        is_active: true,
+      },
+      {
+        id: "dvr_hd_8ch_2mp",
+        technical_name: "dvr_hd_8ch_2mp",
+        display_name: "CP Plus DVR 8CH (2MP Supported, Upto 8 Cameras)",
+        category: "recorder",
+        technology: "HD",
+        unit_price: 4140,
+        channels: 8,
+        max_cameras: 8,
+        catalog_path: "CCTV/Recorders/DVR/2MP",
+        compatible_paths: ["CCTV/Cameras/HD/2MP"],
+        is_active: true,
+      },
+      {
+        id: "dvr_hd_16ch_2mp",
+        technical_name: "dvr_hd_16ch_2mp",
+        display_name: "CP Plus DVR 16CH (2MP Supported, Upto 16 Cameras)",
+        category: "recorder",
+        technology: "HD",
+        unit_price: 7245,
+        channels: 16,
+        max_cameras: 16,
+        catalog_path: "CCTV/Recorders/DVR/2MP",
+        compatible_paths: ["CCTV/Cameras/HD/2MP"],
+        is_active: true,
+      },
+
+      // ── HD DVRs (5MP-compatible: opt 3) ───────────────────────────────────
+      {
+        id: "dvr_hd_4ch_5mp",
+        technical_name: "dvr_hd_4ch_5mp",
+        display_name: "CP Plus DVR 4CH (5MP Supported, Upto 4 Cameras)",
+        category: "recorder",
+        unit_price: 4197,
+        channels: 4,
+        max_cameras: 4,
+        catalog_path: "CCTV/Recorders/DVR/5MP",
+        compatible_paths: ["CCTV/Cameras/HD/5MP"],
+        is_active: true,
+      },
+      {
+        id: "dvr_hd_8ch_5mp",
+        technical_name: "dvr_hd_8ch_5mp",
+        display_name: "CP Plus DVR 8CH (5MP Supported, Upto 8 Cameras)",
+        category: "recorder",
+        technology: "HD",
+        unit_price: 5980,
+        channels: 8,
+        max_cameras: 8,
+        catalog_path: "CCTV/Recorders/DVR/5MP",
+        compatible_paths: ["CCTV/Cameras/HD/5MP"],
+        is_active: true,
+      },
+      {
+        id: "dvr_hd_16ch_5mp",
+        technical_name: "dvr_hd_16ch_5mp",
+        display_name: "CP Plus DVR 16CH (5MP Supported, Upto 16 Cameras)",
+        category: "recorder",
+        technology: "HD",
+        unit_price: 20700,
+        channels: 16,
+        max_cameras: 16,
+        catalog_path: "CCTV/Recorders/DVR/5MP",
+        compatible_paths: ["CCTV/Cameras/HD/5MP"],
+        is_active: true,
+      },
+
+      // ── HD Power Supply (stacks for 9-16 cameras: 2 units auto-selected) ──
+      {
+        id: "psu_hd_8ch",
+        technical_name: "psu_hd_8ch",
+        display_name: "Power Supply (8CH)",
+        category: "accessory",
+        technology: "HD",
+        unit_price: 1260,
+        max_cameras: 8,
+        catalog_path: "CCTV/Accessories/PSU/HD",
+        compatible_paths: ["CCTV/Cameras/HD"],
+        is_active: true,
+      },
+
+      // ── HD HDDs ───────────────────────────────────────────────────────────
+      {
+        id: "hdd_500gb_hd",
+        technical_name: "hdd_500gb_hd",
+        display_name: "HDD 500GB (approx 4-7 days recording)",
+        category: "accessory",
+        unit_price: 2153,
+        is_active: true,
+      },
+      {
+        id: "hdd_1tb_hd",
+        technical_name: "hdd_1tb_hd",
+        display_name: "HDD 1TB (approx 4-7 days recording)",
+        category: "accessory",
+        technology: "HD",
+        unit_price: 5303,
+        is_active: true,
+      },
+      {
+        id: "hdd_3tb_hd",
+        technical_name: "hdd_3tb_hd",
+        display_name: "HDD 3TB (approx 7-10 days recording)",
+        category: "accessory",
+        technology: "HD",
+        unit_price: 8580,
+        is_active: true,
+      },
+      {
+        id: "hdd_4tb_hd",
+        technical_name: "hdd_4tb_hd",
+        display_name: "HDD 4TB",
+        category: "accessory",
+        technology: "HD",
+        unit_price: 11550,
+        is_active: true,
+      },
+
+      // ══════════════════════════════════════════════════════════════
+      //  IP CAMERAS  (5 options)
+      // ══════════════════════════════════════════════════════════════
+
+      // Option 1 — Budget Brand 2MP Color Night & Mic  ₹1,300/cam
+      {
+        id: "cam_ip_opt1",
+        technical_name: "cam_ip_opt1",
+        display_name: "Budget Brand 2MP (Color Night & Mic)",
+        category: "camera",
+        technology: "IP",
+        unit_price: 1300,
+        resolution_tier: "good",
+        daily_gb_per_camera: DAILY_GB,
+        catalog_path: "CCTV/Cameras/IP/2MP",
+        brand: "Budget",
+        is_active: true,
+      },
+
+      // Option 2 — Budget Brand 4MP Color Night & Mic  ₹2,275/cam
+      {
+        id: "cam_ip_opt2",
+        technical_name: "cam_ip_opt2",
+        display_name: "Budget Brand 4MP (Color Night & Mic)",
+        category: "camera",
+        technology: "IP",
+        unit_price: 2275,
+        resolution_tier: "very_clear",
+        daily_gb_per_camera: DAILY_GB,
+        catalog_path: "CCTV/Cameras/IP/4MP",
+        brand: "Budget",
+        is_active: true,
+      },
+
+      // Option 3 — CP Plus 2MP Black & White in Night  ₹2,695/cam
+      {
+        id: "cam_ip_opt3",
+        technical_name: "cam_ip_opt3",
+        display_name: "CP Plus 2MP Black & White in Night",
+        category: "camera",
+        technology: "IP",
+        unit_price: 2695,
+        bulk_discount_threshold: 16,
+        bulk_unit_price: 2585,
+        resolution_tier: "good",
+        daily_gb_per_camera: DAILY_GB,
+        catalog_path: "CCTV/Cameras/IP/2MP",
+        brand: "CP Plus",
+        is_active: true,
+      },
+
+      // Option 4 — CP Plus 2MP Color in Night  ₹3,025/cam
+      {
+        id: "cam_ip_opt4",
+        technical_name: "cam_ip_opt4",
+        display_name: "CP Plus 2MP Color in Night",
+        category: "camera",
+        technology: "IP",
+        unit_price: 3025,
+        bulk_discount_threshold: 16,
+        bulk_unit_price: 2915,
+        resolution_tier: "very_clear",
+        daily_gb_per_camera: DAILY_GB,
+        catalog_path: "CCTV/Cameras/IP/2MP",
+        brand: "CP Plus",
+        is_active: true,
+      },
+
+      // Option 5 — CP Plus 4MP Color in Night  ₹4,015/cam
+      {
+        id: "cam_ip_opt5",
+        technical_name: "cam_ip_opt5",
+        display_name: "CP Plus 4MP Color in Night",
+        category: "camera",
+        technology: "IP",
+        unit_price: 4015,
+        bulk_discount_threshold: 16,
+        bulk_unit_price: 3905,
+        resolution_tier: "crystal_clear",
+        daily_gb_per_camera: DAILY_GB,
+        catalog_path: "CCTV/Cameras/IP/4MP",
+        brand: "CP Plus",
+        is_active: true,
+      },
+
+      // ── IP NVRs (CP Plus) ──────────────────────────────────────────────────
+      {
+        id: "nvr_ip_4ch",
+        technical_name: "nvr_ip_4ch",
+        display_name: "NVR CP Plus (Upto 4 Cameras)",
+        category: "recorder",
+        technology: "IP",
+        unit_price: 4140,
+        channels: 4,
+        max_cameras: 4,
+        catalog_path: "CCTV/Recorders/NVR",
+        compatible_paths: ["CCTV/Cameras/IP"],
+        is_active: true,
+      },
+      {
+        id: "nvr_ip_8ch",
+        technical_name: "nvr_ip_8ch",
+        display_name: "NVR CP Plus (Upto 8 Cameras)",
+        category: "recorder",
+        technology: "IP",
+        unit_price: 4860,
+        channels: 8,
+        max_cameras: 8,
+        catalog_path: "CCTV/Recorders/NVR",
+        compatible_paths: ["CCTV/Cameras/IP"],
+        is_active: true,
+      },
+      {
+        id: "nvr_ip_16ch",
+        technical_name: "nvr_ip_16ch",
+        display_name: "NVR CP Plus (Upto 16 Cameras)",
+        category: "recorder",
+        technology: "IP",
+        unit_price: 8160,
+        channels: 16,
+        max_cameras: 16,
+        catalog_path: "CCTV/Recorders/NVR",
+        compatible_paths: ["CCTV/Cameras/IP"],
+        is_active: true,
+      },
+
+      // ── IP PoE Switches (stacked for 9-16 cameras) ────────────────────────
+      {
+        id: "poe_ip_4ch",
+        technical_name: "poe_ip_4ch",
+        display_name: "PoE Switch (4CH)",
+        category: "accessory",
+        technology: "IP",
+        unit_price: 1207,
+        max_cameras: 4,
+        catalog_path: "CCTV/Accessories/PoE",
+        compatible_paths: ["CCTV/Cameras/IP"],
+        is_active: true,
+      },
+      {
+        id: "poe_ip_8ch",
+        technical_name: "poe_ip_8ch",
+        display_name: "PoE Switch (8CH)",
+        category: "accessory",
+        technology: "IP",
+        unit_price: 1552,
+        max_cameras: 8,
+        catalog_path: "CCTV/Accessories/PoE",
+        compatible_paths: ["CCTV/Cameras/IP"],
+        is_active: true,
+      },
+
+      // ── IP HDDs ───────────────────────────────────────────────────────────
+      {
+        id: "hdd_500gb_ip",
+        technical_name: "hdd_500gb_ip",
+        display_name: "HDD 500GB",
+        category: "accessory",
+        technology: "IP",
+        unit_price: 2153,
+        is_active: true,
+      },
+      {
+        id: "hdd_1tb_ip",
+        technical_name: "hdd_1tb_ip",
+        display_name: "HDD 1TB",
+        category: "accessory",
+        technology: "IP",
+        unit_price: 5303,
+        is_active: true,
+      },
+      {
+        id: "hdd_3tb_ip",
+        technical_name: "hdd_3tb_ip",
+        display_name: "HDD 3TB",
+        category: "accessory",
+        technology: "IP",
+        unit_price: 8190,
+        is_active: true,
+      },
+      {
+        id: "hdd_4tb_ip",
+        technical_name: "hdd_4tb_ip",
+        display_name: "HDD 4TB",
+        category: "accessory",
+        technology: "IP",
+        unit_price: 11025,
+        is_active: true,
+      },
+      {
+        id: "hdd_6tb_ip",
+        technical_name: "hdd_6tb_ip",
+        display_name: "HDD 6TB",
+        category: "accessory",
+        technology: "IP",
+        unit_price: 15540,
+        is_active: true,
+      },
     ];
 
-    products.forEach(p => {
-      const ref = adminDb.collection("products").doc(p.technical_name);
-      batch.set(ref, p);
+    const batch1 = adminDb.batch();
+    products.forEach(({ id, ...data }) => {
+      const ref = adminDb.collection("products").doc(id);
+      batch1.set(ref, { ...data, technical_name: id, created_at: new Date(), updated_at: new Date() });
     });
+    await batch1.commit();
 
-    // --- 2. SEED ELITE SYSTEM ADD-ONS ---
-    // --- 2. SEED ELITE SYSTEM ADD-ONS ---
+    // ── STEP 3: ADDONS ───────────────────────────────────────────────────────
     const addons = [
-      { technical_name: "wire_mgr_mini", display_name: "Compact Wire Manager", price: 450, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "wire_mgr_max", display_name: "Industrial Wire Orchestrator", price: 1200, is_active: true, is_deleted: false, created_at: new Date() },
-      { technical_name: "audio_mic", display_name: "Active Noise-Cancelling Mic", price: 850, is_active: true, is_deleted: false, created_at: new Date() },
+      // HD cables
+      { id: "addon_cable_cc_hd", display_name: "Cable per Mtr (Copper Coated) – HD", price: 12,  unit_multiplier: "none", technology: "HD", is_active: true },
+      { id: "addon_cable_pc_hd", display_name: "Cable per Mtr (Pure Copper) – HD",   price: 35,  unit_multiplier: "none", technology: "HD", is_active: true },
+      // IP cables
+      { id: "addon_cable_cc_ip", display_name: "Cable per Mtr (Copper Coated) – IP", price: 40,  unit_multiplier: "none", technology: "IP", is_active: true },
+      { id: "addon_cable_pc_ip", display_name: "Cable per Mtr (Pure Copper) – IP",   price: 38,  unit_multiplier: "none", technology: "IP", is_active: true },
+      // Common
+      { id: "addon_rack_2u",    display_name: "Rack (2U)",           price: 500, unit_multiplier: "none", technology: "both", is_active: true },
+      { id: "addon_rack_4u",    display_name: "Rack (4U)",           price: 1000, unit_multiplier: "none", technology: "both", is_active: true },
+      { id: "addon_pvc_box",    display_name: "PVC Box 5x5 (per unit)", price: 42, unit_multiplier: "none", technology: "both", is_active: true },
+      { id: "addon_poe_cover",  display_name: "PoE Switch PVC Box Cover", price: 480, unit_multiplier: "none", technology: "IP", is_active: true },
     ];
 
-    addons.forEach(a => {
-      const ref = adminDb.collection("addons").doc(a.technical_name);
-      batch.set(ref, a);
+    const batch2 = adminDb.batch();
+    addons.forEach(({ id, ...data }) => {
+      batch2.set(adminDb.collection("addons").doc(id), { ...data, created_at: new Date() });
     });
+    await batch2.commit();
 
-    // --- 3. SEED ELITE WIZARD CONFIGURATION (COMPLETE 5 STEPS) ---
-    const wizardSteps = [
-      {
-        id: "step_prop_type",
-        title: "Property Type",
-        description: "Tell us where you want to install the cameras.",
-        position: 0,
-        is_active: true,
-        questions: [
-          {
-            id: "q_prop_type",
-            question_text: "Where is the site?",
-            position: 0,
-            input_type: "single",
-            is_required: true,
-            options: [
-              { label: "Home", value: "home", position: 0, pricing_tags: [] },
-              { label: "Office", value: "office", position: 1, pricing_tags: [] },
-              { label: "Factory / Warehouse", value: "factory", position: 2, pricing_tags: ["industrial_grade"] },
-            ]
-          }
-        ]
-      },
-      {
-        id: "step_prop_size",
-        title: "Property Size",
-        description: "How big is the area you want to cover?",
-        position: 1,
-        is_active: true,
-        questions: [
-          {
-            id: "q_prop_size",
-            question_text: "Approximate Coverage Area?",
-            position: 0,
-            input_type: "single",
-            is_required: true,
-            options: [
-              { label: "Small area", value: "small", position: 0, pricing_tags: [] },
-              { label: "Medium area", value: "medium", position: 1, pricing_tags: [] },
-              { label: "Large area", value: "large", position: 2, pricing_tags: ["high_storage"] },
-            ]
-          }
-        ]
-      },
-      {
-        id: "step_infra",
-        title: "Wiring Check",
-        description: "Has the wiring already been done at your site?",
-        position: 2,
-        is_active: true,
-        questions: [
-          {
-            id: "q_wiring",
-            question_text: "Current Wiring Status?",
-            position: 0,
-            input_type: "single",
-            is_required: true,
-            options: [
-              { label: "Wiring is already done", value: "true", position: 0, pricing_tags: ["labor_fitting_only"] },
-              { label: "Need new wiring service", value: "false", position: 1, pricing_tags: ["labor_full_installation"] },
-            ]
-          }
-        ]
-      },
-      {
-        id: "step_features",
-        title: "System Features",
-        description: "Choose extra features you want in your cameras.",
-        position: 3,
-        is_active: true,
-        questions: [
-          {
-            id: "q_features",
-            question_text: "What features do you need?",
-            position: 0,
-            input_type: "multi",
-            is_required: true,
-            options: [
-              { label: "Starlight-Night Vision", value: "night_vision", position: 0, pricing_tags: ["starlight"] },
-              { label: "Mobile Intelligence", value: "phone_alerts", position: 1, pricing_tags: ["cloud_ready"] },
-              { label: "Bi-Directional Audio", value: "audio", position: 2, pricing_tags: ["audio_mic"] },
-            ]
-          }
-        ]
-      },
-      {
-        id: "step_tech",
-        title: "Technology Type",
-        description: "Choose between standard HD or smart digital cameras.",
-        position: 4,
-        is_active: true,
-        questions: [
-          {
-            id: "q_tech",
-            question_text: "Which technology would you like?",
-            position: 0,
-            input_type: "single",
-            is_required: true,
-            options: [
-              { label: "Standard HD Cameras", value: "HD", position: 0, pricing_tags: ["hd_standard"] },
-              { label: "Smart Digital (IP) Cameras", value: "IP", position: 1, pricing_tags: ["ip_pro"] },
-            ]
-          }
-        ]
-      }
-    ];
-
-    // Clear existing wizard data to ensure fresh 5-step state
-    // Note: Batch limit is 500, but we'll manually seed carefully
-    for (const step of wizardSteps) {
-      const stepRef = adminDb.collection("wizard_steps").doc(step.id);
-      const { id: _id, questions, ...stepData } = step;
-      batch.set(stepRef, { ...stepData, created_at: new Date() });
-
-      for (const question of questions) {
-        const qRef = stepRef.collection("questions").doc(question.id);
-        const { id: _qId, options, ...qData } = question;
-        batch.set(qRef, qData);
-
-        for (const option of options) {
-          const optRef = qRef.collection("options").doc();
-          batch.set(optRef, option);
-        }
-      }
-    }
-
-    // --- 4. SEED SETTINGS ---
-    const settingsRef = adminDb.collection("settings").doc(SETTINGS_DOC_ID);
-    batch.set(settingsRef, {
+    // ── STEP 4: SETTINGS ─────────────────────────────────────────────────────
+    // gst_rate = 0 — quoted prices are all-inclusive (no separate GST line)
+    await adminDb.collection("settings").doc("app_config").set({
       company_name: "TEAM CCTV",
       company_logo_url: null,
-      gst_rate: 18,
-      whatsapp_template: "Security Alert: {{customer_name}}, your custom configuration is ready.",
-      pricing_cache_ttl_seconds: 3600,
+      gst_rate: 0,
+
+      // Installation labor rates
+      labor_hd_per_camera: 400,     // BNC/DC/Clip, Normal Conditions
+      labor_ip_per_camera: 500,     // RJ45/Clip, Normal Conditions
+
+      // Cable rates per metre
+      cable_copper_coated_hd: 12,
+      cable_pure_copper_hd: 35,
+      cable_copper_coated_ip: 40,
+      cable_pure_copper_ip: 38,
+      cable_overage_per_mtr: 12,    // extra charge beyond 100 m
+
+      // Post-sale
+      visit_charge: 300,            // after handover if AMC not taken
+      amc_1yr_pct: 5,
+      amc_2yr_pct: 8,
+      amc_3yr_pct: 10,
+
+      // Quote settings
+      quote_validity_days: 7,
+      max_supported_cameras: 16,    // >16 → industrial consultation
+
+      // Payment terms
+      payment_advance_pct: 10,
+      payment_material_pct: 80,
+      payment_handover_pct: 10,
+
+      // Tier labels
+      tier_budget_label: "Essential",
+      tier_recommended_label: "Professional",
+      tier_premium_label: "Premium",
+
+      // Notifications
+      whatsapp_template: "Hi {{customer_name}}, your TEAM CCTV quotation is ready. Reply to know more.",
+      admin_notification_phone: "+919772699395",
+
+      // Legacy compat
+      labor_fitting_only_rate: 400,
+      labor_full_installation_rate: 500,
+      cable_copper_coated: 12,
+      cable_pure_copper: 35,
+      wire_cost_per_meter: 12,
+      pricing_cache_ttl_seconds: 300,
       otp_provider: "firebase_phone",
-      labor_fitting_only_rate: 650,
-      labor_full_installation_rate: 1800,
-      wire_cost_per_meter: 45,
+
       updated_at: new Date(),
     });
 
-    await batch.commit();
-    return NextResponse.json({ message: "Elite Readiness Data Seeding Successful" });
+    // ── STEP 5: RECOMMENDATION RULES ─────────────────────────────────────────
+    const rules = [
+      // HD default → Option 2 (CP Plus 2.4MP Color)
+      {
+        id: "rec_hd_default",
+        priority: 10,
+        is_active: true,
+        conditions: { technology: "HD" },
+        recommendation: {
+          camera_option: 2,
+          label: "Best Value",
+          reason: "CP Plus 2.4MP Color Night gives colour footage day & night at an unbeatable price.",
+          is_featured: true,
+        },
+      },
+      // IP default → Option 4 (CP Plus 2MP Color)
+      {
+        id: "rec_ip_default",
+        priority: 10,
+        is_active: true,
+        conditions: { technology: "IP" },
+        recommendation: {
+          camera_option: 4,
+          label: "Best Value",
+          reason: "CP Plus 2MP Color in Night — smart IP with full-colour night footage, trusted across 500+ Jaipur sites.",
+          is_featured: true,
+        },
+      },
+      // IP factory/large commercial → Option 5 (CP Plus 4MP)
+      {
+        id: "rec_ip_factory",
+        priority: 5,
+        is_active: true,
+        conditions: { technology: "IP", property_types: ["factory", "warehouse"] },
+        recommendation: {
+          camera_option: 5,
+          label: "Industrial Grade",
+          reason: "CP Plus 4MP provides forensic-level detail essential for large industrial sites.",
+          is_featured: true,
+        },
+      },
+    ];
+
+    const batch3 = adminDb.batch();
+    rules.forEach(({ id, ...data }) => {
+      batch3.set(adminDb.collection("recommendation_rules").doc(id), { ...data, created_at: new Date() });
+    });
+    await batch3.commit();
+
+    return NextResponse.json({
+      success: true,
+      message: "✅ Production Catalog Seeded — HD (3 options) + IP (5 options)",
+      wiped: toWipe,
+      counts: {
+        products: products.length,
+        addons: addons.length,
+        recommendation_rules: rules.length,
+      },
+      hd_price_verification: {
+        "4cam_opt1_budget_2mp":    "₹15,053 (4×₹975 + ₹2,990 DVR + ₹1,260 PSU + ₹5,303 HDD + ₹1,600 install)",
+        "4cam_opt2_cpplus_2.4mp":  "₹17,133 (4×₹1,495 + ₹2,990 DVR + ₹1,260 PSU + ₹5,303 HDD + ₹1,600 install)",
+        "4cam_opt3_cpplus_5mp":    "₹21,100 (4×₹2,185 + ₹4,198 DVR + ₹1,260 PSU + ₹5,303 HDD + ₹1,600 install)",
+        "8cam_opt1_budget_2mp":    "₹21,703 (8×₹975 + ₹4,140 DVR + ₹1,260 PSU + ₹5,303 HDD + ₹3,200 install)",
+        "8cam_opt2_cpplus_2.4mp":  "₹25,863 (8×₹1,495 + ₹4,140 DVR + ₹1,260 PSU + ₹5,303 HDD + ₹3,200 install)",
+        "8cam_opt3_cpplus_5mp":    "₹33,223 (8×₹2,185 + ₹5,980 DVR + ₹1,260 PSU + ₹5,303 HDD + ₹3,200 install)",
+        "16cam_opt1_budget_2mp":   "₹40,345 (16×₹975 + ₹7,245 DVR + ₹2,520 PSU×2 + ₹8,580 HDD + ₹6,400 install)",
+        "16cam_opt2_cpplus_2.4mp": "₹48,665 (16×₹1,495 + ₹7,245 DVR + ₹2,520 PSU×2 + ₹8,580 HDD + ₹6,400 install)",
+        "16cam_opt3_cpplus_5mp":   "₹73,160 (16×₹2,185 + ₹20,700 DVR + ₹2,520 PSU×2 + ₹8,580 HDD + ₹6,400 install)",
+      },
+    });
   } catch (error) {
     const err = error as Error;
-    console.error("Seeding Error:", err);
+    console.error("❌ Seed error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+

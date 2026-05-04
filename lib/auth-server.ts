@@ -39,25 +39,27 @@ export async function verifySession(): Promise<SessionResult> {
   }
 }
 
+import { redirect } from "next/navigation";
+
 /**
- * Enforces super_admin role. Throws an error if not authorized.
- * Useful for rapid authorization in sensitive API routes.
+ * Enforces super_admin role. Redirects if not authorized.
+ * Useful for rapid authorization in sensitive API routes or pages.
  */
 export async function requireSuperAdmin() {
   const session = await verifySession();
   if (!session.isAuthenticated || session.role !== "super_admin") {
-    throw new Error("Forbidden: Super Admin access required");
+    redirect("/admin/login");
   }
   return session;
 }
 
 /**
- * Enforces any admin role (super_admin or sales_staff).
+ * Enforces any admin role (super_admin or sales_staff). Redirects if not authorized.
  */
 export async function requireAdmin() {
   const session = await verifySession();
   if (!session.isAuthenticated) {
-    throw new Error("Unauthorized: Admin access required");
+    redirect("/admin/login");
   }
   return session;
 }

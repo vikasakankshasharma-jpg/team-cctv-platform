@@ -1,6 +1,7 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard } from "lucide-react";
 import { DashboardClient, type WeeklyBucket, type SourceBreakdown, type RecentActivity } from "@/components/admin/DashboardClient";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -106,9 +107,9 @@ export default async function AdminDashboard() {
   const recentLeads: RecentActivity[] = recentLeadsSnap.docs.map((doc) => {
     const d = doc.data() as Lead;
     return {
+      id: doc.id,
       customer_name: d.customer_name ?? "Unknown",
       status: d.status ?? "new",
-      // referral_code: d.referral_code ?? null, // Removed as it's not in RecentActivity interface
       created_at: (d.created_at as any)?.toDate?.()?.toISOString() ?? "",
     };
   });
@@ -121,7 +122,8 @@ export default async function AdminDashboard() {
       trend: "Leads captured via Catalyst",
       color: "text-blue-500",
       bg: "bg-blue-500/10",
-      shadow: "shadow-blue-500/10"
+      shadow: "shadow-blue-500/10",
+      href: "/admin/leads"
     },
     {
       label: "Operational Success",
@@ -130,7 +132,8 @@ export default async function AdminDashboard() {
       trend: "Closed/Won transactions",
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
-      shadow: "shadow-emerald-500/10"
+      shadow: "shadow-emerald-500/10",
+      href: "/admin/leads"
     },
     {
       label: "Yield Velocity",
@@ -139,7 +142,8 @@ export default async function AdminDashboard() {
       trend: "Lead conversion efficacy",
       color: "text-purple-400",
       bg: "bg-purple-500/10",
-      shadow: "shadow-purple-500/10"
+      shadow: "shadow-purple-500/10",
+      href: "/admin/leads"
     },
     {
       label: "Gross Throughput",
@@ -148,7 +152,8 @@ export default async function AdminDashboard() {
       trend: "Ex-tax net business volume",
       color: "text-amber-500",
       bg: "bg-amber-500/10",
-      shadow: "shadow-amber-500/10"
+      shadow: "shadow-amber-500/10",
+      href: "/admin/bookings"
     },
   ];
 
@@ -163,7 +168,7 @@ export default async function AdminDashboard() {
       {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {KPIS.map((kpi, idx) => (
-          <div key={idx} className={`bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 relative overflow-hidden group shadow-lg dark:shadow-2xl transition-all hover:border-blue-500/20 active:scale-95 ${kpi.shadow}`}>
+          <Link href={kpi.href} key={idx} className={`block bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 relative overflow-hidden group shadow-lg dark:shadow-2xl transition-all hover:border-blue-500/20 active:scale-95 ${kpi.shadow}`}>
             <div className="flex items-center justify-between mb-6">
               <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{kpi.label}</span>
               <div className={`p-3 rounded-2xl ${kpi.bg} ${kpi.color} shadow-inner`}>
@@ -173,7 +178,7 @@ export default async function AdminDashboard() {
             <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">{kpi.value}</div>
             <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-wider">{kpi.trend}</div>
             <div className="absolute inset-0 bg-gradient-to-tr from-zinc-500/[0.02] dark:from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-          </div>
+          </Link>
         ))}
       </div>
 

@@ -32,7 +32,8 @@ export function ReportsClient({ data, aggregates }: ReportsClientProps) {
       "Mobile",
       "Property Type",
       "Tech Choice",
-      "Referral",
+      "Promoter Name",
+      "Business Name",
       "Net Taxable (₹)",
       "Total Payable (₹)",
       "Plan",
@@ -45,7 +46,8 @@ export function ReportsClient({ data, aggregates }: ReportsClientProps) {
       `"${lead.mobile_number}"`,
       lead.property_type,
       lead.technology_choice,
-      (lead.wizard_answers as any)?.referral_code || "ORGANIC",
+      (lead as any).promoter_name || "ORGANIC",
+      (lead as any).promoter_business || "-",
       quote.net_taxable_amount,
       quote.total_payable,
       quote.plan_type,
@@ -233,8 +235,8 @@ export function ReportsClient({ data, aggregates }: ReportsClientProps) {
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex flex-col">
-                           <span className="text-[10px] font-black text-amber-600 dark:text-amber-500/80 uppercase tracking-[0.2em]">{(lead.wizard_answers as any)?.referral_code?.toUpperCase() || "ORGANIC"}</span>
-                           <span className="text-[8px] font-bold text-zinc-400 dark:text-zinc-700 uppercase tracking-tighter mt-1">Network Acquisition</span>
+                           <span className="text-[10px] font-black text-amber-600 dark:text-amber-500/80 uppercase tracking-[0.2em]">{(lead as any).promoter_name || "ORGANIC"}</span>
+                           <span className="text-[8px] font-bold text-zinc-400 dark:text-zinc-700 uppercase tracking-tighter mt-1">{(lead as any).promoter_business || "Direct Acquisition"}</span>
                         </div>
                       </td>
                       <td className="px-8 py-6 text-right">

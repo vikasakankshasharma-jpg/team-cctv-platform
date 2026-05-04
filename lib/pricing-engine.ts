@@ -23,6 +23,11 @@ export interface PricingEngineParams {
   referralDiscountPercent?: number;
   referralDiscountFlat?: number;
   evaluatedAddonRules: Record<string, AddonRuleResult>;
+  activeOffer?: {
+    type: "discount_percent" | "free_amc";
+    value?: number;
+    campaign_id: string;
+  };
 }
 
 export function calculatePricing(params: PricingEngineParams): PricingResult {
@@ -34,151 +39,218 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     cablingDone,
     referralDiscountPercent = 0,
     referralDiscountFlat = 0,
-    evaluatedAddonRules
+    evaluatedAddonRules,
+    activeOffer
   } = params;
 
   // ─────────────────────────────────────────────
-  // STEP 0: Define Brand Tier Modifiers (Dynamic from Settings)
+  // STEP 0: Industrial Gate
   // ─────────────────────────────────────────────
-  const tierSettings = {
-    budget: { 
-      prefix: settings.tier_budget_label || "VALUE:", 
-      multiplier: settings.tier_budget_multiplier || 0.85 
-    },
-    recommended: { 
-      prefix: settings.tier_recommended_label || "PROFESSIONAL:", 
-      multiplier: settings.tier_recommended_multiplier || 1.0 
-    },
-    premium: { 
-      prefix: settings.tier_premium_label || "ELITE:", 
-      multiplier: settings.tier_premium_multiplier || 1.25 
-    }
-  };
-  const { multiplier: brandMultiplier } = tierSettings[selection.plan_type] || tierSettings.recommended;
-
-  // ─────────────────────────────────────────────
-  // STEP 1: Process Base Hardware Products
-  // ─────────────────────────────────────────────
-  
-  const getProductTierPrice = (product: Product, planType: "budget" | "recommended" | "premium"): number => {
-    if (planType === "budget" && product.unit_price_budget != null) {
-      return product.unit_price_budget;
-    }
-    if (planType === "premium" && product.unit_price_premium != null) {
-      return product.unit_price_premium;
-    }
-    // Fallback: Use standard unit_price with the global brand multiplier
-    return Math.round(product.unit_price * brandMultiplier);
-  };
+  const isIndustrial = selection.camera_count > (settings.max_supported_cameras || 16);
 
   const lineItems: QuoteLineItem[] = [];
   let baseHardwareCost = 0;
 
-  // 1.1 Finding the Camera (Strict matching on resolution_tier AND technology)
-  // We filter by category and technology first
-  const techCameras = products.filter(p => 
-    p.category === "camera" && 
-    p.is_active && 
-    (p.technology === selection.technology || p.technology === "both")
-  );
+  // ─────────────────────────────────────────────
+  // STEP 1: Process Technology Paths
+  // ─────────────────────────────────────────────
 
-  // Find camera matching the requested quality
-  let selectedCamera = techCameras.find(p => p.resolution_tier === selection.picture_quality);
-  
-  // High-Fidelity Fallback Logic:
-  // If specific quality is missing, try to find the next best quality to avoid identical pricing
-  if (!selectedCamera) {
-    const tierOrder: ("good" | "very_clear" | "crystal_clear")[] = ["good", "very_clear", "crystal_clear"];
-    const targetIdx = tierOrder.indexOf(selection.picture_quality);
+  if (!isIndustrial) {
+    if (selection.technology === "IP") {
+      // --- IP PATH ---
+
+      // 1.1 Select Camera (1-5)
+      let ipCameras = products.filter(p => p.category === "camera" && p.technology === "IP" && p.is_active);
+      
+      // Filter by requested features
+      if (selection.requested_features && selection.requested_features.length > 0) {
+        ipCameras = ipCameras.filter(cam => {
+          if (!cam.features) return false;
+          return selection.requested_features!.every(reqFeat => cam.features!.includes(reqFeat));
+        });
+      }
+
+      // We map options 1-5 to the seeded cam_ip_opt1...cam_ip_opt5
+      const optionNum = selection.selected_camera_option || 4; // Default to CP Plus 2MP Color
+      const selectedCamera = ipCameras.find(p => p.technical_name === `cam_ip_opt${optionNum}`) || 
+                             ipCameras.find(p => p.resolution_tier === selection.picture_quality) ||
+                             ipCameras[0];
+
+      if (selectedCamera) {
+        let unitPrice = selectedCamera.unit_price;
+        if (selectedCamera.bulk_discount_threshold && selection.camera_count >= selectedCamera.bulk_discount_threshold) {
+          unitPrice = selectedCamera.bulk_unit_price || unitPrice;
+        }
+        
+        const lineTotal = unitPrice * selection.camera_count;
+        baseHardwareCost += lineTotal;
+        lineItems.push({
+          product_id: selectedCamera.id!,
+          display_name: selectedCamera.display_name,
+          qty: selection.camera_count,
+          unit_price: unitPrice,
+          line_total: lineTotal
+        });
+      }
+
+      // 1.2 Select compatible NVR (path-based)
+      // Find recorders whose compatible_paths include a prefix of the camera's catalog_path
+      const camPath = selectedCamera?.catalog_path || "UNTAGGED";
+      const nvrs = products.filter(p =>
+        p.category === "recorder" &&
+        p.technology === "IP" &&
+        p.is_active &&
+        (p.compatible_paths ?? []).some(cp => camPath.startsWith(cp)) &&
+        (p.max_cameras ?? p.channels ?? 0) >= selection.camera_count
+      );
+      nvrs.sort((a, b) => (a.max_cameras ?? a.channels ?? 0) - (b.max_cameras ?? b.channels ?? 0));
+      const selectedNvr = nvrs[0]; // smallest compatible NVR
+
+      if (selectedNvr) {
+        baseHardwareCost += selectedNvr.unit_price;
+        lineItems.push({
+          product_id: selectedNvr.id!,
+          display_name: selectedNvr.display_name,
+          qty: 1,
+          unit_price: selectedNvr.unit_price,
+          line_total: selectedNvr.unit_price
+        });
+      }
+
+      // 1.3 Select PoE Switch (path-based, capacity-aware)
+      const poeOptions = products.filter(p =>
+        p.category === "accessory" &&
+        p.technology === "IP" &&
+        p.is_active &&
+        p.technical_name.startsWith("poe_") &&
+        (p.compatible_paths ?? []).some(cp => camPath.startsWith(cp))
+      );
+      // Sort by max_cameras ASCENDING to prefer smallest compatible switch
+      poeOptions.sort((a, b) => (a.max_cameras ?? 0) - (b.max_cameras ?? 0));
+      const idealPoe = poeOptions.find(p => (p.max_cameras ?? 0) >= selection.camera_count) || poeOptions[poeOptions.length - 1];
+
+      if (idealPoe) {
+        // For 9-16 cameras, stack multiple switches
+        const switchCapacity = idealPoe.max_cameras ?? 8;
+        const switchQty = Math.ceil(selection.camera_count / switchCapacity);
+        baseHardwareCost += idealPoe.unit_price * switchQty;
+        lineItems.push({ product_id: idealPoe.id!, display_name: idealPoe.display_name, qty: switchQty, unit_price: idealPoe.unit_price, line_total: idealPoe.unit_price * switchQty });
+      }
+
+    } else {
+      // --- HD PATH ---
+
+      // 1.1 Select Camera (1-2)
+      let hdCameras = products.filter(p => p.category === "camera" && p.technology === "HD" && p.is_active);
+      
+      // Filter by requested features
+      if (selection.requested_features && selection.requested_features.length > 0) {
+        hdCameras = hdCameras.filter(cam => {
+          if (!cam.features) return false;
+          return selection.requested_features!.every(reqFeat => cam.features!.includes(reqFeat));
+        });
+      }
+
+      const optionNum = selection.selected_camera_option || 1; // Default to CP Plus 2.4MP
+      const selectedCamera = hdCameras.find(p => p.technical_name === `cam_hd_opt${optionNum}`) || 
+                             hdCameras.find(p => p.resolution_tier === selection.picture_quality) ||
+                             hdCameras[0];
+
+      if (selectedCamera) {
+        const lineTotal = selectedCamera.unit_price * selection.camera_count;
+        baseHardwareCost += lineTotal;
+        lineItems.push({
+          product_id: selectedCamera.id!,
+          display_name: selectedCamera.display_name,
+          qty: selection.camera_count,
+          unit_price: selectedCamera.unit_price,
+          line_total: lineTotal
+        });
+
+        // 1.2 Select compatible DVR using catalog_path
+        const camPathHD = selectedCamera.catalog_path || "UNTAGGED";
+        const dvrs = products.filter(p =>
+          p.category === "recorder" &&
+          p.technology === "HD" &&
+          p.is_active &&
+          (p.compatible_paths ?? []).some(cp => camPathHD.startsWith(cp)) &&
+          (p.max_cameras ?? p.channels ?? 0) >= selection.camera_count
+        );
+        dvrs.sort((a, b) => (a.max_cameras ?? a.channels ?? 0) - (b.max_cameras ?? b.channels ?? 0));
+        const selectedDvr = dvrs[0]; // smallest compatible DVR
+
+        if (selectedDvr) {
+          baseHardwareCost += selectedDvr.unit_price;
+          lineItems.push({
+            product_id: selectedDvr.id!,
+            display_name: selectedDvr.display_name,
+            qty: 1,
+            unit_price: selectedDvr.unit_price,
+            line_total: selectedDvr.unit_price
+          });
+        }
+      }
+
+      // 1.3 Select Power Supply (path-based, capacity-aware)
+      const camPathForPsu = selectedCamera?.catalog_path || "UNTAGGED";
+      const psuOptions = products.filter(p =>
+        p.category === "accessory" &&
+        p.technology === "HD" &&
+        p.is_active &&
+        p.technical_name.startsWith("psu_") &&
+        (p.compatible_paths ?? []).some(cp => camPathForPsu.startsWith(cp))
+      );
+      psuOptions.sort((a, b) => (b.max_cameras ?? 0) - (a.max_cameras ?? 0));
+      const idealPsu = psuOptions.find(p => (p.max_cameras ?? 0) >= selection.camera_count) || psuOptions[0];
+
+      if (idealPsu) {
+        // For 9-16 cameras, stack multiple PSUs
+        const psuCapacity = idealPsu.max_cameras ?? 4;
+        const psuQty = Math.ceil(selection.camera_count / psuCapacity);
+        baseHardwareCost += idealPsu.unit_price * psuQty;
+        lineItems.push({ product_id: idealPsu.id!, display_name: idealPsu.display_name, qty: psuQty, unit_price: idealPsu.unit_price, line_total: idealPsu.unit_price * psuQty });
+      }
+    }
+
+    // 1.4 Auto-Calculate HDD
+    // Use the daily_gb_per_camera from the selected camera (or fallback)
+    const selectedCam = lineItems.find(item => products.find(p => p.id === item.product_id)?.category === "camera");
+    const camProduct = selectedCam ? products.find(p => p.id === selectedCam.product_id) : null;
+    const dailyGB = camProduct?.daily_gb_per_camera || (selection.technology === "IP" ? 10 : 8);
     
-    // Try higher quality first, then lower
-    selectedCamera = techCameras.find(p => p.resolution_tier === tierOrder[targetIdx + 1]) || 
-                     techCameras.find(p => p.resolution_tier === tierOrder[targetIdx - 1]) || 
-                     techCameras[0];
-  }
+    const recordingDays = selection.recording_days || 7; // Fallback to 7 days
+    const requiredGB = selection.camera_count * dailyGB * recordingDays;
+    const requiredTB = requiredGB / 1000; // Using 1000 as per PDF logic (approx)
 
-  if (selectedCamera) {
-    const qty = selection.camera_count;
-    const adjustedUnitPrice = getProductTierPrice(selectedCamera, selection.plan_type);
-    const lineTotal = adjustedUnitPrice * qty;
-    baseHardwareCost += lineTotal;
-    lineItems.push({
-      product_id: selectedCamera.id!,
-      display_name: selectedCamera.display_name,
-      qty,
-      unit_price: adjustedUnitPrice,
-      line_total: lineTotal
-    });
-  }
+    const hdds = products.filter(p => 
+      p.category === "accessory" && 
+      p.is_active && 
+      p.technical_name.toLowerCase().includes("hdd") &&
+      (p.technology === selection.technology || p.technology === "both")
+    );
 
-  // 1.2 Finding the Recorder (Channels >= CameraCount AND Technology Match)
-  const recorders = products.filter(
-    (p) => p.category === "recorder" && p.is_active && (p.technology === selection.technology || p.technology === "both")
-  );
-  recorders.sort((a,b) => (a.channels || 0) - (b.channels || 0));
-  
-  // Select the smallest recorder that fits the camera count
-  const selectedRecorder = recorders.find(r => (r.channels || 0) >= selection.camera_count) || recorders[recorders.length - 1];
+    const getTB = (p: Product) => {
+      const name = p.technical_name.toLowerCase();
+      const tbMatch = name.match(/(\d+)tb/i);
+      if (tbMatch) return parseFloat(tbMatch[1]);
+      const gbMatch = name.match(/(\d+)gb/i);
+      if (gbMatch) return parseFloat(gbMatch[1]) / 1000;
+      return 0;
+    };
 
-  if (selectedRecorder) {
-    const adjustedUnitPrice = getProductTierPrice(selectedRecorder, selection.plan_type);
-    baseHardwareCost += adjustedUnitPrice;
-    lineItems.push({
-      product_id: selectedRecorder.id!,
-      display_name: selectedRecorder.display_name,
-      qty: 1,
-      unit_price: adjustedUnitPrice,
-      line_total: adjustedUnitPrice
-    });
-  }
+    hdds.sort((a, b) => getTB(a) - getTB(b));
+    const selectedHdd = hdds.find(s => getTB(s) >= requiredTB) || hdds[hdds.length - 1];
 
-  // 1.3 Setup storage (Capacity Logic based on Quality)
-  // Storage requirement calculation based on resolution using standard H.265 bitrates
-  // Standard (2MP): ~25 GB / day / camera
-  // Enhanced (5MP): ~45 GB / day / camera
-  // Crystalline (8MP): ~90 GB / day / camera
-  const dailyStorageGB = {
-    "good": 25,          // ~25GB/day (2MP H.265)
-    "very_clear": 45,    // ~45GB/day (5MP H.265)
-    "crystal_clear": 90  // ~90GB/day (8MP H.265)
-  };
-  const gbPerDayPerCamera = dailyStorageGB[selection.picture_quality] || 25;
-  const requiredGB = selection.camera_count * selection.recording_days * gbPerDayPerCamera;
-  
-  // Use 1024 for more accurate TB conversion (standard for disk capacity calculation in systems)
-  const requiredTB = requiredGB / 1024;
-
-  const hdds = products.filter(p => 
-    p.category === "accessory" && 
-    p.is_active && 
-    p.technical_name.toLowerCase().includes("hdd")
-  );
-
-  const getTB = (p: Product) => {
-    const name = p.technical_name.toLowerCase();
-    const tbMatch = name.match(/(\d+)tb/i);
-    if (tbMatch) return parseFloat(tbMatch[1]);
-    const gbMatch = name.match(/(\d+)gb/i);
-    if (gbMatch) return parseFloat(gbMatch[1]) / 1024;
-    return 0;
-  };
-
-  // Sort HDDs by capacity ascending
-  hdds.sort((a, b) => getTB(a) - getTB(b));
-  
-  // Find the smallest HDD that covers the requirement
-  const selectedHdd = hdds.find(s => getTB(s) >= requiredTB) || hdds[hdds.length - 1];
-
-  if (selectedHdd) {
-    const adjustedUnitPrice = getProductTierPrice(selectedHdd, selection.plan_type);
-    baseHardwareCost += adjustedUnitPrice;
-    lineItems.push({
-      product_id: selectedHdd.id!,
-      display_name: selectedHdd.display_name,
-      qty: 1,
-      unit_price: adjustedUnitPrice,
-      line_total: adjustedUnitPrice
-    });
+    if (selectedHdd) {
+      baseHardwareCost += selectedHdd.unit_price;
+      lineItems.push({
+        product_id: selectedHdd.id!,
+        display_name: selectedHdd.display_name,
+        qty: 1,
+        unit_price: selectedHdd.unit_price,
+        line_total: selectedHdd.unit_price
+      });
+    }
   }
 
   // ─────────────────────────────────────────────
@@ -187,12 +259,37 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   let wireCost = 0;
   let laborCost = 0;
 
-  if (cablingDone) {
-    laborCost = settings.labor_fitting_only_rate * selection.camera_count; 
-  } else {
-    const estimatedMeters = selection.camera_count * 20; 
-    wireCost = settings.wire_cost_per_meter * estimatedMeters;
-    laborCost = settings.labor_full_installation_rate * selection.camera_count;
+  if (!isIndustrial) {
+    // Add installation as a line item to match real quote PDFs
+    const laborRate = selection.technology === "IP" ? (settings.labor_ip_per_camera || 500) : (settings.labor_hd_per_camera || 400);
+    const laborTotal = laborRate * selection.camera_count;
+    lineItems.push({
+      product_id: "labor_install",
+      display_name: selection.technology === "IP" ? "Installation with RJ45/Clip (in Normal Conditions)" : "Installation with BNC/DC/Clip (in Normal Conditions)",
+      qty: selection.camera_count,
+      unit_price: laborRate,
+      line_total: laborTotal
+    });
+    baseHardwareCost += laborTotal;
+    
+    // Wire cost is no longer automatically added; it is an optional add-on in the catalog
+    wireCost = 0;
+    laborCost = 0; // Set to 0 because we added it to baseHardwareCost
+
+    // HIGH-REACH EQUIPMENT FEE
+    if (selection.ceiling_height === "high" || selection.ceiling_height === "very_high") {
+      // Inject standard ladder/scaffolding fee. E.g., ₹1000 flat or ₹200 per camera
+      // We will do a flat ₹1500 for high ceilings for the crew.
+      const highReachFee = 1500;
+      lineItems.push({
+        product_id: "fee_high_reach",
+        display_name: "High-Reach Equipment & Risk Fee (Scaffolding/Tall Ladder)",
+        qty: 1,
+        unit_price: highReachFee,
+        line_total: highReachFee
+      });
+      baseHardwareCost += highReachFee;
+    }
   }
 
   // ─────────────────────────────────────────────
@@ -201,34 +298,76 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   let addonsTotal = 0;
   const quoteAddons: QuoteAddon[] = [];
 
-  for (const addon of addons) {
-    if (!addon.is_active) continue;
-    const ruleResult = evaluatedAddonRules[addon.id!];
-    const action = ruleResult ? ruleResult.action : "show_optional";
+  if (!isIndustrial) {
+    for (const addon of addons) {
+      if (!addon.is_active) continue;
+      const ruleResult = evaluatedAddonRules[addon.id!];
+      const action = ruleResult ? ruleResult.action : "show_optional";
 
-    let include = false;
-    if (action === "show_mandatory") {
-      include = true;
-    } else if (action === "show_optional" && selection.selected_addons.includes(addon.id!)) {
-      include = true;
+      let include = false;
+      if (action === "show_mandatory") {
+        include = true;
+      } else if (action === "show_optional" && selection.selected_addons.includes(addon.id!)) {
+        include = true;
+      }
+
+      if (include) {
+        const qty = addon.unit_multiplier === "camera_count" ? selection.camera_count : 1;
+        const total = addon.price * qty;
+        addonsTotal += total;
+        quoteAddons.push({
+          addon_id: addon.id!,
+          display_name: addon.display_name,
+          price: total,
+          qty
+        });
+      }
     }
-
-    if (include) {
-      const qty = addon.unit_multiplier === "camera_count" ? selection.camera_count : 1;
-      const total = addon.price * qty;
-      addonsTotal += total;
+    
+    // AMC CALCULATION (if requested)
+    if (selection.wants_amc) {
+      const amcPercent = settings.amc_1yr_pct || 15; // 15% hardware cost
+      let amcTotal = Math.round(baseHardwareCost * (amcPercent / 100));
+      
+      addonsTotal += amcTotal;
       quoteAddons.push({
-        addon_id: addon.id!,
-        display_name: addon.display_name,
-        price: total,
-        qty
+        addon_id: "amc_1yr",
+        display_name: `1-Year Annual Maintenance Contract (${amcPercent}% of Hardware)`,
+        price: amcTotal,
+        qty: 1
       });
+
+      if (activeOffer?.type === "free_amc") {
+        addonsTotal -= amcTotal;
+        quoteAddons.push({
+          addon_id: "promo_free_amc",
+          display_name: "Follow-Up Promo: Free 1-Year AMC",
+          price: -amcTotal,
+          qty: 1
+        });
+      }
     }
   }
 
   const grossSubtotal = baseHardwareCost + wireCost + laborCost + addonsTotal;
-  const referralDiscount = Math.round(grossSubtotal * (referralDiscountPercent / 100)) + referralDiscountFlat;
-  const netTaxableAmount = Math.max(0, grossSubtotal - referralDiscount);
+  
+  let campaignDiscount = 0;
+  if (activeOffer?.type === "discount_percent" && activeOffer.value) {
+    campaignDiscount = Math.round(grossSubtotal * (activeOffer.value / 100));
+    // Add it as a line item so it shows up in the addons/discounts section
+    addonsTotal -= campaignDiscount;
+    quoteAddons.push({
+      addon_id: "promo_discount",
+      display_name: `Special Promotional Discount (${activeOffer.value}%)`,
+      price: -campaignDiscount,
+      qty: 1
+    });
+  }
+
+  // Calculate referral discount after campaign discount
+  const adjustedGross = grossSubtotal - campaignDiscount;
+  const referralDiscount = Math.round(adjustedGross * (referralDiscountPercent / 100)) + referralDiscountFlat;
+  const netTaxableAmount = Math.max(0, adjustedGross - referralDiscount);
   const gstAmount = Math.round(netTaxableAmount * (settings.gst_rate / 100));
   const totalPayable = netTaxableAmount + gstAmount;
 
@@ -246,6 +385,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     net_taxable_amount: Math.round(netTaxableAmount),
     gst_rate: settings.gst_rate,
     gst_amount: gstAmount,
-    total_payable: Math.round(totalPayable)
+    total_payable: Math.round(totalPayable),
+    requiresIndustrialQuote: isIndustrial
   };
 }

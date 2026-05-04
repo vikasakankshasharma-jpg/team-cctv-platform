@@ -17,6 +17,10 @@ import {
   ShieldCheck,
   ChevronRight,
   Calendar,
+  IndianRupee,
+  Zap,
+  ClipboardList,
+  Link2,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -28,6 +32,7 @@ const NAV_GROUPS = [
     label: "Overview",
     items: [
       { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+      { name: "Price Change Log", href: "/admin/price-log", icon: ClipboardList },
     ]
   },
   {
@@ -42,6 +47,9 @@ const NAV_GROUPS = [
     label: "Product Catalog",
     items: [
       { name: "Products", href: "/admin/products", icon: Package },
+      { name: "Compatibility Matrix", href: "/admin/compatibility", icon: Link2 },
+      { name: "Live Pricing", href: "/admin/pricing", icon: IndianRupee },
+      { name: "Recommendation Rules", href: "/admin/rules", icon: Zap },
       { name: "Add-ons Manager", href: "/admin/addons", icon: Blocks },
       { name: "Wizard Builder", href: "/admin/wizard", icon: Workflow },
     ]

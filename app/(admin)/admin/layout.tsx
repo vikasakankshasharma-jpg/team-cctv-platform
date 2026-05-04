@@ -14,8 +14,8 @@ export default async function AdminLayout({
   const session = await verifySession();
   
   if (!session.isAuthenticated) {
-    // If we are not authenticated (i.e. on the login page),
-    // do not render the sidebar or admin header.
+    // We only reach this state for the /admin/login page
+    // (Middleware redirects all other unauthenticated paths to login)
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans text-zinc-900 dark:text-zinc-100">
         {children}

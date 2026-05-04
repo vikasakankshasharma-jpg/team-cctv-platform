@@ -1,6 +1,7 @@
 "use client";
 
 import { TrendingUp, Users, Zap, Hash, Activity } from "lucide-react";
+import Link from "next/link";
 
 export interface WeeklyBucket {
   label: string;
@@ -16,6 +17,7 @@ export interface SourceBreakdown {
 }
 
 export interface RecentActivity {
+  id: string;
   customer_name: string;
   status: string;
   created_at: unknown;
@@ -145,8 +147,9 @@ function LeadSourcesPanel({
       </div>
 
       {/* Conversion Rate Plate */}
-      <div className="flex items-center gap-6 p-6 bg-zinc-50 dark:bg-zinc-950/40 rounded-[32px] border border-zinc-100 dark:border-zinc-800/60 shadow-inner group overflow-hidden relative">
-        <div className="relative w-24 h-24 shrink-0">
+      {/* Conversion Rate Plate */}
+      <div className="flex items-center gap-4 lg:gap-6 p-5 lg:p-6 bg-zinc-50 dark:bg-zinc-950/40 rounded-[32px] border border-zinc-100 dark:border-zinc-800/60 shadow-inner group overflow-hidden relative">
+        <div className="relative w-16 h-16 lg:w-20 lg:h-20 shrink-0">
           <svg className="w-full h-full -rotate-90 group-hover:scale-110 transition-transform duration-700" viewBox="0 0 36 36">
             <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" className="text-zinc-200 dark:text-zinc-900" strokeWidth="3" />
             <circle
@@ -157,18 +160,18 @@ function LeadSourcesPanel({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-lg font-black text-zinc-900 dark:text-white leading-none">
+            <span className="text-sm lg:text-lg font-black text-zinc-900 dark:text-white leading-none">
                 {conversionRate}%
             </span>
           </div>
         </div>
-        <div className="flex-1">
-          <div className="text-zinc-900 dark:text-white font-black text-xl leading-none mb-2">Efficacy</div>
-          <p className="text-zinc-400 dark:text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
-            Lead-to-Project Conversion Success
+        <div className="flex-1 min-w-0 relative z-10">
+          <div className="text-zinc-900 dark:text-white font-black text-lg lg:text-xl leading-none mb-1.5 lg:mb-2 truncate">Efficacy</div>
+          <p className="text-zinc-400 dark:text-zinc-500 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider lg:tracking-widest leading-snug">
+            Lead-to-Project Conversion
           </p>
         </div>
-        <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+        <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
            <Zap className="w-24 h-24 text-emerald-500" />
         </div>
       </div>
@@ -206,21 +209,21 @@ function LeadSourcesPanel({
           {recentLeads.length === 0 ? (
             <p className="text-zinc-400 dark:text-zinc-600 text-[10px] font-black uppercase text-center py-10 tracking-widest border border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl">Ledger Empty</p>
           ) : (
-            recentLeads.map((lead, i) => (
-              <div key={i} className="flex items-center justify-between gap-4 p-3 bg-zinc-50 dark:bg-zinc-950/20 border border-zinc-100 dark:border-zinc-800/40 rounded-2xl hover:bg-zinc-100 dark:hover:bg-zinc-900/40 transition-all group/item">
+            recentLeads.map((lead) => (
+              <Link href={`/admin/leads`} key={lead.id} className="flex items-center justify-between gap-4 p-3 bg-zinc-50 dark:bg-zinc-950/20 border border-zinc-100 dark:border-zinc-800/40 rounded-2xl hover:bg-zinc-100 dark:hover:bg-zinc-900/40 hover:border-blue-500/30 transition-all group/item active:scale-[0.98]">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-[11px] font-black text-zinc-400 dark:text-zinc-500 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-500 transition-colors shrink-0 shadow-inner">
                     {lead.customer_name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-black text-zinc-900 dark:text-white truncate leading-none mb-1">{lead.customer_name}</span>
+                    <span className="text-xs font-black text-zinc-900 dark:text-white truncate leading-none mb-1 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors">{lead.customer_name}</span>
                     <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate">Inquiry Captured</span>
                   </div>
                 </div>
                 <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border shadow-inner shrink-0 ${STATUS_COLORS[lead.status] || "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700"}`}>
                   {lead.status.replace("_", " ")}
                 </span>
-              </div>
+              </Link>
             ))
           )}
         </div>

@@ -16,7 +16,7 @@ export function WizardQuestionModal({ isOpen, onClose, stepId, question, onSave 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     question_text: "",
-    input_type: "single" as "single" | "multi",
+    input_type: "single" as "single" | "multi" | "number",
     is_required: true,
     position: 0,
   });
@@ -90,11 +90,12 @@ export function WizardQuestionModal({ isOpen, onClose, stepId, question, onSave 
             </label>
             <select
               value={formData.input_type}
-              onChange={(e) => setFormData({ ...formData, input_type: e.target.value as 'single' | 'multi' })}
+              onChange={(e) => setFormData({ ...formData, input_type: e.target.value as 'single' | 'multi' | 'number' })}
               className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-5 py-3.5 text-zinc-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold appearance-none cursor-pointer shadow-inner"
             >
               <option value="single">Exclusive Choice (Single)</option>
               <option value="multi">Collated Choice (Multiple)</option>
+              <option value="number">Numeric Entry (Exact Quantity)</option>
             </select>
           </div>
 

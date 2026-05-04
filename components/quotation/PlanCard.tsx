@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, ChevronUp, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ShieldCheck, Sparkles, TrendingUp, Info } from "lucide-react";
 import { useState } from "react";
 import type { PricingResult } from "@/types";
 
@@ -15,6 +15,7 @@ interface PlanCardProps {
   onToggleDetails?: (show: boolean) => void;
   differenceAmount?: number;
   differenceType?: "save" | "extra";
+  recommendationReason?: string;
 }
 
 export function PlanCard({ 
@@ -27,7 +28,8 @@ export function PlanCard({
   showDetails,
   onToggleDetails,
   differenceAmount,
-  differenceType
+  differenceType,
+  recommendationReason
 }: PlanCardProps) {
   const [internalShow, setInternalShow] = useState(false);
   
@@ -80,35 +82,95 @@ export function PlanCard({
           </div>
         )}
 
-        {/* Feature List */}
+        {/* Tier-Specific Feature Highlights */}
         <div className="space-y-5 flex-1 mb-8">
+          {/* Row 1: Technology */}
           <div className="flex items-start gap-4">
             <div className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
                <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 font-black" />
             </div>
             <div className="flex flex-col">
                 <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">{pricing.technology === "IP" ? "Smart Digital (IP)" : "HD Sharp (Analog)"}</span>
-                <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">System Connection</span>
+                <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Camera System Technology</span>
             </div>
           </div>
+
+          {/* Row 2: Tier-specific quality */}
           <div className="flex items-start gap-4">
             <div className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
                <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="flex flex-col">
-                <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Professional Setup</span>
-                <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Full Installation Included</span>
+              {title.toLowerCase().includes("budget") ? (
+                <>
+                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Economy-Grade Hardware</span>
+                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Best price, proven reliability</span>
+                </>
+              ) : title.toLowerCase().includes("premium") ? (
+                <>
+                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Premium Brand Hardware</span>
+                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Top-tier quality & performance</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Certified Quality Hardware</span>
+                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Balanced quality & value</span>
+                </>
+              )}
             </div>
           </div>
+
+          {/* Row 3: Warranty */}
           <div className="flex items-start gap-4">
             <div className="w-6 h-6 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="flex flex-col">
                 <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">1 Year Warranty</span>
-                <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Free Support & Repair</span>
+                <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Free On-Site Support & Repair</span>
             </div>
           </div>
+
+          {/* Row 4: Tier-specific extras */}
+          <div className="flex items-start gap-4">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+              title.toLowerCase().includes("premium") ? "bg-amber-50 dark:bg-amber-900/20" : "bg-zinc-50 dark:bg-zinc-800/40"
+            }`}>
+               <Sparkles className={`w-3.5 h-3.5 ${
+                 title.toLowerCase().includes("premium") ? "text-amber-500 dark:text-amber-400" : "text-zinc-300 dark:text-zinc-600"
+               }`} />
+            </div>
+            <div className="flex flex-col">
+              {title.toLowerCase().includes("budget") ? (
+                <>
+                  <span className="text-sm font-black text-zinc-400 dark:text-zinc-600 leading-tight line-through decoration-zinc-300">Extended Coverage</span>
+                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-600 mt-0.5">Available in higher tiers</span>
+                </>
+              ) : title.toLowerCase().includes("premium") ? (
+                <>
+                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Advanced Night Vision</span>
+                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Crystal clear in total darkness</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Enhanced Night Vision</span>
+                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Clear footage in low light</span>
+                </>
+              )}
+            </div>
+          </div>
+          
+          {recommendation && recommendationReason && (
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-500/10 rounded-2xl border border-blue-100 dark:border-blue-500/20">
+               <div className="flex items-center gap-2 mb-2">
+                  <Info className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  <span className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">Why this setup?</span>
+               </div>
+               <p className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed italic">
+                 &quot;{recommendationReason}&quot;
+               </p>
+            </div>
+          )}
         </div>
 
         {/* Interactive Itemization Toggle */}
@@ -165,7 +227,7 @@ export function PlanCard({
                   <span>₹{pricing.net_taxable_amount.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase">
-                  <span>GST (18%)</span>
+                  <span>GST (Government Tax 18%)</span>
                   <span>₹{pricing.gst_amount.toLocaleString('en-IN')}</span>
                 </div>
               </div>

@@ -5,8 +5,10 @@ import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "fi
 import { auth } from "@/lib/firebase-client";
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/store/wizard";
-import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, Mail } from "lucide-react";
+import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, Mail, UploadCloud } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
+import { storage } from "@/lib/firebase-client";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 declare global {
   interface Window {
@@ -18,7 +20,7 @@ declare global {
  * Lead Capture Gate (Elite Premiere Edition)
  * Shows a high-fidelity modal required to view custom quotes.
  */
-export function LeadGate() {
+export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
   const router = useRouter();
   const { answers } = useWizardStore();
   
@@ -26,7 +28,11 @@ export function LeadGate() {
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
   const [channel, setChannel] = useState<"sms" | "whatsapp">("sms");
+  const [showIndustrialSuccess, setShowIndustrialSuccess] = useState(false);
   const referralCode = ""; // referralCode input to be implemented
+  
+  const [competitorQuote, setCompetitorQuote] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -95,24 +101,35 @@ export function LeadGate() {
     } catch (error) {
       const err = error as { code?: string; message?: string };
       console.error("🔥 OTP Transmission Fault:", err);
-      if (err.code === "auth/invalid-api-key" || err.message?.includes("invalid-api-key")) {
-        setError("System Configuration Error: Security keys are not correctly synchronized. Please contact our tech team.");
+
+      // Reset recaptcha so it can be retried cleanly
+      try {
+        window.recaptchaVerifier?.clear?.();
+        // @ts-ignore — force re-init on next attempt
+        window.recaptchaVerifier = undefined;
+      } catch (_) { /* ignore cleanup errors */ }
+
+      if (err.code === "auth/invalid-app-credential" || err.message?.includes("invalid-app-credential")) {
+        setError(
+          "Firebase reCAPTCHA Error on localhost: Go to Firebase Console → Authentication → Settings → Authorized Domains and add 'localhost'. " +
+          "For testing right now use mobile: 9999999999 and OTP: 123456."
+        );
+      } else if (err.code === "auth/invalid-api-key" || err.message?.includes("invalid-api-key")) {
+        setError("Configuration Error: Firebase API key is incorrect. Check your .env.local file.");
       } else if (err.code === "auth/too-many-requests") {
-        setError("Security Throttling: Too many attempts. Please try again in a few minutes.");
+        setError("Security Throttling: Too many attempts. Please wait a few minutes and try again.");
+      } else if (err.message?.includes("auth/operation-not-allowed") || err.code === "auth/operation-not-allowed") {
+        setError("Configuration Error: Phone Authentication is not enabled in Firebase Console → Authentication → Sign-in method.");
+      } else if (err.message?.includes("auth/unauthorized-domain") || err.code === "auth/unauthorized-domain") {
+        setError(`Domain Error: '${window.location.hostname}' is not whitelisted. Add it in Firebase Console → Authentication → Settings → Authorized Domains.`);
       } else {
-        // Detailed error for domain issues or configuration
-        if (err.message?.includes("auth/operation-not-allowed")) {
-          setError("Configuration Error: Phone Authentication is not enabled in Firebase Console.");
-        } else if (err.message?.includes("auth/unauthorized-domain") || err.code === "auth/unauthorized-domain") {
-          setError(`Domain Error: ${window.location.hostname} is not whitelisted in Firebase Auth Authorized Domains.`);
-        } else {
-          setError(`Communication Error: ${err.message || "Failed to transmit OTP. Please retry."}`);
-        }
+        setError(`OTP Error: ${err.message || "Failed to send OTP. Please retry."}`);
       }
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleOtpChange = (value: string, index: number) => {
     if (isNaN(Number(value))) return;
@@ -166,6 +183,23 @@ export function LeadGate() {
         return val || "";
       };
 
+      let competitorQuoteUrl = undefined;
+
+      if (competitorQuote) {
+        setIsUploading(true);
+        try {
+          const timestamp = new Date().getTime();
+          const ext = competitorQuote.name.split('.').pop() || 'pdf';
+          const storageRef = ref(storage, `competitor_quotes/${firebaseUid}_${timestamp}.${ext}`);
+          await uploadBytes(storageRef, competitorQuote);
+          competitorQuoteUrl = await getDownloadURL(storageRef);
+        } catch (uploadError) {
+          console.error("File upload failed, proceeding without it", uploadError);
+          // Don't block lead creation if upload fails, just proceed
+        }
+        setIsUploading(false);
+      }
+
       const payload = {
         customer_name: name,
         mobile_number: mobile,
@@ -175,8 +209,29 @@ export function LeadGate() {
         wizard_answers: answers,
         property_type: extractAns("q_prop_type") || "home",
         technology_choice: extractAns("q_tech") || "HD",
-        cabling_done: extractAns("q_wiring") === "true"
+        cabling_done: extractAns("q_wiring") === "true",
+        camera_count: parseInt(extractAns("q_cam_count") || "0"),
+        competitor_quote_url: competitorQuoteUrl
       };
+
+      if (isIndustrial) {
+        // Special API for Industrial Leads
+        const indRes = await fetch("/api/leads/industrial", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: mobile,
+            requested_camera_count: payload.camera_count,
+            property_type: payload.property_type,
+            technology: payload.technology_choice,
+            consent: true
+          })
+        });
+        if (!indRes.ok) throw new Error("Failed to register industrial interest.");
+        
+        setShowIndustrialSuccess(true);
+        return;
+      }
 
       const createRes = await fetch("/api/leads", {
         method: "POST",
@@ -208,165 +263,219 @@ export function LeadGate() {
     <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/20 dark:bg-black/60 backdrop-blur-3xl animate-in fade-in duration-500">
       <div id="recaptcha-container"></div>
       
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-[0_30px_70px_rgba(0,0,0,0.2)] rounded-[40px] w-full max-w-lg p-8 md:p-12 relative overflow-hidden transition-all">
-        
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-black px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest mb-6 border border-emerald-100 dark:border-emerald-800">
-            <CheckCircle2 className="w-3 h-3" />
-            Configuration Finalized
-          </div>
-          <h2 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter leading-[0.85] mb-4">
-             Unlock Your <br className="hidden md:block"/> Elite Proposal.
-          </h2>
-          <p className="text-zinc-400 dark:text-zinc-500 font-medium text-lg leading-snug">Verification required for itemized hardware transparency.</p>
+      {showIndustrialSuccess ? (
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-2xl rounded-[40px] w-full max-w-lg p-12 text-center animate-in zoom-in-95 duration-500">
+           <div className="w-20 h-20 rounded-[32px] bg-blue-600 flex items-center justify-center mx-auto mb-8 shadow-xl shadow-blue-500/20">
+             <ShieldCheck className="w-10 h-10 text-white" />
+           </div>
+           <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4 uppercase">Verification <br/> Successful</h2>
+           <p className="text-zinc-500 dark:text-zinc-400 font-medium text-lg leading-relaxed mb-10">
+             As your requirement exceeds 16 cameras, we provide custom corporate-grade quotations. <br/><br/>
+             <span className="text-zinc-900 dark:text-white font-black">Our technical team will call you within 2 hours</span> to understand your site requirements.
+           </p>
+           <button 
+             onClick={() => router.push("/")}
+             className="w-full h-16 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-xl shadow-blue-500/20"
+           >
+             Return Home
+           </button>
         </div>
-
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-6 py-4 rounded-2xl text-[10px] mb-8 border border-red-100 dark:border-red-900/40 font-black uppercase tracking-wider text-center flex items-center justify-center gap-3">
-            <ShieldCheck className="w-4 h-4" />
-            {error}
+      ) : (
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-[0_30px_70px_rgba(0,0,0,0.2)] rounded-[40px] w-full max-w-lg p-8 md:p-12 relative overflow-hidden transition-all">
+          
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-black px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest mb-6 border border-emerald-100 dark:border-emerald-800">
+              <CheckCircle2 className="w-3 h-3" />
+              {isIndustrial ? "Industrial Inquiry" : "Configuration Finalized"}
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter leading-[0.85] mb-4">
+               {isIndustrial ? "Corporate Setup" : "Unlock Your"} <br className="hidden md:block"/> {isIndustrial ? "Requirement" : "Elite Proposal"}.
+            </h2>
+            <p className="text-zinc-400 dark:text-zinc-500 font-medium text-lg leading-snug">
+              {isIndustrial ? "Capture contact to book your expert site visit." : "Verification required for itemized hardware transparency."}
+            </p>
           </div>
-        )}
 
-        {!otpSent ? (
-          <form onSubmit={handleSendOtp} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 tracking-widest ml-1">Full Name</label>
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
-                <input 
-                  type="text" 
-                  value={name}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const capitalized = val.replace(/\b\w/g, char => char.toUpperCase());
-                    setName(capitalized);
-                  }}
-                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 font-bold text-zinc-900 dark:text-white"
-                  placeholder="e.g. Rahul Sharma"
-                  required
-                />
+          {/* ... rest of the existing form logic ... */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-6 py-4 rounded-2xl text-[10px] mb-8 border border-red-100 dark:border-red-900/40 font-black uppercase tracking-wider text-center flex items-center justify-center gap-3">
+              <ShieldCheck className="w-4 h-4" />
+              {error}
+            </div>
+          )}
+
+          {!otpSent ? (
+            <form onSubmit={handleSendOtp} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 tracking-widest ml-1">Full Name</label>
+                <div className="relative group">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
+                  <input 
+                    type="text" 
+                    value={name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const capitalized = val.replace(/\b\w/g, char => char.toUpperCase());
+                      setName(capitalized);
+                    }}
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 font-bold text-zinc-900 dark:text-white"
+                    placeholder="e.g. Rahul Sharma"
+                    required
+                  />
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1">Contact Number</label>
-              <div className="relative group">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-zinc-400 dark:text-zinc-600 border-r border-zinc-200 dark:border-zinc-800 pr-3">+91</span>
-                <input 
-                  type="tel" 
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl pl-16 pr-4 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 font-bold text-zinc-900 dark:text-white"
-                  placeholder="98765 43210"
-                  required
-                />
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1">Contact Number</label>
+                <div className="relative group">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-zinc-400 dark:text-zinc-600 border-r border-zinc-200 dark:border-zinc-800 pr-3">+91</span>
+                  <input 
+                    type="tel" 
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value)}
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl pl-16 pr-4 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 font-bold text-zinc-900 dark:text-white"
+                    placeholder="98765 43210"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1">Email Address (Optional)</label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
-                <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 font-bold text-zinc-900 dark:text-white"
-                  placeholder="name@example.com"
-                />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1">Email Address (Optional)</label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
+                  <input 
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 font-bold text-zinc-900 dark:text-white"
+                    placeholder="name@example.com"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-6">
-               <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1">Send OTP via</label>
-               <div className="flex flex-wrap gap-4">
-                  {[
-                    { id: "sms", label: "SMS", icon: Phone, active: true },
-                    { id: "whatsapp", label: "WhatsApp", icon: CheckCircle2, active: false }
-                  ].map((chan) => (
-                    <label 
-                      key={chan.id} 
-                      onClick={() => chan.active && setChannel(chan.id as any)}
-                      className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${channel === chan.id ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-60'}`}
-                    >
-                      <input type="radio" name="otp_channel" checked={channel === chan.id} disabled={!chan.active} className="hidden" readOnly />
-                      <chan.icon className="w-4 h-4" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">{chan.label}</span>
-                    </label>
-                  ))}
-               </div>
-            </div>
+              {/* COMPETITOR QUOTE UPLOAD */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-blue-600 dark:text-blue-400 tracking-widest ml-1 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  We Beat Competitor Quotes (Optional)
+                </label>
+                <div className="relative group border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-center hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setCompetitorQuote(e.target.files[0]);
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="flex flex-col items-center gap-2 pointer-events-none">
+                    {competitorQuote ? (
+                      <>
+                        <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                        <span className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[200px]">{competitorQuote.name}</span>
+                        <span className="text-[10px] text-zinc-500 font-medium">Click to change file</span>
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud className="w-6 h-6 text-zinc-400 group-hover:text-blue-500 transition-colors" />
+                        <span className="text-sm font-bold text-zinc-900 dark:text-white">Upload existing quotation</span>
+                        <span className="text-[10px] text-zinc-500 font-medium">PDF, JPG, PNG (Max 5MB)</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-            <button 
-              type="submit"
-              disabled={loading}
-              className="w-full h-16 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white font-black uppercase text-xs tracking-[0.2em] rounded-[24px] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 mt-4"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Generate Elite Quote <ArrowRight className="w-4 h-4" /></>}
-            </button>
-
-            <button 
-              type="button"
-              onClick={() => { setOtpSent(true); }}
-              className="w-full mt-6 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline text-center pointer-events-auto relative z-[100]"
-            >
-              Already have a verification code?
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerifyOtp} className="space-y-10 text-center">
-            <div>
-              <p className="text-zinc-400 dark:text-zinc-500 font-medium mb-1">Authorization code sent to</p>
-              <p className="text-xl font-black text-zinc-900 dark:text-white tracking-tighter">
-                +91 {mobile}
-              </p>
-            </div>
-            
-            <div className="flex justify-between gap-3">
-               {otp.map((digit, i) => (
-                 <input
-                  key={i}
-                  ref={(el) => { inputRefs.current[i] = el; }}
-                  type="text"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(e.target.value, i)}
-                  onKeyDown={(e) => handleKeyDown(e, i)}
-                  className="w-12 h-16 text-center text-2xl font-black text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 transition-all"
-                 />
-               ))}
-            </div>
-
-            <button 
-              type="submit"
-              disabled={loading}
-              className="w-full h-16 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-[0.2em] rounded-[24px] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Access Proposal"}
-            </button>
-            
-            <div className="flex flex-col gap-6 items-center pt-4">
-              <button 
-                type="button" 
-                disabled={!canResend || loading}
-                onClick={handleSendOtp}
-                className={`text-xs font-black uppercase tracking-[0.1em] transition-all ${countdown > 0 ? "text-zinc-400" : "text-blue-600 dark:text-blue-400 hover:underline hover:scale-105 active:scale-95"}`}
-              >
-                {countdown > 0 ? `Resend Code in ${countdown}s` : "Resend Security Code"}
-              </button>
+              <div className="space-y-6">
+                 <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1">Send OTP via</label>
+                 <div className="flex flex-wrap gap-4">
+                    <div className="flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400">
+                      <Phone className="w-4 h-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">SMS</span>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl border bg-zinc-50 dark:bg-zinc-950 border-zinc-100 dark:border-zinc-800 text-zinc-300 dark:text-zinc-700 relative overflow-hidden">
+                      <Phone className="w-4 h-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">WhatsApp</span>
+                      <span className="absolute top-1 right-2 text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-600">Soon</span>
+                    </div>
+                 </div>
+              </div>
 
               <button 
-                type="button" 
-                onClick={() => { setOtpSent(false); setOtp(["","","","","",""]); setCountdown(0); }}
-                className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest hover:underline"
+                type="submit"
+                disabled={loading || isUploading}
+                className="w-full h-16 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white font-black uppercase text-xs tracking-[0.2em] rounded-[24px] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 mt-4"
               >
-                Modify Contact Details
+                {loading || isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{isIndustrial ? "Request Corporate Consultation" : "Generate Elite Quote"} <ArrowRight className="w-4 h-4" /></>}
               </button>
-            </div>
-          </form>
-        )}
-      </div>
+
+              {otpSent && (
+                <button 
+                  type="button"
+                  onClick={() => { setOtpSent(true); }}
+                  className="w-full mt-6 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline text-center pointer-events-auto relative z-[100]"
+                >
+                  Already have a verification code?
+                </button>
+              )}
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-10 text-center">
+              <div>
+                <p className="text-zinc-400 dark:text-zinc-500 font-medium mb-1">Authorization code sent to</p>
+                <p className="text-xl font-black text-zinc-900 dark:text-white tracking-tighter">
+                  +91 {mobile}
+                </p>
+              </div>
+              
+              <div className="flex justify-between gap-3">
+                 {otp.map((digit, i) => (
+                   <input
+                    key={i}
+                    ref={(el) => { inputRefs.current[i] = el; }}
+                    type="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(e.target.value, i)}
+                    onKeyDown={(e) => handleKeyDown(e, i)}
+                    className="w-12 h-16 text-center text-2xl font-black text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 transition-all"
+                   />
+                 ))}
+              </div>
+
+              <button 
+                type="submit"
+                disabled={loading || isUploading || otp.join("").length !== 6}
+                className="w-full h-16 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-[0.2em] rounded-[24px] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+              >
+                {loading || isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Access Proposal"}
+              </button>
+              
+              <div className="flex flex-col gap-6 items-center pt-4">
+                <button 
+                  type="button" 
+                  disabled={!canResend || loading}
+                  onClick={handleSendOtp}
+                  className={`text-xs font-black uppercase tracking-[0.1em] transition-all ${countdown > 0 ? "text-zinc-400" : "text-blue-600 dark:text-blue-400 hover:underline hover:scale-105 active:scale-95"}`}
+                >
+                  {countdown > 0 ? `Resend Code in ${countdown}s` : "Resend Security Code"}
+                </button>
+
+                <button 
+                  type="button" 
+                  onClick={() => { setOtpSent(false); setOtp(["","","","","",""]); setCountdown(0); }}
+                  className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest hover:underline"
+                >
+                  Modify Contact Details
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
     </div>
   );
 }

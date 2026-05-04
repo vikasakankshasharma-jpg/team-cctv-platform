@@ -45,6 +45,11 @@ service cloud.firestore {
       return isAuthenticated() && (userRole() == "super_admin" || userRole() == "sales_staff");
     }
 
+    /** Returns true if the user is a partner */
+    function isPartner() {
+      return isAuthenticated() && userRole() == "partner";
+    }
+
     /** Returns true if the requesting user owns this lead (matched by firebase_uid) */
     function isLeadOwner(leadData) {
       return isAuthenticated() && request.auth.uid == leadData.firebase_uid;
@@ -157,12 +162,12 @@ service cloud.firestore {
     // ──────────────────────────────────────────
     // /promoters/{promoterId}
     // Admin read/write only.
-    // Customers should never see promoter documents directly.
+    // Partners can read their own document.
     // Referral code validation goes through an API route, not direct Firestore access.
     // ──────────────────────────────────────────
 
     match /promoters/{promoterId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin() || (isPartner() && request.auth.uid == resource.data.firebase_uid);
       allow create: if isAdmin();
       allow update: if isAdmin();
       allow delete: if false;
