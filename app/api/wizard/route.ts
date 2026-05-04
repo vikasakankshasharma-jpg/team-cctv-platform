@@ -112,9 +112,32 @@ function getDefaultFallbackWizard(): WizardStep[] {
   return [
     {
       id: "fallback_step1",
+      title: "Property Type",
+      description: "What type of property are you securing?",
+      position: 0,
+      is_active: true,
+      created_at: null,
+      questions: [
+        {
+          id: "q_prop_type",
+          question_text: "Select property type:",
+          position: 0,
+          input_type: "single",
+          is_required: true,
+          options: [
+            { id: "opt_home", label: "Home / Residential", value: "home", position: 0 },
+            { id: "opt_office", label: "Office / Commercial", value: "office", position: 1 },
+            { id: "opt_shop", label: "Shop / Retail", value: "shop", position: 2 },
+            { id: "opt_factory", label: "Factory / Warehouse", value: "factory", position: 3 },
+          ]
+        }
+      ]
+    },
+    {
+      id: "fallback_step2",
       title: "Mounting Surface",
       description: "What type of surfaces will the cameras be mounted on?",
-      position: 0,
+      position: 1,
       is_active: true,
       created_at: null,
       questions: [
@@ -134,10 +157,10 @@ function getDefaultFallbackWizard(): WizardStep[] {
       ]
     },
     {
-      id: "fallback_step2",
+      id: "fallback_step3",
       title: "Ceiling Height",
       description: "How high are your ceilings where cameras will be mounted?",
-      position: 1,
+      position: 2,
       is_active: true,
       created_at: null,
       questions: [
@@ -152,32 +175,39 @@ function getDefaultFallbackWizard(): WizardStep[] {
             { id: "fopt_h_high", label: "High (11 to 15 feet)", value: "high", position: 1 },
             { id: "fopt_h_vhigh", label: "Very High (Above 15 feet)", value: "very_high", position: 2 },
           ]
-        },
-        // We will capture ladder arrangement via a follow up UI in the component, or just ask it here.
-        // For simplicity in the generic wizard engine, we can ask it if they pick high. The wizard UI doesn't have native conditional rendering yet, so we ask it globally but make it optional, or just assume TEAM brings it.
-        // Actually, let's keep it simple: just height. The pricing engine can assume TEAM brings it if height > standard.
+        }
       ]
     },
     {
-      id: "fallback_step3",
-      title: "Camera Count & Tech",
-      description: "How many cameras do you need and what type?",
-      position: 2,
+      id: "fallback_step4",
+      title: "Camera Count",
+      description: "How many cameras do you need?",
+      position: 3,
       is_active: true,
       created_at: null,
       questions: [
         {
           id: "q_cam_count",
-          question_text: "How many cameras do you need?",
+          question_text: "Enter number of cameras:",
           position: 0,
           input_type: "number",
           is_required: true,
           options: []
-        },
+        }
+      ]
+    },
+    {
+      id: "fallback_step5",
+      title: "Technology",
+      description: "Which camera technology do you prefer?",
+      position: 4,
+      is_active: true,
+      created_at: null,
+      questions: [
         {
           id: "q_tech",
-          question_text: "Which camera technology do you prefer?",
-          position: 1,
+          question_text: "Select technology:",
+          position: 0,
           input_type: "single",
           is_required: true,
           options: [
@@ -188,16 +218,16 @@ function getDefaultFallbackWizard(): WizardStep[] {
       ]
     },
     {
-      id: "fallback_step4",
-      title: "Storage & Features",
-      description: "Customize your recording capabilities.",
-      position: 3,
+      id: "fallback_step6",
+      title: "Storage",
+      description: "How far back do you need to be able to watch old recordings?",
+      position: 5,
       is_active: true,
       created_at: null,
       questions: [
         {
           id: "q_storage",
-          question_text: "How far back do you need to be able to watch old recordings?",
+          question_text: "Select recording duration:",
           position: 0,
           input_type: "single",
           is_required: true,
@@ -207,34 +237,44 @@ function getDefaultFallbackWizard(): WizardStep[] {
             { id: "fopt_s_30", label: "1 Month", value: "30", position: 2 },
             { id: "fopt_s_90", label: "3 Months", value: "90", position: 3 },
           ]
-        },
+        }
+      ]
+    },
+    {
+      id: "fallback_step7",
+      title: "Features",
+      description: "Customize your recording capabilities.",
+      position: 6,
+      is_active: true,
+      created_at: null,
+      questions: [
         {
           id: "q_features",
           question_text: "Which special features do you need? (Select all that apply)",
-          position: 1,
+          position: 0,
           input_type: "multi",
           is_required: false,
           options: [
-            { id: "fopt_feat_color", label: "24/7 Color Night Vision (See full color even in pitch black)", value: "feat_color", position: 0 },
-            { id: "fopt_feat_dual_light", label: "Smart Dual Light - Color Night Vision on Motion (\"Turn On\" Color Night Vision only when someone walks by otherwise in Black & White Vision)", value: "feat_dual_light", position: 1 },
-            { id: "fopt_feat_mic", label: "Microphone (Listen to voices and sounds)", value: "feat_mic", position: 2 },
-            { id: "fopt_feat_speaker", label: "Speaker / Two-Way Talk (Speak through your phone)", value: "feat_speaker", position: 3 },
-            { id: "fopt_feat_ik10", label: "Hammer-Proof (Vandal-resistant casing)", value: "feat_ik10", position: 4 },
+            { id: "fopt_feat_color", label: "24/7 Color Night Vision", value: "feat_color", position: 0 },
+            { id: "fopt_feat_dual_light", label: "Smart Dual Light (Color on motion)", value: "feat_dual_light", position: 1 },
+            { id: "fopt_feat_mic", label: "Microphone", value: "feat_mic", position: 2 },
+            { id: "fopt_feat_speaker", label: "Speaker / Two-Way Talk", value: "feat_speaker", position: 3 },
+            { id: "fopt_feat_ik10", label: "Hammer-Proof", value: "feat_ik10", position: 4 },
           ]
         }
       ]
     },
     {
-      id: "fallback_step5",
-      title: "Logistics",
-      description: "Installation details to finalize your quote.",
-      position: 4,
+      id: "fallback_step8",
+      title: "Wiring",
+      description: "Is your property already wired for CCTV?",
+      position: 7,
       is_active: true,
       created_at: null,
       questions: [
         {
           id: "q_wiring",
-          question_text: "Is your property already wired for CCTV?",
+          question_text: "Select cabling status:",
           position: 0,
           input_type: "single",
           is_required: true,
@@ -242,11 +282,21 @@ function getDefaultFallbackWizard(): WizardStep[] {
             { id: "fopt_wired_yes", label: "Yes – Cabling is already done",    value: "true",  position: 0 },
             { id: "fopt_wired_no",  label: "No – Full installation required",  value: "false", position: 1 },
           ]
-        },
+        }
+      ]
+    },
+    {
+      id: "fallback_step9",
+      title: "Timeline",
+      description: "How soon do you need this system installed?",
+      position: 8,
+      is_active: true,
+      created_at: null,
+      questions: [
         {
           id: "q_timeline",
-          question_text: "How soon do you need this system installed?",
-          position: 1,
+          question_text: "Select urgency:",
+          position: 0,
           input_type: "single",
           is_required: true,
           options: [
@@ -255,11 +305,21 @@ function getDefaultFallbackWizard(): WizardStep[] {
             { id: "fopt_t_month", label: "Next Month", value: "month", position: 2 },
             { id: "fopt_t_research", label: "Just researching", value: "research", position: 3 },
           ]
-        },
+        }
+      ]
+    },
+    {
+      id: "fallback_step10",
+      title: "Brand",
+      description: "Do you have a specific brand in mind?",
+      position: 9,
+      is_active: true,
+      created_at: null,
+      questions: [
         {
           id: "q_brand",
-          question_text: "Do you have a specific brand in mind?",
-          position: 2,
+          question_text: "Select brand preference:",
+          position: 0,
           input_type: "single",
           is_required: true,
           options: [
@@ -268,11 +328,21 @@ function getDefaultFallbackWizard(): WizardStep[] {
             { id: "fopt_b_hik", label: "Hikvision", value: "hikvision", position: 2 },
             { id: "fopt_b_dah", label: "Dahua", value: "dahua", position: 3 },
           ]
-        },
+        }
+      ]
+    },
+    {
+      id: "fallback_step11",
+      title: "Maintenance",
+      description: "Would you like an Annual Maintenance Contract (AMC)?",
+      position: 10,
+      is_active: true,
+      created_at: null,
+      questions: [
         {
           id: "q_amc",
-          question_text: "Would you like an Annual Maintenance Contract (AMC)?",
-          position: 3,
+          question_text: "Select AMC option:",
+          position: 0,
           input_type: "single",
           is_required: true,
           options: [
