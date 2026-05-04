@@ -375,7 +375,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         </div>
 
         {/* Global Controls: Camera Count & Recording Days */}
-        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 bg-zinc-50 dark:bg-zinc-900/40 p-8 rounded-[40px] border border-zinc-100 dark:border-zinc-800 shadow-xl">
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 bg-zinc-50 dark:bg-zinc-900/40 p-4 md:p-8 rounded-[32px] md:rounded-[40px] border border-zinc-100 dark:border-zinc-800 shadow-xl">
            <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <label className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em]">System Camera Count</label>
@@ -416,7 +416,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto w-full px-4 space-y-12">
+      <div className="max-w-6xl mx-auto w-full px-2 md:px-4 space-y-8 md:space-y-12">
         <div className="flex items-center justify-between">
            <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
@@ -666,7 +666,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
       {showAddressModal && (
         <SiteDetailsModal 
-          initialPincode={lead.address?.pincode}
+          initialPincode={lead.address?.pincode || (lead.wizard_answers?.lead_pincode as string) || ""}
           onConfirm={handleAddressConfirm}
           onClose={() => setShowAddressModal(false)}
         />

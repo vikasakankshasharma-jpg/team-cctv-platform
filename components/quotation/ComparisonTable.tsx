@@ -120,12 +120,12 @@ export function ComparisonTable({
         <table className="w-full text-left">
           <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-100 dark:border-zinc-800/60">
             <tr>
-              <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] w-12 text-center">Compare</th>
-              <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] min-w-[160px]">Model & Resolution</th>
-              <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] hidden md:table-cell">Key Features</th>
-              <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] text-right whitespace-nowrap">Total Price</th>
-              <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] text-right">Pick</th>
-              <th className="px-2 py-4"></th>
+              <th className="px-2 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] w-10 text-center">✓</th>
+              <th className="px-2 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] min-w-[130px]">Model</th>
+              <th className="px-4 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] hidden md:table-cell">Features</th>
+              <th className="px-2 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] text-right whitespace-nowrap">Price</th>
+              <th className="px-2 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] text-right">Pick</th>
+              <th className="hidden"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/40">
@@ -158,7 +158,7 @@ export function ComparisonTable({
                        </div>
                     </label>
                   </td>
-                  <td className="px-8 py-6">
+                  <td className="px-2 md:px-8 py-3 md:py-6">
                     <div className="flex items-center gap-4 cursor-pointer" onClick={() => onSelectCheckout({ technology: row.technology, option: row.option })}>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isCheckout ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 group-hover:bg-zinc-200 group-hover:text-zinc-900'}`}>
                         {row.technology === "IP" ? <Monitor className="w-5 h-5" /> : <Camera className="w-5 h-5" />}
@@ -206,13 +206,13 @@ export function ComparisonTable({
                   <td className="px-4 md:px-8 py-4 md:py-6 text-right">
                     <button 
                       onClick={() => onSelectCheckout({ technology: row.technology, option: row.option })}
-                      className={`px-3 md:px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                      className={`px-3 md:px-4 py-2 min-h-[40px] rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
                         isCheckout 
                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20 ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-zinc-900' 
                         : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white'
                       }`}
                     >
-                      {isCheckout ? '✓ Picked' : 'Pick'}
+                      {isCheckout ? '✓' : 'Pick'}
                     </button>
                   </td>
                   <td className="px-4 py-6 hidden"></td>

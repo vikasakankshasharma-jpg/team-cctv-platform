@@ -290,7 +290,10 @@ export function CompareCards({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+      {/* Mobile: horizontal scroll carousel | Desktop: 3-col grid */}
+      <div className="flex sm:grid sm:grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible">
+        {/* Spacer for mobile scroll peek */}
       {cardsData.map((card, idx) => {
         const isCheckout =
           activeCheckoutOption?.technology === card.technology &&
@@ -337,7 +340,7 @@ export function CompareCards({
                 option: card.option,
               })
             }
-            className={`relative p-7 rounded-[36px] transition-all duration-300 cursor-pointer border-2 ${cardClass}`}
+            className={`relative p-6 sm:p-7 rounded-[36px] transition-all duration-300 cursor-pointer border-2 flex-none w-[82vw] sm:w-auto snap-center ${cardClass.replace('scale-105', 'sm:scale-105')}`}
           >
             {/* ── Top badge: Best Value ────────────────────────────────────── */}
             {card.isRecommended && (
@@ -557,6 +560,16 @@ export function CompareCards({
           </div>
         );
       })}
+      </div>
+      {/* Mobile swipe hint */}
+      <div className="flex sm:hidden items-center justify-center gap-2 mt-3">
+        <div className="flex gap-1.5">
+          {cardsData.map((_, i) => (
+            <div key={i} className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+          ))}
+        </div>
+        <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest ml-1">Swipe to compare</span>
+      </div>
     </div>
   );
 }

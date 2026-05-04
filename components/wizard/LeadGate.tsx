@@ -5,7 +5,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "fi
 import { auth } from "@/lib/firebase-client";
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/store/wizard";
-import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, Mail, UploadCloud } from "lucide-react";
+import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, Mail, UploadCloud, MapPin } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 import { storage } from "@/lib/firebase-client";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -27,6 +27,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
+  const [pincode, setPincode] = useState("");
   const [channel, setChannel] = useState<"sms" | "whatsapp">("sms");
   const [showIndustrialSuccess, setShowIndustrialSuccess] = useState(false);
   const referralCode = ""; // referralCode input to be implemented
@@ -76,8 +77,9 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
     e.preventDefault();
     setError("");
 
-    if (name.length < 2) return setError("Identity Verification: Please enter your full name.");
-    if (!/^[6-9]\d{9}$/.test(mobile)) return setError("Invalid Format: 10-digit mobile number required.");
+    if (name.length < 2) return setError("Please enter your full name (minimum 2 characters).");
+    if (!/^[6-9]\d{9}$/.test(mobile)) return setError("Enter a valid 10-digit Indian mobile number (starts with 6–9).");
+    if (!/^\d{6}$/.test(pincode)) return setError("Enter your 6-digit area pincode — required for dispatch routing.");
 
     setLoading(true);
     try {
@@ -206,7 +208,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
         email: email || undefined,
         firebase_uid: firebaseUid,
         referral_code: referralCode || undefined,
-        wizard_answers: answers,
+        wizard_answers: { ...answers, lead_pincode: pincode },
         property_type: extractAns("q_prop_type") || "home",
         technology_choice: extractAns("q_tech") || "HD",
         cabling_done: extractAns("q_wiring") === "true",
@@ -262,6 +264,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/20 dark:bg-black/60 backdrop-blur-3xl animate-in fade-in duration-500">
       <div id="recaptcha-container"></div>
+      {/* NOTE: overflow-y-auto ensures errors + new fields are always visible */}
       
       {showIndustrialSuccess ? (
         <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-2xl rounded-[40px] w-full max-w-lg p-12 text-center animate-in zoom-in-95 duration-500">
@@ -281,7 +284,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
            </button>
         </div>
       ) : (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-[0_30px_70px_rgba(0,0,0,0.2)] rounded-[40px] w-full max-w-lg p-8 md:p-12 relative overflow-hidden transition-all">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-[0_30px_70px_rgba(0,0,0,0.2)] rounded-[40px] w-full max-w-lg p-8 md:p-12 relative overflow-y-auto max-h-[90vh] transition-all">
           
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-black px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest mb-6 border border-emerald-100 dark:border-emerald-800">
@@ -298,9 +301,9 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
 
           {/* ... rest of the existing form logic ... */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-6 py-4 rounded-2xl text-[10px] mb-8 border border-red-100 dark:border-red-900/40 font-black uppercase tracking-wider text-center flex items-center justify-center gap-3">
-              <ShieldCheck className="w-4 h-4" />
-              {error}
+            <div className="bg-red-500 text-white px-5 py-4 rounded-2xl text-sm mb-6 font-bold text-center flex items-start gap-3 shadow-lg shadow-red-500/20">
+              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" />
+              <span>{error}</span>
             </div>
           )}
 
@@ -352,6 +355,30 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
                     placeholder="name@example.com"
                   />
                 </div>
+              </div>
+
+              {/* PINCODE — mandatory for lead routing & dispatch */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest ml-1 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> Area Pincode *
+                </label>
+                <div className="relative group">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={pincode}
+                    onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 font-bold text-zinc-900 dark:text-white tracking-widest"
+                    placeholder="e.g. 302001"
+                    required
+                  />
+                  {pincode.length === 6 && (
+                    <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                  )}
+                </div>
+                <p className="text-[10px] font-bold text-zinc-400 ml-1">Required for technician dispatch &amp; service area check</p>
               </div>
 
               {/* COMPETITOR QUOTE UPLOAD */}
