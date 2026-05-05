@@ -171,7 +171,9 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
       const result = await confirmationResult.confirm(fullOtp);
       finalizeLead(result.user.uid);
     } catch (err) {
-      setError("Security Violation: Invalid or expired OTP code.");
+      setOtp(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+      setError("Incorrect OTP entered. Please try again with the correct code.");
     } finally {
       setLoading(false);
     }
