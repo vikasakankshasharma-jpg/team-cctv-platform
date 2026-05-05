@@ -80,7 +80,7 @@ function SpecRow({
         >
           {label}
         </div>
-        <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-600 mt-0.5 leading-tight">
+        <div className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5 leading-tight">
           {sublabel}
         </div>
       </div>
@@ -119,7 +119,7 @@ function AddonRow({
           className={`text-[10px] font-bold leading-tight truncate ${
             isMandatory
               ? "text-zinc-900 dark:text-white"
-              : "text-zinc-400 dark:text-zinc-500"
+              : "text-zinc-500 dark:text-zinc-400"
           }`}
         >
           {name}
@@ -326,8 +326,8 @@ export function CompareCards({
         const cardClass = isCheckout
           ? "border-blue-600 bg-white dark:bg-zinc-900/90 shadow-2xl shadow-blue-500/15 scale-105 z-10 ring-4 ring-blue-600/10"
           : card.isRecommended
-          ? "border-amber-400/60 bg-gradient-to-b from-amber-50/40 to-white dark:from-amber-900/10 dark:to-zinc-900/40 hover:border-amber-400 hover:-translate-y-0.5"
-          : "border-zinc-100 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/40 hover:border-zinc-300 dark:hover:border-zinc-700 hover:-translate-y-0.5";
+          ? "border-amber-400/60 bg-gradient-to-b from-amber-50 to-white dark:from-amber-900/20 dark:to-zinc-900 hover:border-amber-400 hover:-translate-y-0.5"
+          : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:-translate-y-0.5";
 
         return (
           <div
@@ -394,7 +394,7 @@ export function CompareCards({
               className={`text-center mb-6 py-5 rounded-2xl ${
                 isCheckout
                   ? "bg-blue-50 dark:bg-blue-900/20"
-                  : "bg-zinc-50 dark:bg-zinc-800/40"
+                  : "bg-white dark:bg-zinc-950"
               }`}
             >
               <div className="flex items-start justify-center">
@@ -443,7 +443,7 @@ export function CompareCards({
 
             {/* ── Hardware Specs ────────────────────────────────────────────── */}
             <div className="space-y-3">
-              <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.18em] mb-4">
+              <p className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.18em] mb-4">
                 Hardware Specifications
               </p>
 
@@ -516,7 +516,7 @@ export function CompareCards({
             {card.visibleAddons.length > 0 && (
               <div className="mt-5 pt-4 border-t border-dashed border-zinc-100 dark:border-zinc-800/60 space-y-2.5">
                 <div className="flex items-center gap-2 mb-3">
-                  <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.18em]">
+                  <p className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.18em]">
                     Add-Ons
                   </p>
                   <div

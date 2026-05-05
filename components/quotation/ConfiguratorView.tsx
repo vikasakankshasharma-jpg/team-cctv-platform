@@ -378,7 +378,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 bg-zinc-50 dark:bg-zinc-900/40 p-4 md:p-8 rounded-[32px] md:rounded-[40px] border border-zinc-100 dark:border-zinc-800 shadow-xl">
            <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <label className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em]">System Camera Count</label>
+                <label className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em]">System Camera Count</label>
                 <span className="text-xs font-black text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full">{selection.camera_count} Cameras</span>
               </div>
               <input 
@@ -392,7 +392,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
            <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <label className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em]">Global Recording Days</label>
+                <label className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em]">Global Recording Days</label>
                 <div className="flex items-center gap-2 bg-white dark:bg-zinc-950 px-3 py-1 rounded-full border border-zinc-100 dark:border-zinc-800">
                   <Calendar className="w-3 h-3 text-blue-500" />
                   <input 
@@ -457,7 +457,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         />
       </div>
 
-      <div className="bg-white dark:bg-zinc-900/40 rounded-[48px] border border-zinc-100 dark:border-zinc-800 shadow-[0_40px_100px_rgba(0,0,0,0.08)] p-8 md:p-12 max-w-5xl mx-auto w-full backdrop-blur-md">
+      <div className="bg-white dark:bg-zinc-900 rounded-[48px] border border-zinc-100 dark:border-zinc-800 shadow-[0_40px_100px_rgba(0,0,0,0.08)] p-8 md:p-12 max-w-5xl mx-auto w-full backdrop-blur-md">
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
           
           {/* LEFT COLUMN: Configuration Breakdown */}
@@ -479,23 +479,23 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                  const cRes  = cProd?.technical_name?.includes('5mp') ? '5MP Ultra-HD'
                    : cProd?.technical_name?.includes('4mp') ? '4MP Pro-HD' : '2MP Standard-HD';
                  return (
-                   <div className="p-8 rounded-[32px] bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-800 space-y-4">
+                   <div className="p-8 rounded-[32px] bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 space-y-4">
                      <div className="flex justify-between items-center text-sm">
-                       <span className="font-bold text-zinc-400">Camera Model</span>
+                       <span className="font-bold text-zinc-500 dark:text-zinc-400">Camera Model</span>
                        <span className="font-black text-zinc-900 dark:text-white text-right text-xs max-w-[55%] truncate" title={cProd?.display_name}>
                          {cProd?.display_name?.split(' (')[0] ?? `${cTech} Option ${cOpt}`}
                        </span>
                      </div>
                      <div className="flex justify-between items-center text-sm">
-                       <span className="font-bold text-zinc-400">Resolution</span>
+                       <span className="font-bold text-zinc-500 dark:text-zinc-400">Resolution</span>
                        <span className="font-black text-zinc-900 dark:text-white uppercase tracking-widest">{cRes}</span>
                      </div>
                      <div className="flex justify-between items-center text-sm">
-                       <span className="font-bold text-zinc-400">System Type</span>
+                       <span className="font-bold text-zinc-500 dark:text-zinc-400">System Type</span>
                        <span className="font-black text-zinc-900 dark:text-white uppercase tracking-widest">{cTech} / {cTech === 'IP' ? 'NVR' : 'DVR'}</span>
                      </div>
                      <div className="flex justify-between items-center text-sm">
-                       <span className="font-bold text-zinc-400">Storage</span>
+                       <span className="font-bold text-zinc-500 dark:text-zinc-400">Storage</span>
                        <span className="font-black text-zinc-900 dark:text-white uppercase tracking-widest">{selection.recording_days} Days Backup</span>
                      </div>
                    </div>
@@ -615,43 +615,43 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                </div>
 
                {/* Payment Terms + AMC Trust Block */}
-               <div className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-3">
-                 <div className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-3">Payment Terms</div>
+               <div className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-3">
+                 <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-3">Payment Terms</div>
                  <div className="flex justify-between items-center">
-                   <span className="text-[10px] font-bold text-zinc-500">Advance (Booking)</span>
+                   <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">Advance (Booking)</span>
                    <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
                  </div>
                  <div className="flex justify-between items-center">
-                   <span className="text-[10px] font-bold text-zinc-500">Material Delivery</span>
+                   <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">Material Delivery</span>
                    <span className="text-[10px] font-black text-zinc-900 dark:text-white">80%</span>
                  </div>
                  <div className="flex justify-between items-center">
-                   <span className="text-[10px] font-bold text-zinc-500">Final Handover</span>
+                   <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">Final Handover</span>
                    <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
                  </div>
                  <div className="pt-3 mt-1 border-t border-dashed border-zinc-200 dark:border-zinc-800 space-y-1.5">
-                   <div className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-2">After-Sales</div>
+                   <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-2">After-Sales</div>
                    <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-bold text-zinc-500">AMC 1 Year</span>
+                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">AMC 1 Year</span>
                      <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">5% of Total</span>
                    </div>
                    <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-bold text-zinc-500">AMC 2 Year</span>
+                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">AMC 2 Year</span>
                      <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">8% of Total</span>
                    </div>
                    <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-bold text-zinc-500">AMC 3 Year</span>
+                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">AMC 3 Year</span>
                      <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">10% of Total</span>
                    </div>
                    <div className="flex justify-between items-center pt-1">
-                     <span className="text-[10px] font-bold text-zinc-500">Post-Handover Visit</span>
+                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">Post-Handover Visit</span>
                      <span className="text-[10px] font-black text-zinc-900 dark:text-white">&#x20B9;300 / visit</span>
                    </div>
                  </div>
                </div>
 
                {/* Terms Disclaimer */}
-               <div className="text-[9px] font-semibold text-zinc-400 dark:text-zinc-600 leading-relaxed space-y-1 px-1">
+               <div className="text-[9px] font-semibold text-zinc-500 dark:text-zinc-400 leading-relaxed space-y-1 px-1">
                  <p># Product warranty as per company terms & conditions.</p>
                  <p># Warranty does not cover physically damaged accessories.</p>
                  <p># AMC includes site visits & labour — no product cost.</p>
