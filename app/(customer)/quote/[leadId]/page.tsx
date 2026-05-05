@@ -178,28 +178,28 @@ export default async function QuoteResultPage({
   };
 
   return (
-    <main className="min-h-screen bg-white relative overflow-hidden font-sans selection:bg-blue-100">
+    <main className="min-h-screen bg-white dark:bg-zinc-950 relative overflow-hidden font-sans selection:bg-blue-100 dark:selection:bg-blue-900 transition-colors duration-500">
       
       {/* ELITE PREMIERE GRADIENT DESIGN */}
-      <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-[800px] h-[800px] bg-blue-100/40 blur-[160px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-[600px] h-[600px] bg-indigo-100/30 blur-[140px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-[800px] h-[800px] bg-blue-100/40 dark:bg-blue-600/10 blur-[160px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-[600px] h-[600px] bg-indigo-100/30 dark:bg-indigo-600/5 blur-[140px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto py-24 px-6 md:px-12 lg:px-16 flex flex-col items-center">
         
         {/* ELITE HEADER SECTION */}
         <div className="max-w-3xl w-full text-center mb-24 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-           <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 text-white font-black px-5 py-2 rounded-full text-[10px] uppercase tracking-[0.3em] mb-8 shadow-xl">
+           <div className="inline-flex items-center gap-2 bg-zinc-900 dark:bg-zinc-800 border border-zinc-800 dark:border-zinc-700 text-white font-black px-5 py-2 rounded-full text-[10px] uppercase tracking-[0.3em] mb-8 shadow-xl">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
               Calculated for {lead.customer_name}
            </div>
            
-           <h1 className="text-6xl md:text-8xl font-black text-zinc-900 tracking-tighter leading-[0.85] mb-8">
+           <h1 className="text-6xl md:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter leading-[0.85] mb-8">
               Your Security<br/>
-              <span className="text-blue-600">Quote.</span>
+              <span className="text-blue-600 dark:text-blue-400">Quote.</span>
            </h1>
            
-           <p className="text-xl md:text-2xl text-zinc-400 font-medium leading-relaxed max-w-2xl mx-auto">
-              We have made three great plans for your <span className="text-zinc-900 font-bold">{lead.property_type.toUpperCase()}</span> based on what you need.
+           <p className="text-xl md:text-2xl text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed max-w-2xl mx-auto">
+              We have made three great plans for your <span className="text-zinc-900 dark:text-white font-bold">{lead.property_type.toUpperCase()}</span> based on what you need.
            </p>
         </div>
         
@@ -218,12 +218,12 @@ export default async function QuoteResultPage({
         {/* NEXT STEPS TIMELINE */}
         <div className="mt-32 w-full max-w-5xl">
            <div className="text-center mb-16">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4">The Road to Security</span>
-              <h3 className="text-4xl font-black text-zinc-900 tracking-tighter">What Happens Next?</h3>
+              <span className="block text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.3em] mb-4">The Road to Security</span>
+              <h3 className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">What Happens Next?</h3>
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
-              <div className="hidden md:block absolute top-8 left-0 w-full h-px bg-zinc-100 -z-10" />
+              <div className="hidden md:block absolute top-8 left-0 w-full h-px bg-zinc-100 dark:bg-zinc-800 -z-10" />
               
               {[
                 { step: "01", title: "Site Survey", desc: "Book a visit for a precise wiring measurement." },
@@ -232,11 +232,11 @@ export default async function QuoteResultPage({
                 { step: "04", title: "Go Live", desc: "System handover with mobile app setup." }
               ].map((item, i) => (
                 <div key={i} className="flex flex-col items-center text-center group">
-                   <div className="w-16 h-16 rounded-3xl bg-white border border-zinc-100 shadow-xl flex items-center justify-center text-zinc-900 font-black text-xl mb-6 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500">
+                   <div className="w-16 h-16 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-xl flex items-center justify-center text-zinc-900 dark:text-white font-black text-xl mb-6 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500">
                       {item.step}
                    </div>
-                   <h4 className="text-lg font-black text-zinc-900 mb-2 tracking-tight">{item.title}</h4>
-                   <p className="text-xs font-medium text-zinc-400 leading-relaxed px-4">{item.desc}</p>
+                   <h4 className="text-lg font-black text-zinc-900 dark:text-white mb-2 tracking-tight">{item.title}</h4>
+                   <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 leading-relaxed px-4">{item.desc}</p>
                 </div>
               ))}
            </div>

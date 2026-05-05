@@ -33,17 +33,18 @@ export function SiteFooter() {
              <Link href="/jaipur" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Jaipur</Link>
              <div className="flex gap-4 opacity-50">
                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Expanding Next:</span>
-               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Jodhpur</span>
-               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Kota</span>
-               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Ajmer</span>
+               <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Expanding Next:</span>
+               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Jodhpur</span>
+               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Kota</span>
+               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Ajmer</span>
              </div>
           </div>
           <div className="flex gap-8">
-            <Link href="/privacy-policy" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Privacy Policy</Link>
-            <Link href="/terms-of-service" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Terms of Service</Link>
-            <Link href="/admin/login" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Partner Login</Link>
+             <Link href="/privacy-policy" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
+             <Link href="/terms-of-service" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Terms of Service</Link>
+             <Link href="/admin/login" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Partner Login</Link>
           </div>
-          <p className="text-[10px] font-bold text-zinc-300 dark:text-zinc-700 uppercase tracking-[0.2em] mt-4">
+          <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mt-4">
             © {new Date().getFullYear()} TEAM SECURE SYSTEMS PVT LTD.
           </p>
         </div>
