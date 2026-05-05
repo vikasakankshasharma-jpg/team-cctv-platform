@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { TrackingProvider } from "@/components/shared/TrackingProvider";
+import { JsonLd } from "@/components/shared/JsonLd";
 import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
@@ -72,6 +73,7 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <TrackingProvider />
           </Suspense>
+          <JsonLd />
           {children}
         </ThemeProvider>
       </body>
