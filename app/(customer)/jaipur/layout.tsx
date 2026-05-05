@@ -9,7 +9,11 @@ export const metadata: Metadata = {
     description: "Get a custom security blueprint and CCTV installation cost for your Jaipur property in 2 minutes.",
     type: "website",
     locale: "en_IN",
-    siteName: "TEAM Security Ecosystem",
+    siteName: "TEAM CCTV",
+    url: "https://cctvquotation.com/jaipur",
+  },
+  alternates: {
+    canonical: "https://cctvquotation.com/jaipur",
   },
 };
 
