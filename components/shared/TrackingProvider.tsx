@@ -115,3 +115,29 @@ export function TrackingProvider() {
     </>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Web Vitals → GA4
+// Called automatically by Next.js instrumentation when LCP/CLS/INP/FCP/TTFB
+// are measured. Sends them as GA4 events visible in GA4 → Explore → Free Form.
+// ─────────────────────────────────────────────────────────────────────────────
+export function reportWebVitals(metric: {
+  name: string;
+  value: number;
+  rating: 'good' | 'needs-improvement' | 'poor';
+  delta: number;
+  id: string;
+}) {
+  if (typeof window === 'undefined') return;
+  if (!window.gtag || !GA_ID) return;
+
+  window.gtag('event', metric.name, {
+    event_category:  'Web Vitals',
+    event_label:     metric.id,
+    // CLS is a 0–1 float; ×1000 converts to integer for GA4 storage
+    value:           Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
+    non_interaction: true,
+    metric_rating:   metric.rating,
+    metric_delta:    Math.round(metric.delta),
+  });
+}
