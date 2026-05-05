@@ -9,45 +9,60 @@ export function ProgressBar({ currentStepIndex, totalSteps }: ProgressBarProps) 
   const progress = ((currentStepIndex + 1) / totalSteps) * 100;
 
   return (
-    <div className="w-full space-y-4">
-      <div className="flex justify-between items-end">
+    <div className="w-full space-y-3">
+      {/* Labels row */}
+      <div className="flex justify-between items-baseline">
         <div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 block mb-1">
-            Your Quote Progress
+          <span className="block text-[10px] font-bold uppercase tracking-[0.25em] text-blue-600 dark:text-blue-500 mb-1">
+            Your Progress
           </span>
-          <div className="text-2xl font-black text-zinc-900 tracking-tighter">
-            Step <span className="text-zinc-400 font-medium">{currentStepIndex + 1} of {totalSteps}</span>
-          </div>
+          <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+            Question{" "}
+            <span className="text-zinc-900 dark:text-white font-bold">
+              {currentStepIndex + 1}
+            </span>{" "}
+            of {totalSteps}
+          </p>
         </div>
-        <div className="text-right">
-          <span className="text-4xl font-black text-blue-600 leading-none">
-            {Math.round(progress)}%
-          </span>
-        </div>
-      </div>
-      
-      {/* Track */}
-      <div className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/50 shadow-inner">
-        {/* Fill */}
-        <div 
-          className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 transition-all duration-700 ease-out relative"
-          style={{ width: `${progress}%` }}
+        <span
+          className="text-3xl font-black text-blue-600 dark:text-blue-400 tabular-nums leading-none"
+          aria-label={`${Math.round(progress)} percent complete`}
         >
-          {/* Subtle Glow Effect */}
-          <div className="absolute inset-0 bg-white/20 animate-pulse" />
-        </div>
+          {Math.round(progress)}%
+        </span>
       </div>
 
-      <div className="flex justify-between gap-2 px-1">
+      {/* Track */}
+      <div
+        className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuenow={Math.round(progress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-700 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
+      {/* Step dot indicators */}
+      <div className="flex items-center gap-1 px-0.5">
         {Array.from({ length: totalSteps }).map((_, i) => (
-          <div 
-            key={i} 
-            className={`flex-1 h-1 rounded-full transition-all duration-500 ${
-              i <= currentStepIndex ? "bg-blue-600/40" : "bg-zinc-200"
-            }`} 
+          <div
+            key={i}
+            className={[
+              "flex-1 h-1 rounded-full transition-all duration-500",
+              i < currentStepIndex
+                ? "bg-blue-500/60 dark:bg-blue-500/50"
+                : i === currentStepIndex
+                ? "bg-blue-600 dark:bg-blue-400"
+                : "bg-zinc-200 dark:bg-zinc-700",
+            ].join(" ")}
           />
         ))}
       </div>
     </div>
   );
 }
+

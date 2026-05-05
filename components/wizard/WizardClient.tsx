@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWizardStore } from "@/store/wizard";
 import { ProgressBar } from "@/components/wizard/ProgressBar";
 import { OptionCard } from "@/components/wizard/OptionCard";
@@ -13,6 +13,14 @@ export function WizardClient() {
   const [error, setError] = useState("");
   const [showGate, setShowGate] = useState(false);
   const [settings, setSettings] = useState<any>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(msg);
+    toastTimer.current = setTimeout(() => setToast(null), 2500);
+  };
 
   // Fetch configuration on mount (if not already cached)
   useEffect(() => {
@@ -137,7 +145,7 @@ export function WizardClient() {
     });
 
     if (!isValid) {
-      alert("Selection Required: Please address all fields to provide an accurate quote.");
+      showToast("Please select an option to continue.");
       return;
     }
 
@@ -156,6 +164,13 @@ export function WizardClient() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/50 dark:bg-blue-600/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-50/50 dark:bg-indigo-600/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
+      {/* Toast notification */}
+      {toast && (
+        <div className="toast toast-error" role="alert" aria-live="polite">
+          {toast}
+        </div>
+      )}
+
       {/* Blurred overlay if Gate is active */}
       <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 pt-6 pb-32 sm:pt-12 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
         
@@ -171,7 +186,7 @@ export function WizardClient() {
           <p className="text-zinc-500 dark:text-zinc-400 text-xl mt-4 font-medium max-w-2xl">{currentStep.description}</p>
         )}
 
-        <div className="space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 mb-12">
+        <div key={current_step_index} className="space-y-16 wizard-step-enter mb-12">
           {currentStep.questions?.map((q) => {
             if (q.input_type === "number") {
               const currentVal = (answers[q.id!] as string) || "";
