@@ -27,8 +27,8 @@ export function JsonLd() {
     priceRange: "₹₹",
     currenciesAccepted: "INR",
     paymentAccepted: "Cash, UPI, Bank Transfer",
-    image: `${baseUrl}/og-image.jpg`,
-    logo: `${baseUrl}/logo.png`,
+    image: `${baseUrl}/og-image.png`,
+    logo: `${baseUrl}/favicon.ico`,
     address: {
       "@type": "PostalAddress",
       streetAddress: "Jaipur",

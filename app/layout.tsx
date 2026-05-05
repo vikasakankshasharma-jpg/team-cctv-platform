@@ -20,11 +20,20 @@ export const metadata: Metadata = {
     siteName: "TEAM CCTV Jaipur",
     locale: "en_IN",
     type: "website",
+    images: [
+      {
+        url: "https://cctvquotation.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "TEAM CCTV — Free Instant CCTV Quotation Online",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "CCTV Quotation Online | Free Instant Quote in Jaipur | TEAM CCTV",
     description: "Instant professional CCTV blueprints and installation cost for Jaipur property owners.",
+    images: ["https://cctvquotation.com/og-image.png"],
   },
   robots: {
     index: true,
