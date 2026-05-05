@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -12,10 +12,6 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://cctvquotation.com"),
   title: "CCTV Quotation Online | Free Instant Quote in Jaipur | TEAM CCTV",
   description: "Get an instant CCTV quotation online in Jaipur. We install premium STQC compliant cameras like CP Plus with 18% GST included. 100% Free Smart Estimate.",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)",  color: "#09090b" },
-  ],
   openGraph: {
     title: "CCTV Quotation Online | Free Instant Quote in Jaipur | TEAM CCTV",
     description: "Instant AI-driven professional CCTV blueprints and exact installation cost for Jaipur property owners.",
@@ -36,6 +32,17 @@ export const metadata: Metadata = {
   verification: {
     google: "google376a26c23c5e2638",
   },
+};
+
+/**
+ * Next.js 15+ — themeColor must live in the viewport export, not metadata.
+ * This eliminates the "Unsupported metadata themeColor" build warning on every route.
+ */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)",  color: "#09090b" },
+  ],
 };
 
 export default function RootLayout({
