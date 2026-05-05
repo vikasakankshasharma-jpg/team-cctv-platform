@@ -42,9 +42,9 @@ export default function CustomerLayout({
             </div>
             <div className="flex flex-col leading-none">
               <span className="font-black text-lg sm:text-2xl tracking-tighter text-zinc-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                TEAM <span className="text-zinc-400 dark:text-zinc-500 font-medium tracking-tight">CCTV</span>
+                TEAM <span className="text-zinc-400 dark:text-zinc-400 font-medium tracking-tight">CCTV</span>
               </span>
-              <span className="hidden sm:block text-[8px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 mt-1">Smart Security Ecosystem</span>
+              <span className="hidden sm:block text-[8px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-400 mt-1">Smart Security Ecosystem</span>
             </div>
           </Link>
 
@@ -64,7 +64,7 @@ export default function CustomerLayout({
           <div className="flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
             <a 
               href="tel:+919772699395" 
-              className="hidden md:flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group shadow-sm"
+              className="hidden md:flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group shadow-sm"
             >
               <PhoneCall className="w-4 h-4 text-zinc-400 group-hover:text-blue-600 transition-colors" />
               <div className="flex flex-col text-left">

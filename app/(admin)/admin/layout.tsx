@@ -39,13 +39,13 @@ export default async function AdminLayout({
                 <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">System Operational</span>
              </div>
              <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
-             <div className="text-zinc-400 dark:text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+             <div className="text-zinc-400 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-widest">
                 Command Centre / <span className="text-zinc-900 dark:text-zinc-300">v2.4.0</span>
              </div>
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl py-2 px-4 shadow-xl dark:shadow-none backdrop-blur-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group">
+            <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl py-2 px-4 shadow-xl dark:shadow-none backdrop-blur-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group">
               <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 <UserCheck className="w-4.5 h-4.5" />
               </div>

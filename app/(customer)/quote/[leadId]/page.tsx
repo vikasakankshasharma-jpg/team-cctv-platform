@@ -236,7 +236,7 @@ export default async function QuoteResultPage({
                       {item.step}
                    </div>
                    <h4 className="text-lg font-black text-zinc-900 dark:text-white mb-2 tracking-tight">{item.title}</h4>
-                   <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 leading-relaxed px-4">{item.desc}</p>
+                   <p className="text-xs font-medium text-zinc-400 dark:text-zinc-400 leading-relaxed px-4">{item.desc}</p>
                 </div>
               ))}
            </div>

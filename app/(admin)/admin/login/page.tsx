@@ -170,7 +170,7 @@ export default function AdminLoginPage() {
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em]">TEAM CCTV</p>
+              <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.3em]">TEAM CCTV</p>
               <p className="text-sm font-black text-zinc-900 dark:text-white leading-none">Command Centre</p>
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function AdminLoginPage() {
             <span className="text-blue-600 dark:text-blue-500 border-b-8 border-blue-600/10">Command</span><br/>
             Platform.
           </h1>
-          <p className="text-zinc-400 dark:text-zinc-500 font-medium text-lg leading-relaxed max-w-xs">
+          <p className="text-zinc-400 dark:text-zinc-400 font-medium text-lg leading-relaxed max-w-xs">
             Real-time CRM, AI-assisted quotations, and sales analytics — all in one secured environment.
           </p>
         </div>
@@ -201,7 +201,7 @@ export default function AdminLoginPage() {
               </div>
               <div>
                 <p className="text-[11px] font-black text-zinc-500 dark:text-zinc-300 uppercase tracking-widest leading-tight">{label}</p>
-                <p className="text-[10px] font-medium text-zinc-300 dark:text-zinc-600 mt-0.5">{sub}</p>
+                <p className="text-[10px] font-medium text-zinc-300 dark:text-zinc-400 mt-0.5">{sub}</p>
               </div>
             </div>
           ))}
@@ -227,10 +227,10 @@ export default function AdminLoginPage() {
                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-600/20 flex items-center justify-center border border-blue-100 dark:border-blue-500/20 shadow-inner">
                   <Lock className="w-4 h-4 text-blue-600 dark:text-blue-500" />
                </div>
-               <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em]">Staff Access Portal</span>
+               <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.3em]">Staff Access Portal</span>
             </div>
             <h2 className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter leading-tight mb-2">Secure<br/>Sign In</h2>
-            <p className="text-zinc-400 dark:text-zinc-500 font-medium text-sm">Authorized personnel only. All sessions are audited.</p>
+            <p className="text-zinc-400 dark:text-zinc-400 font-medium text-sm">Authorized personnel only. All sessions are audited.</p>
           </div>
 
           {error && (
@@ -261,14 +261,14 @@ export default function AdminLoginPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">
+                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">
                   {method === "mobile" ? "Mobile Number" : "Email Address"}
                 </label>
                 <div className="relative">
                   {method === "mobile" ? (
-                    <Smartphone className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-600" />
+                    <Smartphone className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-400" />
                   ) : (
-                    <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-600" />
+                    <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-400" />
                   )}
                   <input 
                     type={method === "mobile" ? "tel" : "email"}
@@ -313,7 +313,7 @@ export default function AdminLoginPage() {
               </div>
 
               <div className="flex items-center justify-between mt-4">
-                <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">
+                <span className="text-xs font-bold text-zinc-400 dark:text-zinc-400">
                   {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')} remaining
                 </span>
                 <button

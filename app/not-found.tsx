@@ -41,7 +41,7 @@ export default function NotFound() {
           <h1 className="text-5xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">
             Signal <span className="text-blue-600 dark:text-blue-500">Lost</span>.
           </h1>
-          <p className="text-zinc-500 dark:text-zinc-500 font-medium text-lg leading-relaxed">
+          <p className="text-zinc-500 dark:text-zinc-400 font-medium text-lg leading-relaxed">
             The coordinates you requested are outside the mapped command territory.
           </p>
         </div>
@@ -58,7 +58,7 @@ export default function NotFound() {
 
         {/* System Signature */}
         <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-40 w-full">
-          <div className="text-[10px] font-black text-zinc-500 dark:text-zinc-600 uppercase tracking-[0.3em] whitespace-nowrap">CCTV Quotation Intelligence System v2.0</div>
+          <div className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.3em] whitespace-nowrap">CCTV Quotation Intelligence System v2.0</div>
           <div className="flex gap-4">
             <div className="w-1 h-1 rounded-full bg-red-500" />
             <div className="w-1 h-1 rounded-full bg-zinc-800" />

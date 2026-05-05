@@ -32,7 +32,7 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto flex flex-col items-center lg:items-start text-center lg:text-left relative">
           
-          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-12 shadow-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-12 shadow-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
             <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-500" />
             <span>Jaipur&apos;s #1 CCTV Estimator</span>
             <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
@@ -58,7 +58,7 @@ export default function LandingPage() {
             </Link>
             
             <div className="flex flex-col text-left px-4">
-                <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">Instant Result</span>
+                <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-widest">Instant Result</span>
                 <span className="text-sm font-bold text-zinc-900 dark:text-zinc-300">Ready in 2 minutes</span>
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function LandingPage() {
                   { q: "How much does a 4 camera CCTV system cost in Jaipur?", a: `Prices are dynamic. As of ${new Date().toLocaleString('en-US', { month: 'short', year: 'numeric' })}, a standard 4-camera CP Plus system with professional installation typically ranges from ₹12,000 to ₹18,000 depending on wiring length and camera resolution.` },
                   { q: "Are your cameras STQC or BIS-ER compliant?", a: "Yes. We strictly adhere to Indian security standards. We provide STQC-certified hardware for Government projects and BIS-ER compliant systems for retail and home installations. We only use trusted brands like CP Plus and Prama, ensuring full regulatory compliance and data privacy." },
                 ].map((faq, i) => (
-                  <div key={i} className="space-y-4 p-8 rounded-[32px] bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 shadow-inner">
+                  <div key={i} className="space-y-4 p-8 rounded-[32px] bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 shadow-inner">
                     <h4 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight">{faq.q}</h4>
                     <p className="text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed text-sm">{faq.a}</p>
                   </div>

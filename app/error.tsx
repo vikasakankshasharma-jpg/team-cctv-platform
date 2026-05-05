@@ -85,13 +85,13 @@ export default function ErrorBoundary({
           <h1 className="text-5xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">
             Page <span className="text-red-600 dark:text-red-500">Error.</span>
           </h1>
-          <p className="text-zinc-500 dark:text-zinc-500 font-medium text-lg leading-relaxed">
+          <p className="text-zinc-500 dark:text-zinc-400 font-medium text-lg leading-relaxed">
             We hit an unexpected issue. Please try refreshing the page.
             If the problem continues, our team has been automatically notified.
           </p>
 
           {process.env.NODE_ENV === "development" && (
-            <div className="mt-8 p-4 bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl font-mono text-[11px] text-zinc-400 text-left overflow-x-auto shadow-inner">
+            <div className="mt-8 p-4 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl font-mono text-[11px] text-zinc-400 text-left overflow-x-auto shadow-inner">
               <p className="text-red-500/70 dark:text-red-400/50 mb-1 tracking-tighter uppercase font-black">Dev — Exception Log:</p>
               {error.message || "Unknown error."}
               {error.digest && <p className="mt-2 text-zinc-600 dark:text-zinc-700">Digest: {error.digest}</p>}

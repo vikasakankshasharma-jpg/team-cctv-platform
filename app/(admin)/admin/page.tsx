@@ -168,15 +168,15 @@ export default async function AdminDashboard() {
       {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {KPIS.map((kpi, idx) => (
-          <Link href={kpi.href} key={idx} className={`block bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 relative overflow-hidden group shadow-lg dark:shadow-2xl transition-all hover:border-blue-500/20 active:scale-95 ${kpi.shadow}`}>
+          <Link href={kpi.href} key={idx} className={`block bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 relative overflow-hidden group shadow-lg dark:shadow-2xl transition-all hover:border-blue-500/20 active:scale-95 ${kpi.shadow}`}>
             <div className="flex items-center justify-between mb-6">
-              <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{kpi.label}</span>
+              <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-widest">{kpi.label}</span>
               <div className={`p-3 rounded-2xl ${kpi.bg} ${kpi.color} shadow-inner`}>
                 <kpi.icon className="w-5 h-5" />
               </div>
             </div>
             <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">{kpi.value}</div>
-            <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-wider">{kpi.trend}</div>
+            <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider">{kpi.trend}</div>
             <div className="absolute inset-0 bg-gradient-to-tr from-zinc-500/[0.02] dark:from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           </Link>
         ))}
