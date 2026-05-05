@@ -113,7 +113,7 @@ export function ShareDialog({
           </p>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-5 sm:p-8 space-y-5 sm:space-y-6">
 
           {shared ? (
             <div className="text-center py-4 space-y-3 animate-in fade-in zoom-in duration-300">
@@ -141,7 +141,7 @@ export function ShareDialog({
                 <button
                   onClick={() => shareToNumber(customerMobile, false)}
                   disabled={sharing}
-                  className="w-full flex items-center justify-between px-5 py-4 bg-emerald-50 border-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100 rounded-2xl transition-all group"
+                  className="w-full flex items-center justify-between px-5 py-4 bg-emerald-50 border-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100 rounded-2xl transition-all group touch-manipulation active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3">
                     <Phone className="w-4 h-4 text-emerald-600" />
@@ -170,8 +170,10 @@ export function ShareDialog({
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-zinc-400 border-r border-zinc-200 pr-3">+91</span>
                   <input
                     type="tel"
+                    inputMode="tel"
+                    autoComplete="tel-national"
                     value={otherNumber}
-                    onChange={(e) => { setOtherNumber(e.target.value); setError(""); }}
+                    onChange={(e) => { setOtherNumber(e.target.value.replace(/\D/g,'')); setError(""); }}
                     placeholder="98765 43210"
                     maxLength={10}
                     className="w-full bg-zinc-50 border border-zinc-100 rounded-2xl pl-16 pr-4 py-4 font-bold text-zinc-900 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all"
@@ -180,7 +182,7 @@ export function ShareDialog({
                 <button
                   onClick={handleShareToOther}
                   disabled={sharing || !otherNumber}
-                  className="w-full h-14 bg-zinc-900 hover:bg-emerald-600 disabled:opacity-40 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 active:scale-95"
+                  className="w-full h-14 bg-zinc-900 hover:bg-emerald-600 disabled:opacity-40 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 active:scale-95 touch-manipulation"
                 >
                   {sharing ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

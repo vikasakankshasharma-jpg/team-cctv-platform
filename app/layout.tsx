@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { TrackingProvider } from "@/components/shared/TrackingProvider";
 import { Suspense } from "react";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cctvquotation.com"),
@@ -45,6 +45,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* ── DNS Preconnect: Firebase Auth + Firestore (used at wizard start) ── */}
+        <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
+        <link rel="preconnect" href="https://firestore.googleapis.com" />
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
+        <link rel="dns-prefetch" href="https://www.googleapis.com" />
+        {/* ── DNS Preconnect: Analytics ──────────────────────────────────────── */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://connect.facebook.net" />
+      </head>
       <body className={`${inter.className} antialiased selection:bg-blue-500/30`}>
         <ThemeProvider
           attribute="class"

@@ -37,7 +37,7 @@ export default function CityLandingPage({
     <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
       
       {/* Hero Hub */}
-      <section className="relative px-6 pt-24 pb-32 md:pt-32 md:pb-48 overflow-hidden">
+      <section className="relative px-4 sm:px-6 pt-16 pb-20 sm:pt-24 sm:pb-32 md:pt-32 md:pb-48 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-zinc-50 dark:bg-zinc-950">
           <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-blue-200/40 dark:bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-200/20 dark:bg-indigo-600/5 blur-[100px] rounded-full" />
@@ -51,39 +51,51 @@ export default function CityLandingPage({
             <span className="text-blue-600 dark:text-emerald-500">Same-Day Survey</span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-8 leading-[0.9] animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 leading-[0.9] animate-in fade-in slide-in-from-bottom-8 duration-1000">
             Professional CCTV Installation <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">{heroHighlight}</span>
           </h1>
 
-          <p className="text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-3xl mb-12 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
+          <p className="text-base sm:text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-3xl mb-8 sm:mb-12 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
              {description}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-6 items-center w-full sm:w-auto animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
-            <Link 
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-center w-full sm:w-auto animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
+            <Link
               href="/wizard"
-              className="group relative inline-flex justify-center items-center gap-5 px-12 py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[32px] font-black text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-2 active:scale-95"
+              className="group relative inline-flex justify-center items-center gap-4 sm:gap-5 px-8 sm:px-12 py-4 sm:py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[28px] sm:rounded-[32px] font-black text-lg sm:text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-1 sm:hover:-translate-y-2 active:scale-95 touch-manipulation"
             >
               {ctaText}
-              <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
+              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-2 transition-transform duration-300" />
             </Link>
-            
-            <a href="tel:+919772699395" className="flex items-center gap-4 px-8 py-5 rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-all text-left group">
-                <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
-                   <PhoneCall className="w-5 h-5" />
-                </div>
-                <div>
-                   <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Call Local Support</div>
-                   <div className="text-lg font-bold text-zinc-900 dark:text-white">+91 97726 99395</div>
-                </div>
+
+            {/* Phone icon on mobile, full button on sm+ */}
+            <a
+              href="tel:+919772699395"
+              aria-label="Call local support"
+              className="flex sm:hidden items-center justify-center gap-3 w-full py-4 rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold touch-manipulation"
+            >
+              <PhoneCall className="w-5 h-5 text-blue-600" />
+              <span>+91 97726 99395</span>
+            </a>
+            <a
+              href="tel:+919772699395"
+              className="hidden sm:flex items-center gap-4 px-8 py-5 rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-all text-left group"
+            >
+              <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                <PhoneCall className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Call Local Support</div>
+                <div className="text-lg font-bold text-zinc-900 dark:text-white">+91 97726 99395</div>
+              </div>
             </a>
           </div>
         </div>
       </section>
 
       {/* Pricing Context Section */}
-      <section className="py-20 md:py-32 px-6 bg-zinc-50 dark:bg-zinc-900/30">
+      <section className="py-14 sm:py-20 md:py-32 px-4 sm:px-6 bg-zinc-50 dark:bg-zinc-900/30">
          <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
                <h2 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4">CCTV Installation Cost in {cityName}</h2>
@@ -91,7 +103,7 @@ export default function CityLandingPage({
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
-               <div className="bg-white dark:bg-zinc-900 p-10 rounded-[40px] shadow-xl border border-zinc-100 dark:border-zinc-800">
+                <div className="bg-white dark:bg-zinc-900 p-6 sm:p-10 rounded-[28px] sm:rounded-[40px] shadow-xl border border-zinc-100 dark:border-zinc-800">
                   <div className="inline-block px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-6">Residential</div>
                   <h3 className="text-2xl font-black mb-2">Standard 4-Camera Setup</h3>
                   <div className="text-4xl font-black text-zinc-900 dark:text-white mb-6">₹12,000 <span className="text-xl text-zinc-400 font-medium">- ₹18,000</span></div>
@@ -106,7 +118,7 @@ export default function CityLandingPage({
                   <Link href="/wizard" className="block w-full py-4 text-center rounded-2xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold transition-colors">Get Exact Quote</Link>
                </div>
 
-               <div className="bg-zinc-900 dark:bg-blue-600 text-white p-10 rounded-[40px] shadow-2xl relative overflow-hidden">
+                <div className="bg-zinc-900 dark:bg-blue-600 text-white p-6 sm:p-10 rounded-[28px] sm:rounded-[40px] shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
                   <div className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-bold mb-6 backdrop-blur-md border border-white/10">Commercial</div>
                   <h3 className="text-2xl font-black mb-2">8 to 16-Camera Networks</h3>
@@ -126,7 +138,7 @@ export default function CityLandingPage({
       </section>
 
       {/* Neighborhoods Section */}
-      <section className="py-24 px-6 relative">
+      <section className="py-14 sm:py-24 px-4 sm:px-6 relative">
          <div className="max-w-6xl mx-auto">
             <div className="flex flex-col items-center text-center mb-16">
                <MapPin className="w-12 h-12 text-blue-500 mb-6 opacity-80" />
@@ -148,18 +160,21 @@ export default function CityLandingPage({
       </section>
 
       {/* Final Deployment CTA */}
-      <section className="py-24 px-6 relative overflow-hidden text-center bg-zinc-950 transition-colors">
+      <section className="py-14 sm:py-24 px-4 sm:px-6 relative overflow-hidden text-center bg-zinc-950 transition-colors">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
-            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-8 leading-[0.9]">Secure your {cityName} <br/> property today.</h2>
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 sm:mb-8 leading-[0.9]">Secure your {cityName} <br/> property today.</h2>
             <p className="text-zinc-400 text-xl mb-12 font-medium max-w-2xl text-center">Get your exact quote in 2 minutes. 18% GST included. No hidden charges.</p>
             
-            <Link 
+            <Link
               href="/wizard"
-              className="group relative flex items-center gap-6 bg-blue-600 hover:bg-blue-500 text-white px-14 py-8 rounded-[36px] font-black text-2xl transition-all shadow-[0_32px_64px_rgba(0,0,0,0.15)] shadow-blue-500/30 hover:-translate-y-2"
+              className="group relative flex items-center gap-4 sm:gap-6 bg-blue-600 hover:bg-blue-500 text-white px-8 sm:px-14 py-5 sm:py-8 rounded-[28px] sm:rounded-[36px] font-black text-lg sm:text-2xl transition-all shadow-[0_32px_64px_rgba(0,0,0,0.15)] shadow-blue-500/30 hover:-translate-y-1 sm:hover:-translate-y-2 touch-manipulation"
             >
               Get Free Quote
-              <ChevronRight className="w-8 h-8 group-hover:translate-x-2 transition-transform duration-300" />
+              <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 group-hover:translate-x-2 transition-transform duration-300" />
             </Link>
+
+            {/* Bottom spacer for mobile sticky CTA bar */}
+            <div className="h-20 md:hidden" aria-hidden="true" />
 
             <div className="mt-20 flex flex-col items-center gap-8">
                <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50">

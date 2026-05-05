@@ -28,13 +28,14 @@ export function OptionCard({ label, isSelected, isMulti, onClick }: OptionCardPr
               "bg-blue-50 dark:bg-blue-600/10",
               "border-2 border-blue-600",
               "shadow-[0_0_0_4px_rgba(37,99,235,0.10)]",
+              "active:brightness-90 active:scale-[0.98]",
             ].join(" ")
           : [
               "bg-white dark:bg-zinc-900/50",
               "border-2 border-zinc-100 dark:border-zinc-800",
               "hover:border-zinc-300 dark:hover:border-zinc-700",
               "hover:shadow-md hover:-translate-y-[2px]",
-              "active:scale-[0.98]",
+              "active:scale-[0.97]",
             ].join(" "),
       ].join(" ")}
     >

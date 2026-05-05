@@ -345,7 +345,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   if (!pricing_results.recommended) return <div className="animate-pulse flex space-y-4 flex-col h-96 bg-zinc-200 rounded-xl" />;
 
   return (
-    <div className="flex flex-col gap-16 relative">
+    <div className="flex flex-col gap-8 sm:gap-16 relative">
       
       {/* Background Decor */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-50/20 blur-[150px] -z-10 rounded-full" />      <div className="flex flex-col items-center gap-12">
@@ -375,7 +375,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         </div>
 
         {/* Global Controls: Camera Count & Recording Days */}
-        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 bg-zinc-50 dark:bg-zinc-900/40 p-4 md:p-8 rounded-[32px] md:rounded-[40px] border border-zinc-100 dark:border-zinc-800 shadow-xl">
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 bg-zinc-50 dark:bg-zinc-900/40 p-5 md:p-8 rounded-[24px] md:rounded-[40px] border border-zinc-100 dark:border-zinc-800 shadow-xl">
            <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <label className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em]">System Camera Count</label>
@@ -395,8 +395,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                 <label className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em]">Global Recording Days</label>
                 <div className="flex items-center gap-2 bg-white dark:bg-zinc-950 px-3 py-1 rounded-full border border-zinc-100 dark:border-zinc-800">
                   <Calendar className="w-3 h-3 text-blue-500" />
-                  <input 
+                  <input
                     type="number"
+                    inputMode="numeric"
                     min="1" max="365"
                     value={selection.recording_days}
                     onChange={(e) => updateSelection({ recording_days: parseInt(e.target.value) || 7 })}
@@ -457,11 +458,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         />
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 rounded-[48px] border border-zinc-100 dark:border-zinc-800 shadow-[0_40px_100px_rgba(0,0,0,0.08)] p-8 md:p-12 max-w-5xl mx-auto w-full backdrop-blur-md">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
+      <div className="bg-white dark:bg-zinc-900 rounded-[32px] sm:rounded-[48px] border border-zinc-100 dark:border-zinc-800 shadow-[0_40px_100px_rgba(0,0,0,0.08)] p-5 sm:p-8 md:p-12 max-w-5xl mx-auto w-full backdrop-blur-md">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
           
-          {/* LEFT COLUMN: Configuration Breakdown */}
-          <div className="flex-1 space-y-12">
+          {/* LEFT COLUMN: Configuration Breakdown — shown second on mobile */}
+          <div className="flex-1 space-y-8 sm:space-y-12 order-2 lg:order-1">
             
             {/* System Summary */}
             <div className="space-y-6">
@@ -479,7 +480,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                  const cRes  = cProd?.technical_name?.includes('5mp') ? '5MP Ultra-HD'
                    : cProd?.technical_name?.includes('4mp') ? '4MP Pro-HD' : '2MP Standard-HD';
                  return (
-                   <div className="p-8 rounded-[32px] bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 space-y-4">
+                   <div className="p-5 sm:p-8 rounded-[24px] sm:rounded-[32px] bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 space-y-4">
                      <div className="flex justify-between items-center text-sm">
                        <span className="font-bold text-zinc-500 dark:text-zinc-400">Camera Model</span>
                        <span className="font-black text-zinc-900 dark:text-white text-right text-xs max-w-[55%] truncate" title={cProd?.display_name}>
@@ -555,12 +556,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             )}
           </div>
 
-          {/* RIGHT COLUMN: Checkout & Actions */}
-          <div className="lg:w-[400px]">
-            <div className="sticky top-8 space-y-6">
+          {/* RIGHT COLUMN: Checkout & Actions — shown FIRST on mobile */}
+          <div className="lg:w-[400px] order-1 lg:order-2">
+            <div className="sticky top-8 space-y-4 sm:space-y-6">
                
                {/* Total Investment Card */}
-               <div className="bg-zinc-900 dark:bg-zinc-950 p-8 rounded-[32px] shadow-2xl relative overflow-hidden">
+               <div className="bg-zinc-900 dark:bg-zinc-950 p-6 sm:p-8 rounded-[28px] sm:rounded-[32px] shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-48 h-48 bg-blue-500/20 blur-[50px] rounded-full pointer-events-none" />
                   
                    <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Total Investment</div>
@@ -581,33 +582,33 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                </div>
 
                {/* Action Buttons */}
-               <div className="space-y-4">
-                 <button 
+               <div className="space-y-3 sm:space-y-4">
+                 <button
                    onClick={() => triggerActionWithAddress("download")}
                    disabled={isSaving}
-                   className="group relative w-full h-18 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-[0.3em] rounded-[32px] shadow-xl shadow-blue-600/20 transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 overflow-hidden"
+                   className="group relative w-full h-14 sm:h-18 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-[0.3em] rounded-[28px] sm:rounded-[32px] shadow-xl shadow-blue-600/20 transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 overflow-hidden touch-manipulation"
                  >
                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                      <>
-                       <Download className="w-5 h-5 group-hover:-translate-y-1 transition-transform" /> 
-                       Download Full Quote 
+                       <Download className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+                       Download Full Quote
                        <ArrowRight className="w-4 h-4 translate-y-[1px]" />
                      </>
                    )}
                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                  </button>
-                 
-                 <div className="grid grid-cols-2 gap-4">
-                   <button 
+
+                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                   <button
                      onClick={() => triggerActionWithAddress("whatsapp")}
-                     className="group relative h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-widest rounded-3xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 overflow-hidden"
+                     className="group relative h-14 sm:h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl sm:rounded-3xl flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 overflow-hidden touch-manipulation"
                    >
                      <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> WhatsApp
                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                    </button>
-                   <button 
+                   <button
                      onClick={() => triggerActionWithAddress("booking")}
-                     className="h-16 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white font-black uppercase text-[10px] tracking-widest rounded-3xl flex items-center justify-center gap-3 transition-all active:scale-95 border border-zinc-200 dark:border-zinc-700 shadow-lg"
+                     className="h-14 sm:h-16 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white font-black uppercase text-[10px] tracking-widest rounded-2xl sm:rounded-3xl flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95 border border-zinc-200 dark:border-zinc-700 shadow-lg touch-manipulation"
                    >
                      <Calendar className="w-4 h-4" /> Book Visit
                    </button>

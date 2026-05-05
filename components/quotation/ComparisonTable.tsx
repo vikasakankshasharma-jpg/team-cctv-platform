@@ -116,7 +116,7 @@ export function ComparisonTable({
         <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Swipe to compare all options</span>
         <ArrowRight className="w-3 h-3 text-zinc-400 animate-bounce-x" />
       </div>
-      <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
+      <div className="overflow-x-auto overscroll-x-contain -webkit-overflow-scrolling-touch">
         <table className="w-full text-left">
           <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-100 dark:border-zinc-800/60">
             <tr>
@@ -206,7 +206,7 @@ export function ComparisonTable({
                   <td className="px-4 md:px-8 py-4 md:py-6 text-right">
                     <button 
                       onClick={() => onSelectCheckout({ technology: row.technology, option: row.option })}
-                      className={`px-3 md:px-4 py-2 min-h-[40px] rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                      className={`px-3 md:px-4 py-2 min-h-[40px] rounded-full text-[9px] font-black uppercase tracking-widest transition-all touch-manipulation ${
                         isCheckout 
                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20 ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-zinc-900' 
                         : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white'
@@ -224,13 +224,13 @@ export function ComparisonTable({
       </div>
       
       {/* Table Footer Info */}
-      <div className="bg-zinc-50 dark:bg-zinc-950/20 px-8 py-4 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
+      <div className="bg-zinc-50 dark:bg-zinc-950/20 px-4 sm:px-8 py-3 sm:py-4 border-t border-zinc-100 dark:border-zinc-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">All prices include {cameraCount} cameras + {recordingDays} days storage + Installation</span>
+            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+            <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest leading-snug">{cameraCount} cameras + {recordingDays} days storage + Installation</span>
          </div>
-         <div className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest cursor-help flex items-center gap-1 group/help">
-            <Info className="w-3 h-3 group-hover:rotate-12 transition-transform" /> View Hardware Breakdown
+         <div className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest cursor-help flex items-center gap-1 group/help ml-6 sm:ml-0">
+            <Info className="w-3 h-3 group-hover:rotate-12 transition-transform" /> Hardware Breakdown
          </div>
       </div>
     </div>

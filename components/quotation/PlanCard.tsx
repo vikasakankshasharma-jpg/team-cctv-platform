@@ -40,7 +40,7 @@ export function PlanCard({
     <div 
       className={`relative flex flex-col rounded-[40px] border transition-all duration-700 bg-white/70 dark:bg-zinc-900/60 backdrop-blur-xl group
       ${recommendation 
-        ? "border-blue-200 dark:border-blue-500/40 shadow-[0_48px_96px_rgba(37,99,235,0.15)] dark:shadow-[0_48px_96px_rgba(37,99,235,0.25)] scale-[1.04] z-10" 
+        ? "border-blue-200 dark:border-blue-500/40 shadow-[0_48px_96px_rgba(37,99,235,0.15)] dark:shadow-[0_48px_96px_rgba(37,99,235,0.25)] sm:scale-[1.04] z-10" 
         : "border-zinc-100 dark:border-zinc-800 shadow-[0_24px_48px_rgba(0,0,0,0.04)] hover:border-zinc-200 dark:hover:border-blue-500/20 hover:shadow-[0_48px_96px_rgba(0,0,0,0.08)]"}`}
     >
       {/* Premium Badge */}
@@ -56,13 +56,13 @@ export function PlanCard({
         <div className="absolute inset-0 bg-blue-50/30 dark:bg-blue-600/10 blur-[100px] -z-10 rounded-[40px]" />
       )}
 
-      <div className="p-8 md:p-10 flex-1 flex flex-col">
+      <div className="p-6 md:p-10 flex-1 flex flex-col">
         <div className="flex items-center justify-between mb-2">
            <h3 className="text-sm font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{title}</h3>
            {recommendation && <TrendingUp className="w-4 h-4 text-blue-500 dark:text-blue-400" />}
         </div>
         
-        <div className="flex items-end gap-1.5 mb-8 md:mb-10 pb-6 md:pb-8 border-b border-zinc-50 dark:border-zinc-800/60">
+        <div className="flex items-end gap-1.5 mb-6 md:mb-10 pb-5 md:pb-8 border-b border-zinc-50 dark:border-zinc-800/60">
           <span className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter">
             ₹{pricing.total_payable.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </span>
@@ -238,7 +238,7 @@ export function PlanCard({
         <button 
           onClick={onSelect}
           className={`
-            w-full h-16 rounded-3xl font-black uppercase text-xs tracking-[0.2em] transition-all mt-8 transform active:scale-[0.98]
+            w-full h-14 sm:h-16 rounded-2xl sm:rounded-3xl font-black uppercase text-xs tracking-[0.2em] transition-all mt-6 sm:mt-8 transform active:scale-[0.98] touch-manipulation
             ${isSelected 
               ? "bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 shadow-inner" 
               : "bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white shadow-xl dark:shadow-blue-500/20 shadow-zinc-900/20"}

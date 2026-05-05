@@ -134,7 +134,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
 
         <div className="overflow-y-auto flex-1 custom-scrollbar">
           {/* Header */}
-          <div className="px-8 pt-8 pb-6 flex items-start justify-between">
+          <div className="px-5 sm:px-8 pt-5 sm:pt-8 pb-5 sm:pb-6 flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center">
@@ -153,8 +153,8 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
             </button>
           </div>
 
-          {/* Body — two column */}
-          <div className="px-8 pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Body — two column on md+ */}
+          <div className="px-5 sm:px-8 pb-5 sm:pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* LEFT: Form */}
           <div className="space-y-4">
@@ -164,8 +164,10 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
               <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">Area Pincode *</label>
               <div className="relative">
                 <Navigation className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input
+                 <input
                   type="text"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
                   maxLength={6}
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
@@ -353,7 +355,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-5 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between gap-4">
+        <div className="px-5 sm:px-8 py-4 sm:py-5 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between gap-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-4">
           <button
             onClick={onClose}
             className="text-xs font-black text-zinc-400 hover:text-zinc-600 uppercase tracking-widest transition-colors"
@@ -363,7 +365,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
           <button
             onClick={handleConfirm}
             disabled={!isValid}
-            className="group flex items-center gap-3 bg-zinc-900 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black uppercase text-xs tracking-[0.2em] px-8 py-4 rounded-3xl transition-all shadow-xl shadow-zinc-900/10 hover:shadow-blue-500/20 active:scale-95"
+            className="group flex items-center gap-3 bg-zinc-900 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black uppercase text-xs tracking-[0.2em] px-6 sm:px-8 py-4 rounded-2xl sm:rounded-3xl transition-all shadow-xl shadow-zinc-900/10 hover:shadow-blue-500/20 active:scale-95 touch-manipulation"
           >
             Confirm Site
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

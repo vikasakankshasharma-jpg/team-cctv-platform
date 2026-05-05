@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { ShieldCheck, PhoneCall, Zap } from "lucide-react";
+import { ShieldCheck, PhoneCall, Zap, ArrowRight } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/shared/SiteFooter";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // maximumScale removed — was blocking iOS zoom accessibility
 };
 
 export const metadata: Metadata = {
@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { MobileStickyCtaBar } from "@/components/shared/MobileStickyCtaBar";
 
 export default function CustomerLayout({
   children,
@@ -34,7 +35,7 @@ export default function CustomerLayout({
       {/* Premium Public Header */}
       <header className="sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 shadow-sm transition-all">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 md:h-20 flex items-center justify-between relative">
-          
+
           {/* Left — Logo */}
           <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
             <div className="bg-zinc-900 dark:bg-blue-600 text-white p-2 sm:p-2.5 rounded-xl sm:rounded-2xl group-hover:bg-blue-600 dark:group-hover:bg-blue-500 transition-all duration-300 shadow-lg shadow-zinc-900/10 group-hover:shadow-blue-500/30">
@@ -52,7 +53,7 @@ export default function CustomerLayout({
           <div className="absolute left-1/2 -translate-x-1/2">
             <Link
               href="/wizard"
-              className="group flex items-center gap-2 px-4 py-2 md:px-6 md:py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all active:scale-95"
+              className="group flex items-center gap-2 px-4 py-2 md:px-6 md:py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all active:scale-95 touch-manipulation"
             >
               <Zap className="w-3 h-3 group-hover:animate-pulse" />
               <span className="hidden sm:inline">Get Quotation</span>
@@ -62,8 +63,16 @@ export default function CustomerLayout({
 
           {/* Right — Support + Portal */}
           <div className="flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
-            <a 
-              href="tel:+919772699395" 
+            {/* Phone icon visible on mobile, full button on desktop */}
+            <a
+              href="tel:+919772699395"
+              aria-label="Call support"
+              className="flex md:hidden items-center justify-center w-9 h-9 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors touch-manipulation"
+            >
+              <PhoneCall className="w-4 h-4" />
+            </a>
+            <a
+              href="tel:+919772699395"
               className="hidden md:flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group shadow-sm"
             >
               <PhoneCall className="w-4 h-4 text-zinc-400 group-hover:text-blue-600 transition-colors" />
@@ -73,8 +82,8 @@ export default function CustomerLayout({
               </div>
             </a>
             <ThemeToggle />
-            <Link 
-              href="/admin/login" 
+            <Link
+              href="/admin/login"
               className="text-[10px] font-black uppercase tracking-widest text-zinc-300 hover:text-blue-500 transition-colors hidden sm:block"
             >
               Staff Portal
@@ -89,6 +98,9 @@ export default function CustomerLayout({
       </main>
 
       <SiteFooter />
+
+      {/* Sticky mobile CTA bar — hidden on wizard pages (handled inside component) */}
+      <MobileStickyCtaBar />
     </div>
   );
 }

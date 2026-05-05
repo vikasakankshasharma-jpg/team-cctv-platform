@@ -340,7 +340,7 @@ export function CompareCards({
                 option: card.option,
               })
             }
-            className={`relative p-6 sm:p-7 rounded-[36px] transition-all duration-300 cursor-pointer border-2 flex-none w-[82vw] sm:w-auto snap-center ${cardClass.replace('scale-105', 'sm:scale-105')}`}
+            className={`relative p-5 sm:p-6 sm:p-7 rounded-[32px] sm:rounded-[36px] transition-all duration-300 cursor-pointer border-2 flex-none w-[82vw] sm:w-auto snap-center touch-manipulation active:scale-[0.98] ${cardClass.replace('scale-105', 'sm:scale-105')}`}
           >
             {/* ── Top badge: Best Value ────────────────────────────────────── */}
             {card.isRecommended && (
@@ -549,7 +549,7 @@ export function CompareCards({
             {/* ── CTA ──────────────────────────────────────────────────────── */}
             <button
               aria-pressed={isCheckout}
-              className={`w-full mt-6 py-3.5 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-200 ${
+              className={`w-full mt-5 sm:mt-6 py-3.5 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-200 touch-manipulation active:scale-[0.97] ${
                 isCheckout
                   ? "bg-blue-600 text-white shadow-xl shadow-blue-600/25 ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-zinc-900"
                   : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:shadow-md"

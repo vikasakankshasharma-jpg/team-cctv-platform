@@ -51,7 +51,7 @@ export function WizardClient() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] bg-white">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] bg-white dark:bg-zinc-950">
         <div className="relative">
           <Loader2 className="w-16 h-16 animate-spin text-blue-600 mb-6 drop-shadow-[0_0_15px_rgba(37,99,235,0.4)]" />
           <div className="absolute inset-0 flex items-center justify-center">
@@ -176,14 +176,14 @@ export function WizardClient() {
         
         <ProgressBar currentStepIndex={current_step_index} totalSteps={steps.length} />
 
-        <div className="mt-16 mb-12">
+        <div className="mt-6 sm:mt-16 mb-6 sm:mb-12">
           <span className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em] bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full">
               Question {current_step_index + 1} of {steps.length}
           </span>
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-tight mt-6 mb-2">{currentStep.title}</h1>
+        <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-tight mt-4 sm:mt-6 mb-2">{currentStep.title}</h1>
         {currentStep.description && (
-          <p className="text-zinc-500 dark:text-zinc-400 text-xl mt-4 font-medium max-w-2xl">{currentStep.description}</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-base sm:text-xl mt-3 sm:mt-4 font-medium max-w-2xl">{currentStep.description}</p>
         )}
 
         <div key={current_step_index} className="space-y-16 wizard-step-enter mb-12">
@@ -192,19 +192,20 @@ export function WizardClient() {
               const currentVal = (answers[q.id!] as string) || "";
               return (
                 <div key={q.id} id={`question-${q.id}`}>
-                  <div className="flex items-center gap-3 mb-6">
-                     <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-xs">#</div>
-                     <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{q.question_text}</h3>
+                  <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                     <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-xs shrink-0">#</div>
+                     <h3 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{q.question_text}</h3>
                   </div>
                   <div className="relative group max-w-sm">
-                    <input 
+                    <input
                       type="number"
+                      inputMode="numeric"
                       value={currentVal}
                       onChange={(e) => {
                         const val = Math.max(1, Math.min(16, parseInt(e.target.value) || 1));
                         setAnswer(q.id!, String(val));
                       }}
-                      className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-[32px] px-10 py-6 text-2xl font-black text-zinc-900 dark:text-white outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
+                      className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-[24px] sm:rounded-[32px] px-6 sm:px-10 py-5 sm:py-6 text-2xl font-black text-zinc-900 dark:text-white outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
                       placeholder="1 – 16"
                       min={1}
                       max={16}
@@ -286,11 +287,11 @@ export function WizardClient() {
       {/* Sticky Navigation Bar */}
       {!showGate && (
         <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pb-5 pt-3 bg-gradient-to-t from-white/95 dark:from-zinc-950/95 to-transparent backdrop-blur-sm">
-          <div className="w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-[0_-4px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_40px_rgba(0,0,0,0.3)] rounded-3xl flex items-center justify-between p-3 md:p-4 ring-1 ring-zinc-900/5 dark:ring-white/5 transition-all">
+          <div className="w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-[0_-4px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_40px_rgba(0,0,0,0.3)] rounded-3xl flex items-center justify-between p-3 md:p-4 ring-1 ring-zinc-900/5 dark:ring-white/5 transition-all" style={{paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))'}} >
             <button
               onClick={previousStep}
               disabled={current_step_index === 0}
-              className="group h-12 md:h-14 px-6 text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
+              className="group h-12 md:h-14 px-8 md:px-6 text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 disabled:opacity-0 disabled:pointer-events-none cursor-pointer touch-manipulation"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back
             </button>
@@ -308,7 +309,7 @@ export function WizardClient() {
 
             <button
               onClick={handleContinue}
-              className="h-12 md:h-14 px-8 md:px-12 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-2xl shadow-xl shadow-zinc-900/20 dark:shadow-blue-500/30 transition-all flex items-center gap-3 active:scale-95 cursor-pointer"
+              className="h-12 md:h-14 px-8 md:px-12 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-2xl shadow-xl shadow-zinc-900/20 dark:shadow-blue-500/30 transition-all flex items-center gap-3 active:scale-95 cursor-pointer touch-manipulation"
             >
               {isLastStep ? "Generate Quote" : "Continue"}
               {isLastStep ? <ShieldCheck className="w-4 h-4" /> : <ArrowRight className="w-4 h-4 translate-y-[1px]" />}

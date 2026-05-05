@@ -118,6 +118,26 @@ a, button, input, select, textarea {
     transform var(--transition-base);
 }
 
+/* ─── Touch: eliminate 300ms tap delay on all interactive elements ── */
+button, a, [role="button"], [role="radio"], [role="checkbox"] {
+  touch-action: manipulation;
+}
+
+/* ─── Motion: respect user's reduced-motion preference ───────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .motion-safe\:animate-pulse {
+    animation: none !important;
+  }
+  .animate-bounce {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
 /* ─── Background Texture ─────────────────────────────────────── */
 body::before {
   content: "";
@@ -239,6 +259,16 @@ body::before {
 
 @media (min-width: 1024px) {
   .otp-input { width: 58px; height: 66px; }
+}
+
+/* ─── iOS Safe Area Support ──────────────────────────────────── */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ─── Mobile section spacing utility ─────────────────────────── */
+@media (max-width: 640px) {
+  .section-mobile { padding-left: 1rem; padding-right: 1rem; }
 }
 
 /* ─── Selection Highlight ────────────────────────────────────── */

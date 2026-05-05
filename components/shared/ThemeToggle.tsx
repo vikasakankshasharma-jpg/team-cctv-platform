@@ -35,7 +35,7 @@ export function ThemeToggle() {
       className={[
         "group relative w-10 h-10 rounded-2xl flex items-center justify-center",
         "border transition-all duration-200",
-        "hover:shadow-lg active:scale-90",
+        "hover:shadow-lg active:scale-90 touch-manipulation",
         isDark
           ? "bg-zinc-900 border-zinc-700 hover:border-blue-400/60"
           : "bg-white border-zinc-200 hover:border-blue-500/50",
