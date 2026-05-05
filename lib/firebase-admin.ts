@@ -66,7 +66,15 @@ function getAdminApp(): App {
   }
 
   // privateKey from .env has literal \n — replace with actual newlines
-  const formattedKey = privateKey.replace(/\\n/g, "\n");
+  let formattedKey = privateKey.replace(/\\n/g, "\n");
+  
+  // Vercel sometimes injects literal double-quotes if the variable was pasted with quotes
+  if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
+    formattedKey = formattedKey.substring(1, formattedKey.length - 1);
+  }
+  if (formattedKey.startsWith("'") && formattedKey.endsWith("'")) {
+    formattedKey = formattedKey.substring(1, formattedKey.length - 1);
+  }
 
   try {
     return initializeApp({
