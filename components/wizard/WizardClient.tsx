@@ -223,10 +223,31 @@ export function WizardClient() {
 
             return (
               <div key={q.id} id={`question-${q.id}`}>
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-3 mb-4">
                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-xs">?</div>
                    <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{q.question_text}</h3>
                 </div>
+
+                {/* Multi-select indicator badge */}
+                {isMulti && (
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 text-blue-700 dark:text-blue-400 px-4 py-2 rounded-full">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      <span className="text-[11px] font-black uppercase tracking-widest">Select all that apply</span>
+                    </div>
+                    {(currentAns as string[]).length > 0 && (
+                      <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-400 px-3 py-2 rounded-full">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-[11px] font-black uppercase tracking-widest">{(currentAns as string[]).length} Selected</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-0">
                   {q.options?.map((opt) => {
                     const isSelected = isMulti 
@@ -244,6 +265,16 @@ export function WizardClient() {
                     );
                   })}
                 </div>
+
+                {/* Bottom hint for multi-select when nothing selected yet */}
+                {isMulti && (currentAns as string[]).length === 0 && (
+                  <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 mt-4 flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    You can pick <span className="text-zinc-700 dark:text-zinc-300 font-black">more than one</span> option. Click Continue when done.
+                  </p>
+                )}
               </div>
             );
           })}
