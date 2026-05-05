@@ -48,9 +48,9 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased selection:bg-blue-500/30`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+          defaultTheme="light"
+          enableSystem={false}
+          storageKey="team-cctv-theme"
         >
           <Suspense fallback={null}>
             <TrackingProvider />
