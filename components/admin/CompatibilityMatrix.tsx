@@ -2,9 +2,13 @@
 
 import { useState, useMemo, useEffect } from "react";
 import type { ReactNode } from "react";
-import { Folder, FolderOpen, Package, Plus, Link2, RefreshCw, AlertTriangle, Cpu, Tag, Settings, ChevronRight, ChevronDown, Layers } from "lucide-react";
+import { Folder, FolderOpen, Package, Plus, Link2, RefreshCw, AlertTriangle, Cpu, Tag, Settings, ChevronRight, ChevronDown, Layers, GripVertical } from "lucide-react";
 import type { Product } from "@/types";
 import { ProductModal } from "./ProductModal";
+
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -25,6 +29,62 @@ function buildTree(products: Product[]) {
   return Array.from(paths).sort();
 }
 
+// Draggable Node Component
+function SortableTreeNode({ 
+  id, 
+  indent, 
+  isSelected, 
+  isExpanded, 
+  hasChildren, 
+  onClick, 
+  onToggle 
+}: { 
+  id: string, 
+  indent: number, 
+  isSelected: boolean, 
+  isExpanded: boolean, 
+  hasChildren: boolean, 
+  onClick: () => void, 
+  onToggle: () => void 
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    marginLeft: `${indent * 16}px`,
+    zIndex: isDragging ? 10 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style}
+      className={`flex items-center gap-2 py-2 px-2 rounded-xl transition-colors ${
+        isSelected ? "bg-indigo-600/10 text-indigo-400" : "hover:bg-zinc-800/30 text-zinc-400"
+      } ${isDragging ? "opacity-50 ring-2 ring-indigo-500 bg-zinc-900" : ""}`}
+      onClick={onClick}
+    >
+      <div 
+        {...attributes} 
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing p-1 opacity-40 hover:opacity-100 text-zinc-500 hover:text-zinc-300"
+      >
+        <GripVertical className="w-3.5 h-3.5" />
+      </div>
+      <button 
+        onClick={(e) => { e.stopPropagation(); if (hasChildren) onToggle(); }}
+        className="w-5 h-5 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity"
+      >
+        {hasChildren ? (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />) : <div className="w-4 h-4" />}
+      </button>
+      {isExpanded ? <FolderOpen className={`w-4 h-4 ${isSelected ? "text-indigo-400" : "text-blue-400"}`} /> : <Folder className={`w-4 h-4 ${isSelected ? "text-indigo-400" : "text-zinc-500"}`} />}
+      <span className={`text-sm font-bold tracking-wide cursor-pointer ${isSelected ? "text-indigo-100" : "text-zinc-300"}`}>
+        {getLeafName(id)}
+      </span>
+    </div>
+  );
+}
+
 function getIndent(path: string) {
   return path.split("/").length - 1;
 }
@@ -41,13 +101,42 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
+  const [customSortOrder, setCustomSortOrder] = useState<string[]>([]);
+
+  // Setup sensors for drag-and-drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  useEffect(() => {
+    // Load custom order from localStorage
+    try {
+      const saved = localStorage.getItem("catalog_tree_order");
+      if (saved) setCustomSortOrder(JSON.parse(saved));
+    } catch(e) {}
+  }, []);
 
   // Sync state if initialProducts changes
   useEffect(() => {
     setProducts(initialProducts);
   }, [initialProducts]);
 
-  const treePaths = useMemo(() => buildTree(products), [products]);
+  const treePaths = useMemo(() => {
+    const defaultSorted = buildTree(products);
+    // If we have a custom sort order, sort by it
+    if (customSortOrder.length > 0) {
+      return [...defaultSorted].sort((a, b) => {
+        const indexA = customSortOrder.indexOf(a);
+        const indexB = customSortOrder.indexOf(b);
+        if (indexA === -1 && indexB === -1) return 0;
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+    }
+    return defaultSorted;
+  }, [products, customSortOrder]);
 
   // Expand root level by default
   useEffect(() => {
@@ -85,6 +174,21 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
     return products.filter(p => p.catalog_path && p.catalog_path.startsWith(selectedPath));
   }, [products, selectedPath]);
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = treePaths.indexOf(active.id as string);
+      const newIndex = treePaths.indexOf(over.id as string);
+      
+      const newOrder = [...treePaths];
+      newOrder.splice(oldIndex, 1);
+      newOrder.splice(newIndex, 0, active.id as string);
+      
+      setCustomSortOrder(newOrder);
+      localStorage.setItem("catalog_tree_order", JSON.stringify(newOrder));
+    }
+  };
+
   const renderTreeNodes = () => {
     // Basic tree rendering algorithm
     const nodes: ReactNode[] = [];
@@ -101,26 +205,16 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
         const isSelected = selectedPath === path;
 
         nodes.push(
-          <div key={path} className="flex flex-col">
-            <div 
-              className={`flex items-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-colors ${
-                isSelected ? "bg-indigo-600/10 text-indigo-400" : "hover:bg-zinc-800/30 text-zinc-400"
-              }`}
-              style={{ marginLeft: `${indent * 16}px` }}
-              onClick={() => setSelectedPath(path)}
-            >
-              <button 
-                onClick={(e) => { e.stopPropagation(); if (hasChildren) toggleExpand(path); }}
-                className="w-5 h-5 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity"
-              >
-                {hasChildren ? (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />) : <div className="w-4 h-4" />}
-              </button>
-              {isExpanded ? <FolderOpen className={`w-4 h-4 ${isSelected ? "text-indigo-400" : "text-blue-400"}`} /> : <Folder className={`w-4 h-4 ${isSelected ? "text-indigo-400" : "text-zinc-500"}`} />}
-              <span className={`text-sm font-bold tracking-wide ${isSelected ? "text-indigo-100" : "text-zinc-300"}`}>
-                {getLeafName(path)}
-              </span>
-            </div>
-          </div>
+          <SortableTreeNode
+            key={path}
+            id={path}
+            indent={indent}
+            isSelected={isSelected}
+            isExpanded={isExpanded}
+            hasChildren={hasChildren}
+            onClick={() => setSelectedPath(path)}
+            onToggle={() => toggleExpand(path)}
+          />
         );
       }
     });
@@ -164,7 +258,13 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
                 <p className="text-[10px] text-zinc-600 mt-1 px-4">Edit a product and assign it a Catalog Path (e.g., CCTV/Cameras/IP).</p>
               </div>
             ) : (
-              renderTreeNodes()
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={treePaths} strategy={verticalListSortingStrategy}>
+                  <div className="flex flex-col">
+                    {renderTreeNodes()}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </div>
