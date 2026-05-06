@@ -51,16 +51,17 @@ export default function RulesClient({ initialRules }: RulesClientProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this rule?")) {
-      try {
-        const res = await fetch(`/api/admin/recommendation-rules/${id}`, { method: "DELETE" });
-        if (res.ok) {
-          setRules(prev => prev.filter(r => r.id !== id));
-          toast.success("Rule deleted successfully");
-        }
-      } catch (err) {
+    if (!window.confirm("Delete this rule? Leads may fall back to the default recommendation.")) return;
+    try {
+      const res = await fetch(`/api/admin/recommendation-rules/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setRules(prev => prev.filter(r => r.id !== id));
+        toast.success("Rule deleted");
+      } else {
         toast.error("Failed to delete rule");
       }
+    } catch (err) {
+      toast.error("Failed to delete rule");
     }
   };
 

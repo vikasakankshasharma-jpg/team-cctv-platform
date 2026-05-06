@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { HandCoins, CheckCircle2, AlertCircle, Loader2, Search, FileBox } from "lucide-react";
+import { HandCoins, CheckCircle2, AlertCircle, Loader2, Search } from "lucide-react";
 import type { CommissionRecord } from "@/types";
 import { PageHeader } from "./PageHeader";
 import { markCommissionPaid } from "@/app/actions/commissions";
+import { toast } from "sonner";
 
 interface CommissionLedgerClientProps {
   initialRecords: CommissionRecord[];
@@ -25,14 +26,14 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
   );
 
   const handleMarkPaid = async (id: string) => {
-    if (!confirm("Are you sure you want to mark this commission as settled?")) return;
-    
+    if (!window.confirm("Mark this commission as paid? This cannot be undone.")) return;
     setIsProcessing(id);
     try {
       await markCommissionPaid(id);
+      toast.success("Commission marked as paid");
     } catch (error) {
       console.error("Failed to settle commission:", error);
-      alert("Error settling commission. Please try again.");
+      toast.error("Failed to settle commission. Please try again.");
     } finally {
       setIsProcessing(null);
     }
@@ -45,8 +46,8 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
       <PageHeader
         icon={HandCoins}
         title="Commission Ledger"
-        description="Monitor, audit, and finalize referral incentive settlements for the Catalyst network."
-        badge={`${pendingCount} Pending Distributions`}
+        description="Track and settle referral commissions for all active promoters."
+        badge={`${pendingCount} Pending`}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -72,8 +73,8 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
           <p className="text-5xl font-black text-emerald-600 dark:text-emerald-500 tracking-tighter group-hover:scale-105 origin-left transition-transform">₹{stats.totalPaid.toLocaleString('en-IN')}</p>
           <div className="flex items-center gap-3 mt-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-             Audit Managed Asset
-          </div>
+              Fully settled
+           </div>
         </div>
       </div>
 
@@ -83,7 +84,7 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-500 transition-colors" />
             <input
               type="text"
-              placeholder="Query Ledger (Agent, Record ID...)"
+              placeholder="Filter by promoter name..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all font-bold placeholder-zinc-400 dark:placeholder-zinc-700 shadow-inner"
@@ -99,14 +100,14 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-zinc-300">
               <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.25em] font-black">
-                <tr>
-                  <th className="px-8 py-6">Payout Manifest</th>
-                  <th className="px-8 py-6">Agent Origin</th>
-                  <th className="px-8 py-6 text-right">Net Business</th>
-                  <th className="px-8 py-6 text-right">Yield Incentive</th>
-                  <th className="px-8 py-6 text-center">Settlement</th>
-                  <th className="px-8 py-6 text-right">Action</th>
-                </tr>
+                 <tr className="text-[9px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-600">
+                   <th className="px-8 py-6">Record</th>
+                   <th className="px-8 py-6">Promoter</th>
+                   <th className="px-8 py-6 text-right">Sale Value</th>
+                   <th className="px-8 py-6 text-right">Commission</th>
+                   <th className="px-8 py-6 text-center">Status</th>
+                   <th className="px-8 py-6 text-right">Action</th>
+                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40 text-zinc-500 dark:text-zinc-400 font-medium">
                 {filteredRecords.length === 0 ? (
@@ -114,7 +115,7 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
                     <td colSpan={6} className="px-8 py-32 text-center">
                       <div className="flex flex-col items-center gap-4 opacity-50">
                         <HandCoins className="w-12 h-12 text-zinc-300 dark:text-zinc-800" />
-                        <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">No Commission Modules Resolved</p>
+                        <p className="text-sm font-medium text-zinc-400 dark:text-zinc-600">No records found matching your search</p>
                       </div>
                     </td>
                   </tr>
@@ -123,14 +124,14 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
                     <tr key={record.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all group/row">
                       <td className="px-8 py-6">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">REF-{record.id!.slice(-8).toUpperCase()}</span>
-                          <span className="text-[9px] font-bold text-zinc-300 dark:text-zinc-700 mt-2 uppercase tracking-tighter italic">LEAD NODE: {record.lead_id.slice(-8).toUpperCase()}</span>
+                        <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-mono">REF-{record.id!.slice(-8).toUpperCase()}</span>
+                           <span className="text-[9px] font-medium text-zinc-400 dark:text-zinc-600 mt-1 block">Lead: {record.lead_id.slice(-8).toUpperCase()}</span>
                         </div>
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex flex-col">
                             <span className="font-black text-zinc-900 dark:text-white group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-colors text-base tracking-tight uppercase">
-                            {promoterMap[record.promoter_id] || "System Unlinked"}
+                            {promoterMap[record.promoter_id] || "Unknown"}
                           </span>
                           <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 mt-1 uppercase tracking-widest bg-zinc-50 dark:bg-zinc-950/40 px-2 py-0.5 rounded border border-zinc-100 dark:border-zinc-800/60 w-fit shadow-inner">{record.promoter_id}</span>
                         </div>
@@ -138,7 +139,7 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
                       <td className="px-8 py-6 text-right">
                         <div className="flex flex-col items-end">
                           <span className="font-bold text-zinc-400 dark:text-zinc-500 text-sm italic">₹{record.ex_tax_amount.toLocaleString('en-IN')}</span>
-                          <span className="text-[8px] font-black text-zinc-300 dark:text-zinc-700 uppercase tracking-widest mt-1">Ex-Tax Capture</span>
+                           <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest mt-1">Ex-Tax Sale</span>
                         </div>
                       </td>
                       <td className="px-8 py-6 text-right">
@@ -153,14 +154,14 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
                       </td>
                       <td className="px-8 py-6 text-center">
                         {record.status === 'paid' ? (
-                          <div className="flex items-center justify-center gap-2 text-emerald-500/60">
+                          <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-500">
                              <CheckCircle2 className="w-3.5 h-3.5" />
-                             <span className="text-[10px] font-black uppercase tracking-widest">Secured</span>
+                             <span className="text-[10px] font-black uppercase tracking-widest">Paid</span>
                           </div>
                         ) : (
                           <div className="flex items-center justify-center gap-2 text-amber-500">
                              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                             <span className="text-[10px] font-black uppercase tracking-widest">Unreleased</span>
+                             <span className="text-[10px] font-black uppercase tracking-widest">Pending</span>
                           </div>
                         )}
                       </td>
@@ -176,13 +177,13 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
                              ) : (
                                <HandCoins className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
                              )}
-                             Commit Payout
+                            Mark Paid
                            </button>
                         ) : (
-                           <div className="text-zinc-300 dark:text-zinc-700 text-[10px] font-black uppercase tracking-widest flex justify-end items-center gap-3 group-hover/row:text-zinc-400 dark:group-hover/row:text-zinc-500 transition-colors">
-                             <div className="w-8 h-[1px] bg-zinc-100 dark:bg-zinc-800" />
-                             Immutable Log
-                           </div>
+                            <div className="text-zinc-300 dark:text-zinc-700 text-[10px] font-bold uppercase tracking-widest flex justify-end items-center gap-2">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500/40" />
+                              Settled
+                            </div>
                         )}
                       </td>
                     </tr>

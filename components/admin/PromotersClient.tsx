@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { BadgeDollarSign, Plus, UserCheck, UserX, Settings2, Phone } from "lucide-react";
+import { BadgeDollarSign, Plus, UserX, Settings2, Phone } from "lucide-react";
 import type { Promoter } from "@/types";
 import { PromoterModal } from "./PromoterModal";
 import { PageHeader } from "./PageHeader";
 import { createPromoter, updatePromoter, banPromoter } from "@/app/actions/promoters";
+import { toast } from "sonner";
 
 interface PromotersClientProps {
   initialPromoters: Promoter[];
@@ -26,13 +27,13 @@ export function PromotersClient({ initialPromoters }: PromotersClientProps) {
   };
 
   const handleBan = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to ban/disable ${name}? They will no longer be able to claim new leads.`)) {
-      try {
-        await banPromoter(id);
-      } catch (error) {
-        console.error("Failed to ban promoter:", error);
-        alert("Failed to ban promoter");
-      }
+    if (!window.confirm(`Disable ${name}? They will no longer receive new leads.`)) return;
+    try {
+      await banPromoter(id);
+      toast.success(`${name} has been disabled`);
+    } catch (error) {
+      console.error("Failed to disable promoter:", error);
+      toast.error("Failed to disable promoter");
     }
   };
 
@@ -70,11 +71,11 @@ export function PromotersClient({ initialPromoters }: PromotersClientProps) {
           <table className="w-full text-left text-sm text-zinc-300">
             <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.2em] font-black">
               <tr>
-                <th className="px-8 py-6">Promoter Identity</th>
-                <th className="px-8 py-6 text-center">Referral Cryptogram</th>
-                <th className="px-8 py-6 text-right">Aggregate Yield</th>
-                <th className="px-8 py-6 text-center">Network Integrity</th>
-                <th className="px-8 py-6 text-center">Orchestration</th>
+                <th className="px-8 py-6">Promoter</th>
+                <th className="px-8 py-6 text-center">Referral Code</th>
+                <th className="px-8 py-6 text-right">Total Business</th>
+                <th className="px-8 py-6 text-center">Status</th>
+                <th className="px-8 py-6 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40 text-zinc-500 dark:text-zinc-400 font-medium">
@@ -86,8 +87,8 @@ export function PromotersClient({ initialPromoters }: PromotersClientProps) {
                         <BadgeDollarSign className="w-8 h-8 text-zinc-300 dark:text-zinc-700" />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-zinc-900 dark:text-white font-black text-xl uppercase tracking-widest leading-none">Network Latent</p>
-                        <p className="text-zinc-400 dark:text-zinc-600 text-xs font-bold uppercase tracking-tight">Deploy your first referral agent to expand the mesh.</p>
+                        <p className="text-zinc-900 dark:text-white font-black text-xl uppercase tracking-widest leading-none">No Promoters Yet</p>
+                        <p className="text-zinc-400 dark:text-zinc-600 text-xs font-medium">Add your first referral agent to start tracking commissions.</p>
                       </div>
                     </div>
                   </td>
@@ -117,14 +118,14 @@ export function PromotersClient({ initialPromoters }: PromotersClientProps) {
                     </td>
                     <td className="px-8 py-6 text-center">
                       {agent.is_active ? (
-                        <span className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/10 shadow-inner">
+                        <span className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20 shadow-inner">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          Authorized
+                          Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-2 bg-red-50 dark:bg-red-500/5 text-red-600 dark:text-red-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-100 dark:border-red-500/10 shadow-inner">
+                        <span className="inline-flex items-center gap-2 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-100 dark:border-red-500/20 shadow-inner">
                           <UserX className="w-3.5 h-3.5" />
-                          Blacklisted
+                          Disabled
                         </span>
                       )}
                     </td>
@@ -133,7 +134,7 @@ export function PromotersClient({ initialPromoters }: PromotersClientProps) {
                         <button
                           onClick={() => handleEdit(agent)}
                           className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 hover:text-blue-600 dark:hover:text-blue-500 hover:border-blue-200 dark:hover:border-blue-500/30 flex items-center justify-center transition-all shadow-inner active:scale-90"
-                          title="Modify Credentials"
+                          title="Edit promoter"
                         >
                           <Settings2 className="w-4 h-4" />
                         </button>
@@ -141,7 +142,7 @@ export function PromotersClient({ initialPromoters }: PromotersClientProps) {
                           <button
                             onClick={() => agent.id && handleBan(agent.id, agent.name)}
                             className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-500 hover:border-red-200 dark:hover:border-red-500/30 flex items-center justify-center transition-all shadow-inner active:scale-90"
-                            title="Terminate Access"
+                            title="Disable promoter"
                           >
                             <UserX className="w-4 h-4" />
                           </button>
