@@ -17,7 +17,7 @@ test.describe('CCTV Wizard Smoke Test', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     
     // 5. Verify progress indicator exists
-    await expect(page.getByText(/Your Quote Progress/i)).toBeVisible();
+    await expect(page.getByText(/Your Progress/i)).toBeVisible();
     await expect(page.getByText(/\d+%/)).toBeVisible();
   });
 
