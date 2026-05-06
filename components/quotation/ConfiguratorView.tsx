@@ -40,6 +40,7 @@ const ShareDialog = dynamic(() => import("./ShareDialog").then(mod => mod.ShareD
 
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, RecommendedOutput } from "@/types";
 import { useRouter } from "next/navigation";
+import { trackEvent } from "@/components/shared/TrackingProvider";
 
 interface ConfiguratorViewProps {
   lead: Lead;
@@ -109,6 +110,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       surface_types: surfaceTypes,
       brand_preference: (lead.wizard_answers["q_brand"] as string) || "recommend",
       installation_timeline: (lead.wizard_answers["q_timeline"] as string) || "research",
+    });
+
+    trackEvent("view_quote", {
+      lead_id: lead.id,
+      property_type: lead.property_type,
+      technology: lead.technology_choice
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -283,6 +290,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const handleSaveQuote = async (currentLead: Lead) => {
     if (!pricing_results.recommended || !pricingCache.settings) return;
     setIsSaving(true);
+    trackEvent("download_quote", {
+      lead_id: currentLead.id,
+      total_value: pricing_results.recommended.total_payable
+    });
 
     try {
       const payload = {
@@ -329,6 +340,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const handleBooking = async (currentLead: Lead) => {
     if (!currentLead.address) return;
     setIsSaving(true);
+    trackEvent("book_visit", {
+      lead_id: currentLead.id,
+      pincode: currentLead.address.pincode
+    });
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",

@@ -23,6 +23,7 @@ import type {
   Addon,
 } from "@/types";
 import { calculatePricing } from "@/lib/pricing-engine";
+import { trackEvent } from "@/components/shared/TrackingProvider";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -334,12 +335,17 @@ export function CompareCards({
             key={`${card.technology}-${card.option}`}
             role="region"
             aria-labelledby={`tier-label-${idx}`}
-            onClick={() =>
+            onClick={() => {
+              trackEvent("select_plan", {
+                technology: card.technology,
+                option: card.option,
+                price: card.pricing.total_payable
+              });
               onSelectCheckout({
                 technology: card.technology,
                 option: card.option,
-              })
-            }
+              });
+            }}
             className={`relative p-5 sm:p-6 sm:p-7 rounded-[32px] sm:rounded-[36px] transition-all duration-300 cursor-pointer border-2 flex-none w-[82vw] sm:w-auto snap-center touch-manipulation active:scale-[0.98] ${cardClass.replace('scale-105', 'sm:scale-105')}`}
           >
             {/* ── Top badge: Best Value ────────────────────────────────────── */}

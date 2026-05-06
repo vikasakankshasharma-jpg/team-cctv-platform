@@ -6,6 +6,7 @@ import { ProgressBar } from "@/components/wizard/ProgressBar";
 import { OptionCard } from "@/components/wizard/OptionCard";
 import { LeadGate } from "@/components/wizard/LeadGate";
 import { ArrowLeft, ArrowRight, ShieldAlert, Loader2, ShieldCheck, Lock, CheckCircle2 } from "lucide-react";
+import { trackEvent } from "@/components/shared/TrackingProvider";
 
 export function WizardClient({ initialSteps, initialSettings }: { initialSteps?: any[], initialSettings?: any }) {
   const { steps, is_loaded, current_step_index, answers, setSteps, setAnswer, nextStep, previousStep } = useWizardStore();
@@ -133,6 +134,10 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
         if (isValid && !isLastStep) {
           setTimeout(() => {
+            trackEvent("wizard_step_complete", {
+              step_index: current_step_index,
+              step_title: currentStep.title,
+            });
             nextStep();
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }, 400);
@@ -161,6 +166,10 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     if (isLastStep) {
       setShowGate(true);
     } else {
+      trackEvent("wizard_step_complete", {
+        step_index: current_step_index,
+        step_title: currentStep.title,
+      });
       nextStep();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
