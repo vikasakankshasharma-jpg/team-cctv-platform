@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { FollowUpCampaign } from "@/types";
-import { Plus, Edit2, Trash2, Power, MessageCircle, Clock, Percent } from "lucide-react";
+import { Plus, Edit2, Trash2, Power, MessageCircle, Clock, Percent, Zap } from "lucide-react";
 import { updateCampaign, deleteCampaign, createCampaign } from "@/app/actions/campaigns";
+import { toast } from "sonner";
 
 interface CampaignsClientProps {
   initialCampaigns: FollowUpCampaign[];
@@ -16,13 +17,14 @@ export default function CampaignsClient({ initialCampaigns }: CampaignsClientPro
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this campaign?")) return;
+    if (!window.confirm("Delete this campaign? This cannot be undone.")) return;
     try {
       await deleteCampaign(id);
       setCampaigns(campaigns.filter(c => c.id !== id));
+      toast.success("Campaign deleted");
     } catch (e) {
       console.error(e);
-      alert("Failed to delete campaign");
+      toast.error("Failed to delete campaign");
     }
   };
 
@@ -30,9 +32,10 @@ export default function CampaignsClient({ initialCampaigns }: CampaignsClientPro
     try {
       await updateCampaign(campaign.id!, { is_active: !campaign.is_active });
       setCampaigns(campaigns.map(c => c.id === campaign.id ? { ...c, is_active: !c.is_active } : c));
+      toast.success(campaign.is_active ? "Campaign paused" : "Campaign activated");
     } catch (e) {
       console.error(e);
-      alert("Failed to toggle campaign");
+      toast.error("Failed to update campaign");
     }
   };
 
@@ -59,23 +62,27 @@ export default function CampaignsClient({ initialCampaigns }: CampaignsClientPro
         const newCampaign = await createCampaign(data as Omit<FollowUpCampaign, "id" | "created_at">);
         setCampaigns([newCampaign, ...campaigns]);
       }
+      toast.success(isEditing ? "Campaign updated" : "Campaign created");
       setIsEditing(null);
       setIsCreating(false);
     } catch (error) {
       console.error(error);
-      alert("Failed to save campaign.");
+      toast.error("Failed to save campaign");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-black uppercase tracking-widest text-zinc-900 dark:text-white">Active Campaigns</h2>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight">Follow-Up Campaigns</h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Automated outreach triggered by lead status changes.</p>
+        </div>
         <button
           onClick={() => setIsCreating(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95"
         >
           <Plus className="w-4 h-4" /> New Campaign
         </button>
@@ -83,11 +90,15 @@ export default function CampaignsClient({ initialCampaigns }: CampaignsClientPro
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {campaigns.map(campaign => (
-          <div key={campaign.id} className={`bg-white dark:bg-zinc-900 border ${campaign.is_active ? 'border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'border-zinc-200 dark:border-zinc-800 opacity-70'} rounded-[24px] p-6 transition-all`}>
+          <div key={campaign.id} className={`bg-white dark:bg-zinc-900/50 border rounded-[24px] p-6 transition-all shadow-md dark:shadow-xl ${
+            campaign.is_active
+              ? 'border-blue-200 dark:border-blue-500/20 shadow-blue-500/5'
+              : 'border-zinc-100 dark:border-zinc-800/60 opacity-60'
+          }`}>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="font-black text-sm uppercase tracking-widest text-zinc-900 dark:text-white">{campaign.name}</h3>
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1 block">Trigger: {campaign.trigger_status}</span>
+                <h3 className="font-black text-sm text-zinc-900 dark:text-white tracking-tight">{campaign.name}</h3>
+                <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5 block">Triggers on: <span className="font-bold text-zinc-700 dark:text-zinc-300">{campaign.trigger_status}</span></span>
               </div>
               <button 
                 onClick={() => handleToggle(campaign)}
@@ -128,8 +139,8 @@ export default function CampaignsClient({ initialCampaigns }: CampaignsClientPro
       </div>
 
       {(isEditing || isCreating) && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[32px] p-8 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl rounded-[32px] p-8 max-h-[90vh] overflow-y-auto shadow-2xl">
             <h2 className="text-xl font-black uppercase tracking-widest mb-6 text-zinc-900 dark:text-white">
               {isCreating ? "Create Follow-Up Campaign" : "Edit Campaign"}
             </h2>

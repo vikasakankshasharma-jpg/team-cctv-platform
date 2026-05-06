@@ -98,13 +98,13 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor }: Leads
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-10 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all appearance-none cursor-pointer font-black uppercase tracking-widest shadow-inner shadow-zinc-900/5 dark:shadow-none"
             >
-              <option value="all">Global Status</option>
-              <option value="new">Incoming (New)</option>
-              <option value="contacted">Synthesized</option>
-              <option value="site_visit">Deployment</option>
-              <option value="quoted">Finalizing</option>
-              <option value="won">Captured</option>
-              <option value="lost">Terminated</option>
+              <option value="all">All Statuses</option>
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="site_visit">Site Visit</option>
+              <option value="quoted">Quoted</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
             </select>
           </div>
         </div>
@@ -115,9 +115,9 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor }: Leads
           <table className="w-full text-left text-sm text-zinc-300">
             <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 font-black uppercase text-[10px] tracking-[0.25em]">
               <tr>
-                <th className="px-8 py-6">{activeTab === "standard" ? "Identity & Contact" : "Contact Details"}</th>
-                <th className="px-8 py-6">{activeTab === "standard" ? "Topology & Optic" : "Volume Requirements"}</th>
-                <th className="px-8 py-6">{activeTab === "standard" ? "Geo-Logistics" : "Site Archetype"}</th>
+                <th className="px-8 py-6">{activeTab === "standard" ? "Customer" : "Contact"}</th>
+                <th className="px-8 py-6">{activeTab === "standard" ? "System & Camera" : "Volume"}</th>
+                <th className="px-8 py-6">{activeTab === "standard" ? "Location" : "Site Type"}</th>
                 <th className="px-8 py-6">{activeTab === "standard" ? "Source Origin" : "Captured At"}</th>
                 <th className="px-8 py-6 text-center">Lifecycle Status</th>
                 <th className="px-8 py-6 text-right">Action</th>

@@ -22,8 +22,20 @@ interface ReportsClientProps {
   };
 }
 
-export function ReportsClient({ data, aggregates }: ReportsClientProps) {
+export function ReportsClient({ data: allData, aggregates }: ReportsClientProps) {
   const [dateFilter, setDateFilter] = useState("");
+
+  // Apply date filter to data
+  const data = allData.filter(({ lead }) => {
+    if (!dateFilter) return true;
+    const daysAgo = dateFilter === "year" ? 365 : parseInt(dateFilter);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - daysAgo);
+    const createdAt = (lead.created_at as any)?.seconds
+      ? new Date((lead.created_at as any).seconds * 1000)
+      : new Date(lead.created_at as string);
+    return createdAt >= cutoff;
+  });
 
   const exportToCSV = () => {
     // CSV Headers
@@ -83,9 +95,9 @@ export function ReportsClient({ data, aggregates }: ReportsClientProps) {
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
               >
-                <option value="">Last 30 Cycles</option>
-                <option value="90">Last 90 Cycles</option>
-                <option value="year">Full Epoch</option>
+                <option value="">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="year">Full year</option>
               </select>
             </div>
             <button
@@ -161,7 +173,7 @@ export function ReportsClient({ data, aggregates }: ReportsClientProps) {
               <p className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-tighter">Asset Distribution Matrix</p>
            </div>
            <div className="space-y-4">
-              {['Home', 'Office', 'Warehouse', 'Bungalow'].map(type => {
+              {['Home', 'Office', 'Shop', 'Warehouse', 'Bungalow', 'Factory', 'Other'].map(type => {
                 const count = data.filter(d => d.lead.property_type === type.toLowerCase()).length;
                 const percent = data.length > 0 ? (count / data.length) * 100 : 0;
                 return (
