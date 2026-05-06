@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { lead_id, quoteData, address } = body;
+    const { lead_id, quoteData, address, firebase_uid } = body;
 
     if (!lead_id || !quoteData) {
       return NextResponse.json({ error: "Missing lead_id or quoteData" }, { status: 400 });
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ id: "mock-quote-id", message: "Mock quote processed" }, { status: 201 });
     }
 
-    // Verify lead exists and user has access (here simplified, in prod verify token matches lead owner)
+    // Verify lead exists and firebase_uid matches (ownership check)
     if (!adminDb) {
        return NextResponse.json({ error: "Database not initialized" }, { status: 500 });
     }
@@ -36,6 +36,11 @@ export async function POST(request: NextRequest) {
 
     if (!leadDoc.exists) {
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+    }
+
+    // Ownership verification: prevent cross-user quote submission
+    if (firebase_uid && leadDoc.data()?.firebase_uid !== firebase_uid) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Prepare quote document
@@ -75,3 +80,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

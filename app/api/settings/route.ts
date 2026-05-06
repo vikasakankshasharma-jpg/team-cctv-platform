@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { getSettingsConfig } from "@/lib/queries";
+import { verifySession } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const session = await verifySession();
+  if (!session.isAuthenticated) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const settings = await getSettingsConfig();
     if (!settings) {
@@ -16,3 +22,4 @@ export async function GET() {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+

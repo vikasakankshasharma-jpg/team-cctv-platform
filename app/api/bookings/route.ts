@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { lead_id, address, quote_id } = body;
+    const { lead_id, address, quote_id, firebase_uid } = body;
 
     if (!lead_id || !address) {
       return NextResponse.json({ error: "Missing lead_id or address" }, { status: 400 });
@@ -23,6 +23,15 @@ export async function POST(request: NextRequest) {
 
     if (!adminDb) {
        return NextResponse.json({ error: "Database not initialized" }, { status: 500 });
+    }
+
+    // Ownership verification: ensure caller owns this lead
+    const leadDoc = await adminDb.collection("leads").doc(lead_id).get();
+    if (!leadDoc.exists) {
+      return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+    }
+    if (firebase_uid && leadDoc.data()?.firebase_uid !== firebase_uid) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Prepare booking document in a top-level 'bookings' collection
@@ -48,3 +57,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
