@@ -32,28 +32,6 @@ const nextConfig: NextConfig = {
             // Block microphone/camera; allow geolocation for site map feature
             value: 'camera=(), microphone=(), geolocation=(self)',
           },
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              // Scripts: GA4 + GTM + Meta Pixel + Sentry CDN
-              "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net https://js.sentry-cdn.com https://browser.sentry-cdn.com",
-              // Styles: Google Fonts
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              // Fonts: Google Fonts CDN
-              "font-src 'self' https://fonts.gstatic.com",
-              // Images: Firebase Storage + GA tag manager pixel
-              "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://www.googletagmanager.com",
-              // Connections: Firebase + GA4 + Sentry + Pincode API + Maps
-              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google-analytics.com https://www.googletagmanager.com https://o*.ingest.sentry.io https://api.postalpincode.in https://nominatim.openstreetmap.org",
-              // Frames: Google Maps embed (SiteDetailsModal)
-              "frame-src 'self' https://www.google.com https://maps.google.com",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "upgrade-insecure-requests",
-            ].join('; '),
-          },
         ],
       },
       // ── Long-cache for immutable static assets ────────────────────────────

@@ -43,7 +43,7 @@ declare global {
   }
 }
 
-export function TrackingProvider() {
+export function TrackingProvider({ nonce }: { nonce?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -71,10 +71,12 @@ export function TrackingProvider() {
           <Script
             strategy="afterInteractive"
             src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+            nonce={nonce}
           />
           <Script
             id="gtag-init"
             strategy="afterInteractive"
+            nonce={nonce}
             dangerouslySetInnerHTML={{
               __html: `
                 window.dataLayer = window.dataLayer || [];
@@ -96,6 +98,7 @@ export function TrackingProvider() {
         <Script
           id="fb-pixel"
           strategy="afterInteractive"
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
               !function(f,b,e,v,n,t,s)

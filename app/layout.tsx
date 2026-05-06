@@ -7,6 +7,7 @@ import { TrackingProvider } from "@/components/shared/TrackingProvider";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { WebVitalsReporter } from "@/components/shared/WebVitalsReporter";
 import { Suspense } from "react";
+import { headers } from "next/headers";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -56,11 +57,14 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const nonce = headersList.get("x-nonce") || undefined;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -81,7 +85,7 @@ export default function RootLayout({
           storageKey="team-cctv-theme"
         >
           <Suspense fallback={null}>
-            <TrackingProvider />
+            <TrackingProvider nonce={nonce} />
           </Suspense>
           <WebVitalsReporter />
           <JsonLd />
