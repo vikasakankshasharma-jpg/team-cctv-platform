@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { Product } from "@/types";
-import { Loader2, Plus, Search, Edit2, ShieldCheck, ArrowLeft, Save, X } from "lucide-react";
+import { Loader2, Plus, ShieldCheck, ArrowLeft, Save, X } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ProductInventory } from "@/components/admin/ProductInventory";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [featureTags, setFeatureTags] = useState<any[]>([]); // NEW
+  const [featureTags, setFeatureTags] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [search, setSearch] = useState("");
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
@@ -54,7 +54,9 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleToggleActive = async (id: string, currentStatus: boolean) => {
+  const handleToggleActive = async (product: Product) => {
+    const id = product.id!;
+    const currentStatus = product.is_active;
     try {
       // Optimistic update
       setProducts(products.map(p => p.id === id ? { ...p, is_active: !currentStatus } : p));
@@ -126,11 +128,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  const filteredProducts = products.filter(p => 
-    p.display_name.toLowerCase().includes(search.toLowerCase()) ||
-    p.technical_name.toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
     <div className="min-h-screen bg-neutral-50 pb-20">
       {/* Header */}
@@ -148,100 +145,28 @@ export default function AdminProductsPage() {
               <p className="text-sm text-neutral-500">Manage pricing, margins, and stock availability.</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 pr-4 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] w-full md:w-64"
-              />
-            </div>
-            <button 
-              onClick={handleAdd}
-              className="flex items-center gap-2 px-4 py-2 bg-[#4F46E5] text-white rounded-lg text-sm font-medium hover:bg-[#4338ca] transition-colors whitespace-nowrap"
-            >
-              <Plus className="w-4 h-4" />
-              Add Product
-            </button>
-          </div>
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 px-4 py-2 bg-[#4F46E5] text-white rounded-lg text-sm font-medium hover:bg-[#4338ca] transition-colors whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </button>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {isLoading ? (
-          <div className="flex justify-center py-20">
+          <div className="flex flex-col items-center gap-4 py-24">
             <Loader2 className="w-8 h-8 animate-spin text-[#4F46E5]" />
+            <p className="text-xs font-black text-neutral-400 uppercase tracking-widest">Loading catalog…</p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-600 font-medium">
-                  <tr>
-                    <th className="px-6 py-4">Product Name</th>
-                    <th className="px-6 py-4">Category</th>
-                    <th className="px-6 py-4">Tech</th>
-                    <th className="px-6 py-4 text-right">Base Cost</th>
-                    <th className="px-6 py-4 text-right">Margin %</th>
-                    <th className="px-6 py-4 text-right">Selling Price</th>
-                    <th className="px-6 py-4 text-center">Status</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {filteredProducts.map(product => (
-                    <tr key={product.id} className={`hover:bg-neutral-50 ${!product.is_active ? 'opacity-60' : ''}`}>
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-neutral-900">{product.display_name}</div>
-                        <div className="text-xs text-neutral-500 font-mono mt-0.5">{product.technical_name}</div>
-                      </td>
-                      <td className="px-6 py-4 capitalize text-neutral-600">{product.category}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${product.technology === 'IP' ? 'bg-blue-100 text-blue-700' : product.technology === 'HD' ? 'bg-purple-100 text-purple-700' : 'bg-neutral-100 text-neutral-700'}`}>
-                          {product.technology}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right text-neutral-600">
-                        {product.base_cost !== undefined ? `₹${product.base_cost.toLocaleString('en-IN')}` : '-'}
-                      </td>
-                      <td className="px-6 py-4 text-right text-emerald-600 font-medium">
-                        {product.margin_percentage !== undefined ? `${product.margin_percentage}%` : '-'}
-                      </td>
-                      <td className="px-6 py-4 text-right font-semibold text-neutral-900">
-                        ₹{product.unit_price.toLocaleString('en-IN')}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button 
-                          onClick={() => handleToggleActive(product.id!, product.is_active)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${product.is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
-                        >
-                          {product.is_active ? 'In Stock' : 'Out of Stock'}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button 
-                          onClick={() => handleEdit(product)}
-                          className="p-2 text-neutral-400 hover:text-[#4F46E5] hover:bg-indigo-50 rounded-lg transition-colors inline-flex"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredProducts.length === 0 && (
-                    <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-neutral-500">
-                        No products found matching your search.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <ProductInventory
+            products={products}
+            onEdit={handleEdit}
+            onToggle={handleToggleActive}
+          />
         )}
       </div>
 
