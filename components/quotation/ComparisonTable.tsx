@@ -10,7 +10,9 @@ import {
   Monitor,
   Camera,
   Eye,
-  Mic
+  Mic,
+  Cctv,
+  Aperture
 } from "lucide-react";
 import type { 
   Product, 
@@ -161,7 +163,9 @@ export function ComparisonTable({
                   <td className="px-2 md:px-8 py-3 md:py-6">
                     <div className="flex items-center gap-4 cursor-pointer" onClick={() => onSelectCheckout({ technology: row.technology, option: row.option })}>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isCheckout ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 group-hover:bg-zinc-200 group-hover:text-zinc-900'}`}>
-                        {row.technology === "IP" ? <Monitor className="w-5 h-5" /> : <Camera className="w-5 h-5" />}
+                        {row.camProduct?.technical_name.includes('5mp') || row.camProduct?.technical_name.includes('8mp') || row.camProduct?.technical_name.includes('4mp')
+                          ? <Aperture className="w-5 h-5" /> 
+                          : row.technology === "IP" ? <Cctv className="w-5 h-5" /> : <Camera className="w-5 h-5" />}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">

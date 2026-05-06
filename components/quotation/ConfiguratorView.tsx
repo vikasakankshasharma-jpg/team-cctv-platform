@@ -18,7 +18,13 @@ import {
   Info, 
   Check, 
   Loader2,
-  ChevronDown
+  ChevronDown,
+  Minus,
+  Plus,
+  CreditCard,
+  Truck,
+  Handshake,
+  Wrench
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { ComparisonTable } from "./ComparisonTable";
@@ -386,13 +392,23 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                 <label className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em]">System Camera Count</label>
                 <span className="text-xs font-black text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full">{selection.camera_count} Cameras</span>
               </div>
-              <input 
-                type="range" 
-                min="1" max="16" step="1"
-                value={selection.camera_count}
-                onChange={(e) => updateSelection({ camera_count: parseInt(e.target.value) })}
-                className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-zinc-900 dark:accent-blue-600 hover:accent-blue-600 transition-all"
-              />
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => updateSelection({ camera_count: Math.max(1, selection.camera_count - 1) })}
+                  className="w-8 h-8 shrink-0 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-90"
+                ><Minus className="w-4 h-4" /></button>
+                <input 
+                  type="range" 
+                  min="1" max="16" step="1"
+                  value={selection.camera_count}
+                  onChange={(e) => updateSelection({ camera_count: parseInt(e.target.value) })}
+                  className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-zinc-900 dark:accent-blue-600 hover:accent-blue-600 transition-all flex-1"
+                />
+                <button 
+                  onClick={() => updateSelection({ camera_count: Math.min(16, selection.camera_count + 1) })}
+                  className="w-8 h-8 shrink-0 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-90"
+                ><Plus className="w-4 h-4" /></button>
+              </div>
            </div>
 
            <div className="space-y-6">
@@ -411,13 +427,23 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                   <span className="text-[10px] font-black text-zinc-400 uppercase">Days</span>
                 </div>
               </div>
-              <input 
-                type="range" 
-                min="7" max="60" step="1"
-                value={selection.recording_days}
-                onChange={(e) => updateSelection({ recording_days: parseInt(e.target.value) })}
-                className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-zinc-900 dark:accent-blue-600 hover:accent-blue-600 transition-all"
-              />
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => updateSelection({ recording_days: Math.max(7, selection.recording_days - 1) })}
+                  className="w-8 h-8 shrink-0 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-90"
+                ><Minus className="w-4 h-4" /></button>
+                <input 
+                  type="range" 
+                  min="7" max="60" step="1"
+                  value={selection.recording_days}
+                  onChange={(e) => updateSelection({ recording_days: parseInt(e.target.value) })}
+                  className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-zinc-900 dark:accent-blue-600 hover:accent-blue-600 transition-all flex-1"
+                />
+                <button 
+                  onClick={() => updateSelection({ recording_days: Math.min(60, selection.recording_days + 1) })}
+                  className="w-8 h-8 shrink-0 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-90"
+                ><Plus className="w-4 h-4" /></button>
+              </div>
            </div>
         </div>
       </div>
@@ -533,7 +559,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                     { label: 'Storage',      value: selection.recording_days + ' Days Backup' },
                   ];
                   return (
-                    <div className="rounded-[20px] border border-zinc-100 dark:border-zinc-800 overflow-hidden bg-zinc-50 dark:bg-zinc-950 divide-y divide-zinc-100 dark:divide-zinc-800">
+                    <div className="rounded-[24px] border border-zinc-100 dark:border-zinc-800 overflow-hidden bg-zinc-50 dark:bg-zinc-950 divide-y divide-zinc-100 dark:divide-zinc-800">
                       {rows.map(({ label, value }) => (
                         <div key={label} className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
                           <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 shrink-0 whitespace-nowrap">
@@ -570,16 +596,16 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                     return (
                       <label 
                         key={addon.id} 
-                        className={`flex items-center gap-4 p-4 rounded-3xl border transition-all cursor-pointer group/addon ${
+                        className={`flex items-center gap-4 p-4 rounded-[24px] border-2 transition-all duration-300 cursor-pointer group/addon ${
                           isSelected 
-                          ? "border-blue-100 bg-blue-50/20 dark:border-blue-500/20 dark:bg-blue-500/5" 
-                          : "border-zinc-50 dark:border-zinc-800 bg-white dark:bg-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
+                          ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10 shadow-sm" 
+                          : "border-transparent bg-zinc-50 dark:bg-zinc-900 hover:border-zinc-200 dark:hover:border-zinc-800"
                         }`}
                       >
-                        <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${
-                          isSelected ? "bg-blue-600 border-blue-600" : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 group-hover/addon:border-zinc-300"
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-300 ${
+                          isSelected ? "bg-blue-600 border-blue-600 scale-110 shadow-lg shadow-blue-600/30" : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 group-hover/addon:border-zinc-400"
                         }`}>
-                           {isSelected && <Check className="w-3 h-3 text-white font-black" />}
+                           {isSelected && <Check className="w-3.5 h-3.5 text-white font-black" />}
                         </div>
                         <input 
                           type="checkbox" 
@@ -589,8 +615,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                           onChange={() => toggleAddon(addon.id!)}
                         />
                         <div className="flex-1">
-                          <div className="font-black text-[10px] text-zinc-900 dark:text-white leading-tight uppercase tracking-tight">{addon.display_name}</div>
-                          <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-1 tracking-widest">+â‚¹{addon.price.toLocaleString('en-IN')}</div>
+                          <div className={`font-black text-[10px] leading-tight uppercase tracking-tight transition-colors ${isSelected ? "text-blue-900 dark:text-blue-100" : "text-zinc-900 dark:text-white"}`}>{addon.display_name}</div>
+                          <div className={`text-[10px] font-bold mt-1 tracking-widest transition-colors ${isSelected ? "text-blue-600 dark:text-blue-400" : "text-zinc-500 dark:text-zinc-400"}`}>+₹{addon.price.toLocaleString('en-IN')}</div>
                         </div>
                         {isMandatory && <span className="text-[8px] uppercase font-black text-zinc-400 px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-full">Included</span>}
                       </label>
@@ -661,36 +687,45 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                </div>
 
                {/* Payment Terms + AMC Trust Block */}
-               <div className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-3">
-                 <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-3">Payment Terms</div>
-                 <div className="flex justify-between items-center">
-                   <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">Advance (Booking)</span>
-                   <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
-                 </div>
-                 <div className="flex justify-between items-center">
-                   <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">Material Delivery</span>
-                   <span className="text-[10px] font-black text-zinc-900 dark:text-white">80%</span>
-                 </div>
-                 <div className="flex justify-between items-center">
-                   <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">Final Handover</span>
-                   <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
-                 </div>
-                 <div className="pt-3 mt-1 border-t border-dashed border-zinc-200 dark:border-zinc-800 space-y-1.5">
-                   <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-2">After-Sales</div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">AMC 1 Year</span>
-                     <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">5% of Total</span>
+               <div className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-4">
+                 <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-1">Payment Schedule</div>
+                 
+                 <div className="grid grid-cols-3 gap-2">
+                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
+                     <CreditCard className="w-4 h-4 text-blue-500" />
+                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
+                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Advance</span>
                    </div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">AMC 2 Year</span>
-                     <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">8% of Total</span>
+                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
+                     <Truck className="w-4 h-4 text-blue-500" />
+                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">80%</span>
+                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Delivery</span>
                    </div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">AMC 3 Year</span>
-                     <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">10% of Total</span>
+                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
+                     <Handshake className="w-4 h-4 text-emerald-500" />
+                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
+                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Handover</span>
                    </div>
-                   <div className="flex justify-between items-center pt-1">
-                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">Post-Handover Visit</span>
+                 </div>
+
+                 <div className="pt-3 border-t border-dashed border-zinc-200 dark:border-zinc-800">
+                   <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-3">Optional After-Sales (AMC)</div>
+                   <div className="flex gap-2">
+                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
+                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">1 Year</span>
+                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">5% of total</span>
+                     </div>
+                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
+                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">2 Year</span>
+                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">8% of total</span>
+                     </div>
+                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
+                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">3 Year</span>
+                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">10% of total</span>
+                     </div>
+                   </div>
+                   <div className="flex justify-between items-center mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5"><Wrench className="w-3 h-3"/> Post-Handover Visit</span>
                      <span className="text-[10px] font-black text-zinc-900 dark:text-white">&#x20B9;300 / visit</span>
                    </div>
                  </div>

@@ -188,7 +188,7 @@ export default async function QuoteResultPage({
         
         {/* ELITE HEADER SECTION */}
         <div className="max-w-3xl w-full text-center mb-12 sm:mb-24 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-           <div className="inline-flex items-center gap-2 bg-zinc-900 dark:bg-zinc-800 border border-zinc-800 dark:border-zinc-700 text-white font-black px-5 py-2 rounded-full text-[10px] uppercase tracking-[0.3em] mb-6 sm:mb-8 shadow-xl">
+           <div className="inline-flex items-center gap-2 bg-zinc-900 dark:bg-zinc-800 border border-zinc-800 dark:border-zinc-700 text-white font-black px-5 py-2 rounded-full text-[10px] uppercase tracking-[0.15em] mb-6 sm:mb-8 shadow-xl">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
               Calculated for {lead.customer_name}
            </div>
@@ -199,7 +199,7 @@ export default async function QuoteResultPage({
            </h1>
            
            <p className="text-base sm:text-xl md:text-2xl text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed max-w-2xl mx-auto">
-              We have made three great plans for your <span className="text-zinc-900 dark:text-white font-bold">{lead.property_type.toUpperCase()}</span> based on what you need.
+              We have engineered three professional security tiers for your <span className="text-zinc-900 dark:text-white font-bold">{lead.property_type.toUpperCase()}</span>, precisely tailored to your requirements.
            </p>
         </div>
         
@@ -218,12 +218,13 @@ export default async function QuoteResultPage({
         {/* NEXT STEPS TIMELINE */}
         <div className="mt-16 sm:mt-32 w-full max-w-5xl">
            <div className="text-center mb-8 sm:mb-16">
-              <span className="block text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.3em] mb-4">The Road to Security</span>
+              <span className="block text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.15em] mb-4">The Road to Security</span>
               <h3 className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">What Happens Next?</h3>
            </div>
            
            <div className="grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8 relative">
-              <div className="hidden md:block absolute top-8 left-0 w-full h-px bg-zinc-100 dark:bg-zinc-800 -z-10" />
+              {/* CONNECTING LINE */}
+              <div className="hidden md:block absolute top-8 left-1/8 right-1/8 w-3/4 mx-auto h-[2px] bg-gradient-to-r from-transparent via-blue-200 dark:via-blue-800 to-transparent -z-10" />
               
               {[
                 { step: "01", title: "Site Survey", desc: "Book a visit for a precise wiring measurement." },
@@ -231,12 +232,12 @@ export default async function QuoteResultPage({
                 { step: "03", title: "Installation", desc: "Professional setup by our certified team." },
                 { step: "04", title: "Go Live", desc: "System handover with mobile app setup." }
               ].map((item, i) => (
-                <div key={i} className="flex flex-col items-center text-center group">
-                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-xl flex items-center justify-center text-zinc-900 dark:text-white font-black text-base sm:text-xl mb-4 sm:mb-6 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500">
+                <div key={i} className="flex flex-col items-center text-center group cursor-default">
+                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[24px] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-xl flex items-center justify-center text-zinc-900 dark:text-white font-black text-base sm:text-xl mb-4 sm:mb-6 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 group-hover:-translate-y-1 group-hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all duration-300">
                       {item.step}
                    </div>
-                   <h4 className="text-sm sm:text-lg font-black text-zinc-900 dark:text-white mb-1 sm:mb-2 tracking-tight">{item.title}</h4>
-                   <p className="text-xs font-medium text-zinc-400 dark:text-zinc-400 leading-relaxed px-1 sm:px-4">{item.desc}</p>
+                   <h4 className="text-sm sm:text-lg font-black text-zinc-900 dark:text-white mb-1 sm:mb-2 tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{item.title}</h4>
+                   <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 leading-relaxed px-1 sm:px-4">{item.desc}</p>
                 </div>
               ))}
            </div>

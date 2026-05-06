@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, ChevronUp, ShieldCheck, Sparkles, TrendingUp, Info } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ShieldCheck, Sparkles, TrendingUp, Info, Cctv, Aperture, Video } from "lucide-react";
 import { useState } from "react";
 import type { PricingResult } from "@/types";
 
@@ -87,7 +87,7 @@ export function PlanCard({
           {/* Row 1: Technology */}
           <div className="flex items-start gap-4">
             <div className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-               <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 font-black" />
+               <Cctv className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 font-black" />
             </div>
             <div className="flex flex-col">
                 <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">{pricing.technology === "IP" ? "Smart Digital (IP)" : "HD Sharp (Analog)"}</span>
@@ -98,7 +98,11 @@ export function PlanCard({
           {/* Row 2: Tier-specific quality */}
           <div className="flex items-start gap-4">
             <div className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-               <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+               {title.toLowerCase().includes("premium") ? (
+                 <Aperture className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+               ) : (
+                 <Video className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+               )}
             </div>
             <div className="flex flex-col">
               {title.toLowerCase().includes("budget") ? (

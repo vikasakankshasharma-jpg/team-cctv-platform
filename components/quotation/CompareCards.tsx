@@ -324,10 +324,10 @@ export function CompareCards({
 
         // ── Card border / bg ─────────────────────────────────────────────────
         const cardClass = isCheckout
-          ? "border-blue-600 bg-white dark:bg-zinc-900/90 shadow-2xl shadow-blue-500/15 scale-105 z-10 ring-4 ring-blue-600/10"
+          ? "border-blue-500 bg-white dark:bg-zinc-900 shadow-[0_20px_40px_-15px_rgba(37,99,235,0.25)] dark:shadow-[0_20px_40px_-15px_rgba(37,99,235,0.35)] scale-105 z-10 ring-4 ring-blue-500/10"
           : card.isRecommended
-          ? "border-amber-400/60 bg-gradient-to-b from-amber-50 to-white dark:from-amber-900/20 dark:to-zinc-900 hover:border-amber-400 hover:-translate-y-0.5"
-          : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:-translate-y-0.5";
+          ? "border-amber-300/80 dark:border-amber-500/40 bg-gradient-to-b from-amber-50 to-white dark:from-amber-900/20 dark:to-zinc-900 hover:border-amber-400 dark:hover:border-amber-500/60 shadow-xl hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(251,191,36,0.15)] transition-all duration-300 group"
+          : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group";
 
         return (
           <div
@@ -397,11 +397,11 @@ export function CompareCards({
                   : "bg-white dark:bg-zinc-950"
               }`}
             >
-              <div className="flex items-start justify-center">
+              <div className="flex items-baseline justify-center">
                 <span
-                  className={`text-base font-bold mt-1 mr-0.5 ${
+                  className={`text-base font-bold mr-1 ${
                     isCheckout
-                      ? "text-blue-400"
+                      ? "text-blue-500 dark:text-blue-400"
                       : "text-zinc-400"
                   }`}
                 >
@@ -549,10 +549,10 @@ export function CompareCards({
             {/* ── CTA ──────────────────────────────────────────────────────── */}
             <button
               aria-pressed={isCheckout}
-              className={`w-full mt-5 sm:mt-6 py-3.5 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-200 touch-manipulation active:scale-[0.97] ${
+              className={`w-full mt-5 sm:mt-6 py-3.5 rounded-[20px] font-black uppercase tracking-widest text-[10px] transition-all duration-300 touch-manipulation active:scale-[0.97] ${
                 isCheckout
-                  ? "bg-blue-600 text-white shadow-xl shadow-blue-600/25 ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-zinc-900"
-                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:shadow-md"
+                  ? "bg-blue-600 text-white shadow-[0_10px_20px_-10px_rgba(37,99,235,0.5)] ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-zinc-900"
+                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700 group-hover:shadow-md"
               }`}
             >
               {isCheckout ? "✓ Selected" : "Choose Plan"}
