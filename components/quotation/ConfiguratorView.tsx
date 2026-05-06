@@ -252,7 +252,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     }, 300);
 
     return () => clearTimeout(timeout);
-  }, [selection, pricingCache, cablingDone, propertyType, requirements, setPricingResults, promoterDiscount]);
+  }, [selection, pricingCache, cablingDone, propertyType, requirements, setPricingResults, promoterDiscount, lead.active_offer]);
 
   const triggerActionWithAddress = (action: "download" | "whatsapp" | "booking") => {
     if (!lead.address) {

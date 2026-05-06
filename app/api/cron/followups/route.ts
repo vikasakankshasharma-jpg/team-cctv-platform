@@ -83,7 +83,7 @@ export async function GET(req: Request) {
           ? `${campaign.offer_value}% Discount` 
           : campaign.offer_type === 'free_amc' ? "Free 1-Year AMC" : "";
           
-        let message = campaign.message_template
+        const message = campaign.message_template
           .replace(/{{name}}/g, lead.customer_name)
           .replace(/{{quote_link}}/g, quoteLink)
           .replace(/{{offer}}/g, offerText);

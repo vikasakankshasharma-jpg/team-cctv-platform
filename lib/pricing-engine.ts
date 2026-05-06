@@ -327,7 +327,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     // AMC CALCULATION (if requested)
     if (selection.wants_amc) {
       const amcPercent = settings.amc_1yr_pct || 15; // 15% hardware cost
-      let amcTotal = Math.round(baseHardwareCost * (amcPercent / 100));
+      const amcTotal = Math.round(baseHardwareCost * (amcPercent / 100));
       
       addonsTotal += amcTotal;
       quoteAddons.push({

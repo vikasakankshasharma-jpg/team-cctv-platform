@@ -134,7 +134,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
       console.error("🔥 OTP Transmission Fault:", err);
       try {
         window.recaptchaVerifier?.clear?.();
-        // @ts-ignore
+        // @ts-expect-error - third party lib type mismatch
         window.recaptchaVerifier = undefined;
       } catch (_) { /* ignore */ }
 

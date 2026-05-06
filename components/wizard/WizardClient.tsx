@@ -95,7 +95,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
   // Handle Option Click
   const handleOptionSelect = (questionId: string, optionValue: string, isMulti: boolean) => {
-    let newAnswers = { ...answers };
+    const newAnswers = { ...answers };
     
     if (isMulti) {
       const currentAns = (answers[questionId] as string[]) || [];

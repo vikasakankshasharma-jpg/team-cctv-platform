@@ -103,7 +103,7 @@ export default function AdminProductsPage() {
       const method = isNew ? "POST" : "PATCH";
       
       // Auto calc unit price based on cost + margin before sending
-      let payload = { ...editingProduct };
+      const payload = { ...editingProduct };
       if (payload.base_cost !== undefined && payload.margin_percentage !== undefined) {
         payload.unit_price = Math.round(Number(payload.base_cost) + (Number(payload.base_cost) * (Number(payload.margin_percentage) / 100)));
       }
