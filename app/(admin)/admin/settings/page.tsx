@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
 import { Settings2 } from "lucide-react";
@@ -14,6 +15,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function SettingsAdminPage() {
+  await requireAdmin();
+
   // Default values if the document hasn't been created yet
   const defaultSettings: AppSettings = {
     company_name: "TEAM CCTV",

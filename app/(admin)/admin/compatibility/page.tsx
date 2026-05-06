@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { CompatibilityMatrix } from "@/components/admin/CompatibilityMatrix";
 import { adminDb } from "@/lib/firebase-admin";
 import type { Product } from "@/types";
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CompatibilityPage() {
+  await requireAdmin();
+
   let products: Product[] = [];
   
   try {

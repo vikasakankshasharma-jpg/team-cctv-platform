@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import type { Product, AppSettings } from "@/types";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -8,6 +9,8 @@ import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
 export const dynamic = "force-dynamic";
 
 export default async function AdminPricingPage() {
+  await requireAdmin();
+
   // 1. Fetch all products
   const productsSnapshot = await adminDb.collection("products").where("is_active", "==", true).get();
   const products = productsSnapshot.docs.map(doc => ({

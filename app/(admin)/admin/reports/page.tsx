@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { TrendingUp } from "lucide-react";
 import type { Lead, PricingResult } from "@/types";
@@ -13,6 +14,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ReportsAdminPage() {
+  await requireAdmin();
+
   // Fetch Leads with status "won"
   const leadsSnapshot = await adminDb.collection("leads")
     .where("status", "==", "won")

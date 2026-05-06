@@ -1,3 +1,4 @@
+import { verifySession } from "@/lib/auth-server";
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import type { RecommendationRule } from "@/types";
@@ -9,6 +10,8 @@ export const dynamic = "force-dynamic";
  * Fetch all recommendation rules, sorted by priority.
  */
 export async function GET() {
+  const session = await verifySession();
+  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
   try {
     const snapshot = await adminDb
       .collection("recommendation_rules")
@@ -32,6 +35,8 @@ export async function GET() {
  * Create a new rule.
  */
 export async function POST(request: Request) {
+  const session = await verifySession();
+  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
   try {
     const rule: RecommendationRule = await request.json();
     const docRef = adminDb.collection("recommendation_rules").doc();

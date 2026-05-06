@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import type { Addon } from "@/types";
 import { AddonsClient } from "@/components/admin/AddonsClient";
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AddonsAdminPage() {
+  await requireAdmin();
+
   const snapshot = await adminDb.collection("addons").where("is_deleted", "==", false).get();
   
   const addons = snapshot.docs.map(doc => {

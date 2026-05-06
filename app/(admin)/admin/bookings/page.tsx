@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Calendar } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function BookingsPage() {
+  await requireAdmin();
+
   const snapshot = await adminDb.collection("site_visit_bookings")
     .orderBy("created_at", "desc")
     .limit(50)

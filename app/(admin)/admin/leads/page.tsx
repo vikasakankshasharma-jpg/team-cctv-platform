@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Users } from "lucide-react";
 import type { Lead } from "@/types";
@@ -17,6 +18,8 @@ export default async function LeadsAdminPage({
 }: {
   searchParams: { page?: string; lastId?: string; lastDate?: string };
 }) {
+  await requireAdmin();
+
   const PAGE_SIZE = 25;
   const lastDate = searchParams.lastDate ? new Date(searchParams.lastDate) : null;
   

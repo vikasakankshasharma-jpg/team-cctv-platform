@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import type { FollowUpCampaign } from "@/types";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -7,6 +8,8 @@ import CampaignsClient from "@/components/admin/CampaignsClient";
 export const dynamic = "force-dynamic";
 
 export default async function AdminCampaignsPage() {
+  await requireAdmin();
+
   // Fetch all campaigns, sorted by creation date
   const snapshot = await adminDb
     .collection("followup_campaigns")

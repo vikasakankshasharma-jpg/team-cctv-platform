@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import type { WizardStep, WizardQuestion, WizardOption } from "@/types";
 import { WizardBuilderClient } from "@/components/admin/wizard/WizardBuilderClient";
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function WizardBuilderAdminPage() {
+  await requireAdmin();
+
   // We use the exact same recursive fetch strategy as the API route for parity
   // We explicitly order by position for all levels
   const stepsSnapshot = await adminDb

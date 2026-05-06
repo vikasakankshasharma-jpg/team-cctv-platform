@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import type { RecommendationRule } from "@/types";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -7,6 +8,8 @@ import RulesClient from "@/components/admin/RulesClient";
 export const dynamic = "force-dynamic";
 
 export default async function AdminRulesPage() {
+  await requireAdmin();
+
   // Fetch all recommendation rules, sorted by priority
   const snapshot = await adminDb
     .collection("recommendation_rules")

@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import type { Promoter } from "@/types";
 import { PromotersClient } from "@/components/admin/PromotersClient";
@@ -5,6 +6,8 @@ import { PromotersClient } from "@/components/admin/PromotersClient";
 export const dynamic = "force-dynamic";
 
 export default async function PromotersAdminPage() {
+  await requireAdmin();
+
   const snapshot = await adminDb.collection("promoters").orderBy("total_ex_tax_business", "desc").get();
   
   const promoters = snapshot.docs.map(doc => ({

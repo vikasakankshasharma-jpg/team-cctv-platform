@@ -1,3 +1,4 @@
+import { verifySession } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FeatureTag } from "@/types";
@@ -6,6 +7,9 @@ import { FeatureTag } from "@/types";
  * GET: Fetch all feature tags
  */
 export async function GET(req: NextRequest) {
+  const session = await verifySession();
+  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+
   try {
     const snapshot = await adminDb.collection("feature_tags").get();
     const tags: FeatureTag[] = [];
@@ -28,6 +32,9 @@ export async function GET(req: NextRequest) {
  * POST: Create a new feature tag
  */
 export async function POST(req: NextRequest) {
+  const session = await verifySession();
+  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+
   try {
     const body = await req.json();
     const tag: FeatureTag = {
@@ -60,6 +67,9 @@ export async function POST(req: NextRequest) {
  * PATCH: Update a feature tag
  */
 export async function PATCH(req: NextRequest) {
+  const session = await verifySession();
+  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+
   try {
     const body = await req.json();
     const { id, ...updates } = body;

@@ -1,3 +1,4 @@
+import { verifySession } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Product } from "@/types";
@@ -6,6 +7,9 @@ import { Product } from "@/types";
  * GET: Fetch all products for the admin dashboard.
  */
 export async function GET(req: NextRequest) {
+  const session = await verifySession();
+  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+
   try {
     const snapshot = await adminDb.collection("products").get();
     const products: Product[] = [];
@@ -32,6 +36,9 @@ export async function GET(req: NextRequest) {
  * POST: Create a new product.
  */
 export async function POST(req: NextRequest) {
+  const session = await verifySession();
+  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+
   try {
     const body = await req.json();
     const product: Product = {
@@ -71,6 +78,9 @@ export async function POST(req: NextRequest) {
  * PATCH: Update an existing product.
  */
 export async function PATCH(req: NextRequest) {
+  const session = await verifySession();
+  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+
   try {
     const body = await req.json();
     const { id, ...updates } = body;

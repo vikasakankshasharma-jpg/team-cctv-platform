@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FileBox } from "lucide-react";
 import type { CommissionRecord, Promoter } from "@/types";
@@ -7,6 +8,8 @@ import { COLLECTIONS } from "@/lib/firebase-client";
 export const dynamic = "force-dynamic";
 
 export default async function CommissionAdminPage() {
+  await requireAdmin();
+
   // Fetch commission records
   const snapshot = await adminDb.collection(COLLECTIONS.COMMISSION_RECORDS)
     .orderBy("created_at", "desc")

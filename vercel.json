@@ -4,9 +4,6 @@
   "functions": {
     "app/api/quotes/*/pdf/route.tsx": {
       "maxDuration": 60
-    },
-    "app/api/dev/seed/route.ts": {
-      "maxDuration": 60
     }
   },
   "headers": [

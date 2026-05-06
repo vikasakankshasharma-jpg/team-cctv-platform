@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { verifyPartnerSession } from "@/lib/auth-partner";
 import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS, SUBCOLLECTIONS } from "@/lib/constants";
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PartnerLeadsPage() {
   const session = await verifyPartnerSession();
+  if (!session.isAuthenticated) redirect("/partner/login");
   const promoterId = session.promoterId!;
 
   // Fetch leads where promoter_id matches
