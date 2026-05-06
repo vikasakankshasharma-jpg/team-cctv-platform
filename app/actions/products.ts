@@ -3,6 +3,7 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
+import { CreateProductSchema, UpdateProductSchema } from "@/lib/validators";
 import type { Product } from "@/types";
 
 /**
@@ -11,8 +12,11 @@ import type { Product } from "@/types";
 export async function createProduct(data: Omit<Product, "id">) {
   await requireAdmin();
   
+  // Enforce schema validation
+  const validatedData = CreateProductSchema.parse(data);
+  
   const productData = {
-    ...data,
+    ...validatedData,
     is_deleted: false,
     created_at: new Date()
   };
@@ -28,8 +32,12 @@ export async function createProduct(data: Omit<Product, "id">) {
 export async function updateProduct(id: string, data: Partial<Product>) {
   await requireAdmin();
 
+  // Enforce schema validation
+  const validatedData = UpdateProductSchema.parse({ id, ...data });
+  const { id: _removedId, ...safeData } = validatedData;
+
   const updateData = {
-    ...data,
+    ...safeData,
     updated_at: new Date()
   };
 

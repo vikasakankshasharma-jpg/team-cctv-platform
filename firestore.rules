@@ -86,8 +86,7 @@ service cloud.firestore {
 
     match /leads/{leadId} {
       allow read: if isAdmin() || (isAuthenticated() && resource.data.firebase_uid == request.auth.uid);
-      allow create: if isAuthenticated() && notSoftDeleted()
-                       && request.resource.data.firebase_uid == request.auth.uid;
+      allow create: if false; // Created via backend API route only
       allow update: if isAdmin()
                        || (isAuthenticated() && resource.data.firebase_uid == request.auth.uid
                            && onlyAllowedFieldsUpdated(["follow_up_notes"]));

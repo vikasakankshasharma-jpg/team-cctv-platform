@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               // Scripts: GA4 + GTM + Meta Pixel + Sentry CDN
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://connect.facebook.net https://js.sentry-cdn.com https://browser.sentry-cdn.com",
+              "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net https://js.sentry-cdn.com https://browser.sentry-cdn.com",
               // Styles: Google Fonts
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               // Fonts: Google Fonts CDN

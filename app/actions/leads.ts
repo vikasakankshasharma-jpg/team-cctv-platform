@@ -1,43 +1,55 @@
 "use server";
 
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb, arrayUnion } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
 import { COLLECTIONS, SUBCOLLECTIONS } from "@/lib/constants";
+import { UpdateLeadStatusSchema } from "@/lib/validators";
 import type { Lead, Promoter } from "@/types";
 
 /**
  * Updates the status of a lead.
  * Transitioning to "won" will trigger commission calculation logic.
  */
-export async function updateLeadStatus(leadId: string, status: string) {
+export async function updateLeadStatus(leadId: string, status: string, note?: string) {
   await requireAdmin();
 
-  // If status is won, calculate and create commission
-  if (status === "won") {
-    const existingComms = await adminDb
-      .collection(COLLECTIONS.COMMISSION_RECORDS)
-      .where("lead_id", "==", leadId)
-      .get();
+  // Enforce schema validation
+  const validated = UpdateLeadStatusSchema.parse({ lead_id: leadId, status, note });
+
+  if (validated.status === "won") {
+    await adminDb.runTransaction(async (transaction) => {
+      // 1. Check existing comms
+      const existingComms = await transaction.get(
+        adminDb.collection(COLLECTIONS.COMMISSION_RECORDS).where("lead_id", "==", leadId)
+      );
       
-    if (existingComms.empty) {
-      const leadDoc = await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).get();
-      const leadData = leadDoc.data() as Lead;
-      
-      if (leadData?.promoter_id) {
-        // fetch latest quote
-        const quotesSnap = await leadDoc.ref
-          .collection(SUBCOLLECTIONS.QUOTES)
-          .orderBy("created_at", "desc")
-          .limit(1)
-          .get();
+      const leadRef = adminDb.collection(COLLECTIONS.LEADS).doc(leadId);
+      const leadDoc = await transaction.get(leadRef);
+      const leadData = leadDoc.data() as Lead | undefined;
+
+      // Prepare payload for lead update
+      const updatePayload: any = {
+        status: validated.status,
+        updated_at: new Date()
+      };
+      if (validated.note) {
+        updatePayload.follow_up_notes = arrayUnion(validated.note);
+      }
+
+      if (existingComms.empty && leadData?.promoter_id) {
+        const quotesSnap = await transaction.get(
+          leadRef.collection(SUBCOLLECTIONS.QUOTES).orderBy("created_at", "desc").limit(1)
+        );
           
         if (!quotesSnap.empty) {
           const quoteData = quotesSnap.docs[0].data();
           const netTaxable = quoteData.net_taxable_amount || quoteData.total_payable || 0;
           const quoteId = quotesSnap.docs[0].id;
           
-          const promoterDoc = await adminDb.collection(COLLECTIONS.PROMOTERS).doc(leadData.promoter_id).get();
+          const promoterRef = adminDb.collection(COLLECTIONS.PROMOTERS).doc(leadData.promoter_id);
+          const promoterDoc = await transaction.get(promoterRef);
+          
           if (promoterDoc.exists) {
             const promoter = promoterDoc.data() as Promoter;
             
@@ -58,7 +70,8 @@ export async function updateLeadStatus(leadId: string, status: string) {
             }
 
             if (commissionAmount > 0) {
-              await adminDb.collection(COLLECTIONS.COMMISSION_RECORDS).add({
+              const newCommRef = adminDb.collection(COLLECTIONS.COMMISSION_RECORDS).doc();
+              transaction.set(newCommRef, {
                 lead_id: leadId,
                 quote_id: quoteId,
                 promoter_id: leadData.promoter_id,
@@ -69,7 +82,7 @@ export async function updateLeadStatus(leadId: string, status: string) {
                 updated_at: new Date()
               });
 
-              await promoterDoc.ref.update({
+              transaction.update(promoterRef, {
                 total_ex_tax_business: (promoter.total_ex_tax_business || 0) + netTaxable,
                 total_won_leads: (promoter.total_won_leads || 0) + 1
               });
@@ -77,13 +90,23 @@ export async function updateLeadStatus(leadId: string, status: string) {
           }
         }
       }
-    }
-  }
 
-  await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
-    status,
-    updated_at: new Date()
-  });
+      // Always update lead status within the transaction
+      transaction.update(leadRef, updatePayload);
+    });
+  } else {
+    // If not "won", just do a standard update
+    const updatePayload: any = {
+      status: validated.status,
+      updated_at: new Date()
+    };
+    
+    if (validated.note) {
+      updatePayload.follow_up_notes = arrayUnion(validated.note);
+    }
+  
+    await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update(updatePayload);
+  }
 
   revalidatePath("/admin/leads");
   revalidatePath("/admin/commission");

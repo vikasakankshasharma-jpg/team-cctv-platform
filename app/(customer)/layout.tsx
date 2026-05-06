@@ -10,12 +10,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "CCTV Quotation Online | Best Installation in Jaipur | TEAM CCTV",
-  description: "Looking for CCTV installation in Jaipur? Get a professional, tailored CCTV hardware blueprint and quote for your property in minutes. Transparent pricing with top brands.",
-  keywords: ["CCTV Quotation Online", "CCTV Quote Jaipur", "CCTV Installation Jaipur", "CCTV Camera Price Jaipur", "TEAM CCTV"],
+  title: "CCTV Quotation Online | Professional Installation & Setup | TEAM CCTV",
+  description: "Get a professional, tailored CCTV hardware blueprint and quote for your property in minutes. Transparent pricing with top brands.",
+  keywords: ["CCTV Quotation Online", "CCTV Installation", "CCTV Camera Price", "TEAM CCTV"],
   openGraph: {
-    title: "CCTV Quotation Online | Best Installation in Jaipur | TEAM CCTV",
-    description: "Get your custom security blueprint and CCTV installation cost for Jaipur in 2 minutes.",
+    title: "CCTV Quotation Online | Professional Installation & Setup | TEAM CCTV",
+    description: "Get your custom security blueprint and CCTV installation cost in 2 minutes.",
     type: "website",
     locale: "en_IN",
     siteName: "TEAM Security Ecosystem",

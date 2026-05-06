@@ -7,12 +7,12 @@ import { OptionCard } from "@/components/wizard/OptionCard";
 import { LeadGate } from "@/components/wizard/LeadGate";
 import { ArrowLeft, ArrowRight, ShieldAlert, Loader2, ShieldCheck, Lock, CheckCircle2 } from "lucide-react";
 
-export function WizardClient() {
+export function WizardClient({ initialSteps, initialSettings }: { initialSteps?: any[], initialSettings?: any }) {
   const { steps, is_loaded, current_step_index, answers, setSteps, setAnswer, nextStep, previousStep } = useWizardStore();
-  const [loading, setLoading] = useState(!is_loaded);
+  const [loading, setLoading] = useState(!is_loaded && (!initialSteps || initialSteps.length === 0));
   const [error, setError] = useState("");
   const [showGate, setShowGate] = useState(false);
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<any>(initialSettings || null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -22,11 +22,20 @@ export function WizardClient() {
     toastTimer.current = setTimeout(() => setToast(null), 2500);
   };
 
-  // Fetch configuration on mount (if not already cached)
+  // Initialize from props if not loaded
+  useEffect(() => {
+    if (!is_loaded && initialSteps && initialSteps.length > 0) {
+      setSteps(initialSteps);
+      setLoading(false);
+    } else if (is_loaded) {
+      setLoading(false);
+    }
+  }, [is_loaded, initialSteps, setSteps]);
+
+  // Fallback to fetch if props aren't available (e.g. client-side navigation)
   useEffect(() => {
     async function loadWizard() {
-      if (is_loaded && steps.length > 0) {
-        setLoading(false);
+      if (is_loaded || (initialSteps && initialSteps.length > 0)) {
         return;
       }
       try {
@@ -47,7 +56,7 @@ export function WizardClient() {
       }
     }
     loadWizard();
-  }, [is_loaded, steps.length, setSteps]);
+  }, [is_loaded, initialSteps, setSteps]);
 
   if (loading) {
     return (

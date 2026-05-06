@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useWizardStore } from "@/store/wizard";
 import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, Mail, UploadCloud, MapPin, ChevronDown } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
@@ -284,12 +285,12 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
             As your requirement exceeds 16 cameras, we provide custom corporate-grade quotations. <br/><br/>
             <span className="text-zinc-900 dark:text-white font-black">Our technical team will call you within 2 hours</span> to understand your site requirements.
           </p>
-          <button
-            onClick={() => router.push("/")}
-            className="w-full h-14 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-xl shadow-blue-500/20"
+          <Link
+            href="/"
+            className="w-full h-14 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-xl shadow-blue-500/20"
           >
             Return Home
-          </button>
+          </Link>
         </div>
       ) : (
         <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-[0_30px_70px_rgba(0,0,0,0.2)] rounded-[32px] sm:rounded-[40px] w-full max-w-lg p-5 sm:p-8 md:p-12 relative overflow-y-auto max-h-[94dvh] sm:max-h-[90vh] transition-all">

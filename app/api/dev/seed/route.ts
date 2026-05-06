@@ -47,10 +47,10 @@ async function wipeCollection(name: string) {
 }
 
 export async function GET() {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV !== "development") {
     return NextResponse.json(
-      { error: "Seeding is disabled in production." },
-      { status: 403 }
+      { error: "Not Found" },
+      { status: 404 }
     );
   }
 

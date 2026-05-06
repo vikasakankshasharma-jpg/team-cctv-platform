@@ -3,6 +3,10 @@ import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 
 export async function GET(req: Request) {
+  if (process.env.NODE_ENV !== "development") {
+    return NextResponse.json({ error: "Not Found" }, { status: 404 });
+  }
+
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email");
   if (!email) return NextResponse.json({ error: "Missing email" });

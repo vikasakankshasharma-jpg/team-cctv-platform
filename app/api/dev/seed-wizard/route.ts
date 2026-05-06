@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
  * Wipes and re-seeds the wizard template. Dev only.
  */
 export async function GET() {
-  if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "Disabled in production." }, { status: 403 });
+  if (process.env.NODE_ENV !== "development") {
+    return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
   try {

@@ -1,5 +1,6 @@
 import { WizardClient } from "@/components/wizard/WizardClient";
 import type { Metadata } from "next";
+import { getWizardConfig, getSettingsConfig } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "CCTV Setup Wizard | Custom Security Planning",
@@ -11,6 +12,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function WizardPage() {
-  return <WizardClient />;
+export default async function WizardPage() {
+  const [wizardRes, settingsRes] = await Promise.all([
+    getWizardConfig(),
+    getSettingsConfig()
+  ]);
+
+  return <WizardClient initialSteps={wizardRes?.steps} initialSettings={settingsRes} />;
 }
