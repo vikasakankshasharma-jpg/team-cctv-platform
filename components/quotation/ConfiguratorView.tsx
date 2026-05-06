@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
+import { toast } from "sonner";
 import { PlanCard } from "./PlanCard";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { evaluateAddonRules } from "@/lib/addon-rules";
@@ -281,7 +282,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       const payload = {
         lead_id: currentLead.id,
         quoteData: pricing_results.recommended,
-        address: currentLead.address
+        address: currentLead.address,
+        firebase_uid: currentLead.firebase_uid // ownership verification
       };
 
       const res = await fetch("/api/quotes", {
@@ -312,7 +314,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       }
     } catch (err) {
       console.error(err);
-      alert("Error saving your quote. Please try again.");
+      toast.error("Error saving your quote. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -328,10 +330,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         body: JSON.stringify({
           lead_id: currentLead.id,
           address: currentLead.address,
-          quote_id: savedQuoteId || "pending"
+          quote_id: savedQuoteId || "pending",
+          firebase_uid: currentLead.firebase_uid // ownership verification
         })
       });
-      if (res.ok) alert("âœ… Visit Booked! Our technician will reach you shortly.");
+      if (res.ok) toast.success("Visit Booked! Our technician will reach you shortly.");
+      else toast.error("Booking failed. Please try again.");
     } catch (err) {
       console.error(err);
     } finally {
