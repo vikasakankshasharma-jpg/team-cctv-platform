@@ -27,6 +27,15 @@ export const metadata: Metadata = {
   },
 };
 
+import LocalBusinessSchema from "@/components/seo/LocalBusinessSchema";
+import FAQSchema from "@/components/seo/FAQSchema";
+
 export default function JodhpurLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <LocalBusinessSchema cityName="Jodhpur" />
+      <FAQSchema cityName="Jodhpur" />
+      {children}
+    </>
+  );
 }

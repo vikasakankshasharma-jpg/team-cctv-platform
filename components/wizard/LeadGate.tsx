@@ -271,7 +271,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
   };
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/20 dark:bg-black/60 backdrop-blur-3xl animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 bg-zinc-950/20 dark:bg-black/60 backdrop-blur-3xl animate-in fade-in duration-500">
       <div id="recaptcha-container"></div>
 
       {showIndustrialSuccess ? (
@@ -533,8 +533,8 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
                 <p className="text-xl font-black text-zinc-900 dark:text-white tracking-tighter">+91 {mobile}</p>
               </div>
 
-              {/* OTP inputs — use flex with percentage widths to prevent overflow on 360px */}
-              <div className="flex justify-between gap-2">
+              {/* OTP inputs — flex-1 so each box takes equal width; min-w-0 prevents overflow */}
+              <div className="flex gap-2">
                 {otp.map((digit, i) => (
                   <input
                     key={i}
@@ -546,7 +546,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
                     value={digit}
                     onChange={(e) => handleOtpChange(e.target.value, i)}
                     onKeyDown={(e) => handleKeyDown(e, i)}
-                    className="w-[14%] aspect-square text-center text-xl font-black text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 transition-all"
+                    className="flex-1 min-w-0 h-12 sm:h-14 text-center text-xl font-black text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 focus:border-blue-500 dark:focus:border-blue-400 transition-all"
                   />
                 ))}
               </div>

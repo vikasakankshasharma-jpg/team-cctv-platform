@@ -77,10 +77,85 @@ export async function GET(request: Request) {
         id: stepId,
         ...serializedStep,
         questions
-      };
+      } as unknown as WizardStep;
     });
 
-    const wizardSteps = await Promise.all(stepPromises);
+    let wizardSteps = await Promise.all(stepPromises);
+
+    // --- INJECT DYNAMIC RESOLUTION STEP ---
+    const camerasSnapshot = await adminDb
+      .collection("products")
+      .where("category", "==", "camera")
+      .where("is_active", "==", true)
+      .get();
+      
+    const availableResolutions = new Set<number>();
+    camerasSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.resolution_mp) {
+        availableResolutions.add(data.resolution_mp);
+      }
+    });
+    
+    // Sort ascending
+    const sortedResolutions = Array.from(availableResolutions).sort((a, b) => a - b);
+    
+    // Only inject if we have resolutions and the step doesn't already exist
+    const hasResolutionStep = wizardSteps.some(s => 
+      s.questions?.some(q => q.id === "q_resolution")
+    );
+
+    if (sortedResolutions.length > 0 && !hasResolutionStep) {
+      const resOptions: WizardOption[] = [];
+      const resLabels: Record<number, string> = {
+        2: "2MP Standard HD — Good for most homes",
+        4: "4MP Pro HD — Clearer faces & number plates",
+        5: "5MP Ultra HD — Crisp detail, night color",
+        6: "6MP Premium — Large premises & retail",
+        8: "8MP Professional Grade — Banks & factories"
+      };
+      
+      sortedResolutions.forEach((mp, index) => {
+        resOptions.push({
+          id: `opt_res_${mp}mp`,
+          label: resLabels[mp] || `${mp}MP Camera`,
+          value: `${mp}mp`,
+          position: index
+        });
+      });
+
+      const resolutionStep: WizardStep = {
+        id: "dynamic_step_resolution",
+        title: "Camera Quality",
+        description: "What image quality do you need?",
+        position: 11, // Insert after Property Type
+        is_active: true,
+        created_at: new Date().toISOString(),
+        questions: [
+          {
+            id: "q_resolution",
+            question_text: "Select resolution:",
+            input_type: "single",
+            is_required: true,
+            position: 0,
+            options: resOptions
+          }
+        ]
+      };
+
+      // Increment positions for subsequent steps to maintain order
+      wizardSteps = wizardSteps.map(step => {
+        if (step.position >= 1) {
+          return { ...step, position: step.position + 1 };
+        }
+        return step;
+      });
+
+      // Insert and re-sort
+      wizardSteps.push(resolutionStep);
+      wizardSteps.sort((a, b) => (a.position || 0) - (b.position || 0));
+    }
+    // --- END DYNAMIC RESOLUTION STEP ---
 
     return NextResponse.json({ 
       steps: wizardSteps,
@@ -134,10 +209,32 @@ function getDefaultFallbackWizard(): WizardStep[] {
       ]
     },
     {
+      id: "fallback_step_res",
+      title: "Camera Quality",
+      description: "What image quality do you need?",
+      position: 11,
+      is_active: true,
+      created_at: null,
+      questions: [
+        {
+          id: "q_resolution",
+          question_text: "Select resolution:",
+          position: 0,
+          input_type: "single",
+          is_required: true,
+          options: [
+            { id: "opt_res_2mp", label: "2MP Standard HD — Good for most homes", value: "2mp", position: 0 },
+            { id: "opt_res_4mp", label: "4MP Pro HD — Clearer faces & number plates", value: "4mp", position: 1 },
+            { id: "opt_res_5mp", label: "5MP Ultra HD — Crisp detail, night color", value: "5mp", position: 2 },
+          ]
+        }
+      ]
+    },
+    {
       id: "fallback_step2",
       title: "Mounting Surface",
       description: "What type of surfaces will the cameras be mounted on?",
-      position: 1,
+      position: 11,
       is_active: true,
       created_at: null,
       questions: [
@@ -160,7 +257,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step3",
       title: "Ceiling Height",
       description: "How high are your ceilings where cameras will be mounted?",
-      position: 2,
+      position: 11,
       is_active: true,
       created_at: null,
       questions: [
@@ -182,7 +279,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step4",
       title: "Camera Count",
       description: "How many cameras do you need?",
-      position: 3,
+      position: 11,
       is_active: true,
       created_at: null,
       questions: [
@@ -200,7 +297,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step5",
       title: "Technology",
       description: "Which camera technology do you prefer?",
-      position: 4,
+      position: 11,
       is_active: true,
       created_at: null,
       questions: [
@@ -221,7 +318,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step6",
       title: "Storage",
       description: "How far back do you need to be able to watch old recordings?",
-      position: 5,
+      position: 11,
       is_active: true,
       created_at: null,
       questions: [
@@ -244,7 +341,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step7",
       title: "Features",
       description: "Customize your recording capabilities.",
-      position: 6,
+      position: 11,
       is_active: true,
       created_at: null,
       questions: [
@@ -268,7 +365,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step8",
       title: "Wiring",
       description: "Is your property already wired for CCTV?",
-      position: 7,
+      position: 11,
       is_active: true,
       created_at: null,
       questions: [
@@ -289,7 +386,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step9",
       title: "Timeline",
       description: "How soon do you need this system installed?",
-      position: 8,
+      position: 11,
       is_active: true,
       created_at: null,
       questions: [
@@ -312,7 +409,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step10",
       title: "Brand",
       description: "Do you have a specific brand in mind?",
-      position: 9,
+      position: 11,
       is_active: true,
       created_at: null,
       questions: [
@@ -335,7 +432,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step11",
       title: "Maintenance",
       description: "Would you like an Annual Maintenance Contract (AMC)?",
-      position: 10,
+      position: 11,
       is_active: true,
       created_at: null,
       questions: [

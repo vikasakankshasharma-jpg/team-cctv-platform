@@ -16,7 +16,8 @@ import {
   Zap, 
   Info, 
   Check, 
-  Loader2 
+  Loader2,
+  ChevronDown
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { ComparisonTable } from "./ComparisonTable";
@@ -417,45 +418,87 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto w-full px-2 md:px-4 space-y-8 md:space-y-12">
-        <div className="flex items-center justify-between">
-           <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
-                 <SlidersHorizontal className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">Technical Comparison</h2>
-                <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">Select hardware to see instant quote impact</p>
-              </div>
-           </div>
-           {activeRecommendation && (
-              <div className="hidden md:flex items-center gap-3 px-5 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 rounded-2xl">
-                  <Zap className="w-5 h-5 text-amber-500" />
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">Expert Advice</span>
-                    <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400">{activeRecommendation.reason}</span>
-                  </div>
-              </div>
-           )}
-        </div>
+      <div className="max-w-6xl mx-auto w-full px-2 md:px-4">
 
-        <ComparisonTable 
-          cameraCount={selection.camera_count}
-          recordingDays={selection.recording_days}
-          products={pricingCache.products}
-          addons={pricingCache.addons}
-          settings={pricingCache.settings}
-          cablingDone={cablingDone}
-          
-          compareOptions={compare_options}
-          onToggleCompare={handleToggleCompare}
-          activeCheckoutOption={active_checkout_option}
-          onSelectCheckout={setActiveCheckoutOption}
-          
-          recommendation={activeRecommendation}
-          promoterDiscount={promoterDiscount}
-          evaluatedAddonRules={evaluateAddonRules(pricingCache.addon_rules, selection, cablingDone, propertyType, requirements)}
-        />
+        {/* ── Collapsible trigger ─────────────────────────────────────────── */}
+        <button
+          onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
+          className="w-full flex items-center justify-between p-5 md:p-6 bg-zinc-50 dark:bg-zinc-900/40 rounded-[28px] border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-100/80 dark:hover:bg-zinc-900/60 transition-all text-left touch-manipulation"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20 shrink-0">
+              <SlidersHorizontal className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base md:text-lg font-black text-zinc-900 dark:text-white tracking-tight uppercase">
+                  Compare All Options
+                </h2>
+                <span className="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[9px] font-black uppercase tracking-widest rounded-full">
+                  8 Plans
+                </span>
+              </div>
+              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-0.5">
+                {isDetailsExpanded ? "Click to collapse" : "See all camera options & live prices"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0 ml-3">
+            {compare_options.length > 0 && (
+              <span className="hidden sm:flex items-center gap-1 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-full border border-blue-100 dark:border-blue-800/40">
+                {compare_options.length} comparing
+              </span>
+            )}
+            <ChevronDown
+              className={"w-5 h-5 text-zinc-400 transition-transform duration-300" + (isDetailsExpanded ? " rotate-180" : "")}
+            />
+          </div>
+        </button>
+
+        {/* ── Expandable content ─────────────────────────────────────────── */}
+        {isDetailsExpanded && (
+          <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+
+            {/* Expert advice */}
+            {activeRecommendation && (
+              <div className="flex items-center gap-3 px-5 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 rounded-2xl">
+                <Zap className="w-5 h-5 text-amber-500 shrink-0" />
+                <div>
+                  <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest block">
+                    Expert Advice
+                  </span>
+                  <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400">
+                    {activeRecommendation.reason}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Compare limit warning */}
+            {compareLimit && (
+              <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-2xl text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest flex items-center gap-2">
+                <Info className="w-4 h-4 shrink-0" />
+                Max 3 options can be compared at once. Deselect one to add another.
+              </div>
+            )}
+
+            <ComparisonTable
+              cameraCount={selection.camera_count}
+              recordingDays={selection.recording_days}
+              products={pricingCache.products}
+              addons={pricingCache.addons}
+              settings={pricingCache.settings}
+              cablingDone={cablingDone}
+              compareOptions={compare_options}
+              onToggleCompare={handleToggleCompare}
+              activeCheckoutOption={active_checkout_option}
+              onSelectCheckout={setActiveCheckoutOption}
+              recommendation={activeRecommendation}
+              promoterDiscount={promoterDiscount}
+              evaluatedAddonRules={evaluateAddonRules(pricingCache.addon_rules, selection, cablingDone, propertyType, requirements)}
+            />
+          </div>
+        )}
       </div>
 
       <div className="bg-white dark:bg-zinc-900 rounded-[32px] sm:rounded-[48px] border border-zinc-100 dark:border-zinc-800 shadow-[0_40px_100px_rgba(0,0,0,0.08)] p-5 sm:p-8 md:p-12 max-w-5xl mx-auto w-full backdrop-blur-md">
@@ -479,28 +522,26 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                  const cProd = pricingCache.products.find(p => p.technical_name === cTn);
                  const cRes  = cProd?.technical_name?.includes('5mp') ? '5MP Ultra-HD'
                    : cProd?.technical_name?.includes('4mp') ? '4MP Pro-HD' : '2MP Standard-HD';
-                 return (
-                   <div className="p-5 sm:p-8 rounded-[24px] sm:rounded-[32px] bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 space-y-4">
-                     <div className="flex justify-between items-center text-sm">
-                       <span className="font-bold text-zinc-500 dark:text-zinc-400">Camera Model</span>
-                       <span className="font-black text-zinc-900 dark:text-white text-right text-xs max-w-[55%] truncate" title={cProd?.display_name}>
-                         {cProd?.display_name?.split(' (')[0] ?? `${cTech} Option ${cOpt}`}
-                       </span>
-                     </div>
-                     <div className="flex justify-between items-center text-sm">
-                       <span className="font-bold text-zinc-500 dark:text-zinc-400">Resolution</span>
-                       <span className="font-black text-zinc-900 dark:text-white uppercase tracking-widest">{cRes}</span>
-                     </div>
-                     <div className="flex justify-between items-center text-sm">
-                       <span className="font-bold text-zinc-500 dark:text-zinc-400">System Type</span>
-                       <span className="font-black text-zinc-900 dark:text-white uppercase tracking-widest">{cTech} / {cTech === 'IP' ? 'NVR' : 'DVR'}</span>
-                     </div>
-                     <div className="flex justify-between items-center text-sm">
-                       <span className="font-bold text-zinc-500 dark:text-zinc-400">Storage</span>
-                       <span className="font-black text-zinc-900 dark:text-white uppercase tracking-widest">{selection.recording_days} Days Backup</span>
-                     </div>
-                   </div>
-                 );
+                  const rows = [
+                    { label: 'Camera Model', value: cProd?.display_name?.split(' (')[0] ?? (cTech + ' Option ' + cOpt) },
+                    { label: 'Resolution',   value: cRes },
+                    { label: 'System Type',  value: cTech + ' / ' + (cTech === 'IP' ? 'NVR' : 'DVR') },
+                    { label: 'Storage',      value: selection.recording_days + ' Days Backup' },
+                  ];
+                  return (
+                    <div className="rounded-[20px] border border-zinc-100 dark:border-zinc-800 overflow-hidden bg-zinc-50 dark:bg-zinc-950 divide-y divide-zinc-100 dark:divide-zinc-800">
+                      {rows.map(({ label, value }) => (
+                        <div key={label} className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
+                          <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 shrink-0 whitespace-nowrap">
+                            {label}
+                          </span>
+                          <span className="text-xs font-black text-zinc-900 dark:text-white text-right leading-snug">
+                            {value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
                })()}
             </div>
 

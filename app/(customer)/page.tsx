@@ -65,7 +65,7 @@ export default function LandingPage() {
     <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
 
       {/* 1. Elite Hero Hub */}
-      <section className="relative px-4 sm:px-6 pt-10 pb-16 sm:pt-16 sm:pb-20 md:pt-48 md:pb-60 overflow-hidden">
+      <section className="relative px-4 sm:px-6 pt-10 pb-16 sm:pt-16 sm:pb-20 md:pt-24 md:pb-32 overflow-hidden">
         {/* Background Depth Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-zinc-50 dark:bg-zinc-950">
           <div className="absolute top-[-10%] right-[-10%] w-[600px] sm:w-[800px] h-[600px] sm:h-[800px] bg-blue-200/40 dark:bg-blue-600/10 blur-[120px] rounded-full motion-safe:animate-pulse" />
@@ -122,7 +122,7 @@ export default function LandingPage() {
       </section>
 
       {/* 2. Architecture Philosophy Section */}
-      <section className="bg-zinc-950 py-16 sm:py-24 md:py-48 px-4 sm:px-6 relative overflow-hidden">
+      <section className="bg-zinc-950 py-16 sm:py-24 md:py-24 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-900 to-transparent" />
 
         <div className="max-w-7xl mx-auto">
@@ -190,7 +190,7 @@ export default function LandingPage() {
       </section>
 
       {/* 3. Final Deployment CTA */}
-      <section className="py-16 sm:py-24 md:py-32 px-4 sm:px-6 relative overflow-hidden text-center bg-white dark:bg-zinc-950 transition-colors">
+      <section className="py-16 sm:py-24 md:py-20 px-4 sm:px-6 relative overflow-hidden text-center bg-white dark:bg-zinc-950 transition-colors">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
           <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-50 dark:bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-500 mb-8 sm:mb-12 animate-bounce">
             <Zap className="w-7 h-7 sm:w-10 sm:h-10 fill-current" />

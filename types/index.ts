@@ -106,6 +106,11 @@ export interface Product {
   // Brand for premium-tier comparison logic
   brand?: string;
 
+  // Resolution in megapixels — used by wizard to dynamically show available options.
+  // Set this on every camera product: 2, 4, 5, 6, or 8.
+  // Leave undefined for recorders, accessories, cables.
+  resolution_mp?: number;
+
   created_at?: unknown;
   updated_at?: unknown;
 }

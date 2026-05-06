@@ -370,6 +370,30 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
+                {/* Resolution MP — camera only */}
+                {editingProduct.category === 'camera' && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">
+                      Camera Resolution (MP) *
+                    </label>
+                    <select
+                      value={editingProduct.resolution_mp ?? ""}
+                      onChange={e => setEditingProduct({ ...editingProduct, resolution_mp: e.target.value ? Number(e.target.value) : undefined })}
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]"
+                    >
+                      <option value="">— Select resolution —</option>
+                      <option value="2">2 MP — Standard HD</option>
+                      <option value="4">4 MP — Pro HD</option>
+                      <option value="5">5 MP — Ultra HD</option>
+                      <option value="6">6 MP — Premium</option>
+                      <option value="8">8 MP — Professional Grade</option>
+                    </select>
+                    <p className="text-[10px] text-neutral-400">
+                      This drives which resolution options appear in the customer wizard. Keep it accurate.
+                    </p>
+                  </div>
+                )}
+
                 {/* Dynamic Features Assignment */}
                 {editingProduct.category === 'camera' && (
                   <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mt-6">

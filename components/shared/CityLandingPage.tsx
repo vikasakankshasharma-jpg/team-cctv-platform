@@ -37,7 +37,7 @@ export default function CityLandingPage({
     <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
       
       {/* Hero Hub */}
-      <section className="relative px-4 sm:px-6 pt-16 pb-20 sm:pt-24 sm:pb-32 md:pt-32 md:pb-48 overflow-hidden">
+      <section className="relative px-4 sm:px-6 pt-16 pb-20 sm:pt-24 sm:pb-32 md:pt-24 md:pb-32 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-zinc-50 dark:bg-zinc-950">
           <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-blue-200/40 dark:bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-200/20 dark:bg-indigo-600/5 blur-[100px] rounded-full" />

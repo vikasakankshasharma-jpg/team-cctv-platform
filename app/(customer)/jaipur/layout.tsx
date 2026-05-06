@@ -17,10 +17,19 @@ export const metadata: Metadata = {
   },
 };
 
+import LocalBusinessSchema from "@/components/seo/LocalBusinessSchema";
+import FAQSchema from "@/components/seo/FAQSchema";
+
 export default function JaipurLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <>
+      <LocalBusinessSchema cityName="Jaipur" />
+      <FAQSchema cityName="Jaipur" />
+      {children}
+    </>
+  );
 }

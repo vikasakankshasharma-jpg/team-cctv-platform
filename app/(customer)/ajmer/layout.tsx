@@ -27,6 +27,15 @@ export const metadata: Metadata = {
   },
 };
 
+import LocalBusinessSchema from "@/components/seo/LocalBusinessSchema";
+import FAQSchema from "@/components/seo/FAQSchema";
+
 export default function AjmerLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <LocalBusinessSchema cityName="Ajmer" />
+      <FAQSchema cityName="Ajmer" />
+      {children}
+    </>
+  );
 }

@@ -202,15 +202,24 @@ export function WizardClient() {
                       inputMode="numeric"
                       value={currentVal}
                       onChange={(e) => {
-                        const val = Math.max(1, Math.min(16, parseInt(e.target.value) || 1));
-                        setAnswer(q.id!, String(val));
+                        const raw = e.target.value;
+                        setAnswer(q.id!, raw); // Allow raw string during typing
+                      }}
+                      onBlur={(e) => {
+                        // On blur, snap any empty / out-of-range value back to a valid number
+                        const parsed = parseInt(e.target.value);
+                        if (isNaN(parsed)) {
+                          setAnswer(q.id!, "1"); // Default to 1 if empty/invalid
+                        } else {
+                          const val = Math.max(1, Math.min(16, parsed));
+                          setAnswer(q.id!, String(val));
+                        }
                       }}
                       className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-[24px] sm:rounded-[32px] px-6 sm:px-10 py-5 sm:py-6 text-2xl font-black text-zinc-900 dark:text-white outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
                       placeholder="1 – 16"
                       min={1}
                       max={16}
                     />
-                    <div className="absolute right-8 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-700 font-black uppercase text-xs tracking-widest">Cams</div>
                   </div>
                   <p className="text-xs font-bold text-zinc-400 dark:text-zinc-600 mt-3 ml-2">
                     For <span className="font-black text-zinc-700 dark:text-zinc-400">more than 16 cameras</span>, our team will reach out with a custom corporate quote.
@@ -249,6 +258,16 @@ export function WizardClient() {
                   </div>
                 )}
 
+                {/* Hint ABOVE options — visible on mobile before scrolling */}
+                {isMulti && (
+                  <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 mb-4 flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    You can pick <span className="text-zinc-700 dark:text-zinc-300 font-black">more than one</span> option. Click Continue when done.
+                  </p>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-0">
                   {q.options?.map((opt) => {
                     const isSelected = isMulti 
@@ -267,15 +286,6 @@ export function WizardClient() {
                   })}
                 </div>
 
-                {/* Bottom hint for multi-select when nothing selected yet */}
-                {isMulti && (currentAns as string[]).length === 0 && (
-                  <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 mt-4 flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    You can pick <span className="text-zinc-700 dark:text-zinc-300 font-black">more than one</span> option. Click Continue when done.
-                  </p>
-                )}
               </div>
             );
           })}
