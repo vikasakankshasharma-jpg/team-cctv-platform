@@ -139,7 +139,7 @@ function LeadSourcesPanel({
       {/* Title */}
       <div>
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-600 dark:text-purple-500 mb-1.5 flex items-center gap-2">
-          <Hash className="w-3 h-3" /> Source Integrity
+          <Hash className="w-3 h-3" /> Lead Sources
         </p>
         <h3 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">
           Origin Matrix
@@ -166,7 +166,7 @@ function LeadSourcesPanel({
           </div>
         </div>
         <div className="flex-1 min-w-0 relative z-10">
-          <div className="text-zinc-900 dark:text-white font-black text-lg lg:text-xl leading-none mb-1.5 lg:mb-2 truncate">Efficacy</div>
+          <div className="text-zinc-900 dark:text-white font-black text-lg lg:text-xl leading-none mb-1.5 lg:mb-2 truncate">Conversion Rate</div>
           <p className="text-zinc-400 dark:text-zinc-500 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider lg:tracking-widest leading-snug">
             Lead-to-Project Conversion
           </p>
@@ -202,12 +202,12 @@ function LeadSourcesPanel({
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2.5">
             <Zap className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Flux Stream</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Recent Activity</span>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
           {recentLeads.length === 0 ? (
-            <p className="text-zinc-400 dark:text-zinc-600 text-[10px] font-black uppercase text-center py-10 tracking-widest border border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl">Ledger Empty</p>
+            <p className="text-zinc-400 dark:text-zinc-600 text-[10px] font-black uppercase text-center py-10 tracking-widest border border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl">No recent activity</p>
           ) : (
             recentLeads.map((lead) => (
               <Link href={`/admin/leads`} key={lead.id} className="flex items-center justify-between gap-4 p-3 bg-zinc-50 dark:bg-zinc-950/20 border border-zinc-100 dark:border-zinc-800/40 rounded-2xl hover:bg-zinc-100 dark:hover:bg-zinc-900/40 hover:border-blue-500/30 transition-all group/item active:scale-[0.98]">
@@ -217,7 +217,7 @@ function LeadSourcesPanel({
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-black text-zinc-900 dark:text-white truncate leading-none mb-1 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors">{lead.customer_name}</span>
-                    <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate">Inquiry Captured</span>
+                    <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate">New Inquiry</span>
                   </div>
                 </div>
                 <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border shadow-inner shrink-0 ${STATUS_COLORS[lead.status] || "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700"}`}>

@@ -6,6 +6,7 @@ import type { Addon } from "@/types";
 import { AddonModal } from "./AddonModal";
 import { PageHeader } from "./PageHeader";
 import { createAddon, updateAddon, deleteAddon } from "@/app/actions/addons";
+import { toast } from "sonner";
 
 interface AddonsClientProps {
   initialAddons: (Addon & { technical_name?: string })[];
@@ -26,13 +27,13 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete ${name}?`)) {
-      try {
-        await deleteAddon(id);
-      } catch (error) {
-        console.error("Failed to delete addon:", error);
-        alert("Failed to delete addon");
-      }
+    if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
+    try {
+      await deleteAddon(id);
+      toast.success(`${name} deleted successfully`);
+    } catch (error) {
+      console.error("Failed to delete addon:", error);
+      toast.error("Failed to delete addon");
     }
   };
 
@@ -68,11 +69,11 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
           <table className="w-full text-left text-sm text-zinc-300">
             <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.2em] font-black">
               <tr>
-                <th className="px-8 py-6">Add-on Identity</th>
-                <th className="px-8 py-6 text-right">Market Valuation</th>
-                <th className="px-8 py-6 text-center">Unit Multiplier</th>
-                <th className="px-8 py-6 text-center">Deployment</th>
-                <th className="px-8 py-6 text-center">Operations</th>
+                <th className="px-8 py-6">Add-on Name</th>
+                <th className="px-8 py-6 text-right">Price</th>
+                <th className="px-8 py-6 text-center">Pricing Type</th>
+                <th className="px-8 py-6 text-center">Status</th>
+                <th className="px-8 py-6 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40 text-zinc-500 dark:text-zinc-400 font-medium">
@@ -84,8 +85,8 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
                         <Blocks className="w-8 h-8 text-zinc-300 dark:text-zinc-800" />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-zinc-900 dark:text-white font-black text-xl uppercase tracking-widest leading-none">Manifest Empty</p>
-                        <p className="text-zinc-400 dark:text-zinc-600 text-xs font-bold uppercase tracking-tight">Initialize your first add-on module to begin.</p>
+                        <p className="text-zinc-900 dark:text-white font-black text-xl uppercase tracking-widest leading-none">No Add-ons Yet</p>
+                        <p className="text-zinc-400 dark:text-zinc-600 text-xs font-bold uppercase tracking-tight">Create your first add-on to begin.</p>
                       </div>
                     </div>
                   </td>
@@ -110,22 +111,22 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
                     <td className="px-8 py-6 text-center">
                       {item.unit_multiplier === "camera_count" ? (
                         <span className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-500/5 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-500/10 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner">
-                          Scalable (Camera)
+                          Per Camera
                         </span>
                       ) : (
-                        <span className="text-zinc-400 dark:text-zinc-700 text-[10px] font-black uppercase tracking-widest">Fixed Asset</span>
+                        <span className="text-zinc-400 dark:text-zinc-700 text-[10px] font-black uppercase tracking-widest">Fixed Price</span>
                       )}
                     </td>
                     <td className="px-8 py-6 text-center">
                       {item.is_active ? (
                         <span className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/10 shadow-inner">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          Operational
+                          Active
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-2 bg-zinc-50 dark:bg-zinc-950/60 text-zinc-400 dark:text-zinc-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-zinc-100 dark:border-zinc-800">
                           <span className="w-1.5 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800" />
-                          Dormant
+                          Disabled
                         </span>
                       )}
                     </td>
@@ -134,14 +135,14 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
                         <button
                           onClick={() => handleEdit(item)}
                           className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 hover:text-blue-600 dark:hover:text-blue-500 hover:border-blue-200 dark:hover:border-blue-500/30 flex items-center justify-center transition-all shadow-inner active:scale-90"
-                          title="Refine Asset"
+                          title="Edit Add-on"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => item.id && handleDelete(item.id, item.display_name)}
                           className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-500 hover:border-red-200 dark:hover:border-red-500/30 flex items-center justify-center transition-all shadow-inner active:scale-90"
-                          title="Decommission"
+                          title="Delete Add-on"
                         >
                           <Trash className="w-4 h-4" />
                         </button>

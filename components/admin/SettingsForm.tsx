@@ -5,6 +5,7 @@ import { Save, Settings2, Image as ImageIcon, Loader2, CheckCircle2, BadgePercen
 import type { AppSettings } from "@/types";
 import { updateSettings } from "@/app/actions/settings";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface SettingsFormProps {
   initialSettings: AppSettings;
@@ -26,7 +27,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       console.error("Failed to update settings:", error);
-      alert("Error saving settings. Please try again.");
+      toast.error("Error saving settings. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -450,7 +451,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       </div>
 
       {/* Footer / Global System Settings */}
-      <div className="bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl dark:shadow-2xl backdrop-blur-sm flex flex-col md:flex-row items-center justify-between gap-8">
+      <div className="sticky bottom-6 z-50 bg-white/90 dark:bg-zinc-900/90 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-6 shadow-2xl dark:shadow-2xl backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-8 mt-12">
         <div className="flex flex-wrap gap-8 items-center w-full md:w-auto">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Cache Performance (TTL)</label>
@@ -475,8 +476,8 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               onChange={handleChange}
               className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-2.5 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold h-[46px] appearance-none cursor-pointer pr-10 shadow-inner"
             >
-                <option value="firebase_phone">Firebase Intelligence</option>
-                <option value="other">Internal Mock Provider</option>
+              <option value="firebase_phone">Firebase Phone Auth</option>
+              <option value="other">Mock Provider</option>
             </select>
           </div>
         </div>
@@ -485,7 +486,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
           {showSuccess && (
             <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400 text-xs font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-500/10 px-6 py-3.5 rounded-full border border-emerald-100 dark:border-emerald-500/20 animate-in fade-in slide-in-from-right-4">
               <CheckCircle2 className="w-4 h-4" />
-              Sync Successful
+              Settings Saved
             </div>
           )}
           
@@ -499,7 +500,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             ) : (
               <Save className="w-4 h-4 group-hover:scale-125 transition-transform duration-300" />
             )}
-            {isSubmitting ? "Orchestrating..." : "Publish Config"}
+            {isSubmitting ? "Saving..." : "Save Settings"}
           </button>
         </div>
       </div>

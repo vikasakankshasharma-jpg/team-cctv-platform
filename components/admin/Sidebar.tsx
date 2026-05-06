@@ -19,8 +19,8 @@ import {
   Calendar,
   IndianRupee,
   Zap,
-  ClipboardList,
   Link2,
+  Megaphone,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -32,15 +32,15 @@ const NAV_GROUPS = [
     label: "Overview",
     items: [
       { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-      { name: "Price Change Log", href: "/admin/price-log", icon: ClipboardList },
     ]
   },
   {
     label: "Sales Operations",
     items: [
-      { name: "Leads & CRM", href: "/admin/leads", icon: Users },
-      { name: "Site Visits", href: "/admin/bookings", icon: Calendar },
-      { name: "Reports", href: "/admin/reports", icon: TrendingUp },
+      { name: "Leads & CRM",    href: "/admin/leads",     icon: Users },
+      { name: "Site Visits",    href: "/admin/bookings",  icon: Calendar },
+      { name: "Campaigns",      href: "/admin/campaigns", icon: Megaphone },
+      { name: "Reports",        href: "/admin/reports",   icon: TrendingUp },
     ]
   },
   {
