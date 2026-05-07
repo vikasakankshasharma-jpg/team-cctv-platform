@@ -313,22 +313,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       const { id: generatedQuoteId } = await res.json();
       setSavedQuoteId(generatedQuoteId);
       
-      const pdfRes = await fetch(`/api/quotes/${generatedQuoteId}/pdf?leadId=${currentLead.id}`);
-      if (pdfRes.ok) {
-         const contentType = pdfRes.headers.get("Content-Type");
-         if (contentType === "application/pdf") {
-            const blob = await pdfRes.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            setSavedPdfUrl(blobUrl);
-            window.open(blobUrl, "_blank");
-         } else {
-            const { url } = await pdfRes.json();
-            if (url) {
-              setSavedPdfUrl(url);
-              window.open(url, "_blank");
-            }
-         }
-      }
+      router.push(`/quote/${currentLead.id}/review/${generatedQuoteId}`);
     } catch (err) {
       console.error(err);
       toast.error("Error saving your quote. Please try again.");

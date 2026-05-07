@@ -1,0 +1,201 @@
+/**
+ * TEAM CCTV — Quote Page Styles
+ * File: app/(customer)/quote/[id]/quote.module.css
+ *
+ * Used alongside QuotePage.tsx when you prefer CSS Modules over inline styles.
+ * The inline-style version in QuotePage.tsx works standalone —
+ * import this module if you want to add hover/focus states and
+ * media queries that inline styles can't express.
+ *
+ * Usage in QuotePage.tsx:
+ *   import styles from "./quote.module.css";
+ *   <button className={styles.btnPrimary}>Accept This Quote</button>
+ */
+
+/* ── Tokens ──────────────────────────────────────────────────────────────── */
+.page {
+  --navy:      #0F1F3D;
+  --navy-mid:  #1A3057;
+  --gold:      #C8922A;
+  --gold-bg:   #F5E6C8;
+  --cream:     #FAFAF7;
+  --text:      #1C1C28;
+  --muted:     #6B7380;
+  --border:    #E4E4DC;
+  --green:     #0A7A5A;
+  --green-bg:  #E8F5F0;
+  --r:         10px;
+  --shadow-lg: 0 12px 40px rgba(15,31,61,.13);
+
+  max-width:    860px;
+  margin:       0 auto;
+  padding:      24px 16px 80px;
+  font-family:  'DM Sans', system-ui, sans-serif;
+  background:   var(--cream);
+  color:        var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btnPrimary,
+.btnGold,
+.btnOutline {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           8px;
+  padding:       13px 24px;
+  border-radius: 8px;
+  font-family:   inherit;
+  font-size:     14px;
+  font-weight:   600;
+  cursor:        pointer;
+  border:        none;
+  transition:    transform .15s, box-shadow .15s, background .15s, border-color .15s;
+  white-space:   nowrap;
+}
+
+.btnPrimary {
+  background: var(--navy);
+  color:      #fff;
+  flex:       1;
+  justify-content: center;
+}
+.btnPrimary:hover {
+  background:  var(--navy-mid);
+  transform:   translateY(-1px);
+  box-shadow:  0 6px 20px rgba(15,31,61,.25);
+}
+.btnPrimary:active { transform: translateY(0); }
+.btnPrimary:focus-visible {
+  outline:        2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.btnPrimaryAccepted {
+  background:     var(--green);
+  color:          #fff;
+  pointer-events: none;
+  flex:           1;
+  justify-content: center;
+  display:        inline-flex;
+  align-items:    center;
+  gap:            8px;
+  padding:        13px 24px;
+  border-radius:  8px;
+  font-size:      14px;
+  font-weight:    600;
+}
+
+.btnGold {
+  background: var(--gold);
+  color:      #fff;
+}
+.btnGold:hover {
+  background: #B07A20;
+  transform:  translateY(-1px);
+  box-shadow: 0 6px 20px rgba(200,146,42,.35);
+}
+.btnGold:focus-visible {
+  outline:        2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+.btnOutline {
+  background:   #fff;
+  color:        var(--text);
+  border:       1.5px solid var(--border);
+}
+.btnOutline:hover {
+  border-color: var(--navy);
+  color:        var(--navy);
+  background:   #F5F7FB;
+}
+.btnOutline:focus-visible {
+  outline:        2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+/* ── Table row hover ─────────────────────────────────────────────────────── */
+.itemRow {
+  transition: background .12s;
+}
+.itemRow:hover {
+  background: #FAFAF5;
+}
+
+/* ── Card entrance animation ─────────────────────────────────────────────── */
+.card {
+  animation: slideUp .38s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ── Validity chip pulse when ≤3 days left ───────────────────────────────── */
+.urgentDays {
+  color:     #C0392B;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .55; }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+/* Tablet */
+@media (max-width: 720px) {
+  .billGrid { grid-template-columns: 1fr !important; }
+  .termsGrid { grid-template-columns: 1fr !important; }
+  .headerMeta { grid-template-columns: 1fr 1fr !important; }
+  .headerMeta > :last-child { display: none; } /* hide Lead Reference on small screens */
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .page { padding: 16px 12px 60px; }
+
+  /* Header */
+  .cardHeader { padding: 20px 18px 18px !important; }
+  .quoteNumber { font-size: 16px !important; }
+  .brandName   { font-size: 17px !important; }
+
+  /* Body */
+  .cardBody { padding: 20px 18px !important; }
+
+  /* Totals full-width */
+  .totalsWrap { justify-content: stretch !important; }
+  .totalsBox  { width: 100% !important; }
+
+  /* Actions stack */
+  .actionsRow {
+    flex-direction: column !important;
+  }
+  .btnPrimary,
+  .btnGold,
+  .btnOutline,
+  .btnPrimaryAccepted {
+    width:           100%;
+    justify-content: center;
+  }
+
+  /* Footer stack */
+  .cardFooter {
+    flex-direction: column !important;
+    align-items:    flex-start !important;
+    gap:            8px !important;
+  }
+
+  /* Table — hide unit price on very small screens */
+  .colUnitPrice { display: none !important; }
+}
+
+/* Print */
+@media print {
+  .actionsRow,
+  .statusBar { display: none !important; }
+
+  .page { padding: 0; max-width: 100%; }
+  .card { box-shadow: none !important; border: none !important; }
+}
