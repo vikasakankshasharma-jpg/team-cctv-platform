@@ -31,13 +31,8 @@ import { ComparisonTable } from "./ComparisonTable";
 import { CompareCards } from "./CompareCards";
 import { resolveCardLayout } from "@/lib/card-layout-engine";
 
-const SiteDetailsModal = dynamic(() => import("./SiteDetailsModal").then(mod => mod.SiteDetailsModal), {
-  loading: () => <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-[100] animate-pulse" />
-});
-
-const ShareDialog = dynamic(() => import("./ShareDialog").then(mod => mod.ShareDialog), {
-  loading: () => null
-});
+import { SiteDetailsModal } from "./SiteDetailsModal";
+import { ShareDialog } from "./ShareDialog";
 
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, RecommendedOutput, CardLayoutRule } from "@/types";
 import { useRouter } from "next/navigation";

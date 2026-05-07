@@ -47,14 +47,23 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
     setMap(null);
   }, []);
 
+  const lastFetchedPincode = useRef<string>("");
+
   useEffect(() => {
     if (pincode.length !== 6) {
       setIsMapReady(false);
       setPostOffices([]);
       setAreaInfo("");
       setSelectedPostOffice("");
+      lastFetchedPincode.current = ""; // Reset when invalid
       return;
     }
+
+    if (lastFetchedPincode.current === pincode) {
+      return; // Already fetched or fetching this exact pincode
+    }
+    
+    lastFetchedPincode.current = pincode;
 
     setIsMapReady(true);
     setCoords({ lat: 26.9124, lng: 75.7873 }); // Default to Jaipur
@@ -104,7 +113,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
     fetchPincode();
 
     return () => controller.abort();
-  }, [pincode]); // ← only re-run when the pincode itself changes
+  }, [pincode]);
 
   const handleConfirm = () => {
     let finalAddress = fullAddress;
