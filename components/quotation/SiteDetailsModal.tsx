@@ -48,58 +48,63 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
   }, []);
 
   useEffect(() => {
-    if (pincode.length === 6) {
-      setIsMapReady(true);
-      
-      // Default to Mumbai until geocoding responds
-      if (!isFetchingPincode) {
-         setCoords({ lat: 19.0760, lng: 72.8777 });
-      }
-      
-      const fetchPincode = async () => {
-        setIsFetchingPincode(true);
-        try {
-          const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-          const data = await res.json();
-          if (data && data[0] && data[0].Status === "Success") {
-             const offices = data[0].PostOffice;
-             setPostOffices(offices);
-             setAreaInfo(`${offices[0].District}, ${offices[0].State}`);
-             if (offices.length > 0) {
-                setSelectedPostOffice(offices[0].Name);
-             }
-          } else {
-             setPostOffices([]);
-             setAreaInfo("");
-             setSelectedPostOffice("");
-          }
-          
-          // Geocode using OpenStreetMap Nominatim API (Free and robust)
-          try {
-             const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${pincode}+India`);
-             const geoData = await geoRes.json();
-             if (geoData && geoData.length > 0) {
-                setCoords({ lat: parseFloat(geoData[0].lat), lng: parseFloat(geoData[0].lon) });
-             }
-          } catch (geoErr) {
-             console.error("Geocoding failed:", geoErr);
-          }
-          
-        } catch (e) {
-          console.error(e);
-          setPostOffices([]);
-        } finally {
-          setIsFetchingPincode(false);
-        }
-      };
-      fetchPincode();
-    } else {
+    if (pincode.length !== 6) {
       setIsMapReady(false);
       setPostOffices([]);
       setAreaInfo("");
       setSelectedPostOffice("");
+      return;
     }
-  }, [pincode, isFetchingPincode]);
+
+    setIsMapReady(true);
+    setCoords({ lat: 26.9124, lng: 75.7873 }); // Default to Jaipur
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    const fetchPincode = async () => {
+      setIsFetchingPincode(true);
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`, { signal });
+        const data = await res.json();
+        if (data && data[0] && data[0].Status === "Success") {
+          const offices = data[0].PostOffice;
+          setPostOffices(offices);
+          setAreaInfo(`${offices[0].District}, ${offices[0].State}`);
+          if (offices.length > 0) setSelectedPostOffice(offices[0].Name);
+        } else {
+          setPostOffices([]);
+          setAreaInfo("");
+          setSelectedPostOffice("");
+        }
+
+        // Geocode using OpenStreetMap Nominatim (free)
+        try {
+          const geoRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${pincode}+India`,
+            { signal }
+          );
+          const geoData = await geoRes.json();
+          if (geoData && geoData.length > 0) {
+            setCoords({ lat: parseFloat(geoData[0].lat), lng: parseFloat(geoData[0].lon) });
+          }
+        } catch (geoErr) {
+          if ((geoErr as Error).name !== "AbortError") console.error("Geocoding failed:", geoErr);
+        }
+      } catch (e) {
+        if ((e as Error).name !== "AbortError") {
+          console.error(e);
+          setPostOffices([]);
+        }
+      } finally {
+        setIsFetchingPincode(false);
+      }
+    };
+
+    fetchPincode();
+
+    return () => controller.abort();
+  }, [pincode]); // ← only re-run when the pincode itself changes
 
   const handleConfirm = () => {
     let finalAddress = fullAddress;
