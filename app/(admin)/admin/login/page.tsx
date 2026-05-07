@@ -67,6 +67,8 @@ export default function AdminLoginPage() {
     } catch (err: any) {
       if (err.code === "auth/invalid-app-credential" || err.message?.includes("invalid-app-credential")) {
         setError("Mobile Verification is currently unavailable in this environment (App Check / Domain blocked). Please use the EMAIL option instead.");
+      } else if (err.code === "auth/internal-error" || err.message?.includes("internal-error")) {
+        setError(`Firebase Configuration Error: Ensure '${window.location.hostname}' is added to Firebase Authorized Domains AND your Google Cloud API Key HTTP Referrer restrictions allow this domain.`);
       } else {
         setError(err.message || "An unexpected error occurred.");
       }

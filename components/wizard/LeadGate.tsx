@@ -139,11 +139,13 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
       } catch (_) { /* ignore */ }
 
       if (err.code === "auth/invalid-app-credential" || err.message?.includes("invalid-app-credential")) {
-        setError("Firebase reCAPTCHA Error: Add 'localhost' to Firebase Console → Authentication → Settings → Authorized Domains. For testing use mobile: 9999999999 and OTP: 123456.");
+        setError("Firebase reCAPTCHA Error: Add your domain to Firebase Console → Authentication → Settings → Authorized Domains.");
       } else if (err.code === "auth/too-many-requests") {
         setError("Too many attempts. Please wait a few minutes and try again.");
       } else if (err.code === "auth/unauthorized-domain") {
         setError(`Domain '${window.location.hostname}' is not whitelisted. Add it in Firebase Console → Authentication → Authorized Domains.`);
+      } else if (err.code === "auth/internal-error" || err.message?.includes("internal-error")) {
+        setError(`Firebase Configuration Error: Ensure '${window.location.hostname}' is added to Firebase Authorized Domains AND your Google Cloud API Key HTTP Referrer restrictions allow this domain.`);
       } else {
         setError(`OTP Error: ${err.message || "Failed to send OTP. Please retry."}`);
       }
