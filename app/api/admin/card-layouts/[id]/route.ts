@@ -4,11 +4,12 @@ import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
 // PUT — update a layout
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await requireAdminApi();
+  const { id: paramId } = await params;
   const body = await req.json();
   const { id, created_at, ...data } = body;
-  await adminDb.collection("comparison_card_layouts").doc(params.id).update({
+  await adminDb.collection("comparison_card_layouts").doc(paramId).update({
     ...data,
     updated_at: FieldValue.serverTimestamp(),
   });
@@ -16,8 +17,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // DELETE — remove a layout
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   await requireAdminApi();
-  await adminDb.collection("comparison_card_layouts").doc(params.id).delete();
+  const { id: paramId } = await params;
+  await adminDb.collection("comparison_card_layouts").doc(paramId).delete();
   return NextResponse.json({ ok: true });
 }

@@ -83,7 +83,7 @@ export default async function QuoteResultPage({
       adminDb.collection("addon_rules").get(),
       adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
       adminDb.collection("recommendation_rules").orderBy("priority", "asc").get(),
-      adminDb.collection("comparison_card_layouts").where("is_active", "==", true).orderBy("priority", "asc").get()
+      adminDb.collection("comparison_card_layouts").where("is_active", "==", true).get()
     ]);
 
     // Populate Lead if not in mock mode
@@ -104,7 +104,9 @@ export default async function QuoteResultPage({
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter((rule: any) => rule.is_active === true);
 
-    card_layouts = layoutsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+    card_layouts = layoutsSnap.docs
+      .map((doc: any) => ({ id: doc.id, ...doc.data() }))
+      .sort((a: any, b: any) => (a.priority || 0) - (b.priority || 0));
 
     // 1.5 Fetch Promoter if exists
     if (lead?.promoter_id) {

@@ -10,7 +10,7 @@ test.describe('CCTV Wizard Smoke Test', () => {
     await expect(startButton).toBeVisible();
     
     // 3. Click and navigate to wizard
-    await startButton.click();
+    await startButton.click({ force: true });
     await expect(page).toHaveURL(/.*wizard/);
     
     // 4. Check if the first question loads

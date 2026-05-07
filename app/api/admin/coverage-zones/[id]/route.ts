@@ -3,11 +3,12 @@ import { requireAdminApi } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 
 // PUT — update a zone
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAdminApi();
+    const { id } = await params;
     const body = await req.json();
-    await adminDb.collection("coverage_zones").doc(params.id).update(body);
+    await adminDb.collection("coverage_zones").doc(id).update(body);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -15,10 +16,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // DELETE — remove a zone
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAdminApi();
-    await adminDb.collection("coverage_zones").doc(params.id).delete();
+    const { id } = await params;
+    await adminDb.collection("coverage_zones").doc(id).delete();
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
