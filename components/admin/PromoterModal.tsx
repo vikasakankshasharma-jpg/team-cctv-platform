@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Loader2, Dices, UserPlus, Fingerprint, ShieldCheck } from "lucide-react";
+import { X, Loader2, Dices, UserPlus, Fingerprint, ShieldCheck, Settings2 } from "lucide-react";
 import type { Promoter } from "@/types";
 
 interface PromoterModalProps {
@@ -9,9 +9,10 @@ interface PromoterModalProps {
   onClose: () => void;
   promoter?: Promoter | null;
   onSave: (data: any) => Promise<void>;
+  availableLayouts?: { id: string; name: string }[];
 }
 
-export function PromoterModal({ isOpen, onClose, promoter, onSave }: PromoterModalProps) {
+export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayouts = [] }: PromoterModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -21,6 +22,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave }: PromoterMod
     is_active: true,
     discount_type: "percent" as "flat" | "percent",
     discount_value: 0,
+    custom_layout_id: "" as string,
   });
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave }: PromoterMod
         is_active: promoter.is_active ?? true,
         discount_type: promoter.discount_type || "percent",
         discount_value: promoter.discount_value || 0,
+        custom_layout_id: promoter.custom_layout_id || "",
       });
     } else {
       setFormData({
@@ -43,6 +46,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave }: PromoterMod
         is_active: true,
         discount_type: "percent",
         discount_value: 0,
+        custom_layout_id: "",
       });
     }
   }, [promoter, isOpen]);
@@ -65,7 +69,8 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave }: PromoterMod
     // Ensure code is uppercase and stripped of spaces
     const finalData = {
         ...formData,
-        referral_code: formData.referral_code.toUpperCase().replace(/\s+/g, "")
+        referral_code: formData.referral_code.toUpperCase().replace(/\s+/g, ""),
+        custom_layout_id: formData.custom_layout_id === "" ? null : formData.custom_layout_id
     };
 
     try {
@@ -212,6 +217,24 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave }: PromoterMod
                     {formData.discount_type === "percent" ? "%" : "₹"}
                   </span>
                </div>
+            </div>
+
+            {/* Custom Layout Override */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                <Settings2 className="w-3 h-3 text-amber-500" /> Custom Layout Override
+              </label>
+              <select
+                value={formData.custom_layout_id}
+                onChange={(e) => setFormData({ ...formData, custom_layout_id: e.target.value })}
+                className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner appearance-none"
+              >
+                <option value="">Default System Layout</option>
+                {availableLayouts.map(layout => (
+                  <option key={layout.id} value={layout.id}>{layout.name}</option>
+                ))}
+              </select>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-2">Override the comparison cards displayed when leads use this code</p>
             </div>
           </div>
 

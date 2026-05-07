@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { generateOtp, otpExpiresAt } from "@/lib/auth-partner";
+import { FieldValue } from "firebase-admin/firestore";
 
 const AUTHORIZED_MOBILES = ["9772699395"];
 
@@ -16,9 +17,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Please enter a valid 10-digit Indian mobile number." }, { status: 400 });
     }
 
-    if (!AUTHORIZED_MOBILES.includes(normalized)) {
+    // Check if it's a super admin
+    let role = AUTHORIZED_MOBILES.includes(normalized) ? "super_admin" : null;
+    let userName = role === "super_admin" ? "Master Admin" : "";
+
+    // If not super admin, check if it's a salesperson
+    if (!role) {
+      const spSnap = await adminDb.collection("salespeople")
+        .where("mobile_number", "==", normalized)
+        .where("is_active", "==", true)
+        .limit(1)
+        .get();
+      
+      if (!spSnap.empty) {
+        role = "sales_staff";
+        userName = spSnap.docs[0].data().name || "Sales Agent";
+      }
+    }
+
+    if (!role) {
       return NextResponse.json(
-        { error: "Unauthorized. This mobile number does not have Admin privileges." },
+        { error: "Unauthorized. This mobile number does not have Admin or Sales privileges." },
         { status: 403 }
       );
     }
@@ -35,8 +54,9 @@ export async function POST(req: Request) {
         otp, 
         expiresAt, 
         type: "mobile", 
-        role: "super_admin",
-        createdAt: new Date() 
+        role: role,
+        name: userName,
+        createdAt: FieldValue.serverTimestamp() 
       });
 
     console.log(`✅ [Admin OTP] Mobile lookup validated for +91${normalized}. OTP: ${otp}`);

@@ -136,3 +136,20 @@ export async function getLeadQuotes(leadId: string) {
   });
 }
 
+/**
+ * Assigns a lead to a salesperson
+ */
+export async function assignLeadToSalesperson(leadId: string, salespersonId: string | null, salespersonName: string | null) {
+  await requireAdmin();
+
+  const updatePayload: any = {
+    assigned_to_salesperson_id: salespersonId,
+    assigned_to_salesperson_name: salespersonName,
+    updated_at: new Date()
+  };
+
+  await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update(updatePayload);
+  
+  revalidatePath("/admin/leads");
+  return { success: true };
+}

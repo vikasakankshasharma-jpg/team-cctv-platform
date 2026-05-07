@@ -21,9 +21,17 @@ interface PartnerDashboardClientProps {
     status: string;
     created_at: string;
   }[];
+  pipeline?: {
+    new: number;
+    contacted: number;
+    site_visit: number;
+    quoted: number;
+    won: number;
+    lost: number;
+  };
 }
 
-export function PartnerDashboardClient({ partnerName, referralCode, stats, recentWins }: PartnerDashboardClientProps) {
+export function PartnerDashboardClient({ partnerName, referralCode, stats, recentWins, pipeline }: PartnerDashboardClientProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -62,16 +70,35 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
 
           <div className="flex flex-col items-start md:items-end gap-2">
             <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Your Referral Code</span>
-            <button 
-              onClick={handleCopy}
-              className="group flex items-center gap-3 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 border border-amber-200 dark:border-amber-500/20 px-5 py-3 rounded-[20px] transition-all active:scale-95"
-            >
-              <span className="font-mono text-xl font-black text-amber-700 dark:text-amber-500 tracking-[0.2em]">{referralCode}</span>
-              <div className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 flex items-center justify-center shadow-sm">
-                <Copy className={`w-4 h-4 transition-colors ${copied ? "text-emerald-500" : "text-amber-500 dark:text-amber-400"}`} />
+            
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={handleCopy}
+                className="group flex flex-col items-center justify-center bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 border border-amber-200 dark:border-amber-500/20 px-6 py-4 rounded-[20px] transition-all active:scale-95 h-[100px]"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-2xl font-black text-amber-700 dark:text-amber-500 tracking-[0.2em]">{referralCode}</span>
+                  <div className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 flex items-center justify-center shadow-sm">
+                    <Copy className={`w-4 h-4 transition-colors ${copied ? "text-emerald-500" : "text-amber-500 dark:text-amber-400"}`} />
+                  </div>
+                </div>
+                {copied && <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-2 animate-in slide-in-from-top-1">Copied Link!</span>}
+              </button>
+
+              <div className="w-[100px] h-[100px] bg-white rounded-[20px] p-2 shadow-inner border border-zinc-200 shrink-0 flex items-center justify-center">
+                {typeof window !== "undefined" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/?ref=' + referralCode)}`} 
+                    alt="Referral QR Code" 
+                    className="w-full h-full object-contain rounded-xl"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-zinc-100 rounded-xl animate-pulse" />
+                )}
               </div>
-            </button>
-            {copied && <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest animate-in slide-in-from-top-1">Copied to clipboard</span>}
+            </div>
+            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest text-right mt-1">Scan to open referral link</span>
           </div>
         </div>
       </div>
@@ -96,6 +123,32 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
           );
         })}
       </div>
+
+      {/* ── PIPELINE TRACKER ──────────────────────────────────────────────── */}
+      {pipeline && (
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl dark:shadow-2xl">
+          <div className="mb-6">
+            <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Referral Pipeline</h2>
+            <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Real-time status of your referred leads</p>
+          </div>
+          
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+            {[
+              { label: "New", value: pipeline.new, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+              { label: "Contacted", value: pipeline.contacted, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+              { label: "Site Visit", value: pipeline.site_visit, color: "text-purple-500", bg: "bg-purple-500/10", border: "border-purple-500/20" },
+              { label: "Quoted", value: pipeline.quoted, color: "text-indigo-500", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
+              { label: "Won", value: pipeline.won, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+              { label: "Lost", value: pipeline.lost, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
+            ].map(stage => (
+              <div key={stage.label} className={`flex flex-col items-center justify-center p-4 rounded-2xl border ${stage.border} ${stage.bg} text-center`}>
+                <span className={`text-2xl font-black ${stage.color}`}>{stage.value}</span>
+                <span className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] mt-2">{stage.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── RECENT WINS ────────────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl">

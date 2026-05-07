@@ -231,6 +231,36 @@ service cloud.firestore {
     }
 
     // ──────────────────────────────────────────
+    // /comparison_card_layouts/{layoutId}
+    // Public read (needed for quote generation), admin write.
+    // ──────────────────────────────────────────
+
+    match /comparison_card_layouts/{layoutId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // /coverage_zones/{zoneId}
+    // Public read (for geo-assignment), admin write.
+    // ──────────────────────────────────────────
+
+    match /coverage_zones/{zoneId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // /salespeople/{salespersonId}
+    // Admin read/write. Salespeople can read their own profile.
+    // ──────────────────────────────────────────
+
+    match /salespeople/{salespersonId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.firebase_uid == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // ──────────────────────────────────────────
     // /settings/app_config
     // Public read — pricing config needed client-side.
     // Only super_admin can write.

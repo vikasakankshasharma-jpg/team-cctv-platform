@@ -59,10 +59,25 @@ export default async function PartnerDashboardPage() {
 
   const recentWins = await Promise.all(recentWinsPromises);
 
-  // 3. Count Total Leads
-  // For larger datasets use count(), but here we can just do a normal query to avoid composite index limits initially, or use count
-  const leadsCountSnap = await adminDb.collection(COLLECTIONS.LEADS).where("promoter_id", "==", promoterId).count().get();
-  const totalLeads = leadsCountSnap.data().count;
+  // 3. Count Total Leads and aggregate statuses
+  const leadsSnap = await adminDb.collection(COLLECTIONS.LEADS).where("promoter_id", "==", promoterId).get();
+  const totalLeads = leadsSnap.size;
+  
+  const pipeline = {
+    new: 0,
+    contacted: 0,
+    site_visit: 0,
+    quoted: 0,
+    won: 0,
+    lost: 0,
+  };
+  
+  leadsSnap.docs.forEach((doc) => {
+    const status = doc.data().status as keyof typeof pipeline;
+    if (pipeline[status] !== undefined) {
+      pipeline[status]++;
+    }
+  });
 
   // 4. Fetch Promoter details for referral code
   const promoterDoc = await adminDb.collection(COLLECTIONS.PROMOTERS).doc(promoterId).get();
@@ -79,6 +94,7 @@ export default async function PartnerDashboardPage() {
         totalLeads
       }}
       recentWins={recentWins}
+      pipeline={pipeline}
     />
   );
 }

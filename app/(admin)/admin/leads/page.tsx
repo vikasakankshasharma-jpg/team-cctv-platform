@@ -1,4 +1,5 @@
-import { requireAdmin } from "@/lib/auth-server";
+import { verifySession } from "@/lib/auth-server";
+import { redirect } from "next/navigation";
 import { adminDb } from "@/lib/firebase-admin";
 import { Users } from "lucide-react";
 import type { Lead } from "@/types";
@@ -18,14 +19,56 @@ export default async function LeadsAdminPage({
 }: {
   searchParams: { page?: string; lastId?: string; lastDate?: string };
 }) {
-  await requireAdmin();
+  const session = await verifySession();
+  const isAdmin = session.role === "super_admin";
+  const isSalesStaff = session.role === "sales_staff";
+
+  // Guard: only admins and active sales staff can access CRM
+  if (!isAdmin && !isSalesStaff) {
+    redirect("/admin/login?redirect=/admin/leads");
+  }
+
+  let allowedPincodes: string[] = [];
+  if (isSalesStaff && session.user) {
+    const salespersonSnap = await adminDb.collection("salespeople")
+      .where("firebase_uid", "==", session.user.uid)
+      .where("is_active", "==", true)
+      .limit(1)
+      .get();
+    
+    if (!salespersonSnap.empty) {
+      const spData = salespersonSnap.docs[0].data();
+      const zoneIds = spData.assigned_zone_ids || [];
+      if (zoneIds.length > 0) {
+        const zonesSnap = await adminDb.collection("coverage_zones")
+          .where("__name__", "in", zoneIds)
+          .get();
+        
+        zonesSnap.docs.forEach(doc => {
+          allowedPincodes = [...allowedPincodes, ...(doc.data().pincodes || [])];
+        });
+      }
+    }
+  }
 
   const PAGE_SIZE = 25;
   const lastDate = searchParams.lastDate ? new Date(searchParams.lastDate) : null;
   
   let query = adminDb.collection("leads")
-    .orderBy("created_at", "desc")
-    .limit(PAGE_SIZE);
+    .orderBy("created_at", "desc");
+
+  // Apply geo-filtering for sales staff
+  if (isSalesStaff) {
+    if (allowedPincodes.length > 0) {
+      // Note: Firestore 'in' query limit is 30 items
+      query = query.where("address.pincode", "in", allowedPincodes.slice(0, 30));
+    } else {
+      // No assigned pincodes = no leads
+      query = query.where("address.pincode", "==", "NONE_ASSIGNED");
+    }
+  }
+
+  query = query.limit(PAGE_SIZE);
 
   if (lastDate) {
     query = query.startAfter(lastDate);
@@ -78,6 +121,13 @@ export default async function LeadsAdminPage({
 
   const newCount = leads.filter(l => l.status === "new").length + industrialLeads.filter(l => l.status === "new").length;
 
+  // Fetch salespeople for assignment dropdown
+  let salespeople: { id: string; name: string }[] = [];
+  if (isAdmin) {
+    const spSnap = await adminDb.collection("salespeople").where("is_active", "==", true).get();
+    salespeople = spSnap.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+  }
+
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       <PageHeader
@@ -91,7 +141,9 @@ export default async function LeadsAdminPage({
         <LeadsClient 
           initialLeads={leads} 
           industrialLeads={industrialLeads as any[]} 
-          nextCursor={nextCursor} 
+          nextCursor={nextCursor}
+          salespeople={salespeople}
+          isAdmin={isAdmin}
         />
       </div>
     </div>

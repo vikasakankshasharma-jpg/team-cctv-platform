@@ -42,6 +42,9 @@ export interface Lead {
   promoter_id?: string | null;
   promoter_name?: string | null;      // NEW: Virtual field for UI
   promoter_business?: string | null;  // NEW: Virtual field for UI
+  assigned_to_salesperson_id?: string | null;
+  assigned_to_salesperson_name?: string | null;
+
   
   // Follow-Up Engine
   followups_sent?: string[];
@@ -271,6 +274,8 @@ export interface Promoter {
   total_ex_tax_business: number;
   discount_type?: "flat" | "percent";
   discount_value?: number;
+  custom_layout_id?: string | null;
+
   created_at?: unknown;
   updated_at?: unknown;
 }
@@ -369,4 +374,69 @@ export interface RecommendedOutput {
   reason: string;
   is_featured: boolean;
   rule_id: string;
+}
+
+// ── Card Layout System (Phase 2) ─────────────────────────────────────────────
+// Allows admin to control which 3 cards are shown per customer segment
+// without code changes. Stored in Firestore `comparison_card_layouts`.
+
+export interface CardSlot {
+  slot: "budget" | "recommended" | "premium";
+  technology: "HD" | "IP";
+  camera_option: number;
+  /** Optional override badge text, e.g. "Smart Upgrade" */
+  badge?: string;
+  is_featured?: boolean;
+}
+
+export interface CardLayoutRule {
+  id?: string;
+  name: string;                          // e.g. "IP Home Standard"
+  description?: string;
+  // Conditions — all must match for this layout to be selected
+  technology_filter: "HD" | "IP" | "any";
+  property_type_filter?: string[];       // e.g. ["home", "bungalow"]
+  camera_count_min?: number;
+  camera_count_max?: number;
+  priority: number;                      // Lower = higher priority
+  is_active: boolean;
+  // The 3 card slots this layout defines
+  cards: [CardSlot, CardSlot, CardSlot];
+  created_at?: unknown;
+  updated_at?: unknown;
+}
+
+// ── Geographic Zones (for Salesperson coverage) ───────────────────────────────
+// Admin creates named zones (e.g. "Jaipur North"), each with a list of pincodes.
+// Salespeople are assigned zones \u2192 they see only leads from those pincodes.
+
+export interface CoverageZone {
+  id?: string;
+  name: string;                          // e.g. "Jaipur North", "Ajmer East"
+  city: string;
+  state: string;
+  pincodes: string[];                    // All pincodes in this zone
+  is_active: boolean;
+  created_at?: unknown;
+  updated_at?: unknown;
+}
+
+// ── Salesperson (Internal Sales Team) ────────────────────────────────────────
+// New role between Admin and Customer. Logs in via OTP (same as partners).
+// Can only see/edit leads within their assigned geographic coverage.
+// Admin creates accounts \u2014 cannot self-register.
+
+export interface Salesperson {
+  id?: string;
+  name: string;
+  mobile_number: string;
+  firebase_uid?: string;                 // Set after first OTP login
+  is_active: boolean;
+  // Geographic coverage \u2014 at least one must be set
+  assigned_zone_ids?: string[];          // Zone IDs from coverage_zones collection
+  assigned_pincodes?: string[];          // Direct pincode overrides
+  assigned_cities?: string[];
+  assigned_states?: string[];
+  created_at?: unknown;
+  updated_at?: unknown;
 }

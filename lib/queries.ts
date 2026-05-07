@@ -237,10 +237,52 @@ function getDefaultFallbackWizard(): WizardStep[] {
       ]
     },
     {
+      id: "fallback_step_internet",
+      title: "Internet at Site",
+      description: "Do you have active WiFi or Internet at the installation site?",
+      position: 1,
+      is_active: true,
+      created_at: null,
+      questions: [
+        {
+          id: "q_internet",
+          question_text: "Internet availability:",
+          position: 0,
+          input_type: "single",
+          is_required: true,
+          options: [
+            { id: "opt_int_yes", label: "Yes, WiFi/Internet is available", value: "true", position: 0 },
+            { id: "opt_int_no",  label: "No Internet at site",            value: "false", position: 1 },
+          ]
+        }
+      ]
+    },
+    {
+      id: "fallback_step_install_type",
+      title: "Setup Type",
+      description: "Is this a brand new installation or an upgrade?",
+      position: 2,
+      is_active: true,
+      created_at: null,
+      questions: [
+        {
+          id: "q_install_type",
+          question_text: "Select setup type:",
+          position: 0,
+          input_type: "single",
+          is_required: true,
+          options: [
+            { id: "opt_ins_new", label: "New Installation", value: "new", position: 0 },
+            { id: "opt_ins_upg", label: "Upgrade Existing System", value: "upgrade", position: 1 },
+          ]
+        }
+      ]
+    },
+    {
       id: "fallback_step3",
       title: "Ceiling Height",
       description: "How high are your ceilings where cameras will be mounted?",
-      position: 11,
+      position: 3,
       is_active: true,
       created_at: null,
       questions: [
@@ -412,10 +454,32 @@ function getDefaultFallbackWizard(): WizardStep[] {
       ]
     },
     {
+      id: "fallback_step_budget",
+      title: "Budget Range",
+      description: "What is your approximate budget for this project?",
+      position: 12,
+      is_active: true,
+      created_at: null,
+      questions: [
+        {
+          id: "q_budget",
+          question_text: "Select budget range:",
+          position: 0,
+          input_type: "single",
+          is_required: false,
+          options: [
+            { id: "opt_bud_low", label: "Budget Friendly (Value for money)", value: "budget", position: 0 },
+            { id: "opt_bud_mid", label: "Standard (Performance balanced)",  value: "standard", position: 1 },
+            { id: "opt_bud_high", label: "Premium (Best quality & features)", value: "premium", position: 2 },
+          ]
+        }
+      ]
+    },
+    {
       id: "fallback_step11",
       title: "Maintenance",
       description: "Would you like an Annual Maintenance Contract (AMC)?",
-      position: 11,
+      position: 13,
       is_active: true,
       created_at: null,
       questions: [

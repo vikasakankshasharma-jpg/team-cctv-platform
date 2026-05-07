@@ -15,9 +15,15 @@ export default async function PromotersAdminPage() {
     ...(doc.data() as Omit<Promoter, "id">)
   }));
 
+  const layoutsSnapshot = await adminDb.collection("comparison_card_layouts").get();
+  const cardLayouts = layoutsSnapshot.docs.map(doc => ({
+    id: doc.id,
+    name: doc.data().name
+  }));
+
   return (
     <div className="space-y-6">
-      <PromotersClient initialPromoters={promoters} />
+      <PromotersClient initialPromoters={promoters} availableLayouts={cardLayouts} />
     </div>
   );
 }

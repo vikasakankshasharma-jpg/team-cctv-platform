@@ -46,6 +46,7 @@ export default async function QuoteResultPage({
   let settings: AppSettings | null = null;
   let promoter: Promoter | null = null;
   let recommendation_rules: any[] = [];
+  let card_layouts: any[] = [];
 
   // HANDLE MOCK SCENARIO (DEMO/E2E)
   if (leadId === "mock-e2e-lead" || leadId === "mock-lead") {
@@ -73,14 +74,16 @@ export default async function QuoteResultPage({
       addonsSnap,
       rulesSnap,
       settingsSnap,
-      rulesSnap2
+      rulesSnap2,
+      layoutsSnap
     ] = await Promise.all([
       lead ? Promise.resolve(null) : adminDb.collection("leads").doc(leadId).get(),
       adminDb.collection("products").where("is_active", "==", true).where("is_deleted", "==", false).get(),
       adminDb.collection("addons").where("is_active", "==", true).where("is_deleted", "==", false).get(),
       adminDb.collection("addon_rules").get(),
       adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
-      adminDb.collection("recommendation_rules").orderBy("priority", "asc").get()
+      adminDb.collection("recommendation_rules").orderBy("priority", "asc").get(),
+      adminDb.collection("comparison_card_layouts").where("is_active", "==", true).orderBy("priority", "asc").get()
     ]);
 
     // Populate Lead if not in mock mode
@@ -101,6 +104,8 @@ export default async function QuoteResultPage({
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter((rule: any) => rule.is_active === true);
 
+    card_layouts = layoutsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+
     // 1.5 Fetch Promoter if exists
     if (lead?.promoter_id) {
       const promoterSnap = await adminDb.collection("promoters").doc(lead.promoter_id).get();
@@ -119,6 +124,7 @@ export default async function QuoteResultPage({
     settings = serializeDoc(settings);
     promoter = serializeDoc(promoter);
     recommendation_rules = serializeDoc(recommendation_rules);
+    card_layouts = serializeDoc(card_layouts);
 
   } catch (err) {
     console.error("Error fetching quote data:", err);
@@ -174,7 +180,8 @@ export default async function QuoteResultPage({
     addons,
     addon_rules,
     settings: finalSettings,
-    recommendation_rules
+    recommendation_rules,
+    card_layouts
   };
 
   return (
@@ -212,6 +219,7 @@ export default async function QuoteResultPage({
                percent: promoter?.discount_type === "percent" ? (promoter.discount_value || 0) : 0,
                flat: promoter?.discount_type === "flat" ? (promoter.discount_value || 0) : 0
              }}
+             customLayoutId={promoter?.custom_layout_id}
            />
         </div>
 

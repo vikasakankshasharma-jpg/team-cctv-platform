@@ -10,9 +10,10 @@ import { toast } from "sonner";
 
 interface PromotersClientProps {
   initialPromoters: Promoter[];
+  availableLayouts?: { id: string; name: string }[];
 }
 
-export function PromotersClient({ initialPromoters }: PromotersClientProps) {
+export function PromotersClient({ initialPromoters, availableLayouts = [] }: PromotersClientProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPromoter, setEditingPromoter] = useState<Promoter | null>(null);
 
@@ -162,6 +163,7 @@ export function PromotersClient({ initialPromoters }: PromotersClientProps) {
         onClose={() => setIsModalOpen(false)}
         promoter={editingPromoter}
         onSave={handleSave}
+        availableLayouts={availableLayouts}
       />
     </>
   );

@@ -42,8 +42,9 @@ export async function POST(req: Request) {
         uid = newUser.uid;
       }
 
-      await adminAuth.setCustomUserClaims(uid, { role: "super_admin" });
-      const customToken = await adminAuth.createCustomToken(uid, { role: "super_admin" });
+      const role = data?.role || "super_admin";
+      await adminAuth.setCustomUserClaims(uid, { role });
+      const customToken = await adminAuth.createCustomToken(uid, { role });
       
       return NextResponse.json({ success: true, customToken });
     }
@@ -65,10 +66,23 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Unauthorized mobile number." }, { status: 403 });
       }
 
-      await otpDoc.ref.delete();
+      const spData = otpDoc.data()!;
+      const role = spData.role || "super_admin";
 
-      await adminAuth.setCustomUserClaims(uid, { role: "super_admin" });
-      const customToken = await adminAuth.createCustomToken(uid, { role: "super_admin" });
+      // If it's a salesperson, link their account to this UID
+      if (role === "sales_staff") {
+        const spSnap = await adminDb.collection("salespeople")
+          .where("mobile_number", "==", normalized)
+          .limit(1)
+          .get();
+        
+        if (!spSnap.empty) {
+          await spSnap.docs[0].ref.update({ firebase_uid: uid });
+        }
+      }
+
+      await adminAuth.setCustomUserClaims(uid, { role });
+      const customToken = await adminAuth.createCustomToken(uid, { role });
 
       return NextResponse.json({ success: true, customToken });
     }

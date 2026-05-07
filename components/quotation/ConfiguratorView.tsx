@@ -29,6 +29,7 @@ import {
 import dynamic from "next/dynamic";
 import { ComparisonTable } from "./ComparisonTable";
 import { CompareCards } from "./CompareCards";
+import { resolveCardLayout } from "@/lib/card-layout-engine";
 
 const SiteDetailsModal = dynamic(() => import("./SiteDetailsModal").then(mod => mod.SiteDetailsModal), {
   loading: () => <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-[100] animate-pulse" />
@@ -38,7 +39,7 @@ const ShareDialog = dynamic(() => import("./ShareDialog").then(mod => mod.ShareD
   loading: () => null
 });
 
-import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, RecommendedOutput } from "@/types";
+import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, RecommendedOutput, CardLayoutRule } from "@/types";
 import { useRouter } from "next/navigation";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 
@@ -50,14 +51,16 @@ interface ConfiguratorViewProps {
     addon_rules: AddonRule[];
     settings: AppSettings;
     recommendation_rules: RecommendationRule[];
+    card_layouts: CardLayoutRule[];
   };
   promoterDiscount?: {
     percent: number;
     flat: number;
   };
+  customLayoutId?: string | null;
 }
 
-export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDiscount }: ConfiguratorViewProps) {
+export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDiscount, customLayoutId }: ConfiguratorViewProps) {
   const router = useRouter();
   const [lead, setLead] = useState<Lead>(initialLead);
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -128,6 +131,16 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     return Array.isArray(reqValues) ? reqValues : (reqValues ? [reqValues] : []);
   }, [lead.wizard_answers]);
 
+  // ── Memoized addon rule evaluation — single source of truth for the whole page
+  // Must be declared AFTER cablingDone, propertyType, requirements
+  const evaluatedRules = useMemo(() => evaluateAddonRules(
+    pricingCache.addon_rules,
+    selection,
+    cablingDone,
+    propertyType,
+    requirements
+  ), [pricingCache.addon_rules, selection, cablingDone, propertyType, requirements]);
+
   // 2. Dynamic Recommendation Evaluation
   const activeRecommendation = useMemo(() => {
     return getRecommendedOption(
@@ -145,57 +158,38 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRecommendation?.camera_option]);
 
-  // Init Compare Options on Load â€“ compute premium based on brand & resolution
-  // Uses a ref to ensure this only runs ONCE per page load, regardless of checkout changes.
+  // Init Compare Options — Technology-Aware Smart Card Preselection
+  // Rules:
+  //   Customer chose IP       → 3 IP cards (Budget / Recommended / Premium)
+  //   Customer chose HD       → 2 HD cards + 1 IP Upgrade suggestion
+  //   Customer "not sure"     → Mixed (HD Budget + IP Recommended + IP Premium)
+  // Uses a ref to ensure this only runs ONCE per page load.
   useEffect(() => {
     if (compareInitialized.current) return;
     if (pricingCache.products.length === 0) return;
 
     compareInitialized.current = true;
 
-    const recOption = activeRecommendation?.camera_option || 2;
-    const recTech = selection.technology;
+    // Use the admin-controlled Card Layout Engine
+    const resolved = resolveCardLayout(pricingCache.card_layouts, {
+      technology: selection.technology || "any",
+      propertyType: lead.property_type,
+      cameraCount: selection.camera_count,
+      customLayoutId: customLayoutId || undefined
+    });
 
-    const recTechName = recTech === "IP" ? `cam_ip_opt${recOption}` : `cam_hd_opt${recOption}`;
-    const recProduct = pricingCache.products.find(p => p.technical_name === recTechName);
-    const recBrand = recProduct?.brand;
-    const recResolution = recProduct?.technical_name?.includes('5mp') ? 5
-      : recProduct?.technical_name?.includes('4mp') ? 4 : 2;
-
-    const getMp = (tn: string) =>
-      tn.includes('5mp') ? 5 : tn.includes('4mp') ? 4 : 2;
-
-    // 1ï¸âƒ£ Higher-resolution SAME brand
-    let premiumProduct = pricingCache.products.find(p =>
-      p.is_active &&
-      p.brand === recBrand &&
-      p.technology === recTech &&
-      getMp(p.technical_name ?? '') > recResolution
-    );
-
-    // 2ï¸âƒ£ Higher-resolution ANY brand (fallback)
-    if (!premiumProduct) {
-      premiumProduct = pricingCache.products.find(p =>
-        p.is_active &&
-        p.technology === recTech &&
-        getMp(p.technical_name ?? '') > recResolution
-      );
-    }
-
-    const premiumOption = premiumProduct
-      ? parseInt(premiumProduct.technical_name?.match(/opt(\d+)/)?.[1] ?? `${recOption + 1}`)
-      : recOption + 1;
-
-    const defaults: Array<{ technology: "HD" | "IP"; option: number }> = [
-      { technology: "HD", option: 1 },        // Essential  â€“ cheapest HD
-      { technology: "IP", option: recOption }, // Recommended â€“ admin rule
-      { technology: "IP", option: premiumOption }, // Premium â€“ higher res / diff brand
-    ];
+    const defaults = resolved.cards;
 
     setCompareOptions(defaults);
-    setActiveCheckoutOption(defaults[1]); // default checkout = Recommended
+    // Find the card that is marked as recommended/featured, or fallback to the middle one
+    const recommendedCard = defaults.find(c => {
+       // Check if this card matches the activeRecommendation from engine
+       return c.technology === selection.technology && c.option === activeRecommendation?.camera_option;
+    }) || defaults[1];
+
+    setActiveCheckoutOption({ technology: recommendedCard.technology, option: recommendedCard.option });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pricingCache.products.length, activeRecommendation?.camera_option]);
+  }, [pricingCache.products.length, activeRecommendation?.camera_option, selection.technology]);
 
   // Handle Toggle Compare from Table (inline limit message replaces browser alert)
   const handleToggleCompare = (opt: { technology: "HD" | "IP"; option: number }) => {
@@ -359,30 +353,60 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     <div className="flex flex-col gap-8 sm:gap-16 relative">
       
       {/* Background Decor */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-50/20 blur-[150px] -z-10 rounded-full" />      <div className="flex flex-col items-center gap-12">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-50/20 blur-[150px] -z-10 rounded-full" />
+
+      <div className="flex flex-col items-center gap-12">
         <div className="w-full max-w-6xl mx-auto space-y-6">
-           <div className="flex flex-col items-center gap-3 mb-8">
-              <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 text-white font-black px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest leading-none">
-                 <Zap className="w-3 h-3 text-blue-500" />
-                 Smart Comparison
+
+          {/* ── Section header ─────────────────────────────────────────────── */}
+          <div className="flex flex-col items-center gap-3 mb-4">
+            <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 text-white font-black px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest leading-none">
+              <Zap className="w-3 h-3 text-blue-500" />
+              Smart Comparison
+            </div>
+            <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase text-center">Choose Your System</h2>
+            <p className="text-sm font-medium text-zinc-400 dark:text-zinc-500 text-center max-w-md">
+              {selection.technology === "IP"
+                ? "IP camera systems — RJ45/Cat6 wiring, NVR recorder, superior image quality at same MP."
+                : selection.technology === "HD"
+                ? "HD camera systems — coaxial wiring, DVR recorder, proven & affordable technology."
+                : "Comparing HD (DVR) and IP (NVR) systems — both support remote mobile viewing."}
+            </p>
+          </div>
+
+          {/* ── Recommendation reason banner ───────────────────────────────── */}
+          {activeRecommendation && (
+            <div className="flex items-start gap-3 px-4 py-3.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-2xl animate-in fade-in duration-500">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0 mt-0.5">
+                <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
-              <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase text-center">Choose Your Tier</h2>
-           </div>
-           
-           <CompareCards 
-              compareOptions={compare_options}
-              activeCheckoutOption={active_checkout_option}
-              onSelectCheckout={setActiveCheckoutOption}
-              cameraCount={selection.camera_count}
-              recordingDays={selection.recording_days}
-              products={pricingCache.products}
-              addons={pricingCache.addons}
-              settings={pricingCache.settings}
-              cablingDone={cablingDone}
-              recommendation={activeRecommendation}
-              promoterDiscount={promoterDiscount}
-              evaluatedAddonRules={evaluateAddonRules(pricingCache.addon_rules, selection, cablingDone, propertyType, requirements)}
-           />
+              <div className="min-w-0">
+                <div className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-0.5">
+                  ⭐ Our Recommendation — {lead.property_type.charAt(0).toUpperCase() + lead.property_type.slice(1)} Setup
+                </div>
+                <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 leading-snug">
+                  {activeRecommendation.reason}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Compare Cards ──────────────────────────────────────────────── */}
+          <CompareCards
+            compareOptions={compare_options}
+            activeCheckoutOption={active_checkout_option}
+            onSelectCheckout={setActiveCheckoutOption}
+            cameraCount={selection.camera_count}
+            recordingDays={selection.recording_days}
+            products={pricingCache.products}
+            addons={pricingCache.addons}
+            settings={pricingCache.settings}
+            cablingDone={cablingDone}
+            recommendation={activeRecommendation}
+            customerTechnology={selection.technology}
+            promoterDiscount={promoterDiscount}
+            evaluatedAddonRules={evaluatedRules}
+          />
         </div>
 
         {/* Global Controls: Camera Count & Recording Days */}
@@ -525,7 +549,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               onSelectCheckout={setActiveCheckoutOption}
               recommendation={activeRecommendation}
               promoterDiscount={promoterDiscount}
-              evaluatedAddonRules={evaluateAddonRules(pricingCache.addon_rules, selection, cablingDone, propertyType, requirements)}
+              evaluatedAddonRules={evaluatedRules}
             />
           </div>
         )}
@@ -577,7 +601,6 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
             {/* Extra Features */}
             {pricingCache.addons.filter(a => {
-              const evaluatedRules = evaluateAddonRules(pricingCache.addon_rules, selection, cablingDone, propertyType, requirements);
               const ruleStatus = evaluatedRules[a.id!];
               return a.is_active && ruleStatus && ruleStatus.action !== "hide";
             }).length > 0 && (
@@ -587,7 +610,6 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                 </h3>
                 <div className="space-y-3">
                   {pricingCache.addons.filter(a => a.is_active).map(addon => {
-                    const evaluatedRules = evaluateAddonRules(pricingCache.addon_rules, selection, cablingDone, propertyType, requirements);
                     const ruleStatus = evaluatedRules[addon.id!];
                     if (ruleStatus?.action === "hide" || (!ruleStatus)) return null;
                     const isMandatory = ruleStatus.action === "show_mandatory";
@@ -639,9 +661,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                    {(() => {
                      const cT = active_checkout_option?.technology ?? selection.technology;
                      const cO = active_checkout_option?.option   ?? selection.selected_camera_option;
-                     const eR = evaluateAddonRules(pricingCache.addon_rules, selection, cablingDone, propertyType, requirements);
-                     const cp = calculatePricing({ selection: { ...selection, technology: cT, selected_camera_option: cO }, products: pricingCache.products, addons: pricingCache.addons, settings: pricingCache.settings, cablingDone, referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: eR });
-                     return <div className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4">&#x20B9;{cp.total_payable.toLocaleString('en-IN')}</div>;
+                     const cp = calculatePricing({ selection: { ...selection, technology: cT, selected_camera_option: cO }, products: pricingCache.products, addons: pricingCache.addons, settings: pricingCache.settings, cablingDone, referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules });
+                     return <div className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 transition-all duration-300">&#x20B9;{cp.total_payable.toLocaleString('en-IN')}</div>;
                    })()}
                   
                   <div className="pt-6 border-t border-zinc-800 flex justify-between items-center">
@@ -652,7 +673,52 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                   </div>
                </div>
 
-               {/* Action Buttons */}
+               {/* Payment Terms + AMC Trust Block — shown ABOVE action buttons so customer sees full picture first */}
+               <div className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-4">
+                 <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-1">Payment Schedule</div>
+                 
+                 <div className="grid grid-cols-3 gap-2">
+                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
+                     <CreditCard className="w-4 h-4 text-blue-500" />
+                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
+                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Advance</span>
+                   </div>
+                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
+                     <Truck className="w-4 h-4 text-blue-500" />
+                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">80%</span>
+                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Delivery</span>
+                   </div>
+                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
+                     <Handshake className="w-4 h-4 text-emerald-500" />
+                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
+                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Handover</span>
+                   </div>
+                 </div>
+
+                 <div className="pt-3 border-t border-dashed border-zinc-200 dark:border-zinc-800">
+                   <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-3">Optional After-Sales (AMC)</div>
+                   <div className="flex gap-2">
+                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
+                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">1 Year</span>
+                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">{pricingCache.settings.amc_1yr_pct ?? 15}% of total</span>
+                     </div>
+                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
+                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">2 Year</span>
+                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">{pricingCache.settings.amc_2yr_pct ?? 20}% of total</span>
+                     </div>
+                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
+                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">3 Year</span>
+                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">{pricingCache.settings.amc_3yr_pct ?? 25}% of total</span>
+                     </div>
+                   </div>
+                   <div className="flex justify-between items-center mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5"><Wrench className="w-3 h-3"/> Post-Handover Visit</span>
+                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">&#x20B9;{pricingCache.settings.visit_charge ?? 300} / visit</span>
+                   </div>
+                 </div>
+               </div>
+
+               {/* Action Buttons — below payment terms so customer is informed before committing */}
                <div className="space-y-3 sm:space-y-4">
                  <button
                    onClick={() => triggerActionWithAddress("download")}
@@ -686,57 +752,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                  </div>
                </div>
 
-               {/* Payment Terms + AMC Trust Block */}
-               <div className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-4">
-                 <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-1">Payment Schedule</div>
-                 
-                 <div className="grid grid-cols-3 gap-2">
-                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
-                     <CreditCard className="w-4 h-4 text-blue-500" />
-                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
-                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Advance</span>
-                   </div>
-                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
-                     <Truck className="w-4 h-4 text-blue-500" />
-                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">80%</span>
-                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Delivery</span>
-                   </div>
-                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
-                     <Handshake className="w-4 h-4 text-emerald-500" />
-                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
-                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Handover</span>
-                   </div>
-                 </div>
-
-                 <div className="pt-3 border-t border-dashed border-zinc-200 dark:border-zinc-800">
-                   <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-3">Optional After-Sales (AMC)</div>
-                   <div className="flex gap-2">
-                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
-                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">1 Year</span>
-                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">5% of total</span>
-                     </div>
-                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
-                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">2 Year</span>
-                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">8% of total</span>
-                     </div>
-                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
-                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">3 Year</span>
-                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">10% of total</span>
-                     </div>
-                   </div>
-                   <div className="flex justify-between items-center mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5"><Wrench className="w-3 h-3"/> Post-Handover Visit</span>
-                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">&#x20B9;300 / visit</span>
-                   </div>
-                 </div>
-               </div>
-
                {/* Terms Disclaimer */}
                <div className="text-[9px] font-semibold text-zinc-500 dark:text-zinc-400 leading-relaxed space-y-1 px-1">
-                 <p># Product warranty as per company terms & conditions.</p>
-                 <p># Warranty does not cover physically damaged accessories.</p>
-                 <p># AMC includes site visits & labour — no product cost.</p>
-                 <p># Quote valid for {pricingCache.settings.quote_validity_days ?? 15} days from issue date.</p>
+                 <p>• Product warranty as per company terms & conditions.</p>
+                 <p>• Warranty does not cover physically damaged accessories.</p>
+                 <p>• AMC includes site visits & labour — no product cost.</p>
+                 <p>• Quote valid for {pricingCache.settings.quote_validity_days ?? 15} days from issue date.</p>
                </div>
 
             </div>

@@ -477,6 +477,46 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </div>
             )}
 
+            <hr style={{ border: "none", borderTop: "1px solid #E4E4DC", margin: "0 0 28px" }} />
+
+            {/* ── Visual Intelligence Comparison ────────────────────────── */}
+            <div style={{ marginBottom: 40 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase", color: "#6B7380", marginBottom: 16 }}>
+                Visual Intelligence: Resolution Comparison
+              </div>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid #E4E4DC" }}>
+                  <img 
+                    src="/comparisons/2mp.png" 
+                    alt="2MP View" 
+                    style={{ width: "100%", display: "block", aspectRatio: "16/9", objectFit: "cover" }} 
+                  />
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 12px", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", color: "white" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700 }}>2MP Full HD (1080p)</div>
+                    <div style={{ fontSize: 9, opacity: 0.8 }}>Standard identification range: 10-15ft</div>
+                  </div>
+                </div>
+
+                <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid #C8922A" }}>
+                  <img 
+                    src="/comparisons/5mp.png" 
+                    alt="5MP View" 
+                    style={{ width: "100%", display: "block", aspectRatio: "16/9", objectFit: "cover" }} 
+                  />
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 12px", background: "rgba(200,146,42,0.9)", color: "white" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700 }}>5MP Ultra 3K HD</div>
+                    <div style={{ fontSize: 9, opacity: 0.9 }}>Advanced identification range: 25-30ft</div>
+                  </div>
+                  <div style={{ position: "absolute", top: 8, right: 8, background: "#C8922A", color: "white", fontSize: 8, fontWeight: 900, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" }}>Recommended</div>
+                </div>
+              </div>
+              
+              <p style={{ fontSize: 11.5, color: "#6B7380", marginTop: 12, lineHeight: 1.5, fontStyle: "italic" }}>
+                * Images are simulated for comparative purposes. 5MP resolution provides 2.5x more detail than standard 2MP cameras, crucial for facial recognition and license plate capture at longer distances.
+              </p>
+            </div>
+
             <hr style={{ border: "none", borderTop: "1px solid #E4E4DC", margin: "0 0 24px" }} />
 
             {/* Action buttons */}

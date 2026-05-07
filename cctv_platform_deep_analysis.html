@@ -1,0 +1,494 @@
+
+<h2 class="sr-only">TEAM CCTV platform deep analysis — 3-card system, wizard questions, HD vs IP, price range, and customer UX recommendations</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1rem 0 2rem;font-size:14px;color:var(--color-text-primary)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:1.5rem}
+.tab{padding:7px 14px;border-radius:var(--border-radius-md);font-size:13px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.tab.active{background:var(--color-background-primary);border-color:var(--color-border-primary);color:var(--color-text-primary);font-weight:500}
+.sec{display:none}.sec.active{display:block}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.1rem}
+.card.bad{border-color:#F09595;background:#FCEBEB}
+.card.good{border-color:#B5D4F4;background:#E6F1FB}
+.card.warn{border-color:#FAC775;background:#FAEEDA}
+.card.green{border-color:#C0DD97;background:#EAF3DE}
+.lbl{font-size:10px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.lbl.red{color:#A32D2D}.lbl.blue{color:#185FA5}.lbl.amber{color:#854F0B}.lbl.green{color:#3B6D11}
+.h3{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.sub{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;margin-top:6px}
+.badge.red{background:#FCEBEB;color:#A32D2D}
+.badge.green{background:#EAF3DE;color:#3B6D11}
+.badge.blue{background:#E6F1FB;color:#185FA5}
+.badge.amber{background:#FAEEDA;color:#854F0B}
+.badge.navy{background:#E8EDF5;color:#0C447C}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:16px 0}
+.plan-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.1rem;position:relative;transition:transform .15s}
+.plan-card:hover{transform:translateY(-2px)}
+.plan-card.featured{border:2px solid var(--color-border-info)}
+.plan-title{font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:2px}
+.plan-mp{font-size:11px;color:var(--color-text-secondary);margin-bottom:8px}
+.plan-price{font-size:22px;font-weight:500;color:var(--color-text-primary);line-height:1}
+.plan-price-sub{font-size:11px;color:var(--color-text-secondary);margin-bottom:10px;margin-top:2px}
+.plan-tag{font-size:10.5px;font-weight:500;padding:3px 8px;border-radius:5px}
+.feat{font-size:12px;color:var(--color-text-secondary);margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.feat-row{display:flex;align-items:flex-start;gap:6px}
+.feat-row i{font-size:14px;flex-shrink:0;margin-top:0px}
+.feat-row.ok i{color:#3B6D11}.feat-row.no i{color:#A32D2D}.feat-row.mid i{color:#854F0B}
+.recbadge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--color-background-info);color:var(--color-text-info);font-size:10px;font-weight:500;padding:3px 10px;border-radius:8px;white-space:nowrap}
+.q-list{display:flex;flex-direction:column;gap:8px}
+.q-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary)}
+.q-item.missing{border-color:#F09595;background:#FCEBEB}
+.q-item.ok-q{border-color:#C0DD97;background:#EAF3DE}
+.q-item.improve{border-color:#FAC775;background:#FAEEDA}
+.q-num{font-size:11px;font-weight:500;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.q-num.red{background:#F09595;color:#501313}
+.q-num.green{background:#C0DD97;color:#173404}
+.q-num.amber{background:#FAC775;color:#412402}
+.q-text{flex:1}
+.q-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.q-note{font-size:11.5px;color:var(--color-text-secondary);line-height:1.5}
+.compare-bar{display:flex;gap:0;border-radius:var(--border-radius-md);overflow:hidden;border:0.5px solid var(--color-border-tertiary);margin-bottom:12px}
+.compare-col{flex:1;padding:10px 12px;border-right:0.5px solid var(--color-border-tertiary)}
+.compare-col:last-child{border-right:none}
+.compare-col.hd-col{background:#EAF3DE}
+.compare-col.ip-col{background:#E6F1FB}
+.compare-col.hd-hdr{background:#3B6D11;color:white}
+.compare-col.ip-hdr{background:#185FA5;color:white}
+.compare-hdr-text{font-size:12px;font-weight:500;text-align:center}
+.compare-val{font-size:12px;text-align:center;color:var(--color-text-secondary);padding:2px 0}
+.compare-label{font-size:11px;color:var(--color-text-secondary);padding:8px 12px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);font-weight:500}
+.price-sim{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.price-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md)}
+.price-tier{font-size:12px;font-weight:500;min-width:80px}
+.price-bar-wrap{flex:1;height:8px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden}
+.price-bar{height:100%;border-radius:4px}
+.price-range{font-size:12px;color:var(--color-text-secondary);min-width:120px;text-align:right}
+.dot-good{width:8px;height:8px;border-radius:50%;background:#639922;flex-shrink:0}
+.dot-warn{width:8px;height:8px;border-radius:50%;background:#EF9F27;flex-shrink:0}
+.dot-bad{width:8px;height:8px;border-radius:50%;background:#E24B4A;flex-shrink:0}
+.sim-row{display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0}
+.verdict-box{padding:12px 14px;border-radius:var(--border-radius-md);margin-top:12px;display:flex;gap:10px;align-items:flex-start}
+.verdict-box.pass{background:#EAF3DE;border:0.5px solid #C0DD97}
+.verdict-box.fail{background:#FCEBEB;border:0.5px solid #F09595}
+.verdict-box.warn{background:#FAEEDA;border:0.5px solid #FAC775}
+.verdict-icon{font-size:18px;flex-shrink:0}
+.verdict-text{font-size:13px;line-height:1.6;color:var(--color-text-primary)}
+.sechead{font-size:13px;font-weight:500;margin-bottom:12px;color:var(--color-text-primary)}
+</style>
+
+<div class="wrap">
+<div class="tabs">
+  <button class="tab active" onclick="show('cards',this)">3-Card system</button>
+  <button class="tab" onclick="show('wizard',this)">Wizard questions</button>
+  <button class="tab" onclick="show('hdip',this)">HD vs IP decision</button>
+  <button class="tab" onclick="show('quote',this)">Quote page UX</button>
+  <button class="tab" onclick="show('action',this)">Action plan</button>
+</div>
+
+<!-- ─── TAB 1: 3-Card System ─────────────────────────────────── -->
+<div id="cards" class="sec active">
+  <p class="sechead">Current 3-card system — what's wrong</p>
+  <div class="row3">
+    <div class="card bad">
+      <div class="lbl red">Card 1 — current</div>
+      <div class="h3">Basic 5MP</div>
+      <div class="sub">5MP IP Camera · NVR · HDD</div>
+      <span class="badge red"><i class="ti ti-x" aria-hidden="true"></i> Same resolution as Card 2</span>
+    </div>
+    <div class="card bad">
+      <div class="lbl red">Card 2 — current</div>
+      <div class="h3">Standard 5MP</div>
+      <div class="sub">5MP IP Camera · NVR · HDD</div>
+      <span class="badge red"><i class="ti ti-x" aria-hidden="true"></i> Customer can't tell difference</span>
+    </div>
+    <div class="card bad">
+      <div class="lbl red">Card 3 — current</div>
+      <div class="h3">Premium 5MP</div>
+      <div class="sub">5MP IP Camera · NVR · HDD</div>
+      <span class="badge red"><i class="ti ti-x" aria-hidden="true"></i> Why pay more for same MP?</span>
+    </div>
+  </div>
+  <div class="verdict-box fail">
+    <i class="ti ti-alert-triangle verdict-icon" aria-hidden="true" style="color:#A32D2D"></i>
+    <div class="verdict-text">Same resolution (5MP) across all 3 cards destroys the reason cards exist. A customer looks at all 3, sees "5MP" everywhere, and asks "what am I actually paying extra for?" — then calls you instead of clicking. Cards exist to let customers self-select without calling.</div>
+  </div>
+  <div class="divider"></div>
+  <p class="sechead">Recommended 3-card system — completely different approach</p>
+  <div class="row3">
+    <div class="plan-card">
+      <div class="lbl amber">Card 1 — HD analog</div>
+      <div class="plan-title">HD Basic</div>
+      <div class="plan-mp">2MP (1080p Full HD) · DVR system</div>
+      <div class="plan-price">₹6,500<span style="font-size:14px;font-weight:400"> /cam</span></div>
+      <div class="plan-price-sub">4-cam system: ₹28K – ₹42K</div>
+      <span class="plan-tag" style="background:#FAEEDA;color:#412402">Budget · DVR · Coaxial cable</span>
+      <div class="feat">
+        <div class="feat-row ok"><i class="ti ti-check" aria-hidden="true"></i><span>Best value for basic monitoring</span></div>
+        <div class="feat-row ok"><i class="ti ti-check" aria-hidden="true"></i><span>Works in low-bandwidth areas</span></div>
+        <div class="feat-row no"><i class="ti ti-x" aria-hidden="true"></i><span>No AI features, no PoE</span></div>
+        <div class="feat-row no"><i class="ti ti-x" aria-hidden="true"></i><span>Separate power cable needed</span></div>
+      </div>
+      <div class="badge amber" style="margin-top:10px">Homes · Small shops · Upgrades</div>
+    </div>
+    <div class="plan-card featured">
+      <span class="recbadge"><i class="ti ti-star" aria-hidden="true"></i> Recommended for most</span>
+      <div class="lbl blue">Card 2 — IP standard</div>
+      <div class="plan-title">IP Smart</div>
+      <div class="plan-mp">4MP (2K) · NVR · PoE system</div>
+      <div class="plan-price">₹10,500<span style="font-size:14px;font-weight:400"> /cam</span></div>
+      <div class="plan-price-sub">4-cam system: ₹48K – ₹72K</div>
+      <span class="plan-tag" style="background:#E6F1FB;color:#042C53">Standard · NVR · Single cable</span>
+      <div class="feat">
+        <div class="feat-row ok"><i class="ti ti-check" aria-hidden="true"></i><span>Single Cat6 cable = power + video</span></div>
+        <div class="feat-row ok"><i class="ti ti-check" aria-hidden="true"></i><span>Face detection, motion alerts</span></div>
+        <div class="feat-row ok"><i class="ti ti-check" aria-hidden="true"></i><span>Remote viewing on phone</span></div>
+        <div class="feat-row mid"><i class="ti ti-minus" aria-hidden="true"></i><span>Needs stable internet for remote</span></div>
+      </div>
+      <div class="badge blue" style="margin-top:10px">4-BHK home · Office · Shop</div>
+    </div>
+    <div class="plan-card">
+      <div class="lbl" style="color:#3C3489">Card 3 — IP 4K</div>
+      <div class="plan-title">IP Premium 4K</div>
+      <div class="plan-mp">8MP (4K Ultra HD) · NVR · PoE</div>
+      <div class="plan-price">₹18,000<span style="font-size:14px;font-weight:400"> /cam</span></div>
+      <div class="plan-price-sub">4-cam system: ₹82K – ₹1.2L</div>
+      <span class="plan-tag" style="background:#EEEDFE;color:#26215C">Premium · 4K · AI analytics</span>
+      <div class="feat">
+        <div class="feat-row ok"><i class="ti ti-check" aria-hidden="true"></i><span>Read number plates from 15m</span></div>
+        <div class="feat-row ok"><i class="ti ti-check" aria-hidden="true"></i><span>Identify faces at distance</span></div>
+        <div class="feat-row ok"><i class="ti ti-check" aria-hidden="true"></i><span>Digital zoom stays clear</span></div>
+        <div class="feat-row no"><i class="ti ti-x" aria-hidden="true"></i><span>2× more storage needed</span></div>
+      </div>
+      <div class="badge navy" style="margin-top:10px">Jewellery · Bank · Parking lot</div>
+    </div>
+  </div>
+  <div class="verdict-box pass">
+    <i class="ti ti-check verdict-icon" aria-hidden="true" style="color:#3B6D11"></i>
+    <div class="verdict-text">Now every card is fundamentally different — different technology, different resolution, different cable, different use case, different price. A customer immediately knows which one is theirs. The "Recommended" badge on Card 2 guides 80% of customers (homes + offices) to the right choice without calling.</div>
+  </div>
+
+  <div class="divider"></div>
+  <p class="sechead">Price range display — show min-max next to each card</p>
+  <div class="price-sim">
+    <div class="price-row">
+      <div class="price-tier" style="color:#854F0B">HD Basic</div>
+      <div class="price-bar-wrap"><div class="price-bar" style="width:35%;background:#EF9F27"></div></div>
+      <div class="price-range">4 cam: ₹28K – ₹42K<br><span style="font-size:10px">8 cam: ₹48K – ₹75K</span></div>
+    </div>
+    <div class="price-row">
+      <div class="price-tier" style="color:#185FA5">IP Smart</div>
+      <div class="price-bar-wrap"><div class="price-bar" style="width:60%;background:#378ADD"></div></div>
+      <div class="price-range">4 cam: ₹48K – ₹72K<br><span style="font-size:10px">8 cam: ₹85K – ₹1.2L</span></div>
+    </div>
+    <div class="price-row">
+      <div class="price-tier" style="color:#3C3489">IP 4K</div>
+      <div class="price-bar-wrap"><div class="price-bar" style="width:90%;background:#7F77DD"></div></div>
+      <div class="price-range">4 cam: ₹82K – ₹1.2L<br><span style="font-size:10px">8 cam: ₹1.5L – ₹2.2L</span></div>
+    </div>
+  </div>
+  <div class="sub" style="margin-top:8px">Show these price ranges <strong>on the card itself</strong>, not hidden inside the quote. Customer ko pehle se pata hona chahiye ki ballpark kitna lagega — this reduces drop-off and builds trust. The range updates dynamically based on camera count selected in the wizard.</div>
+</div>
+
+<!-- ─── TAB 2: Wizard Questions ──────────────────────────────── -->
+<div id="wizard" class="sec">
+  <p class="sechead">Current wizard questions — audit</p>
+  <div class="q-list">
+    <div class="q-item ok-q">
+      <div class="q-num green">1</div>
+      <div class="q-text">
+        <div class="q-title">Property type (Home / Shop / Office / Factory)</div>
+        <div class="q-note">✓ Good — this drives the right recommendation. Keep it. Add "Society / Housing complex" as an option, it's a big segment in Jaipur.</div>
+      </div>
+    </div>
+    <div class="q-item ok-q">
+      <div class="q-num green">2</div>
+      <div class="q-text">
+        <div class="q-title">Number of cameras</div>
+        <div class="q-note">✓ Good — but add a helper: "Not sure? Tell us your floor count + entry points and we'll suggest." Many customers don't know how many they need.</div>
+      </div>
+    </div>
+    <div class="q-item ok-q">
+      <div class="q-num green">3</div>
+      <div class="q-text">
+        <div class="q-title">Indoor / Outdoor / Both</div>
+        <div class="q-note">✓ Good — this affects camera type (IP66/IP67 rating). Keep it.</div>
+      </div>
+    </div>
+    <div class="q-item improve">
+      <div class="q-num amber">4</div>
+      <div class="q-text">
+        <div class="q-title">IP camera / HD camera (technology choice)</div>
+        <div class="q-note">⚠ Problem: Customer doesn't know the difference. Asking this question early causes confusion and drop-off. <strong>Move this question AFTER showing them the 3-card comparison.</strong> Let them see the price and benefit difference first, then choose. The wizard should educate, not quiz.</div>
+      </div>
+    </div>
+    <div class="q-item missing">
+      <div class="q-num red">5</div>
+      <div class="q-text">
+        <div class="q-title">MISSING — Budget range</div>
+        <div class="q-note">Critical missing question for Indian market. Show 4 options: "Under ₹30K / ₹30K–₹75K / ₹75K–₹1.5L / No limit". This single question lets you pre-filter which card to highlight. Without it, you're recommending 4K to someone with ₹25K budget.</div>
+      </div>
+    </div>
+    <div class="q-item missing">
+      <div class="q-num red">6</div>
+      <div class="q-text">
+        <div class="q-title">MISSING — New installation or upgrade?</div>
+        <div class="q-note">If it's an upgrade of an existing DVR system, recommending IP/NVR means new wiring cost (₹8K–₹20K extra). Customer needs to know this upfront. HD cameras reuse existing coaxial cable — huge saving. This question changes the entire recommendation.</div>
+      </div>
+    </div>
+    <div class="q-item missing">
+      <div class="q-num red">7</div>
+      <div class="q-text">
+        <div class="q-title">MISSING — Special requirement (single most important question)</div>
+        <div class="q-note">Options: "Just basic monitoring / See faces clearly / Read vehicle number plates / Cover large area (warehouse/parking) / All of the above". This single answer determines minimum MP requirement. A jeweller who says "read number plates" needs 8MP at the entrance — you can't give them 2MP and then blame the camera later.</div>
+      </div>
+    </div>
+    <div class="q-item missing">
+      <div class="q-num red">8</div>
+      <div class="q-text">
+        <div class="q-title">MISSING — Remote viewing (internet available?)</div>
+        <div class="q-note">IP cameras require a stable internet connection for remote viewing on phone. If the customer's site has poor internet (common in industrial areas, storage facilities), IP-over-WiFi will fail. Ask: "Do you have broadband internet at the installation site?" If no → recommend HD system or local-access-only IP setup.</div>
+      </div>
+    </div>
+    <div class="q-item improve">
+      <div class="q-num amber">9</div>
+      <div class="q-text">
+        <div class="q-title">Night vision / low-light coverage</div>
+        <div class="q-note">⚠ If this question exists, it's not weighted correctly in recommendations. Infrared vs full-colour night vision is a ₹3,000–₹8,000 per camera difference. Customer should understand: "Basic IR (black/white at night)" vs "Color Night Vision (Hikvision AcuSense/Dahua WizSense)" — show them a real comparison image.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <p class="sechead">Recommended wizard question order</p>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:13px">
+      <span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px;min-width:32px;text-align:center">Q1</span>
+      <span>Property type — Home / Shop / Office / Factory / Society</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:13px">
+      <span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px;min-width:32px;text-align:center">Q2</span>
+      <span>Number of cameras (with helper: "help me decide")</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:13px">
+      <span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px;min-width:32px;text-align:center">Q3</span>
+      <span>Indoor / Outdoor / Both</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:13px">
+      <span style="background:#FAEEDA;color:#412402;font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px;min-width:32px;text-align:center">Q4</span>
+      <span>New installation or upgrading existing system?</span>
+      <span class="badge amber">NEW</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:13px">
+      <span style="background:#FAEEDA;color:#412402;font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px;min-width:32px;text-align:center">Q5</span>
+      <span>What's most important to you? (basic monitoring / face ID / number plate / large area)</span>
+      <span class="badge amber">NEW</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:13px">
+      <span style="background:#FAEEDA;color:#412402;font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px;min-width:32px;text-align:center">Q6</span>
+      <span>Budget range: Under ₹30K / ₹30K–₹75K / ₹75K–₹1.5L / Flexible</span>
+      <span class="badge amber">NEW</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:13px">
+      <span style="background:#EAF3DE;color:#173404;font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px;min-width:32px;text-align:center">Q7</span>
+      <span>Night vision needed? Basic IR / Full-colour night vision</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:13px">
+      <span style="background:#EAF3DE;color:#173404;font-size:11px;font-weight:500;padding:2px 8px;border-radius:5px;min-width:32px;text-align:center">Q8</span>
+      <span>Internet at site? (for remote phone viewing) — Yes / No / Don't know</span>
+      <span class="badge green">NEW</span>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:6px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)">
+      → Based on Q4+Q5+Q6, auto-select and highlight the right card. Show HD comparison note if Q4=upgrade OR Q6=under ₹30K.
+    </div>
+  </div>
+</div>
+
+<!-- ─── TAB 3: HD vs IP Decision ─────────────────────────────── -->
+<div id="hdip" class="sec">
+  <p class="sechead">Should you show HD quotation when customer selects IP only?</p>
+  <div class="verdict-box pass">
+    <i class="ti ti-check verdict-icon" aria-hidden="true" style="color:#3B6D11"></i>
+    <div class="verdict-text"><strong>Yes, always show HD as a "save money" comparison</strong> — but frame it correctly: "Here's what you selected (IP 4MP). Here's the HD equivalent at 20–30% lower cost. For your use case, we recommend IP because..." This is honest, builds trust, and prevents buyer's remorse after installation.</div>
+  </div>
+
+  <div class="divider"></div>
+  <p class="sechead">HD vs IP — what to show in comparison</p>
+  <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px">
+    <div class="compare-bar" style="border:none;border-radius:0;margin:0">
+      <div class="compare-col compare-col compare-col" style="background:var(--color-background-secondary);flex:1.4;border-right:0.5px solid var(--color-border-tertiary)"><div style="font-size:11px;font-weight:500;color:var(--color-text-secondary)">Feature</div></div>
+      <div class="compare-col" style="background:#3B6D11;flex:1"><div class="compare-hdr-text" style="color:white">HD Analog</div><div style="font-size:10px;text-align:center;color:rgba(255,255,255,.6)">DVR · Coaxial</div></div>
+      <div class="compare-col" style="background:#185FA5;flex:1"><div class="compare-hdr-text" style="color:white">IP Smart</div><div style="font-size:10px;text-align:center;color:rgba(255,255,255,.6)">NVR · Cat6</div></div>
+    </div>
+    <div style="display:flex;border-bottom:0.5px solid var(--color-border-tertiary)">
+      <div style="flex:1.4;padding:8px 12px;font-size:12px;font-weight:500;border-right:0.5px solid var(--color-border-tertiary)">Price (4-cam system)</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;background:#EAF3DE;color:#173404;font-weight:500">₹28K – ₹42K</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;background:#E6F1FB;color:#042C53;font-weight:500">₹48K – ₹72K</div>
+    </div>
+    <div style="display:flex;border-bottom:0.5px solid var(--color-border-tertiary)">
+      <div style="flex:1.4;padding:8px 12px;font-size:12px;font-weight:500;border-right:0.5px solid var(--color-border-tertiary)">Resolution</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:var(--color-text-secondary)">2MP (1080p)</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:var(--color-text-secondary)">4MP (2K)</div>
+    </div>
+    <div style="display:flex;border-bottom:0.5px solid var(--color-border-tertiary)">
+      <div style="flex:1.4;padding:8px 12px;font-size:12px;font-weight:500;border-right:0.5px solid var(--color-border-tertiary)">Cable</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:var(--color-text-secondary)">Coaxial + power</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:var(--color-text-secondary)">Cat6 only (PoE)</div>
+    </div>
+    <div style="display:flex;border-bottom:0.5px solid var(--color-border-tertiary)">
+      <div style="flex:1.4;padding:8px 12px;font-size:12px;font-weight:500;border-right:0.5px solid var(--color-border-tertiary)">Max cable run</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:#3B6D11;font-weight:500">500m ✓</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:var(--color-text-secondary)">100m (extender needed)</div>
+    </div>
+    <div style="display:flex;border-bottom:0.5px solid var(--color-border-tertiary)">
+      <div style="flex:1.4;padding:8px 12px;font-size:12px;font-weight:500;border-right:0.5px solid var(--color-border-tertiary)">Remote phone viewing</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:var(--color-text-secondary)">Yes (basic app)</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:#3B6D11;font-weight:500">Yes (better app) ✓</div>
+    </div>
+    <div style="display:flex;border-bottom:0.5px solid var(--color-border-tertiary)">
+      <div style="flex:1.4;padding:8px 12px;font-size:12px;font-weight:500;border-right:0.5px solid var(--color-border-tertiary)">AI motion alerts</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:#A32D2D">No</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:#3B6D11;font-weight:500">Yes ✓</div>
+    </div>
+    <div style="display:flex;border-bottom:0.5px solid var(--color-border-tertiary)">
+      <div style="flex:1.4;padding:8px 12px;font-size:12px;font-weight:500;border-right:0.5px solid var(--color-border-tertiary)">Upgrade existing wiring</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:#3B6D11;font-weight:500">Yes ✓ (reuse coax)</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:12px;color:#A32D2D">No (new Cat6 needed)</div>
+    </div>
+    <div style="display:flex">
+      <div style="flex:1.4;padding:8px 12px;font-size:12px;font-weight:500;border-right:0.5px solid var(--color-border-tertiary)">Best for</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:11px;color:#173404">Budget installs, upgrades, long cable runs</div>
+      <div style="flex:1;padding:8px;text-align:center;font-size:11px;color:#042C53">New installs, smart features, better image</div>
+    </div>
+  </div>
+
+  <div class="verdict-box warn">
+    <i class="ti ti-bulb verdict-icon" aria-hidden="true" style="color:#854F0B"></i>
+    <div class="verdict-text"><strong>Recommendation logic:</strong> If customer selects "IP only" but answers Q4=upgrade + Q6=under ₹30K → show a banner: "Switching to IP requires new wiring (₹8K–₹20K extra). HD cameras would save you ₹15K–₹25K total. Want to compare?" This one smart prompt will convert 20–30% of customers to higher-trust deals.</div>
+  </div>
+</div>
+
+<!-- ─── TAB 4: Quote Page UX ─────────────────────────────────── -->
+<div id="quote" class="sec">
+  <p class="sechead">Quote page — what customers struggle to understand</p>
+  <div class="q-list">
+    <div class="q-item missing">
+      <div class="q-num red">1</div>
+      <div class="q-text">
+        <div class="q-title">Technical model numbers confuse customers</div>
+        <div class="q-note">Customers don't know what "DS-2CD2143G2-I" means. Replace with: <strong>"Hikvision 4MP Outdoor Dome Camera"</strong> with a small photo. Model number goes in a "technical details" expandable section — hidden by default. 80% of customers don't need it.</div>
+      </div>
+    </div>
+    <div class="q-item missing">
+      <div class="q-num red">2</div>
+      <div class="q-text">
+        <div class="q-title">Storage shown as "2TB HDD" — meaningless to customer</div>
+        <div class="q-note">Translate: <strong>"2TB storage = 45 days of recording with 6 cameras (H.265)"</strong>. Every customer wants to know "how many days back can I watch?" — give them that answer directly on the quote. This is a conversion booster — it shows they're getting real value.</div>
+      </div>
+    </div>
+    <div class="q-item improve">
+      <div class="q-num amber">3</div>
+      <div class="q-text">
+        <div class="q-title">No visual of what 4MP vs 2MP actually looks like</div>
+        <div class="q-note">Add a simple before/after comparison image on the quote page showing a face at 5 metres in 2MP vs 4MP. One image = 1000 words. Customer immediately understands why they're paying more. This is the single highest-ROI UX addition you can make to the quote page.</div>
+      </div>
+    </div>
+    <div class="q-item improve">
+      <div class="q-num amber">4</div>
+      <div class="q-text">
+        <div class="q-title">Price breakdown doesn't show "what I'm saving vs market rate"</div>
+        <div class="q-note">Add a single line: <strong>"Market rate for this setup: ₹95,000 – ₹1,10,000. Your TEAM CCTV price: ₹74,000."</strong> This anchors the customer to a higher reference price and makes your quote feel like a deal. Common practice in US/UK CCTV companies — not done in India yet.</div>
+      </div>
+    </div>
+    <div class="q-item ok-q">
+      <div class="q-num green">5</div>
+      <div class="q-text">
+        <div class="q-title">Validity period is shown — good</div>
+        <div class="q-note">✓ The "Valid for 7 days" with countdown is excellent urgency-building UX. Keep it. Make the countdown pulse red when ≤3 days remain.</div>
+      </div>
+    </div>
+    <div class="q-item missing">
+      <div class="q-num red">6</div>
+      <div class="q-text">
+        <div class="q-title">No WhatsApp "Accept this quote" option</div>
+        <div class="q-note">In India, many customers (especially 45+) will not click a button on a website to "accept". They want to call or WhatsApp. Add a WhatsApp button: "Message us on WhatsApp to confirm" next to the Accept button. This alone will increase conversions from quote views significantly for the Jaipur market.</div>
+      </div>
+    </div>
+    <div class="q-item improve">
+      <div class="q-num amber">7</div>
+      <div class="q-text">
+        <div class="q-title">Quote page doesn't show the assigned sales person</div>
+        <div class="q-note">Show: "Your TEAM contact: Rahul Sharma · +91 98290 XXXXX". A real person's name and photo builds 3× more trust than a company number. The customer has been through a wizard, they feel they have a relationship — confirm it by showing who will call them.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TAB 5: Action Plan ────────────────────────────────────── -->
+<div id="action" class="sec">
+  <p class="sechead">Priority action plan — week by week</p>
+  <div class="q-list">
+    <div class="q-item" style="border-color:#E24B4A;background:#FCEBEB">
+      <div class="q-num red">W1</div>
+      <div class="q-text">
+        <div class="q-title">Redesign 3 cards — HD / IP 4MP / IP 8MP 4K</div>
+        <div class="q-note">Different technology, different cable, different price range on each card. Add "Recommended" badge to IP Smart. Add min-max price range per card. This is the single highest-impact change.</div>
+      </div>
+    </div>
+    <div class="q-item" style="border-color:#E24B4A;background:#FCEBEB">
+      <div class="q-num red">W1</div>
+      <div class="q-text">
+        <div class="q-title">Add 3 missing wizard questions</div>
+        <div class="q-note">Q: New or upgrade? Q: What matters most (basic / face ID / number plate)? Q: Budget range? These 3 questions transform recommendations from generic to personalised.</div>
+      </div>
+    </div>
+    <div class="q-item" style="border-color:#FAC775;background:#FAEEDA">
+      <div class="q-num amber">W2</div>
+      <div class="q-text">
+        <div class="q-title">Quote page: replace model numbers with product names + photos</div>
+        <div class="q-note">Translate "2TB HDD" to "45 days recording". Add market rate anchor price. Show sales person's name + photo on quote.</div>
+      </div>
+    </div>
+    <div class="q-item" style="border-color:#FAC775;background:#FAEEDA">
+      <div class="q-num amber">W2</div>
+      <div class="q-text">
+        <div class="q-title">Add HD comparison banner in configurator</div>
+        <div class="q-note">When customer selects IP but has upgrade situation or low budget → show smart suggestion to compare with HD. Show the price saving clearly.</div>
+      </div>
+    </div>
+    <div class="q-item" style="border-color:#C0DD97;background:#EAF3DE">
+      <div class="q-num green">W3</div>
+      <div class="q-text">
+        <div class="q-title">Add WhatsApp confirmation button on quote page</div>
+        <div class="q-note">Pre-filled WhatsApp message: "Hi TEAM CCTV, I want to confirm Quote #QT-2026-XXXX for ₹74,458." One click. Jaipur market will use this more than the digital accept button.</div>
+      </div>
+    </div>
+    <div class="q-item" style="border-color:#C0DD97;background:#EAF3DE">
+      <div class="q-num green">W4</div>
+      <div class="q-text">
+        <div class="q-title">Add 2MP vs 4MP visual comparison to quote page</div>
+        <div class="q-note">A face at 5 metres, two side-by-side images. Justifies the IP Smart price premium better than any text description. Can be a static image pair hosted in Firebase Storage.</div>
+      </div>
+    </div>
+    <div class="q-item" style="border-color:#B5D4F4;background:#E6F1FB">
+      <div class="q-num" style="background:#B5D4F4;color:#042C53">W5</div>
+      <div class="q-text">
+        <div class="q-title">Add "help me decide camera count" helper to wizard Q2</div>
+        <div class="q-note">A small form: "Floors: __ · Entry doors: __ · Parking: yes/no" → auto-suggests camera count. Customers who don't know what they need will use this and be more likely to complete the wizard.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function show(id, btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>

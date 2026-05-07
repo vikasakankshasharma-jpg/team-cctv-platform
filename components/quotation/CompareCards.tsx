@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import {
   Check,
   ShieldCheck,
@@ -39,6 +39,8 @@ interface CompareCardsProps {
   settings: AppSettings;
   cablingDone: boolean;
   recommendation?: RecommendedOutput | null;
+  /** The technology the customer explicitly chose in the wizard (IP / HD / undefined = not sure) */
+  customerTechnology?: "HD" | "IP";
   promoterDiscount?: { percent: number; flat: number };
   evaluatedAddonRules: any;
 }
@@ -152,6 +154,7 @@ export function CompareCards({
   settings,
   cablingDone,
   recommendation,
+  customerTechnology,
   promoterDiscount,
   evaluatedAddonRules,
 }: CompareCardsProps) {
@@ -187,9 +190,12 @@ export function CompareCards({
         const camProduct = products.find(
           (p) => p.technical_name === camTechnicalName
         );
+        // isRecommended: matches option number AND respects the customer's
+        // chosen technology — fixes the bug where HD recommendations were
+        // silently ignored due to a hardcoded "&& co.technology === IP" check.
         const isRecommended =
           recommendation?.camera_option === co.option &&
-          co.technology === "IP";
+          co.technology === (customerTechnology ?? "IP");
 
         // Build add-on list for this card (only visible ones)
         const visibleAddons = (addons as Addon[]).filter((a) => {
@@ -301,10 +307,12 @@ export function CompareCards({
           activeCheckoutOption?.option === card.option;
 
         // ── Tier label ──────────────────────────────────────────────────────
-        let tierName = "Essential";
-        if (card.isRecommended) tierName = "Recommended";
-        else if (idx === cardsData.length - 1 && cardsData.length > 1)
-          tierName = "Premium";
+        // If customer chose HD and this card is IP → label it as "Smart Upgrade"
+        const isUpgradeSuggestion = customerTechnology === "HD" && card.isIP;
+        let tierName = "Budget";
+        if (isUpgradeSuggestion) tierName = "Smart Upgrade";
+        else if (card.isRecommended) tierName = "Recommended";
+        else if (idx === cardsData.length - 1 && cardsData.length > 1) tierName = "Premium";
 
         // ── Savings vs most expensive ────────────────────────────────────────
         const savings = maxPrice - card.pricing.total_payable;
@@ -316,12 +324,23 @@ export function CompareCards({
           ? "5MP Ultra-HD"
           : card.is4MP
           ? "4MP Pro-HD"
-          : "2MP Standard-HD";
+          : "2MP Full-HD";
         const resIcon = card.is5MP
           ? "text-purple-500"
           : card.is4MP
           ? "text-blue-500"
           : "text-zinc-400";
+
+        // ── Technology badge label ────────────────────────────────────────────
+        const techBadgeLabel = card.isIP ? "IP · NVR · Cat6" : "HD · DVR · Coaxial";
+        const techBadgeColor = card.isIP
+          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/40"
+          : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40";
+
+        // ── Price per camera ──────────────────────────────────────────────────
+        const pricePerCam = cameraCount > 0
+          ? Math.round(card.pricing.total_payable / cameraCount)
+          : 0;
 
         // ── Card border / bg ─────────────────────────────────────────────────
         const cardClass = isCheckout
@@ -348,11 +367,17 @@ export function CompareCards({
             }}
             className={`relative p-5 sm:p-6 sm:p-7 rounded-[32px] sm:rounded-[36px] transition-all duration-300 cursor-pointer border-2 flex-none w-[82vw] sm:w-auto snap-center touch-manipulation active:scale-[0.98] ${cardClass.replace('scale-105', 'sm:scale-105')}`}
           >
-            {/* ── Top badge: Best Value ────────────────────────────────────── */}
+            {/* ── Top badge ────────────────────────────────────────────────── */}
             {card.isRecommended && (
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-amber-400 to-amber-600 text-white rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/25 whitespace-nowrap flex items-center gap-1.5 z-10">
                 <Zap className="w-2.5 h-2.5 fill-white" />
                 Best Value Match
+              </div>
+            )}
+            {isUpgradeSuggestion && !card.isRecommended && (
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/25 whitespace-nowrap flex items-center gap-1.5 z-10">
+                <Zap className="w-2.5 h-2.5 fill-white" />
+                Smart Upgrade
               </div>
             )}
 
@@ -360,44 +385,44 @@ export function CompareCards({
             <div className="flex flex-col items-center text-center mt-4 mb-5">
               <div
                 id={`tier-label-${idx}`}
-                className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${
-                  isCheckout
-                    ? "text-blue-500"
-                    : card.isRecommended
-                    ? "text-amber-500"
+                className={`text-[9px] font-black uppercase tracking-[0.2em] mb-2 ${
+                  isCheckout ? "text-blue-500"
+                    : card.isRecommended ? "text-amber-500"
+                    : isUpgradeSuggestion ? "text-indigo-500"
                     : "text-zinc-400"
                 }`}
               >
                 {tierName}
               </div>
+
+              {/* Technology badge — HD/DVR vs IP/NVR */}
+              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black border mb-3 ${techBadgeColor}`}>
+                {card.isIP ? <Network className="w-2.5 h-2.5" /> : <Camera className="w-2.5 h-2.5" />}
+                {techBadgeLabel}
+              </div>
+
               <div
-                className={`p-2.5 rounded-2xl mb-4 transition-colors ${
-                  isCheckout
-                    ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
-                    : card.isRecommended
-                    ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                className={`p-2.5 rounded-2xl mb-3 transition-colors ${
+                  isCheckout ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                    : card.isRecommended ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                    : isUpgradeSuggestion ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
                     : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
                 }`}
                 aria-label={`${card.technology} camera system`}
               >
-                {card.isIP ? (
-                  <Monitor className="w-6 h-6" />
-                ) : (
-                  <Camera className="w-6 h-6" />
-                )}
+                {card.isIP ? <Monitor className="w-6 h-6" /> : <Camera className="w-6 h-6" />}
               </div>
               <h4
                 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight leading-tight text-center px-2"
                 title={card.camProduct?.display_name}
               >
-                {card.camProduct?.display_name ||
-                  `${card.technology} Option ${card.option}`}
+                {card.camProduct?.display_name || `${card.technology} Option ${card.option}`}
               </h4>
             </div>
 
             {/* ── Price ────────────────────────────────────────────────────── */}
             <div
-              className={`text-center mb-6 py-5 rounded-2xl ${
+              className={`text-center mb-4 py-5 rounded-2xl animate-in fade-in zoom-in-95 duration-200 ${
                 isCheckout
                   ? "bg-blue-50 dark:bg-blue-900/20"
                   : "bg-white dark:bg-zinc-950"
@@ -423,8 +448,16 @@ export function CompareCards({
                   {card.pricing.total_payable.toLocaleString("en-IN")}
                 </span>
               </div>
-              <div className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 mt-2 uppercase tracking-widest">
-                Incl. GST & Installation
+              <div className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 mt-1 uppercase tracking-widest">
+                Incl. GST &amp; Installation
+              </div>
+              {/* Price per camera — helps benchmark against competitor quotes */}
+              <div className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 mt-1">
+                ₹{pricePerCam.toLocaleString("en-IN")}<span className="font-medium text-zinc-400"> / camera</span>
+              </div>
+              {/* Context: what this price is based on */}
+              <div className="text-[9px] font-medium text-zinc-400 dark:text-zinc-500 mt-1">
+                {cameraCount} cameras · {recordingDays} days recording
               </div>
               
               {/* ── Savings badge (Moved here to prevent overlap) ───────────── */}
@@ -445,6 +478,27 @@ export function CompareCards({
                     </span>
                   </div>
                 )}
+            </div>
+
+            {/* What's Included mini-list */}
+            <div className="mb-5 pb-4 border-b border-zinc-100 dark:border-zinc-800/60">
+              <p className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.18em] mb-2.5">
+                What&apos;s Included
+              </p>
+              <div className="grid grid-cols-1 gap-1.5">
+                {[
+                  { label: `${cameraCount}× ${card.camProduct?.display_name?.split(" (")[0] ?? card.technology + " Camera"}`, icon: "📷" },
+                  { label: `1× ${card.recType} (${cameraCount <= 4 ? "4" : cameraCount <= 8 ? "8" : "16"}-Ch Recorder)`, icon: "📺" },
+                  { label: "1× 1TB Surveillance HDD", icon: "💾" },
+                  { label: card.isIP ? `Cat6 UTP Cable (~${cameraCount * 25}m)` : `RG59 Coaxial (~${cameraCount * 25}m)`, icon: "🛡️" },
+                  { label: "Professional Installation & Testing", icon: "🔧" },
+                ].map(item => (
+                  <div key={item.label} className="flex items-center gap-2">
+                    <span className="text-[11px] leading-none shrink-0">{item.icon}</span>
+                    <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 leading-snug">{item.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* ── Hardware Specs ────────────────────────────────────────────── */}

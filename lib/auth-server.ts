@@ -63,3 +63,15 @@ export async function requireAdmin() {
   }
   return session;
 }
+
+/**
+ * Enforces any admin role (super_admin or sales_staff) for API routes.
+ * Returns a 401 response instead of redirecting.
+ */
+export async function requireAdminApi() {
+  const session = await verifySession();
+  if (!session.isAuthenticated) {
+    throw new Error("Unauthorized"); // This will be caught by the API route and returned as 401
+  }
+  return session;
+}

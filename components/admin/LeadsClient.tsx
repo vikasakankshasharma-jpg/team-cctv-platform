@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Users, Eye, Phone, MapPin, Search, Filter, Loader2, Target, Zap, Waves, ChevronRight, History } from "lucide-react";
 import type { Lead } from "@/types";
-import { updateLeadStatus } from "@/app/actions/leads";
+import { updateLeadStatus, assignLeadToSalesperson } from "@/app/actions/leads";
 import Link from "next/link";
 import { PageHeader } from "./PageHeader";
 import { useRouter } from "next/navigation";
@@ -13,14 +13,17 @@ interface LeadsClientProps {
   initialLeads: Lead[];
   industrialLeads: any[];
   nextCursor?: string | null;
+  salespeople?: { id: string; name: string }[];
+  isAdmin?: boolean;
 }
 
-export function LeadsClient({ initialLeads, industrialLeads, nextCursor }: LeadsClientProps) {
+export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespeople = [], isAdmin = false }: LeadsClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"standard" | "industrial">("standard");
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [isAssigning, setIsAssigning] = useState<string | null>(null);
   const [historyLead, setHistoryLead] = useState<{ id: string, name: string } | null>(null);
 
   const currentDataset = activeTab === "standard" ? initialLeads : industrialLeads;
@@ -44,6 +47,23 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor }: Leads
       console.error("Failed to update status:", error);
     } finally {
       setIsUpdating(null);
+    }
+  };
+
+  const handleAssignSalesperson = async (leadId: string, spId: string) => {
+    setIsAssigning(leadId);
+    try {
+      let spName = null;
+      if (spId !== "unassigned") {
+        const sp = salespeople.find(s => s.id === spId);
+        if (sp) spName = sp.name;
+      }
+      
+      await assignLeadToSalesperson(leadId, spId === "unassigned" ? null : spId, spName);
+    } catch (error) {
+      console.error("Failed to assign salesperson:", error);
+    } finally {
+      setIsAssigning(null);
     }
   };
 
@@ -251,7 +271,32 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor }: Leads
                          {isUpdating === lead.id && (
                            <Loader2 className="w-3.5 h-3.5 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400" />
                          )}
-                      </div>
+                       </div>
+                       
+                       {/* Salesperson Assignment Dropdown */}
+                       {activeTab === "standard" && isAdmin && (
+                         <div className="mt-2 relative">
+                            <select
+                              value={(lead as Lead).assigned_to_salesperson_id || "unassigned"}
+                              onChange={(e) => handleAssignSalesperson(lead.id!, e.target.value)}
+                              disabled={isAssigning === lead.id}
+                              className={`appearance-none bg-zinc-50 dark:bg-zinc-900 border ${(lead as Lead).assigned_to_salesperson_id ? 'border-blue-500/30 text-blue-600 dark:text-blue-400' : 'border-zinc-200 dark:border-zinc-800 text-zinc-500'} font-bold text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-lg w-full max-w-[120px] outline-none cursor-pointer text-center truncate ${isAssigning === lead.id ? 'opacity-50' : ''}`}
+                            >
+                              <option value="unassigned">Unassigned</option>
+                              {salespeople.map(sp => (
+                                <option key={sp.id} value={sp.id}>{sp.name}</option>
+                              ))}
+                            </select>
+                            {isAssigning === lead.id && (
+                              <Loader2 className="w-3 h-3 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400" />
+                            )}
+                         </div>
+                       )}
+                       {activeTab === "standard" && !isAdmin && (lead as Lead).assigned_to_salesperson_name && (
+                         <div className="mt-2 text-[9px] font-black text-blue-500 uppercase tracking-widest">
+                           Assigned to: {(lead as Lead).assigned_to_salesperson_name}
+                         </div>
+                       )}
                     </td>
                     <td className="px-8 py-6 text-right">
                       {activeTab === "standard" ? (
