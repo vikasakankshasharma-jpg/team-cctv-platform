@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://*.googleapis.com; connect-src 'self' https://*.googleapis.com https://*.google.com https://*.firebaseapp.com https://*.firebasestorage.app https://vitals.vercel-insights.com https://*.sentry.io https://api.postalpincode.in https://nominatim.openstreetmap.org; frame-src 'self' https://www.google.com https://*.firebaseapp.com; img-src 'self' data: blob: https://*.googleapis.com https://*.gstatic.com https://*.google.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; worker-src 'self' blob:;"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://*.googleapis.com https://www.recaptcha.net; connect-src 'self' https://*.googleapis.com https://*.google.com https://www.google.com https://www.recaptcha.net https://*.firebaseapp.com https://*.firebasestorage.app https://vitals.vercel-insights.com https://*.sentry.io https://api.postalpincode.in https://nominatim.openstreetmap.org; frame-src 'self' https://www.google.com https://www.recaptcha.net https://*.firebaseapp.com; img-src 'self' data: blob: https://*.googleapis.com https://*.gstatic.com https://*.google.com https://firebasestorage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; worker-src 'self' blob:;"
           },
           {
             key: 'Permissions-Policy',
