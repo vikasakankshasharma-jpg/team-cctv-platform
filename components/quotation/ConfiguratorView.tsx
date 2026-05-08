@@ -572,7 +572,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                  const cRes  = cProd?.technical_name?.includes('5mp') ? '5MP Ultra-HD'
                    : cProd?.technical_name?.includes('4mp') ? '4MP Pro-HD' : '2MP Standard-HD';
                   const rows = [
-                    { label: 'Camera Model', value: cProd?.display_name?.split(' (')[0] ?? (cTech + ' Option ' + cOpt) },
+                    { label: 'Camera Model', value: cProd?.display_name ?? (cTech + ' Option ' + cOpt) },
                     { label: 'Resolution',   value: cRes },
                     { label: 'System Type',  value: cTech + ' / ' + (cTech === 'IP' ? 'NVR' : 'DVR') },
                     { label: 'Storage',      value: selection.recording_days + ' Days Backup' },

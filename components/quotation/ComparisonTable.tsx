@@ -177,7 +177,7 @@ export function ComparisonTable({
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                           <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-tight line-clamp-1 max-w-[120px]">{row.camProduct?.display_name.split(' (')[0]}</span>
+                           <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-tight line-clamp-2 max-w-[140px]">{row.camProduct?.display_name}</span>
                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${
                              row.camProduct?.technical_name.includes('5mp') || row.camProduct?.technical_name.includes('4mp')
                              ? 'bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800'

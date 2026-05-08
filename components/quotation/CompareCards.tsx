@@ -487,7 +487,7 @@ export function CompareCards({
               </p>
               <div className="grid grid-cols-1 gap-1.5">
                 {[
-                  { label: `${cameraCount}× ${card.camProduct?.display_name?.split(" (")[0] ?? card.technology + " Camera"}`, icon: "📷" },
+                  { label: `${cameraCount}× ${card.camProduct?.display_name ?? card.technology + " Camera"}`, icon: "📷" },
                   { label: `1× ${card.recType} (${cameraCount <= 4 ? "4" : cameraCount <= 8 ? "8" : "16"}-Ch Recorder)`, icon: "📺" },
                   { label: "1× 1TB Surveillance HDD", icon: "💾" },
                   { label: card.isIP ? `Cat6 UTP Cable (~${cameraCount * 25}m)` : `RG59 Coaxial (~${cameraCount * 25}m)`, icon: "🛡️" },
