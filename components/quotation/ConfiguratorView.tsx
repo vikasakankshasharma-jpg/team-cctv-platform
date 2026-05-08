@@ -567,28 +567,58 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                {(() => {
                  const cTech = active_checkout_option?.technology ?? selection.technology;
                  const cOpt  = active_checkout_option?.option   ?? selection.selected_camera_option;
-                 const cTn   = `${cTech === 'IP' ? 'cam_ip' : 'cam_hd'}_opt${cOpt}`;
-                 const cProd = pricingCache.products.find(p => p.technical_name === cTn);
-                 const cRes  = cProd?.technical_name?.includes('5mp') ? '5MP Ultra-HD'
-                   : cProd?.technical_name?.includes('4mp') ? '4MP Pro-HD' : '2MP Standard-HD';
-                  const rows = [
-                    { label: 'Camera Model', value: cProd?.display_name ?? (cTech + ' Option ' + cOpt) },
-                    { label: 'Resolution',   value: cRes },
-                    { label: 'System Type',  value: cTech + ' / ' + (cTech === 'IP' ? 'NVR' : 'DVR') },
-                    { label: 'Storage',      value: selection.recording_days + ' Days Backup' },
-                  ];
-                  return (
-                    <div className="rounded-[24px] border border-zinc-100 dark:border-zinc-800 overflow-hidden bg-zinc-50 dark:bg-zinc-950 divide-y divide-zinc-100 dark:divide-zinc-800">
-                      {rows.map(({ label, value }) => (
-                        <div key={label} className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 sm:py-3.5">
-                          <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 shrink-0 whitespace-nowrap">
-                            {label}
-                          </span>
-                          <span className="text-xs font-black text-zinc-900 dark:text-white text-right leading-snug">
-                            {value}
-                          </span>
-                        </div>
-                      ))}
+                 
+                 const cp = calculatePricing({ 
+                    selection: { ...selection, technology: cTech, selected_camera_option: cOpt }, 
+                    products: pricingCache.products, 
+                    addons: pricingCache.addons, 
+                    settings: pricingCache.settings, 
+                    cablingDone, 
+                    referralDiscountPercent: promoterDiscount?.percent || 0, 
+                    referralDiscountFlat: promoterDiscount?.flat || 0, 
+                    evaluatedAddonRules: evaluatedRules,
+                    activeOffer: lead.active_offer
+                 });
+
+                 return (
+                    <div className="rounded-[24px] border border-zinc-100 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-950 shadow-sm">
+                      <div className="px-4 py-3 sm:px-5 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Scope of Work & Materials</span>
+                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Amount</span>
+                      </div>
+                      <div className="divide-y divide-zinc-100 dark:border-zinc-800/50">
+                        {cp.items.map((item) => (
+                          <div key={item.product_id} className="flex items-start justify-between gap-4 px-4 py-3.5 sm:px-5">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <span className="w-6 h-6 mt-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-center text-[10px] font-black text-zinc-600 dark:text-zinc-400 shrink-0">
+                                 {item.qty}x
+                              </span>
+                              <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 leading-snug">
+                                {item.display_name}
+                              </span>
+                            </div>
+                            <span className="text-[13px] font-black text-zinc-900 dark:text-white text-right shrink-0 mt-0.5">
+                              ₹{item.line_total.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        ))}
+                        
+                        {cp.addons.map((addon) => (
+                          <div key={addon.addon_id} className="flex items-start justify-between gap-4 px-4 py-3.5 sm:px-5">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <span className="w-6 h-6 mt-0.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[10px] font-black text-blue-600 dark:text-blue-400 shrink-0">
+                                 {addon.qty ?? 1}x
+                              </span>
+                              <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 leading-snug">
+                                {addon.display_name}
+                              </span>
+                            </div>
+                            <span className="text-[13px] font-black text-zinc-900 dark:text-white text-right shrink-0 mt-0.5">
+                              {addon.price < 0 ? "-" : ""}₹{Math.abs(addon.price).toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   );
                })()}
