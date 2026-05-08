@@ -21,6 +21,7 @@ import {
   Zap,
   Link2,
   Megaphone,
+  Grid3x3,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,6 +51,7 @@ const NAV_GROUPS = [
       { name: "Products",             href: "/admin/products",      icon: Package },
       { name: "Compatibility Matrix", href: "/admin/compatibility", icon: Link2 },
       { name: "Live Pricing",         href: "/admin/pricing",       icon: IndianRupee },
+      { name: "Quotation Matrices",   href: "/admin/pricing/matrices", icon: Grid3x3 },
       { name: "Recommendation Rules", href: "/admin/rules",         icon: Zap },
       { name: "Card Layout Builder",  href: "/admin/card-layouts",  icon: Workflow },
       { name: "Add-ons Manager",      href: "/admin/addons",        icon: Blocks },

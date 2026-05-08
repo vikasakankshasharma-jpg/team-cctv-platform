@@ -80,6 +80,7 @@ export interface Product {
   unit_price: number;            // Computed or manual final selling price
   unit_price_budget?: number;    // NEW: Manual Budget price override
   unit_price_premium?: number;   // NEW: Manual Premium price override
+  option_price_overrides?: Record<string, number>; // Dynamic pricing adjustments based on options
   is_active: boolean;
   features?: string[];           // NEW: Array of FeatureTag IDs this product supports
   
@@ -116,6 +117,7 @@ export interface Product {
 
   created_at?: unknown;
   updated_at?: unknown;
+  updated_by?: string;              // Admin UID who last updated this
 }
 
 export interface Addon {
@@ -211,6 +213,12 @@ export interface PricingResult {
   total_payable: number;
 
   requiresIndustrialQuote?: boolean; // NEW: Flag for > 16 cameras
+  
+  // Margin Intelligence
+  total_purchase_cost?: number;
+  gross_profit_value?: number;
+  gross_profit_percent?: number;
+  margin_warnings?: string[];
 }
 
 export type Quote = PricingResult & { id?: string };
@@ -253,6 +261,7 @@ export interface AppSettings {
   amc_2yr_pct: number;
   amc_3yr_pct: number;
   quote_validity_days: number;
+  minimum_margin_threshold?: number; // E.g., 20 for 20% minimum target margin
 
   updated_at?: unknown;
   updated_by?: string | null;

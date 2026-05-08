@@ -61,8 +61,25 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
 
   // ─── Inline Editing Logic ──────────────────────────────────────────
 
-  const handlePriceChange = (id: string, newPrice: number) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, unit_price: newPrice } : p));
+  const handleInlineChange = (id: string, field: "unit_price" | "base_cost" | "margin_percentage", value: number) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id !== id) return p;
+      const updated = { ...p, [field]: value };
+      
+      if (field === "unit_price") {
+        const cost = updated.base_cost || 0;
+        if (value > 0 && cost > 0) {
+          updated.margin_percentage = Number((((value - cost) / value) * 100).toFixed(2));
+        }
+      } else if (field === "base_cost" || field === "margin_percentage") {
+        const cost = updated.base_cost || 0;
+        const margin = updated.margin_percentage || 0;
+        if (margin > 0 && margin < 100) {
+          updated.unit_price = Math.round(cost / (1 - margin / 100));
+        }
+      }
+      return updated;
+    }));
     setChangedIds(prev => {
       const next = new Set(prev);
       next.add(id);
@@ -81,7 +98,12 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
     setIsPublishing(true);
     const changes = products
       .filter(p => changedIds.has(p.id!))
-      .map(p => ({ id: p.id!, unit_price: p.unit_price }));
+      .map(p => ({ 
+        id: p.id!, 
+        unit_price: p.unit_price, 
+        base_cost: p.base_cost, 
+        margin_percentage: p.margin_percentage 
+      }));
 
     try {
       await updateProductPrices(changes);
@@ -107,7 +129,12 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
         cablingDone: false,
         evaluatedAddonRules: {}
       });
-      return { label: config.label, total: result.total_payable };
+      return { 
+        label: config.label, 
+        total: result.total_payable,
+        profit_percent: result.gross_profit_percent || 0,
+        warnings: result.margin_warnings || []
+      };
     });
   }, [products, settings, addons]);
 
@@ -179,6 +206,8 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
                   <tr>
                     <th className="px-8 py-4">Display Name</th>
                     <th className="px-8 py-4">SKU / Technical Name</th>
+                    <th className="px-8 py-4 text-right">Base Cost (₹)</th>
+                    <th className="px-8 py-4 text-right">Margin %</th>
                     <th className="px-8 py-4 text-right">Selling Price (₹)</th>
                   </tr>
                 </thead>
@@ -192,13 +221,36 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
                         <span className="font-mono text-[10px] text-zinc-400 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-950 px-2 py-1 rounded-md">{product.technical_name}</span>
                       </td>
                       <td className="px-8 py-4 text-right">
+                        <input 
+                          type="number"
+                          value={product.base_cost || ""}
+                          onChange={(e) => handleInlineChange(product.id!, "base_cost", parseFloat(e.target.value) || 0)}
+                          className={`w-24 bg-transparent text-right font-bold text-sm focus:outline-none focus:ring-0 transition-all ${
+                            changedIds.has(product.id!) ? "text-blue-600 dark:text-blue-400" : "text-zinc-500"
+                          }`}
+                        />
+                      </td>
+                      <td className="px-8 py-4 text-right">
+                        <div className="flex justify-end items-center gap-1">
+                          <input 
+                            type="number"
+                            value={product.margin_percentage || ""}
+                            onChange={(e) => handleInlineChange(product.id!, "margin_percentage", parseFloat(e.target.value) || 0)}
+                            className={`w-16 bg-transparent text-right font-bold text-sm focus:outline-none focus:ring-0 transition-all ${
+                              (product.margin_percentage || 0) < (settings.minimum_margin_threshold || 15) ? "text-red-500" : (changedIds.has(product.id!) ? "text-blue-600 dark:text-blue-400" : "text-zinc-500")
+                            }`}
+                          />
+                          <span className="text-zinc-600 text-xs">%</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-4 text-right">
                         <div className="flex justify-end items-center gap-3">
                           {changedIds.has(product.id!) && <AlertCircle className="w-4 h-4 text-blue-500 animate-pulse" />}
                           <div className="relative group/input">
                             <input 
                               type="number"
                               value={product.unit_price}
-                              onChange={(e) => handlePriceChange(product.id!, parseFloat(e.target.value) || 0)}
+                              onChange={(e) => handleInlineChange(product.id!, "unit_price", parseFloat(e.target.value) || 0)}
                               className={`w-32 bg-transparent text-right font-black text-base focus:outline-none focus:ring-0 transition-all ${
                                 changedIds.has(product.id!) ? "text-blue-600 dark:text-blue-400" : "text-zinc-900 dark:text-white"
                               }`}
@@ -233,15 +285,26 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
 
               <div className="space-y-4">
                 {previews.map((prev, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all group/item">
-                    <div>
-                      <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 group-hover/item:text-blue-400 transition-colors">{prev.label}</div>
-                      <div className="text-xs font-bold text-zinc-400">Total Quotation Value</div>
+                  <div key={idx} className="flex flex-col rounded-2xl bg-white/5 border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all group/item overflow-hidden">
+                    <div className="flex items-center justify-between p-5">
+                      <div>
+                        <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 group-hover/item:text-blue-400 transition-colors">{prev.label}</div>
+                        <div className="text-xs font-bold text-zinc-400">Total Quotation Value</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xl font-black text-white">₹{prev.total.toLocaleString('en-IN')}</div>
+                        <div className={`text-[9px] font-bold uppercase tracking-tighter ${prev.profit_percent < (settings.minimum_margin_threshold || 15) ? "text-red-400" : "text-emerald-400"}`}>
+                          Margin: {prev.profit_percent}%
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xl font-black text-white">₹{prev.total.toLocaleString('en-IN')}</div>
-                      <div className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter">Instant Calc</div>
-                    </div>
+                    {prev.warnings.length > 0 && (
+                      <div className="px-5 pb-3">
+                        <div className="text-[10px] text-red-400 font-bold bg-red-500/10 p-2 rounded-lg border border-red-500/20">
+                          {prev.warnings[0]} {prev.warnings.length > 1 && `(+${prev.warnings.length - 1} more warnings)`}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -118,7 +118,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         // Scroll to the next question on the same page
         const nextQId = currentStep.questions![qIndex + 1].id;
         setTimeout(() => {
-          document.getElementById(`question-${nextQId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          document.getElementById(`question-${nextQId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 300);
       } else {
         // Last question in the step: verify all required are answered before auto-advancing to next step
@@ -190,7 +190,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       )}
 
       {/* Blurred overlay if Gate is active */}
-      <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 pt-6 pb-32 sm:pt-12 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
+      <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 pt-6 pb-48 sm:pb-56 sm:pt-12 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
         
         <ProgressBar currentStepIndex={current_step_index} totalSteps={steps.length} />
 
@@ -209,7 +209,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
             if (q.input_type === "number") {
               const currentVal = (answers[q.id!] as string) || "";
               return (
-                <div key={q.id} id={`question-${q.id}`}>
+                <div key={q.id} id={`question-${q.id}`} className="scroll-mt-24 sm:scroll-mt-32">
                   <div className="flex items-center gap-3 mb-4 sm:mb-6">
                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-xs shrink-0">#</div>
                      <h3 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{q.question_text}</h3>
@@ -250,7 +250,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
             const currentAns = answers[q.id!] || (isMulti ? [] : "");
 
             return (
-              <div key={q.id} id={`question-${q.id}`}>
+              <div key={q.id} id={`question-${q.id}`} className="scroll-mt-24 sm:scroll-mt-32">
                 <div className="flex items-center gap-3 mb-4">
                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-xs">?</div>
                    <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{q.question_text}</h3>

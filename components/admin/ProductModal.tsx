@@ -18,6 +18,8 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
     technical_name: "",
     category: "camera",
     technology: "IP",
+    base_cost: 0,
+    margin_percentage: 0,
     unit_price: 0,
     is_active: true,
   });
@@ -29,6 +31,8 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         technical_name: product.technical_name,
         category: product.category,
         technology: product.technology,
+        base_cost: product.base_cost ?? 0,
+        margin_percentage: product.margin_percentage ?? 0,
         unit_price: product.unit_price,
         is_active: product.is_active ?? true,
         resolution_tier: product.resolution_tier,
@@ -45,6 +49,8 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         technical_name: "",
         category: "camera",
         technology: "IP",
+        base_cost: 0,
+        margin_percentage: 0,
         unit_price: 0,
         is_active: true,
         catalog_path: "",
@@ -67,6 +73,33 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
   const removeCompatiblePath = (path: string) => {
     const current = formData.compatible_paths ?? [];
     setFormData({ ...formData, compatible_paths: current.filter(p => p !== path) });
+  };
+
+  const handleBaseCostChange = (val: number) => {
+    const margin = formData.margin_percentage || 0;
+    let newUnitPrice = formData.unit_price;
+    if (margin > 0 && margin < 100) {
+      newUnitPrice = Math.round(val / (1 - margin / 100));
+    }
+    setFormData({ ...formData, base_cost: val, unit_price: newUnitPrice });
+  };
+
+  const handleMarginChange = (val: number) => {
+    const cost = formData.base_cost || 0;
+    let newUnitPrice = formData.unit_price;
+    if (val > 0 && val < 100 && cost > 0) {
+      newUnitPrice = Math.round(cost / (1 - val / 100));
+    }
+    setFormData({ ...formData, margin_percentage: val, unit_price: newUnitPrice });
+  };
+
+  const handleUnitPriceChange = (val: number) => {
+    const cost = formData.base_cost || 0;
+    let newMargin = formData.margin_percentage || 0;
+    if (val > 0 && cost > 0) {
+      newMargin = Number((((val - cost) / val) * 100).toFixed(2));
+    }
+    setFormData({ ...formData, unit_price: val, margin_percentage: newMargin });
   };
 
   if (!isOpen) return null;
@@ -198,17 +231,51 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                    <BadgeIndianRupee className="w-3 h-3" /> Recommended Brand Price
+                    Purchase Cost (Base)
                   </label>
                   <div className="relative">
                     <span className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.base_cost || ""}
+                      onChange={(e) => handleBaseCostChange(Number(e.target.value))}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl pl-10 pr-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                    Target Margin %
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      max="99"
+                      step="0.01"
+                      value={formData.margin_percentage || ""}
+                      onChange={(e) => handleMarginChange(Number(e.target.value))}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                    />
+                    <span className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">%</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                    <BadgeIndianRupee className="w-3 h-3" /> Final Selling Price
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-blue-500 font-black">₹</span>
                     <input
                       required
                       type="number"
                       min="0"
                       value={formData.unit_price}
-                      onChange={(e) => setFormData({ ...formData, unit_price: Number(e.target.value) })}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                      onChange={(e) => handleUnitPriceChange(Number(e.target.value))}
+                      className="w-full bg-zinc-900 border border-blue-500/30 rounded-3xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>

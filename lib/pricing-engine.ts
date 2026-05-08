@@ -50,6 +50,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
   const lineItems: QuoteLineItem[] = [];
   let baseHardwareCost = 0;
+  let totalPurchaseCost = 0;
+  const marginWarnings: string[] = [];
 
   // ─────────────────────────────────────────────
   // STEP 1: Process Technology Paths
@@ -84,6 +86,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
         
         const lineTotal = unitPrice * selection.camera_count;
         baseHardwareCost += lineTotal;
+        totalPurchaseCost += (selectedCamera.base_cost || 0) * selection.camera_count;
+        if ((selectedCamera.base_cost || 0) > unitPrice) {
+          marginWarnings.push(`Camera option sold below cost: ${selectedCamera.display_name}`);
+        }
         lineItems.push({
           product_id: selectedCamera.id!,
           display_name: selectedCamera.display_name,
@@ -108,6 +114,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
       if (selectedNvr) {
         baseHardwareCost += selectedNvr.unit_price;
+        totalPurchaseCost += (selectedNvr.base_cost || 0);
+        if ((selectedNvr.base_cost || 0) > selectedNvr.unit_price) {
+          marginWarnings.push(`NVR sold below cost: ${selectedNvr.display_name}`);
+        }
         lineItems.push({
           product_id: selectedNvr.id!,
           display_name: selectedNvr.display_name,
@@ -134,6 +144,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
         const switchCapacity = idealPoe.max_cameras ?? 8;
         const switchQty = Math.ceil(selection.camera_count / switchCapacity);
         baseHardwareCost += idealPoe.unit_price * switchQty;
+        totalPurchaseCost += (idealPoe.base_cost || 0) * switchQty;
+        if ((idealPoe.base_cost || 0) > idealPoe.unit_price) {
+          marginWarnings.push(`PoE Switch sold below cost: ${idealPoe.display_name}`);
+        }
         lineItems.push({ product_id: idealPoe.id!, display_name: idealPoe.display_name, qty: switchQty, unit_price: idealPoe.unit_price, line_total: idealPoe.unit_price * switchQty });
       }
 
@@ -159,6 +173,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       if (selectedCamera) {
         const lineTotal = selectedCamera.unit_price * selection.camera_count;
         baseHardwareCost += lineTotal;
+        totalPurchaseCost += (selectedCamera.base_cost || 0) * selection.camera_count;
+        if ((selectedCamera.base_cost || 0) > selectedCamera.unit_price) {
+          marginWarnings.push(`Camera option sold below cost: ${selectedCamera.display_name}`);
+        }
         lineItems.push({
           product_id: selectedCamera.id!,
           display_name: selectedCamera.display_name,
@@ -181,6 +199,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
         if (selectedDvr) {
           baseHardwareCost += selectedDvr.unit_price;
+          totalPurchaseCost += (selectedDvr.base_cost || 0);
+          if ((selectedDvr.base_cost || 0) > selectedDvr.unit_price) {
+            marginWarnings.push(`DVR sold below cost: ${selectedDvr.display_name}`);
+          }
           lineItems.push({
             product_id: selectedDvr.id!,
             display_name: selectedDvr.display_name,
@@ -208,6 +230,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
         const psuCapacity = idealPsu.max_cameras ?? 4;
         const psuQty = Math.ceil(selection.camera_count / psuCapacity);
         baseHardwareCost += idealPsu.unit_price * psuQty;
+        totalPurchaseCost += (idealPsu.base_cost || 0) * psuQty;
+        if ((idealPsu.base_cost || 0) > idealPsu.unit_price) {
+          marginWarnings.push(`Power Supply sold below cost: ${idealPsu.display_name}`);
+        }
         lineItems.push({ product_id: idealPsu.id!, display_name: idealPsu.display_name, qty: psuQty, unit_price: idealPsu.unit_price, line_total: idealPsu.unit_price * psuQty });
       }
     }
@@ -243,6 +269,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
     if (selectedHdd) {
       baseHardwareCost += selectedHdd.unit_price;
+      totalPurchaseCost += (selectedHdd.base_cost || 0);
+      if ((selectedHdd.base_cost || 0) > selectedHdd.unit_price) {
+        marginWarnings.push(`Storage Drive sold below cost: ${selectedHdd.display_name}`);
+      }
       lineItems.push({
         product_id: selectedHdd.id!,
         display_name: selectedHdd.display_name,
@@ -371,6 +401,13 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   const gstAmount = Math.round(netTaxableAmount * (settings.gst_rate / 100));
   const totalPayable = netTaxableAmount + gstAmount;
 
+  const grossProfitValue = netTaxableAmount - totalPurchaseCost;
+  const grossProfitPercent = netTaxableAmount > 0 ? (grossProfitValue / netTaxableAmount) * 100 : 0;
+  
+  if (settings.minimum_margin_threshold && grossProfitPercent < settings.minimum_margin_threshold) {
+    marginWarnings.push(`Overall margin (${grossProfitPercent.toFixed(1)}%) is below minimum threshold (${settings.minimum_margin_threshold}%).`);
+  }
+
   return {
     plan_type: selection.plan_type,
     technology: selection.technology,
@@ -386,6 +423,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     gst_rate: settings.gst_rate,
     gst_amount: gstAmount,
     total_payable: Math.round(totalPayable),
-    requiresIndustrialQuote: isIndustrial
+    requiresIndustrialQuote: isIndustrial,
+    total_purchase_cost: Math.round(totalPurchaseCost),
+    gross_profit_value: Math.round(grossProfitValue),
+    gross_profit_percent: Number(grossProfitPercent.toFixed(2)),
+    margin_warnings: marginWarnings
   };
 }

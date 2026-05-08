@@ -124,10 +124,22 @@ export type CreateSiteVisitInput = z.infer<typeof CreateSiteVisitSchema>;
 export const CreateProductSchema = z.object({
   technical_name: z.string().min(2).max(100),
   display_name: z.string().min(2).max(100),
-  category: z.enum(["camera", "recorder", "accessory"]),
+  category: z.enum(["camera", "recorder", "accessory", "cable"]),
   technology: z.enum(["HD", "IP", "both"]),
   unit_price: MoneySchema,
+  unit_price_budget: z.number().min(0).optional(),
+  unit_price_premium: z.number().min(0).optional(),
+  base_cost: z.number().min(0).optional(),
+  margin_percentage: z.number().min(0).optional(),
+  min_cameras: z.number().int().min(1).optional(),
+  max_cameras: z.number().int().min(1).optional(),
+  channels: z.number().int().min(1).optional(),
+  resolution_tier: z.enum(["good", "very_clear", "crystal_clear"]).optional(),
+  brand: z.string().optional(),
+  catalog_path: z.string().optional(),
+  compatible_paths: z.array(z.string()).optional(),
   is_active: z.boolean().default(true),
+  updated_by: z.string().optional(),
 });
 
 export type CreateProductInput = z.infer<typeof CreateProductSchema>;
