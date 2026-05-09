@@ -72,8 +72,28 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
         });
       }
 
+      // Filter by brand
+      if (selection.brand_preference && selection.brand_preference !== "all") {
+        ipCameras = ipCameras.filter(p => p.brand?.toLowerCase() === selection.brand_preference?.toLowerCase());
+      }
+
+      // Filter by budget (estimated base cost subtraction)
+      if (selection.max_budget) {
+        const estBase = (selection.camera_count * (settings.labor_ip_per_camera || 500)) + 
+                        (selection.camera_count * 25 * (settings.cable_copper_coated_ip || 40)) + 
+                        5000; // avg NVR + HDD + PoE
+        const maxCamPrice = (selection.max_budget - estBase) / selection.camera_count;
+        ipCameras = ipCameras.filter(p => p.unit_price <= maxCamPrice);
+      }
+
+      // Sort by focus point
+      if (selection.focus_point === "quality") {
+        ipCameras.sort((a, b) => b.unit_price - a.unit_price);
+      } else {
+        ipCameras.sort((a, b) => a.unit_price - b.unit_price);
+      }
+
       // We map options 1-5 to the seeded cam_ip_opt1...cam_ip_opt5
-      ipCameras.sort((a, b) => a.unit_price - b.unit_price);
       const optionNum = selection.selected_camera_option || 4; // Default to CP Plus 2MP Color
       const selectedCamera = ipCameras.find(p => p.technical_name === `cam_ip_opt${optionNum}`) || 
                              ipCameras[Math.min(optionNum - 1, Math.max(0, ipCameras.length - 1))] ||
@@ -166,7 +186,27 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
         });
       }
 
-      hdCameras.sort((a, b) => a.unit_price - b.unit_price);
+      // Filter by brand
+      if (selection.brand_preference && selection.brand_preference !== "all") {
+        hdCameras = hdCameras.filter(p => p.brand?.toLowerCase() === selection.brand_preference?.toLowerCase());
+      }
+
+      // Filter by budget
+      if (selection.max_budget) {
+        const estBase = (selection.camera_count * (settings.labor_hd_per_camera || 400)) + 
+                        (selection.camera_count * 25 * (settings.cable_copper_coated_hd || 12)) + 
+                        4000; // avg DVR + HDD + PSU
+        const maxCamPrice = (selection.max_budget - estBase) / selection.camera_count;
+        hdCameras = hdCameras.filter(p => p.unit_price <= maxCamPrice);
+      }
+
+      // Sort by focus point
+      if (selection.focus_point === "quality") {
+        hdCameras.sort((a, b) => b.unit_price - a.unit_price);
+      } else {
+        hdCameras.sort((a, b) => a.unit_price - b.unit_price);
+      }
+
       const optionNum = selection.selected_camera_option || 1; // Default to CP Plus 2.4MP
       const selectedCamera = hdCameras.find(p => p.technical_name === `cam_hd_opt${optionNum}`) || 
                              hdCameras[Math.min(optionNum - 1, Math.max(0, hdCameras.length - 1))] ||

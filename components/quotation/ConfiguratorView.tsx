@@ -29,6 +29,7 @@ import {
 import dynamic from "next/dynamic";
 import { ComparisonTable } from "./ComparisonTable";
 import { CompareCards } from "./CompareCards";
+import { FullCustomizerPanel } from "./FullCustomizerPanel";
 import { resolveCardLayout } from "@/lib/card-layout-engine";
 
 import { SiteDetailsModal } from "./SiteDetailsModal";
@@ -385,6 +386,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               </div>
             </div>
           )}
+
+          {/* ── Full Customizer Panel ──────────────────────────────────────── */}
+          <FullCustomizerPanel />
 
           {/* ── Compare Cards ──────────────────────────────────────────────── */}
           <CompareCards

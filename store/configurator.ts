@@ -92,6 +92,9 @@ const defaultSelection: ConfiguratorSelection = {
   recording_days: 7,          // 7 days → correct HDD selection (matches quotation sheets)
   selected_addons: [],
   selected_camera_option: 4,  // IP Option 4 = CP Plus 2MP Color in Night (recommended)
+  brand_preference: "all",
+  max_budget: null,
+  focus_point: "price",
 };
 
 // ─────────────────────────────────────────────

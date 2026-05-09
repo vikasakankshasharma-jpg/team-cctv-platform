@@ -176,6 +176,8 @@ export interface ConfiguratorSelection {
   brand_preference?: string;
   installation_timeline?: string;
   wants_amc?: boolean;
+  focus_point?: "price" | "quality";
+  max_budget?: number | null;
 }
 
 export interface QuoteLineItem {
