@@ -486,18 +486,24 @@ export function CompareCards({
                 What&apos;s Included
               </p>
               <div className="grid grid-cols-1 gap-1.5">
-                {[
-                  { label: `${cameraCount}× ${card.camProduct?.display_name ?? card.technology + " Camera"}`, icon: "📷" },
-                  { label: `1× ${card.recType} (${cameraCount <= 4 ? "4" : cameraCount <= 8 ? "8" : "16"}-Ch Recorder)`, icon: "📺" },
-                  { label: "1× 1TB Surveillance HDD", icon: "💾" },
-                  { label: card.isIP ? `Cat6 UTP Cable (~${cameraCount * 25}m)` : `RG59 Coaxial (~${cameraCount * 25}m)`, icon: "🛡️" },
-                  { label: "Professional Installation & Testing", icon: "🔧" },
-                ].map(item => (
-                  <div key={item.label} className="flex items-center gap-2">
-                    <span className="text-[11px] leading-none shrink-0">{item.icon}</span>
-                    <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 leading-snug">{item.label}</span>
-                  </div>
-                ))}
+                {(() => {
+                  const recorderItem = card.pricing.items.find(i => i.category === 'recorder');
+                  const storageItem = card.pricing.items.find(i => i.category === 'storage');
+                  const cableItem = card.pricing.items.find(i => i.category === 'cable');
+                  
+                  return [
+                    { label: `${cameraCount}× ${card.camProduct?.display_name ?? card.technology + " Camera"}`, icon: "📷" },
+                    { label: recorderItem ? `${recorderItem.qty}× ${recorderItem.display_name}` : `1× ${card.recType} (${cameraCount <= 4 ? "4" : cameraCount <= 8 ? "8" : "16"}-Ch Recorder)`, icon: "📺" },
+                    { label: storageItem ? `${storageItem.qty}× ${storageItem.display_name}` : "1× 1TB Surveillance HDD", icon: "💾" },
+                    { label: cableItem ? `~${cableItem.qty}m ${cableItem.display_name}` : (card.isIP ? `Cat6 UTP Cable (~${cameraCount * 25}m)` : `RG59 Coaxial (~${cameraCount * 25}m)`), icon: "🛡️" },
+                    { label: "Professional Installation & Testing", icon: "🔧" },
+                  ].map(item => (
+                    <div key={item.label} className="flex items-center gap-2">
+                      <span className="text-[11px] leading-none shrink-0">{item.icon}</span>
+                      <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 leading-snug">{item.label}</span>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
 
