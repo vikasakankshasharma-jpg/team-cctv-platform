@@ -488,7 +488,10 @@ export function CompareCards({
               <div className="grid grid-cols-1 gap-1.5">
                 {(() => {
                   const recorderItem = card.pricing.items.find(i => products.find(p => p.id === i.product_id)?.category === 'recorder');
-                  const storageItem = card.pricing.items.find(i => products.find(p => p.id === i.product_id)?.category === 'storage');
+                  const storageItem = card.pricing.items.find(i => {
+                      const p = products.find(p => p.id === i.product_id);
+                      return p?.category === 'accessory' && p.technical_name.toLowerCase().includes('hdd');
+                  });
                   const cableItem = card.pricing.items.find(i => products.find(p => p.id === i.product_id)?.category === 'cable');
                   
                   return [
