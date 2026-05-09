@@ -73,9 +73,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       }
 
       // We map options 1-5 to the seeded cam_ip_opt1...cam_ip_opt5
+      ipCameras.sort((a, b) => a.unit_price - b.unit_price);
       const optionNum = selection.selected_camera_option || 4; // Default to CP Plus 2MP Color
       const selectedCamera = ipCameras.find(p => p.technical_name === `cam_ip_opt${optionNum}`) || 
-                             ipCameras.find(p => p.resolution_tier === selection.picture_quality) ||
+                             ipCameras[Math.min(optionNum - 1, Math.max(0, ipCameras.length - 1))] ||
                              ipCameras[0];
 
       if (selectedCamera) {
@@ -165,9 +166,10 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
         });
       }
 
+      hdCameras.sort((a, b) => a.unit_price - b.unit_price);
       const optionNum = selection.selected_camera_option || 1; // Default to CP Plus 2.4MP
       const selectedCamera = hdCameras.find(p => p.technical_name === `cam_hd_opt${optionNum}`) || 
-                             hdCameras.find(p => p.resolution_tier === selection.picture_quality) ||
+                             hdCameras[Math.min(optionNum - 1, Math.max(0, hdCameras.length - 1))] ||
                              hdCameras[0];
 
       if (selectedCamera) {

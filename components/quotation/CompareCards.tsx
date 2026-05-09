@@ -183,13 +183,11 @@ export function CompareCards({
           evaluatedAddonRules,
         });
 
-        const camTechnicalName =
-          co.technology === "IP"
-            ? `cam_ip_opt${co.option}`
-            : `cam_hd_opt${co.option}`;
-        const camProduct = products.find(
-          (p) => p.technical_name === camTechnicalName
-        );
+        const selectedCamId = pricing.items.find(i => {
+           const p = products.find(prod => prod.id === i.product_id);
+           return p?.category === 'camera';
+        })?.product_id;
+        const camProduct = products.find(p => p.id === selectedCamId);
         // isRecommended: matches option number AND respects the customer's
         // chosen technology — fixes the bug where HD recommendations were
         // silently ignored due to a hardcoded "&& co.technology === IP" check.
