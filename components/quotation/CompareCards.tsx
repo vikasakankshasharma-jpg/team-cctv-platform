@@ -14,6 +14,7 @@ import {
   HardDrive,
   Info,
   ArrowDown,
+  X,
 } from "lucide-react";
 import type {
   Product,
@@ -324,10 +325,10 @@ export function CompareCards({
           ? "4MP Pro-HD"
           : "2MP Full-HD";
         const resIcon = card.is5MP
-          ? "text-purple-500"
+          ? "text-purple-500 bg-purple-500"
           : card.is4MP
-          ? "text-blue-500"
-          : "text-zinc-400";
+          ? "text-blue-500 bg-blue-500"
+          : "text-zinc-400 bg-zinc-400";
 
         // ── Technology badge label ────────────────────────────────────────────
         const techBadgeLabel = card.isIP ? "IP · NVR · Cat6" : "HD · DVR · Coaxial";
@@ -516,8 +517,8 @@ export function CompareCards({
 
               {/* System Type */}
               <SpecRow
-                icon={<Network className="w-3.5 h-3.5" />}
-                iconColor={card.isIP ? "text-blue-500" : "text-zinc-500"}
+                icon={<Check className="w-4 h-4" />}
+                iconColor={card.isIP ? "text-blue-500 bg-blue-500" : "text-zinc-500 bg-zinc-500"}
                 label={card.isIP ? "Smart IP Network System" : "Analog HD System"}
                 sublabel={
                   card.isIP
@@ -529,7 +530,7 @@ export function CompareCards({
 
               {/* Resolution */}
               <SpecRow
-                icon={<Camera className="w-3.5 h-3.5" />}
+                icon={<Check className="w-4 h-4" />}
                 iconColor={resIcon}
                 label={resLabel}
                 sublabel="Camera sensor resolution"
@@ -538,9 +539,9 @@ export function CompareCards({
 
               {/* Night Vision */}
               <SpecRow
-                icon={<Eye className="w-3.5 h-3.5" />}
+                icon={card.isColorNight ? <Check className="w-4 h-4" /> : <Check className="w-4 h-4" />}
                 iconColor={
-                  card.isColorNight ? "text-amber-500" : "text-zinc-500"
+                  card.isColorNight ? "text-amber-500 bg-amber-500" : "text-zinc-500 bg-zinc-500"
                 }
                 label={
                   card.isColorNight
@@ -548,22 +549,22 @@ export function CompareCards({
                     : "IR B&W Night Vision"
                 }
                 sublabel="Low-light / zero-light performance"
-                active={card.isColorNight}
+                active={true}
               />
 
               {/* Audio */}
               <SpecRow
-                icon={<Mic className="w-3.5 h-3.5" />}
-                iconColor={card.hasAudio ? "text-emerald-500" : "text-zinc-400"}
+                icon={card.hasAudio ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                iconColor={card.hasAudio ? "text-emerald-500 bg-emerald-500" : "text-red-500 bg-red-500"}
                 label={card.hasAudio ? "Built-in Microphone" : "No Audio Recording"}
                 sublabel="Ambient sound capture"
-                active={card.hasAudio}
+                active={true}
               />
 
               {/* Recorder */}
               <SpecRow
-                icon={<ShieldCheck className="w-3.5 h-3.5" />}
-                iconColor="text-indigo-500"
+                icon={<Check className="w-4 h-4" />}
+                iconColor="text-indigo-500 bg-indigo-500"
                 label={`${card.recType} Recorder`}
                 sublabel={`${cameraCount}-channel continuous recording`}
                 active={true}
@@ -571,8 +572,8 @@ export function CompareCards({
 
               {/* Storage */}
               <SpecRow
-                icon={<HardDrive className="w-3.5 h-3.5" />}
-                iconColor="text-sky-500"
+                icon={<Check className="w-4 h-4" />}
+                iconColor="text-sky-500 bg-sky-500"
                 label={card.storageLabel}
                 sublabel={`${recordingDays} days footage retention`}
                 active={true}
