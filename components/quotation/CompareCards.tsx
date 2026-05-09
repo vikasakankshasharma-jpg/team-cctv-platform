@@ -487,9 +487,9 @@ export function CompareCards({
               </p>
               <div className="grid grid-cols-1 gap-1.5">
                 {(() => {
-                  const recorderItem = card.pricing.items.find(i => i.category === 'recorder');
-                  const storageItem = card.pricing.items.find(i => i.category === 'storage');
-                  const cableItem = card.pricing.items.find(i => i.category === 'cable');
+                  const recorderItem = card.pricing.items.find(i => products.find(p => p.id === i.product_id)?.category === 'recorder');
+                  const storageItem = card.pricing.items.find(i => products.find(p => p.id === i.product_id)?.category === 'storage');
+                  const cableItem = card.pricing.items.find(i => products.find(p => p.id === i.product_id)?.category === 'cable');
                   
                   return [
                     { label: `${cameraCount}× ${card.camProduct?.display_name ?? card.technology + " Camera"}`, icon: "📷" },
