@@ -130,8 +130,8 @@ export function FullCustomizerPanel() {
               <span>No Limit</span>
             </div>
           </div>
-          <p className="text-[10px] text-zinc-500 leading-snug">
-            Set your absolute maximum budget. We'll automatically filter out systems exceeding this cost.
+        <p className="text-[10px] text-zinc-500 leading-snug">
+            Set your absolute maximum budget. We&apos;ll automatically filter out systems exceeding this cost.
           </p>
         </div>
 

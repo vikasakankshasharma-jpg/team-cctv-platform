@@ -383,7 +383,7 @@ export function CardLayoutClient({ initialLayouts, cameras }: {
       <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40 rounded-2xl">
         <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
         <div className="text-sm text-blue-800 dark:text-blue-300">
-          <strong>How it works:</strong> Layouts are checked top-to-bottom by priority. The first layout whose conditions match the customer's context (technology, property type, camera count) determines which 3 cards they see. If none match, smart defaults apply.
+          <strong>How it works:</strong> Layouts are checked top-to-bottom by priority. The first layout whose conditions match the customer&apos;s context (technology, property type, camera count) determines which 3 cards they see. If none match, smart defaults apply.
         </div>
       </div>
 

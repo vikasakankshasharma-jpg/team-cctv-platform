@@ -277,6 +277,7 @@ export function CompareCards({
     promoterDiscount,
     evaluatedAddonRules,
     recommendation,
+    customerTechnology,
   ]);
 
   // ── Savings badge: compare this card vs the most-expensive card ────────────
