@@ -27,9 +27,9 @@ import {
   Wrench
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { ComparisonTable } from "./ComparisonTable";
 import { CompareCards } from "./CompareCards";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
+import { AllSystemsGrid } from "./AllSystemsGrid";
 import { resolveCardLayout } from "@/lib/card-layout-engine";
 
 import { SiteDetailsModal } from "./SiteDetailsModal";
@@ -351,23 +351,16 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       {/* Background Decor */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-50/20 blur-[150px] -z-10 rounded-full" />
 
-      <div className="flex flex-col items-center gap-12">
-        <div className="w-full max-w-6xl mx-auto space-y-6">
-
+      {/* ── Hero Section: Top Recommendations ─────────────────────────────── */}
+      <div className="w-full max-w-7xl mx-auto px-2 md:px-4 mb-12 lg:mb-16">
+        <div className="space-y-6">
           {/* ── Section header ─────────────────────────────────────────────── */}
-          <div className="flex flex-col items-center gap-3 mb-4">
-            <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 text-white font-black px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest leading-none">
+          <div className="flex flex-col gap-3 mb-4">
+            <div className="inline-flex self-start items-center gap-2 bg-zinc-900 border border-zinc-800 text-white font-black px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest leading-none">
               <Zap className="w-3 h-3 text-blue-500" />
-              Smart Comparison
+              Top Recommendations
             </div>
-            <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase text-center">Choose Your System</h2>
-            <p className="text-sm font-medium text-zinc-400 dark:text-zinc-500 text-center max-w-md">
-              {selection.technology === "IP"
-                ? "IP camera systems — RJ45/Cat6 wiring, NVR recorder, superior image quality at same MP."
-                : selection.technology === "HD"
-                ? "HD camera systems — coaxial wiring, DVR recorder, proven & affordable technology."
-                : "Comparing HD (DVR) and IP (NVR) systems — both support remote mobile viewing."}
-            </p>
+            <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">Compare Featured Systems</h2>
           </div>
 
           {/* ── Recommendation reason banner ───────────────────────────────── */}
@@ -387,9 +380,6 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             </div>
           )}
 
-          {/* ── Full Customizer Panel ──────────────────────────────────────── */}
-          <FullCustomizerPanel />
-
           {/* ── Compare Cards ──────────────────────────────────────────────── */}
           <CompareCards
             compareOptions={compare_options}
@@ -407,9 +397,33 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             evaluatedAddonRules={evaluatedRules}
           />
         </div>
+      </div>
+
+      {/* ── Explore Section: Filters + Grid ───────────────────────────────── */}
+      <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-7xl mx-auto px-2 md:px-4">
+        
+        {/* ── Left Sidebar: Filters ────────────────────────────────────── */}
+        <div className="w-full lg:w-[320px] shrink-0 lg:sticky lg:top-24 z-20 space-y-6">
+          <FullCustomizerPanel />
+        </div>
+
+        {/* ── Right Content: Results ───────────────────────────────────── */}
+        <div className="flex-1 w-full min-w-0">
+          
+
+          {/* ── All Systems Grid (Amazon-like View) ────────────────────────── */}
+          <AllSystemsGrid 
+            pricingCache={pricingCache}
+            cablingDone={cablingDone}
+            promoterDiscount={promoterDiscount}
+            evaluatedRules={evaluatedRules}
+          />
+          
+        </div>
+      </div>
 
         {/* Global Controls: Camera Count & Recording Days */}
-        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 bg-zinc-50 dark:bg-zinc-900/40 p-5 md:p-8 rounded-[24px] md:rounded-[40px] border border-zinc-100 dark:border-zinc-800 shadow-xl">
+        <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 bg-zinc-50 dark:bg-zinc-900/40 p-5 md:p-8 rounded-[24px] md:rounded-[40px] border border-zinc-100 dark:border-zinc-800 shadow-xl">
            <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <label className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em]">System Camera Count</label>
@@ -469,90 +483,6 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               </div>
            </div>
         </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto w-full px-2 md:px-4">
-
-        {/* ── Collapsible trigger ─────────────────────────────────────────── */}
-        <button
-          onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
-          className="w-full flex items-center justify-between p-5 md:p-6 bg-zinc-50 dark:bg-zinc-900/40 rounded-[28px] border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-100/80 dark:hover:bg-zinc-900/60 transition-all text-left touch-manipulation"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20 shrink-0">
-              <SlidersHorizontal className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base md:text-lg font-black text-zinc-900 dark:text-white tracking-tight uppercase">
-                  Compare All Options
-                </h2>
-                <span className="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[9px] font-black uppercase tracking-widest rounded-full">
-                  8 Plans
-                </span>
-              </div>
-              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-0.5">
-                {isDetailsExpanded ? "Click to collapse" : "See all camera options & live prices"}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 shrink-0 ml-3">
-            {compare_options.length > 0 && (
-              <span className="hidden sm:flex items-center gap-1 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-full border border-blue-100 dark:border-blue-800/40">
-                {compare_options.length} comparing
-              </span>
-            )}
-            <ChevronDown
-              className={"w-5 h-5 text-zinc-400 transition-transform duration-300" + (isDetailsExpanded ? " rotate-180" : "")}
-            />
-          </div>
-        </button>
-
-        {/* ── Expandable content ─────────────────────────────────────────── */}
-        {isDetailsExpanded && (
-          <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-
-            {/* Expert advice */}
-            {activeRecommendation && (
-              <div className="flex items-center gap-3 px-5 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 rounded-2xl">
-                <Zap className="w-5 h-5 text-amber-500 shrink-0" />
-                <div>
-                  <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest block">
-                    Expert Advice
-                  </span>
-                  <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400">
-                    {activeRecommendation.reason}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Compare limit warning */}
-            {compareLimit && (
-              <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-2xl text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest flex items-center gap-2">
-                <Info className="w-4 h-4 shrink-0" />
-                Max 3 options can be compared at once. Deselect one to add another.
-              </div>
-            )}
-
-            <ComparisonTable
-              cameraCount={selection.camera_count}
-              recordingDays={selection.recording_days}
-              products={pricingCache.products}
-              addons={pricingCache.addons}
-              settings={pricingCache.settings}
-              cablingDone={cablingDone}
-              compareOptions={compare_options}
-              onToggleCompare={handleToggleCompare}
-              activeCheckoutOption={active_checkout_option}
-              onSelectCheckout={setActiveCheckoutOption}
-              recommendation={activeRecommendation}
-              promoterDiscount={promoterDiscount}
-              evaluatedAddonRules={evaluatedRules}
-            />
-          </div>
-        )}
-      </div>
 
       <div className="bg-white dark:bg-zinc-900 rounded-[32px] sm:rounded-[48px] border border-zinc-100 dark:border-zinc-800 shadow-[0_40px_100px_rgba(0,0,0,0.08)] p-5 sm:p-8 md:p-12 max-w-5xl mx-auto w-full backdrop-blur-md">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
@@ -573,7 +503,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                  const cOpt  = active_checkout_option?.option   ?? selection.selected_camera_option;
                  
                  const cp = calculatePricing({ 
-                    selection: { ...selection, technology: cTech, selected_camera_option: cOpt }, 
+                    selection: { 
+                      ...selection, 
+                      technology: cTech as "HD" | "IP", 
+                      selected_camera_option: typeof cOpt === "number" ? cOpt : undefined,
+                      selected_camera_id: typeof cOpt === "string" ? cOpt : undefined,
+                    }, 
                     products: pricingCache.products, 
                     addons: pricingCache.addons, 
                     settings: pricingCache.settings, 
@@ -690,7 +625,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                    {(() => {
                      const cT = active_checkout_option?.technology ?? selection.technology;
                      const cO = active_checkout_option?.option   ?? selection.selected_camera_option;
-                     const cp = calculatePricing({ selection: { ...selection, technology: cT, selected_camera_option: cO }, products: pricingCache.products, addons: pricingCache.addons, settings: pricingCache.settings, cablingDone, referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules });
+                     const cp = calculatePricing({ selection: { ...selection, technology: cT as "HD" | "IP", selected_camera_option: typeof cO === "number" ? cO : undefined, selected_camera_id: typeof cO === "string" ? cO : undefined }, products: pricingCache.products, addons: pricingCache.addons, settings: pricingCache.settings, cablingDone, referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer });
                      return <div className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 transition-all duration-300">&#x20B9;{cp.total_payable.toLocaleString('en-IN')}</div>;
                    })()}
                   

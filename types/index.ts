@@ -115,6 +115,8 @@ export interface Product {
   // Leave undefined for recorders, accessories, cables.
   resolution_mp?: number;
 
+  image_url?: string;               // NEW: Option to upload an image for the product/kit
+
   created_at?: unknown;
   updated_at?: unknown;
   updated_by?: string;              // Admin UID who last updated this
@@ -167,6 +169,7 @@ export interface ConfiguratorSelection {
   selected_addons: string[];
   plan_type: "budget" | "recommended" | "premium";
   selected_camera_option?: number; // 1-5 for IP, 1-2 for HD
+  selected_camera_id?: string;     // NEW: Specific camera ID to skip option matching
   
   // NEW FIELDS FROM WIZARD REDESIGN
   surface_types?: string[];

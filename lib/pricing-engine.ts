@@ -94,10 +94,15 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       }
 
       // We map options 1-5 to the seeded cam_ip_opt1...cam_ip_opt5
-      const optionNum = selection.selected_camera_option || 4; // Default to CP Plus 2MP Color
-      const selectedCamera = ipCameras.find(p => p.technical_name === `cam_ip_opt${optionNum}`) || 
-                             ipCameras[Math.min(optionNum - 1, Math.max(0, ipCameras.length - 1))] ||
-                             ipCameras[0];
+      let selectedCamera: Product | undefined;
+      if (selection.selected_camera_id) {
+        selectedCamera = products.find(p => p.id === selection.selected_camera_id);
+      } else {
+        const optionNum = selection.selected_camera_option || 4; // Default to CP Plus 2MP Color
+        selectedCamera = ipCameras.find(p => p.technical_name === `cam_ip_opt${optionNum}`) || 
+                               ipCameras[Math.min(optionNum - 1, Math.max(0, ipCameras.length - 1))] ||
+                               ipCameras[0];
+      }
 
       if (selectedCamera) {
         let unitPrice = selectedCamera.unit_price;
@@ -207,10 +212,15 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
         hdCameras.sort((a, b) => a.unit_price - b.unit_price);
       }
 
-      const optionNum = selection.selected_camera_option || 1; // Default to CP Plus 2.4MP
-      const selectedCamera = hdCameras.find(p => p.technical_name === `cam_hd_opt${optionNum}`) || 
-                             hdCameras[Math.min(optionNum - 1, Math.max(0, hdCameras.length - 1))] ||
-                             hdCameras[0];
+      let selectedCamera: Product | undefined;
+      if (selection.selected_camera_id) {
+        selectedCamera = products.find(p => p.id === selection.selected_camera_id);
+      } else {
+        const optionNum = selection.selected_camera_option || 1; // Default to CP Plus 2.4MP
+        selectedCamera = hdCameras.find(p => p.technical_name === `cam_hd_opt${optionNum}`) || 
+                               hdCameras[Math.min(optionNum - 1, Math.max(0, hdCameras.length - 1))] ||
+                               hdCameras[0];
+      }
 
       if (selectedCamera) {
         const lineTotal = selectedCamera.unit_price * selection.camera_count;

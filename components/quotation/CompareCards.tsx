@@ -15,6 +15,11 @@ import {
   Info,
   ArrowDown,
   X,
+  Moon,
+  Activity,
+  User,
+  Home,
+  Building2,
 } from "lucide-react";
 import type {
   Product,
@@ -29,9 +34,9 @@ import { trackEvent } from "@/components/shared/TrackingProvider";
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface CompareCardsProps {
-  compareOptions: Array<{ technology: "HD" | "IP"; option: number }>;
-  activeCheckoutOption: { technology: "HD" | "IP"; option: number } | null;
-  onSelectCheckout: (option: { technology: "HD" | "IP"; option: number }) => void;
+  compareOptions: Array<{ technology: "HD" | "IP"; option: number | string }>;
+  activeCheckoutOption: { technology: "HD" | "IP"; option: number | string } | null;
+  onSelectCheckout: (option: { technology: "HD" | "IP"; option: number | string }) => void;
 
   cameraCount: number;
   recordingDays: number;
@@ -49,42 +54,50 @@ interface CompareCardsProps {
 // ─── Spec Row helper ─────────────────────────────────────────────────────────
 
 function SpecRow({
-  icon,
-  iconColor,
+  icon: FeatureIcon,
   label,
   sublabel,
   active,
 }: {
   icon: React.ReactNode;
-  iconColor: string;
   label: string;
   sublabel: string;
   active: boolean;
 }) {
   return (
-    <div className="flex items-start gap-3">
-      <div
-        className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-          active
-            ? `${iconColor} bg-opacity-10`
-            : "bg-zinc-100 dark:bg-zinc-800/60"
-        }`}
-      >
-        <div className={active ? iconColor : "text-zinc-400 dark:text-zinc-600"}>
-          {icon}
+    <div className="flex items-start gap-3 group/spec transition-all duration-300">
+      <div className="relative shrink-0">
+        <div
+          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
+            active
+              ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm"
+              : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600"
+          }`}
+        >
+          {FeatureIcon}
+        </div>
+        {/* Status indicator overlay */}
+        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-zinc-900 flex items-center justify-center ${
+          active ? "bg-emerald-500" : "bg-red-500"
+        }`}>
+          {active ? (
+            <Check className="w-2.5 h-2.5 text-white stroke-[4]" />
+          ) : (
+            <X className="w-2.5 h-2.5 text-white stroke-[4]" />
+          )}
         </div>
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 pt-0.5">
         <div
-          className={`text-xs font-black uppercase tracking-tight leading-tight ${
+          className={`text-[11px] font-black uppercase tracking-tight leading-tight transition-colors ${
             active
               ? "text-zinc-900 dark:text-white"
-              : "text-zinc-400 dark:text-zinc-600 opacity-50"
+              : "text-zinc-400 dark:text-zinc-600 opacity-60"
           }`}
         >
           {label}
         </div>
-        <div className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5 leading-tight">
+        <div className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 mt-1 leading-tight opacity-80">
           {sublabel}
         </div>
       </div>
@@ -167,7 +180,8 @@ export function CompareCards({
           technology: co.technology,
           camera_count: cameraCount,
           recording_days: recordingDays,
-          selected_camera_option: co.option,
+          selected_camera_option: typeof co.option === "number" ? co.option : undefined,
+          selected_camera_id: typeof co.option === "string" ? co.option : undefined,
           plan_type: "recommended",
           selected_addons: [],
           picture_quality: "good",
@@ -210,7 +224,7 @@ export function CompareCards({
         const is4MP = tn.includes("4mp");
         const isColorNight = tn.includes("color");
         const hasAudio =
-          tn.includes("mic") || tn.includes("audio") || co.option > 1;
+          tn.includes("mic") || tn.includes("audio") || (typeof co.option === "number" && co.option > 1);
         const isIP = co.technology === "IP";
 
         // NVR / DVR info
@@ -343,7 +357,7 @@ export function CompareCards({
 
         // ── Card border / bg ─────────────────────────────────────────────────
         const cardClass = isCheckout
-          ? "border-blue-500 bg-white dark:bg-zinc-900 shadow-[0_20px_40px_-15px_rgba(37,99,235,0.25)] dark:shadow-[0_20px_40px_-15px_rgba(37,99,235,0.35)] scale-105 z-10 ring-4 ring-blue-500/10"
+          ? "border-blue-400 dark:border-blue-500 bg-gradient-to-b from-blue-50/50 to-white dark:from-blue-900/10 dark:to-zinc-900 shadow-[0_20px_40px_-15px_rgba(37,99,235,0.15)] dark:shadow-[0_20px_40px_-15px_rgba(37,99,235,0.25)] scale-105 z-10 ring-2 ring-blue-400/20"
           : card.isRecommended
           ? "border-amber-300/80 dark:border-amber-500/40 bg-gradient-to-b from-amber-50 to-white dark:from-amber-900/20 dark:to-zinc-900 hover:border-amber-400 dark:hover:border-amber-500/60 shadow-xl hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(251,191,36,0.15)] transition-all duration-300 group"
           : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group";
@@ -367,18 +381,24 @@ export function CompareCards({
             className={`relative p-5 sm:p-6 sm:p-7 rounded-[32px] sm:rounded-[36px] transition-all duration-300 cursor-pointer border-2 flex-none w-[82vw] sm:w-auto snap-center touch-manipulation active:scale-[0.98] ${cardClass.replace('scale-105', 'sm:scale-105')}`}
           >
             {/* ── Top badge ────────────────────────────────────────────────── */}
+            {/* ── Recommendation badge ────────────────────────────────────── */}
             {card.isRecommended && (
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-amber-400 to-amber-600 text-white rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/25 whitespace-nowrap flex items-center gap-1.5 z-10">
-                <Zap className="w-2.5 h-2.5 fill-white" />
-                Best Value Match
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-500/30 whitespace-nowrap flex items-center gap-1.5 z-10 border border-white/20">
+                <Zap className="w-3 h-3 fill-white animate-pulse" />
+                Expert Recommendation
               </div>
             )}
-            {isUpgradeSuggestion && !card.isRecommended && (
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/25 whitespace-nowrap flex items-center gap-1.5 z-10">
-                <Zap className="w-2.5 h-2.5 fill-white" />
-                Smart Upgrade
-              </div>
-            )}
+            
+            {/* ── Best For Tag ─────────────────────────────────────────── */}
+            <div className="absolute top-4 right-4 opacity-10 dark:opacity-20 pointer-events-none">
+              {idx === 0 ? (
+                <Home className="w-12 h-12" />
+              ) : idx === 1 ? (
+                <Building2 className="w-12 h-12" />
+              ) : (
+                <Zap className="w-12 h-12" />
+              )}
+            </div>
 
             {/* ── Tier header ──────────────────────────────────────────────── */}
             <div className="flex flex-col items-center text-center mt-4 mb-5">
@@ -401,15 +421,15 @@ export function CompareCards({
               </div>
 
               <div
-                className={`p-2.5 rounded-2xl mb-3 transition-colors ${
-                  isCheckout ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
-                    : card.isRecommended ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-                    : isUpgradeSuggestion ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                className={`p-3 rounded-2xl mb-3 transition-all duration-500 group-hover:scale-110 ${
+                  isCheckout ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                    : card.isRecommended ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20"
+                    : isUpgradeSuggestion ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20"
                     : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
                 }`}
                 aria-label={`${card.technology} camera system`}
               >
-                {card.isIP ? <Monitor className="w-6 h-6" /> : <Camera className="w-6 h-6" />}
+                {card.isIP ? <Network className="w-7 h-7" /> : <Monitor className="w-7 h-7" />}
               </div>
               <h4
                 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight leading-tight text-center px-2"
@@ -438,7 +458,7 @@ export function CompareCards({
                   ₹
                 </span>
                 <span
-                  className={`text-4xl md:text-5xl font-black tracking-tighter leading-none ${
+                  className={`text-3xl md:text-4xl font-black tracking-tighter leading-none ${
                     isCheckout
                       ? "text-blue-600 dark:text-blue-400"
                       : "text-zinc-900 dark:text-white"
@@ -517,9 +537,8 @@ export function CompareCards({
 
               {/* System Type */}
               <SpecRow
-                icon={<Check className="w-4 h-4" />}
-                iconColor={card.isIP ? "text-blue-500 bg-blue-500" : "text-zinc-500 bg-zinc-500"}
-                label={card.isIP ? "Smart IP Network System" : "Analog HD System"}
+                icon={<ShieldCheck className="w-5 h-5" />}
+                label={card.isIP ? "Smart IP Network" : "Analog HD Pro"}
                 sublabel={
                   card.isIP
                     ? "Digital, POE/WiFi cabling"
@@ -527,55 +546,48 @@ export function CompareCards({
                 }
                 active={true}
               />
-
+ 
               {/* Resolution */}
               <SpecRow
-                icon={<Check className="w-4 h-4" />}
-                iconColor={resIcon}
+                icon={<Monitor className="w-5 h-5" />}
                 label={resLabel}
                 sublabel="Camera sensor resolution"
-                active={card.is5MP || card.is4MP || true}
+                active={true}
               />
-
+ 
               {/* Night Vision */}
               <SpecRow
-                icon={card.isColorNight ? <Check className="w-4 h-4" /> : <Check className="w-4 h-4" />}
-                iconColor={
-                  card.isColorNight ? "text-amber-500 bg-amber-500" : "text-zinc-500 bg-zinc-500"
-                }
+                icon={<Moon className="w-5 h-5" />}
                 label={
                   card.isColorNight
-                    ? "Full-Color Night Vision"
+                    ? "Full-Color Night"
                     : "IR B&W Night Vision"
                 }
-                sublabel="Low-light / zero-light performance"
+                sublabel="Low-light performance"
                 active={true}
               />
-
+ 
               {/* Audio */}
               <SpecRow
-                icon={card.hasAudio ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-                iconColor={card.hasAudio ? "text-emerald-500 bg-emerald-500" : "text-red-500 bg-red-500"}
-                label={card.hasAudio ? "Built-in Microphone" : "No Audio Recording"}
+                icon={<Mic className="w-5 h-5" />}
+                label={card.hasAudio ? "Built-in Mic" : "No Audio"}
                 sublabel="Ambient sound capture"
-                active={true}
+                active={card.hasAudio}
               />
-
+ 
               {/* Recorder */}
               <SpecRow
-                icon={<Check className="w-4 h-4" />}
-                iconColor="text-indigo-500 bg-indigo-500"
-                label={`${card.recType} Recorder`}
-                sublabel={`${cameraCount}-channel continuous recording`}
+                icon={<Activity className="w-5 h-5" />}
+                label={`${card.recType} Hub`}
+                sublabel={`${cameraCount}-channel recording`}
                 active={true}
               />
-
+ 
               {/* Storage */}
               <SpecRow
-                icon={<Check className="w-4 h-4" />}
-                iconColor="text-sky-500 bg-sky-500"
+                icon={<HardDrive className="w-5 h-5" />}
                 label={card.storageLabel}
-                sublabel={`${recordingDays} days footage retention`}
+                sublabel={`${recordingDays} days retention`}
                 active={true}
               />
             </div>

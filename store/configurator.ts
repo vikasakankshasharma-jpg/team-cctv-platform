@@ -42,8 +42,8 @@ interface ConfiguratorStore {
   promoter_id: string | null;
 
   // ── Compare State (New 3-Tier SaaS Layout) ──────────────────────────────
-  compare_options: Array<{ technology: "HD" | "IP"; option: number }>;
-  active_checkout_option: { technology: "HD" | "IP"; option: number } | null;
+  compare_options: Array<{ technology: "HD" | "IP"; option: number | string }>;
+  active_checkout_option: { technology: "HD" | "IP"; option: number | string } | null;
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
@@ -65,10 +65,10 @@ interface ConfiguratorStore {
   setPricingResults: (results: ConfiguratorStore["pricing_results"]) => void;
 
   /** Update compare options from table */
-  setCompareOptions: (options: Array<{ technology: "HD" | "IP"; option: number }>) => void;
+  setCompareOptions: (options: Array<{ technology: "HD" | "IP"; option: number | string }>) => void;
 
   /** Set the active checkout option (when clicking a card) */
-  setActiveCheckoutOption: (option: { technology: "HD" | "IP"; option: number }) => void;
+  setActiveCheckoutOption: (option: { technology: "HD" | "IP"; option: number | string }) => void;
 
   /** Apply a referral discount from a validated promoter */
   applyReferral: (discount: number, promoterId: string) => void;
@@ -148,7 +148,12 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
   setActiveCheckoutOption: (option) => set({ 
     active_checkout_option: option,
     // Also sync the legacy selection state so the pricing loop picks it up
-    selection: { ...get().selection, technology: option.technology, selected_camera_option: option.option }
+    selection: { 
+      ...get().selection, 
+      technology: option.technology, 
+      selected_camera_option: typeof option.option === "number" ? option.option : undefined,
+      selected_camera_id: typeof option.option === "string" ? option.option : undefined
+    }
   }),
 
   applyReferral: (discount, promoterId) =>

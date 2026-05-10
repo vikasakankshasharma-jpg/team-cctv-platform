@@ -36,20 +36,20 @@ export function FullCustomizerPanel() {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto mb-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 md:p-6 shadow-sm">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-        <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+    <div className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 shadow-sm sticky top-24">
+      <div className="flex items-center gap-3 mb-5 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+        <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
           <SlidersHorizontal className="w-4 h-4 text-blue-600 dark:text-blue-400" />
         </div>
-        <h3 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest">
+        <h3 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest leading-tight">
           Build Your Own System
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="flex flex-col gap-6">
         
         {/* Column 1: Brand & Focus */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div className="space-y-3">
             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Preferred Brand</label>
             <div className="flex flex-wrap gap-2">
@@ -81,10 +81,10 @@ export function FullCustomizerPanel() {
 
           <div className="space-y-3">
             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Focus Point</label>
-            <div className="flex bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-xl">
+            <div className="flex flex-col gap-1 bg-zinc-100 dark:bg-zinc-800/50 p-1.5 rounded-xl">
               <button
                 onClick={() => updateSelection({ focus_point: "price" })}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
                   selection.focus_point === "price"
                     ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white"
                     : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
@@ -94,7 +94,7 @@ export function FullCustomizerPanel() {
               </button>
               <button
                 onClick={() => updateSelection({ focus_point: "quality" })}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
                   selection.focus_point === "quality"
                     ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white"
                     : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
@@ -106,8 +106,10 @@ export function FullCustomizerPanel() {
           </div>
         </div>
 
+        <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800/80 my-2" />
+
         {/* Column 2: Budget Control */}
-        <div className="space-y-3 lg:border-l lg:border-zinc-100 dark:lg:border-zinc-800 lg:pl-8">
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Max Total Budget</label>
             <span className="text-xs font-black text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full">
@@ -115,7 +117,7 @@ export function FullCustomizerPanel() {
             </span>
           </div>
           
-          <div className="pt-4">
+          <div className="pt-2">
             <input 
               type="range" 
               min="10000" max="100000" step="1000"
@@ -128,13 +130,15 @@ export function FullCustomizerPanel() {
               <span>No Limit</span>
             </div>
           </div>
-          <p className="text-[10px] text-zinc-500 leading-relaxed pt-2">
-            Set your absolute maximum budget. We will automatically filter out cameras that cause your total system cost to exceed this amount.
+          <p className="text-[10px] text-zinc-500 leading-snug">
+            Set your absolute maximum budget. We'll automatically filter out systems exceeding this cost.
           </p>
         </div>
 
+        <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800/80 my-2" />
+
         {/* Column 3: Advanced Features */}
-        <div className="space-y-3 lg:border-l lg:border-zinc-100 dark:lg:border-zinc-800 lg:pl-8">
+        <div className="space-y-4">
           <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Must-Have Features</label>
           <div className="grid grid-cols-2 gap-2">
             {[
