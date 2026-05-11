@@ -236,33 +236,6 @@ export default async function QuoteResultPage({
            />
         </div>
 
-        {/* NEXT STEPS TIMELINE */}
-        <div className="mt-16 sm:mt-32 w-full max-w-5xl">
-           <div className="text-center mb-8 sm:mb-16">
-              <span className="block text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.15em] mb-4">The Road to Security</span>
-              <h3 className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">What Happens Next?</h3>
-           </div>
-           
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8 relative">
-              {/* CONNECTING LINE */}
-              <div className="hidden md:block absolute top-8 left-1/8 right-1/8 w-3/4 mx-auto h-[2px] bg-gradient-to-r from-transparent via-blue-200 dark:via-blue-800 to-transparent -z-10" />
-              
-              {[
-                { step: "01", title: "Site Survey", desc: "Book a visit for a precise wiring measurement." },
-                { step: "02", title: "Final Quote", desc: "Receive a binding contract with exact totals." },
-                { step: "03", title: "Installation", desc: "Professional setup by our certified team." },
-                { step: "04", title: "Go Live", desc: "System handover with mobile app setup." }
-              ].map((item, i) => (
-                <div key={i} className="flex flex-col items-center text-center group cursor-default">
-                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[24px] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-xl flex items-center justify-center text-zinc-900 dark:text-white font-black text-base sm:text-xl mb-4 sm:mb-6 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 group-hover:-translate-y-1 group-hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all duration-300">
-                      {item.step}
-                   </div>
-                   <h4 className="text-sm sm:text-lg font-black text-zinc-900 dark:text-white mb-1 sm:mb-2 tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{item.title}</h4>
-                   <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 leading-relaxed px-1 sm:px-4">{item.desc}</p>
-                </div>
-              ))}
-           </div>
-        </div>
 
       </div>
     </main>

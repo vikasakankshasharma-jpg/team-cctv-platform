@@ -602,6 +602,51 @@ export async function GET(request: Request) {
         "16cam_opt3_cpplus_5mp":   "₹73,160 (16×₹2,185 + ₹20,700 DVR + ₹2,520 PSU×2 + ₹8,580 HDD + ₹6,400 install)",
       },
     });
+
+    // ── STEP 5: PERSISTENT DEMO LEAD ─────────────────────────────────────────
+    const demoLeadId = "live-demo-lead";
+    await adminDb.collection("leads").doc(demoLeadId).set({
+      customer_name: "Demo Customer",
+      mobile_number: "9999999999",
+      email: "demo@cctvquotation.com",
+      property_type: "Residential",
+      camera_count: 4,
+      status: "qualified",
+      created_at: adminDb.firestore.FieldValue.serverTimestamp(),
+      address: {
+        city: "Jaipur",
+        area: "Vaishali Nagar",
+        pincode: "302021"
+      }
+    });
+
+    // Create a corresponding quote for the demo lead
+    const demoQuoteId = "demo-quote-hikvision";
+    await adminDb.collection("leads").doc(demoLeadId).collection("quotes").doc(demoQuoteId).set({
+      status: "pending",
+      created_at: adminDb.firestore.FieldValue.serverTimestamp(),
+      items: [
+        { product_id: "cam_ip_opt5", display_name: "4MP Pro-HD Color Night Camera", brand: "Hikvision", qty: 4, unit_price: 4015, technology: "IP" },
+        { product_id: "nvr_opt2", display_name: "8-Channel 4K NVR", brand: "Hikvision", qty: 1, unit_price: 8500, technology: "IP" }
+      ],
+      addons: [
+        { addon_id: "addon_hdd_2tb", display_name: "2TB Surveillance HDD", brand: "Seagate", qty: 1, price: 5200 }
+      ],
+      labor_cost: 4000,
+      cabling_cost: 2500,
+      gst_rate: 18,
+      total_amount: 34560,
+      quote_number: "DEMO-HIK-001"
+    });
+
+    return NextResponse.json({ 
+      message: "Production Catalog & Demo Lead Seeded Successfully",
+      stats: {
+        products: products.length,
+        addons: addons.length,
+        demoLead: demoLeadId
+      }
+    });
   } catch (error) {
     const err = error as Error;
     console.error("❌ Seed error:", err);
