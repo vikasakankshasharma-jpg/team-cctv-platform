@@ -92,6 +92,7 @@ export async function GET() {
         daily_gb_per_camera: DAILY_GB,
         catalog_path: "CCTV/Cameras/HD/2MP",
         brand: "CP Plus",
+        features: ["color"],
         is_active: true,
       },
 
@@ -99,7 +100,7 @@ export async function GET() {
       {
         id: "cam_hd_opt3",
         technical_name: "cam_hd_opt3",
-        display_name: "CP Plus 5MP Color in Night",
+        display_name: "5MP Color Night Vision Camera",
         category: "camera",
         technology: "HD",
         unit_price: 2185,
@@ -107,6 +108,7 @@ export async function GET() {
         daily_gb_per_camera: DAILY_GB,
         catalog_path: "CCTV/Cameras/HD/5MP",
         brand: "CP Plus",
+        features: ["color"],
         is_active: true,
       },
 
@@ -140,7 +142,7 @@ export async function GET() {
       {
         id: "dvr_hd_16ch_2mp",
         technical_name: "dvr_hd_16ch_2mp",
-        display_name: "CP Plus DVR 16CH (2MP Supported, Upto 16 Cameras)",
+        display_name: "16-Channel Pro DVR",
         category: "recorder",
         technology: "HD",
         unit_price: 7245,
@@ -148,6 +150,7 @@ export async function GET() {
         max_cameras: 16,
         catalog_path: "CCTV/Recorders/DVR/2MP",
         compatible_paths: ["CCTV/Cameras/HD/2MP"],
+        brand: "CP Plus",
         is_active: true,
       },
 
@@ -258,6 +261,7 @@ export async function GET() {
         daily_gb_per_camera: DAILY_GB,
         catalog_path: "CCTV/Cameras/IP/2MP",
         brand: "Budget",
+        features: ["color", "mic"],
         is_active: true,
       },
 
@@ -273,31 +277,30 @@ export async function GET() {
         daily_gb_per_camera: DAILY_GB,
         catalog_path: "CCTV/Cameras/IP/4MP",
         brand: "Budget",
+        features: ["color", "mic"],
         is_active: true,
       },
 
-      // Option 3 — CP Plus 2MP Black & White in Night  ₹2,695/cam
+      // Option 3 — Hikvision 2MP B&W Night  ₹2,695/cam
       {
         id: "cam_ip_opt3",
         technical_name: "cam_ip_opt3",
-        display_name: "CP Plus 2MP Black & White in Night",
+        display_name: "2MP Classic IP Camera",
         category: "camera",
         technology: "IP",
         unit_price: 2695,
-        bulk_discount_threshold: 16,
-        bulk_unit_price: 2585,
         resolution_tier: "good",
         daily_gb_per_camera: DAILY_GB,
         catalog_path: "CCTV/Cameras/IP/2MP",
-        brand: "CP Plus",
+        brand: "Hikvision",
         is_active: true,
       },
 
-      // Option 4 — CP Plus 2MP Color in Night  ₹3,025/cam
+      // Option 4 — Hikvision 2MP Color in Night  ₹3,025/cam
       {
         id: "cam_ip_opt4",
         technical_name: "cam_ip_opt4",
-        display_name: "CP Plus 2MP Color in Night",
+        display_name: "2MP Color Night Vision Camera",
         category: "camera",
         technology: "IP",
         unit_price: 3025,
@@ -306,15 +309,15 @@ export async function GET() {
         resolution_tier: "very_clear",
         daily_gb_per_camera: DAILY_GB,
         catalog_path: "CCTV/Cameras/IP/2MP",
-        brand: "CP Plus",
+        brand: "Hikvision",
         is_active: true,
       },
 
-      // Option 5 — CP Plus 4MP Color in Night  ₹4,015/cam
+      // Option 5 — Hikvision 4MP Color in Night  ₹4,015/cam
       {
         id: "cam_ip_opt5",
         technical_name: "cam_ip_opt5",
-        display_name: "CP Plus 4MP Color in Night",
+        display_name: "4MP Pro-HD Color Night Camera",
         category: "camera",
         technology: "IP",
         unit_price: 4015,
@@ -323,7 +326,8 @@ export async function GET() {
         resolution_tier: "crystal_clear",
         daily_gb_per_camera: DAILY_GB,
         catalog_path: "CCTV/Cameras/IP/4MP",
-        brand: "CP Plus",
+        brand: "Hikvision",
+        features: ["color"],
         is_active: true,
       },
 

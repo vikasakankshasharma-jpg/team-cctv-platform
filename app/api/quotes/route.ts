@@ -62,12 +62,16 @@ export async function POST(request: NextRequest) {
       gst_rate: quoteData.gst_rate,
       gst_amount: quoteData.gst_amount,
       total_payable: quoteData.total_payable,
-      pdf_url: null, // to be populated later by background job or subsequent client upload
+      pdf_url: null,
+      status: body.status || "draft",
+      accepted_at: body.accepted_at ? new Date(body.accepted_at) : null,
       created_at: serverTimestamp(),
     });
 
     // Simultaneously update Lead with address and status if provided
-    const updatePayload: Record<string, unknown> = { status: "quoted" };
+    const updatePayload: Record<string, unknown> = { 
+      status: body.status === "accepted" ? "accepted" : "quoted" 
+    };
     if (address) updatePayload.address = address;
     
     const leadPromise = leadRef.update(updatePayload);

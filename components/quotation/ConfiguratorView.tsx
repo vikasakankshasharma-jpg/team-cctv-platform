@@ -24,13 +24,15 @@ import {
   CreditCard,
   Truck,
   Handshake,
-  Wrench
+  Wrench,
+  Activity
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { CompareCards } from "./CompareCards";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
 import { AllSystemsGrid } from "./AllSystemsGrid";
 import { resolveCardLayout } from "@/lib/card-layout-engine";
+import { ExpertFiltersBar } from "./ExpertFiltersBar";
 
 import { SiteDetailsModal } from "./SiteDetailsModal";
 import { ShareDialog } from "./ShareDialog";
@@ -107,7 +109,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       wants_amc: wantsAmc,
       requested_features: requestedFeatures,
       surface_types: surfaceTypes,
-      brand_preference: (lead.wizard_answers["q_brand"] as string) || "recommend",
+      brand_preference: (lead.wizard_answers["q_brand"] === "recommend" || lead.wizard_answers["q_brand"] === "unsure") ? "all" : (lead.wizard_answers["q_brand"] as string || "all"),
       installation_timeline: (lead.wizard_answers["q_timeline"] as string) || "research",
     });
 
@@ -251,6 +253,37 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     return () => clearTimeout(timeout);
   }, [selection, pricingCache, cablingDone, propertyType, requirements, setPricingResults, promoterDiscount, lead.active_offer]);
 
+  // ── Compute Active Pricing Result (for Summary & Checkout) ────────────────
+  const activePricing = useMemo(() => {
+    const cT = active_checkout_option?.technology ?? selection.technology;
+    const cO = active_checkout_option?.option ?? selection.selected_camera_option;
+
+    return calculatePricing({
+      selection: {
+        ...selection,
+        technology: cT as "HD" | "IP",
+        selected_camera_option: typeof cO === "number" ? cO : undefined,
+        selected_camera_id: typeof cO === "string" ? cO : undefined,
+      },
+      products: pricingCache.products,
+      addons: pricingCache.addons,
+      settings: pricingCache.settings,
+      cablingDone,
+      referralDiscountPercent: promoterDiscount?.percent || 0,
+      referralDiscountFlat: promoterDiscount?.flat || 0,
+      evaluatedAddonRules: evaluatedRules,
+      activeOffer: lead.active_offer,
+    });
+  }, [
+    active_checkout_option,
+    selection,
+    pricingCache,
+    cablingDone,
+    promoterDiscount,
+    evaluatedRules,
+    lead.active_offer,
+  ]);
+
   const triggerActionWithAddress = (action: "download" | "whatsapp" | "booking") => {
     if (!lead.address) {
       setPendingAction(action);
@@ -270,27 +303,33 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     }
   };
 
-  const executeAction = async (action: "download" | "whatsapp" | "booking", currentLead?: Lead) => {
+  const executeAction = async (action: "download" | "whatsapp" | "booking" | "accept", currentLead?: Lead) => {
     const activeLead = currentLead || lead;
-    if (action === "download") await handleSaveQuote(activeLead);
+    if (action === "download") await handleSaveQuote(activeLead, "draft");
+    if (action === "accept") await handleSaveQuote(activeLead, "accepted");
     if (action === "whatsapp") handleWhatsappShare(activeLead);
     if (action === "booking") await handleBooking(activeLead);
   };
 
-  const handleSaveQuote = async (currentLead: Lead) => {
-    if (!pricing_results.recommended || !pricingCache.settings) return;
+  const handleSaveQuote = async (currentLead: Lead, status: "accepted" | "draft" = "draft") => {
+    if (!activePricing || !pricingCache.settings) return;
     setIsSaving(true);
-    trackEvent("download_quote", {
+
+    const isAccepted = status === "accepted";
+    
+    trackEvent(isAccepted ? "quote_accepted" : "download_quote", {
       lead_id: currentLead.id,
-      total_value: pricing_results.recommended.total_payable
+      total_value: activePricing.total_payable
     });
 
     try {
       const payload = {
         lead_id: currentLead.id,
-        quoteData: pricing_results.recommended,
+        quoteData: activePricing,
         address: currentLead.address,
-        firebase_uid: currentLead.firebase_uid // ownership verification
+        firebase_uid: currentLead.firebase_uid,
+        status,
+        accepted_at: isAccepted ? new Date().toISOString() : null
       };
 
       const res = await fetch("/api/quotes", {
@@ -303,6 +342,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       const { id: generatedQuoteId } = await res.json();
       setSavedQuoteId(generatedQuoteId);
       
+      if (isAccepted) {
+        toast.success("Quotation Accepted! We will contact you shortly.");
+      } else {
+        toast.success("Detailed Quotation Ready!");
+      }
+
       router.push(`/quote/${currentLead.id}/review/${generatedQuoteId}`);
     } catch (err) {
       console.error(err);
@@ -380,6 +425,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             </div>
           )}
 
+          <ExpertFiltersBar />
+
           {/* ── Compare Cards ──────────────────────────────────────────────── */}
           <CompareCards
             compareOptions={compare_options}
@@ -393,8 +440,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             cablingDone={cablingDone}
             recommendation={activeRecommendation}
             customerTechnology={selection.technology}
+            requestedFeatures={selection.requested_features || []}
+            selectedAddons={selection.selected_addons || []}
             promoterDiscount={promoterDiscount}
             evaluatedAddonRules={evaluatedRules}
+            activeOffer={lead.active_offer}
           />
         </div>
       </div>
@@ -417,6 +467,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             cablingDone={cablingDone}
             promoterDiscount={promoterDiscount}
             evaluatedRules={evaluatedRules}
+            activeOffer={lead.active_offer}
           />
           
         </div>
@@ -497,42 +548,20 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                   <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">System Summary</h3>
                </div>
                
-               {/* System Summary - mirrors the SELECTED comparison card */}
-               {(() => {
-                 const cTech = active_checkout_option?.technology ?? selection.technology;
-                 const cOpt  = active_checkout_option?.option   ?? selection.selected_camera_option;
-                 
-                 const cp = calculatePricing({ 
-                    selection: { 
-                      ...selection, 
-                      technology: cTech as "HD" | "IP", 
-                      selected_camera_option: typeof cOpt === "number" ? cOpt : undefined,
-                      selected_camera_id: typeof cOpt === "string" ? cOpt : undefined,
-                    }, 
-                    products: pricingCache.products, 
-                    addons: pricingCache.addons, 
-                    settings: pricingCache.settings, 
-                    cablingDone, 
-                    referralDiscountPercent: promoterDiscount?.percent || 0, 
-                    referralDiscountFlat: promoterDiscount?.flat || 0, 
-                    evaluatedAddonRules: evaluatedRules,
-                    activeOffer: lead.active_offer
-                 });
-
-                 return (
                     <div className="rounded-[24px] border border-zinc-100 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-950 shadow-sm">
-                      <div className="px-4 py-3 sm:px-5 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Scope of Work & Materials</span>
-                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Amount</span>
+                      <div className="px-4 py-3 sm:px-5 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-zinc-500">
+                         <span className="text-[10px] font-black uppercase tracking-widest">Item Description</span>
+                         <span className="text-[10px] font-black uppercase tracking-widest">Line Total</span>
                       </div>
                       <div className="divide-y divide-zinc-100 dark:border-zinc-800/50">
-                        {cp.items.map((item) => (
-                          <div key={item.product_id} className="flex items-start justify-between gap-4 px-4 py-3.5 sm:px-5">
+                        {activePricing.items.map((item) => (
+                          <div key={item.product_id} className="flex items-start justify-between gap-4 px-4 py-3.5 sm:px-5 group/item">
                             <div className="flex items-start gap-3 min-w-0">
-                              <span className="w-6 h-6 mt-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-center text-[10px] font-black text-zinc-600 dark:text-zinc-400 shrink-0">
+                              <span className="w-6 h-6 mt-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-center text-[10px] font-black text-zinc-600 dark:text-zinc-400 shrink-0 group-hover/item:bg-blue-100 group-hover/item:text-blue-600 transition-colors">
                                  {item.qty}x
                               </span>
                               <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 leading-snug">
+                                {item.brand ? <span className="font-black text-zinc-900 dark:text-white mr-1">{item.brand}</span> : null}
                                 {item.display_name}
                               </span>
                             </div>
@@ -542,10 +571,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                           </div>
                         ))}
                         
-                        {cp.addons.map((addon) => (
-                          <div key={addon.addon_id} className="flex items-start justify-between gap-4 px-4 py-3.5 sm:px-5">
+                        {activePricing.addons.map((addon) => (
+                          <div key={addon.addon_id} className="flex items-start justify-between gap-4 px-4 py-3.5 sm:px-5 group/item">
                             <div className="flex items-start gap-3 min-w-0">
-                              <span className="w-6 h-6 mt-0.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[10px] font-black text-blue-600 dark:text-blue-400 shrink-0">
+                              <span className="w-6 h-6 mt-0.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[10px] font-black text-blue-600 dark:text-blue-400 shrink-0 group-hover/item:bg-blue-100 transition-colors">
                                  {addon.qty ?? 1}x
                               </span>
                               <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 leading-snug">
@@ -559,8 +588,29 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                         ))}
                       </div>
                     </div>
-                  );
-               })()}
+                </div>
+
+            {/* Scope of Work Section */}
+            <div className="space-y-6">
+               <div className="flex items-center gap-3 mb-2">
+                  <Activity className="w-5 h-5 text-blue-500" />
+                  <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">Scope of Work</h3>
+               </div>
+               
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 {[
+                   { title: "Consultation & Survey", desc: "Site visit to finalize camera angles and exact cable route." },
+                   { title: "Hardware Deployment", desc: "Rigorous installation of cameras, recorders, and PoE/PSU units." },
+                   { title: "Pure Copper Cabling", desc: "Certified high-speed cabling with proper PVC casing and protection." },
+                   { title: "Configuration & AI Setup", desc: "Setup of smart alerts, mobile apps, and remote access." }
+                 ].map((step, i) => (
+                   <div key={i} className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+                     <div className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest mb-1.5">Phase 0{i+1}</div>
+                     <div className="text-[13px] font-black text-zinc-900 dark:text-white mb-1">{step.title}</div>
+                     <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed">{step.desc}</p>
+                   </div>
+                 ))}
+               </div>
             </div>
 
             {/* Extra Features */}
@@ -622,12 +672,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                   <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-48 h-48 bg-blue-500/20 blur-[50px] rounded-full pointer-events-none" />
                   
                    <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Total Investment</div>
-                   {(() => {
-                     const cT = active_checkout_option?.technology ?? selection.technology;
-                     const cO = active_checkout_option?.option   ?? selection.selected_camera_option;
-                     const cp = calculatePricing({ selection: { ...selection, technology: cT as "HD" | "IP", selected_camera_option: typeof cO === "number" ? cO : undefined, selected_camera_id: typeof cO === "string" ? cO : undefined }, products: pricingCache.products, addons: pricingCache.addons, settings: pricingCache.settings, cablingDone, referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer });
-                     return <div className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 transition-all duration-300">&#x20B9;{cp.total_payable.toLocaleString('en-IN')}</div>;
-                   })()}
+                    <div className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 transition-all duration-300">&#x20B9;{activePricing.total_payable.toLocaleString('en-IN')}</div>
                   
                   <div className="pt-6 border-t border-zinc-800 flex justify-between items-center">
                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Incl. GST & Labor</span>
@@ -685,30 +730,42 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                {/* Action Buttons — below payment terms so customer is informed before committing */}
                <div className="space-y-3 sm:space-y-4">
                  <button
-                   onClick={() => triggerActionWithAddress("download")}
+                   onClick={() => executeAction("accept")}
                    disabled={isSaving}
-                   className="group relative w-full h-14 sm:h-18 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-[0.3em] rounded-[28px] sm:rounded-[32px] shadow-xl shadow-blue-600/20 transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 overflow-hidden touch-manipulation"
+                   className="group relative w-full h-16 sm:h-20 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-sm tracking-[0.3em] rounded-[28px] sm:rounded-[32px] shadow-2xl shadow-emerald-500/30 transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 overflow-hidden touch-manipulation"
                  >
                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                      <>
-                       <Download className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
-                       Download Full Quote
-                       <ArrowRight className="w-4 h-4 translate-y-[1px]" />
+                       <ShieldCheck className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                       Accept Quote
+                       <ArrowRight className="w-5 h-5 translate-y-[1px]" />
                      </>
                    )}
-                   <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                 </button>
+
+                 <button
+                   onClick={() => executeAction("download")}
+                   disabled={isSaving}
+                   className="group relative w-full h-14 sm:h-16 bg-blue-600/10 hover:bg-blue-600/20 text-blue-600 dark:text-blue-400 font-black uppercase text-[10px] tracking-widest rounded-[24px] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 border border-blue-600/20"
+                 >
+                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                     <>
+                       <Download className="w-4 h-4" />
+                       Download PDF
+                     </>
+                   )}
                  </button>
 
                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
                    <button
-                     onClick={() => triggerActionWithAddress("whatsapp")}
+                     onClick={() => executeAction("whatsapp")}
                      className="group relative h-14 sm:h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl sm:rounded-3xl flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 overflow-hidden touch-manipulation"
                    >
                      <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> WhatsApp
                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                    </button>
                    <button
-                     onClick={() => triggerActionWithAddress("booking")}
+                     onClick={() => executeAction("booking")}
                      className="h-14 sm:h-16 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white font-black uppercase text-[10px] tracking-widest rounded-2xl sm:rounded-3xl flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95 border border-zinc-200 dark:border-zinc-700 shadow-lg touch-manipulation"
                    >
                      <Calendar className="w-4 h-4" /> Book Visit

@@ -47,8 +47,11 @@ interface CompareCardsProps {
   recommendation?: RecommendedOutput | null;
   /** The technology the customer explicitly chose in the wizard (IP / HD / undefined = not sure) */
   customerTechnology?: "HD" | "IP";
+  requestedFeatures: string[];
+  selectedAddons: string[];
   promoterDiscount?: { percent: number; flat: number };
   evaluatedAddonRules: any;
+  activeOffer?: any;
 }
 
 // ─── Spec Row helper ─────────────────────────────────────────────────────────
@@ -169,8 +172,11 @@ export function CompareCards({
   cablingDone,
   recommendation,
   customerTechnology,
+  requestedFeatures,
+  selectedAddons,
   promoterDiscount,
   evaluatedAddonRules,
+  activeOffer,
 }: CompareCardsProps) {
   // ── Compute card data ──────────────────────────────────────────────────────
   const cardsData = useMemo(() => {
@@ -183,7 +189,8 @@ export function CompareCards({
           selected_camera_option: typeof co.option === "number" ? co.option : undefined,
           selected_camera_id: typeof co.option === "string" ? co.option : undefined,
           plan_type: "recommended",
-          selected_addons: [],
+          selected_addons: selectedAddons,
+          requested_features: requestedFeatures,
           picture_quality: "good",
         };
 
@@ -196,6 +203,7 @@ export function CompareCards({
           referralDiscountPercent: promoterDiscount?.percent || 0,
           referralDiscountFlat: promoterDiscount?.flat || 0,
           evaluatedAddonRules,
+          activeOffer,
         });
 
         const selectedCamId = pricing.items.find(i => {
@@ -278,6 +286,9 @@ export function CompareCards({
     evaluatedAddonRules,
     recommendation,
     customerTechnology,
+    requestedFeatures,
+    selectedAddons,
+    activeOffer,
   ]);
 
   // ── Savings badge: compare this card vs the most-expensive card ────────────
@@ -323,10 +334,12 @@ export function CompareCards({
         // ── Tier label ──────────────────────────────────────────────────────
         // If customer chose HD and this card is IP → label it as "Smart Upgrade"
         const isUpgradeSuggestion = customerTechnology === "HD" && card.isIP;
-        let tierName = "Budget";
+        let tierName = idx === 0 ? "Standard" : idx === 1 ? "Value" : "Professional";
         if (isUpgradeSuggestion) tierName = "Smart Upgrade";
         else if (card.isRecommended) tierName = "Recommended";
-        else if (idx === cardsData.length - 1 && cardsData.length > 1) tierName = "Premium";
+        else if (idx === cardsData.length - 1 && cardsData.length > 1) {
+          tierName = card.isIP ? "Elite" : "Premium";
+        }
 
         // ── Savings vs most expensive ────────────────────────────────────────
         const savings = maxPrice - card.pricing.total_payable;
@@ -436,6 +449,9 @@ export function CompareCards({
                 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight leading-tight text-center px-2"
                 title={card.camProduct?.display_name}
               >
+                {card.camProduct?.brand && (
+                  <span className="block text-[10px] text-blue-600 dark:text-blue-400 mb-1">{card.camProduct.brand}</span>
+                )}
                 {card.camProduct?.display_name || `${card.technology} Option ${card.option}`}
               </h4>
             </div>
@@ -515,15 +531,15 @@ export function CompareCards({
                   const cableItem = card.pricing.items.find(i => products.find(p => p.id === i.product_id)?.category === 'cable');
                   
                   return [
-                    { label: `${cameraCount}× ${card.camProduct?.display_name ?? card.technology + " Camera"}`, icon: "📷" },
-                    { label: recorderItem ? `${recorderItem.qty}× ${recorderItem.display_name}` : `1× ${card.recType} (${cameraCount <= 4 ? "4" : cameraCount <= 8 ? "8" : "16"}-Ch Recorder)`, icon: "📺" },
-                    { label: storageItem ? `${storageItem.qty}× ${storageItem.display_name}` : "1× 1TB Surveillance HDD", icon: "💾" },
+                    { label: `${cameraCount}× ${card.camProduct?.brand ? card.camProduct.brand + " " : ""}${card.camProduct?.display_name ?? card.technology + " Camera"}`, icon: "📷" },
+                    { label: recorderItem ? `${recorderItem.qty}× ${recorderItem.brand ? recorderItem.brand + " " : ""}${recorderItem.display_name}` : `1× ${card.recType} (${cameraCount <= 4 ? "4" : cameraCount <= 8 ? "8" : "16"}-Ch Recorder)`, icon: "📺" },
+                    { label: storageItem ? `${storageItem.qty}× ${storageItem.brand ? storageItem.brand + " " : ""}${storageItem.display_name}` : "1× 1TB Surveillance HDD", icon: "💾" },
                     { label: cableItem ? `~${cableItem.qty}m ${cableItem.display_name}` : (card.isIP ? `Cat6 UTP Cable (~${cameraCount * 25}m)` : `RG59 Coaxial (~${cameraCount * 25}m)`), icon: "🛡️" },
                     { label: "Professional Installation & Testing", icon: "🔧" },
                   ].map(item => (
                     <div key={item.label} className="flex items-center gap-2">
                       <span className="text-[11px] leading-none shrink-0">{item.icon}</span>
-                      <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 leading-snug">{item.label}</span>
+                      <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 leading-snug truncate" title={item.label}>{item.label}</span>
                     </div>
                   ));
                 })()}

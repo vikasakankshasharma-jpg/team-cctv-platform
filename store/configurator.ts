@@ -78,6 +78,9 @@ interface ConfiguratorStore {
 
   /** Reset configurator to defaults (e.g., after quote is saved) */
   resetConfigurator: () => void;
+
+  /** Reset only filters */
+  resetFilters: () => void;
 }
 
 // ─────────────────────────────────────────────
@@ -170,4 +173,16 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
       compare_options: [],
       active_checkout_option: null,
     }),
+
+  resetFilters: () =>
+    set((state) => ({
+      selection: {
+        ...state.selection,
+        brand_preference: "all",
+        max_budget: null,
+        requested_features: [],
+        focus_point: "price",
+        technology: "IP", // Reset to recommended default
+      },
+    })),
 }));

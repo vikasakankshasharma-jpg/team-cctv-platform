@@ -1,19 +1,46 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
-import { SlidersHorizontal, IndianRupee, ShieldCheck, Zap, Maximize, Mic, Moon, Camera } from "lucide-react";
+import { 
+  SlidersHorizontal, 
+  IndianRupee, 
+  ShieldCheck, 
+  Zap, 
+  Maximize, 
+  Mic, 
+  Moon, 
+  Camera, 
+  ChevronDown, 
+  ChevronUp,
+  X,
+  Database,
+  Cpu,
+  Monitor
+} from "lucide-react";
 
 export function FullCustomizerPanel() {
-  const { selection, updateSelection, pricing_results, products } = useConfiguratorStore();
+  const { selection, updateSelection, products, resetFilters } = useConfiguratorStore();
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    brands: true,
+    budget: true,
+    features: true,
+    tech: true
+  });
 
-  // Extract unique brands from cameras
-  const uniqueBrands = useMemo(() => {
-    const brands = new Set<string>();
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  // Extract unique brands and counts
+  const brandStats = useMemo(() => {
+    const stats: Record<string, number> = {};
     products.forEach(p => {
-      if (p.category === "camera" && p.brand) brands.add(p.brand);
+      if (p.category === "camera" && p.brand) {
+        stats[p.brand] = (stats[p.brand] || 0) + 1;
+      }
     });
-    return Array.from(brands).sort();
+    return Object.entries(stats).sort((a, b) => b[1] - a[1]);
   }, [products]);
 
   const toggleFeature = (feature: string) => {
@@ -27,7 +54,6 @@ export function FullCustomizerPanel() {
 
   const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
-    // If the slider is at 100k, we treat it as no limit
     if (val >= 100000) {
       updateSelection({ max_budget: null });
     } else {
@@ -35,140 +61,218 @@ export function FullCustomizerPanel() {
     }
   };
 
+  const clearFilters = () => {
+    resetFilters();
+  };
+
+  const activeFilterCount = 
+    (selection.brand_preference !== "all" ? 1 : 0) +
+    (selection.max_budget !== null ? 1 : 0) +
+    (selection.requested_features?.length || 0);
+
   return (
-    <div className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 shadow-sm sticky top-24">
-      <div className="flex items-center gap-3 mb-5 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-        <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-          <SlidersHorizontal className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+    <div className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[32px] overflow-hidden shadow-sm lg:sticky lg:top-24">
+      
+      {/* Header */}
+      <div className="bg-zinc-50 dark:bg-zinc-900/50 px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <SlidersHorizontal className="w-4 h-4 text-zinc-900 dark:text-white" />
+          <h3 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-[0.2em]">Filters</h3>
+          {activeFilterCount > 0 && (
+            <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center">
+              {activeFilterCount}
+            </span>
+          )}
         </div>
-        <h3 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest leading-tight">
-          Build Your Own System
-        </h3>
+        {activeFilterCount > 0 && (
+          <button 
+            onClick={clearFilters}
+            className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline"
+          >
+            Clear All
+          </button>
+        )}
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
         
-        {/* Column 1: Brand & Focus */}
-        <div className="space-y-5">
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Preferred Brand</label>
-            <div className="flex flex-wrap gap-2">
+        {/* Section: Technology */}
+        <div className="p-6 space-y-4">
+          <button 
+            onClick={() => toggleSection('tech')}
+            className="w-full flex items-center justify-between group"
+          >
+            <span className="text-[10px] font-black text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors uppercase tracking-[0.2em]">Technology Choice</span>
+            {expandedSections.tech ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+          </button>
+          
+          {expandedSections.tech && (
+            <div className="flex gap-2 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
               <button
-                onClick={() => updateSelection({ brand_preference: "all" })}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                  !selection.brand_preference || selection.brand_preference === "all"
-                    ? "bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-zinc-900"
-                    : "bg-transparent text-zinc-600 border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:text-zinc-400"
-                }`}
-              >
-                All Brands
-              </button>
-              {uniqueBrands.map(brand => (
-                <button
-                  key={brand}
-                  onClick={() => updateSelection({ brand_preference: brand })}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                    selection.brand_preference === brand
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-transparent text-zinc-600 border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:text-zinc-400"
-                  }`}
-                >
-                  {brand}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Focus Point</label>
-            <div className="flex flex-col gap-1 bg-zinc-100 dark:bg-zinc-800/50 p-1.5 rounded-xl">
-              <button
-                onClick={() => updateSelection({ focus_point: "price" })}
-                className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
-                  selection.focus_point === "price"
+                onClick={() => updateSelection({ technology: "HD" })}
+                className={`flex-1 flex flex-col items-center justify-center py-3 rounded-lg transition-all ${
+                  selection.technology === "HD"
                     ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white"
                     : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
                 }`}
               >
-                <IndianRupee className="w-3.5 h-3.5" /> Best Price
+                <Monitor className="w-4 h-4 mb-1" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Analog HD</span>
               </button>
               <button
-                onClick={() => updateSelection({ focus_point: "quality" })}
-                className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
-                  selection.focus_point === "quality"
+                onClick={() => updateSelection({ technology: "IP" })}
+                className={`flex-1 flex flex-col items-center justify-center py-3 rounded-lg transition-all ${
+                  selection.technology === "IP"
                     ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white"
                     : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
                 }`}
               >
-                <ShieldCheck className="w-3.5 h-3.5" /> Highest Quality
+                <Cpu className="w-4 h-4 mb-1" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Digital IP</span>
               </button>
             </div>
-          </div>
+          )}
         </div>
 
-        <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800/80 my-2" />
-
-        {/* Column 2: Budget Control */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Max Total Budget</label>
-            <span className="text-xs font-black text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full">
-              {selection.max_budget ? `₹${selection.max_budget.toLocaleString()}` : "No Limit"}
-            </span>
-          </div>
+        {/* Section: Brands */}
+        <div className="p-6 space-y-4">
+          <button 
+            onClick={() => toggleSection('brands')}
+            className="w-full flex items-center justify-between group"
+          >
+            <span className="text-[10px] font-black text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors uppercase tracking-[0.2em]">Top Brands</span>
+            {expandedSections.brands ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+          </button>
           
-          <div className="pt-2">
-            <input 
-              type="range" 
-              min="10000" max="100000" step="1000"
-              value={selection.max_budget || 100000}
-              onChange={handleBudgetChange}
-              className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
-            />
-            <div className="flex justify-between mt-2 text-[10px] font-bold text-zinc-400">
-              <span>₹10,000</span>
-              <span>No Limit</span>
+          {expandedSections.brands && (
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div 
+                onClick={() => updateSelection({ brand_preference: "all" })}
+                className="flex items-center gap-3 group cursor-pointer"
+              >
+                <div 
+                  className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${
+                    selection.brand_preference === "all" || !selection.brand_preference ? "bg-blue-600 border-blue-600 shadow-sm" : "border-zinc-200 dark:border-zinc-700 bg-transparent group-hover:border-zinc-400"
+                  }`}
+                >
+                  {(selection.brand_preference === "all" || !selection.brand_preference) && <ShieldCheck className="w-3 h-3 text-white" />}
+                </div>
+                <span className={`text-[11px] font-bold transition-colors ${(selection.brand_preference === "all" || !selection.brand_preference) ? "text-blue-600 dark:text-blue-400" : "text-zinc-700 dark:text-zinc-300"}`}>All Brands</span>
+              </div>
+              
+              {brandStats.map(([brand, count]) => {
+                const isSelected = selection.brand_preference === brand;
+                return (
+                  <div 
+                    key={brand} 
+                    onClick={() => updateSelection({ brand_preference: brand })}
+                    className="flex items-center justify-between group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${
+                        isSelected ? "bg-blue-600 border-blue-600 shadow-sm" : "border-zinc-200 dark:border-zinc-700 bg-transparent group-hover:border-zinc-400"
+                      }`}>
+                        {isSelected && <ShieldCheck className="w-3 h-3 text-white" />}
+                      </div>
+                      <span className={`text-[11px] font-bold transition-colors ${isSelected ? "text-blue-600 dark:text-blue-400" : "text-zinc-700 dark:text-zinc-300"}`}>
+                        {brand}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-black text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">{count}</span>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-        <p className="text-[10px] text-zinc-500 leading-snug">
-            Set your absolute maximum budget. We&apos;ll automatically filter out systems exceeding this cost.
+          )}
+        </div>
+
+        {/* Section: Budget */}
+        <div className="p-6 space-y-4">
+          <button 
+            onClick={() => toggleSection('budget')}
+            className="w-full flex items-center justify-between group"
+          >
+            <span className="text-[10px] font-black text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors uppercase tracking-[0.2em]">Price Range</span>
+            {expandedSections.budget ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+          </button>
+          
+          {expandedSections.budget && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Max Budget</span>
+                <span className="text-xs font-black text-zinc-900 dark:text-white">
+                  {selection.max_budget ? `₹${selection.max_budget.toLocaleString()}` : "No Limit"}
+                </span>
+              </div>
+              <div className="px-2">
+                <input 
+                  type="range" 
+                  min="10000" max="100000" step="5000"
+                  value={selection.max_budget || 100000}
+                  onChange={handleBudgetChange}
+                  className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Section: Features */}
+        <div className="p-6 space-y-4">
+          <button 
+            onClick={() => toggleSection('features')}
+            className="w-full flex items-center justify-between group"
+          >
+            <span className="text-[10px] font-black text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors uppercase tracking-[0.2em]">Advanced Features</span>
+            {expandedSections.features ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+          </button>
+          
+          {expandedSections.features && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+              {[
+                { id: "mic", label: "Built-in Microphone", icon: <Mic className="w-3.5 h-3.5" /> },
+                { id: "color_night", label: "Color Night Vision", icon: <Moon className="w-3.5 h-3.5" /> },
+                { id: "ptz", label: "PTZ / Rotation", icon: <Maximize className="w-3.5 h-3.5" /> },
+                { id: "4mp", label: "4MP / 5MP (Ultra HD)", icon: <Camera className="w-3.5 h-3.5" /> },
+                { id: "wifi", label: "WiFi / Wireless", icon: <Zap className="w-3.5 h-3.5" /> },
+              ].map(feat => {
+                const isActive = (selection.requested_features || []).includes(feat.id);
+                return (
+                  <div 
+                    key={feat.id} 
+                    onClick={() => toggleFeature(feat.id)}
+                    className="flex items-center justify-between group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${
+                          isActive ? "bg-blue-600 border-blue-600 shadow-md" : "border-zinc-200 dark:border-zinc-700 bg-transparent group-hover:border-zinc-400"
+                        }`}
+                      >
+                        {isActive && <ShieldCheck className="w-3 h-3 text-white" />}
+                      </div>
+                      <span className={`text-[11px] font-bold transition-colors ${isActive ? "text-blue-600 dark:text-blue-400" : "text-zinc-700 dark:text-zinc-300"}`}>{feat.label}</span>
+                    </div>
+                    <div className={`transition-colors ${isActive ? "text-blue-500" : "text-zinc-400"}`}>{feat.icon}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+      </div>
+      
+      {/* Footer / Results Info */}
+      <div className="bg-zinc-50 dark:bg-zinc-900/50 p-6">
+        <div className="p-4 bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+          <div className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Expert Tip</div>
+          <p className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            Selecting <b>Digital IP</b> provides 2x more clarity than Analog HD, recommended for retail & businesses.
           </p>
         </div>
-
-        <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800/80 my-2" />
-
-        {/* Column 3: Advanced Features */}
-        <div className="space-y-4">
-          <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Must-Have Features</label>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { id: "mic", label: "Built-in Mic", icon: <Mic className="w-3 h-3" /> },
-              { id: "color_night", label: "Color Night", icon: <Moon className="w-3 h-3" /> },
-              { id: "ptz", label: "PTZ Rotation", icon: <Maximize className="w-3 h-3" /> },
-              { id: "4mp", label: "4MP / 5MP", icon: <Camera className="w-3 h-3" /> },
-            ].map(feat => {
-              const isActive = (selection.requested_features || []).includes(feat.id);
-              return (
-                <button
-                  key={feat.id}
-                  onClick={() => toggleFeature(feat.id)}
-                  className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all ${
-                    isActive
-                      ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400"
-                      : "bg-zinc-50 border-zinc-100 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800/50 dark:border-zinc-800 dark:text-zinc-400"
-                  }`}
-                >
-                  <div className={`shrink-0 ${isActive ? "text-blue-500" : "text-zinc-400"}`}>
-                    {feat.icon}
-                  </div>
-                  <span className="text-[11px] font-bold leading-tight">{feat.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
       </div>
+
     </div>
   );
 }

@@ -136,16 +136,27 @@ export default async function QuoteResultPage({
 
   // DEFAULT FALLBACK DATA (If DB is empty or seed failed)
   if (products.length === 0) {
+    // Fallback products for mock lead or when DB fails
     products = [
-      { id: "f_h_2", technical_name: "cam_hd_2mp", display_name: "2MP HD Sharp Camera", category: "camera", technology: "HD", unit_price: 1450, resolution_tier: "good", is_active: true },
-      { id: "f_h_5", technical_name: "cam_hd_5mp", display_name: "5MP HD Ultra Camera", category: "camera", technology: "HD", unit_price: 2200, resolution_tier: "very_clear", is_active: true },
-      { id: "f_h_8", technical_name: "cam_hd_8mp", display_name: "8MP 4K Crystal Camera", category: "camera", technology: "HD", unit_price: 3500, resolution_tier: "crystal_clear", is_active: true },
-      { id: "f_i_2", technical_name: "cam_ip_2mp", display_name: "2MP Smart Digital Camera", category: "camera", technology: "IP", unit_price: 2800, resolution_tier: "good", is_active: true },
-      { id: "f_i_5", technical_name: "cam_ip_5mp", display_name: "5MP Smart Digital Camera", category: "camera", technology: "IP", unit_price: 3900, resolution_tier: "very_clear", is_active: true },
-      { id: "f_i_8", technical_name: "cam_ip_8mp", display_name: "8MP 4K Smart Digital Camera", category: "camera", technology: "IP", unit_price: 5800, resolution_tier: "crystal_clear", is_active: true },
-      { id: "f_d_4", technical_name: "dvr_4ch", display_name: "4-Channel Recorder (HD)", category: "recorder", technology: "HD", unit_price: 3800, channels: 4, is_active: true },
-      { id: "f_n_4", technical_name: "nvr_4ch", display_name: "4-Channel Recorder (Digital)", category: "recorder", technology: "IP", unit_price: 5900, channels: 4, is_active: true },
-      { id: "f_acc_h1", technical_name: "hdd_1tb", display_name: "1TB Video Memory", category: "accessory", unit_price: 4200, is_active: true },
+      // Cameras
+      { id: "f_i_1", technical_name: "cam_ip_opt1", display_name: "2MP Eco Digital Camera", category: "camera", technology: "IP", unit_price: 2400, resolution_tier: "standard", is_active: true, catalog_path: "TEAM/IP/ECO", features: ["Mic"] },
+      { id: "f_i_2", technical_name: "cam_ip_opt2", display_name: "2MP Smart Digital Camera", category: "camera", technology: "IP", unit_price: 2800, resolution_tier: "good", is_active: true, catalog_path: "TEAM/IP/SMART", features: ["Mic", "Color"] },
+      { id: "f_i_4", technical_name: "cam_ip_opt4", display_name: "2MP Elite Digital Camera", category: "camera", technology: "IP", unit_price: 3500, resolution_tier: "best", is_active: true, catalog_path: "TEAM/IP/ELITE", features: ["Mic", "Color", "PTZ"] },
+      { id: "f_h_1", technical_name: "cam_hd_opt1", display_name: "2MP Classic HD Camera", category: "camera", technology: "HD", unit_price: 1200, resolution_tier: "standard", is_active: true, catalog_path: "TEAM/HD/CLASSIC", features: ["Mic"] },
+      
+      // Recorders
+      { id: "f_r_1", technical_name: "nvr_4ch", display_name: "4-Channel Smart NVR", category: "recorder", technology: "IP", unit_price: 4500, channels: 4, max_cameras: 4, is_active: true, compatible_paths: ["TEAM/IP"] },
+      { id: "f_r_2", technical_name: "nvr_8ch", display_name: "8-Channel Smart NVR", category: "recorder", technology: "IP", unit_price: 7500, channels: 8, max_cameras: 8, is_active: true, compatible_paths: ["TEAM/IP"] },
+      { id: "f_r_3", technical_name: "dvr_4ch", display_name: "4-Channel Pro DVR", category: "recorder", technology: "HD", unit_price: 3200, channels: 4, max_cameras: 4, is_active: true, compatible_paths: ["TEAM/HD"] },
+
+      // Storage
+      { id: "f_s_1", technical_name: "hdd_1tb", display_name: "1TB Surveillance HDD", category: "accessory", technology: "both", unit_price: 3800, is_active: true },
+      { id: "f_s_2", technical_name: "hdd_2tb", display_name: "2TB Surveillance HDD", category: "accessory", technology: "both", unit_price: 5800, is_active: true },
+
+      // Accessories
+      { id: "f_a_1", technical_name: "poe_4port", display_name: "4-Port PoE Switch", category: "accessory", technology: "IP", unit_price: 1800, max_cameras: 4, is_active: true, compatible_paths: ["TEAM/IP"] },
+      { id: "f_a_2", technical_name: "poe_8port", display_name: "8-Port PoE Switch", category: "accessory", technology: "IP", unit_price: 3200, max_cameras: 8, is_active: true, compatible_paths: ["TEAM/IP"] },
+      { id: "f_a_3", technical_name: "psu_4port", display_name: "4-Port Power Supply", category: "accessory", technology: "HD", unit_price: 850, max_cameras: 4, is_active: true, compatible_paths: ["TEAM/HD"] },
     ] as Product[];
   }
 

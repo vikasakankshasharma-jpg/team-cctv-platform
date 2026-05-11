@@ -194,7 +194,10 @@ export function PlanCard({
               <div className="space-y-2 pb-4 border-b border-zinc-200 dark:border-zinc-800">
                 {pricing.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between items-start gap-3">
-                    <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 leading-tight">{item.qty}x {item.display_name}</span>
+                    <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 leading-tight">
+                      {item.qty}x {item.brand ? <span className="font-black text-zinc-900 dark:text-white mr-1">{item.brand}</span> : null}
+                      {item.display_name}
+                    </span>
                     <span className="text-[11px] font-black text-zinc-900 dark:text-white shrink-0">₹{item.line_total.toLocaleString('en-IN')}</span>
                   </div>
                 ))}
@@ -231,7 +234,7 @@ export function PlanCard({
                   <span>₹{pricing.net_taxable_amount.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase">
-                  <span>GST (Government Tax 18%)</span>
+                  <span>GST (Government Tax {Math.round((pricing.gst_amount / pricing.net_taxable_amount) * 100) || 0}%)</span>
                   <span>₹{pricing.gst_amount.toLocaleString('en-IN')}</span>
                 </div>
               </div>

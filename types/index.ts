@@ -186,6 +186,7 @@ export interface ConfiguratorSelection {
 export interface QuoteLineItem {
   product_id: string;
   display_name: string;
+  brand?: string;
   qty: number;
   unit_price: number;
   line_total: number;
