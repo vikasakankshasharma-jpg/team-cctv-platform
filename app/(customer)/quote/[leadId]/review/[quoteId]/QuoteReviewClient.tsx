@@ -363,7 +363,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                    { title: "Go Live", desc: "System handover with mobile app setup." }
                  ].map((step, i) => (
                    <div key={i} style={{ padding: 12, borderRadius: 10, background: "#F7F7F3", border: "1px solid #E4E4DC" }}>
-                     <div style={{ fontSize: 9, fontWeight: 800, color: "#2C5F8A", uppercase: true, letterSpacing: ".05em", marginBottom: 4 }}>STEP 0{i+1}</div>
+                     <div style={{ fontSize: 9, fontWeight: 800, color: "#2C5F8A", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 4 }}>STEP 0{i+1}</div>
                      <div style={{ fontSize: 12.5, fontWeight: 700, color: "#1C1C28", marginBottom: 2 }}>{step.title}</div>
                      <div style={{ fontSize: 10.5, color: "#6B7380", lineHeight: 1.4 }}>{step.desc}</div>
                    </div>
