@@ -46,8 +46,10 @@ async function wipeCollection(name: string) {
   await batch.commit();
 }
 
-export async function GET() {
-  if (process.env.NODE_ENV !== "development") {
+  const { searchParams } = new URL(request.url);
+  const force = searchParams.get("force");
+
+  if (process.env.NODE_ENV !== "development" && force !== "PRODUCTION_FORCE") {
     return NextResponse.json(
       { error: "Not Found" },
       { status: 404 }
@@ -55,6 +57,7 @@ export async function GET() {
   }
 
   try {
+    console.log(`[SEEDER] Running ${force === "PRODUCTION_FORCE" ? "PRODUCTION" : "DEVELOPMENT"} SEED...`);
     // ── STEP 1: NUCLEAR WIPE ────────────────────────────────────────────────
     await Promise.all(toWipe.map(wipeCollection));
 
