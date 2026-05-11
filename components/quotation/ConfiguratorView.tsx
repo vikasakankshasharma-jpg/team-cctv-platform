@@ -597,10 +597,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                   <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">What Happens Next?</h3>
                </div>
                
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                  {[
                    { title: "Site Survey", desc: "Book a visit for a precise wiring measurement." },
-                   { title: "Final Quote", desc: "Receive a binding contract with exact totals." },
                    { title: "Installation", desc: "Professional setup by our certified team." },
                    { title: "Go Live", desc: "System handover with mobile app setup." }
                  ].map((step, i) => (

@@ -349,8 +349,30 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             </div>
 
             {/* Section label */}
+            {/* What Happens Next Section */}
+            <div style={{ marginBottom: 32 }}>
+               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2C5F8A" strokeWidth="2.5" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase", color: "#1C1C28" }}>What Happens Next?</div>
+               </div>
+               
+               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                 {[
+                   { title: "Site Survey", desc: "Book a visit for a precise wiring measurement." },
+                   { title: "Installation", desc: "Professional setup by our certified team." },
+                   { title: "Go Live", desc: "System handover with mobile app setup." }
+                 ].map((step, i) => (
+                   <div key={i} style={{ padding: 12, borderRadius: 10, background: "#F7F7F3", border: "1px solid #E4E4DC" }}>
+                     <div style={{ fontSize: 9, fontWeight: 800, color: "#2C5F8A", uppercase: true, letterSpacing: ".05em", marginBottom: 4 }}>STEP 0{i+1}</div>
+                     <div style={{ fontSize: 12.5, fontWeight: 700, color: "#1C1C28", marginBottom: 2 }}>{step.title}</div>
+                     <div style={{ fontSize: 10.5, color: "#6B7380", lineHeight: 1.4 }}>{step.desc}</div>
+                   </div>
+                 ))}
+               </div>
+            </div>
+
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase", color: "#6B7380", marginBottom: 12 }}>
-              Scope of Work &amp; Materials
+              Detailed Bill of Materials
             </div>
 
             {/* Line items table */}
