@@ -590,22 +590,22 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                     </div>
                 </div>
 
-            {/* Scope of Work Section */}
+            {/* What Happens Next Section */}
             <div className="space-y-6">
                <div className="flex items-center gap-3 mb-2">
                   <Activity className="w-5 h-5 text-blue-500" />
-                  <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">Scope of Work</h3>
+                  <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">What Happens Next?</h3>
                </div>
                
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  {[
-                   { title: "Consultation & Survey", desc: "Site visit to finalize camera angles and exact cable route." },
-                   { title: "Hardware Deployment", desc: "Rigorous installation of cameras, recorders, and PoE/PSU units." },
-                   { title: "Pure Copper Cabling", desc: "Certified high-speed cabling with proper PVC casing and protection." },
-                   { title: "Configuration & AI Setup", desc: "Setup of smart alerts, mobile apps, and remote access." }
+                   { title: "Site Survey", desc: "Book a visit for a precise wiring measurement." },
+                   { title: "Final Quote", desc: "Receive a binding contract with exact totals." },
+                   { title: "Installation", desc: "Professional setup by our certified team." },
+                   { title: "Go Live", desc: "System handover with mobile app setup." }
                  ].map((step, i) => (
                    <div key={i} className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-                     <div className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest mb-1.5">Phase 0{i+1}</div>
+                     <div className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest mb-1.5">Step 0{i+1}</div>
                      <div className="text-[13px] font-black text-zinc-900 dark:text-white mb-1">{step.title}</div>
                      <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed">{step.desc}</p>
                    </div>

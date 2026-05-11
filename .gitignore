@@ -58,3 +58,5 @@ lint_output*.txt
 
 # local pdf quotations (generated documents)
 *.pdf
+.vercel
+.env*.local
