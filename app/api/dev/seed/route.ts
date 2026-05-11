@@ -612,7 +612,7 @@ export async function GET(request: Request) {
       property_type: "Residential",
       camera_count: 4,
       status: "qualified",
-      created_at: adminDb.firestore.FieldValue.serverTimestamp(),
+      created_at: new Date().toISOString(), // Use simple ISO string for seed lead
       address: {
         city: "Jaipur",
         area: "Vaishali Nagar",
@@ -624,7 +624,7 @@ export async function GET(request: Request) {
     const demoQuoteId = "demo-quote-hikvision";
     await adminDb.collection("leads").doc(demoLeadId).collection("quotes").doc(demoQuoteId).set({
       status: "pending",
-      created_at: adminDb.firestore.FieldValue.serverTimestamp(),
+      created_at: new Date().toISOString(),
       items: [
         { product_id: "cam_ip_opt5", display_name: "4MP Pro-HD Color Night Camera", brand: "Hikvision", qty: 4, unit_price: 4015, technology: "IP" },
         { product_id: "nvr_opt2", display_name: "8-Channel 4K NVR", brand: "Hikvision", qty: 1, unit_price: 8500, technology: "IP" }
