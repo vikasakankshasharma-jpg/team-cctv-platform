@@ -126,10 +126,12 @@ export interface Addon {
   id?: string;
   display_name: string;
   price: number;
+  base_cost?: number;            // NEW: Cost to business
   is_active: boolean;
   
   // NEW: Multiplier logic
   unit_multiplier?: "none" | "camera_count";
+  brand?: string;                // NEW: Optional brand labeling
   created_at?: unknown;
   updated_at?: unknown;
 }

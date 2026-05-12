@@ -391,6 +391,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
           if (addon.unit_multiplier === "camera_count") qty = selection.camera_count;
           const lineTotal = price * qty;
           addonsTotal += lineTotal;
+          totalPurchaseCost += (addon.base_cost || 0) * qty;
           quoteAddons.push({ addon_id: addon.id!, display_name: addon.display_name, price: price, qty: qty });
         }
       });
