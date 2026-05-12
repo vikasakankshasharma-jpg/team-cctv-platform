@@ -128,15 +128,15 @@ export function Sidebar() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all relative group ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all relative group ${
                       active
-                        ? "bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400"
-                        : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                        ? "bg-blue-50 dark:bg-blue-600/10 text-blue-700 dark:text-blue-400"
+                        : "text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100/50 dark:hover:bg-zinc-900"
                     }`}
                   >
                     {/* Active left-edge glow indicator */}
                     {active && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-600 dark:bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-600 dark:bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
                     )}
 
                     <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors ${

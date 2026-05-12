@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Product } from "@/types";
-import { Loader2, Plus, ShieldCheck, ArrowLeft, Save, X } from "lucide-react";
+import { Loader2, Plus, ShieldCheck, ArrowLeft, Save, X, Package } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ProductInventory } from "@/components/admin/ProductInventory";
@@ -129,37 +129,38 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-20">
-      {/* Header */}
-      <div className="bg-white border-b border-neutral-200 px-6 py-4 sticky top-0 z-10">
+    <div className="bg-zinc-50/50 pb-20">
+      {/* Page Header - Subdued & Sober */}
+      <div className="px-6 py-6 border-b border-zinc-200/60 bg-white">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link href="/admin" className="p-2 hover:bg-neutral-100 rounded-full transition-colors text-neutral-500">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-center text-zinc-400">
+              <Package className="w-6 h-6" />
+            </div>
             <div>
-              <h1 className="text-xl font-bold text-neutral-900 flex items-center gap-2">
-                <ShieldCheck className="w-6 h-6 text-[#4F46E5]" />
+              <h1 className="text-xl font-black text-zinc-900 tracking-tight">
                 Product Catalog Manager
               </h1>
-              <p className="text-sm text-neutral-500">Manage pricing, margins, and stock availability.</p>
+              <p className="text-xs font-medium text-zinc-500 mt-1">
+                Centralized inventory, margin control, and technical specifications.
+              </p>
             </div>
           </div>
           <button
             onClick={handleAdd}
-            className="flex items-center gap-2 px-4 py-2 bg-[#4F46E5] text-white rounded-lg text-sm font-medium hover:bg-[#4338ca] transition-colors whitespace-nowrap"
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
           >
             <Plus className="w-4 h-4" />
-            Add Product
+            Add New SKU
           </button>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {isLoading ? (
-          <div className="flex flex-col items-center gap-4 py-24">
-            <Loader2 className="w-8 h-8 animate-spin text-[#4F46E5]" />
-            <p className="text-xs font-black text-neutral-400 uppercase tracking-widest">Loading catalog…</p>
+          <div className="flex flex-col items-center gap-4 py-32">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Synchronizing Catalog…</p>
           </div>
         ) : (
           <ProductInventory
@@ -174,13 +175,18 @@ export default function AdminProductsPage() {
       {isModalOpen && editingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
-              <h2 className="text-lg font-bold text-neutral-900">
-                {editingProduct.id ? "Edit Product" : "Add New Product"}
-              </h2>
+            <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-100 bg-zinc-50/50">
+              <div>
+                <h2 className="text-lg font-black text-zinc-900 tracking-tight">
+                  {editingProduct.id ? "Modify Inventory Record" : "Create New Catalog Entry"}
+                </h2>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">
+                  SKU: {editingProduct.technical_name || "PENDING"}
+                </p>
+              </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 text-neutral-400 hover:text-neutral-600 rounded-full hover:bg-neutral-100"
+                className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-white border border-transparent hover:border-zinc-200 transition-all"
               >
                 <X className="w-5 h-5" />
               </button>

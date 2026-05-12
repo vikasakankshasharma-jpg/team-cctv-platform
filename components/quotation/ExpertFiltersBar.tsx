@@ -62,7 +62,7 @@ export function ExpertFiltersBar() {
           </div>
           <div>
             <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">System Discovery Expert</h3>
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mt-0.5">Refine featured recommendations instantly</p>
+            <p className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] mt-0.5">Refine featured recommendations instantly</p>
           </div>
         </div>
         
@@ -70,7 +70,7 @@ export function ExpertFiltersBar() {
           {hasActiveFilters && (
             <button 
               onClick={resetFilters}
-              className="group flex items-center gap-2 px-6 py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white transition-all text-[11px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 active:scale-95"
+              className="group flex items-center gap-2 px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white transition-all text-[11px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 active:scale-95"
             >
               <RotateCcw className="w-4 h-4 group-hover:rotate-[-90deg] transition-transform" /> 
               Reset All Filters
@@ -83,8 +83,8 @@ export function ExpertFiltersBar() {
         
         {/* Preferred Brand */}
         <div className="space-y-5">
-          <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-500" /> Preferred Brand
+          <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" /> Preferred Brand
           </label>
           <div className="flex flex-wrap gap-2">
             <button
@@ -92,7 +92,7 @@ export function ExpertFiltersBar() {
               className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
                 !selection.brand_preference || selection.brand_preference === "all"
                   ? "bg-zinc-900 text-white shadow-lg shadow-zinc-900/20 dark:bg-white dark:text-zinc-900"
-                  : "bg-zinc-50 text-zinc-400 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-500"
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-500"
               }`}
             >
               All Brands
@@ -104,7 +104,7 @@ export function ExpertFiltersBar() {
                 className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
                   selection.brand_preference === brand
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                    : "bg-zinc-50 text-zinc-400 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-500"
+                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-500"
                 }`}
               >
                 {brand}
@@ -115,16 +115,16 @@ export function ExpertFiltersBar() {
 
         {/* Focus Point */}
         <div className="space-y-5">
-          <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
-            <Target className="w-3.5 h-3.5 text-blue-500" /> Selection Focus
+          <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <Target className="w-3.5 h-3.5 text-blue-600" /> Selection Focus
           </label>
-          <div className="flex gap-1.5 bg-zinc-100/50 dark:bg-zinc-800/30 p-1.5 rounded-[24px] border border-zinc-100 dark:border-zinc-800">
+          <div className="flex gap-1.5 bg-zinc-100 dark:bg-zinc-800/30 p-1.5 rounded-[24px] border border-zinc-200 dark:border-zinc-800">
             <button
               onClick={() => updateSelection({ focus_point: "price" })}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all ${
                 selection.focus_point === "price"
                   ? "bg-white dark:bg-zinc-700 shadow-xl text-zinc-900 dark:text-white"
-                  : "text-zinc-400 hover:text-zinc-600 dark:text-zinc-500"
+                  : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-500"
               }`}
             >
               <IndianRupee className="w-4 h-4" /> Best Price
@@ -134,7 +134,7 @@ export function ExpertFiltersBar() {
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all ${
                 selection.focus_point === "quality"
                   ? "bg-white dark:bg-zinc-700 shadow-xl text-zinc-900 dark:text-white"
-                  : "text-zinc-400 hover:text-zinc-600 dark:text-zinc-500"
+                  : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-500"
               }`}
             >
               <ShieldCheck className="w-4 h-4" /> Quality
@@ -145,10 +145,10 @@ export function ExpertFiltersBar() {
         {/* Max Budget */}
         <div className="space-y-5">
           <div className="flex justify-between items-center">
-            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
-              <IndianRupee className="w-3.5 h-3.5 text-blue-500" /> Max Budget
+            <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
+              <IndianRupee className="w-3.5 h-3.5 text-blue-600" /> Max Budget
             </label>
-            <span className="text-[10px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full uppercase tracking-widest">
+            <span className="text-[10px] font-black text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full uppercase tracking-widest">
               {selection.max_budget ? `₹${selection.max_budget.toLocaleString()}` : "No Limit"}
             </span>
           </div>
@@ -160,7 +160,7 @@ export function ExpertFiltersBar() {
               onChange={handleBudgetChange}
               className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
             />
-            <div className="flex justify-between mt-3 text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">
+            <div className="flex justify-between mt-3 text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">
               <span>₹10K</span>
               <span>No Limit</span>
             </div>
@@ -169,8 +169,8 @@ export function ExpertFiltersBar() {
 
         {/* Features */}
         <div className="space-y-5">
-          <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
-            <Zap className="w-3.5 h-3.5 text-blue-500" /> Must-Have Features
+          <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <Zap className="w-3.5 h-3.5 text-blue-600" /> Must-Have Features
           </label>
           <div className="grid grid-cols-2 gap-2">
             {[
@@ -187,7 +187,7 @@ export function ExpertFiltersBar() {
                   className={`flex items-center gap-2 p-3 rounded-2xl border transition-all ${
                     isActive
                       ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20"
-                      : "bg-zinc-50 border-zinc-100 text-zinc-400 hover:bg-zinc-100 dark:bg-zinc-800/50 dark:border-zinc-800 dark:text-zinc-500"
+                      : "bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800/50 dark:border-zinc-800 dark:text-zinc-500"
                   }`}
                 >
                    {isActive ? <ShieldCheck className="w-3.5 h-3.5" /> : feat.icon}

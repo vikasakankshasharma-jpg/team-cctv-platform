@@ -11,24 +11,41 @@ export async function GET(req: NextRequest) {
   if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
 
   try {
-    const snapshot = await adminDb.collection("products").get();
-    const products: Product[] = [];
+    const [prodSnap, addonSnap] = await Promise.all([
+      adminDb.collection("products").get(),
+      adminDb.collection("addons").get()
+    ]);
+
+    const items: Product[] = [];
     
-    snapshot.forEach(doc => {
-      products.push({ id: doc.id, ...doc.data() } as Product);
+    prodSnap.forEach(doc => {
+      items.push({ id: doc.id, ...doc.data() } as Product);
     });
 
-    // Sort by category then technology
-    products.sort((a, b) => {
-      if (a.category !== b.category) return a.category.localeCompare(b.category);
-      if (a.technology !== b.technology) return a.technology.localeCompare(b.technology);
+    addonSnap.forEach(doc => {
+      const data = doc.data();
+      // Map Addon to Product-like structure for the dashboard
+      items.push({ 
+        id: doc.id, 
+        ...data,
+        unit_price: data.price || data.unit_price || 0,
+        category: data.category || "accessory", // Default to accessory if not set
+        technology: data.technology || "both"
+      } as any as Product);
+    });
+
+    // Sort by category then name
+    items.sort((a, b) => {
+      const catA = a.category || "";
+      const catB = b.category || "";
+      if (catA !== catB) return catA.localeCompare(catB);
       return a.display_name.localeCompare(b.display_name);
     });
 
-    return NextResponse.json({ success: true, products });
+    return NextResponse.json({ success: true, products: items });
   } catch (error) {
-    console.error("Error fetching products:", error);
-    return NextResponse.json({ success: false, error: "Failed to fetch products" }, { status: 500 });
+    console.error("Error fetching items:", error);
+    return NextResponse.json({ success: false, error: "Failed to fetch items" }, { status: 500 });
   }
 }
 
