@@ -7,6 +7,12 @@ const AUTHORIZED_EMAILS = ["vikasakankshasharma@gmail.com"];
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
+if (!process.env.RESEND_API_KEY) {
+  console.warn("❌ [Resend] initialization failed: RESEND_API_KEY is missing from environment.");
+} else {
+  console.info("✅ [Resend] service initialized with API key.");
+}
+
 export async function POST(req: Request) {
   try {
     const { email, name } = await req.json();
@@ -36,6 +42,7 @@ export async function POST(req: Request) {
     });
 
     // Send Real Email via Resend
+    console.info(`[Auth] Attempting to send email to ${email}. Service status: ${!!resend}`);
     if (resend) {
       try {
         const { data, error } = await resend.emails.send({
