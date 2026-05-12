@@ -39,6 +39,8 @@
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
   --transition-slow: 400ms ease;
+
+  color-scheme: light;
 }
 
 .dark {
@@ -48,6 +50,8 @@
   --border: #27272a;
   --muted: #a1a1aa;
   --primary-light: #1e3a5f;
+
+  color-scheme: dark;
 }
 
 @theme inline {

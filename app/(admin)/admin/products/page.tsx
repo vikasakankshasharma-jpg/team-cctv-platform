@@ -129,328 +129,255 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="bg-zinc-50/50 pb-20">
-      {/* Page Header - Subdued & Sober */}
-      <div className="px-6 py-6 border-b border-zinc-200/60 bg-white">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-center text-zinc-400">
-              <Package className="w-6 h-6" />
+    <div className="bg-zinc-50 dark:bg-zinc-950 min-h-screen pb-24 transition-colors duration-500">
+      {/* ── Page Header ─────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-200/50 dark:border-zinc-800/60 shadow-sm transition-all duration-500">
+        <div className="max-w-[1600px] mx-auto px-8 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className="w-14 h-14 rounded-[22px] bg-zinc-900 dark:bg-white flex items-center justify-center shadow-2xl shadow-zinc-900/20 dark:shadow-white/5 group hover:rotate-3 transition-transform duration-500">
+              <Package className="w-6 h-6 text-white dark:text-zinc-900" />
             </div>
             <div>
-              <h1 className="text-xl font-black text-zinc-900 tracking-tight">
-                Product Catalog Manager
+              <div className="flex items-center gap-2 mb-1">
+                 <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                 <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.3em]">Operational Real-time</span>
+              </div>
+              <h1 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight leading-none">
+                Hardware Management Suite
               </h1>
-              <p className="text-xs font-medium text-zinc-500 mt-1">
-                Centralized inventory, margin control, and technical specifications.
+              <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 mt-2 uppercase tracking-widest">
+                 Inventory Control & Price Engine Configuration
               </p>
             </div>
           </div>
-          <button
-            onClick={handleAdd}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            Add New SKU
-          </button>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex items-center gap-4">
+             <div className="hidden xl:flex items-center gap-8 mr-4 text-right">
+                <div>
+                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Sync Status</p>
+                   <p className="text-xs font-black text-zinc-900 dark:text-white">Total Integrity</p>
+                </div>
+                <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-800" />
+             </div>
+             <button
+               onClick={handleAdd}
+               className="flex items-center gap-3 px-8 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all shadow-2xl shadow-zinc-900/20 active:scale-95 group"
+             >
+               <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
+               Register New Hardware
+             </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ── Main Content Area ───────────────────────────────────────────── */}
+      <main className="max-w-[1600px] mx-auto px-8 py-12">
         {isLoading ? (
-          <div className="flex flex-col items-center gap-4 py-32">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Synchronizing Catalog…</p>
+          <div className="flex flex-col items-center gap-6 py-40">
+            <div className="relative">
+               <div className="w-16 h-16 border-4 border-zinc-100 dark:border-zinc-800 rounded-full" />
+               <div className="w-16 h-16 border-4 border-t-zinc-900 dark:border-t-white rounded-full animate-spin absolute inset-0" />
+            </div>
+            <p className="text-[11px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.4em] animate-pulse">Syncing Master Library…</p>
           </div>
         ) : (
-          <ProductInventory
-            products={products}
-            onEdit={handleEdit}
-            onToggle={handleToggleActive}
-          />
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <ProductInventory
+              products={products}
+              onEdit={handleEdit}
+              onToggle={handleToggleActive}
+            />
+          </div>
         )}
-      </div>
+      </main>
 
-      {/* Edit/Add Modal */}
+      {/* ── Premium Modal Interface ────────────────────────────────────── */}
       {isModalOpen && editingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-100 bg-zinc-50/50">
-              <div>
-                <h2 className="text-lg font-black text-zinc-900 tracking-tight">
-                  {editingProduct.id ? "Modify Inventory Record" : "Create New Catalog Entry"}
-                </h2>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">
-                  SKU: {editingProduct.technical_name || "PENDING"}
-                </p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-zinc-900/20 dark:bg-black/60 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900 rounded-[40px] shadow-[0_50px_100px_rgba(0,0,0,0.1)] dark:shadow-none w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-zinc-200/50 dark:border-zinc-800/60 transition-all scale-100 group">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-10 py-8 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-950/40 backdrop-blur-md">
+              <div className="flex items-center gap-6">
+                <div className="w-14 h-14 rounded-[22px] bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+                  <Plus className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
+                    {editingProduct.id ? "Hardware Matrix Override" : "Inventory Onboarding"}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-1">
+                     <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Master SKU:</span>
+                     <code className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">{editingProduct.technical_name || "ASSIGNING..."}</code>
+                  </div>
+                </div>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-white border border-transparent hover:border-zinc-200 transition-all"
+                className="w-12 h-12 flex items-center justify-center text-zinc-400 hover:text-red-500 dark:hover:text-red-400 rounded-2xl hover:bg-red-50 dark:hover:bg-red-500/5 transition-all group/close"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6 transition-transform group-hover/close:rotate-90" />
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto">
-              <form id="product-form" onSubmit={handleSave} className="space-y-6">
+            <div className="p-10 overflow-y-auto scrollbar-none">
+              <form id="product-form" onSubmit={handleSave} className="space-y-12">
                 
-                {/* Basic Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Display Name *</label>
-                    <input 
-                      required
-                      type="text" 
-                      value={editingProduct.display_name || ""}
-                      onChange={e => setEditingProduct({...editingProduct, display_name: e.target.value})}
-                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]"
-                      placeholder="e.g. 2TB HDD Seagate"
-                    />
+                {/* Visual Section: Identity */}
+                <section className="space-y-6">
+                  <div className="flex items-center gap-3">
+                     <span className="w-5 h-px bg-zinc-200 dark:bg-zinc-800" />
+                     <h3 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em]">Device Identity</h3>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Technical Name / ID *</label>
-                    <input 
-                      required
-                      type="text" 
-                      value={editingProduct.technical_name || ""}
-                      onChange={e => setEditingProduct({...editingProduct, technical_name: e.target.value})}
-                      disabled={!!editingProduct.id}
-                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] disabled:bg-neutral-50 disabled:text-neutral-500"
-                      placeholder="e.g. hdd_2tb"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Category *</label>
-                    <select 
-                      value={editingProduct.category || "camera"}
-                      onChange={e => setEditingProduct({...editingProduct, category: e.target.value as any})}
-                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]"
-                    >
-                      <option value="camera">Camera</option>
-                      <option value="recorder">Recorder (DVR/NVR)</option>
-                      <option value="accessory">Accessory (HDD/PSU)</option>
-                      <option value="cable">Cable</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Technology *</label>
-                    <select 
-                      value={editingProduct.technology || "both"}
-                      onChange={e => setEditingProduct({...editingProduct, technology: e.target.value as any})}
-                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]"
-                    >
-                      <option value="HD">HD Only</option>
-                      <option value="IP">IP Only</option>
-                      <option value="both">Both (HD & IP)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Brand</label>
-                    <input 
-                      type="text" 
-                      value={editingProduct.brand || ""}
-                      onChange={e => setEditingProduct({...editingProduct, brand: e.target.value})}
-                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]"
-                      placeholder="e.g. CP Plus, Seagate"
-                    />
-                  </div>
-                </div>
-
-                {/* Advanced Routing / Capability Info */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-neutral-100 pt-6">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Catalog Path</label>
-                    <input 
-                      type="text" 
-                      value={editingProduct.catalog_path || ""}
-                      onChange={e => setEditingProduct({...editingProduct, catalog_path: e.target.value})}
-                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]"
-                      placeholder="e.g. CCTV/Accessories/HDD"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Max Cameras</label>
-                    <input 
-                      type="number" 
-                      value={editingProduct.max_cameras || ""}
-                      onChange={e => setEditingProduct({...editingProduct, max_cameras: parseInt(e.target.value) || undefined})}
-                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]"
-                      placeholder="For DVR/NVR/PoE"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Stock Status</label>
-                    <div className="flex items-center h-10">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={!!editingProduct.is_active} 
-                          onChange={e => setEditingProduct({...editingProduct, is_active: e.target.checked})}
-                          className="sr-only peer" 
-                        />
-                        <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                        <span className="ms-3 text-sm font-medium text-neutral-700">
-                          {editingProduct.is_active ? 'In Stock' : 'Out of Stock'}
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Resolution MP — camera only */}
-                {editingProduct.category === 'camera' && (
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">
-                      Camera Resolution (MP) *
-                    </label>
-                    <select
-                      value={editingProduct.resolution_mp ?? ""}
-                      onChange={e => setEditingProduct({ ...editingProduct, resolution_mp: e.target.value ? Number(e.target.value) : undefined })}
-                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]"
-                    >
-                      <option value="">— Select resolution —</option>
-                      <option value="2">2 MP — Standard HD</option>
-                      <option value="4">4 MP — Pro HD</option>
-                      <option value="5">5 MP — Ultra HD</option>
-                      <option value="6">6 MP — Premium</option>
-                      <option value="8">8 MP — Professional Grade</option>
-                    </select>
-                    <p className="text-[10px] text-neutral-400">
-                      This drives which resolution options appear in the customer wizard. Keep it accurate.
-                    </p>
-                  </div>
-                )}
-
-                {/* Dynamic Features Assignment */}
-                {editingProduct.category === 'camera' && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mt-6">
-                    <h3 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-blue-600" />
-                      Dynamic Features & Capabilities
-                    </h3>
-                    <p className="text-xs text-blue-700 mb-4">
-                      Select all features this camera supports. These will be matched against customer selections in the Wizard.
-                    </p>
-                    
-                    {featureTags.length === 0 ? (
-                      <div className="text-sm text-blue-600 italic">No feature tags defined yet. Create them in the Features tab.</div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        {featureTags.map(tag => {
-                          const isSelected = editingProduct.features?.includes(tag.id) || false;
-                          return (
-                            <label key={tag.id} className="relative flex items-start gap-3 cursor-pointer group">
-                              <div className="flex items-center h-5">
-                                <input 
-                                  type="checkbox"
-                                  className="w-4 h-4 text-blue-600 bg-white border-neutral-300 rounded focus:ring-blue-500"
-                                  checked={isSelected}
-                                  onChange={(e) => {
-                                    const currentFeatures = editingProduct.features || [];
-                                    if (e.target.checked) {
-                                      setEditingProduct({...editingProduct, features: [...currentFeatures, tag.id]});
-                                    } else {
-                                      setEditingProduct({...editingProduct, features: currentFeatures.filter(id => id !== tag.id)});
-                                    }
-                                  }}
-                                />
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-sm font-semibold text-neutral-900 group-hover:text-blue-700 transition-colors">
-                                  {tag.technical_name}
-                                </span>
-                                <span className="text-[10px] text-neutral-500 line-clamp-1" title={tag.customer_label}>
-                                  {tag.customer_label}
-                                </span>
-                              </div>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* PRICING ENGINE */}
-                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5 mt-6">
-                  <h3 className="text-sm font-bold text-indigo-900 mb-4 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                    Cost-Plus Margin Pricing
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-indigo-800 uppercase tracking-wider">Base Cost (₹) *</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2.5">
+                      <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Commercial Label *</label>
                       <input 
                         required
-                        type="number" 
-                        value={editingProduct.base_cost !== undefined ? editingProduct.base_cost : ""}
-                        onChange={e => {
-                          const val = e.target.value ? Number(e.target.value) : undefined;
-                          setEditingProduct({...editingProduct, base_cost: val});
-                        }}
-                        className="w-full px-3 py-2 border border-indigo-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] bg-white font-mono"
-                        placeholder="e.g. 1300"
+                        type="text" 
+                        value={editingProduct.display_name || ""}
+                        onChange={e => setEditingProduct({...editingProduct, display_name: e.target.value})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white"
+                        placeholder="e.g. 5MP Full Color Night Vision IP Camera"
                       />
                     </div>
+                    <div className="space-y-2.5">
+                      <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Manufacturer / Brand</label>
+                      <input 
+                        type="text" 
+                        value={editingProduct.brand || ""}
+                        onChange={e => setEditingProduct({...editingProduct, brand: e.target.value})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white"
+                        placeholder="e.g. Local Brand, Hikvision"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* Visual Section: Classification */}
+                <section className="space-y-6">
+                  <div className="flex items-center gap-3">
+                     <span className="w-5 h-px bg-zinc-200 dark:bg-zinc-800" />
+                     <h3 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em]">Technical Classification</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="space-y-2.5">
+                      <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Operational Segment</label>
+                      <select 
+                        value={editingProduct.category || "camera"}
+                        onChange={e => setEditingProduct({...editingProduct, category: e.target.value as any})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-[11px] font-black uppercase tracking-widest focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white appearance-none cursor-pointer"
+                      >
+                        <option value="camera">Camera</option>
+                        <option value="recorder">Recorder Unit</option>
+                        <option value="accessory">Hardware Accessory</option>
+                        <option value="cable">Transmission Line</option>
+                        <option value="network">Network Infrastructure</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2.5">
+                      <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Architecture</label>
+                      <select 
+                        value={editingProduct.technology || "both"}
+                        onChange={e => setEditingProduct({...editingProduct, technology: e.target.value as any})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-[11px] font-black uppercase tracking-widest focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white appearance-none cursor-pointer"
+                      >
+                        <option value="HD">Analog HD</option>
+                        <option value="IP">Digital IP</option>
+                        <option value="both">Hybrid Unified</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2.5">
+                      <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Catalog Pathing</label>
+                      <input 
+                        type="text" 
+                        value={editingProduct.catalog_path || ""}
+                        onChange={e => setEditingProduct({...editingProduct, catalog_path: e.target.value})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white"
+                        placeholder="e.g. CCTV/IP/Bullet"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* PRICING ENGINE: High Fidelity */}
+                <section className="bg-zinc-900 dark:bg-white rounded-[32px] p-10 text-white dark:text-zinc-900 shadow-2xl relative overflow-hidden group/pricing transition-all duration-700">
+                  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover/pricing:scale-110 transition-transform duration-1000">
+                     <IndianRupee className="w-32 h-32" />
+                  </div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-8">
+                       <div className="w-10 h-10 rounded-xl bg-white/10 dark:bg-black/5 flex items-center justify-center">
+                          <BadgeDollarSign className="w-5 h-5 text-emerald-400" />
+                       </div>
+                       <div>
+                          <h3 className="text-lg font-black uppercase tracking-tight">Cost-Plus Pricing Engine</h3>
+                          <p className="text-[10px] font-bold text-white/40 dark:text-black/40 uppercase tracking-[0.2em] mt-1">Automated margin calculations for quotation parity</p>
+                       </div>
+                    </div>
                     
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Margin (%) *</label>
-                      <div className="relative">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-end">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Procurement Cost (₹)</label>
                         <input 
                           required
                           type="number" 
-                          value={editingProduct.margin_percentage !== undefined ? editingProduct.margin_percentage : ""}
-                          onChange={e => {
-                            const val = e.target.value ? Number(e.target.value) : undefined;
-                            setEditingProduct({...editingProduct, margin_percentage: val});
-                          }}
-                          className="w-full px-3 py-2 border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white font-mono pr-8"
-                          placeholder="e.g. 15"
+                          value={editingProduct.base_cost !== undefined ? editingProduct.base_cost : ""}
+                          onChange={e => setEditingProduct({...editingProduct, base_cost: e.target.value ? Number(e.target.value) : undefined})}
+                          className="w-full bg-white/10 dark:bg-black/5 border border-white/10 dark:border-black/10 rounded-2xl px-6 py-4 text-xl font-black focus:ring-4 focus:ring-white/20 transition-all text-white dark:text-zinc-900 tabular-nums outline-none"
+                          placeholder="0.00"
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 font-bold">%</span>
                       </div>
-                    </div>
+                      
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Profit Margin (%)</label>
+                        <div className="relative">
+                          <input 
+                            required
+                            type="number" 
+                            value={editingProduct.margin_percentage !== undefined ? editingProduct.margin_percentage : ""}
+                            onChange={e => setEditingProduct({...editingProduct, margin_percentage: e.target.value ? Number(e.target.value) : undefined})}
+                            className="w-full bg-white/10 dark:bg-black/5 border border-white/10 dark:border-black/10 rounded-2xl px-6 py-4 text-xl font-black focus:ring-4 focus:ring-white/20 transition-all text-white dark:text-zinc-900 tabular-nums outline-none pr-10"
+                            placeholder="15"
+                          />
+                          <span className="absolute right-5 top-1/2 -translate-y-1/2 text-white/30 dark:text-black/30 font-black">%</span>
+                        </div>
+                      </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Final Selling Price</label>
-                      <div className="w-full px-3 py-2 border border-neutral-200 rounded-lg bg-neutral-100 text-neutral-900 font-bold font-mono">
-                        ₹ {
-                          (editingProduct.base_cost !== undefined && editingProduct.margin_percentage !== undefined)
-                            ? Math.round(Number(editingProduct.base_cost) + (Number(editingProduct.base_cost) * (Number(editingProduct.margin_percentage) / 100))).toLocaleString('en-IN')
-                            : editingProduct.unit_price?.toLocaleString('en-IN') || "0"
-                        }
+                      <div className="bg-emerald-500 rounded-3xl p-6 shadow-xl shadow-emerald-500/30">
+                        <label className="text-[9px] font-black uppercase tracking-[0.4em] text-white/60 block mb-1">Final Retail Valuation</label>
+                        <div className="text-3xl font-black text-white tabular-nums tracking-tighter">
+                          ₹ {
+                            (editingProduct.base_cost !== undefined && editingProduct.margin_percentage !== undefined)
+                              ? Math.round(Number(editingProduct.base_cost) + (Number(editingProduct.base_cost) * (Number(editingProduct.margin_percentage) / 100))).toLocaleString('en-IN')
+                              : "0"
+                          }
+                        </div>
                       </div>
-                      <p className="text-[10px] text-neutral-500 mt-1 leading-tight">
-                        Calculated automatically. This price is displayed in the Quotation Wizard.
-                      </p>
                     </div>
                   </div>
-                </div>
+                </section>
                 
               </form>
             </div>
             
-            <div className="border-t border-neutral-100 px-6 py-4 bg-neutral-50 flex justify-end gap-3">
+            {/* Modal Footer */}
+            <div className="px-10 py-8 border-t border-zinc-100 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-950 flex justify-end gap-6">
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
+                className="px-8 py-3.5 text-[11px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-95"
               >
-                Cancel
+                Cancel Override
               </button>
               <button
                 type="submit"
                 form="product-form"
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#4F46E5] rounded-lg hover:bg-[#4338ca] transition-colors disabled:opacity-70"
+                className="flex items-center gap-3 px-10 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-zinc-900/20 active:scale-95 disabled:opacity-50 group"
               >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {editingProduct.id ? "Save Changes" : "Add Product"}
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 group-hover:scale-110 transition-transform" />}
+                Commit Changes
               </button>
             </div>
           </div>

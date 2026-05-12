@@ -49,10 +49,12 @@ function sellingPrice(p: Product): number {
 
 function Chip({ label, value, dot }: { label: string; value: number; dot: string }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-sm">
-      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-      <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">{label}</span>
-      <span className="text-xs font-black text-zinc-900 dark:text-white">{value}</span>
+    <div className="flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800 shadow-[0_2px_10px_rgba(0,0,0,0.02)] rounded-2xl transition-all hover:scale-105 hover:shadow-md cursor-default">
+      <div className={`w-2 h-2 rounded-full ${dot} shadow-[0_0_8px_currentColor]`} />
+      <div className="flex flex-col">
+        <span className="text-[9px] font-black text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.2em] leading-none mb-1">{label}</span>
+        <span className="text-sm font-black text-zinc-900 dark:text-white leading-none">{value}</span>
+      </div>
     </div>
   );
 }
@@ -76,114 +78,121 @@ function SubCategoryGroup({
     <div className="border-t border-zinc-100 dark:border-zinc-800/60 first:border-0">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 px-5 py-3 bg-zinc-50/50 dark:bg-zinc-950/40 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors"
+        className="w-full flex items-center justify-between px-6 py-4 bg-zinc-50/30 dark:bg-zinc-950/20 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/40 transition-all group/sub"
       >
-        {open ? <ChevronDown className="w-3 h-3 text-zinc-500" /> : <ChevronRight className="w-3 h-3 text-zinc-500" />}
-        <span className="text-[10px] font-black text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.15em]">
-          {label || "General Infrastructure"}
-        </span>
-        <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600">({products.length})</span>
+        <div className="flex items-center gap-3">
+          <div className={`transition-transform duration-300 ${open ? "rotate-180" : ""}`}>
+            <ChevronDown className="w-4 h-4 text-zinc-400 group-hover/sub:text-blue-500" />
+          </div>
+          <span className="text-[11px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.2em] group-hover/sub:text-blue-600 dark:group-hover/sub:text-blue-400 transition-colors">
+            {label || "General Infrastructure"}
+          </span>
+          <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-100 bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 rounded-full">{products.length} Items</span>
+        </div>
+        <div className="h-px flex-1 mx-6 bg-gradient-to-r from-zinc-200/50 to-transparent dark:from-zinc-800/50" />
       </button>
 
       {open && (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
-            <thead className="bg-zinc-50/80 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800/60">
-              <tr className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
-                <th className="px-5 py-3 w-[30%]">Product / Model ID</th>
-                <th className="px-5 py-3 w-[15%]">Manufacturer</th>
-                <th className="px-5 py-3 w-[15%]">Specs</th>
-                <th className="px-5 py-3 text-right w-[12%]">Purchase (₹)</th>
-                <th className="px-5 py-3 text-right w-[10%]">Margin</th>
-                <th className="px-5 py-3 text-right w-[13%]">Sale Price</th>
-                <th className="px-5 py-3 text-center w-[5%]">Status</th>
-                <th className="px-5 py-3 text-center w-[5%]">Edit</th>
+            <thead className="bg-zinc-100 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 transition-colors duration-500">
+              <tr className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-900 dark:text-white">
+                <th className="px-6 py-4 w-[35%]">SKU / Information</th>
+                <th className="px-6 py-4 w-[15%]">Manufacturer</th>
+                <th className="px-6 py-4 w-[15%]">Hardware Specs</th>
+                <th className="px-6 py-4 text-right w-[15%]">Pricing Engine</th>
+                <th className="px-6 py-4 text-center w-[10%]">Status</th>
+                <th className="px-6 py-4 text-center w-[10%]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/40">
+            <tbody className="divide-y divide-zinc-50/50 dark:divide-zinc-900/50 bg-white dark:bg-zinc-950/20 transition-colors duration-500">
               {products.map((p) => (
                 <tr
                   key={p.id}
-                  className={`hover:bg-zinc-50/80 dark:hover:bg-zinc-800/20 transition-all group/row ${!p.is_active ? "bg-zinc-50/30 dark:bg-zinc-950/20 opacity-60" : ""}`}
+                  className={`group/row transition-all duration-300 ${!p.is_active ? "opacity-50 grayscale-[0.5]" : "hover:bg-blue-50/20 dark:hover:bg-blue-900/5"}`}
                 >
-                  <td className="px-5 py-4">
-                    <div className="font-bold text-sm text-zinc-900 dark:text-white group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-colors leading-tight">
-                      {p.display_name}
-                    </div>
-                    {p.technical_name && (
-                      <code className="text-[10px] font-mono text-zinc-500 dark:text-zinc-500 uppercase tracking-widest mt-1 block">
-                        {p.technical_name}
-                      </code>
-                    )}
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
-                      {p.brand || <span className="text-zinc-300 dark:text-zinc-700">Generic</span>}
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <div className="flex flex-wrap gap-1.5">
-                      {p.resolution_mp && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded text-[9px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-widest">
-                          {p.resolution_mp}MP
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800 group-hover/row:border-blue-200 dark:group-hover/row:border-blue-900/50 transition-all">
+                        <Package className="w-5 h-5 text-zinc-400 group-hover/row:text-blue-500 transition-colors" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-black text-sm text-zinc-900 dark:text-white group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-colors truncate">
+                          {p.display_name}
                         </span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <code className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300 uppercase tracking-widest">{p.technical_name || "ID_MISSING"}</code>
+                          <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                          <span className="text-[9px] font-bold text-zinc-600 dark:text-zinc-300 uppercase tracking-tighter">Verified SKU</span>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-[10px] font-black text-zinc-400">
+                        {(p.brand || "G")[0]}
+                      </div>
+                      <span className="text-[11px] font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-widest">
+                        {p.brand || "Generic"}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-5">
+                    <div className="flex flex-wrap gap-2">
+                      {p.resolution_mp && (
+                        <div className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-[9px] font-black text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 uppercase tracking-widest">
+                          {p.resolution_mp}MP
+                        </div>
                       )}
                       {p.channels && (
-                        <span className="inline-flex px-2 py-0.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest">
+                        <div className="px-2 py-1 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-[9px] font-black text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800 uppercase tracking-widest">
                           {p.channels}CH
-                        </span>
+                        </div>
                       )}
-                      <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest border ${TECH_PILL[p.technology] || TECH_PILL.HD}`}>
+                      <div className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${TECH_PILL[p.technology] || TECH_PILL.HD}`}>
                         {p.technology}
-                      </span>
+                      </div>
                     </div>
                   </td>
 
-                  <td className="px-5 py-4 text-right">
-                    <span className="text-[11px] font-mono font-medium text-zinc-600 dark:text-zinc-400">
-                      {p.base_cost !== undefined
-                        ? `₹${Number(p.base_cost).toLocaleString("en-IN")}`
-                        : <span className="text-zinc-300 dark:text-zinc-700">—</span>}
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4 text-right">
-                    {p.margin_percentage !== undefined ? (
-                      <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500">
-                        +{p.margin_percentage}%
+                  <td className="px-6 py-5 text-right">
+                    <div className="flex flex-col items-end">
+                      <span className="text-sm font-black text-zinc-900 dark:text-white tabular-nums">
+                        ₹{sellingPrice(p).toLocaleString("en-IN")}
                       </span>
-                    ) : <span className="text-zinc-300 dark:text-zinc-700 text-[9px]">—</span>}
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 line-through">₹{Number(p.base_cost || 0).toLocaleString()}</span>
+                        <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 bg-emerald-50 dark:bg-emerald-500/5 px-1.5 rounded-md">+{p.margin_percentage}%</span>
+                      </div>
+                    </div>
                   </td>
 
-                  <td className="px-5 py-4 text-right">
-                    <span className="text-sm font-black text-zinc-900 dark:text-white">
-                      ₹{sellingPrice(p).toLocaleString("en-IN")}
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4 text-center">
+                  <td className="px-6 py-5 text-center">
                     <button
                       onClick={() => onToggle(p)}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
-                        p.is_active
-                          ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100"
-                          : "bg-zinc-100 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200"
+                      className={`relative w-12 h-6 rounded-full transition-all duration-500 ${
+                        p.is_active ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" : "bg-zinc-200 dark:bg-zinc-800"
                       }`}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${p.is_active ? "bg-emerald-500 animate-pulse" : "bg-zinc-400 dark:bg-zinc-700"}`} />
-                      {p.is_active ? "Live" : "Off"}
+                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-500 shadow-sm ${p.is_active ? "left-7" : "left-1"}`} />
                     </button>
+                    <p className="text-[8px] font-black uppercase tracking-widest mt-2 text-zinc-500 dark:text-zinc-400">
+                      {p.is_active ? "Live" : "Standby"}
+                    </p>
                   </td>
 
-                  <td className="px-5 py-4 text-center">
-                    <button
-                      onClick={() => onEdit(p)}
-                      className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-blue-600 hover:border-blue-400 dark:hover:border-blue-500/40 flex items-center justify-center mx-auto transition-all active:scale-90 shadow-sm"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
+                  <td className="px-6 py-5 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => onEdit(p)}
+                        className="w-9 h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-900 dark:hover:border-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -228,28 +237,34 @@ function CategorySection({
   }, [products]);
 
   return (
-    <div className="rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 overflow-hidden shadow-xl shadow-zinc-200/20 dark:shadow-none bg-white dark:bg-zinc-950/40 transition-all">
+    <div className="rounded-[40px] border border-zinc-200/50 dark:border-zinc-800/60 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.03)] dark:shadow-none bg-white dark:bg-zinc-950/40 backdrop-blur-sm group/cat transition-all duration-500 hover:shadow-xl">
       <button
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between px-6 py-4 border-b ${acc} transition-all hover:bg-opacity-95`}
+        className={`w-full flex items-center justify-between px-8 py-6 border-b transition-all duration-500 relative overflow-hidden ${acc}`}
       >
-        <div className="flex items-center gap-4">
-          <div className={`w-8 h-8 rounded-xl flex items-center justify-center border shadow-sm ${acc}`}>
-            <Icon className="w-4 h-4" />
+        <div className="absolute inset-0 bg-white/40 dark:bg-black/10 opacity-0 group-hover/cat:opacity-100 transition-opacity duration-700" />
+        <div className="flex items-center gap-5 relative z-10">
+          <div className={`w-12 h-12 rounded-[22px] flex items-center justify-center border shadow-xl transition-transform duration-500 group-hover/cat:scale-110 group-hover/cat:rotate-3 ${acc}`}>
+            <Icon className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <span className="text-[11px] font-black uppercase tracking-[0.25em] block leading-none">{cfg.label}</span>
-            <span className="text-[9px] font-bold text-zinc-500/80 dark:text-zinc-400/60 uppercase tracking-widest mt-1 block">Inventory Segment</span>
+            <span className="text-xs font-black uppercase tracking-[0.3em] block leading-none mb-1.5">{cfg.label}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-bold text-zinc-700 dark:text-zinc-200 uppercase tracking-widest block">Operational Hardware Library</span>
+              <span className="w-1 h-1 rounded-full bg-current opacity-50" />
+              <span className="text-[9px] font-black px-3 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-current/10 shadow-sm">
+                {products.length} SKU{products.length !== 1 ? 's' : ''}
+              </span>
+            </div>
           </div>
-          <span className="ml-2 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-current/10 shadow-sm">
-            {products.length}
-          </span>
         </div>
-        {open ? <ChevronDown className="w-5 h-5 opacity-50" /> : <ChevronRight className="w-5 h-5 opacity-50" />}
+        <div className={`transition-all duration-500 relative z-10 ${open ? "rotate-180" : ""}`}>
+          <ChevronDown className="w-6 h-6 opacity-30 group-hover/cat:opacity-100" />
+        </div>
       </button>
 
       {open && (
-        <div className="flex flex-col">
+        <div className="flex flex-col bg-white dark:bg-transparent">
           {Object.entries(subGroups).sort().map(([subLabel, items]) => (
             <SubCategoryGroup
               key={subLabel}
@@ -310,78 +325,94 @@ export function ProductInventory({ products, onEdit, onToggle }: ProductInventor
     total:     products.length,
   }), [filtered, products]);
 
-  const SEL = "bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer";
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
 
       {/* ── Stats bar ── */}
-      <div className="flex flex-wrap gap-2">
-        <Chip label="Total SKUs"  value={counts.total}     dot="bg-zinc-400" />
-        <Chip label="Cameras"     value={counts.camera}    dot="bg-blue-500" />
-        <Chip label="Recorders"   value={counts.recorder}  dot="bg-amber-500" />
-        <Chip label="Addons/Cables" value={counts.addons}  dot="bg-teal-500" />
-        <Chip label="Active"      value={counts.active}    dot="bg-emerald-500" />
+      <div className="flex flex-wrap gap-4 px-2">
+        <Chip label="Total Master Catalog"  value={counts.total}     dot="bg-zinc-400 dark:bg-zinc-600" />
+        <Chip label="Vision Sensors"        value={counts.camera}    dot="bg-blue-500" />
+        <Chip label="Processing Units"      value={counts.recorder}  dot="bg-amber-500" />
+        <Chip label="Infrastructure"         value={counts.addons}    dot="bg-teal-500" />
+        <Chip label="Active Deployment"      value={counts.active}    dot="bg-emerald-500" />
       </div>
 
       {/* ── Filter bar ── */}
-      <div className="bg-white dark:bg-zinc-900/50 p-4 rounded-3xl border border-zinc-100 dark:border-zinc-800/60 shadow-sm space-y-4">
-        <div className="flex items-center gap-2 mb-2">
-          <ListFilter className="w-4 h-4 text-zinc-400" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Advanced Filters</span>
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.02)] space-y-8 relative overflow-hidden transition-colors duration-500">
+        <div className="absolute top-0 right-0 p-8 opacity-5">
+           <Filter className="w-32 h-32 text-zinc-900 dark:text-white" />
         </div>
         
-        <div className="flex flex-wrap gap-3 items-center">
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-12 h-12 rounded-[22px] bg-zinc-900 dark:bg-zinc-800 flex items-center justify-center shadow-2xl shadow-zinc-900/20 dark:shadow-white/5">
+             <ListFilter className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight uppercase">Intelligent Inventory Filter</h3>
+            <p className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.2em] mt-1">Refine your view across 1,776 unique SKUs</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 relative z-10">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px] max-w-sm group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 group-focus-within:text-blue-500 transition-colors" />
+          <div className="relative group col-span-1 md:col-span-2 lg:col-span-1 xl:col-span-2">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-500 transition-colors" />
             <input
               type="text"
-              placeholder="Quick search by name, SKU, brand…"
+              placeholder="Search by name, SKU, or manufacturer…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-xl pl-10 pr-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-zinc-400 dark:placeholder-zinc-700"
+              className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl pl-12 pr-6 py-3 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder-zinc-500 dark:placeholder-zinc-500 shadow-sm"
             />
           </div>
 
-          <div className="h-8 w-px bg-zinc-100 dark:bg-zinc-800 mx-1 hidden md:block" />
-
           {/* Category filter */}
-          <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className={SEL}>
-            <option value="all">All Categories</option>
-            {Object.entries(CATEGORIES).map(([val, cfg]) => (
-              <option key={val} value={val}>{cfg.label}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="w-full appearance-none bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all cursor-pointer shadow-sm">
+              <option value="all">All Segments</option>
+              {Object.entries(CATEGORIES).map(([val, cfg]) => (
+                <option key={val} value={val}>{cfg.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+          </div>
 
           {/* Brand Filter */}
-          <select value={filterBrand} onChange={(e) => setFilterBrand(e.target.value)} className={SEL}>
-            <option value="all">All Brands</option>
-            {brands.map(b => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select value={filterBrand} onChange={(e) => setFilterBrand(e.target.value)} className="w-full appearance-none bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all cursor-pointer shadow-sm">
+              <option value="all">All Manufacturers</option>
+              {brands.map(b => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+          </div>
 
           {/* Technology filter */}
-          <select value={filterTech} onChange={(e) => setFilterTech(e.target.value)} className={SEL}>
-            <option value="all">All Tech</option>
-            <option value="IP">Digital IP</option>
-            <option value="HD">Analog HD</option>
-            <option value="both">Multi-Tech</option>
-          </select>
+          <div className="relative">
+            <select value={filterTech} onChange={(e) => setFilterTech(e.target.value)} className="w-full appearance-none bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all cursor-pointer shadow-sm">
+              <option value="all">Any Technology</option>
+              <option value="IP">Digital IP System</option>
+              <option value="HD">Analog HD System</option>
+              <option value="both">Hybrid Tech</option>
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+          </div>
 
           {/* Status filter */}
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={SEL}>
-            <option value="all">All Status</option>
-            <option value="active">Live in Wizard</option>
-            <option value="inactive">Hidden (Off)</option>
-          </select>
+          <div className="relative">
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full appearance-none bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl px-5 py-3 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all cursor-pointer shadow-sm">
+              <option value="all">Any Status</option>
+              <option value="active">Active Deployment</option>
+              <option value="inactive">Off-line / Archive</option>
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+          </div>
         </div>
       </div>
 
       {/* ── Category groups ── */}
-      <div className="space-y-6">
-        {/* Sort categories: Cameras first, then Recorders, then others */}
+      <div className="space-y-12">
         {["camera", "recorder", ...Object.keys(CATEGORIES).filter(k => !["camera", "recorder"].includes(k))].map((cat) => {
           const items = filtered.filter((p) => {
             const pCat = p.category || "addon";
@@ -402,18 +433,21 @@ export function ProductInventory({ products, onEdit, onToggle }: ProductInventor
 
       {/* ── Empty state ── */}
       {filtered.length === 0 && (
-        <div className="flex flex-col items-center gap-4 py-24 text-center border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-[24px]">
-          <div className="w-14 h-14 rounded-[20px] bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center">
-            <Package className="w-7 h-7 text-zinc-300 dark:text-zinc-700" />
+        <div className="flex flex-col items-center gap-6 py-32 text-center bg-white dark:bg-zinc-950/20 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[50px] transition-colors duration-500">
+          <div className="w-20 h-20 rounded-[30px] bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-xl">
+            <Package className="w-8 h-8 text-zinc-300 dark:text-zinc-700" />
           </div>
-          <p className="text-xs font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
-            No products match your filters
-          </p>
+          <div className="space-y-2">
+            <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">No Inventory Matches</h3>
+            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-500 max-w-xs mx-auto">
+              Your current filter configuration yielded zero results across 1,776 items.
+            </p>
+          </div>
           <button 
             onClick={() => {setSearch(""); setFilterCat("all"); setFilterTech("all"); setFilterStatus("all"); setFilterBrand("all");}}
-            className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline"
+            className="px-6 py-3 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[11px] font-black uppercase tracking-widest transition-all hover:scale-105 shadow-xl shadow-zinc-900/20 active:scale-95"
           >
-            Clear all filters
+            Reset Master Filters
           </button>
         </div>
       )}
