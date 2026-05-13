@@ -211,12 +211,14 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               </label>
               <select
                 value={formData.technology}
-                onChange={(e) => setFormData({ ...formData, technology: e.target.value as "IP" | "HD" | "both" })}
+                onChange={(e) => setFormData({ ...formData, technology: e.target.value as "IP" | "HD" | "Common" | "WiFi" | "4G" })}
                 className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
               >
-                <option value="IP">IP (Network)</option>
+                <option value="IP">IP (Network / Wired)</option>
                 <option value="HD">HD (Analog)</option>
-                <option value="both">Both / Universal</option>
+                <option value="WiFi">WiFi (Wireless)</option>
+                <option value="4G">4G (Cellular)</option>
+                <option value="Common">Common / Universal</option>
               </select>
             </div>
           </div>

@@ -74,7 +74,7 @@ export interface Product {
   technical_name: string;
   display_name: string;
   category: "camera" | "recorder" | "accessory" | "cable";
-  technology: "HD" | "IP" | "both";
+  technology: "HD" | "IP" | "Common" | "WiFi" | "4G";
   base_cost?: number;            // NEW: Cost to business
   margin_percentage?: number;    // NEW: Expected profit margin
   unit_price: number;            // Computed or manual final selling price
