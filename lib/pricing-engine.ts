@@ -65,7 +65,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   let effectiveTech = selection.technology;
   if (selection.selected_camera_id) {
     const cam = products.find(p => p.id === selection.selected_camera_id);
-    if (cam && cam.technology && cam.technology !== "both") {
+    if (cam && cam.technology && cam.technology !== "Common") {
       effectiveTech = cam.technology as "HD" | "IP";
     }
   }
@@ -326,7 +326,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       p.category === "accessory" && 
       p.is_active && 
       p.technical_name.toLowerCase().includes("hdd") &&
-      (p.technology === effectiveTech || p.technology === "both")
+      (p.technology === effectiveTech || p.technology === "Common")
     );
 
     const getTB = (p: Product) => {
