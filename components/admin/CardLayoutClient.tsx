@@ -71,7 +71,7 @@ function SlotEditor({
   onChange: (s: CardSlot) => void;
 }) {
   const camOptions = cameras
-    .filter((c) => c.technology === slot.technology || c.technology === "both")
+    .filter((c) => c.technology === slot.technology || c.technology === "Common")
     .sort((a, b) => a.unit_price - b.unit_price);
 
   return (
