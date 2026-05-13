@@ -218,7 +218,16 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
                         <div className="font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">{product.display_name}</div>
                       </td>
                       <td className="px-8 py-4">
-                        <span className="font-mono text-[10px] text-zinc-400 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-950 px-2 py-1 rounded-md">{product.technical_name}</span>
+                        <span 
+                          onClick={() => {
+                            navigator.clipboard.writeText(product.technical_name);
+                            toast.success("SKU Copied");
+                          }}
+                          title="Click to copy SKU"
+                          className="font-mono text-[10px] text-zinc-400 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-950 px-2 py-1 rounded-md cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors"
+                        >
+                          {product.technical_name}
+                        </span>
                       </td>
                       <td className="px-8 py-4 text-right">
                         <input 
@@ -285,7 +294,16 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
 
               <div className="space-y-4">
                 {previews.map((prev, idx) => (
-                  <div key={idx} className="flex flex-col rounded-2xl bg-white/5 border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all group/item overflow-hidden">
+                  <div 
+                    key={idx} 
+                    onClick={() => {
+                      const summary = `${prev.label} - Total: ₹${prev.total.toLocaleString('en-IN')} (Margin: ${prev.profit_percent}%)`;
+                      navigator.clipboard.writeText(summary);
+                      toast.success("Quotation Summary Copied");
+                    }}
+                    title="Click to copy summary"
+                    className="cursor-pointer flex flex-col rounded-2xl bg-white/5 border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all group/item overflow-hidden active:scale-[0.98]"
+                  >
                     <div className="flex items-center justify-between p-5">
                       <div>
                         <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 group-hover/item:text-blue-400 transition-colors">{prev.label}</div>
