@@ -27,10 +27,10 @@ export default async function MatricesPage() {
   const settingsDoc = await adminDb.collection("settings").doc(SETTINGS_DOC_ID).get();
   const settingsRaw = settingsDoc.data() || {};
   const settings = {
-    ...settingsRaw,
+    ...(settingsRaw as any),
     created_at: (settingsRaw.created_at as any)?.toDate?.()?.toISOString() || settingsRaw.created_at || null,
     updated_at: (settingsRaw.updated_at as any)?.toDate?.()?.toISOString() || settingsRaw.updated_at || null,
-  } as AppSettings;
+  } as unknown as AppSettings;
 
   // 3. Fetch addons for reference
   const addonsSnapshot = await adminDb.collection("addons").where("is_active", "==", true).get();
