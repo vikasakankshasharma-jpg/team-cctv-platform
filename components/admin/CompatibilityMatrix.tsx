@@ -307,10 +307,27 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
                         <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{product.technical_name}</p>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 pl-11">
-                      <span className="px-2 py-1 rounded bg-zinc-950 border border-zinc-800 text-[9px] font-black text-zinc-400 uppercase tracking-widest">
-                        {product.catalog_path || "Uncategorized"}
-                      </span>
+                    <div className="flex flex-wrap items-center gap-1.5 pl-11">
+                      {product.catalog_path ? (
+                        product.catalog_path.split('/').map((segment, idx, arr) => (
+                          <div key={idx} className="flex items-center gap-1.5">
+                            <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest border ${
+                              idx === 0 ? "bg-zinc-900 border-zinc-800 text-zinc-500" :
+                              idx === 1 ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" :
+                              idx === 2 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+                              "bg-purple-500/10 border-purple-500/20 text-purple-400"
+                            }`}>
+                              <span className="opacity-50 mr-1">{idx === 0 ? "DOMAIN:" : idx === 1 ? "CAT:" : idx === 2 ? "TECH:" : "SPEC:"}</span>
+                              {segment}
+                            </span>
+                            {idx < arr.length - 1 && <ChevronRight className="w-3 h-3 text-zinc-700 shrink-0" />}
+                          </div>
+                        ))
+                      ) : (
+                        <span className="px-2 py-1 rounded bg-zinc-950 border border-zinc-800 text-[9px] font-black text-zinc-400 uppercase tracking-widest">
+                          Uncategorized
+                        </span>
+                      )}
                     </div>
                   </div>
 
