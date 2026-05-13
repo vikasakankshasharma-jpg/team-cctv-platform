@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Product } from "@/types";
-import { Loader2, Plus, ShieldCheck, ArrowLeft, Save, X, Package } from "lucide-react";
+import { Loader2, Plus, ShieldCheck, ArrowLeft, Save, X, Package, IndianRupee, BadgeDollarSign } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ProductInventory } from "@/components/admin/ProductInventory";

@@ -30,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "functions", ".gemini"]
+  "exclude": ["node_modules", "functions", ".gemini", "scratch"]
 }
