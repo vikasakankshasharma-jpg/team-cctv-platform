@@ -24,7 +24,8 @@ import {
   Megaphone,
   Grid3x3,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Database
 } from "lucide-react";
 
 // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -52,6 +53,7 @@ const NAV_GROUPS = [
     label: "Product Catalog",
     items: [
       { name: "Products",             href: "/admin/products",      icon: Package },
+      { name: "Data Management",      href: "/admin/products/bulk", icon: Database },
       { name: "Compatibility",        href: "/admin/compatibility", icon: Link2 },
       { name: "Live Pricing",         href: "/admin/pricing",       icon: IndianRupee },
       { name: "Quotation Matrices",   href: "/admin/pricing/matrices", icon: Grid3x3 },
