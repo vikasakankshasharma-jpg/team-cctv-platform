@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -49,13 +49,11 @@ const NAV_GROUPS = [
     label: "Product Catalog",
     items: [
       { name: "Products",             href: "/admin/products",      icon: Package },
-      { name: "Compatibility Matrix", href: "/admin/compatibility", icon: Link2 },
+      { name: "Compatibility",        href: "/admin/compatibility", icon: Link2 },
       { name: "Live Pricing",         href: "/admin/pricing",       icon: IndianRupee },
       { name: "Quotation Matrices",   href: "/admin/pricing/matrices", icon: Grid3x3 },
-      { name: "Recommendation Rules", href: "/admin/rules",         icon: Zap },
-      { name: "Card Layout Builder",  href: "/admin/card-layouts",  icon: Workflow },
-      { name: "Add-ons Manager",      href: "/admin/addons",        icon: Blocks },
-      { name: "Wizard Builder",       href: "/admin/wizard",        icon: Workflow },
+      { name: "Rules & Add-ons",      href: "/admin/rules",         icon: Zap },
+      { name: "Card Layouts",         href: "/admin/card-layouts",  icon: Workflow },
     ]
   },
   {
@@ -128,7 +126,7 @@ export function Sidebar() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all relative group ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all relative group ${
                       active
                         ? "bg-blue-50 dark:bg-blue-600/10 text-blue-700 dark:text-blue-400"
                         : "text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100/50 dark:hover:bg-zinc-900"

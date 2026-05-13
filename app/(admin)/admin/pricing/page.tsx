@@ -20,7 +20,7 @@ export default async function AdminPricingPage() {
 
   // 2. Fetch app settings
   const settingsDoc = await adminDb.collection("settings").doc(SETTINGS_DOC_ID).get();
-  const settings = settingsDoc.data() as AppSettings;
+  const settings = (settingsDoc.data() || {}) as AppSettings;
 
   // 3. Fetch addons for reference in pricing engine
   const addonsSnapshot = await adminDb.collection("addons").where("is_active", "==", true).get();
