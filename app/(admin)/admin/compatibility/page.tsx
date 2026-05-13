@@ -17,16 +17,22 @@ export default async function CompatibilityPage() {
   let products: Product[] = [];
   
   try {
-    const snapshot = await adminDb.collection("products").where("is_deleted", "==", false).get();
-    products = snapshot.docs.map(doc => {
-      const data = doc.data() as Product;
-      return {
-        ...data,
-        id: doc.id,
-        updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
-        created_at: (data.created_at as any)?.toDate?.()?.toISOString() || data.created_at || null,
-      };
-    });
+    // NOTE: Do NOT use .where("is_deleted", "==", false) — that Firestore query
+    // excludes documents that don't have the `is_deleted` field at all.
+    // Instead, fetch all and filter in code so newly-seeded products (without the
+    // field) are still visible in the Compatibility Matrix.
+    const snapshot = await adminDb.collection("products").get();
+    products = snapshot.docs
+      .filter(doc => doc.data().is_deleted !== true)
+      .map(doc => {
+        const data = doc.data() as Product;
+        return {
+          ...data,
+          id: doc.id,
+          updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
+          created_at: (data.created_at as any)?.toDate?.()?.toISOString() || data.created_at || null,
+        };
+      });
   } catch (error) {
     console.error("Compatibility Matrix: Failed to fetch products", error);
   }
