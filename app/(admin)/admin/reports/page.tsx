@@ -34,7 +34,15 @@ export default async function ReportsAdminPage() {
 
   // 2. Fetch active products
   const productsSnapshot = await adminDb.collection("products").where("is_active", "==", true).get();
-  const allProducts = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const allProducts = productsSnapshot.docs.map(doc => {
+    const d = doc.data();
+    return {
+      id: doc.id,
+      ...d,
+      created_at: (d.created_at as any)?.toDate?.()?.toISOString() || d.created_at || null,
+      updated_at: (d.updated_at as any)?.toDate?.()?.toISOString() || d.updated_at || null,
+    };
+  });
 
   // 3. Fetch promoters
   const promotersSnapshot = await adminDb.collection("promoters").get();
