@@ -6,6 +6,7 @@ import { Loader2, Plus, ShieldCheck, ArrowLeft, Save, X, Package, IndianRupee, B
 import Link from "next/link";
 import { toast } from "sonner";
 import { ProductInventory } from "@/components/admin/ProductInventory";
+import { BackButton } from "@/components/admin/BackButton";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -134,6 +135,7 @@ export default function AdminProductsPage() {
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-200/50 dark:border-zinc-800/60 shadow-sm transition-all duration-500">
         <div className="max-w-[1600px] mx-auto px-8 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
+            <BackButton />
             <div className="w-14 h-14 rounded-[22px] bg-zinc-900 dark:bg-white flex items-center justify-center shadow-2xl shadow-zinc-900/20 dark:shadow-white/5 group hover:rotate-3 transition-transform duration-500">
               <Package className="w-6 h-6 text-white dark:text-zinc-900" />
             </div>
