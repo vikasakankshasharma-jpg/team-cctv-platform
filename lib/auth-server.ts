@@ -57,9 +57,6 @@ export async function requireSuperAdmin() {
  * Enforces any admin role (super_admin or sales_staff). Redirects if not authorized.
  */
 export async function requireAdmin() {
-  if (process.env.NODE_ENV === "development") {
-    return { isAuthenticated: true, user: { uid: "test_admin", role: "super_admin" }, role: "super_admin" };
-  }
   const session = await verifySession();
   if (!session.isAuthenticated) {
     redirect("/admin/login");
