@@ -20,6 +20,9 @@ export const COLLECTIONS = {
   SITE_VISIT_BOOKINGS: "site_visit_bookings",
   SETTINGS: "settings",
   RECOMMENDATION_RULES: "recommendation_rules",
+  FRANCHISE_DEALERS: "franchise_dealers",
+  FRANCHISE_PRICING_OVERRIDES: "franchise_pricing_overrides",
+  DEALER_OTP_VERIFICATIONS: "dealer_otp_verifications",
 } as const;
 
 
