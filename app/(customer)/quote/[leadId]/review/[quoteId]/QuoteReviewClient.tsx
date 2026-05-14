@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { load } from "@cashfreepayments/cashfree-js";
+import type { Cashfree } from "@cashfreepayments/cashfree-js";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
@@ -153,6 +155,50 @@ function TermCard({
 export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const [accepted, setAccepted] = useState(quote.status === "accepted");
   const [isAccepting, setIsAccepting] = useState(false);
+  const [isPayingEMI, setIsPayingEMI] = useState(false);
+  const [cashfree, setCashfree] = useState<Cashfree | null>(null);
+
+  useEffect(() => {
+    const initCashfree = async () => {
+      try {
+        const cf = await load({ mode: "sandbox" }); // Change to "production" when live
+        setCashfree(cf);
+      } catch (err) {
+        console.error("Failed to load Cashfree SDK", err);
+      }
+    };
+    initCashfree();
+  }, []);
+
+  const handlePayEMI = async () => {
+    if (!cashfree) {
+      toast.error("Payment system not ready. Please refresh.");
+      return;
+    }
+
+    setIsPayingEMI(true);
+    try {
+      const res = await fetch(`/api/quotes/${quote.id}/accept`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId: quote.leadId, paymentMethod: "emi" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to initiate EMI payment");
+
+      const checkoutOptions = {
+        paymentSessionId: data.payment_session_id,
+        redirectTarget: "_self" as const,
+      };
+
+      await cashfree.checkout(checkoutOptions);
+    } catch (err: any) {
+      toast.error(err.message);
+      console.error(err);
+    } finally {
+      setIsPayingEMI(false);
+    }
+  };
 
   const subtotal = quote.lineItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
   const halfGst  = (subtotal * quote.gstPercent) / 200;
@@ -524,30 +570,34 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </div>
 
               {/* CTA */}
-              <a
-                href={`https://www.cashfree.com/emi`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={handlePayEMI}
+                disabled={isPayingEMI}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
+                  justifyContent: "center",
                   gap: 8,
                   marginTop: 18,
-                  padding: "11px 22px",
+                  width: "100%",
+                  padding: "13px 22px",
                   background: GOLD,
                   color: "white",
+                  border: "none",
                   borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  textDecoration: "none",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: isPayingEMI ? "not-allowed" : "pointer",
                   letterSpacing: ".02em",
+                  textTransform: "uppercase",
+                  transition: "all .18s",
                 }}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
                 </svg>
-                Apply for EMI — Instant Approval
-              </a>
+                {isPayingEMI ? "Processing..." : "Apply for EMI — Instant Approval"}
+              </button>
               <div style={{ color: "rgba(255,255,255,.3)", fontSize: 10.5, marginTop: 10 }}>
                 * EMI is subject to bank approval. Interest rates vary by bank and tenure. TEAM CCTV does not add any processing fees.
               </div>

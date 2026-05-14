@@ -1,6 +1,6 @@
 "use client";
 
-import { TrendingUp, Users, Zap, Hash, Activity } from "lucide-react";
+import { TrendingUp, Users, Zap, Hash, Activity, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export interface WeeklyBucket {
@@ -27,6 +27,8 @@ export interface DashboardClientProps {
   trend: WeeklyBucket[];
   sources: SourceBreakdown[];
   recentLeads: RecentActivity[];
+  internalLeads: RecentActivity[];
+  internalLeadsCount: number;
   conversionRate: number;
 }
 const STATUS_COLORS: Record<string, string> = {
@@ -128,10 +130,14 @@ function SalesTrendChart({ trend }: { trend: WeeklyBucket[] }) {
 function LeadSourcesPanel({
   sources,
   recentLeads,
+  internalLeads,
+  internalLeadsCount,
   conversionRate,
 }: {
   sources: SourceBreakdown[];
   recentLeads: RecentActivity[];
+  internalLeads: RecentActivity[];
+  internalLeadsCount: number;
   conversionRate: number;
 }) {
   return (
@@ -146,7 +152,30 @@ function LeadSourcesPanel({
         </h3>
       </div>
 
-      {/* Conversion Rate Plate */}
+      {/* Internal Leads Focus (Soft Launch Optimization) */}
+      <div className="p-6 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/40 rounded-[32px] shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+             <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+             <span className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">Unassigned Queue</span>
+          </div>
+          <span className="text-xs font-black text-amber-700 dark:text-amber-400">{internalLeadsCount} Leads</span>
+        </div>
+        
+        <div className="space-y-2">
+          {internalLeads.length === 0 ? (
+            <p className="text-[10px] font-bold text-amber-700/50 uppercase text-center py-2">Queue Empty — Great job!</p>
+          ) : (
+            internalLeads.map(lead => (
+              <Link key={lead.id} href={`/admin/leads`} className="flex items-center justify-between p-2 bg-white dark:bg-zinc-900 rounded-xl border border-amber-100/50 dark:border-amber-800/20 shadow-sm hover:scale-[1.02] transition-transform">
+                <span className="text-[11px] font-black text-zinc-900 dark:text-white truncate">{lead.customer_name}</span>
+                <ArrowRight className="w-3 h-3 text-amber-500" />
+              </Link>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* Conversion Rate Plate */}
       <div className="flex items-center gap-4 lg:gap-6 p-5 lg:p-6 bg-zinc-50 dark:bg-zinc-950/40 rounded-[32px] border border-zinc-100 dark:border-zinc-800/60 shadow-inner group overflow-hidden relative">
         <div className="relative w-16 h-16 lg:w-20 lg:h-20 shrink-0">
@@ -236,7 +265,7 @@ function LeadSourcesPanel({
 // MAIN EXPORT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function DashboardClient({ trend, sources, recentLeads, conversionRate }: DashboardClientProps) {
+export function DashboardClient({ trend, sources, recentLeads, internalLeads, internalLeadsCount, conversionRate }: DashboardClientProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[40px] p-10 min-h-[500px] flex flex-col shadow-xl dark:shadow-2xl backdrop-blur-sm transition-all hover:border-blue-500/20">
@@ -246,6 +275,8 @@ export function DashboardClient({ trend, sources, recentLeads, conversionRate }:
         <LeadSourcesPanel
           sources={sources}
           recentLeads={recentLeads}
+          internalLeads={internalLeads}
+          internalLeadsCount={internalLeadsCount}
           conversionRate={conversionRate}
         />
       </div>

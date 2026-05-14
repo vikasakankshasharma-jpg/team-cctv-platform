@@ -30,12 +30,17 @@ export default async function AdminDashboard() {
   await requireAdmin();
 
   // ... (aggregation logic remains same)
-  const [leadsCountRes, wonLeadsCountRes, promotersSnapshot, recentLeadsSnap] = await Promise.all([
+  const [leadsCountRes, wonLeadsCountRes, promotersSnapshot, recentLeadsSnap, internalCountRes, internalSnap] = await Promise.all([
     adminDb.collection("leads").count().get(),
     adminDb.collection("leads").where("status", "==", "won").count().get(),
     adminDb.collection("promoters").get(),
     adminDb.collection("leads").orderBy("created_at", "desc").limit(7).get(),
+    adminDb.collection("leads").where("franchise_dealer_id", "==", null).count().get(),
+    adminDb.collection("leads").where("franchise_dealer_id", "==", null).orderBy("created_at", "desc").limit(5).get(),
   ]);
+
+  const internalLeadsCount = internalCountRes.data().count;
+  const internalLeadsSnap = internalSnap;
 
   const leadsCount = leadsCountRes.data().count;
   const wonLeadsCount = wonLeadsCountRes.data().count;
@@ -105,6 +110,16 @@ export default async function AdminDashboard() {
   ];
 
   const recentLeads: RecentActivity[] = recentLeadsSnap.docs.map((doc) => {
+    const d = doc.data() as Lead;
+    return {
+      id: doc.id,
+      customer_name: d.customer_name ?? "Unknown",
+      status: d.status ?? "new",
+      created_at: (d.created_at as any)?.toDate?.()?.toISOString() ?? "",
+    };
+  });
+
+  const internalLeads: RecentActivity[] = internalLeadsSnap.docs.map((doc: any) => {
     const d = doc.data() as Lead;
     return {
       id: doc.id,
@@ -187,6 +202,8 @@ export default async function AdminDashboard() {
         trend={trend}
         sources={sources}
         recentLeads={recentLeads}
+        internalLeads={internalLeads}
+        internalLeadsCount={internalLeadsCount}
         conversionRate={conversionRate}
       />
     </div>

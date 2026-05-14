@@ -14,7 +14,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  FileText
+  FileText,
+  CreditCard
 } from "lucide-react";
 import type { FranchiseDealer } from "@/types";
 
@@ -82,6 +83,9 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline }: Props) 
             </button>
             <button onClick={() => router.push("/dealer/leads")} className="w-full flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl text-sm font-bold transition-all">
               <Users className="w-4 h-4" /> My Leads
+            </button>
+            <button onClick={() => router.push("/dealer/billing")} className="w-full flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl text-sm font-bold transition-all">
+              <CreditCard className="w-4 h-4" /> Billing
             </button>
           </nav>
         </div>
