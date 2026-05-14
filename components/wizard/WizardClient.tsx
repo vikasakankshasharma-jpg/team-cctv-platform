@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/store/wizard";
 import { ProgressBar } from "@/components/wizard/ProgressBar";
 import { OptionCard } from "@/components/wizard/OptionCard";
 import { LeadGate } from "@/components/wizard/LeadGate";
-import { ArrowLeft, ArrowRight, ShieldAlert, Loader2, ShieldCheck, Lock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShieldAlert, Loader2, ShieldCheck, Lock, CheckCircle2, Home } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 
 export function WizardClient({ initialSteps, initialSettings }: { initialSteps?: any[], initialSettings?: any }) {
+  const router = useRouter();
   const { steps, is_loaded, current_step_index, answers, setSteps, setAnswer, nextStep, previousStep } = useWizardStore();
+  const isFirstStep = current_step_index === 0;
   const [loading, setLoading] = useState(!is_loaded && (!initialSteps || initialSteps.length === 0));
   const [error, setError] = useState("");
   const [showGate, setShowGate] = useState(false);
@@ -317,11 +320,13 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pb-5 pt-3 bg-gradient-to-t from-white/95 dark:from-zinc-950/95 to-transparent backdrop-blur-sm">
           <div className="w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-[0_-4px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_40px_rgba(0,0,0,0.3)] rounded-3xl flex items-center justify-between p-3 md:p-4 ring-1 ring-zinc-900/5 dark:ring-white/5 transition-all" style={{paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))'}} >
             <button
-              onClick={previousStep}
-              disabled={current_step_index === 0}
-              className="group h-12 md:h-14 px-8 md:px-6 text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 disabled:opacity-0 disabled:pointer-events-none cursor-pointer touch-manipulation"
+              onClick={isFirstStep ? () => router.push('/') : previousStep}
+              className="group h-12 md:h-14 px-8 md:px-6 text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 cursor-pointer touch-manipulation"
+              aria-label={isFirstStep ? "Back to homepage" : "Previous question"}
             >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back
+              {isFirstStep
+                ? <><Home className="w-4 h-4 group-hover:scale-110 transition-transform" /> Home</>
+                : <><ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back</>}
             </button>
 
             <div className="hidden lg:flex items-center gap-6 px-8 border-x border-zinc-100 dark:border-zinc-800">

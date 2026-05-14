@@ -455,8 +455,107 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </div>
             </div>
 
+            {/* ── Cashfree EMI Financing Section ────────────────────────── */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #0F1F3D 0%, #1a3260 100%)",
+                borderRadius: 12,
+                padding: "24px 28px",
+                marginBottom: 28,
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              {/* Decorative bg shape */}
+              <div style={{ position: "absolute", top: -30, right: -30, width: 180, height: 180, borderRadius: "50%", background: "rgba(200,146,42,.08)", pointerEvents: "none" }} />
+
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <div style={{ background: GOLD, borderRadius: 6, padding: "4px 8px", fontSize: 9, fontWeight: 800, color: "white", letterSpacing: ".08em", textTransform: "uppercase" }}>
+                      💳 Easy EMI
+                    </div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", fontWeight: 500 }}>Powered by Cashfree Payments</div>
+                  </div>
+                  <div style={{ color: "white", fontSize: 18, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>
+                    Split your payment into easy instalments
+                  </div>
+                  <div style={{ color: "rgba(255,255,255,.55)", fontSize: 12.5, lineHeight: 1.5 }}>
+                    No-cost EMI on all major bank cards. Instant approval. Zero foreclosure charges.
+                  </div>
+                </div>
+              </div>
+
+              {/* EMI Option Chips */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 20 }}>
+                {[
+                  { months: 3,  label: "3 Months",  emoji: "⚡" },
+                  { months: 6,  label: "6 Months",  emoji: "✨" },
+                  { months: 12, label: "12 Months", emoji: "🏆" },
+                ].map(({ months, label, emoji }) => {
+                  const emi = Math.ceil(total / months);
+                  const isBest = months === 6;
+                  return (
+                    <div
+                      key={months}
+                      style={{
+                        background: isBest ? GOLD : "rgba(255,255,255,.07)",
+                        border: isBest ? `1.5px solid ${GOLD}` : "1.5px solid rgba(255,255,255,.12)",
+                        borderRadius: 10,
+                        padding: "14px 12px",
+                        textAlign: "center",
+                        position: "relative",
+                      }}
+                    >
+                      {isBest && (
+                        <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", background: "#fff", color: GOLD, fontSize: 8, fontWeight: 800, padding: "2px 8px", borderRadius: 20, letterSpacing: ".06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                          Most Popular
+                        </div>
+                      )}
+                      <div style={{ fontSize: 14, marginBottom: 4 }}>{emoji}</div>
+                      <div style={{ color: isBest ? "white" : "rgba(255,255,255,.5)", fontSize: 10, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                      <div style={{ color: "white", fontSize: 20, fontWeight: 800, lineHeight: 1 }}>
+                        {formatINR(emi)}
+                      </div>
+                      <div style={{ color: isBest ? "rgba(255,255,255,.75)" : "rgba(255,255,255,.4)", fontSize: 10, marginTop: 3 }}>/ month</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* CTA */}
+              <a
+                href={`https://www.cashfree.com/emi`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginTop: 18,
+                  padding: "11px 22px",
+                  background: GOLD,
+                  color: "white",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  letterSpacing: ".02em",
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+                Apply for EMI — Instant Approval
+              </a>
+              <div style={{ color: "rgba(255,255,255,.3)", fontSize: 10.5, marginTop: 10 }}>
+                * EMI is subject to bank approval. Interest rates vary by bank and tenure. TEAM CCTV does not add any processing fees.
+              </div>
+            </div>
+
             {/* Trust term cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 28 }}>
+
               <TermCard
                 iconBg="#F5E6C8"
                 icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2.2" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}

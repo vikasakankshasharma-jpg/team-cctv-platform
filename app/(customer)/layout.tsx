@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ShieldCheck, PhoneCall, Zap, ArrowRight } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/shared/SiteFooter";
+import { WhatsAppFloat } from "@/components/shared/WhatsAppFloat";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -101,6 +102,9 @@ export default function CustomerLayout({
 
       {/* Sticky mobile CTA bar — hidden on wizard pages (handled inside component) */}
       <MobileStickyCtaBar />
+
+      {/* WhatsApp floating button — auto-hides on wizard/admin pages */}
+      <WhatsAppFloat />
     </div>
   );
 }

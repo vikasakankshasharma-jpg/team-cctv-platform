@@ -271,5 +271,34 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
+    // ──────────────────────────────────────────
+    // /franchise_dealers/{dealerId}
+    // Admin full access.
+    // Franchise dealers can read their own profile (for their portal).
+    // ──────────────────────────────────────────
+
+    match /franchise_dealers/{dealerId} {
+      allow read: if isAdmin() ||
+                    (isAuthenticated() && resource.data.firebase_uid == request.auth.uid);
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // /franchise_pricing_overrides/{overrideId}
+    // Admin full access.
+    // Franchise dealers can read their own pricing override (to power their quotation portal).
+    // No customer access — pricing data is privileged.
+    // ──────────────────────────────────────────
+
+    match /franchise_pricing_overrides/{overrideId} {
+      allow read: if isAdmin() ||
+                    (isAuthenticated() &&
+                     resource.data.franchise_dealer_id != null &&
+                     exists(/databases/$(database)/documents/franchise_dealers/$(resource.data.franchise_dealer_id)) &&
+                     get(/databases/$(database)/documents/franchise_dealers/$(resource.data.franchise_dealer_id)).data.firebase_uid == request.auth.uid);
+      allow create, update, delete: if isSuperAdmin();
+    }
+
   }
 }
+

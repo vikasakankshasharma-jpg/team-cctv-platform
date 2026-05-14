@@ -45,7 +45,10 @@ export interface Lead {
   assigned_to_salesperson_id?: string | null;
   assigned_to_salesperson_name?: string | null;
 
-  
+  // Franchise Network — auto-set on lead creation from pincode routing
+  franchise_dealer_id?: string | null;        // Which franchise dealer owns this lead
+  franchise_dealer_name?: string | null;      // Virtual field for UI display
+
   // Follow-Up Engine
   followups_sent?: string[];
   active_offer?: {
@@ -449,11 +452,76 @@ export interface Salesperson {
   mobile_number: string;
   firebase_uid?: string;                 // Set after first OTP login
   is_active: boolean;
-  // Geographic coverage \u2014 at least one must be set
+  // Geographic coverage — at least one must be set
   assigned_zone_ids?: string[];          // Zone IDs from coverage_zones collection
   assigned_pincodes?: string[];          // Direct pincode overrides
   assigned_cities?: string[];
   assigned_states?: string[];
+  created_at?: unknown;
+  updated_at?: unknown;
+}
+
+// ── Franchise Network ─────────────────────────────────────────────────────────
+// A FranchiseDealer is an external CCTV installation business operating under
+// the TEAM CCTV brand. They own exclusive territory (pincodes), execute
+// installations, and earn commission per sale. Admin controls their pricing.
+
+export interface FranchiseDealer {
+  id?: string;
+  company_name: string;                  // e.g., "Sharma CCTV Dealers"
+  owner_name: string;                    // Contact person
+  mobile_number: string;                 // OTP login
+  email?: string;
+  firebase_uid?: string;                 // Set after first OTP login
+  is_active: boolean;
+
+  // Territory (pincode-based — exclusive rights)
+  assigned_zone_ids?: string[];          // Links to CoverageZone documents
+  assigned_pincodes?: string[];          // Direct pincode list
+  assigned_cities?: string[];            // City-level fallback
+  assigned_states?: string[];            // State-level fallback (broadest)
+  territory_exclusivity: boolean;        // true = no other dealer can serve these pincodes
+
+  // Franchise Agreement
+  franchise_fee_monthly: number;         // Monthly fixed fee in INR
+  commission_percent: number;            // % of ex-tax sale value (e.g., 6)
+  agreement_start_date?: unknown;
+  agreement_end_date?: unknown;
+
+  // Performance Counters (updated on lead events)
+  total_leads_received: number;
+  total_leads_won: number;
+  total_ex_tax_business: number;         // Cumulative ex-GST sales value
+  total_commission_due: number;          // Commission earned, not yet paid
+  total_commission_paid: number;         // Commission already disbursed
+
+  created_at?: unknown;
+  updated_at?: unknown;
+}
+
+// Per-franchise pricing overrides — admin sets different purchase costs
+// and margins per franchise to reflect local supplier pricing and competition.
+export interface FranchisePricingOverride {
+  id?: string;
+  franchise_dealer_id: string;           // FK → FranchiseDealer.id
+
+  // Product-level overrides (purchase cost may differ by city/supplier)
+  product_overrides: {
+    product_id: string;
+    purchase_cost: number;               // Local supplier cost
+    margin_percent?: number;             // Custom margin for this franchise
+    unit_price_override?: number;        // Final price lock (skips margin calc)
+  }[];
+
+  // Labor and cabling overrides (differ by city)
+  labor_ip_per_camera?: number;
+  labor_hd_per_camera?: number;
+  cable_cost_per_meter?: number;
+
+  // Admin-enforced pricing guardrails
+  minimum_margin_percent: number;        // Floor — franchise cannot go below this
+  maximum_discount_percent: number;      // Max discount franchise can offer customer
+
   created_at?: unknown;
   updated_at?: unknown;
 }

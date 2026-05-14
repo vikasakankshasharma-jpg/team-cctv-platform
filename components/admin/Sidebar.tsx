@@ -25,7 +25,8 @@ import {
   Grid3x3,
   PanelLeftClose,
   PanelLeftOpen,
-  Database
+  Database,
+  Building2
 } from "lucide-react";
 
 // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -64,8 +65,9 @@ const NAV_GROUPS = [
   {
     label: "Financials",
     items: [
-      { name: "Promoters", href: "/admin/promoters", icon: BadgeDollarSign },
-      { name: "Commission Ledger", href: "/admin/commission", icon: FileBox },
+      { name: "Franchise Network", href: "/admin/franchises",  icon: Building2 },
+      { name: "Promoters",         href: "/admin/promoters",   icon: BadgeDollarSign },
+      { name: "Commission Ledger", href: "/admin/commission",  icon: FileBox },
     ]
   },
   {

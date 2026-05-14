@@ -115,7 +115,12 @@ export default function CityLandingPage({
                         </li>
                      ))}
                   </ul>
-                  <Link href="/wizard" className="block w-full py-4 text-center rounded-2xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold transition-colors">Get Exact Quote</Link>
+                  <Link
+                    href={`/wizard?segment=residential&city=${encodeURIComponent(cityName)}`}
+                    className="block w-full py-4 text-center rounded-2xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold transition-colors"
+                  >
+                    Get Exact Quote →
+                  </Link>
                </div>
 
                 <div className="bg-zinc-900 dark:bg-blue-600 text-white p-6 sm:p-10 rounded-[28px] sm:rounded-[40px] shadow-2xl relative overflow-hidden">
@@ -131,7 +136,12 @@ export default function CityLandingPage({
                         </li>
                      ))}
                   </ul>
-                  <Link href="/wizard" className="block w-full py-4 text-center rounded-2xl bg-white text-zinc-900 hover:bg-zinc-100 font-bold transition-colors">Build Custom Setup</Link>
+                  <Link
+                    href={`/wizard?segment=commercial&city=${encodeURIComponent(cityName)}`}
+                    className="block w-full py-4 text-center rounded-2xl bg-white text-zinc-900 hover:bg-zinc-100 font-bold transition-colors"
+                  >
+                    Build Custom Setup →
+                  </Link>
                </div>
             </div>
          </div>
