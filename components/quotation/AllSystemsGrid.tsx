@@ -169,7 +169,7 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
                 ) : (
                   <div className="flex flex-col items-center opacity-20 group-hover:opacity-40 transition-opacity">
                     <Camera className="w-16 h-16 mb-2" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-center">{kit.camera.brand}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-center">{kit.camera.brand || "Standard"}</span>
                   </div>
                 )}
                 
@@ -190,9 +190,9 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
                 <div className="flex-1 flex flex-col justify-between">
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">{kit.camera.brand} Surveillance</div>
+                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">{kit.camera.brand || "Standard"} Surveillance</div>
                       <h4 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white leading-tight group-hover:text-blue-600 transition-colors duration-300 min-h-[3.5rem] line-clamp-2">
-                        {selection.camera_count} Channel {kit.camera.brand} Elite Kit
+                        {selection.camera_count} Channel {kit.camera.brand ? kit.camera.brand + " " : ""}Elite Kit
                       </h4>
                       <p className="text-[11px] font-bold text-zinc-500 line-clamp-1 italic tracking-wide">{kit.camera.display_name}</p>
                     </div>
