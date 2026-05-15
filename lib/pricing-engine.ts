@@ -333,14 +333,26 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
     });
   }
 
-  // Filter by budget tier
-  if (selection.plan_type === "budget") {
-     pool.sort((a, b) => a.unit_price - b.unit_price);
-  } else if (selection.plan_type === "premium") {
-     pool.sort((a, b) => b.unit_price - a.unit_price);
+  // Always sort ascending by price for deterministic results
+  pool.sort((a, b) => a.unit_price - b.unit_price);
+
+  if (pool.length === 0) return undefined;
+
+  // Use explicit option number if provided (1, 2, 3)
+  if (selection.selected_camera_option) {
+    const idx = selection.selected_camera_option - 1;
+    return pool[Math.min(idx, pool.length - 1)];
   }
 
-  return pool[0];
+  // Fallback to plan_type if option number is not provided
+  if (selection.plan_type === "budget") {
+     return pool[0];
+  } else if (selection.plan_type === "premium") {
+     return pool[pool.length - 1];
+  } else {
+     // recommended/middle tier
+     return pool.length > 1 ? pool[1] : pool[0];
+  }
 }
 
 function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: "HD" | "IP") {

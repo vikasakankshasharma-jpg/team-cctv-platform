@@ -182,13 +182,19 @@ export function CompareCards({
   const cardsData = useMemo(() => {
     return compareOptions
       .map((co) => {
+        let plan_type: "budget" | "recommended" | "premium" = "recommended";
+        if (typeof co.option === "number") {
+          if (co.option === 1) plan_type = "budget";
+          else if (co.option === 3) plan_type = "premium";
+        }
+
         const selection: ConfiguratorSelection = {
           technology: co.technology,
           camera_count: cameraCount,
           recording_days: recordingDays,
           selected_camera_option: typeof co.option === "number" ? co.option : undefined,
           selected_camera_id: typeof co.option === "string" ? co.option : undefined,
-          plan_type: "recommended",
+          plan_type,
           selected_addons: selectedAddons,
           requested_features: requestedFeatures,
           picture_quality: "good",
