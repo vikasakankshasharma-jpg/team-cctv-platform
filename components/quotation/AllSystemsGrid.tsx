@@ -37,13 +37,12 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
       cameras = cameras.filter(cam => {
         const camFeats = (cam.features || []).map(f => f.toLowerCase());
         const name = (cam.display_name + " " + cam.technical_name).toLowerCase();
-        const check = (tag: string) => camFeats.includes(tag) || name.includes(tag);
+        
+        // Smart substring match so 'color' matches 'color_night' or 'full_color'
+        const check = (tag: string) => camFeats.some(f => f.includes(tag)) || name.includes(tag);
 
         return selection.requested_features!.every(reqFeat => {
-          const rf = reqFeat.toLowerCase();
-          if (rf === "mic" || rf === "audio") return check("mic") || check("audio");
-          if (rf === "color" || rf === "color_night") return check("color") || check("color_night");
-          return check(rf);
+          return check(reqFeat.toLowerCase().trim());
         });
       });
     }

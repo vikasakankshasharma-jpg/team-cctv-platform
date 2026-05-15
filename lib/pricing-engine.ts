@@ -345,19 +345,45 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
   if (pool.length === 0) return undefined;
 
   // Use explicit option number if provided (1, 2, 3)
+  // But wait, CompareCards relies on 1,2,3 to mean Budget, Recommended, Premium!
   if (selection.selected_camera_option) {
-    const idx = selection.selected_camera_option - 1;
-    return pool[Math.min(idx, pool.length - 1)];
+    const opt = selection.selected_camera_option;
+    if (opt === 1 || selection.plan_type === "budget") {
+      // 1. Budget: Absolute lowest price
+      return pool[0];
+    } else if (opt === 3 || selection.plan_type === "premium") {
+      // 3. Premium/Elite: Absolute highest price / highest specification
+      return pool[pool.length - 1];
+    } else {
+      // 2. Recommended / Smart Choice
+      if (pool.length <= 2) return pool[pool.length - 1];
+      
+      // Property-aware logic
+      const prop = selection.property_type;
+      if (prop === "warehouse" || prop === "office") {
+        // Find a high-spec camera near the 60th-80th percentile
+        // Prioritize cameras with 4MP+, audio, or PTZ
+        const highSpec = pool.slice(Math.floor(pool.length / 2)).find(cam => {
+          const feats = (cam.features || []).join(" ").toLowerCase();
+          const name = cam.technical_name.toLowerCase();
+          return feats.includes("mic") || feats.includes("audio") || 
+                 feats.includes("ptz") || name.includes("4mp") || name.includes("5mp") || name.includes("8mp");
+        });
+        return highSpec || pool[Math.floor(pool.length * 0.7)]; // Fallback to 70th percentile
+      } else {
+        // Residential (home, bungalow) -> Median price / solid value
+        return pool[Math.floor(pool.length / 2)];
+      }
+    }
   }
 
-  // Fallback to plan_type if option number is not provided
+  // Fallback to plan_type if option number is not provided (should not happen with new logic, but safe)
   if (selection.plan_type === "budget") {
      return pool[0];
   } else if (selection.plan_type === "premium") {
      return pool[pool.length - 1];
   } else {
-     // recommended/middle tier
-     return pool.length > 1 ? pool[1] : pool[0];
+     return pool[Math.floor(pool.length / 2)];
   }
 }
 

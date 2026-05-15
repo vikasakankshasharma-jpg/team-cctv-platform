@@ -186,6 +186,7 @@ export interface ConfiguratorSelection {
   wants_amc?: boolean;
   focus_point?: "price" | "quality";
   max_budget?: number | null;
+  property_type?: "home" | "office" | "warehouse" | "bungalow"; // Added for smart recommendations
 }
 
 export interface QuoteLineItem {

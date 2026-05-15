@@ -1,10 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
-import { Zap, ShieldCheck, Mic, Moon, Maximize, Camera } from "lucide-react";
+import { Zap, ShieldCheck, Mic, Moon, Maximize, Camera, Sparkles } from "lucide-react";
 
 export function FeatureToggleGrid() {
-  const { selection, updateSelection } = useConfiguratorStore();
+  const { selection, updateSelection, products } = useConfiguratorStore();
 
   const toggleFeature = (feature: string) => {
     const current = selection.requested_features || [];
@@ -15,12 +16,44 @@ export function FeatureToggleGrid() {
     }
   };
 
-  const FEATURES = [
-    { id: "mic", label: "Mic", icon: <Mic className="w-3.5 h-3.5" /> },
-    { id: "color_night", label: "Night", icon: <Moon className="w-3.5 h-3.5" /> },
-    { id: "ptz", label: "PTZ", icon: <Maximize className="w-3.5 h-3.5" /> },
-    { id: "4mp", label: "Ultra HD", icon: <Camera className="w-3.5 h-3.5" /> },
-  ];
+  const dynamicFeatures = useMemo(() => {
+    const featureSet = new Set<string>();
+    products.forEach(p => {
+      if (p.category === "camera" && Array.isArray(p.features)) {
+        p.features.forEach(f => {
+          if (f.trim() !== "") featureSet.add(f.trim().toLowerCase());
+        });
+      }
+    });
+
+    const uniqueFeatures = Array.from(featureSet).sort();
+
+    return uniqueFeatures.map(feat => {
+      let label = feat.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+      let icon = <Sparkles className="w-3.5 h-3.5" />;
+      
+      if (feat.includes("mic") || feat.includes("audio")) {
+        label = "Mic / Audio";
+        icon = <Mic className="w-3.5 h-3.5" />;
+      } else if (feat.includes("color") || feat.includes("night")) {
+        label = "Color Night";
+        icon = <Moon className="w-3.5 h-3.5" />;
+      } else if (feat.includes("ptz") || feat.includes("pan") || feat.includes("360")) {
+        label = "PTZ";
+        icon = <Maximize className="w-3.5 h-3.5" />;
+      } else if (feat.includes("ultra") || feat.includes("4mp") || feat.includes("5mp") || feat.includes("8mp") || feat.includes("4k")) {
+        label = "Ultra HD";
+        icon = <Camera className="w-3.5 h-3.5" />;
+      } else if (feat.includes("ai") || feat.includes("smart")) {
+        label = "AI Smart";
+        icon = <Zap className="w-3.5 h-3.5" />;
+      }
+      
+      return { id: feat, label, icon };
+    });
+  }, [products]);
+
+  if (dynamicFeatures.length === 0) return null;
 
   return (
     <div className="space-y-5">
@@ -28,7 +61,7 @@ export function FeatureToggleGrid() {
         <Zap className="w-3.5 h-3.5 text-blue-600" /> Must-Have Features
       </label>
       <div className="grid grid-cols-2 gap-2">
-        {FEATURES.map(feat => {
+        {dynamicFeatures.map(feat => {
           const isActive = (selection.requested_features || []).includes(feat.id);
           return (
             <button
@@ -41,7 +74,7 @@ export function FeatureToggleGrid() {
               }`}
             >
                {isActive ? <ShieldCheck className="w-3.5 h-3.5" /> : feat.icon}
-              <span className="text-[9px] font-black uppercase tracking-widest">{feat.label}</span>
+              <span className="text-[9px] font-black uppercase tracking-widest truncate">{feat.label}</span>
             </button>
           );
         })}

@@ -124,6 +124,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       surface_types: surfaceTypes,
       brand_preference: (lead.wizard_answers["q_brand"] === "recommend" || lead.wizard_answers["q_brand"] === "unsure") ? "all" : (lead.wizard_answers["q_brand"] as string || "all"),
       installation_timeline: (lead.wizard_answers["q_timeline"] as string) || "research",
+      property_type: lead.property_type,
     });
 
     trackEvent("view_quote", {
