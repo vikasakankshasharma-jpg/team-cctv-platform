@@ -1,32 +1,33 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { CreateLeadSchema } from "@/lib/validators";
 import { adminDb, arrayUnion, serverTimestamp } from "@/lib/firebase-admin";
 import { rateLimit } from "@/lib/rate-limit";
 import { routeLeadToFranchise, incrementFranchiseLeadCount } from "@/lib/lead-router";
+import { ApiResponse } from "@/lib/api-response";
 
+/**
+ * ENTERPRISE LEAD INGESTION
+ * Handles lead creation, referral validation, and territory-based load balancing.
+ */
 export async function POST(request: NextRequest) {
-  const { success } = rateLimit(request);
+  const { success } = await rateLimit(request);
   if (!success) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    return ApiResponse.error("Too many requests", "RATE_LIMIT_EXCEEDED", 429);
   }
 
   try {
     const body = await request.json();
 
-    // Validate request body
+    // 1. Validate request body
     const validation = CreateLeadSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Validation failed", details: validation.error.format() },
-        { status: 400 }
-      );
+      return ApiResponse.badRequest("Lead validation failed", validation.error.format());
     }
 
     const leadData = validation.data;
     let promoterId: string | null = null;
-    const discountApplied = 0;
 
-    // Validate referral code if provided
+    // 2. Validate referral code if provided
     if (leadData.referral_code) {
       const promotersSnapshot = await adminDb
         .collection("promoters")
@@ -36,16 +37,11 @@ export async function POST(request: NextRequest) {
         .get();
 
       if (!promotersSnapshot.empty) {
-        const promoterDoc = promotersSnapshot.docs[0];
-        promoterId = promoterDoc.id;
-        // The actual discount logic application happens during quote generation,
-        // but we can store the snapshot value. We'll leave it as 0 here and update during quote.
+        promoterId = promotersSnapshot.docs[0].id;
       }
     }
 
-    // ── Franchise Lead Routing ────────────────────────────────────────────────
-    // Extract location from wizard_answers — customer fills pincode/city during wizard.
-    // Keys checked in priority order to support any wizard schema.
+    // 3. ENTERPRISE LOAD BALANCING & ROUTING
     const wizardAnswers = (leadData.wizard_answers || {}) as Record<string, unknown>;
     const pincode = String(wizardAnswers?.q_pincode || wizardAnswers?.pincode || "");
     const city    = String(wizardAnswers?.q_city    || wizardAnswers?.city    || "");
@@ -53,11 +49,9 @@ export async function POST(request: NextRequest) {
 
     const routing = await routeLeadToFranchise(pincode, city, state);
 
-    // Determine if hot lead (cabling already done = near-ready customer)
-    const isHotLead = leadData.cabling_done === true;
-
-    // Create the lead document
+    // 4. Create Lead Document
     const newLeadRef = adminDb.collection("leads").doc();
+    const isHotLead = leadData.cabling_done === true;
 
     await newLeadRef.set({
       customer_name:        leadData.customer_name,
@@ -66,38 +60,37 @@ export async function POST(request: NextRequest) {
       status:               "new",
       promoter_id:          promoterId,
       referral_code_used:   leadData.referral_code || null,
-      discount_applied:     discountApplied,
       wizard_answers:       leadData.wizard_answers,
       property_type:        leadData.property_type,
       technology_choice:    leadData.technology_choice,
       cabling_done:         leadData.cabling_done,
       is_hot_lead:          isHotLead,
 
-      // Franchise routing — auto-set at creation time
+      // Franchise load-balanced routing
       franchise_dealer_id:   routing.franchise_dealer_id,
       franchise_dealer_name: routing.franchise_dealer_name,
-      franchise_match_type:  routing.match_type,   // "pincode"|"zone"|"city"|"state"|"internal"
+      franchise_match_type:  routing.match_type,
 
       created_at:        serverTimestamp(),
       updated_at:        serverTimestamp(),
-      follow_up_notes:   arrayUnion("Lead created via website wizard"),
+      follow_up_notes:   arrayUnion("Lead ingested via enterprise router"),
       is_deleted:        false,
-      deleted_at:        null,
     });
 
-    // Increment franchise lead counter — fire-and-forget, never blocks response
+    // 5. Update Franchise Counters (Async)
     if (routing.franchise_dealer_id) {
       incrementFranchiseLeadCount(routing.franchise_dealer_id).catch((err) =>
         console.error("[Leads API] Counter increment failed:", err)
       );
     }
 
-    return NextResponse.json(
-      { id: newLeadRef.id, message: "Lead created successfully" },
-      { status: 201 }
-    );
-  } catch (error: unknown) {
-    console.error("Error creating lead:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return ApiResponse.success({ 
+      id: newLeadRef.id, 
+      message: "Lead created and routed successfully" 
+    }, 201);
+
+  } catch (error: any) {
+    console.error("Critical error in lead ingestion:", error);
+    return ApiResponse.error("Internal server error", "INTERNAL_ERROR", 500, error.message);
   }
 }

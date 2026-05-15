@@ -2,22 +2,52 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { Resend } from "resend";
-
-const AUTHORIZED_EMAILS = ["vikasakankshasharma@gmail.com"];
-
+import { rateLimit } from "@/lib/rate-limit";
+import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function POST(req: Request) {
+  // 1. Rate Limiting
+  const { success } = await rateLimit(req);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   try {
-    const { email, name } = await req.json();
+    const body = await req.json();
+    const { email, name } = body;
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
     }
 
-    if (!AUTHORIZED_EMAILS.includes(email.toLowerCase().trim())) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const { ip, ua } = getRequestMetadata(req);
+
+    // 2. Dynamic RBAC Lookup
+    const adminSnap = await adminDb.collection("admins")
+      .where("email", "==", normalizedEmail)
+      .where("is_active", "==", true)
+      .limit(1)
+      .get();
+
+    if (adminSnap.empty) {
+      // Audit failure
+      await createAuditLog({
+        action: "ADMIN_LOGIN_FAILURE",
+        actor_id: "guest",
+        actor_email: normalizedEmail,
+        resource_type: "auth",
+        ip_address: ip,
+        user_agent: ua,
+        metadata: { reason: "Email not in authorized admin collection or inactive" }
+      });
       return NextResponse.json({ error: "Unauthorized. This email does not have Admin privileges." }, { status: 403 });
     }
+
+    const adminData = adminSnap.docs[0].data();
+    const userName = adminData.name || name || "Master Admin";
+    const role = adminData.role || "super_admin";
 
     // Generate random 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -82,7 +112,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, message: "OTP sent to your email." });
-  } catch (error) {
+  } catch (error: any) {
     console.error("🔥 Email OTP Error:", error);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }

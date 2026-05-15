@@ -49,6 +49,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
+import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
+
 /**
  * POST: Create a new product.
  */
@@ -58,6 +60,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+    const { ip, ua } = getRequestMetadata(req);
     const product: Product = {
       ...body,
       is_active: body.is_active ?? true,
@@ -84,6 +87,18 @@ export async function POST(req: NextRequest) {
       product.id = docRef.id;
     }
 
+    // Log the action
+    await createAuditLog({
+      action: "PRODUCT_CREATE",
+      actor_id: session.user?.uid || "system",
+      actor_email: session.user?.email || "unknown",
+      resource_id: product.id,
+      resource_type: "product",
+      metadata: { display_name: product.display_name, category: product.category },
+      ip_address: ip,
+      user_agent: ua
+    });
+
     return NextResponse.json({ success: true, product });
   } catch (error) {
     console.error("Error creating product:", error);
@@ -101,6 +116,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
     const { id, ...updates } = body;
+    const { ip, ua } = getRequestMetadata(req);
 
     if (!id) {
       return NextResponse.json({ success: false, error: "Product ID is required" }, { status: 400 });
@@ -121,6 +137,18 @@ export async function PATCH(req: NextRequest) {
 
     const docRef = adminDb.collection("products").doc(id);
     await docRef.update(updates);
+
+    // Log the action
+    await createAuditLog({
+      action: "PRODUCT_UPDATE",
+      actor_id: session.user?.uid || "system",
+      actor_email: session.user?.email || "unknown",
+      resource_id: id,
+      resource_type: "product",
+      metadata: { updated_fields: Object.keys(updates) },
+      ip_address: ip,
+      user_agent: ua
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

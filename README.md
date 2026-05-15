@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TEAM CCTV – Enterprise Smart Quotation & Referral Platform
 
-## Getting Started
+TEAM is a high-fidelity, production-hardened SaaS platform designed for professional CCTV sales automation, franchise lead management, and customer referral tracking.
 
-First, run the development server:
+## 🚀 Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Expert Configurator**: A modular, state-driven quotation engine with server-side price recalculation.
+- **Franchise Portal**: Territory-based lead routing and subscription-based partner management.
+- **Enterprise Security**: Strict CSP/HSTS headers, Session-based RBAC, and Immutable Audit Logging.
+- **Sales Intelligence**: Real-time KPI dashboards with performance-based visual coding.
+- **Inventory Health**: Automated catalog deduplication and structural repair tools.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠 Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: Next.js 16.2 (App Router)
+- **State Management**: Zustand (Client) / Server Components (Server)
+- **Database**: Firebase Firestore (Enterprise Rules Enforced)
+- **Auth**: Firebase Auth (OTP-based)
+- **Payments**: Cashfree (Subscriptions & EMI Orders)
+- **Mailing**: Resend API
+- **Styling**: Tailwind CSS 4.0
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔒 Security & Compliance
 
-## Learn More
+### Audit Logging
+All administrative actions are tracked in the `audit_logs` collection. Each log includes:
+- `actor_id` / `actor_email`
+- `action` (e.g., `FRANCHISE_CREATE`, `PRODUCT_UPDATE`)
+- `ip_address` & `user_agent`
+- `metadata` (Diff of changes)
 
-To learn more about Next.js, take a look at the following resources:
+### Zero-Trust Pricing
+The system ignores client-side pricing calculations during checkout. Every quote is re-validated and recalculated on the server using authoritative database values to prevent tampering.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Middleware
+Global `middleware.ts` enforces:
+- **HSTS**: Strict Transport Security (Production only)
+- **CSP**: Content Security Policy whitelisting Google Maps & Firebase
+- **RBAC**: Protected routes for `/admin`, `/partner`, and `/salesperson`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📦 Operational Commands
 
-## Deploy on Vercel
+### Catalog Maintenance
+The platform uses a deduplicated 732-item master catalog.
+- **Verification**: `npx tsx scratch/verify_db.ts`
+- **Regeneration**: `npx tsx scratch/gen_markdown_catalog.ts`
+- **Sync**: `python scratch/update_seeder_data.py`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Testing
+- **E2E Flow**: `npx tsx scratch/verify_quotation_flow.ts`
+- **Playwright**: `npm test`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📈 KPIs & Dashboards
+The **Sales Dashboard** tracks conversion performance:
+- **Conversion Rate**: Emerald (>20%) or Amber (<20%) indicators based on Won/Total leads ratio.
+
+---
+© 2026 TEAM CCTV. All Rights Reserved.

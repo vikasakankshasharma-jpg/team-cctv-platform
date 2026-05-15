@@ -36,6 +36,9 @@ import { ExpertFiltersBar } from "./ExpertFiltersBar";
 
 import { SiteDetailsModal } from "./SiteDetailsModal";
 import { ShareDialog } from "./ShareDialog";
+import { SystemSummary } from "./SystemSummary";
+import { ActionPanel } from "./ActionPanel";
+import { AddonSelector } from "./AddonSelector";
 
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, RecommendedOutput, CardLayoutRule } from "@/types";
 import { useRouter } from "next/navigation";
@@ -62,7 +65,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const router = useRouter();
   const [lead, setLead] = useState<Lead>(initialLead);
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [pendingAction, setPendingAction] = useState<"download" | "whatsapp" | "booking" | null>(null);
+  const [pendingAction, setPendingAction] = useState<"download" | "whatsapp" | "booking" | "accept" | null>(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
   const [savedPdfUrl, setSavedPdfUrl] = useState<string | null>(null);
@@ -284,7 +287,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     lead.active_offer,
   ]);
 
-  const triggerActionWithAddress = (action: "download" | "whatsapp" | "booking") => {
+  const triggerActionWithAddress = (action: "download" | "whatsapp" | "booking" | "accept") => {
     if (!lead.address) {
       setPendingAction(action);
       setShowAddressModal(true);
@@ -542,53 +545,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           <div className="flex-1 space-y-8 sm:space-y-12 order-2 lg:order-1">
             
             {/* System Summary */}
-            <div className="space-y-6">
-               <div className="flex items-center gap-3 mb-2">
-                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                  <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">System Summary</h3>
-               </div>
-               
-                    <div className="rounded-[24px] border border-zinc-100 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-950 shadow-sm">
-                      <div className="px-4 py-3 sm:px-5 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-zinc-500">
-                         <span className="text-[10px] font-black uppercase tracking-widest">Item Description</span>
-                         <span className="text-[10px] font-black uppercase tracking-widest">Line Total</span>
-                      </div>
-                      <div className="divide-y divide-zinc-100 dark:border-zinc-800/50">
-                        {activePricing.items.map((item) => (
-                          <div key={item.product_id} className="flex items-start justify-between gap-4 px-4 py-3.5 sm:px-5 group/item">
-                            <div className="flex items-start gap-3 min-w-0">
-                              <span className="w-6 h-6 mt-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-center text-[10px] font-black text-zinc-600 dark:text-zinc-400 shrink-0 group-hover/item:bg-blue-100 group-hover/item:text-blue-600 transition-colors">
-                                 {item.qty}x
-                              </span>
-                              <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 leading-snug">
-                                {item.brand ? <span className="font-black text-zinc-900 dark:text-white mr-1">{item.brand}</span> : null}
-                                {item.display_name}
-                              </span>
-                            </div>
-                            <span className="text-[13px] font-black text-zinc-900 dark:text-white text-right shrink-0 mt-0.5">
-                              ₹{item.line_total.toLocaleString('en-IN')}
-                            </span>
-                          </div>
-                        ))}
-                        
-                        {activePricing.addons.map((addon) => (
-                          <div key={addon.addon_id} className="flex items-start justify-between gap-4 px-4 py-3.5 sm:px-5 group/item">
-                            <div className="flex items-start gap-3 min-w-0">
-                              <span className="w-6 h-6 mt-0.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[10px] font-black text-blue-600 dark:text-blue-400 shrink-0 group-hover/item:bg-blue-100 transition-colors">
-                                 {addon.qty ?? 1}x
-                              </span>
-                              <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 leading-snug">
-                                {addon.display_name}
-                              </span>
-                            </div>
-                            <span className="text-[13px] font-black text-zinc-900 dark:text-white text-right shrink-0 mt-0.5">
-                              {addon.price < 0 ? "-" : ""}₹{Math.abs(addon.price).toLocaleString('en-IN')}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                </div>
+            <SystemSummary 
+              items={activePricing.items} 
+              addons={activePricing.addons} 
+            />
 
             {/* What Happens Next Section */}
             <div className="space-y-6">
@@ -612,176 +572,20 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                </div>
             </div>
 
-            {/* Extra Features */}
-            {pricingCache.addons.filter(a => {
-              const ruleStatus = evaluatedRules[a.id!];
-              return a.is_active && ruleStatus && ruleStatus.action !== "hide";
-            }).length > 0 && (
-              <div className="space-y-6">
-                <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
-                   <Zap className="w-5 h-5 text-blue-500" /> Extra Features
-                </h3>
-                <div className="space-y-3">
-                  {pricingCache.addons.filter(a => a.is_active).map(addon => {
-                    const ruleStatus = evaluatedRules[addon.id!];
-                    if (ruleStatus?.action === "hide" || (!ruleStatus)) return null;
-                    const isMandatory = ruleStatus.action === "show_mandatory";
-                    const isSelected = isMandatory || selection.selected_addons.includes(addon.id!);
-
-                    return (
-                      <label 
-                        key={addon.id} 
-                        className={`flex items-center gap-4 p-4 rounded-[24px] border-2 transition-all duration-300 cursor-pointer group/addon ${
-                          isSelected 
-                          ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10 shadow-sm" 
-                          : "border-transparent bg-zinc-50 dark:bg-zinc-900 hover:border-zinc-200 dark:hover:border-zinc-800"
-                        }`}
-                      >
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-300 ${
-                          isSelected ? "bg-blue-600 border-blue-600 scale-110 shadow-lg shadow-blue-600/30" : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 group-hover/addon:border-zinc-400"
-                        }`}>
-                           {isSelected && <Check className="w-3.5 h-3.5 text-white font-black" />}
-                        </div>
-                        <input 
-                          type="checkbox" 
-                          className="hidden"
-                          checked={isSelected}
-                          disabled={isMandatory}
-                          onChange={() => toggleAddon(addon.id!)}
-                        />
-                        <div className="flex-1">
-                          <div className={`font-black text-[10px] leading-tight uppercase tracking-tight transition-colors ${isSelected ? "text-blue-900 dark:text-blue-100" : "text-zinc-900 dark:text-white"}`}>{addon.display_name}</div>
-                          <div className={`text-[10px] font-bold mt-1 tracking-widest transition-colors ${isSelected ? "text-blue-600 dark:text-blue-400" : "text-zinc-500 dark:text-zinc-400"}`}>+₹{addon.price.toLocaleString('en-IN')}</div>
-                        </div>
-                        {isMandatory && <span className="text-[8px] uppercase font-black text-zinc-400 px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-full">Included</span>}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            <AddonSelector 
+              addons={pricingCache.addons} 
+              evaluatedRules={evaluatedRules} 
+              selectedAddonIds={selection.selected_addons} 
+              toggleAddon={toggleAddon} 
+            />
           </div>
 
-          {/* RIGHT COLUMN: Checkout & Actions — shown FIRST on mobile */}
-          <div className="lg:w-[400px] order-1 lg:order-2">
-            <div className="sticky top-8 space-y-4 sm:space-y-6">
-               
-               {/* Total Investment Card */}
-               <div className="bg-zinc-900 dark:bg-zinc-950 p-6 sm:p-8 rounded-[28px] sm:rounded-[32px] shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-48 h-48 bg-blue-500/20 blur-[50px] rounded-full pointer-events-none" />
-                  
-                   <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Total Investment</div>
-                    <div className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 transition-all duration-300">&#x20B9;{activePricing.total_payable.toLocaleString('en-IN')}</div>
-                  
-                  <div className="pt-6 border-t border-zinc-800 flex justify-between items-center">
-                     <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Incl. GST & Labor</span>
-                     <div className="text-[9px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
-                        <Check className="w-2.5 h-2.5" /> Best Value Match
-                     </div>
-                  </div>
-               </div>
-
-               {/* Payment Terms + AMC Trust Block — shown ABOVE action buttons so customer sees full picture first */}
-               <div className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-4">
-                 <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-1">Payment Schedule</div>
-                 
-                 <div className="grid grid-cols-3 gap-2">
-                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
-                     <CreditCard className="w-4 h-4 text-blue-500" />
-                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
-                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Advance</span>
-                   </div>
-                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
-                     <Truck className="w-4 h-4 text-blue-500" />
-                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">80%</span>
-                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Delivery</span>
-                   </div>
-                   <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-center gap-1.5 shadow-sm">
-                     <Handshake className="w-4 h-4 text-emerald-500" />
-                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">10%</span>
-                     <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Handover</span>
-                   </div>
-                 </div>
-
-                 <div className="pt-3 border-t border-dashed border-zinc-200 dark:border-zinc-800">
-                   <div className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-3">Optional After-Sales (AMC)</div>
-                   <div className="flex gap-2">
-                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
-                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">1 Year</span>
-                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">{pricingCache.settings.amc_1yr_pct ?? 15}% of total</span>
-                     </div>
-                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
-                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">2 Year</span>
-                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">{pricingCache.settings.amc_2yr_pct ?? 20}% of total</span>
-                     </div>
-                     <div className="flex-1 flex flex-col p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
-                       <span className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400">3 Year</span>
-                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">{pricingCache.settings.amc_3yr_pct ?? 25}% of total</span>
-                     </div>
-                   </div>
-                   <div className="flex justify-between items-center mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-                     <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5"><Wrench className="w-3 h-3"/> Post-Handover Visit</span>
-                     <span className="text-[10px] font-black text-zinc-900 dark:text-white">&#x20B9;{pricingCache.settings.visit_charge ?? 300} / visit</span>
-                   </div>
-                 </div>
-               </div>
-
-               {/* Action Buttons — below payment terms so customer is informed before committing */}
-               <div className="space-y-3 sm:space-y-4">
-                 <button
-                   onClick={() => executeAction("accept")}
-                   disabled={isSaving}
-                   className="group relative w-full h-16 sm:h-20 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-sm tracking-[0.3em] rounded-[28px] sm:rounded-[32px] shadow-2xl shadow-emerald-500/30 transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 overflow-hidden touch-manipulation"
-                 >
-                   {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                     <>
-                       <ShieldCheck className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                       Accept Quote
-                       <ArrowRight className="w-5 h-5 translate-y-[1px]" />
-                     </>
-                   )}
-                 </button>
-
-                 <button
-                   onClick={() => executeAction("download")}
-                   disabled={isSaving}
-                   className="group relative w-full h-14 sm:h-16 bg-blue-600/10 hover:bg-blue-600/20 text-blue-600 dark:text-blue-400 font-black uppercase text-[10px] tracking-widest rounded-[24px] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 border border-blue-600/20"
-                 >
-                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                     <>
-                       <Download className="w-4 h-4" />
-                       Download PDF
-                     </>
-                   )}
-                 </button>
-
-                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                   <button
-                     onClick={() => executeAction("whatsapp")}
-                     className="group relative h-14 sm:h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl sm:rounded-3xl flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 overflow-hidden touch-manipulation"
-                   >
-                     <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> WhatsApp
-                     <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                   </button>
-                   <button
-                     onClick={() => executeAction("booking")}
-                     className="h-14 sm:h-16 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white font-black uppercase text-[10px] tracking-widest rounded-2xl sm:rounded-3xl flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95 border border-zinc-200 dark:border-zinc-700 shadow-lg touch-manipulation"
-                   >
-                     <Calendar className="w-4 h-4" /> Book Visit
-                   </button>
-                 </div>
-               </div>
-
-               {/* Terms Disclaimer */}
-               <div className="text-[9px] font-semibold text-zinc-500 dark:text-zinc-400 leading-relaxed space-y-1 px-1">
-                 <p>• Product warranty as per company terms & conditions.</p>
-                 <p>• Warranty does not cover physically damaged accessories.</p>
-                 <p>• AMC includes site visits & labour — no product cost.</p>
-                 <p>• Quote valid for {pricingCache.settings.quote_validity_days ?? 15} days from issue date.</p>
-               </div>
-
-            </div>
-          </div>
+          <ActionPanel 
+            pricing={activePricing} 
+            settings={pricingCache.settings} 
+            isSaving={isSaving} 
+            onAction={triggerActionWithAddress} 
+          />
           
         </div>
       </div>

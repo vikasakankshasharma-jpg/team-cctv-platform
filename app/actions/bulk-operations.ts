@@ -1,18 +1,13 @@
-"use server";
-
-import { requireAdmin } from "@/lib/auth-server";
-import { adminDb } from "@/lib/firebase-admin";
-import type { Product } from "@/types";
+import { createAuditLog } from "@/lib/audit-logs";
 
 export async function bulkUpdateProducts(products: Partial<Product>[]) {
-  await requireAdmin();
+  const session = await requireAdmin();
 
   if (!products || !Array.isArray(products) || products.length === 0) {
     throw new Error("No valid products provided for bulk update.");
   }
 
   // Firestore allows up to 500 writes per batch.
-  // We need to chunk the updates if there are more than 500.
   const BATCH_SIZE = 500;
   
   try {
@@ -29,20 +24,30 @@ export async function bulkUpdateProducts(products: Partial<Product>[]) {
         }
 
         const dataToSave = { ...prod };
-        delete dataToSave.id; // Remove id from data payload
+        delete dataToSave.id;
 
-        // Update timestamps
         dataToSave.updated_at = new Date().toISOString();
         if (!prod.id) {
             dataToSave.created_at = new Date().toISOString();
         }
 
-        // Use set with merge: true to update existing fields without destroying unmentioned ones
         batch.set(docRef, dataToSave, { merge: true });
       });
 
       await batch.commit();
     }
+
+    // Audit log
+    await createAuditLog({
+      action: "BULK_PRODUCT_IMPORT",
+      actor_id: session.user?.uid || "unknown",
+      actor_email: session.user?.email,
+      resource_type: "product",
+      metadata: {
+        total_count: products.length,
+        timestamp: new Date().toISOString()
+      }
+    });
 
     return { success: true, count: products.length };
   } catch (error: any) {

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
+import { verifySession } from "@/lib/auth-server";
 import type { FranchiseDealer } from "@/types";
 
 // GET /api/admin/franchises — list all franchise dealers
 export async function GET() {
-  try {
-    await requireAdmin();
-  } catch {
+  const session = await verifySession();
+  if (!session.isAuthenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -28,9 +29,8 @@ export async function GET() {
 
 // POST /api/admin/franchises — create a new franchise dealer
 export async function POST(request: NextRequest) {
-  try {
-    await requireAdmin();
-  } catch {
+  const session = await verifySession();
+  if (!session.isAuthenticated || session.role !== "super_admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -69,6 +69,20 @@ export async function POST(request: NextRequest) {
     };
 
     await docRef.set(payload);
+
+    // Audit log
+    const { ip, ua } = getRequestMetadata(request);
+    await createAuditLog({
+      action: "FRANCHISE_CREATE",
+      actor_id: session.user?.uid || "system",
+      actor_email: session.user?.email || "unknown",
+      resource_id: docRef.id,
+      resource_type: "franchise_dealer",
+      metadata: { company_name: payload.company_name },
+      ip_address: ip,
+      user_agent: ua
+    });
+
     return NextResponse.json({ id: docRef.id, message: "Franchise dealer created" }, { status: 201 });
   } catch (err) {
     console.error("[Franchises API POST]", err);

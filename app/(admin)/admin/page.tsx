@@ -2,7 +2,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard } from "lucide-react";
+import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard, TrendingUp } from "lucide-react";
 import { DashboardClient, type WeeklyBucket, type SourceBreakdown, type RecentActivity } from "@/components/admin/DashboardClient";
 import { PageHeader } from "@/components/admin/PageHeader";
 import type { Metadata } from "next";
@@ -129,6 +129,10 @@ export default async function AdminDashboard() {
     };
   });
 
+  const leadVelocity = trend.length > 0 
+    ? (trend.reduce((sum, day) => sum + day.total, 0) / trend.length).toFixed(1)
+    : "0";
+
   const KPIS = [
     {
       label: "Total Pipeline",
@@ -170,6 +174,16 @@ export default async function AdminDashboard() {
       shadow: "shadow-amber-500/10",
       href: "/admin/bookings"
     },
+    {
+      label: "Lead Velocity",
+      value: leadVelocity,
+      icon: TrendingUp,
+      trend: "Avg leads per day (7d)",
+      color: "text-rose-500",
+      bg: "bg-rose-500/10",
+      shadow: "shadow-rose-500/10",
+      href: "/admin/leads"
+    },
   ];
 
   return (
@@ -181,7 +195,7 @@ export default async function AdminDashboard() {
       />
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {KPIS.map((kpi, idx) => (
           <Link href={kpi.href} key={idx} className={`block bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 relative overflow-hidden group shadow-lg dark:shadow-2xl transition-all hover:border-blue-500/20 active:scale-95 ${kpi.shadow}`}>
             <div className="flex items-center justify-between mb-6">

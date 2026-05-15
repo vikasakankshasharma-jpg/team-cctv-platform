@@ -41,27 +41,38 @@ export default async function DealerDashboardPage() {
     .where("franchise_dealer_id", "==", dealerId)
     .get();
   
-  const pipeline = {
-    new: 0,
-    contacted: 0,
-    site_visit: 0,
-    quoted: 0,
-    won: 0,
-    lost: 0,
-  };
+  const pipeline = { new: 0, contacted: 0, site_visit: 0, quoted: 0, won: 0, lost: 0 };
+  const pincodePerformance: Record<string, number> = {};
+  
+  // Lead Velocity (Last 7 days)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  let recentLeadCount = 0;
 
   allLeadsSnap.docs.forEach((doc) => {
-    const status = doc.data().status as keyof typeof pipeline;
-    if (pipeline[status] !== undefined) {
-      pipeline[status]++;
-    }
+    const data = doc.data();
+    const status = data.status as keyof typeof pipeline;
+    if (pipeline[status] !== undefined) pipeline[status]++;
+
+    const pin = data.address?.pincode || data.wizard_answers?.lead_pincode;
+    if (pin) pincodePerformance[pin] = (pincodePerformance[pin] || 0) + 1;
+
+    const createdAt = data.created_at?.toDate?.() || new Date(data.created_at);
+    if (createdAt >= sevenDaysAgo) recentLeadCount++;
   });
+
+  const leadVelocity = Number((recentLeadCount / 7).toFixed(1));
+  const topPincodes = Object.entries(pincodePerformance)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
 
   return (
     <DealerDashboardClient
       dealer={dealer}
       recentLeads={leads}
       pipeline={pipeline}
+      leadVelocity={leadVelocity}
+      topPincodes={topPincodes}
     />
   );
 }

@@ -226,7 +226,7 @@ export function DealerLeadDetailClient({ lead, quotes }: Props) {
                     <h4 className="text-sm font-black uppercase tracking-widest">Territory Exclusive</h4>
                  </div>
                  <p className="text-xs text-emerald-800/70 dark:text-emerald-400/70 font-medium leading-relaxed mb-4">
-                    This lead was automatically routed to you based on the customer's pincode. You have exclusive rights to serve this inquiry.
+                    This lead was automatically routed to you based on the customer&apos;s pincode. You have exclusive rights to serve this inquiry.
                  </p>
                  <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
                     <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Assigned Zone</p>

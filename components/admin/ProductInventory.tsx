@@ -222,8 +222,6 @@ function CategorySection({
   const Icon = cfg.icon;
   const acc = ACCENT[cfg.accent];
 
-  if (products.length === 0) return null;
-
   // Group by catalog_path (Sub-categories)
   const subGroups = useMemo(() => {
     const groups: Record<string, Product[]> = {};
@@ -235,6 +233,8 @@ function CategorySection({
     });
     return groups;
   }, [products]);
+
+  if (products.length === 0) return null;
 
   return (
     <div className="rounded-[40px] border border-zinc-200/50 dark:border-zinc-800/60 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.03)] dark:shadow-none bg-white dark:bg-zinc-950/40 backdrop-blur-sm group/cat transition-all duration-500 hover:shadow-xl">
@@ -433,21 +433,33 @@ export function ProductInventory({ products, onEdit, onToggle }: ProductInventor
 
       {/* ── Empty state ── */}
       {filtered.length === 0 && (
-        <div className="flex flex-col items-center gap-6 py-32 text-center bg-white dark:bg-zinc-950/20 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[50px] transition-colors duration-500">
-          <div className="w-20 h-20 rounded-[30px] bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-xl">
-            <Package className="w-8 h-8 text-zinc-300 dark:text-zinc-700" />
+        <div className="relative flex flex-col items-center gap-8 py-40 text-center bg-white dark:bg-zinc-950/20 border border-zinc-200 dark:border-zinc-800 rounded-[60px] overflow-hidden group/empty transition-all duration-700">
+          {/* Decorative background flair */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl group-hover/empty:bg-blue-500/10 transition-colors duration-1000" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-zinc-500/5 rounded-full blur-3xl group-hover/empty:bg-zinc-500/10 transition-colors duration-1000" />
+          
+          <div className="relative">
+            <div className="w-24 h-24 rounded-[32px] bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-2xl group-hover/empty:rotate-6 transition-transform duration-700">
+              <Package className="w-10 h-10 text-zinc-300 dark:text-zinc-600" />
+            </div>
+            <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center text-white shadow-lg animate-bounce">
+              <Search className="w-4 h-4" />
+            </div>
           </div>
-          <div className="space-y-2">
-            <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">No Inventory Matches</h3>
-            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-500 max-w-xs mx-auto">
-              Your current filter configuration yielded zero results across 1,776 items.
+
+          <div className="space-y-3 relative z-10">
+            <h3 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Zero Alignment Detected</h3>
+            <p className="text-sm font-bold text-zinc-500 dark:text-zinc-500 max-w-sm mx-auto leading-relaxed uppercase tracking-widest opacity-60">
+              The current matrix filter has isolated the system from all 1,732 catalog nodes.
             </p>
           </div>
+
           <button 
             onClick={() => {setSearch(""); setFilterCat("all"); setFilterTech("all"); setFilterStatus("all"); setFilterBrand("all");}}
-            className="px-6 py-3 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[11px] font-black uppercase tracking-widest transition-all hover:scale-105 shadow-xl shadow-zinc-900/20 active:scale-95"
+            className="relative z-10 px-10 py-4 rounded-[20px] bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:shadow-2xl hover:shadow-blue-500/20 active:scale-95 group/btn overflow-hidden"
           >
-            Reset Master Filters
+            <span className="relative z-10">Reset Multi-Channel Filters</span>
+            <div className="absolute inset-0 bg-blue-600 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />
           </button>
         </div>
       )}

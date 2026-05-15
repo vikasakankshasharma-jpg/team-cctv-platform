@@ -273,6 +273,8 @@ export interface AppSettings {
   amc_3yr_pct: number;
   quote_validity_days: number;
   minimum_margin_threshold?: number; // E.g., 20 for 20% minimum target margin
+  high_reach_fee?: number;           // Fee for high ceilings
+  labor_cost_margin_percent?: number; // Purchase cost of labor as % of retail (e.g. 70%)
 
   updated_at?: unknown;
   updated_by?: string | null;

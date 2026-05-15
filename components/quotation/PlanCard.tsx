@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, ChevronUp, ShieldCheck, Sparkles, TrendingUp, Info, Cctv, Aperture, Video } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ChevronRight, ShieldCheck, Sparkles, TrendingUp, Info, Cctv, Aperture, Video } from "lucide-react";
 import { useState } from "react";
 import type { PricingResult } from "@/types";
 
@@ -32,145 +32,166 @@ export function PlanCard({
   recommendationReason
 }: PlanCardProps) {
   const [internalShow, setInternalShow] = useState(false);
+  const [rotate, setRotate] = useState({ x: 0, y: 0 });
   
   const showItemized = showDetails !== undefined ? showDetails : internalShow;
   const setShowItemized = onToggleDetails ? onToggleDetails : setInternalShow;
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const box = card.getBoundingClientRect();
+    const x = e.clientX - box.left;
+    const y = e.clientY - box.top;
+    const centerX = box.width / 2;
+    const centerY = box.height / 2;
+    const rotateX = (y - centerY) / 20;
+    const rotateY = (centerX - x) / 20;
+    setRotate({ x: rotateX, y: rotateY });
+  };
+
+  const handleMouseLeave = () => {
+    setRotate({ x: 0, y: 0 });
+  };
+
+  // Determine theme based on title
+  const isPremium = title.toLowerCase().includes("premium") || title.toLowerCase().includes("ultra");
+  const isBudget = title.toLowerCase().includes("budget") || title.toLowerCase().includes("economy");
+  
+  const theme = isPremium 
+    ? { 
+        bg: "from-amber-500/10 to-transparent", 
+        border: "border-amber-200/50 dark:border-amber-500/30", 
+        glow: "bg-amber-500/10", 
+        text: "text-amber-600 dark:text-amber-400",
+        accent: "bg-amber-500",
+        shadow: "shadow-amber-500/10"
+      } 
+    : isBudget 
+    ? { 
+        bg: "from-emerald-500/10 to-transparent", 
+        border: "border-emerald-200/50 dark:border-emerald-500/30", 
+        glow: "bg-emerald-500/10", 
+        text: "text-emerald-600 dark:text-emerald-400",
+        accent: "bg-emerald-500",
+        shadow: "shadow-emerald-500/10"
+      }
+    : { 
+        bg: "from-blue-500/10 to-transparent", 
+        border: "border-blue-200/50 dark:border-blue-500/30", 
+        glow: "bg-blue-500/10", 
+        text: "text-blue-600 dark:text-blue-400",
+        accent: "bg-blue-600",
+        shadow: "shadow-blue-500/10"
+      };
+
   return (
     <div 
-      className={`relative flex flex-col rounded-[40px] border transition-all duration-700 bg-white/70 dark:bg-zinc-900/60 backdrop-blur-xl group
+      className={`relative flex flex-col rounded-[48px] border transition-all duration-300 ease-out bg-white/80 dark:bg-zinc-900/60 backdrop-blur-3xl group cursor-default perspective-1000
+      ${theme.border} ${isSelected ? "ring-4 ring-blue-500/20" : ""}
       ${recommendation 
-        ? "border-blue-200 dark:border-blue-500/40 shadow-[0_48px_96px_rgba(37,99,235,0.15)] dark:shadow-[0_48px_96px_rgba(37,99,235,0.25)] sm:scale-[1.04] z-10" 
-        : "border-zinc-100 dark:border-zinc-800 shadow-[0_24px_48px_rgba(0,0,0,0.04)] hover:border-zinc-200 dark:hover:border-blue-500/20 hover:shadow-[0_48px_96px_rgba(0,0,0,0.08)]"}`}
+        ? "shadow-[0_64px_128px_rgba(0,0,0,0.12)] sm:scale-[1.05] z-10" 
+        : "shadow-[0_32px_64px_rgba(0,0,0,0.06)] hover:shadow-[0_48px_96px_rgba(0,0,0,0.1)]"}`}
+      style={{
+        transform: `perspective(1000px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
+      {/* Decorative Gradient Background */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${theme.bg} rounded-[48px] opacity-50 -z-10`} />
+
       {/* Premium Badge */}
       {badge && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-2 bg-zinc-900 dark:bg-blue-600 border border-zinc-800 dark:border-blue-500/50 rounded-full shadow-xl flex items-center gap-2 z-20 whitespace-nowrap">
-          <Sparkles className="w-3 h-3 text-blue-400 dark:text-blue-100" />
-          <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">{badge}</span>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-2.5 bg-zinc-950 dark:bg-white border border-white/10 dark:border-zinc-200 rounded-full shadow-2xl flex items-center gap-2 z-20 whitespace-nowrap group-hover:scale-110 transition-transform">
+          <Sparkles className={`w-3.5 h-3.5 ${theme.text}`} />
+          <span className="text-[10px] font-black text-white dark:text-zinc-950 uppercase tracking-[0.2em]">{badge}</span>
         </div>
       )}
 
       {/* Recommended visual indicator (glow) */}
-      {recommendation && (
-        <div className="absolute inset-0 bg-blue-50/30 dark:bg-blue-600/10 blur-[100px] -z-10 rounded-[40px]" />
+      {(recommendation || isPremium) && (
+        <div className={`absolute -inset-4 ${theme.glow} blur-[60px] -z-20 rounded-[60px] opacity-50 group-hover:opacity-80 transition-opacity`} />
       )}
 
-      <div className="p-6 md:p-10 flex-1 flex flex-col">
-        <div className="flex items-center justify-between mb-2">
-           <h3 className="text-sm font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{title}</h3>
-           {recommendation && <TrendingUp className="w-4 h-4 text-blue-500 dark:text-blue-400" />}
+      <div className="p-8 md:p-12 flex-1 flex flex-col">
+        <div className="flex items-center justify-between mb-3">
+           <h3 className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em]">{title}</h3>
+           {recommendation && <TrendingUp className={`w-5 h-5 ${theme.text}`} />}
         </div>
         
-        <div className="flex items-end gap-1.5 mb-6 md:mb-10 pb-5 md:pb-8 border-b border-zinc-50 dark:border-zinc-800/60">
-          <span className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter">
+        <div className="flex items-end gap-2 mb-10 pb-8 border-b border-zinc-100 dark:border-zinc-800/60 relative">
+          <span className="text-5xl md:text-6xl font-black text-zinc-950 dark:text-white tracking-tighter leading-none">
             ₹{pricing.total_payable.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </span>
-          <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-1.5 md:mb-2.5 ml-1">Final Price</span>
+          <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2 ml-1">Final Price</span>
+          
+          {/* Subtle Price Underline based on theme */}
+          <div className={`absolute bottom-0 left-0 h-1 w-20 ${theme.accent} rounded-full -mb-0.5 opacity-30`} />
         </div>
 
         {/* Difference Amount Badge */}
         {differenceAmount !== undefined && differenceType && (
-          <div className="mb-8 flex items-center justify-center">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border shadow-inner ${
+          <div className="mb-10 flex items-center justify-center">
+            <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border ${
               differenceType === 'save' 
-                ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20' 
-                : 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-500/20'
+                ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20 shadow-emerald-500/5' 
+                : 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-500/20 shadow-orange-500/5'
             }`}>
-              {differenceType === 'save' ? <span>Save ₹{differenceAmount.toLocaleString('en-IN')}</span> : <span>Extra ₹{differenceAmount.toLocaleString('en-IN')}</span>}
+              {differenceType === 'save' ? <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" /> Save ₹{differenceAmount.toLocaleString('en-IN')}</span> : <span>Extra ₹{differenceAmount.toLocaleString('en-IN')}</span>}
             </span>
           </div>
         )}
 
         {/* Tier-Specific Feature Highlights */}
-        <div className="space-y-5 flex-1 mb-8">
-          {/* Row 1: Technology */}
-          <div className="flex items-start gap-4">
-            <div className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-               <Cctv className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 font-black" />
+        <div className="space-y-6 flex-1 mb-10">
+          {[
+            { 
+              icon: <Cctv className="w-4 h-4" />, 
+              title: pricing.technology === "IP" ? "Pure Digital (IP)" : "Ultra HD (Analog)",
+              subtitle: "Advanced Camera Technology",
+              bg: "bg-blue-50 dark:bg-blue-500/10",
+              color: "text-blue-600 dark:text-blue-400"
+            },
+            { 
+              icon: isPremium ? <Aperture className="w-4 h-4" /> : <Video className="w-4 h-4" />,
+              title: isBudget ? "Standard Grade" : isPremium ? "Professional Series" : "Performance Plus",
+              subtitle: "Hardware Build Quality",
+              bg: "bg-purple-50 dark:bg-purple-500/10",
+              color: "text-purple-600 dark:text-purple-400"
+            },
+            { 
+              icon: <ShieldCheck className="w-4 h-4" />,
+              title: "On-Site Support",
+              subtitle: "1 Year Comprehensive Coverage",
+              bg: "bg-emerald-50 dark:bg-emerald-500/10",
+              color: "text-emerald-600 dark:text-emerald-400"
+            },
+            { 
+              icon: <Sparkles className="w-4 h-4" />,
+              title: isPremium ? "StarLight Vision" : "IR Night Vision",
+              subtitle: "Low-Light Enhancement",
+              bg: "bg-amber-50 dark:bg-amber-500/10",
+              color: "text-amber-600 dark:text-amber-400"
+            }
+          ].map((feature, i) => (
+            <div key={i} className="flex items-center gap-5 group/item">
+              <div className={`w-10 h-10 rounded-2xl ${feature.bg} flex items-center justify-center shrink-0 transition-transform group-hover/item:scale-110`}>
+                <div className={feature.color}>{feature.icon}</div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[13px] font-black text-zinc-950 dark:text-zinc-200 leading-none mb-1 uppercase tracking-tight">{feature.title}</span>
+                <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{feature.subtitle}</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-                <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">{pricing.technology === "IP" ? "Smart Digital (IP)" : "HD Sharp (Analog)"}</span>
-                <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Camera System Technology</span>
-            </div>
-          </div>
-
-          {/* Row 2: Tier-specific quality */}
-          <div className="flex items-start gap-4">
-            <div className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-               {title.toLowerCase().includes("premium") ? (
-                 <Aperture className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-               ) : (
-                 <Video className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-               )}
-            </div>
-            <div className="flex flex-col">
-              {title.toLowerCase().includes("budget") ? (
-                <>
-                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Economy-Grade Hardware</span>
-                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Best price, proven reliability</span>
-                </>
-              ) : title.toLowerCase().includes("premium") ? (
-                <>
-                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Premium Brand Hardware</span>
-                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Top-tier quality & performance</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Certified Quality Hardware</span>
-                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Balanced quality & value</span>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Row 3: Warranty */}
-          <div className="flex items-start gap-4">
-            <div className="w-6 h-6 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
-               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div className="flex flex-col">
-                <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">1 Year Warranty</span>
-                <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Free On-Site Support & Repair</span>
-            </div>
-          </div>
-
-          {/* Row 4: Tier-specific extras */}
-          <div className="flex items-start gap-4">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-              title.toLowerCase().includes("premium") ? "bg-amber-50 dark:bg-amber-900/20" : "bg-zinc-50 dark:bg-zinc-800/40"
-            }`}>
-               <Sparkles className={`w-3.5 h-3.5 ${
-                 title.toLowerCase().includes("premium") ? "text-amber-500 dark:text-amber-400" : "text-zinc-300 dark:text-zinc-600"
-               }`} />
-            </div>
-            <div className="flex flex-col">
-              {title.toLowerCase().includes("budget") ? (
-                <>
-                  <span className="text-sm font-black text-zinc-400 dark:text-zinc-600 leading-tight line-through decoration-zinc-300">Extended Coverage</span>
-                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-600 mt-0.5">Available in higher tiers</span>
-                </>
-              ) : title.toLowerCase().includes("premium") ? (
-                <>
-                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Advanced Night Vision</span>
-                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Crystal clear in total darkness</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-200 leading-tight">Enhanced Night Vision</span>
-                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">Clear footage in low light</span>
-                </>
-              )}
-            </div>
-          </div>
+          ))}
           
           {recommendation && recommendationReason && (
-            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-500/10 rounded-2xl border border-blue-100 dark:border-blue-500/20">
-               <div className="flex items-center gap-2 mb-2">
-                  <Info className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                  <span className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">Why this setup?</span>
+            <div className={`mt-6 p-6 rounded-[32px] border ${theme.border} bg-white dark:bg-black/20 shadow-xl ${theme.shadow}`}>
+               <div className="flex items-center gap-2 mb-3">
+                  <Info className={`w-4 h-4 ${theme.text}`} />
+                  <span className={`text-[10px] font-black ${theme.text} uppercase tracking-[0.2em]`}>Expert Verdict</span>
                </div>
-               <p className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed italic">
+               <p className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 leading-relaxed uppercase tracking-wide">
                  &quot;{recommendationReason}&quot;
                </p>
             </div>
@@ -178,64 +199,56 @@ export function PlanCard({
         </div>
 
         {/* Interactive Itemization Toggle */}
-        <div className={`transition-all duration-300 rounded-3xl border border-zinc-100 dark:border-zinc-800 ${showItemized ? "bg-zinc-50 dark:bg-black/40 p-6" : "p-4 hover:bg-zinc-50 dark:hover:bg-black/20"}`}>
+        <div className={`transition-all duration-500 rounded-[32px] border ${theme.border} ${showItemized ? "bg-zinc-50 dark:bg-black/40 p-8" : "p-5 hover:bg-zinc-50 dark:hover:bg-black/20"}`}>
           <button 
             onClick={() => setShowItemized(!showItemized)}
             className="flex items-center justify-between w-full text-left transition-colors"
           >
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-              {showItemized ? "Hide Setup Details" : "Show Setup Details"}
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+              {showItemized ? "Close Manifest" : "View Manifest"}
             </span>
-            {showItemized ? <ChevronUp className="w-4 h-4 text-zinc-400 dark:text-zinc-600" /> : <ChevronDown className="w-4 h-4 text-zinc-400 dark:text-zinc-600" />}
+            <div className={`w-8 h-8 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center border ${theme.border} shadow-sm`}>
+              {showItemized ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+            </div>
           </button>
           
           {showItemized && (
-            <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="space-y-2 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="mt-8 space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="space-y-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
                 {pricing.items.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-start gap-3">
-                    <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 leading-tight">
-                      {item.qty}x {item.brand ? <span className="font-black text-zinc-900 dark:text-white mr-1">{item.brand}</span> : null}
-                      {item.display_name}
-                    </span>
-                    <span className="text-[11px] font-black text-zinc-900 dark:text-white shrink-0">₹{item.line_total.toLocaleString('en-IN')}</span>
+                  <div key={idx} className="flex justify-between items-start gap-4">
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-black text-zinc-950 dark:text-white uppercase tracking-tight leading-tight">
+                        {item.qty}x {item.display_name}
+                      </span>
+                      {item.brand && <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest mt-0.5">{item.brand}</span>}
+                    </div>
+                    <span className="text-[11px] font-black text-zinc-950 dark:text-white shrink-0 tabular-nums">₹{item.line_total.toLocaleString('en-IN')}</span>
                   </div>
                 ))}
               </div>
               
-              <div className="space-y-1.5 pt-2">
-                <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-tight">
-                  <span>Cameras & Recorder</span>
-                  <span>₹{pricing.base_hardware_cost.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-tight">
-                  <span>Wires & Pipes</span>
-                  <span>₹{pricing.cabling_cost.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-tight">
-                  <span>Installation Work</span>
-                  <span>₹{pricing.labor_cost.toLocaleString('en-IN')}</span>
-                </div>
-                {pricing.addons_total > 0 && (
-                  <div className="flex justify-between items-center text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tight">
-                    <span>Selected Extras</span>
-                    <span>₹{pricing.addons_total.toLocaleString('en-IN')}</span>
+              <div className="space-y-2.5 pt-2">
+                {[
+                  { label: "Core Hardware", val: pricing.base_hardware_cost },
+                  { label: "Infrastructure", val: pricing.cabling_cost },
+                  { label: "Execution Fee", val: pricing.labor_cost },
+                  ...(pricing.addons_total > 0 ? [{ label: "Selected Extras", val: pricing.addons_total, color: "text-blue-600" }] : []),
+                  ...(pricing.referral_discount > 0 ? [{ label: "Loyalty Credit", val: -pricing.referral_discount, color: "text-emerald-600" }] : []),
+                ].map((row, i) => (
+                  <div key={i} className="flex justify-between items-center text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                    <span className={row.color}>{row.label}</span>
+                    <span className={`${row.color || "text-zinc-950 dark:text-zinc-300"} tabular-nums`}>₹{row.val.toLocaleString('en-IN')}</span>
                   </div>
-                )}
-                {pricing.referral_discount > 0 && (
-                  <div className="flex justify-between items-center text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-tight">
-                    <span>Loyalty Credit</span>
-                    <span>-₹{pricing.referral_discount.toLocaleString('en-IN')}</span>
-                  </div>
-                )}
+                ))}
                 
-                <div className="flex justify-between items-center pt-3 mt-1 border-t border-zinc-200 dark:border-zinc-800 text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">
-                  <span>Total before Tax</span>
-                  <span>₹{pricing.net_taxable_amount.toLocaleString('en-IN')}</span>
+                <div className="flex justify-between items-center pt-5 mt-2 border-t border-zinc-200 dark:border-zinc-800 text-[12px] font-black text-zinc-950 dark:text-white uppercase tracking-[0.2em]">
+                  <span>Net Investment</span>
+                  <span className="tabular-nums">₹{pricing.net_taxable_amount.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase">
-                  <span>GST (Government Tax {Math.round((pricing.gst_amount / pricing.net_taxable_amount) * 100) || 0}%)</span>
-                  <span>₹{pricing.gst_amount.toLocaleString('en-IN')}</span>
+                <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                  <span>Tax Compliance (GST {Math.round((pricing.gst_amount / pricing.net_taxable_amount) * 100) || 0}%)</span>
+                  <span className="tabular-nums">₹{pricing.gst_amount.toLocaleString('en-IN')}</span>
                 </div>
               </div>
             </div>
@@ -245,16 +258,25 @@ export function PlanCard({
         <button 
           onClick={onSelect}
           className={`
-            w-full h-14 sm:h-16 rounded-2xl sm:rounded-3xl font-black uppercase text-xs tracking-[0.2em] transition-all mt-6 sm:mt-8 transform active:scale-[0.98] touch-manipulation
+            w-full h-16 sm:h-20 rounded-[28px] sm:rounded-[36px] font-black uppercase text-[11px] tracking-[0.3em] transition-all mt-8 sm:mt-12 transform active:scale-95 touch-manipulation shadow-2xl
             ${isSelected 
-              ? "bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 shadow-inner" 
-              : "bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white shadow-xl dark:shadow-blue-500/20 shadow-zinc-900/20"}
+              ? "bg-emerald-500 text-white shadow-emerald-500/30" 
+              : `bg-zinc-950 dark:bg-blue-600 hover:scale-[1.02] text-white ${theme.shadow}`}
           `}
         >
-          {isSelected ? "Selected ✓" : "Choose this Plan"}
+          {isSelected ? (
+            <span className="flex items-center justify-center gap-3">
+              <Check className="w-5 h-5" /> Package Selected
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-3">
+               Configure Package <ChevronRight className="w-4 h-4" />
+            </span>
+          )}
         </button>
 
       </div>
     </div>
   );
 }
+

@@ -1,8 +1,5 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
 import {
   ArrowRight,
   ShieldCheck,
@@ -11,58 +8,66 @@ import {
   Cpu,
   Layers,
   ChevronRight,
-  Shield,
   Star,
   Award,
   Globe,
-  ChevronDown,
 } from "lucide-react";
+import { FaqSection } from "@/components/landing/FaqSection";
+import type { Metadata } from "next";
 
-const faqs = [
-  {
-    q: "Is GST included in the quote price?",
-    a: "Yes. All our quotes include 18% GST. The price you see is the final CCTV with GST price you pay — no surprises.",
+export const metadata: Metadata = {
+  title: "Online CCTV Quotation & Installation in Jaipur | TEAM CCTV",
+  description: "Get an instant CCTV camera price with installation in Jaipur. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
+  keywords: ["CCTV Jaipur", "CCTV price with installation", "CCTV camera price Jaipur", "Online CCTV quotation", "TEAM CCTV"],
+  alternates: {
+    canonical: "https://teamcctv.com",
   },
-  {
-    q: "Does the price include installation?",
-    a: "Yes. Labour and wiring costs are calculated based on your property and included in the final CCTV camera price with installation.",
-  },
-  {
-    q: "How much does a 4-camera CCTV system cost in Jaipur?",
-    a: `Prices are dynamic. As of ${new Date().toLocaleString("en-US", { month: "short", year: "numeric" })}, a standard 4-camera CP Plus system with professional installation typically ranges from ₹12,000 to ₹18,000 depending on wiring length and camera resolution.`,
-  },
-  {
-    q: "Are your cameras STQC or BIS-ER compliant?",
-    a: "Yes. We strictly adhere to Indian security standards. We provide STQC-certified hardware for Government projects and BIS-ER compliant systems for retail and home installations. We only use trusted brands like CP Plus and Prama.",
-  },
-];
-
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border border-zinc-100 dark:border-zinc-800/60 rounded-[24px] overflow-hidden bg-zinc-50 dark:bg-zinc-900 shadow-inner">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left touch-manipulation"
-        aria-expanded={open}
-      >
-        <h4 className="text-sm sm:text-base font-black text-zinc-900 dark:text-white tracking-tight">{q}</h4>
-        <ChevronDown
-          className={`w-5 h-5 shrink-0 text-zinc-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      {open && (
-        <div className="px-6 pb-5">
-          <p className="text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed text-sm">{a}</p>
-        </div>
-      )}
-    </div>
-  );
-}
+};
 
 export default function LandingPage() {
+  // Structured Data for Local Business
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "TEAM CCTV Jaipur",
+    "image": "https://teamcctv.com/og-image.jpg",
+    "@id": "https://teamcctv.com",
+    "url": "https://teamcctv.com",
+    "telephone": "+91-9772699395",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Malviya Nagar",
+      "addressLocality": "Jaipur",
+      "postalCode": "302017",
+      "addressRegion": "RJ",
+      "addressCountry": "IN"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 26.8524,
+      "longitude": 75.8203
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "opens": "09:00",
+      "closes": "20:00"
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* 1. Elite Hero Hub */}
       <section className="relative px-4 sm:px-6 pt-10 pb-16 sm:pt-16 sm:pb-20 md:pt-24 md:pb-32 overflow-hidden">
@@ -70,31 +75,29 @@ export default function LandingPage() {
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-zinc-50 dark:bg-zinc-950">
           <div className="absolute top-[-10%] right-[-10%] w-[600px] sm:w-[800px] h-[600px] sm:h-[800px] bg-blue-200/40 dark:bg-blue-600/10 blur-[120px] rounded-full motion-safe:animate-pulse" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-indigo-200/20 dark:bg-indigo-600/5 blur-[100px] rounded-full" />
-          {/* Subtle Grid Pattern */}
           <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.07] bg-[radial-gradient(#000_1px,transparent_1px)] dark:bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:32px_32px]" />
         </div>
 
         <div className="max-w-7xl mx-auto flex flex-col items-center lg:items-start text-center lg:text-left relative">
-
-          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-2xl backdrop-blur-sm">
             <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-500 shrink-0" />
             <span>Jaipur&apos;s #1 CCTV Estimator</span>
             <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 hidden sm:block" />
             <span className="text-blue-600 dark:text-emerald-500 hidden sm:inline">100% Free &amp; Instant</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-9xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[0.9] sm:leading-[0.88] animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-9xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[0.9] sm:leading-[0.88]">
             High-Quality Security. <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">
               Starting in Jaipur.
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
+          <p className="text-base sm:text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed">
             Get an exact price for your CCTV setup in under 2 minutes. No technical knowledge needed — answer 4 simple questions and we&apos;ll do the rest.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-center w-full sm:w-auto animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-center w-full sm:w-auto">
             <Link
               href="/wizard"
               className="group relative inline-flex w-full sm:w-auto justify-center items-center gap-3 sm:gap-4 px-8 sm:px-12 py-4 sm:py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[28px] sm:rounded-[32px] font-black text-base sm:text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-1 sm:hover:-translate-y-2 active:scale-95 touch-manipulation"
@@ -102,16 +105,9 @@ export default function LandingPage() {
               Get CCTV Quotation Online
               <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-2 transition-transform duration-300" />
             </Link>
-
-            {/* Secondary label — hidden on mobile to keep hero clean */}
-            <div className="hidden sm:flex flex-col text-left px-4">
-              <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-widest">Instant Result</span>
-              <span className="text-sm font-bold text-zinc-900 dark:text-zinc-300">Ready in 2 minutes</span>
-            </div>
           </div>
 
-          {/* Inline trust strip — visible on mobile instead of the hidden secondary label */}
-          <div className="flex sm:hidden items-center gap-4 mt-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+          <div className="flex sm:hidden items-center gap-4 mt-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
             <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> STQC Certified</span>
             <span>·</span>
             <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> 500+ Installs</span>
@@ -124,16 +120,13 @@ export default function LandingPage() {
       {/* 2. Architecture Philosophy Section */}
       <section className="bg-zinc-950 py-16 sm:py-24 md:py-24 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-900 to-transparent" />
-
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 sm:gap-24 items-center">
-
             <div className="space-y-8 sm:space-y-12">
               <div>
                 <h2 className="text-blue-500 font-black text-xs uppercase tracking-[0.4em] mb-4 sm:mb-6">How It Works</h2>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tighter leading-tight">Smart Security <br /> Made for You.</h3>
               </div>
-
               <div className="space-y-6 sm:space-y-8">
                 {[
                   { icon: Target, title: "Perfect Coverage", desc: "We make sure every corner of your property is covered, leaving no blind spots for complete peace of mind." },
@@ -210,29 +203,14 @@ export default function LandingPage() {
             <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 group-hover:translate-x-2 transition-transform duration-300" />
           </Link>
 
-          {/* FAQ Section — accordion on mobile */}
-          <div className="mt-20 sm:mt-40 w-full max-w-5xl mx-auto text-left">
-            <div className="flex flex-col items-center mb-10 sm:mb-20">
-              <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4 text-center">Support &amp; Clarification</span>
-              <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter text-center">
-                Frequently Asked Questions
-              </h3>
-            </div>
-
-            {/* Mobile: accordion stack | Desktop: 2-column grid of accordions */}
-            <div className="grid md:grid-cols-2 gap-4 sm:gap-6 md:gap-10">
-              {faqs.map((faq, i) => (
-                <FaqItem key={i} q={faq.q} a={faq.a} />
-              ))}
-            </div>
-          </div>
+          <FaqSection />
 
           {/* Partner Trust Strip */}
           <div className="mt-16 sm:mt-20 flex flex-col items-center gap-6 sm:gap-8 w-full">
             <div className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Trusted Hardware Partners &amp; Verified Installs</div>
             <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-12 md:gap-20 grayscale opacity-60 dark:opacity-40">
-              <Image src="/partners/cpplus.png" alt="CP PLUS" width={120} height={40} className="h-6 md:h-8 w-auto object-contain" loading="lazy" />
-              <Image src="/partners/prama.png" alt="PRAMA" width={120} height={40} className="h-6 md:h-8 w-auto object-contain" loading="lazy" />
+              <Image src="/partners/cpplus.png" alt="CP PLUS" width={120} height={40} className="h-6 md:h-8 w-auto object-contain" />
+              <Image src="/partners/prama.png" alt="PRAMA" width={120} height={40} className="h-6 md:h-8 w-auto object-contain" />
               <div className="flex items-center gap-3">
                 <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" />
                 <span className="font-black text-lg sm:text-xl tracking-tight uppercase">BIS-ER</span>
@@ -247,8 +225,6 @@ export default function LandingPage() {
               <span>Jaipur&apos;s Preferred CCTV Platform | 500+ Properties Secured</span>
             </div>
           </div>
-
-          {/* Bottom spacer for mobile sticky CTA bar */}
           <div className="h-20 md:hidden" aria-hidden="true" />
         </div>
       </section>

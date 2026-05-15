@@ -26,7 +26,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Database,
-  Building2
+  Building2,
+  HeartPulse
 } from "lucide-react";
 
 // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -56,6 +57,7 @@ const NAV_GROUPS = [
       { name: "Products",             href: "/admin/products",      icon: Package },
       { name: "Data Management",      href: "/admin/products/bulk", icon: Database },
       { name: "Compatibility",        href: "/admin/compatibility", icon: Link2 },
+      { name: "Catalog Health",       href: "/admin/products/health", icon: HeartPulse },
       { name: "Live Pricing",         href: "/admin/pricing",       icon: IndianRupee },
       { name: "Quotation Matrices",   href: "/admin/pricing/matrices", icon: Grid3x3 },
       { name: "Rules & Add-ons",      href: "/admin/rules",         icon: Zap },
@@ -74,6 +76,7 @@ const NAV_GROUPS = [
     label: "System",
     items: [
       { name: "Settings", href: "/admin/settings", icon: Settings },
+      { name: "Audit Logs", href: "/admin/reports/logs", icon: ShieldCheck },
     ]
   }
 ];

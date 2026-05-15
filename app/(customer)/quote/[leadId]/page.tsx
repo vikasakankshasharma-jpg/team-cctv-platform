@@ -91,9 +91,20 @@ export default async function QuoteResultPage({
       lead = { id: leadSnap.id, ...leadSnap.data() } as Lead;
     }
 
-    // Populate Pricing Components
-    products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-    addons = addonsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Addon));
+    // Populate Pricing Components (Masked for Client Security)
+    products = productsSnap.docs.map(doc => {
+      const data = doc.data() as Product;
+      // STRIP SENSITIVE FIELDS: Never expose internal costs/margins to the browser
+      const { base_cost, margin_percentage, ...publicData } = data;
+      return { id: doc.id, ...publicData } as Product;
+    });
+
+    addons = addonsSnap.docs.map(doc => {
+      const data = doc.data() as Addon;
+      const { base_cost, ...publicData } = data;
+      return { id: doc.id, ...publicData } as Addon;
+    });
+    
     addon_rules = rulesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as AddonRule));
     
     if (settingsSnap.exists) {

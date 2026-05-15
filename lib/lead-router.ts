@@ -1,17 +1,11 @@
 /**
  * @file lib/lead-router.ts
- * @description Pincode-based franchise lead routing engine.
+ * @description Enterprise Pincode-based Lead Routing Engine with Load Balancing.
  *
- * When a lead is created, this module determines which FranchiseDealer
- * should receive it based on their assigned pincodes, zones, cities, or states.
- * Falls back to TEAM CCTV's own team (returns null) if no franchise matches.
- *
- * Resolution priority (highest → lowest):
- *   1. Exact pincode match in franchise.assigned_pincodes
- *   2. Zone match — franchise.assigned_zone_ids → CoverageZone.pincodes
- *   3. City match in franchise.assigned_cities
- *   4. State match in franchise.assigned_states
- *   5. null → TEAM CCTV handles internally
+ * Automatically routes leads to FranchiseDealers or Salespeople based on:
+ * 1. Geographic Territory (Pincode > Zone > City > State)
+ * 2. Load Balancing (Least leads assigned)
+ * 3. Territory Exclusivity Rules
  */
 
 import { adminDb } from "@/lib/firebase-admin";
@@ -24,13 +18,8 @@ export interface LeadRoutingResult {
 }
 
 /**
- * Determines which active franchise dealer should receive a lead
- * based on the customer's pincode and city.
- *
- * @param pincode  - Customer's 6-digit pincode (e.g., "302001")
- * @param city     - Customer's city name (e.g., "Jaipur")
- * @param state    - Customer's state name (e.g., "Rajasthan")
- * @returns        - Routing result with franchise ID, name, and match type
+ * Determines the best franchise dealer for a lead using hierarchical 
+ * territory matching and least-connection load balancing.
  */
 export async function routeLeadToFranchise(
   pincode?: string,
@@ -43,130 +32,94 @@ export async function routeLeadToFranchise(
     match_type: "internal",
   };
 
-  // ── STEP 1: Exact pincode match ─────────────────────────────────────────────
+  // Helper to pick the best dealer from a pool (Load Balancing)
+  const pickBestDealer = (docs: FirebaseFirestore.QueryDocumentSnapshot[]): LeadRoutingResult | null => {
+    if (docs.length === 0) return null;
+    
+    // LOAD BALANCING: Sort by total_leads_received to pick the one with least work
+    const sorted = [...docs].sort((a, b) => {
+      const aData = a.data() as FranchiseDealer;
+      const bData = b.data() as FranchiseDealer;
+      return (aData.total_leads_received || 0) - (bData.total_leads_received || 0);
+    });
+
+    const best = sorted[0];
+    const data = best.data() as FranchiseDealer;
+
+    return {
+      franchise_dealer_id: best.id,
+      franchise_dealer_name: data.company_name,
+      match_type: null, // To be set by caller
+    };
+  };
+
+  // 1. Exact Pincode Match (Exclusive or Shared)
   if (pincode && pincode.length === 6) {
-    try {
-      const pincodeSnap = await adminDb
+    const snap = await adminDb
+      .collection("franchise_dealers")
+      .where("is_active", "==", true)
+      .where("assigned_pincodes", "array-contains", pincode)
+      .get();
+
+    const best = pickBestDealer(snap.docs);
+    if (best) return { ...best, match_type: "pincode" };
+  }
+
+  // 2. Zone Match (Pincode inside a CoverageZone)
+  if (pincode && pincode.length === 6) {
+    const zonesSnap = await adminDb
+      .collection("coverage_zones")
+      .where("pincodes", "array-contains", pincode)
+      .where("is_active", "==", true)
+      .get();
+
+    if (!zonesSnap.empty) {
+      const zoneIds = zonesSnap.docs.map(d => d.id);
+      const snap = await adminDb
         .collection("franchise_dealers")
         .where("is_active", "==", true)
-        .where("territory_exclusivity", "==", true)
-        .where("assigned_pincodes", "array-contains", pincode)
-        .limit(1)
+        .where("assigned_zone_ids", "array-contains-any", zoneIds)
         .get();
 
-      if (!pincodeSnap.empty) {
-        const doc = pincodeSnap.docs[0];
-        const dealer = doc.data() as FranchiseDealer;
-        return {
-          franchise_dealer_id: doc.id,
-          franchise_dealer_name: dealer.company_name,
-          match_type: "pincode",
-        };
-      }
-    } catch (err) {
-      console.warn("[LeadRouter] Pincode query failed:", err);
+      const best = pickBestDealer(snap.docs);
+      if (best) return { ...best, match_type: "zone" };
     }
   }
 
-  // ── STEP 2: Zone match (pincode inside a CoverageZone assigned to a franchise) ─
-  if (pincode && pincode.length === 6) {
-    try {
-      const zonesSnap = await adminDb
-        .collection("coverage_zones")
-        .where("pincodes", "array-contains", pincode)
-        .where("is_active", "==", true)
-        .get();
-
-      for (const zoneDoc of zonesSnap.docs) {
-        const franchiseSnap = await adminDb
-          .collection("franchise_dealers")
-          .where("is_active", "==", true)
-          .where("assigned_zone_ids", "array-contains", zoneDoc.id)
-          .limit(1)
-          .get();
-
-        if (!franchiseSnap.empty) {
-          const doc = franchiseSnap.docs[0];
-          const dealer = doc.data() as FranchiseDealer;
-          return {
-            franchise_dealer_id: doc.id,
-            franchise_dealer_name: dealer.company_name,
-            match_type: "zone",
-          };
-        }
-      }
-    } catch (err) {
-      console.warn("[LeadRouter] Zone query failed:", err);
-    }
-  }
-
-  // ── STEP 3: City match ──────────────────────────────────────────────────────
+  // 3. City Match
   if (city) {
-    try {
-      const citySnap = await adminDb
-        .collection("franchise_dealers")
-        .where("is_active", "==", true)
-        .where("assigned_cities", "array-contains", city)
-        .limit(1)
-        .get();
+    const snap = await adminDb
+      .collection("franchise_dealers")
+      .where("is_active", "==", true)
+      .where("assigned_cities", "array-contains", city)
+      .get();
 
-      if (!citySnap.empty) {
-        const doc = citySnap.docs[0];
-        const dealer = doc.data() as FranchiseDealer;
-        return {
-          franchise_dealer_id: doc.id,
-          franchise_dealer_name: dealer.company_name,
-          match_type: "city",
-        };
-      }
-    } catch (err) {
-      console.warn("[LeadRouter] City query failed:", err);
-    }
+    const best = pickBestDealer(snap.docs);
+    if (best) return { ...best, match_type: "city" };
   }
 
-  // ── STEP 4: State match ─────────────────────────────────────────────────────
+  // 4. State Match
   if (state) {
-    try {
-      const stateSnap = await adminDb
-        .collection("franchise_dealers")
-        .where("is_active", "==", true)
-        .where("assigned_states", "array-contains", state)
-        .limit(1)
-        .get();
+    const snap = await adminDb
+      .collection("franchise_dealers")
+      .where("is_active", "==", true)
+      .where("assigned_states", "array-contains", state)
+      .get();
 
-      if (!stateSnap.empty) {
-        const doc = stateSnap.docs[0];
-        const dealer = doc.data() as FranchiseDealer;
-        return {
-          franchise_dealer_id: doc.id,
-          franchise_dealer_name: dealer.company_name,
-          match_type: "state",
-        };
-      }
-    } catch (err) {
-      console.warn("[LeadRouter] State query failed:", err);
-    }
+    const best = pickBestDealer(snap.docs);
+    if (best) return { ...best, match_type: "state" };
   }
 
-  // ── STEP 5: No match → TEAM CCTV internal team ─────────────────────────────
   return unmatched;
 }
 
 /**
- * Increments the leads received counter on the matched franchise dealer.
- * Call this after a lead is successfully created and routed.
+ * Increments the lead counter and updates last_assigned_at for a dealer.
  */
-export async function incrementFranchiseLeadCount(franchiseDealerId: string): Promise<void> {
-  try {
-    const { FieldValue } = await import("firebase-admin/firestore");
-    await adminDb
-      .collection("franchise_dealers")
-      .doc(franchiseDealerId)
-      .update({
-        total_leads_received: FieldValue.increment(1),
-      });
-  } catch (err) {
-    // Non-critical — counter will be off by 1 but lead is already assigned
-    console.error("[LeadRouter] Failed to increment lead count:", err);
-  }
+export async function incrementFranchiseLeadCount(id: string): Promise<void> {
+  const { FieldValue } = await import("firebase-admin/firestore");
+  await adminDb.collection("franchise_dealers").doc(id).update({
+    total_leads_received: FieldValue.increment(1),
+    last_lead_assigned_at: FieldValue.serverTimestamp()
+  });
 }

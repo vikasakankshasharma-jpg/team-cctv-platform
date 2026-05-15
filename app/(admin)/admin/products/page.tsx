@@ -6,6 +6,7 @@ import { Loader2, Plus, ShieldCheck, ArrowLeft, Save, X, Package, IndianRupee, B
 import Link from "next/link";
 import { toast } from "sonner";
 import { ProductInventory } from "@/components/admin/ProductInventory";
+import { ProductsSkeleton } from "@/components/admin/ProductsSkeleton";
 import { BackButton } from "@/components/admin/BackButton";
 
 export default function AdminProductsPage() {
@@ -175,13 +176,7 @@ export default function AdminProductsPage() {
       {/* ── Main Content Area ───────────────────────────────────────────── */}
       <main className="max-w-[1600px] mx-auto px-8 py-12">
         {isLoading ? (
-          <div className="flex flex-col items-center gap-6 py-40">
-            <div className="relative">
-               <div className="w-16 h-16 border-4 border-zinc-100 dark:border-zinc-800 rounded-full" />
-               <div className="w-16 h-16 border-4 border-t-zinc-900 dark:border-t-white rounded-full animate-spin absolute inset-0" />
-            </div>
-            <p className="text-[11px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.4em] animate-pulse">Syncing Master Library…</p>
-          </div>
+          <ProductsSkeleton />
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <ProductInventory

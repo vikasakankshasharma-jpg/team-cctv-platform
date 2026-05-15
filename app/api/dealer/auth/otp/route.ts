@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb, serverTimestamp } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { generateDealerOtp, dealerOtpExpiresAt } from "@/lib/auth-dealer";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    // Enterprise Security Boundary: Rate Limiting
+    const limit = await rateLimit(request, 5, 60_000);
+    if (!limit.success) {
+      return NextResponse.json({ error: "Too many requests. Please try again in a minute." }, { status: 429 });
+    }
+
     const body = await request.json();
     const { mobile_number, action, otp } = body;
 

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Join the TEAM CCTV Franchise Network | Grow Your CCTV Business",
-  description: "Get high-quality, verified CCTV leads in your territory. Join India's fastest growing franchise network for security system integrators.",
+  description: "Get high-quality, verified CCTV leads in your territory. Join India&apos;s fastest growing franchise network for security system integrators.",
 };
 
 export default function ForDealersPage() {
@@ -11,7 +11,7 @@ export default function ForDealersPage() {
     {
       icon: <MapPin className="w-6 h-6" />,
       title: "Territory Exclusivity",
-      description: "We route leads based on pincodes. When an inquiry comes from your area, it's exclusively yours."
+      description: "We route leads based on pincodes. When an inquiry comes from your area, it&apos;s exclusively yours."
     },
     {
       icon: <Users className="w-6 h-6" />,
@@ -48,7 +48,7 @@ export default function ForDealersPage() {
             Scale Your CCTV Business <br /> <span className="text-blue-600">With Verified Territory Leads</span>
           </h1>
           <p className="text-lg text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto mb-10 font-medium">
-            Join India's most advanced franchise network for security integrators. Get a ready-to-use digital platform, territory exclusivity, and high-conversion leads.
+            Join India&apos;s most advanced franchise network for security integrators. Get a ready-to-use digital platform, territory exclusivity, and high-conversion leads.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link 

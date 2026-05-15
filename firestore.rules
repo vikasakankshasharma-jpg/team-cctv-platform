@@ -45,6 +45,11 @@ service cloud.firestore {
       return isAuthenticated() && (userRole() == "super_admin" || userRole() == "sales_staff");
     }
 
+    /** Returns true if the user is a franchise dealer */
+    function isDealer() {
+      return isAuthenticated() && userRole() == "franchise_dealer";
+    }
+
     /** Returns true if the user is a partner */
     function isPartner() {
       return isAuthenticated() && userRole() == "partner";
@@ -85,7 +90,8 @@ service cloud.firestore {
     // ──────────────────────────────────────────
 
     match /leads/{leadId} {
-      allow read: if isAdmin() || (isAuthenticated() && resource.data.firebase_uid == request.auth.uid);
+      allow get: if isAdmin() || (isAuthenticated() && resource.data.firebase_uid == request.auth.uid);
+      allow list: if isAdmin(); 
       allow create: if false; // Created via backend API route only
       allow update: if isAdmin()
                        || (isAuthenticated() && resource.data.firebase_uid == request.auth.uid
@@ -208,13 +214,16 @@ service cloud.firestore {
 
     // ──────────────────────────────────────────
     // /otp_verifications/{docId}
-    // Internal use only — if custom OTP fallback is implemented.
-    // No direct client access allowed; managed exclusively via API routes.
+    // /dealer_otp_verifications/{docId}
+    // Internal use only — managed exclusively via API routes.
     // ──────────────────────────────────────────
 
     match /otp_verifications/{docId} {
-      allow read: if false;
-      allow write: if false;
+      allow read, write: if false;
+    }
+
+    match /dealer_otp_verifications/{docId} {
+      allow read, write: if false;
     }
 
     // ──────────────────────────────────────────
@@ -297,6 +306,25 @@ service cloud.firestore {
                      exists(/databases/$(database)/documents/franchise_dealers/$(resource.data.franchise_dealer_id)) &&
                      get(/databases/$(database)/documents/franchise_dealers/$(resource.data.franchise_dealer_id)).data.firebase_uid == request.auth.uid);
       allow create, update, delete: if isSuperAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // /admins/{adminId}
+    // Only super_admins can manage the admin list.
+    // ──────────────────────────────────────────
+    match /admins/{adminId} {
+      allow read, write: if isSuperAdmin();
+    }
+
+    // ──────────────────────────────────────────
+    // /audit_logs/{logId}
+    // Read-only for super_admins (for compliance).
+    // Write-only (create only) for system via API (no direct client creation).
+    // ──────────────────────────────────────────
+    match /audit_logs/{logId} {
+      allow read: if isSuperAdmin();
+      allow create: if false; // Audit logs must be created via server-side Admin SDK
+      allow update, delete: if false;
     }
 
   }
