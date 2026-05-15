@@ -9,7 +9,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "seed:wizard": "ts-node --project tsconfig.scripts.json --transpile-only scripts/seed-wizard-steps.ts",
+    "seed:products": "ts-node --project tsconfig.scripts.json --transpile-only scripts/seed-cctv-products.ts",
+    "seed:check": "curl -s \"http://localhost:3000/api/debug/wizard-health?token=teamcctv-health-check\" | npx -y json"
   },
   "dependencies": {
     "@cashfreepayments/cashfree-js": "^1.0.7",
@@ -52,11 +55,13 @@
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.6.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "pdfjs-dist": "^5.7.284",
     "pdfkit": "^0.18.0",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

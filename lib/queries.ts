@@ -195,7 +195,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step_res",
       title: "Camera Quality",
       description: "What image quality do you need?",
-      position: 11,
+      position: 2,
       is_active: true,
       created_at: null,
       questions: [
@@ -217,7 +217,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step2",
       title: "Mounting Surface",
       description: "What type of surfaces will the cameras be mounted on?",
-      position: 11,
+      position: 4,
       is_active: true,
       created_at: null,
       questions: [
@@ -304,7 +304,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step4",
       title: "Camera Count",
       description: "How many cameras do you need?",
-      position: 11,
+      position: 5,
       is_active: true,
       created_at: null,
       questions: [
@@ -322,7 +322,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step5",
       title: "Technology",
       description: "Which camera technology do you prefer?",
-      position: 11,
+      position: 6,
       is_active: true,
       created_at: null,
       questions: [
@@ -343,7 +343,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step6",
       title: "Storage",
       description: "How far back do you need to be able to watch old recordings?",
-      position: 11,
+      position: 7,
       is_active: true,
       created_at: null,
       questions: [
@@ -366,7 +366,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step7",
       title: "Features",
       description: "Customize your recording capabilities.",
-      position: 11,
+      position: 8,
       is_active: true,
       created_at: null,
       questions: [
@@ -390,7 +390,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step8",
       title: "Wiring",
       description: "Is your property already wired for CCTV?",
-      position: 11,
+      position: 9,
       is_active: true,
       created_at: null,
       questions: [
@@ -411,7 +411,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
       id: "fallback_step9",
       title: "Timeline",
       description: "How soon do you need this system installed?",
-      position: 11,
+      position: 10,
       is_active: true,
       created_at: null,
       questions: [
@@ -447,7 +447,7 @@ function getDefaultFallbackWizard(): WizardStep[] {
           options: [
             { id: "fopt_b_rec", label: "Unsure, please recommend the best value", value: "recommend", position: 0 },
             { id: "fopt_b_cp", label: "CP Plus", value: "cpplus", position: 1 },
-            { id: "fopt_b_hik", label: "Hikvision", value: "hikvision", position: 2 },
+            { id: "fopt_b_prama", label: "Prama (Hikvision Technology)", value: "prama", position: 2 },
             { id: "fopt_b_dah", label: "Dahua", value: "dahua", position: 3 },
           ]
         }
