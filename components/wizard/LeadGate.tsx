@@ -266,7 +266,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
         cabling_done: payload.cabling_done
       });
 
-      router.push(`/quote/${resData.id}`);
+      router.push(`/quote/${resData.data.id}`);
     } catch (error) {
       const err = error as Error;
       setError(err.message);

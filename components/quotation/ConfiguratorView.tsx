@@ -342,7 +342,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       });
 
       if (!res.ok) throw new Error("Failed to save quote");
-      const { id: generatedQuoteId } = await res.json();
+      const resData = await res.json();
+      const generatedQuoteId = resData.data.id;
       setSavedQuoteId(generatedQuoteId);
       
       if (isAccepted) {
