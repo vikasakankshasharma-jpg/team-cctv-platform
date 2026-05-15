@@ -1,4 +1,8 @@
+"use server";
 import { createAuditLog } from "@/lib/audit-logs";
+import { requireAdmin } from "@/lib/auth-server";
+import { adminDb } from "@/lib/firebase-admin";
+import type { Product } from "@/types";
 
 export async function bulkUpdateProducts(products: Partial<Product>[]) {
   const session = await requireAdmin();

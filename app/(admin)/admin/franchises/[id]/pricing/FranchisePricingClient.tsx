@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Save, ArrowLeft, Info, AlertTriangle, ShieldCheck, Lock, DollarSign, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import type { FranchiseDealer, FranchisePricingOverride, Product } from "@/types";

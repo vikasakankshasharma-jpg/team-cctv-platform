@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   XCircle,
   FileText,
-  CreditCard
+  CreditCard,
+  Zap
 } from "lucide-react";
 import type { FranchiseDealer } from "@/types";
 
