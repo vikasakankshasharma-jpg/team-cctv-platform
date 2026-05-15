@@ -327,10 +327,16 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
   
   // Filter by features
   if (selection.requested_features?.length) {
-    pool = pool.filter(cam => {
-      const feats = (cam.features || []).map(f => f.toLowerCase());
-      return selection.requested_features!.every(rf => feats.includes(rf.toLowerCase()));
+    const filteredPool = pool.filter(cam => {
+      const feats = (cam.features || []).map(f => f.toLowerCase().trim());
+      return selection.requested_features!.every(rf => feats.includes(rf.toLowerCase().trim()));
     });
+    
+    // Fallback: If strict feature matching eliminates ALL cameras, 
+    // drop the filter so we don't return an invalid (camera-less) quote.
+    if (filteredPool.length > 0) {
+       pool = filteredPool;
+    }
   }
 
   // Always sort ascending by price for deterministic results
