@@ -166,7 +166,7 @@ export async function getWizardConfig() {
   }
 }
 
-function getDefaultFallbackWizard(): WizardStep[] {
+export function getDefaultFallbackWizard(): WizardStep[] {
   return [
     {
       id: "fallback_step1",

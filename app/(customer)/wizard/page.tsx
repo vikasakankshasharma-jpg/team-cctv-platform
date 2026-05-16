@@ -1,6 +1,6 @@
 import { WizardClient } from "@/components/wizard/WizardClient";
 import type { Metadata } from "next";
-import { getWizardConfig, getSettingsConfig } from "@/lib/queries";
+import { getWizardConfig, getSettingsConfig, getDefaultFallbackWizard } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "CCTV Setup Wizard | Custom Security Planning",
@@ -13,10 +13,24 @@ export const metadata: Metadata = {
 };
 
 export default async function WizardPage() {
-  const [wizardRes, settingsRes] = await Promise.all([
-    getWizardConfig(),
-    getSettingsConfig()
-  ]);
+  let wizardRes;
+  let settingsRes;
+
+  try {
+    const [w, s] = await Promise.all([
+      getWizardConfig(),
+      getSettingsConfig()
+    ]);
+    wizardRes = w;
+    settingsRes = s;
+
+    if (!wizardRes || !wizardRes.steps || wizardRes.steps.length === 0) {
+      wizardRes = { steps: getDefaultFallbackWizard() };
+    }
+  } catch (error) {
+    wizardRes = { steps: getDefaultFallbackWizard() };
+    settingsRes = null;
+  }
 
   return <WizardClient initialSteps={wizardRes?.steps} initialSettings={settingsRes} />;
 }
