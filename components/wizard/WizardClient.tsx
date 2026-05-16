@@ -8,12 +8,16 @@ import { OptionCard } from "@/components/wizard/OptionCard";
 import { LeadGate } from "@/components/wizard/LeadGate";
 import { ArrowLeft, ArrowRight, ShieldAlert, Loader2, ShieldCheck, Lock, CheckCircle2, Home } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
+import type { WizardQuestion, WizardOption } from "@/types";
 
 export function WizardClient({ initialSteps, initialSettings }: { initialSteps?: any[], initialSettings?: any }) {
   const router = useRouter();
   const { steps, is_loaded, current_step_index, answers, setSteps, setAnswer, nextStep, previousStep } = useWizardStore();
   const isFirstStep = current_step_index === 0;
-  const [loading, setLoading] = useState(!is_loaded && (!initialSteps || initialSteps.length === 0));
+
+  // Always start loading=true so we never render the error state before the
+  // Zustand store has been hydrated from initialSteps (render-order race fix).
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showGate, setShowGate] = useState(false);
   const [settings, setSettings] = useState<any>(initialSettings || null);
@@ -26,14 +30,17 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     toastTimer.current = setTimeout(() => setToast(null), 2500);
   };
 
-  // Initialize from props if not loaded
+  // Initialize from SSR props — runs after first paint, sets store then clears loading
   useEffect(() => {
-    if (!is_loaded && initialSteps && initialSteps.length > 0) {
+    if (is_loaded) {
+      // Already hydrated from sessionStorage (returning visitor mid-wizard)
+      setLoading(false);
+    } else if (initialSteps && initialSteps.length > 0) {
+      // Fresh visit: load the server-rendered steps into the store
       setSteps(initialSteps);
       setLoading(false);
-    } else if (is_loaded) {
-      setLoading(false);
     }
+    // If neither, the fallback fetch effect below will handle it
   }, [is_loaded, initialSteps, setSteps]);
 
   // Fallback to fetch if props aren't available (e.g. client-side navigation)
@@ -62,6 +69,10 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     loadWizard();
   }, [is_loaded, initialSteps, setSteps]);
 
+  // Use store steps if loaded, otherwise fall back to SSR initialSteps while the
+  // store hydrates — prevents the error flash before the useEffect runs.
+  const effectiveSteps = steps.length > 0 ? steps : (initialSteps || []);
+
   if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] bg-white dark:bg-zinc-950">
@@ -77,7 +88,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     );
   }
 
-  if (error || steps.length === 0) {
+  if (error || effectiveSteps.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] px-6 text-center bg-white dark:bg-zinc-950">
         <div className="p-5 bg-red-50 dark:bg-red-900/20 rounded-3xl mb-6">
@@ -94,8 +105,8 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     );
   }
 
-  const currentStep = steps[current_step_index];
-  const isLastStep = current_step_index === steps.length - 1;
+  const currentStep = effectiveSteps[current_step_index] || effectiveSteps[0];
+  const isLastStep = current_step_index === effectiveSteps.length - 1;
 
   // Handle Option Click
   const handleOptionSelect = (questionId: string, optionValue: string, isMulti: boolean) => {
@@ -114,7 +125,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       setAnswer(questionId, optionValue);
       
       // UX enhancement: Smart Auto-Navigate
-      const qIndex = currentStep.questions?.findIndex(q => q.id === questionId) ?? -1;
+      const qIndex = currentStep.questions?.findIndex((q: WizardQuestion) => q.id === questionId) ?? -1;
       const isLastQuestionInStep = qIndex === (currentStep.questions?.length || 0) - 1;
       
       if (!isLastQuestionInStep) {
@@ -126,7 +137,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       } else {
         // Last question in the step: verify all required are answered before auto-advancing to next step
         let isValid = true;
-        currentStep.questions?.forEach((q) => {
+        currentStep.questions?.forEach((q: WizardQuestion) => {
           if (q.is_required) {
             const ans = newAnswers[q.id!];
             if (!ans || (Array.isArray(ans) && ans.length === 0)) {
@@ -152,7 +163,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
   // Validate step before advancing
   const handleContinue = () => {
     let isValid = true;
-    currentStep.questions?.forEach((q) => {
+    currentStep.questions?.forEach((q: WizardQuestion) => {
       if (q.is_required) {
         const ans = answers[q.id!];
         if (!ans || (Array.isArray(ans) && ans.length === 0)) {
@@ -195,11 +206,11 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       {/* Blurred overlay if Gate is active */}
       <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 pt-6 pb-48 sm:pb-56 sm:pt-12 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
         
-        <ProgressBar currentStepIndex={current_step_index} totalSteps={steps.length} />
+        <ProgressBar currentStepIndex={current_step_index} totalSteps={effectiveSteps.length} />
 
         <div className="mt-6 sm:mt-16 mb-6 sm:mb-12">
           <span className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em] bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full">
-              Question {current_step_index + 1} of {steps.length}
+              Question {current_step_index + 1} of {effectiveSteps.length}
           </span>
         </div>
         <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-tight mt-4 sm:mt-6 mb-2">{currentStep.title}</h1>
@@ -208,7 +219,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         )}
 
         <div key={current_step_index} className="space-y-16 wizard-step-enter mb-12">
-          {currentStep.questions?.map((q) => {
+          {currentStep.questions?.map((q: WizardQuestion) => {
             if (q.input_type === "number") {
               const currentVal = (answers[q.id!] as string) || "";
               return (
@@ -290,7 +301,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-0">
-                  {q.options?.map((opt) => {
+                  {q.options?.map((opt: WizardOption) => {
                     const isSelected = isMulti 
                       ? (currentAns as string[]).includes(opt.value) 
                       : currentAns === opt.value;
