@@ -30,9 +30,9 @@ export default function LandingPage() {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": "TEAM CCTV Jaipur",
-    "image": "https://teamcctv.com/og-image.jpg",
-    "@id": "https://teamcctv.com",
-    "url": "https://teamcctv.com",
+    "image": "https://cctvquotation.com/og-image.jpg",
+    "@id": "https://cctvquotation.com",
+    "url": "https://cctvquotation.com",
     "telephone": "+91-9772699395",
     "address": {
       "@type": "PostalAddress",
