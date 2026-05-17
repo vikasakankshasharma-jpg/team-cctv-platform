@@ -106,7 +106,7 @@ export default function CityLandingPage({
                 <div className="bg-white dark:bg-zinc-900 p-6 sm:p-10 rounded-[28px] sm:rounded-[40px] shadow-xl border border-zinc-100 dark:border-zinc-800">
                   <div className="inline-block px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-6">Residential</div>
                   <h3 className="text-2xl font-black mb-2">Standard 4-Camera Setup</h3>
-                  <div className="text-4xl font-black text-zinc-900 dark:text-white mb-6">₹12,000 <span className="text-xl text-zinc-400 font-medium">- ₹18,000</span></div>
+                  <div className="text-4xl font-black text-zinc-900 dark:text-white mb-6">₹18,000 <span className="text-xl text-zinc-400 font-medium">- ₹28,000</span></div>
                   <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">Perfect for independent houses and small shops. Includes CP Plus cameras, DVR, wiring, and professional installation.</p>
                   <ul className="space-y-4 mb-8">
                      {["4x 2MP/5MP STQC Cameras", "4-Channel DVR + HDD", "Power Supply & Connectors", "Complete Installation Labor"].map((item, i) => (
