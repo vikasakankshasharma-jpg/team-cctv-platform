@@ -16,6 +16,7 @@ import FaqJsonLd from "@/components/landing/FaqJsonLd";
 import type { Metadata } from "next";
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export const metadata: Metadata = {
   title: "Online CCTV Quotation & Installation in Jaipur | TEAM CCTV",
   description: "Get an instant CCTV camera price with installation in Jaipur. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
