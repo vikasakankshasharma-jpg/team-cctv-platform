@@ -21,15 +21,20 @@ export const faqs = [
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   return (
-    <details className="group border border-zinc-100 dark:border-zinc-800/60 rounded-[24px] overflow-hidden bg-zinc-50 dark:bg-zinc-900 shadow-inner marker:content-[''] [&::-webkit-details-marker]:hidden">
-      <summary className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left cursor-pointer touch-manipulation select-none list-none">
+    <details className="group border border-zinc-100 dark:border-zinc-800/60 rounded-[24px] bg-zinc-50 dark:bg-zinc-900 shadow-inner marker:content-[''] [&::-webkit-details-marker]:hidden">
+      <summary className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left cursor-pointer touch-manipulation select-none list-none outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-[24px]">
         <h4 className="text-sm sm:text-base font-black text-zinc-900 dark:text-white tracking-tight">{q}</h4>
         <ChevronDown
           className="w-5 h-5 shrink-0 text-zinc-400 transition-transform duration-300 group-open:rotate-180"
         />
       </summary>
-      <div className="px-6 pb-5 animate-in slide-in-from-top-2 fade-in duration-200">
-        <p className="text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed text-sm">{a}</p>
+      {/* Content wrapper with pure CSS max-height transition for smooth open/close */}
+      <div className="grid grid-rows-[0fr] group-open:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out px-6">
+        <div className="overflow-hidden">
+          <p className="text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed text-sm pb-6">
+            {a}
+          </p>
+        </div>
       </div>
     </details>
   );
