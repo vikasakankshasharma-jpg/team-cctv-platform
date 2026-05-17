@@ -15,6 +15,16 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      // ── Explicit Cache Bypass for Root Route ─────────────────────────────
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
       // ── Security headers on all routes ───────────────────────────────────
       {
         source: '/(.*)',
