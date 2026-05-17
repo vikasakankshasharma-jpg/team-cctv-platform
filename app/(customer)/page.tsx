@@ -216,7 +216,7 @@ export default function LandingPage() {
                 { q: "How much does a 4-camera CCTV system cost in Jaipur?", a: "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation." },
                 { q: "Are your cameras STQC or BIS-ER compliant?", a: "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification and meet STQC standards — suitable for government tenders, housing societies, and commercial projects." },
               ].map((item, i) => (
-                <details key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", marginBottom: 12 }}>
+                <details key={i} open style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", marginBottom: 12 }}>
                   <summary style={{ color: "rgba(255,255,255,0.85)", fontSize: 16, fontWeight: 500, cursor: "pointer", padding: "14px 0", listStyle: "none" }}>{item.q}</summary>
                   <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, lineHeight: 1.7, padding: "0 0 14px" }}>{item.a}</p>
                 </details>
