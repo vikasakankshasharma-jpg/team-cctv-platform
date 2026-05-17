@@ -1,60 +1,40 @@
-import { ChevronDown } from "lucide-react";
-
 export const faqs = [
   {
     q: "Is GST included in the quote price?",
-    a: "Yes. All our quotes include 18% GST. The price you see is the final CCTV with GST price you pay — no surprises.",
+    a: "Yes. All TEAM CCTV quotations include 18% GST with no hidden charges. The price covers cameras, DVR/NVR, HDD, cabling, and professional installation — everything.",
   },
   {
     q: "Does the price include installation?",
-    a: "Yes. Labour and wiring costs are calculated based on your property and included in the final CCTV camera price with installation.",
+    a: "Yes. Every quotation includes full professional installation — camera mounting, cable routing, DVR/NVR setup, mobile app configuration, and a complete system demonstration.",
   },
   {
     q: "How much does a 4-camera CCTV system cost in Jaipur?",
-    a: `Prices are dynamic. As of ${new Date().toLocaleString("en-US", { month: "short", year: "numeric" })}, a standard 4-camera CP Plus system with professional installation typically ranges from ₹12,000 to ₹18,000 depending on wiring length and camera resolution.`,
+    a: "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation.",
   },
   {
     q: "Are your cameras STQC or BIS-ER compliant?",
-    a: "Yes. We strictly adhere to Indian security standards. We provide STQC-certified hardware for Government projects and BIS-ER compliant systems for retail and home installations. We only use trusted brands like CP Plus and Prama.",
+    a: "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification and meet STQC standards — suitable for government tenders, housing societies, and commercial projects.",
   },
 ];
 
-function FaqItem({ q, a }: { q: string; a: string }) {
-  return (
-    <details className="group border border-zinc-100 dark:border-zinc-800/60 rounded-[24px] bg-zinc-50 dark:bg-zinc-900 shadow-inner marker:content-[''] [&::-webkit-details-marker]:hidden">
-      <summary className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left cursor-pointer touch-manipulation select-none list-none outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-[24px]">
-        <h4 className="text-sm sm:text-base font-black text-zinc-900 dark:text-white tracking-tight">{q}</h4>
-        <ChevronDown
-          className="w-5 h-5 shrink-0 text-zinc-400 transition-transform duration-300 group-open:rotate-180"
-        />
-      </summary>
-      {/* Content wrapper with pure CSS max-height transition for smooth open/close */}
-      <div className="grid grid-rows-[0fr] group-open:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out px-6">
-        <div className="overflow-hidden">
-          <p className="text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed text-sm pb-6">
-            {a}
-          </p>
-        </div>
-      </div>
-    </details>
-  );
-}
-
 export function FaqSection() {
   return (
-    <div className="mt-20 sm:mt-40 w-full max-w-5xl mx-auto text-left">
-      <div className="flex flex-col items-center mb-10 sm:mb-20">
-        <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4 text-center">Support &amp; Clarification</span>
-        <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter text-center">
+    <section style={{ padding: "80px 24px", background: "#0F1F3D" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <h2 style={{ color: "white", fontSize: 28, marginBottom: 32, fontWeight: 700 }}>
           Frequently Asked Questions
-        </h3>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-4 sm:gap-6 md:gap-10">
-        {faqs.map((faq, i) => (
-          <FaqItem key={i} q={faq.q} a={faq.a} />
+        </h2>
+        {faqs.map((item, i) => (
+          <details key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: 16, marginBottom: 16 }}>
+            <summary style={{ color: "rgba(255,255,255,0.85)", fontSize: 16, fontWeight: 500, cursor: "pointer", padding: "8px 0", listStyle: "none" }}>
+              {item.q}
+            </summary>
+            <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, lineHeight: 1.7, marginTop: 10 }}>
+              {item.a}
+            </p>
+          </details>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
