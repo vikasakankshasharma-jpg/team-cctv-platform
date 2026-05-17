@@ -12,7 +12,6 @@ import {
   Award,
   Globe,
 } from "lucide-react";
-import { FaqSection } from "@/components/landing/FaqSection";
 import FaqJsonLd from "@/components/landing/FaqJsonLd";
 import type { Metadata } from "next";
 
@@ -205,7 +204,24 @@ export default function LandingPage() {
             <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 group-hover:translate-x-2 transition-transform duration-300" />
           </Link>
 
-          <FaqSection />
+          {/* FAQ — INLINE, NO COMPONENT */}
+          <section style={{ padding: "80px 24px", background: "#0F1F3D", width: "100%", marginTop: "64px" }}>
+            <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "left" }}>
+              <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 10 }}>Support &amp; Clarification</p>
+              <h2 style={{ color: "white", fontSize: 28, marginBottom: 32, fontWeight: 700, fontFamily: "serif" }}>Frequently Asked Questions</h2>
+              {[
+                { q: "Is GST included in the quote price?", a: "Yes. All TEAM CCTV quotations include 18% GST with no hidden charges. The price covers cameras, DVR/NVR, HDD, cabling, and professional installation — everything." },
+                { q: "Does the price include installation?", a: "Yes. Every quotation includes full professional installation — camera mounting, cable routing, DVR/NVR setup, mobile app configuration on your phone, and a complete system demonstration." },
+                { q: "How much does a 4-camera CCTV system cost in Jaipur?", a: "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation." },
+                { q: "Are your cameras STQC or BIS-ER compliant?", a: "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification and meet STQC standards — suitable for government tenders, housing societies, and commercial projects." },
+              ].map((item, i) => (
+                <details key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", marginBottom: 12 }}>
+                  <summary style={{ color: "rgba(255,255,255,0.85)", fontSize: 16, fontWeight: 500, cursor: "pointer", padding: "14px 0", listStyle: "none" }}>{item.q}</summary>
+                  <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, lineHeight: 1.7, padding: "0 0 14px" }}>{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
           <FaqJsonLd />
 
           {/* Partner Trust Strip */}
