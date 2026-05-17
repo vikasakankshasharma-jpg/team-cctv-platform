@@ -97,6 +97,7 @@ export default function CityLandingPage({
       {/* Pricing Context Section */}
       <section className="py-14 sm:py-20 md:py-32 px-4 sm:px-6 bg-zinc-50 dark:bg-zinc-900/30">
          <div className="max-w-5xl mx-auto">
+            {/* Aligned residential pricing to platform base 18k-28k */}
             <div className="text-center mb-16">
                <h2 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4">CCTV Installation Cost in {cityName}</h2>
                <p className="text-zinc-500 dark:text-zinc-400 font-medium">Updated transparent pricing for {currentMonthYear}</p>
