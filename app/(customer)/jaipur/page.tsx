@@ -2,6 +2,9 @@
 
 import CityLandingPage from "@/components/shared/CityLandingPage";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function JaipurLandingPage() {
   const neighborhoods = [
     "Vaishali Nagar", "Malviya Nagar", "C-Scheme", "Mansarovar", 
