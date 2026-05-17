@@ -317,6 +317,8 @@ export interface WizardOption {
   value: string;
   position: number;
   pricing_tags?: string[];
+  icon?: string;
+  tier_hint?: string;
 }
 
 export interface WizardQuestion {
