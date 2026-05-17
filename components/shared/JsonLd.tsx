@@ -44,6 +44,39 @@ export function JsonLd() {
     },
   };
 
+  // ── 3. LocalBusiness ────────────────────────────────────────────────────────
+  const localBusinessSchema = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "TEAM CCTV",
+    "description": "Professional CCTV installation in Jaipur with CP Plus and Prama cameras.",
+    "url": "https://cctvquotation.com",
+    "telephone": "+919772699395",
+    "email": "hello@cctvquotation.com",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Malviya Nagar",
+      "addressLocality": "Jaipur",
+      "addressRegion": "Rajasthan",
+      "postalCode": "302017",
+      "addressCountry": "IN"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 26.8467,
+      "longitude": 75.8073
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    "priceRange": "₹₹",
+    "areaServed": "Jaipur, Rajasthan, India",
+    "sameAs": []
+  };
+
   return (
     <>
       <script
@@ -53,6 +86,10 @@ export function JsonLd() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
       />
     </>
   );
