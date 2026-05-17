@@ -13,6 +13,7 @@ import {
   Globe,
 } from "lucide-react";
 import { FaqSection } from "@/components/landing/FaqSection";
+import FaqJsonLd from "@/components/landing/FaqJsonLd";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -204,6 +205,7 @@ export default function LandingPage() {
           </Link>
 
           <FaqSection />
+          <FaqJsonLd />
 
           {/* Partner Trust Strip */}
           <div className="mt-16 sm:mt-20 flex flex-col items-center gap-6 sm:gap-8 w-full">

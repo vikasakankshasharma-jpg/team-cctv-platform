@@ -1,9 +1,6 @@
-"use client";
-
-import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
-const faqs = [
+export const faqs = [
   {
     q: "Is GST included in the quote price?",
     a: "Yes. All our quotes include 18% GST. The price you see is the final CCTV with GST price you pay — no surprises.",
@@ -23,25 +20,18 @@ const faqs = [
 ];
 
 function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
   return (
-    <div className="border border-zinc-100 dark:border-zinc-800/60 rounded-[24px] overflow-hidden bg-zinc-50 dark:bg-zinc-900 shadow-inner">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left touch-manipulation"
-        aria-expanded={open}
-      >
+    <details className="group border border-zinc-100 dark:border-zinc-800/60 rounded-[24px] overflow-hidden bg-zinc-50 dark:bg-zinc-900 shadow-inner marker:content-[''] [&::-webkit-details-marker]:hidden">
+      <summary className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left cursor-pointer touch-manipulation select-none list-none">
         <h4 className="text-sm sm:text-base font-black text-zinc-900 dark:text-white tracking-tight">{q}</h4>
         <ChevronDown
-          className={`w-5 h-5 shrink-0 text-zinc-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          className="w-5 h-5 shrink-0 text-zinc-400 transition-transform duration-300 group-open:rotate-180"
         />
-      </button>
-      {open && (
-        <div className="px-6 pb-5">
-          <p className="text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed text-sm">{a}</p>
-        </div>
-      )}
-    </div>
+      </summary>
+      <div className="px-6 pb-5 animate-in slide-in-from-top-2 fade-in duration-200">
+        <p className="text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed text-sm">{a}</p>
+      </div>
+    </details>
   );
 }
 
