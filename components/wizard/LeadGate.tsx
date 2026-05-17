@@ -114,7 +114,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
 
     setLoading(true);
     try {
-      if (mobile === "9999999999") {
+      if (process.env.NODE_ENV === "development" && mobile === "9999999999") {
         setOtpSent(true);
         setLoading(false);
         setCountdown(30);
@@ -175,7 +175,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
     const fullOtp = otp.join("");
     if (fullOtp.length < 6) return setError("Please enter the complete 6-digit code.");
 
-    if (mobile === "9999999999" && fullOtp === "123456") {
+    if (process.env.NODE_ENV === "development" && mobile === "9999999999" && fullOtp === "123456") {
       finalizeLead("e2e-bypass-uid");
       return;
     }
