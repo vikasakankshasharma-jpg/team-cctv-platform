@@ -49,10 +49,26 @@ export async function GET(
     // Use Division or District as "city" — Division is often the nearest city
     const city: string = office.Division || office.District || "";
 
-    const served = district.toLowerCase().includes("jaipur") || pin.startsWith("302");
+    const dLower = district.toLowerCase();
+    let citySlug = "";
+    let served = false;
+
+    if (dLower.includes("jaipur") || pin.startsWith("302")) {
+      citySlug = "jaipur";
+      served = true;
+    } else if (dLower.includes("jodhpur") || pin.startsWith("342")) {
+      citySlug = "jodhpur";
+      served = false;
+    } else if (dLower.includes("kota") || pin.startsWith("324")) {
+      citySlug = "kota";
+      served = false;
+    } else if (dLower.includes("ajmer") || pin.startsWith("305")) {
+      citySlug = "ajmer";
+      served = false;
+    }
 
     return NextResponse.json(
-      { district, state, city, served },
+      { district, state, city, served, citySlug },
       {
         status: 200,
         headers: {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, PhoneCall, Zap, ArrowRight } from "lucide-react";
+import { ShieldCheck, PhoneCall, Zap, ArrowRight, ChevronDown } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/shared/SiteFooter";
 import { WhatsAppFloat } from "@/components/shared/WhatsAppFloat";
@@ -37,18 +37,48 @@ export default function CustomerLayout({
       <header className="sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 shadow-sm transition-all">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 md:h-20 flex items-center justify-between relative">
 
-          {/* Left — Logo */}
-          <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
-            <div className="bg-zinc-900 dark:bg-blue-600 text-white p-2 sm:p-2.5 rounded-xl sm:rounded-2xl group-hover:bg-blue-600 dark:group-hover:bg-blue-500 transition-all duration-300 shadow-lg shadow-zinc-900/10 group-hover:shadow-blue-500/30">
-              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+          {/* Left — Logo & Cities Dropdown */}
+          <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+              <div className="bg-zinc-900 dark:bg-blue-600 text-white p-2 sm:p-2.5 rounded-xl sm:rounded-2xl group-hover:bg-blue-600 dark:group-hover:bg-blue-500 transition-all duration-300 shadow-lg shadow-zinc-900/10 group-hover:shadow-blue-500/30">
+                <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div className="flex flex-col leading-none">
+                <span className="font-black text-lg sm:text-2xl tracking-tighter text-zinc-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                  CCTV<span className="text-zinc-400 dark:text-zinc-400 font-medium tracking-tight">Quotation</span>
+                </span>
+                <span className="hidden sm:block text-[8px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-400 mt-1">by TEAM</span>
+              </div>
+            </Link>
+
+            {/* Premium Cities Dropdown */}
+            <div className="relative group/dropdown py-2">
+              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100/50 dark:border-zinc-800/50 text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-sm cursor-pointer">
+                <span>Cities</span>
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 group-hover/dropdown:rotate-180 transition-transform duration-300" />
+              </button>
+              
+              {/* Dropdown Menu */}
+              <div className="absolute left-0 mt-2 w-48 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100/80 dark:border-zinc-800/80 shadow-xl opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all duration-300 transform scale-95 group-hover/dropdown:scale-100 origin-top-left z-50 p-2 space-y-1 backdrop-blur-md">
+                <Link href="/jaipur" className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all">
+                  <span>Jaipur</span>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-md">Live</span>
+                </Link>
+                <Link href="/jodhpur" className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all">
+                  <span>Jodhpur</span>
+                  <span className="text-[8px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-md">Soon</span>
+                </Link>
+                <Link href="/kota" className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all">
+                  <span>Kota</span>
+                  <span className="text-[8px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-md">Soon</span>
+                </Link>
+                <Link href="/ajmer" className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all">
+                  <span>Ajmer</span>
+                  <span className="text-[8px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-md">Soon</span>
+                </Link>
+              </div>
             </div>
-            <div className="flex flex-col leading-none">
-              <span className="font-black text-lg sm:text-2xl tracking-tighter text-zinc-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                CCTV<span className="text-zinc-400 dark:text-zinc-400 font-medium tracking-tight">Quotation</span>
-              </span>
-              <span className="hidden sm:block text-[8px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-400 mt-1">by TEAM</span>
-            </div>
-          </Link>
+          </div>
 
           {/* Centre — Get Quotation CTA */}
           <div className="absolute left-1/2 -translate-x-1/2">

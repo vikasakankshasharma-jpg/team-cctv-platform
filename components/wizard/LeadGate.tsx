@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useWizardStore } from "@/store/wizard";
 import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, Mail, UploadCloud, MapPin, ChevronDown } from "lucide-react";
@@ -24,12 +24,13 @@ declare global {
  */
 export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { answers } = useWizardStore();
 
   // ── Field state (reordered: mobile first for ergonomics) ──────────────────
   const [mobile, setMobile] = useState("");
   const [name, setName] = useState("");
-  const [pincode, setPincode] = useState("");
+  const [pincode, setPincode] = useState(searchParams.get("pincode") || "");
   const [email, setEmail] = useState("");
   const [channel] = useState<"sms">("sms");
   const [showIndustrialSuccess, setShowIndustrialSuccess] = useState(false);
