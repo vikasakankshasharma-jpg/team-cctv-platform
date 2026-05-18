@@ -9,7 +9,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
   const router = useRouter();
   const [pincode, setPincode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<React.ReactNode>("");
   const [showCaptureModal, setShowCaptureModal] = useState(false);
 
   const handleCheck = async (e: React.FormEvent) => {
@@ -29,12 +29,25 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
         throw new Error(data.error || "Pincode check failed.");
       }
 
-      if (data.served) {
-        // Redirect directly to the wizard with pre-filled pincode parameter
-        router.push(`/wizard?pincode=${pincode}`);
+      if (data.citySlug) {
+        // Redirect directly to the beautiful local city landing page!
+        router.push(`/${data.citySlug}`);
       } else {
-        // Trigger unserved capture modal
-        setShowCaptureModal(true);
+        // City not found — show friendly inline WhatsApp waitlist option
+        setError(
+          <span className="flex items-center gap-1.5 flex-wrap">
+            <span>We don't serve your area yet.</span>
+            <a
+              href={`https://wa.me/919772699395?text=Hi,%20I'm%20interested%20in%20CCTV%20installation%20for%20pincode%20${pincode}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 font-bold underline hover:text-blue-500"
+            >
+              WhatsApp us
+            </a>
+            <span>to check expansion options!</span>
+          </span>
+        );
       }
     } catch (err: any) {
       setError(err.message || "Failed to check service availability.");
