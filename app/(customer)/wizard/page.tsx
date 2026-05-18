@@ -3,12 +3,13 @@ import type { Metadata } from "next";
 import { getWizardConfig, getSettingsConfig, getDefaultFallbackWizard } from "@/lib/queries";
 
 export const metadata: Metadata = {
-  title: "CCTV Setup Wizard | Custom Security Planning",
+  title: "Get Free CCTV Quote | CCTVQuotation by TEAM",
   description: "Design your perfect security system in minutes. Answer a few questions to get an instant, industrial-grade quotation tailored to your property.",
   openGraph: {
-    title: "CCTV Setup Wizard | Custom Security Planning",
+    title: "Get Free CCTV Quote | CCTVQuotation by TEAM",
     description: "Design your perfect security system in minutes. Get an instant industrial-grade quotation.",
     images: ["/og-wizard.png"], // Placeholder for future OG image
+    siteName: "CCTVQuotation",
   },
 };
 

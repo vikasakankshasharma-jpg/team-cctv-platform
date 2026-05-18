@@ -3,9 +3,9 @@ import Link from "next/link";
 import { ChevronLeft, Shield, Lock, Eye, Phone, Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | TEAM CCTV — cctvquotation.com",
+  title: "Privacy Policy | CCTVQuotation — cctvquotation.com",
   description:
-    "Privacy Policy for TEAM CCTV's online CCTV quotation platform. Learn how we collect, use, and protect your personal data in accordance with the Digital Personal Data Protection Act, 2023.",
+    "Privacy Policy for CCTVQuotation's online CCTV quotation platform. Learn how we collect, use, and protect your personal data in accordance with the Digital Personal Data Protection Act, 2023.",
   alternates: { canonical: "https://cctvquotation.com/privacy-policy" },
 };
 

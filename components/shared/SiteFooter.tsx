@@ -16,7 +16,7 @@ export function SiteFooter() {
         <div className="text-left space-y-4">
           <div className="flex items-center gap-2 text-zinc-900 dark:text-white font-black tracking-tighter text-xl">
             <ShieldCheck className="w-6 h-6 text-blue-600" />
-            TEAM SECURITY
+            CCTVQuotation
           </div>
           <p className="text-zinc-400 dark:text-zinc-500 text-sm font-medium max-w-sm leading-relaxed">
             India&apos;s leading intelligent security planning ecosystem. We combine advanced hardware logic with certified human expertise.
@@ -44,7 +44,7 @@ export function SiteFooter() {
              <Link href="/admin/login" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Partner Login</Link>
           </div>
           <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mt-4">
-            © {new Date().getFullYear()} TEAM SECURE SYSTEMS PVT LTD.
+            © {new Date().getFullYear()} CCTVQuotation — A TEAM Platform
           </p>
         </div>
       </div>

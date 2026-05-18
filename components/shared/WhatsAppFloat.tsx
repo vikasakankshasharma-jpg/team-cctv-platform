@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 
 const WA_NUMBER = "919772699395";
 const WA_MESSAGE = encodeURIComponent(
-  "Hi TEAM CCTV! 👋 I'd like a free quotation for CCTV installation at my property. Please help me."
+  "Hi CCTVQuotation Team! 👋 I'd like a free quotation for CCTV installation at my property. Please help me."
 );
 const WA_HREF = `https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`;
 

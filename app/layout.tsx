@@ -13,13 +13,13 @@ const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cctvquotation.com"),
-  title: "CCTV Quotation Online | Free Instant Quote in Jaipur | TEAM CCTV",
+  title: "CCTV Quotation Online | Free Instant Quote in Jaipur | CCTVQuotation by TEAM",
   description: "Get an instant CCTV quotation online in Jaipur. We install premium STQC compliant cameras like CP Plus with 18% GST included. 100% Free Smart Estimate.",
   openGraph: {
-    title: "CCTV Quotation Online | Free Instant Quote in Jaipur | TEAM CCTV",
+    title: "CCTV Quotation Online | Free Instant Quote in Jaipur | CCTVQuotation by TEAM",
     description: "Instant AI-driven professional CCTV blueprints and exact installation cost for Jaipur property owners.",
     url: "https://cctvquotation.com",
-    siteName: "TEAM CCTV Jaipur",
+    siteName: "CCTVQuotation",
     locale: "en_IN",
     type: "website",
     images: [
@@ -27,13 +27,13 @@ export const metadata: Metadata = {
         url: "https://cctvquotation.com/og-image.png",
         width: 1200,
         height: 630,
-        alt: "TEAM CCTV — Free Instant CCTV Quotation Online",
+        alt: "CCTVQuotation — Free Instant CCTV Quotation Online",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CCTV Quotation Online | Free Instant Quote in Jaipur | TEAM CCTV",
+    title: "CCTV Quotation Online | Free Instant Quote in Jaipur | CCTVQuotation by TEAM",
     description: "Instant professional CCTV blueprints and installation cost for Jaipur property owners.",
     images: ["https://cctvquotation.com/og-image.png"],
   },

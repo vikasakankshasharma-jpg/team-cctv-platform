@@ -125,6 +125,30 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
       const appVerifier = window.recaptchaVerifier;
       const formatPhone = "+91" + mobile;
       const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
+    // After sending OTP, attempt WebOTP auto‑fill in background
+    if (typeof window !== "undefined" && "OTPCredential" in window) {
+      try {
+        const ac = new AbortController();
+        const cred = await navigator.credentials.get({
+          otp: { transport: ["sms"] },
+          signal: ac.signal,
+        } as any) as any;
+        // Fill OTP state automatically (split into array of characters)
+        const code = cred.code.replace(/\D/g, "");
+        if (code.length === 6) {
+          setOtp(code.split(""));
+          // Optionally auto‑verify after short delay
+          setTimeout(() => handleVerifyOtp(new Event("submit") as any), 500);
+        }
+      } catch (_) {
+        // Fail silently – user can type manually
+      }
+    }
+    setConfirmationResult(result);
+    setOtpSent(true);
+    setCountdown(30);
+    setCanResend(false);
+    return;
       setConfirmationResult(result);
       setOtpSent(true);
       setCountdown(30);
@@ -171,6 +195,11 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
+    // If OTP was auto‑filled via WebOTP, we can skip manual entry
+    if (otp.some(d => d)) {
+      // otp already populated – continue as normal
+    }
+
     e.preventDefault();
     const fullOtp = otp.join("");
     if (fullOtp.length < 6) return setError("Please enter the complete 6-digit code.");

@@ -13,16 +13,23 @@ import {
   Globe,
 } from "lucide-react";
 import FaqJsonLd from "@/components/landing/FaqJsonLd";
+import { PincodeWidget } from "@/components/landing/PincodeWidget";
 import type { Metadata } from "next";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const metadata: Metadata = {
-  title: "Online CCTV Quotation & Installation in Jaipur | TEAM CCTV",
+  title: "CCTVQuotation | Free CCTV Price Online in Jaipur",
   description: "Get an instant CCTV camera price with installation in Jaipur. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
-  keywords: ["CCTV Jaipur", "CCTV price with installation", "CCTV camera price Jaipur", "Online CCTV quotation", "TEAM CCTV"],
+  keywords: ["CCTV Jaipur", "CCTV price with installation", "CCTV camera price Jaipur", "Online CCTV quotation", "CCTVQuotation", "TEAM CCTV"],
   alternates: {
     canonical: "https://cctvquotation.com",
+  },
+  openGraph: {
+    title: "CCTVQuotation | Free CCTV Price Online in Jaipur",
+    description: "Get an instant CCTV camera price with installation in Jaipur. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
+    type: "website",
+    url: "https://cctvquotation.com",
   },
 };
 
@@ -31,7 +38,8 @@ export default function LandingPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "TEAM CCTV Jaipur",
+    "name": "CCTVQuotation",
+    "alternateName": "TEAM CCTV",
     "image": "https://cctvquotation.com/og-image.jpg",
     "@id": "https://cctvquotation.com",
     "url": "https://cctvquotation.com",
@@ -99,14 +107,8 @@ export default function LandingPage() {
             Get an exact price for your CCTV setup in under 2 minutes. No technical knowledge needed — answer 4 simple questions and we&apos;ll do the rest.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-center w-full sm:w-auto">
-            <Link
-              href="/wizard"
-              className="group relative inline-flex w-full sm:w-auto justify-center items-center gap-3 sm:gap-4 px-8 sm:px-12 py-4 sm:py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[28px] sm:rounded-[32px] font-black text-base sm:text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-1 sm:hover:-translate-y-2 active:scale-95 touch-manipulation"
-            >
-              Get CCTV Quotation Online
-              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-2 transition-transform duration-300" />
-            </Link>
+          <div className="w-full mb-8 sm:mb-10 md:mb-16">
+            <PincodeWidget variant="hero" />
           </div>
 
           <div className="flex sm:hidden items-center gap-4 mt-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
@@ -197,13 +199,9 @@ export default function LandingPage() {
             2-minute setup. No hidden costs. 18% GST included in all plans.
           </p>
 
-          <Link
-            href="/wizard"
-            className="group relative flex items-center gap-4 sm:gap-6 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white px-8 sm:px-14 py-5 sm:py-8 rounded-[28px] sm:rounded-[36px] font-black text-lg sm:text-2xl transition-all shadow-[0_32px_64px_rgba(0,0,0,0.15)] dark:shadow-blue-500/30 hover:-translate-y-1 sm:hover:-translate-y-2 touch-manipulation"
-          >
-            Get CCTV Quotation Online
-            <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 group-hover:translate-x-2 transition-transform duration-300" />
-          </Link>
+          <div className="w-full mb-10 sm:mb-16">
+            <PincodeWidget variant="footer" />
+          </div>
 
           {/* FAQ — INLINE, NO COMPONENT */}
           <section style={{ padding: "80px 24px", background: "#0F1F3D", width: "100%", marginTop: "64px" }}>
@@ -211,7 +209,7 @@ export default function LandingPage() {
               <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 10 }}>Support &amp; Clarification</p>
               <h2 style={{ color: "white", fontSize: 28, marginBottom: 32, fontWeight: 700, fontFamily: "serif" }}>Frequently Asked Questions</h2>
               {[
-                { q: "Is GST included in the quote price?", a: "Yes. All TEAM CCTV quotations include 18% GST with no hidden charges. The price covers cameras, DVR/NVR, HDD, cabling, and professional installation — everything." },
+                { q: "Is GST included in the quote price?", a: "Yes. All CCTVQuotation quotations include 18% GST with no hidden charges. The price covers cameras, DVR/NVR, HDD, cabling, and professional installation — everything." },
                 { q: "Does the price include installation?", a: "Yes. Every quotation includes full professional installation — camera mounting, cable routing, DVR/NVR setup, mobile app configuration on your phone, and a complete system demonstration." },
                 { q: "How much does a 4-camera CCTV system cost in Jaipur?", a: "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation." },
                 { q: "Are your cameras STQC or BIS-ER compliant?", a: "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification and meet STQC standards — suitable for government tenders, housing societies, and commercial projects." },
