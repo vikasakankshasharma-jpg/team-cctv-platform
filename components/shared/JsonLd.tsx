@@ -17,7 +17,7 @@ export function JsonLd() {
     "@type": "Organization",
     "@id": `${baseUrl}/#organization`,
     name: "TEAM SECURE SYSTEMS PVT LTD",
-    alternateName: "TEAM CCTV",
+    alternateName: ["CCTVQuotation", "TEAM CCTV"],
     url: baseUrl,
     logo: `${baseUrl}/favicon.ico`,
     image: `${baseUrl}/og-image.png`,
@@ -32,7 +32,7 @@ export function JsonLd() {
     "@type": "WebSite",
     "@id": `${baseUrl}/#website`,
     url: baseUrl,
-    name: "TEAM CCTV Quotation",
+    name: "CCTVQuotation",
     publisher: { "@id": `${baseUrl}/#organization` },
     potentialAction: {
       "@type": "SearchAction",
@@ -48,7 +48,8 @@ export function JsonLd() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "TEAM CCTV",
+    "name": "CCTVQuotation",
+    "alternateName": "TEAM CCTV",
     "description": "Professional CCTV installation in Jaipur with CP Plus and Prama cameras.",
     "url": "https://cctvquotation.com",
     "telephone": "+919772699395",

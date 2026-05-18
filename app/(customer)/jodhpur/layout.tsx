@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "CCTV Installation Cost in Jodhpur | Free Online Quote | TEAM CCTV",
+  title: "CCTV Installation Cost in Jodhpur | Free Online Quote | CCTVQuotation by TEAM",
   description:
     "Get the best CCTV camera installation cost in Jodhpur. Instant online quote for HD & IP cameras, DVR/NVR systems. Serving Ratanada, Sardarpura, Paota & all of Jodhpur. GST included.",
   keywords: [
@@ -14,12 +14,12 @@ export const metadata: Metadata = {
     "CCTV dealer Jodhpur",
   ],
   openGraph: {
-    title: "CCTV Installation Cost in Jodhpur | TEAM CCTV",
+    title: "CCTV Installation Cost in Jodhpur | CCTVQuotation by TEAM",
     description:
       "Get a custom CCTV security blueprint and installation cost for your Jodhpur property in 2 minutes. GST-inclusive pricing, 1-year warranty.",
     type: "website",
     locale: "en_IN",
-    siteName: "TEAM CCTV",
+    siteName: "CCTVQuotation",
     url: "https://cctvquotation.com/jodhpur",
   },
   alternates: {

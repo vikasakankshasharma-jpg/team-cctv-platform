@@ -3,9 +3,9 @@ import Link from "next/link";
 import { ChevronLeft, FileText, AlertCircle, Wrench, CreditCard, Scale, Phone, Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | TEAM CCTV — cctvquotation.com",
+  title: "Terms of Service | CCTVQuotation — cctvquotation.com",
   description:
-    "Terms of Service for TEAM CCTV's CCTV quotation and installation platform in Jaipur. Read our service terms, quotation accuracy, payment policy, and warranty information.",
+    "Terms of Service for CCTVQuotation's CCTV quotation and installation platform in Jaipur. Read our service terms, quotation accuracy, payment policy, and warranty information.",
   alternates: { canonical: "https://cctvquotation.com/terms-of-service" },
 };
 

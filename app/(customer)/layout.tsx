@@ -11,15 +11,15 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "CCTV Quotation Online | Professional Installation & Setup | TEAM CCTV",
+  title: "CCTV Quotation Online | Professional Installation & Setup | CCTVQuotation",
   description: "Get a professional, tailored CCTV hardware blueprint and quote for your property in minutes. Transparent pricing with top brands.",
-  keywords: ["CCTV Quotation Online", "CCTV Installation", "CCTV Camera Price", "TEAM CCTV"],
+  keywords: ["CCTV Quotation Online", "CCTV Installation", "CCTV Camera Price", "CCTVQuotation"],
   openGraph: {
-    title: "CCTV Quotation Online | Professional Installation & Setup | TEAM CCTV",
+    title: "CCTV Quotation Online | Professional Installation & Setup | CCTVQuotation",
     description: "Get your custom security blueprint and CCTV installation cost in 2 minutes.",
     type: "website",
     locale: "en_IN",
-    siteName: "TEAM Security Ecosystem",
+    siteName: "CCTVQuotation",
   },
 };
 
@@ -44,9 +44,9 @@ export default function CustomerLayout({
             </div>
             <div className="flex flex-col leading-none">
               <span className="font-black text-lg sm:text-2xl tracking-tighter text-zinc-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                TEAM <span className="text-zinc-400 dark:text-zinc-400 font-medium tracking-tight">CCTV</span>
+                CCTV<span className="text-zinc-400 dark:text-zinc-400 font-medium tracking-tight">Quotation</span>
               </span>
-              <span className="hidden sm:block text-[8px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-400 mt-1">Smart Security Ecosystem</span>
+              <span className="hidden sm:block text-[8px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-400 mt-1">by TEAM</span>
             </div>
           </Link>
 
