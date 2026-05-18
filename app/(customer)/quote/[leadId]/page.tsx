@@ -4,6 +4,7 @@ import { ConfiguratorView } from "@/components/quotation/ConfiguratorView";
 import { Lead, Product, Addon, AddonRule, AppSettings, Promoter } from "@/types";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { MapPin } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -208,6 +209,16 @@ export default async function QuoteResultPage({
     card_layouts
   };
 
+  // Check if pincode belongs to an unserved/coming soon city
+  const leadPincode = String(lead.wizard_answers?.lead_pincode || "");
+  let unservedCityName: string | null = null;
+  
+  if (leadPincode && leadPincode.length === 6) {
+    if (leadPincode.startsWith("342")) unservedCityName = "Jodhpur";
+    else if (leadPincode.startsWith("324")) unservedCityName = "Kota";
+    else if (leadPincode.startsWith("305")) unservedCityName = "Ajmer";
+  }
+
   return (
     <main className="min-h-screen bg-white dark:bg-zinc-950 relative overflow-hidden font-sans selection:bg-blue-100 dark:selection:bg-blue-900 transition-colors duration-500">
       
@@ -223,6 +234,16 @@ export default async function QuoteResultPage({
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
               Calculated for {lead.customer_name}
            </div>
+
+           {unservedCityName && (
+             <div className="mb-8 p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 flex flex-col sm:flex-row items-center justify-center gap-3 animate-in fade-in zoom-in duration-500">
+               <MapPin className="w-5 h-5 shrink-0" />
+               <p className="text-sm font-semibold text-center sm:text-left">
+                 We are expanding to <span className="font-black uppercase">{unservedCityName}</span> soon! <br className="sm:hidden" />
+                 <span className="opacity-80 font-medium">Below is a reference quote based on nearest city pricing.</span>
+               </p>
+             </div>
+           )}
            
            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter leading-[0.9] sm:leading-[0.85] mb-5 sm:mb-8">
               Your Security<br/>
