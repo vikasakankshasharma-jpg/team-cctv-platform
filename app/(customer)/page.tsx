@@ -19,15 +19,15 @@ import type { Metadata } from "next";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const metadata: Metadata = {
-  title: "CCTVQuotation | Free CCTV Price Online in Jaipur",
-  description: "Get an instant CCTV camera price with installation in Jaipur. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
-  keywords: ["CCTV Jaipur", "CCTV price with installation", "CCTV camera price Jaipur", "Online CCTV quotation", "CCTVQuotation", "TEAM CCTV"],
+  title: "CCTVQuotation | Get Free & Instant CCTV Installation Price Online",
+  description: "Get an instant CCTV camera price with professional installation. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
+  keywords: ["CCTV price with installation", "CCTV camera price", "Online CCTV quotation", "CCTVQuotation", "TEAM CCTV"],
   alternates: {
     canonical: "https://cctvquotation.com",
   },
   openGraph: {
-    title: "CCTVQuotation | Free CCTV Price Online in Jaipur",
-    description: "Get an instant CCTV camera price with installation in Jaipur. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
+    title: "CCTVQuotation | Get Free & Instant CCTV Installation Price Online",
+    description: "Get an instant CCTV camera price with professional installation. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
     type: "website",
     url: "https://cctvquotation.com",
     siteName: "CCTVQuotation",
@@ -92,7 +92,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col items-center lg:items-start text-center lg:text-left relative">
           <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-2xl backdrop-blur-sm">
             <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-500 shrink-0" />
-            <span>Jaipur&apos;s #1 CCTV Estimator</span>
+            <span>India&apos;s #1 CCTV Estimator</span>
             <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 hidden sm:block" />
             <span className="text-blue-600 dark:text-emerald-500 hidden sm:inline">100% Free &amp; Instant</span>
           </div>
@@ -100,7 +100,7 @@ export default function LandingPage() {
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-9xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[0.9] sm:leading-[0.88]">
             High-Quality Security. <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">
-              Starting in Jaipur.
+              On Your Budget.
             </span>
           </h1>
 
@@ -241,7 +241,7 @@ export default function LandingPage() {
             </div>
             <div className="px-5 py-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
               <Star className="w-4 h-4 fill-emerald-500/50" />
-              <span>Jaipur&apos;s Preferred CCTV Platform | 500+ Properties Secured</span>
+              <span>India&apos;s Preferred CCTV Platform | 500+ Properties Secured</span>
             </div>
           </div>
           <div className="h-20 md:hidden" aria-hidden="true" />
