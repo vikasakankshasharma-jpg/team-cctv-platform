@@ -30,6 +30,7 @@ export const metadata: Metadata = {
     description: "Get an instant CCTV camera price with installation in Jaipur. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
     type: "website",
     url: "https://cctvquotation.com",
+    siteName: "CCTVQuotation",
   },
 };
 
