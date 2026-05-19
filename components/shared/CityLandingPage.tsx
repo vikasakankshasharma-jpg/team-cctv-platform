@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { 
   ArrowRight, 
   ShieldCheck, 
@@ -32,6 +33,9 @@ export default function CityLandingPage({
   ctaText = `Get ${cityName} Quotation`
 }: CityLandingPageProps) {
   const currentMonthYear = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const searchParams = useSearchParams();
+  const pincodeParam = searchParams.get("pincode");
+  const wizardUrl = `/wizard?city=${cityName}${pincodeParam ? `&pincode=${pincodeParam}` : ''}`;
 
   return (
     <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
@@ -73,7 +77,7 @@ export default function CityLandingPage({
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-center w-full sm:w-auto animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
             <Link
-              href={`/wizard?city=${cityName}`}
+              href={wizardUrl}
               className="group relative inline-flex justify-center items-center gap-4 sm:gap-5 px-8 sm:px-12 py-4 sm:py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[28px] sm:rounded-[32px] font-black text-lg sm:text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-1 sm:hover:-translate-y-2 active:scale-95 touch-manipulation"
             >
               {ctaText}

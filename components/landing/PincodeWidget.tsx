@@ -30,8 +30,8 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
       }
 
       if (data.citySlug) {
-        // Redirect directly to the beautiful local city landing page!
-        router.push(`/${data.citySlug}`);
+        // Redirect directly to the beautiful local city landing page with pincode context!
+        router.push(`/${data.citySlug}?pincode=${pincode}`);
       } else {
         // City not found — show friendly inline WhatsApp waitlist option
         setError(
