@@ -138,34 +138,34 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
       const appVerifier = window.recaptchaVerifier;
       const formatPhone = "+91" + mobile;
       const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
-    // After sending OTP, attempt WebOTP auto‑fill in background
-    if (typeof window !== "undefined" && "OTPCredential" in window) {
-      try {
-        const ac = new AbortController();
-        const cred = await navigator.credentials.get({
-          otp: { transport: ["sms"] },
-          signal: ac.signal,
-        } as any) as any;
-        // Fill OTP state automatically (split into array of characters)
-        const code = cred.code.replace(/\D/g, "");
-        if (code.length === 6) {
-          setOtp(code.split(""));
-          // Optionally auto‑verify after short delay
-          setTimeout(() => handleVerifyOtp(new Event("submit") as any), 500);
-        }
-      } catch (_) {
-        // Fail silently – user can type manually
-      }
-    }
-    setConfirmationResult(result);
-    setOtpSent(true);
-    setCountdown(30);
-    setCanResend(false);
-    return;
+
       setConfirmationResult(result);
       setOtpSent(true);
       setCountdown(30);
       setCanResend(false);
+
+      // After sending OTP, attempt WebOTP auto‑fill in background without blocking the main execution path.
+      if (typeof window !== "undefined" && "OTPCredential" in window) {
+        setTimeout(async () => {
+          try {
+            const ac = new AbortController();
+            const cred = await navigator.credentials.get({
+              otp: { transport: ["sms"] },
+              signal: ac.signal,
+            } as any) as any;
+            // Fill OTP state automatically (split into array of characters)
+            const code = cred.code.replace(/\D/g, "");
+            if (code.length === 6) {
+              setOtp(code.split(""));
+              // Optionally auto‑verify after short delay
+              setTimeout(() => handleVerifyOtp(new Event("submit") as any), 500);
+            }
+          } catch (_) {
+            // Fail silently – user can type manually
+          }
+        }, 10);
+      }
+      return;
     } catch (error) {
       const err = error as { code?: string; message?: string };
       console.error("🔥 OTP Transmission Fault:", err);
