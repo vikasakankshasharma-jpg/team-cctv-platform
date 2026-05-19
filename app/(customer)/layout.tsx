@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { MobileStickyCtaBar } from "@/components/shared/MobileStickyCtaBar";
+import { ServiceAreaModal } from "@/components/shared/ServiceAreaModal";
 
 export default function CustomerLayout({
   children,
@@ -51,28 +52,9 @@ export default function CustomerLayout({
               </div>
             </Link>
 
-            {/* Premium Cities Dropdown */}
-            <div className="relative group/dropdown py-2">
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100/50 dark:border-zinc-800/50 text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-sm cursor-pointer">
-                <span>Cities</span>
-                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 group-hover/dropdown:rotate-180 transition-transform duration-300" />
-              </button>
-              
-              {/* Dropdown Menu */}
-              <div className="absolute left-0 mt-2 w-48 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100/80 dark:border-zinc-800/80 shadow-xl opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all duration-300 transform scale-95 group-hover/dropdown:scale-100 origin-top-left z-50 p-2 space-y-1 backdrop-blur-md">
-                <Link href="/jaipur" className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all">
-                  <span>Jaipur</span>
-                </Link>
-                <Link href="/jodhpur" className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all">
-                  <span>Jodhpur</span>
-                </Link>
-                <Link href="/kota" className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all">
-                  <span>Kota</span>
-                </Link>
-                <Link href="/ajmer" className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all">
-                  <span>Ajmer</span>
-                </Link>
-              </div>
+            {/* Smart Hierarchical Service Area Modal */}
+            <div className="py-2">
+              <ServiceAreaModal />
             </div>
           </div>
 
