@@ -123,6 +123,18 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
         return;
       }
 
+      // Always clear and recreate RecaptchaVerifier to prevent auth/argument-error
+      // from stale/expired verifier instances on retry or page revisit.
+      if (window.recaptchaVerifier) {
+        try {
+          window.recaptchaVerifier.clear();
+        } catch (_) { /* ignore clear errors */ }
+        window.recaptchaVerifier = undefined as any;
+      }
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+      });
+
       const appVerifier = window.recaptchaVerifier;
       const formatPhone = "+91" + mobile;
       const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
