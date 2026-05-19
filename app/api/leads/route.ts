@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { CreateLeadSchema } from "@/lib/validators";
-import { adminDb, arrayUnion, serverTimestamp } from "@/lib/firebase-admin";
+import { adminDb, arrayUnion, serverTimestamp, increment } from "@/lib/firebase-admin";
 import { rateLimit } from "@/lib/rate-limit";
 import { routeLeadToFranchise, incrementFranchiseLeadCount } from "@/lib/lead-router";
 import { ApiResponse } from "@/lib/api-response";
@@ -43,11 +43,23 @@ export async function POST(request: NextRequest) {
 
     // 3. ENTERPRISE LOAD BALANCING & ROUTING
     const wizardAnswers = (leadData.wizard_answers || {}) as Record<string, unknown>;
-    const pincode = String(wizardAnswers?.q_pincode || wizardAnswers?.pincode || "");
+    const pincode = String(wizardAnswers?.q_pincode || wizardAnswers?.pincode || wizardAnswers?.lead_pincode || "");
     const city    = String(wizardAnswers?.q_city    || wizardAnswers?.city    || "");
     const state   = String(wizardAnswers?.q_state   || wizardAnswers?.state   || "");
 
     const routing = await routeLeadToFranchise(pincode, city, state);
+
+    // EXPANSION TRACKING: Resolve location based on pincode prefix
+    const pincodePrefix = pincode.substring(0, 3);
+    const PINCODE_CITY_MAP: Record<string, {city: string, slug: string, served: boolean}> = {
+      "302": { city: "Jaipur",  slug: "jaipur",  served: true  },
+      "303": { city: "Jaipur",  slug: "jaipur",  served: true  },
+      "342": { city: "Jodhpur", slug: "jodhpur", served: false },
+      "324": { city: "Kota",    slug: "kota",    served: false },
+      "305": { city: "Ajmer",   slug: "ajmer",   served: false },
+      "313": { city: "Udaipur", slug: "udaipur", served: false },
+    };
+    const locationData = PINCODE_CITY_MAP[pincodePrefix] ?? null;
 
     // 4. Create Lead Document
     const newLeadRef = adminDb.collection("leads").doc();
@@ -71,6 +83,16 @@ export async function POST(request: NextRequest) {
       franchise_dealer_name: routing.franchise_dealer_name,
       franchise_match_type:  routing.match_type,
 
+      // Expansion Tracking Fields
+      detected_pincode:      pincode || null,
+      detected_city:         locationData?.city ?? "Unknown",
+      detected_city_slug:    locationData?.slug ?? null,
+      detected_state:        "Rajasthan",
+      service_status:        locationData?.served ? "active" : "waitlist",
+      is_reference_quote:    locationData ? !locationData.served : false,
+      waitlist_confirmed:    false,
+      franchise_notified_at: null,
+
       created_at:        serverTimestamp(),
       updated_at:        serverTimestamp(),
       follow_up_notes:   arrayUnion("Lead ingested via enterprise router"),
@@ -82,6 +104,18 @@ export async function POST(request: NextRequest) {
       incrementFranchiseLeadCount(routing.franchise_dealer_id).catch((err) =>
         console.error("[Leads API] Counter increment failed:", err)
       );
+    }
+    
+    // 6. Update Service Areas Waitlist Count (Async)
+    if (locationData && !locationData.served) {
+      adminDb.collection("service_areas").doc(locationData.slug)
+        .update({ waitlist_count: increment(1) })
+        .catch(err => {
+          // If doc doesn't exist, create it
+          if (err.code === 5) {
+            adminDb.collection("service_areas").doc(locationData.slug).set({ waitlist_count: 1 });
+          }
+        });
     }
 
     return ApiResponse.success({ 
