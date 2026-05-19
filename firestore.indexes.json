@@ -96,6 +96,15 @@
         { "fieldPath": "category",   "order": "ASCENDING" },
         { "fieldPath": "is_active",  "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "leads",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "detected_city",  "order": "ASCENDING" },
+        { "fieldPath": "service_status", "order": "ASCENDING" },
+        { "fieldPath": "created_at",     "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
