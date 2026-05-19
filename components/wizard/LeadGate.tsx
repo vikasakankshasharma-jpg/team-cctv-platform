@@ -613,6 +613,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
           )}
         </div>
       )}
+      <div id="recaptcha-container"></div>
     </div>
   );
 }
