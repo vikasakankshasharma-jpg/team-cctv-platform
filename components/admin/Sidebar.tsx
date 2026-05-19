@@ -27,7 +27,8 @@ import {
   PanelLeftOpen,
   Database,
   Building2,
-  HeartPulse
+  HeartPulse,
+  MapPin
 } from "lucide-react";
 
 // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -45,6 +46,7 @@ const NAV_GROUPS = [
     label: "Sales Operations",
     items: [
       { name: "Leads & CRM",    href: "/admin/leads",        icon: Users },
+      { name: "Expansion Hub",  href: "/admin/expansion",    icon: MapPin },
       { name: "Site Visits",    href: "/admin/bookings",     icon: Calendar },
       { name: "Campaigns",      href: "/admin/campaigns",    icon: Megaphone },
       { name: "Reports",        href: "/admin/reports",      icon: TrendingUp },
