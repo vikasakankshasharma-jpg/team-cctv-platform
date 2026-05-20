@@ -48,10 +48,15 @@ export default async function CardLayoutsPage() {
       } as CardLayoutRule;
     });
 
-    cameras = productsSnap.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Product),
-    }));
+    cameras = productsSnap.docs.map((doc) => {
+      const d = doc.data();
+      return {
+        id: doc.id,
+        ...d,
+        created_at: d.created_at?.toDate?.()?.toISOString() ?? d.created_at ?? null,
+        updated_at: d.updated_at?.toDate?.()?.toISOString() ?? d.updated_at ?? null,
+      } as Product;
+    });
   } catch (err) {
     console.error("[CardLayoutsPage] Fetch failed:", err);
     fetchError = true;
