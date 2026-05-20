@@ -384,6 +384,15 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
 
   let pool = products.filter(p => p.category === "camera" && p.technology === tech && p.is_active);
   
+  // Filter by Brand
+  if (selection.brand_preference && selection.brand_preference !== "all") {
+    const brandFiltered = pool.filter(cam => cam.brand?.toLowerCase() === selection.brand_preference?.toLowerCase());
+    // Fallback: If strict brand matching eliminates ALL cameras, drop the filter
+    if (brandFiltered.length > 0) {
+      pool = brandFiltered;
+    }
+  }
+
   // Filter by features
   if (selection.requested_features?.length) {
     const filteredPool = pool.filter(cam => {
