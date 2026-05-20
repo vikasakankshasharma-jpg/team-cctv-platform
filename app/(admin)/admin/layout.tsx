@@ -25,7 +25,7 @@ export default async function AdminLayout({
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <AdminHeader 
-          userEmail={session.user?.email || "Unknown"} 
+          userEmail={session.user?.email || session.user?.phone_number || "Unknown"} 
           userRole={session.role || "admin"} 
         />
 
