@@ -27,7 +27,7 @@ export default function CityLandingPage({
   cityName,
   tagline = `Serving All of ${cityName}`,
   heroHighlight = `Across ${cityName}.`,
-  description = `Protect your home or business in ${cityName}. Get an exact price for your CCTV setup online in under 2 minutes. We only use STQC compliant, government-approved hardware.`,
+  description = `Protect your home or business in ${cityName}. Get an exact price for your CCTV setup online in under 2 minutes.`,
   neighborhoods,
   commercialAreas = "local businesses",
   ctaText = `Get ${cityName} Quotation`
@@ -125,7 +125,7 @@ export default function CityLandingPage({
                   <div className="text-4xl font-black text-zinc-900 dark:text-white mb-6">₹18,000 <span className="text-xl text-zinc-400 font-medium">- ₹28,000</span></div>
                   <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">Perfect for independent houses and small shops. Includes CP Plus cameras, DVR, wiring, and professional installation.</p>
                   <ul className="space-y-4 mb-8">
-                     {["4x 2MP/5MP STQC Cameras", "4-Channel DVR + HDD", "Power Supply & Connectors", "Complete Installation Labor"].map((item, i) => (
+                     {["4x 2MP/5MP HD Cameras", "4-Channel DVR + HDD", "Power Supply & Connectors", "Complete Installation Labor"].map((item, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                            <CheckCircle2 className="w-5 h-5 text-emerald-500" /> {item}
                         </li>
@@ -146,7 +146,7 @@ export default function CityLandingPage({
                   <div className="text-4xl font-black text-white mb-6">₹30k <span className="text-xl text-zinc-400 font-medium">- ₹80k+</span></div>
                   <p className="text-zinc-300 text-sm mb-8 leading-relaxed">Ideal for offices, warehouses, and factories in {commercialAreas}. High-definition IP cameras with extended storage.</p>
                   <ul className="space-y-4 mb-8">
-                     {["Network/IP STQC Cameras", "High-Capacity NVR System", "Structured Cabling", "Advanced Remote Viewing Setup"].map((item, i) => (
+                     {["Network/IP Cameras", "High-Capacity NVR System", "Structured Cabling", "Advanced Remote Viewing Setup"].map((item, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-medium text-white">
                            <CheckCircle2 className="w-5 h-5 text-blue-300 dark:text-blue-200" /> {item}
                         </li>
@@ -210,7 +210,7 @@ export default function CityLandingPage({
                  </div>
                  <div className="flex items-center gap-3">
                    <ShieldCheck className="w-8 h-8 text-white" />
-                   <span className="font-black text-xl tracking-tight text-white">STQC APPROVED</span>
+                   <span className="font-black text-xl tracking-tight text-white">BIS-ER</span>
                  </div>
                  <div className="flex items-center gap-3">
                    <Award className="w-8 h-8 text-white" />

@@ -12,8 +12,8 @@ export const faqs = [
     a: "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation.",
   },
   {
-    q: "Are your cameras STQC or BIS-ER compliant?",
-    a: "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification and meet STQC standards — suitable for government tenders, housing societies, and commercial projects.",
+    q: "Are your cameras BIS-ER compliant?",
+    a: "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification - suitable for government tenders, housing societies, and commercial projects. STQC certified cameras are also available as an optional premium upgrade during configuration.",
   },
 ];
 

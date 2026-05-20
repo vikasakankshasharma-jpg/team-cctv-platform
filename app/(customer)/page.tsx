@@ -128,7 +128,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex sm:hidden items-center gap-4 mt-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-            <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> STQC Certified</span>
+            <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> 18% GST Bill</span>
             <span>·</span>
             <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> 500+ Installs</span>
             <span>·</span>
@@ -228,7 +228,7 @@ export default function LandingPage() {
                 { q: "Is GST included in the quote price?", a: "Yes. All CCTVQuotation quotations include 18% GST with no hidden charges. The price covers cameras, DVR/NVR, HDD, cabling, and professional installation — everything." },
                 { q: "Does the price include installation?", a: "Yes. Every quotation includes full professional installation — camera mounting, cable routing, DVR/NVR setup, mobile app configuration on your phone, and a complete system demonstration." },
                 { q: "How much does a 4-camera CCTV system cost in Jaipur?", a: "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation." },
-                { q: "Are your cameras STQC or BIS-ER compliant?", a: "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification and meet STQC standards — suitable for government tenders, housing societies, and commercial projects." },
+                { q: "Are your cameras BIS-ER compliant?", a: "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification — suitable for government tenders, housing societies, and commercial projects." },
               ].map((item, i) => (
                 <details key={i} open style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", marginBottom: 12 }}>
                   <summary style={{ color: "rgba(255,255,255,0.85)", fontSize: 16, fontWeight: 500, cursor: "pointer", padding: "14px 0", listStyle: "none" }}>{item.q}</summary>
@@ -248,10 +248,6 @@ export default function LandingPage() {
               <div className="flex items-center gap-3">
                 <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" />
                 <span className="font-black text-lg sm:text-xl tracking-tight uppercase">BIS-ER</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Award className="w-7 h-7 sm:w-8 sm:h-8" />
-                <span className="font-black text-lg sm:text-xl tracking-tight uppercase">STQC</span>
               </div>
             </div>
             <div className="px-5 py-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">

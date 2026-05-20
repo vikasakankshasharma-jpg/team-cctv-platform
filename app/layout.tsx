@@ -14,7 +14,7 @@ const inter = Inter({ subsets: ["latin"], display: "swap" });
 export const metadata: Metadata = {
   metadataBase: new URL("https://cctvquotation.com"),
   title: "CCTV Quotation Online | Free Instant Quote in Jaipur | CCTVQuotation by TEAM",
-  description: "Get an instant CCTV quotation online in Jaipur. We install premium STQC compliant cameras like CP Plus with 18% GST included. 100% Free Smart Estimate.",
+  description: "Get an instant CCTV quotation online in Jaipur. We install premium cameras like CP Plus with 18% GST included. 100% Free Smart Estimate.",
   openGraph: {
     title: "CCTV Quotation Online | Free Instant Quote in Jaipur | CCTVQuotation by TEAM",
     description: "Instant AI-driven professional CCTV blueprints and exact installation cost for Jaipur property owners.",
