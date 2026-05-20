@@ -159,40 +159,11 @@ export function ServiceAreaModal() {
                   </div>
                 )}
 
-                {/* Status Feedback */}
-                {selectedCity && cityData && (
-                  <div className={`p-4 rounded-2xl border flex items-start gap-3 animate-in fade-in zoom-in-95 duration-300 ${
-                    cityData.served 
-                      ? "bg-emerald-50/50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20" 
-                      : "bg-blue-50/50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20"
-                  }`}>
-                    {cityData.served ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                    ) : (
-                      <CheckCircle2 className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                    )}
-                    <div>
-                      <p className={`font-bold text-sm ${cityData.served ? "text-emerald-900 dark:text-emerald-400" : "text-blue-900 dark:text-blue-400"}`}>
-                        {cityData.served ? "Great news! We serve your area." : "We're available in your area!"}
-                      </p>
-                      <p className={`text-xs mt-1 ${cityData.served ? "text-emerald-700 dark:text-emerald-500/80" : "text-blue-700 dark:text-blue-500/80"}`}>
-                        {cityData.served 
-                          ? "Proceed to get your instant quotation and book a site visit." 
-                          : "Get an instant reference quote based on your requirements."}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
                 {/* Action Button */}
-                {selectedCity && cityData && (
+                {selectedCity && (
                   <button
                     onClick={handleContinue}
-                    className={`w-full py-3.5 rounded-xl text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${
-                      cityData.served 
-                        ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/20" 
-                        : "bg-blue-600 hover:bg-blue-500 shadow-blue-600/20"
-                    }`}
+                    className="w-full py-3.5 rounded-xl text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg bg-blue-600 hover:bg-blue-500 shadow-blue-600/20 mt-6"
                   >
                     Get Quotation Now
                     <ArrowRight className="w-4 h-4" />
