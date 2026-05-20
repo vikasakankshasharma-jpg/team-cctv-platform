@@ -127,18 +127,19 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       
       {/* EXPORT CARD */}
-      <div className="bg-white dark:bg-zinc-900/40 rounded-[32px] border border-zinc-100 dark:border-zinc-800 p-8 shadow-xl backdrop-blur-md flex flex-col items-center text-center">
-        <div className="w-20 h-20 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center mb-6">
+      <div className="bg-white dark:bg-zinc-900/40 rounded-[32px] border border-zinc-100 dark:border-zinc-800 p-8 shadow-xl backdrop-blur-md flex flex-col items-center text-center relative overflow-hidden group">
+        <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-colors duration-700" />
+        <div className="w-20 h-20 rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-500">
           <Download className="w-10 h-10 text-blue-600 dark:text-blue-400" />
         </div>
-        <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight mb-2">Export Catalog</h3>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-8 max-w-[280px]">
-          Download a complete CSV backup of all {products.length} products. You can edit this file in Excel to adjust prices or compatibility in bulk.
+        <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight mb-2 relative z-10">Export Catalog</h3>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-8 max-w-[280px] relative z-10">
+          Download a complete CSV backup of all <strong className="text-zinc-900 dark:text-white">{products.length}</strong> products. You can edit this file in Excel to adjust prices or compatibility in bulk.
         </p>
         <button
           onClick={handleExport}
           disabled={isExporting}
-          className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-6 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50"
+          className="w-full relative z-10 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-6 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-600/20 hover:shadow-blue-600/40 active:scale-95 disabled:opacity-50"
         >
           {isExporting ? <RefreshCw className="w-5 h-5 animate-spin" /> : <FileSpreadsheet className="w-5 h-5" />}
           Generate CSV
@@ -146,13 +147,13 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
       </div>
 
       {/* IMPORT CARD */}
-      <div className="bg-zinc-900 rounded-[32px] border border-zinc-800 p-8 shadow-2xl relative overflow-hidden flex flex-col items-center text-center">
-        {/* Decorative background blur */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl" />
+      <div className="bg-zinc-950 rounded-[32px] border border-zinc-800 p-8 shadow-2xl relative overflow-hidden flex flex-col items-center text-center group">
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/30 transition-colors duration-700" />
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-colors duration-700" />
         
         {!parsedData ? (
           <>
-            <div className="w-20 h-20 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6 z-10">
+            <div className="w-20 h-20 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6 z-10 group-hover:scale-110 transition-transform duration-500">
               <Upload className="w-10 h-10 text-indigo-400" />
             </div>
             <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2 z-10">Import Modifications</h3>
@@ -170,7 +171,7 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
             
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full relative z-10 flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+              className="w-full relative z-10 flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-6 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 active:scale-95"
             >
               <Upload className="w-5 h-5" />
               Select CSV File

@@ -243,7 +243,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
           <button
             id="btn-export-csv"
             onClick={() => setShowExportDropdown(!showExportDropdown)}
-            className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all shadow-sm active:scale-95 group"
+            className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all shadow-sm active:scale-95 group whitespace-nowrap"
           >
             <FileDown className="w-4 h-4 text-emerald-500" />
             Export CSV
@@ -298,7 +298,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
         <button
           id="btn-import-csv"
           onClick={() => setModalState("upload")}
-          className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 group"
+          className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 group whitespace-nowrap"
         >
           <Upload className="w-4 h-4" />
           Import CSV
