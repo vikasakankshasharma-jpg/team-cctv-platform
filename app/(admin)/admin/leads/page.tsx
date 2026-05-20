@@ -19,14 +19,14 @@ export default async function LeadsAdminPage({
 }: {
   searchParams: { page?: string; lastId?: string; lastDate?: string };
 }) {
-  const session = { isAuthenticated: true, role: "super_admin", user: { uid: "test_uid" } };
-  const isAdmin = true;
-  const isSalesStaff = false;
+  const session = await verifySession();
+  const isAdmin = session.isAuthenticated && session.role === "super_admin";
+  const isSalesStaff = session.isAuthenticated && session.role === "sales_staff";
 
   // Guard: only admins and active sales staff can access CRM
-  // if (!isAdmin && !isSalesStaff) {
-  //   redirect("/admin/login?redirect=/admin/leads");
-  // }
+  if (!isAdmin && !isSalesStaff) {
+    redirect("/admin/login?redirect=/admin/leads");
+  }
   let allowedPincodes: string[] = [];
   if (isSalesStaff && session.user) {
     const salespersonSnap = await adminDb.collection("salespeople")

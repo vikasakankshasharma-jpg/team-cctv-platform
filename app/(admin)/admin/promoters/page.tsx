@@ -33,10 +33,15 @@ export default async function PromotersAdminPage() {
       snapshot = await adminDb.collection("promoters").get();
     }
 
-    promoters = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...(doc.data() as Omit<Promoter, "id">),
-    }));
+    promoters = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        created_at: data.created_at?.toDate?.()?.toISOString() ?? data.created_at ?? null,
+        updated_at: data.updated_at?.toDate?.()?.toISOString() ?? data.updated_at ?? null,
+      };
+    }) as any[];
 
     const layoutsSnapshot = await adminDb.collection("comparison_card_layouts").get();
     cardLayouts = layoutsSnapshot.docs.map(doc => ({
