@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { adminDb, increment, serverTimestamp } from "@/lib/firebase-admin";
 
 /**
  * GET /api/pincode/[pin]
@@ -65,6 +66,17 @@ export async function GET(
     } else if (dLower.includes("ajmer") || pin.startsWith("305")) {
       citySlug = "ajmer";
       served = false;
+    } else {
+      citySlug = city.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+
+    if (citySlug) {
+      adminDb.collection("city_impressions").doc(citySlug).set({
+        city: city,
+        state: state,
+        total_lookups: increment(1),
+        last_lookup: serverTimestamp(),
+      }, { merge: true }).catch(err => console.error("Impression log failed:", err));
     }
 
     return NextResponse.json(
