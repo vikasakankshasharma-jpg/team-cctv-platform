@@ -26,7 +26,7 @@ export function SiteFooter() {
         <div className="flex flex-col md:items-end gap-6">
           <div className="flex items-center gap-2 px-4 py-2 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
             <Lock className="w-4 h-4 text-emerald-500" />
-            <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">ISO 27001 Certified Planner</span>
+            <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Secure & Verified Platform</span>
           </div>
           <div className="flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 items-center md:justify-end">
              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">

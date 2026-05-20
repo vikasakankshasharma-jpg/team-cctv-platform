@@ -7,10 +7,22 @@ export const metadata: Metadata = {
   description:
     "Terms of Service for CCTVQuotation's CCTV quotation and installation platform in Jaipur. Read our service terms, quotation accuracy, payment policy, and warranty information.",
   alternates: { canonical: "https://cctvquotation.com/terms-of-service" },
+  openGraph: {
+    title: "Terms of Service | CCTVQuotation",
+    description: "Terms of service — CCTVQuotation by TEAM.",
+    siteName: "CCTVQuotation",
+    type: "website",
+    locale: "en_IN",
+  },
+  twitter: {
+    card: "summary",
+    title: "Terms of Service | CCTVQuotation",
+    description: "Terms of service — CCTVQuotation by TEAM.",
+  },
 };
 
 export default function TermsOfServicePage() {
-  const lastUpdated = "16 May 2025";
+  const lastUpdated = "20 May 2026";
   const companyName = "TEAM CCTV (Proprietor: Vikash Akansha Sharma)";
   const domain = "cctvquotation.com";
   const phone = "+91 97726 99395";
@@ -89,7 +101,7 @@ export default function TermsOfServicePage() {
               <li>Optional Annual Maintenance Contracts (AMC) for ongoing support.</li>
             </ul>
             <p>
-              Our service is currently available <strong className="text-zinc-900 dark:text-white">exclusively for properties located in Jaipur, Rajasthan, India.</strong> We do not currently service other cities or states.
+              Our active installation service currently operates in Jaipur, Rajasthan. Reference quotations are provided for all India locations. Installation in other cities is subject to availability and franchise partner deployment.
             </p>
           </section>
 
@@ -102,7 +114,7 @@ export default function TermsOfServicePage() {
               <li>Final prices are confirmed <strong className="text-zinc-900 dark:text-white">only after a physical site inspection</strong> by our technical team.</li>
               <li>The final price may vary by <strong className="text-zinc-900 dark:text-white">±10%</strong> from the online estimate, depending on site-specific factors such as cable run lengths, surface type, structural challenges, or access requirements.</li>
               <li>All prices displayed include <strong className="text-zinc-900 dark:text-white">18% GST</strong> unless explicitly stated otherwise.</li>
-              <li>Quotation validity is <strong className="text-zinc-900 dark:text-white">15 days</strong> from the date of generation, subject to hardware price fluctuations.</li>
+              <li>Quotation validity is <strong className="text-zinc-900 dark:text-white">7 days</strong> from the date of generation, subject to hardware price fluctuations.</li>
               <li>Quoted prices are for <strong className="text-zinc-900 dark:text-white">CP Plus and Prama brand hardware</strong>. Substitutions for other brands may change pricing.</li>
             </ul>
           </section>
@@ -135,9 +147,8 @@ export default function TermsOfServicePage() {
             <ul>
               <li>A standard advance of <strong className="text-zinc-900 dark:text-white">50% of the total project cost</strong> is required to confirm the installation booking and procure hardware.</li>
               <li>The remaining balance is due upon completion of installation and handover of the system.</li>
-              <li>All payments are processed securely via Cashfree Payments, a PCI-DSS compliant payment gateway. We do not store card details.</li>
               <li>GST invoices (GSTIN applicable) are issued for all transactions.</li>
-              <li>Advance payments are <strong className="text-zinc-900 dark:text-white">non-refundable</strong> if the project is cancelled by the customer after hardware has been procured, except where TEAM CCTV is at fault.</li>
+              <li>Refund of advance minus actual procurement costs applies if the project is cancelled by the customer after hardware has been procured, except where TEAM CCTV is at fault.</li>
             </ul>
           </section>
 
