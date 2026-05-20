@@ -273,6 +273,7 @@ export function getDefaultFallbackWizard(): WizardStep[] {
             { id: "number_plate",label: "Number plate padhna",        value: "number_plate", position: 2, icon: "🚗",  tier_hint: "elite" },
             { id: "large_area",  label: "Bada area cover karna",      value: "large_area",   position: 3, icon: "📡",  tier_hint: "elite" },
             { id: "color_night", label: "Color night vision",         value: "color_night",  position: 4, icon: "🌙",  tier_hint: "professional" },
+            { id: "stqc",        label: "STQC / Govt Certified",      value: "stqc",         position: 5, icon: "🏛️",  tier_hint: "elite" },
           ]
         }
       ]
