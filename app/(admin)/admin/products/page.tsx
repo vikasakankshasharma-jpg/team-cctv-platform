@@ -2,17 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { Product } from "@/types";
-import { Loader2, Plus, ShieldCheck, ArrowLeft, Save, X, Package, IndianRupee, BadgeDollarSign } from "lucide-react";
-import Link from "next/link";
+import { Loader2, Plus, Save, X, Package, IndianRupee, BadgeDollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { ProductInventory } from "@/components/admin/ProductInventory";
 import { ProductsSkeleton } from "@/components/admin/ProductsSkeleton";
 import { BackButton } from "@/components/admin/BackButton";
+import { BulkImportExport } from "@/components/admin/BulkImportExport";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [featureTags, setFeatureTags] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Active filters — kept in sync with ProductInventory for intelligent export
+  const [activeFilters, setActiveFilters] = useState<{ category: string; technology: string }>({
+    category: "",
+    technology: "",
+  });
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
@@ -154,14 +160,15 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-             <div className="hidden xl:flex items-center gap-8 mr-4 text-right">
-                <div>
-                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Sync Status</p>
-                   <p className="text-xs font-black text-zinc-900 dark:text-white">Total Integrity</p>
-                </div>
-                <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-800" />
-             </div>
+          <div className="flex items-center gap-3">
+             {/* Bulk Export / Import */}
+             <BulkImportExport
+               activeFilters={activeFilters}
+               onImportSuccess={fetchProducts}
+             />
+
+             <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-800" />
+
              <button
                onClick={handleAdd}
                className="flex items-center gap-3 px-8 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all shadow-2xl shadow-zinc-900/20 active:scale-95 group"
@@ -183,6 +190,7 @@ export default function AdminProductsPage() {
               products={products}
               onEdit={handleEdit}
               onToggle={handleToggleActive}
+              onFiltersChange={setActiveFilters}
             />
           </div>
         )}
