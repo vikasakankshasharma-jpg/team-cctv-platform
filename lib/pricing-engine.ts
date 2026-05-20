@@ -21,6 +21,8 @@ export interface PricingEngineParams {
   addons: Addon[];
   settings: AppSettings;
   cablingDone: boolean;
+  cablingMeters?: number;       // Estimated cable run length in meters
+  locationMultiplier?: number;  // City-specific labor cost multiplier (default: 1.0)
   propertyType?: string;
   requirements?: string[];
   referralDiscountPercent?: number;
@@ -43,6 +45,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     addons,
     settings,
     cablingDone,
+    cablingMeters = 50,
+    locationMultiplier = 1.0,
     referralDiscountPercent = 0,
     referralDiscountFlat = 0,
     activeOffer
@@ -76,11 +80,19 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     totalPurchaseCost += hardware.totalCost;
 
     // 3. Labor & Equipment Calculation
-    const labor = calculateLabor(selection, settings, effectiveTech);
+    const labor = calculateLabor(selection, settings, effectiveTech, locationMultiplier);
     lineItems.push(...labor.items);
     baseHardwareCost += labor.totalRetail;
     // Labor purchase cost is usually 0 (internal staff) or a percentage (outsourced)
     totalPurchaseCost += (labor.totalRetail * (settings.labor_cost_margin_percent || 0)) / 100;
+
+    // 3b. Cabling Cost (only if customer hasn't already done cabling)
+    if (!cablingDone) {
+      const cabling = calculateCabling(selection, settings, effectiveTech, cablingMeters, locationMultiplier);
+      lineItems.push(...cabling.items);
+      baseHardwareCost += cabling.totalRetail;
+      totalPurchaseCost += cabling.totalCost;
+    }
 
     // 4. Add-ons & Promotional Calculation
     const addonCalc = calculateAddons({
@@ -220,17 +232,23 @@ function calculateHardware(
   return { items, totalRetail, totalCost };
 }
 
-function calculateLabor(selection: ConfiguratorSelection, settings: AppSettings, tech: "HD" | "IP") {
+function calculateLabor(
+  selection: ConfiguratorSelection,
+  settings: AppSettings,
+  tech: "HD" | "IP",
+  locationMultiplier = 1.0
+) {
   const items: QuoteLineItem[] = [];
   let totalRetail = 0;
 
-  const rate = tech === "IP" ? (settings.labor_ip_per_camera || 500) : (settings.labor_hd_per_camera || 400);
+  const baseRate = tech === "IP" ? (settings.labor_ip_per_camera || 500) : (settings.labor_hd_per_camera || 400);
+  const rate = Math.round(baseRate * locationMultiplier);
   const qty = selection.camera_count;
   const lineTotal = rate * qty;
 
   items.push({
     product_id: "labor_install",
-    display_name: `Standard ${tech} Installation & Termination`,
+    display_name: `Standard ${tech} Installation & Termination${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
     qty,
     unit_price: rate,
     line_total: lineTotal
@@ -239,7 +257,7 @@ function calculateLabor(selection: ConfiguratorSelection, settings: AppSettings,
 
   // High Reach Fee (Enterprise Setting)
   if (selection.ceiling_height === "high" || selection.ceiling_height === "very_high") {
-    const fee = settings.high_reach_fee || 1500;
+    const fee = Math.round((settings.high_reach_fee || 1500) * locationMultiplier);
     items.push({
       product_id: "fee_high_reach",
       display_name: "High-Reach Equipment & Safety Access Fee",
@@ -251,6 +269,35 @@ function calculateLabor(selection: ConfiguratorSelection, settings: AppSettings,
   }
 
   return { items, totalRetail };
+}
+
+function calculateCabling(
+  selection: ConfiguratorSelection,
+  settings: AppSettings,
+  tech: "HD" | "IP",
+  meters: number,
+  locationMultiplier = 1.0
+) {
+  const items: QuoteLineItem[] = [];
+  // Estimated total cable = meters per camera × camera count
+  const totalMeters = meters * selection.camera_count;
+  const baseCostPerMeter = tech === "IP"
+    ? (settings.cable_copper_coated_ip || 12)
+    : (settings.cable_copper_coated_hd || 8);
+  const ratePerMeter = Math.round(baseCostPerMeter * locationMultiplier);
+  const lineTotal = ratePerMeter * totalMeters;
+
+  items.push({
+    product_id: "cabling_material",
+    display_name: `${tech} Cabling & Conduit Material (~${totalMeters}m)`,
+    qty: totalMeters,
+    unit_price: ratePerMeter,
+    line_total: lineTotal
+  });
+
+  // Purchase cost = ~70% of retail (material has lower margin)
+  const totalCost = Math.round(lineTotal * 0.7);
+  return { items, totalRetail: lineTotal, totalCost };
 }
 
 function calculateAddons(params: {
@@ -266,7 +313,11 @@ function calculateAddons(params: {
   let totalRetail = 0;
   let totalCost = 0;
 
-  selectedAddonIds.forEach(id => {
+  // BUG FIX: Skip `amc_1yr` here — it is handled dynamically below
+  // to avoid double-counting (price is % of hardware, not a fixed price).
+  const staticAddonIds = selectedAddonIds.filter(id => id !== "amc_1yr");
+
+  staticAddonIds.forEach(id => {
     const addon = addons.find(a => a.id === id);
     if (!addon) return;
 
@@ -284,29 +335,37 @@ function calculateAddons(params: {
     totalCost += (addon.base_cost || 0) * qty;
   });
 
-  // Dynamic AMC Logic
+  // Dynamic AMC Logic (only runs once, price is % of hardware)
   if (selectedAddonIds.includes("amc_1yr")) {
     const pct = settings.amc_1yr_pct || 15;
     const amcPrice = Math.round(baseHardwareCost * (pct / 100));
     
-    items.push({
-      addon_id: "amc_1yr",
-      display_name: `1-Year Annual Maintenance Contract (${pct}%)`,
-      price: amcPrice,
-      qty: 1
-    });
-
     if (activeOffer?.type === "free_amc") {
+      // Show both lines so customer sees the saving
+      items.push({
+        addon_id: "amc_1yr",
+        display_name: `1-Year Annual Maintenance Contract (${pct}%)`,
+        price: amcPrice,
+        qty: 1
+      });
       items.push({
         addon_id: "promo_free_amc",
         display_name: "Promotion: Free 1st Year AMC",
         price: -amcPrice,
         qty: 1
       });
-      totalRetail += 0; // Net zero
+      // Net zero — no change to totalRetail
     } else {
+      items.push({
+        addon_id: "amc_1yr",
+        display_name: `1-Year Annual Maintenance Contract (${pct}%)`,
+        price: amcPrice,
+        qty: 1
+      });
       totalRetail += amcPrice;
     }
+    // AMC purchase cost ≈ 30% of retail (technician visits)
+    totalCost += Math.round(amcPrice * 0.3);
   }
 
   return { items, totalRetail, totalCost };
@@ -397,20 +456,32 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
   return recorders[0];
 }
 
+/** Safely resolves storage capacity in TB from a product.
+ *  Prefers the dedicated `storage_tb` field, falls back to name parsing.
+ */
+function resolveHDDCapacity(product: Product & { storage_tb?: number }): number {
+  if (typeof product.storage_tb === "number" && product.storage_tb > 0) {
+    return product.storage_tb;
+  }
+  // Fallback: extract first number from name (e.g. "Seagate 2TB HDD" → 2)
+  const match = product.technical_name.match(/(\d+(?:\.\d+)?)\s*TB/i);
+  if (match) return parseFloat(match[1]);
+  // Last resort: any leading number
+  const numMatch = product.technical_name.match(/^(\d+)/);
+  return numMatch ? parseFloat(numMatch[1]) : 0;
+}
+
 function resolveHDD(selection: ConfiguratorSelection, products: Product[], tech: "HD" | "IP") {
   const recordingDays = selection.recording_days || 7;
+  // Use product's declared daily_gb_per_camera if available, else sensible defaults
   const gbPerDay = tech === "IP" ? 15 : 10;
   const requiredGB = selection.camera_count * gbPerDay * recordingDays;
   const requiredTB = requiredGB / 1000;
 
   const hdds = products.filter(p => p.category === "accessory" && p.technical_name.toLowerCase().includes("hdd"));
-  hdds.sort((a, b) => {
-    const aTB = parseFloat(a.technical_name.match(/\d+/)?.[0] || "0");
-    const bTB = parseFloat(b.technical_name.match(/\d+/)?.[0] || "0");
-    return aTB - bTB;
-  });
+  hdds.sort((a, b) => resolveHDDCapacity(a) - resolveHDDCapacity(b));
 
-  return hdds.find(h => parseFloat(h.technical_name.match(/\d+/)?.[0] || "0") >= requiredTB) || hdds[hdds.length - 1];
+  return hdds.find(h => resolveHDDCapacity(h) >= requiredTB) || hdds[hdds.length - 1];
 }
 
 function resolveTransmission(selection: ConfiguratorSelection, products: Product[], tech: "HD" | "IP") {

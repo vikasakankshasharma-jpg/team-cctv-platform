@@ -1,11 +1,15 @@
 import { verifySession } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { Users, LayoutDashboard, CalendarCheck, Clock, ArrowUpRight, Phone, MessageSquare } from "lucide-react";
+import {
+  Users, LayoutDashboard, CalendarCheck, Clock,
+  ArrowUpRight, Flame, Target, TrendingUp, FileText
+} from "lucide-react";
 import type { Metadata } from "next";
 import type { Lead } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { ActivePipeline } from "@/components/salesperson/ActivePipeline";
 
 export const metadata: Metadata = {
   title: "Sales Dashboard | TEAM CCTV",
@@ -15,53 +19,124 @@ export const dynamic = "force-dynamic";
 
 export default async function SalespersonDashboard() {
   const session = await verifySession();
-  
+
   let totalAssigned = 0;
   let wonLeads = 0;
-  let newLeads = 0;
+  let activeCount = 0;
+  let todayFollowUps = 0;
   let activeLeads: Lead[] = [];
-  
+  let todayLeads: Lead[] = [];
+  // Simple monthly win data for mini trend (last 5 months)
+  const monthlyWins: Record<string, number> = {};
+
   if (session.user) {
     const spSnap = await adminDb.collection("salespeople")
       .where("firebase_uid", "==", session.user.uid)
       .limit(1)
       .get();
-      
+
     if (!spSnap.empty) {
       const spId = spSnap.docs[0].id;
-      
-      // Get leads assigned to this salesperson
+
       const leadsSnap = await adminDb.collection("leads")
         .where("assigned_to_salesperson_id", "==", spId)
         .orderBy("created_at", "desc")
         .get();
-        
+
       totalAssigned = leadsSnap.size;
-      
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
       const allLeads = leadsSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        created_at: (doc.data().created_at as any)?.toDate?.() ?? new Date(doc.data().created_at)
+        created_at: (doc.data().created_at as any)?.toDate?.() ?? new Date(doc.data().created_at),
       } as Lead));
 
       allLeads.forEach(lead => {
-        if (lead.status === "won") wonLeads++;
-        if (lead.status === "new") newLeads++;
+        if (lead.status === "won") {
+          wonLeads++;
+          const d = lead.created_at as Date;
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          monthlyWins[key] = (monthlyWins[key] || 0) + 1;
+        }
+        if (lead.status !== "won" && lead.status !== "lost") activeCount++;
+
+        // Follow-up: leads created today or leads in "contacted" status older than 24h
+        const createdAt = lead.created_at as Date;
+        const ageHours = (Date.now() - createdAt.getTime()) / 3600000;
+        if (lead.status === "contacted" && ageHours > 24 && ageHours < 72) {
+          todayFollowUps++;
+          todayLeads.push(lead);
+        } else if (lead.status === "new" && ageHours < 4) {
+          todayLeads.push(lead);
+        }
       });
 
-      // Show top 5 leads needing attention (not won or lost)
-      activeLeads = allLeads.filter(l => l.status !== "won" && l.status !== "lost").slice(0, 5);
+      activeLeads = allLeads
+        .filter(l => l.status !== "won" && l.status !== "lost")
+        .slice(0, 6);
     }
   }
 
   const conversionRate = totalAssigned > 0 ? Math.round((wonLeads / totalAssigned) * 100) : 0;
 
-  const KPIS = [
-    { label: "Total Assigned", value: totalAssigned, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Won Deals", value: wonLeads, icon: CalendarCheck, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Conversion Rate", value: `${conversionRate}%`, icon: ArrowUpRight, color: conversionRate > 20 ? "text-emerald-500" : "text-amber-500", bg: conversionRate > 20 ? "bg-emerald-500/10" : "bg-amber-500/10" },
-  ];
+  // Build mini trend bars (last 5 months)
+  const trendMonths: { label: string; wins: number }[] = [];
+  for (let i = 4; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const shortMonth = d.toLocaleString("default", { month: "short" });
+    trendMonths.push({ label: shortMonth, wins: monthlyWins[key] || 0 });
+  }
+  const maxWins = Math.max(...trendMonths.map(m => m.wins), 1);
 
+  const KPIS = [
+    {
+      label: "Total Assigned",
+      value: totalAssigned,
+      icon: Users,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+      sub: "all time"
+    },
+    {
+      label: "Won Deals",
+      value: wonLeads,
+      icon: CalendarCheck,
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      sub: "closed successfully"
+    },
+    {
+      label: "Conversion Rate",
+      value: `${conversionRate}%`,
+      icon: ArrowUpRight,
+      color: conversionRate > 20 ? "text-emerald-500" : "text-amber-500",
+      bg: conversionRate > 20 ? "bg-emerald-500/10" : "bg-amber-500/10",
+      sub: conversionRate > 20 ? "above target" : "needs improvement"
+    },
+    {
+      label: "Active Pipeline",
+      value: activeCount,
+      icon: Flame,
+      color: "text-orange-500",
+      bg: "bg-orange-500/10",
+      sub: "in progress"
+    },
+    {
+      label: "Follow-Ups Today",
+      value: todayFollowUps,
+      icon: Target,
+      color: todayFollowUps > 0 ? "text-red-500" : "text-zinc-400",
+      bg: todayFollowUps > 0 ? "bg-red-500/10" : "bg-zinc-100 dark:bg-zinc-800",
+      sub: todayFollowUps > 0 ? "action required" : "all clear"
+    },
+  ];
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -70,78 +145,102 @@ export default async function SalespersonDashboard() {
         title="Command Centre"
         description="Monitor your active pipeline and conversion performance."
       />
-      
+
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {KPIS.map((kpi, idx) => (
-          <div key={idx} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[32px] p-8 shadow-sm relative overflow-hidden group">
-            <div className="flex items-center justify-between mb-4 relative z-10">
-              <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{kpi.label}</span>
-              <div className={`p-3 rounded-2xl ${kpi.bg} ${kpi.color}`}>
-                <kpi.icon className="w-5 h-5" />
+          <div key={idx} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[28px] p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3 relative z-10">
+              <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest leading-tight">{kpi.label}</span>
+              <div className={`p-2.5 rounded-xl ${kpi.bg} ${kpi.color}`}>
+                <kpi.icon className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter relative z-10">{kpi.value}</div>
+            <div className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter relative z-10">{kpi.value}</div>
+            <div className="text-[9px] font-bold text-zinc-400 mt-1 uppercase tracking-widest">{kpi.sub}</div>
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-50 dark:from-zinc-800/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         ))}
       </div>
 
-      {/* Active Pipeline Section */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight uppercase tracking-widest flex items-center gap-2">
-             <ArrowUpRight className="w-5 h-5 text-blue-500" /> Active Pipeline
-          </h3>
-          <Link href="/salesperson/leads" className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest hover:underline">
-            View All Leads
-          </Link>
+      {/* Two-column layout: Pipeline + Trend */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Active Pipeline — 2/3 width */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-black text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+              <Flame className="w-4 h-4 text-orange-500" /> Active Pipeline
+            </h3>
+            <Link href="/salesperson/leads" className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline">
+              View All →
+            </Link>
+          </div>
+          <ActivePipeline leads={activeLeads} />
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          {activeLeads.length === 0 ? (
-            <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-[32px] py-20 text-center">
-              <p className="text-zinc-500 font-bold italic">No active leads requiring immediate attention.</p>
+        {/* Right column: Trend + Quick Actions */}
+        <div className="space-y-6">
+          {/* Monthly Win Trend */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[28px] p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-5">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Win Trend (5 Months)</h4>
             </div>
-          ) : (
-            activeLeads.map((lead) => (
-              <div key={lead.id} className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[32px] shadow-sm hover:shadow-md transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div className="flex items-start gap-5">
-                  <div className="w-14 h-14 rounded-[20px] bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-blue-500/10 group-hover:text-blue-500 transition-colors">
-                    <Users className="w-6 h-6" />
+            <div className="flex items-end gap-2 h-24">
+              {trendMonths.map((m, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="w-full flex items-end justify-center" style={{ height: "72px" }}>
+                    <div
+                      className="w-full rounded-t-lg bg-emerald-500/80 transition-all"
+                      style={{ height: `${Math.max((m.wins / maxWins) * 100, 4)}%` }}
+                    />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h4 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight">{lead.customer_name}</h4>
-                      <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${
-                        lead.status === 'new' ? 'bg-blue-500/10 text-blue-500' :
-                        lead.status === 'site_visit' ? 'bg-purple-500/10 text-purple-500' :
-                        'bg-amber-500/10 text-amber-500'
-                      }`}>
-                        {lead.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                       <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDistanceToNow(lead.created_at as Date)} ago</span>
-                       <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
-                       <span>{lead.property_type || 'Residential'}</span>
-                    </div>
-                  </div>
+                  <span className="text-[9px] font-bold text-zinc-400">{m.label}</span>
+                  <span className="text-[9px] font-black text-zinc-600 dark:text-zinc-300">{m.wins}</span>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <div className="flex items-center gap-3">
-                  <a href={`tel:${lead.mobile_number}`} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white font-black text-[10px] uppercase tracking-widest border border-zinc-100 dark:border-zinc-800 hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/20 transition-all">
-                    <Phone className="w-3.5 h-3.5" /> Call
-                  </a>
-                  <a href={`https://wa.me/${lead.mobile_number}`} target="_blank" className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all">
-                    <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
-                  </a>
-                  <Link href={`/salesperson/leads/${lead.id}`} className="w-12 h-12 rounded-2xl bg-zinc-900 dark:bg-zinc-700 flex items-center justify-center text-white hover:bg-blue-600 transition-all shadow-xl">
-                    <ArrowUpRight className="w-5 h-5" />
-                  </Link>
-                </div>
+          {/* Quick Actions */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[28px] p-6 shadow-sm space-y-3">
+            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Quick Actions</h4>
+            <Link href="/salesperson/create-quote" className="flex items-center gap-3 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors group">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <FileText className="w-4 h-4 text-white" />
               </div>
-            ))
+              <div>
+                <p className="text-xs font-black text-zinc-900 dark:text-white">Walk-In Quote</p>
+                <p className="text-[9px] text-zinc-500 font-medium">Create quote for walk-in customer</p>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-zinc-400 ml-auto group-hover:text-amber-500 transition-colors" />
+            </Link>
+            <Link href="/salesperson/leads" className="flex items-center gap-3 p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors group">
+              <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <Users className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-zinc-900 dark:text-white">My Leads</p>
+                <p className="text-[9px] text-zinc-500 font-medium">View and manage all assigned leads</p>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-zinc-400 ml-auto group-hover:text-blue-500 transition-colors" />
+            </Link>
+          </div>
+
+          {/* Follow-Up Alert */}
+          {todayFollowUps > 0 && (
+            <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-[28px] p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="w-4 h-4 text-red-500" />
+                <h4 className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest">Action Required</h4>
+              </div>
+              <p className="text-sm font-bold text-red-700 dark:text-red-300">
+                {todayFollowUps} lead{todayFollowUps > 1 ? "s" : ""} need{todayFollowUps === 1 ? "s" : ""} follow-up today.
+              </p>
+              <Link href="/salesperson/leads" className="mt-3 inline-flex items-center gap-1.5 text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest hover:underline">
+                View Now <ArrowUpRight className="w-3 h-3" />
+              </Link>
+            </div>
           )}
         </div>
       </div>
