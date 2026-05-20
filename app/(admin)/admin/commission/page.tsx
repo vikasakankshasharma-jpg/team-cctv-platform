@@ -16,10 +16,15 @@ export default async function CommissionAdminPage() {
     .limit(200)
     .get();
   
-  const commissions = snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...(doc.data() as Omit<CommissionRecord, "id">)
-  })) as CommissionRecord[];
+  const commissions = snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      created_at: data.created_at?.toDate?.()?.toISOString() ?? data.created_at ?? null,
+      updated_at: data.updated_at?.toDate?.()?.toISOString() ?? data.updated_at ?? null,
+    };
+  }) as any[];
 
   // Fetch all promoters to build a name map for readability
   const promotersSnapshot = await adminDb.collection(COLLECTIONS.PROMOTERS).get();
