@@ -171,7 +171,7 @@ export default function AdminProductsPage() {
 
              <button
                onClick={handleAdd}
-               className="flex items-center gap-3 px-8 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all shadow-2xl shadow-zinc-900/20 active:scale-95 group"
+               className="flex items-center gap-3 px-8 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all shadow-2xl shadow-zinc-900/20 active:scale-95 group whitespace-nowrap"
              >
                <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
                Register New Hardware
