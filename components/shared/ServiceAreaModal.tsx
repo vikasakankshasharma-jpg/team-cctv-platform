@@ -14,6 +14,8 @@ export function ServiceAreaModal() {
   
   const [selectedState, setSelectedState] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const router = useRouter();
 
   // Load locations when modal opens
@@ -94,6 +96,7 @@ export function ServiceAreaModal() {
                       onChange={(e) => {
                         setSelectedState(e.target.value);
                         setSelectedCity(""); // Reset city when state changes
+                        setSearchQuery("");
                       }}
                       className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
                     >
@@ -108,21 +111,51 @@ export function ServiceAreaModal() {
 
                 {/* City Selector */}
                 {selectedState && stateData && (
-                  <div className="space-y-1.5 animate-in slide-in-from-top-2 fade-in duration-300">
+                  <div className="space-y-1.5 animate-in slide-in-from-top-2 fade-in duration-300 relative">
                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">City / Town</label>
                     <div className="relative">
-                      <select 
-                        value={selectedCity}
-                        onChange={(e) => setSelectedCity(e.target.value)}
-                        className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
-                      >
-                        <option value="" disabled>Select your city...</option>
-                        {stateData.children?.map(c => (
-                          <option key={c.name} value={c.name}>{c.name}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                      <input 
+                        type="text"
+                        value={isDropdownOpen ? searchQuery : selectedCity || ""}
+                        placeholder="Search your city..."
+                        onFocus={() => {
+                          setIsDropdownOpen(true);
+                          setSearchQuery("");
+                        }}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-zinc-400 placeholder:font-medium"
+                      />
+                      <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} />
                     </div>
+
+                    {/* Dropdown Menu */}
+                    {isDropdownOpen && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-[110]" 
+                          onClick={() => setIsDropdownOpen(false)}
+                        />
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-[120] max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2">
+                          {stateData.children?.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
+                            <div className="px-4 py-3 text-sm text-zinc-500 text-center font-medium">No cities found.</div>
+                          ) : (
+                            stateData.children?.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map(c => (
+                              <button
+                                key={c.name}
+                                onClick={() => {
+                                  setSelectedCity(c.name);
+                                  setIsDropdownOpen(false);
+                                  setSearchQuery("");
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                              >
+                                {c.name}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
