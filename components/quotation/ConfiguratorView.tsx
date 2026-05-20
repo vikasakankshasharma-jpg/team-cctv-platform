@@ -33,6 +33,7 @@ import { FullCustomizerPanel } from "./FullCustomizerPanel";
 import { AllSystemsGrid } from "./AllSystemsGrid";
 import { resolveCardLayout } from "@/lib/card-layout-engine";
 import { ExpertFiltersBar } from "./ExpertFiltersBar";
+import { PriceRangeTicker } from "./PriceRangeTicker";
 
 import { SiteDetailsModal } from "./SiteDetailsModal";
 import { ShareDialog } from "./ShareDialog";
@@ -171,38 +172,40 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRecommendation?.camera_option]);
 
-  // Init Compare Options — Technology-Aware Smart Card Preselection
-  // Rules:
-  //   Customer chose IP       → 3 IP cards (Budget / Recommended / Premium)
-  //   Customer chose HD       → 2 HD cards + 1 IP Upgrade suggestion
-  //   Customer "not sure"     → Mixed (HD Budget + IP Recommended + IP Premium)
-  // Uses a ref to ensure this only runs ONCE per page load.
+  // ── Dynamic 3-Card Anchoring Engine ──────────────────────────────────────
+  // Rules: We dynamically generate Good (1), Better (2), Best (3) options.
+  // The pricing engine handles picking the median value for Option 2, 
+  // and the lowest/highest values for 1 and 3 respectively, based on filters.
   useEffect(() => {
-    if (compareInitialized.current) return;
     if (pricingCache.products.length === 0) return;
 
-    compareInitialized.current = true;
+    // Use current tech, default to IP if unknown
+    const currentTech = (!selection.technology) ? "IP" : selection.technology;
 
-    // Use the admin-controlled Card Layout Engine
-    const resolved = resolveCardLayout(pricingCache.card_layouts, {
-      technology: selection.technology || "any",
-      propertyType: lead.property_type,
-      cameraCount: selection.camera_count,
-      customLayoutId: customLayoutId || undefined
-    });
+    const dynamicCards: Array<{technology: "HD" | "IP"; option: number}> = [
+      { technology: currentTech as "HD" | "IP", option: 1 },
+      { technology: currentTech as "HD" | "IP", option: 2 },
+      { technology: currentTech as "HD" | "IP", option: 3 }
+    ];
 
-    const defaults = resolved.cards;
+    setCompareOptions(dynamicCards);
 
-    setCompareOptions(defaults);
-    // Find the card that is marked as recommended/featured, or fallback to the middle one
-    const recommendedCard = defaults.find(c => {
-       // Check if this card matches the activeRecommendation from engine
-       return c.technology === selection.technology && c.option === activeRecommendation?.camera_option;
-    }) || defaults[1];
+    // Pick the recommended card (usually option 2)
+    const recommendedCard = dynamicCards.find(c => {
+       return c.technology === currentTech && c.option === activeRecommendation?.camera_option;
+    }) || dynamicCards[1];
 
-    setActiveCheckoutOption({ technology: recommendedCard.technology, option: recommendedCard.option });
+    if (!active_checkout_option || active_checkout_option.technology !== currentTech) {
+      setActiveCheckoutOption({ technology: recommendedCard.technology, option: recommendedCard.option });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pricingCache.products.length, activeRecommendation?.camera_option, selection.technology]);
+  }, [
+    pricingCache.products.length, 
+    selection.technology, 
+    selection.brand_preference, 
+    selection.requested_features,
+    selection.max_budget
+  ]);
 
   // Handle Toggle Compare from Table (inline limit message replaces browser alert)
   const handleToggleCompare = (opt: { technology: "HD" | "IP"; option: number }) => {
@@ -458,6 +461,17 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             customerTechnology={selection.technology}
             requestedFeatures={selection.requested_features || []}
             selectedAddons={selection.selected_addons || []}
+            promoterDiscount={promoterDiscount}
+            evaluatedAddonRules={evaluatedRules}
+            activeOffer={lead.active_offer}
+          />
+          
+          <PriceRangeTicker
+            cameraCount={selection.camera_count}
+            products={pricingCache.products}
+            addons={pricingCache.addons}
+            settings={pricingCache.settings}
+            cablingDone={cablingDone}
             promoterDiscount={promoterDiscount}
             evaluatedAddonRules={evaluatedRules}
             activeOffer={lead.active_offer}
