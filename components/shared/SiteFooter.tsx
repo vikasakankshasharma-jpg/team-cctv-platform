@@ -29,14 +29,9 @@ export function SiteFooter() {
             <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">ISO 27001 Certified Planner</span>
           </div>
           <div className="flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 items-center md:justify-end">
-             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Operations:</span>
-             <Link href="/jaipur" className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 hover:underline">Jaipur</Link>
-             <div className="flex gap-3 sm:gap-4 opacity-50">
-               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Expanding Next:</span>
-               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Jodhpur</span>
-               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Kota</span>
-               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Ajmer</span>
-             </div>
+             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+               🇮🇳 Serving all of India
+             </span>
           </div>
           <div className="flex flex-wrap gap-4 sm:gap-8">
              <Link href="/privacy-policy" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
