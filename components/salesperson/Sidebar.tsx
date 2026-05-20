@@ -9,21 +9,28 @@ import {
   LogOut,
   ChevronRight,
   ShieldCheck,
-  FileText
+  FileText,
+  TrendingUp
 } from "lucide-react";
 
 const NAV_GROUPS = [
   {
     label: "Overview",
     items: [
-      { name: "Dashboard", href: "/salesperson/dashboard", icon: LayoutDashboard },
+      { name: "Dashboard",    href: "/salesperson/dashboard",    icon: LayoutDashboard },
     ]
   },
   {
     label: "Sales Operations",
     items: [
-      { name: "My Leads",    href: "/salesperson/leads",        icon: Users },
-      { name: "Create Quote", href: "/salesperson/create-quote", icon: FileText },
+      { name: "My Leads",     href: "/salesperson/leads",        icon: Users },
+      { name: "Walk-In Quote",href: "/salesperson/create-quote", icon: FileText },
+    ]
+  },
+  {
+    label: "Insights",
+    items: [
+      { name: "My Performance", href: "/salesperson/dashboard", icon: TrendingUp },
     ]
   }
 ];
@@ -43,8 +50,7 @@ export function Sidebar() {
     }
   };
 
-  const isActive = (href: string) =>
-    pathname.startsWith(href);
+  const isActive = (href: string) => pathname === href || (href !== "/salesperson/dashboard" && pathname.startsWith(href));
 
   return (
     <div className="w-64 bg-white dark:bg-zinc-950 border-r border-zinc-100 dark:border-zinc-800/60 flex flex-col h-screen sticky top-0 overflow-hidden shadow-sm dark:shadow-none transition-colors duration-500">
@@ -73,7 +79,7 @@ export function Sidebar() {
                 const Icon = item.icon;
                 return (
                   <Link
-                    key={item.name}
+                    key={item.name + item.href}
                     href={item.href}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all relative group ${
                       active
