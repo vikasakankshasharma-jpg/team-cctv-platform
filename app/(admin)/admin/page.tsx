@@ -142,6 +142,8 @@ export default async function AdminDashboard() {
       color: "text-blue-500",
       bg: "bg-blue-500/10",
       shadow: "shadow-blue-500/10",
+      borderGradient: "from-blue-400 to-indigo-500",
+      hoverBg: "bg-gradient-to-br from-blue-500/[0.03] to-transparent",
       href: "/admin/leads"
     },
     {
@@ -152,6 +154,8 @@ export default async function AdminDashboard() {
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
       shadow: "shadow-emerald-500/10",
+      borderGradient: "from-emerald-400 to-teal-500",
+      hoverBg: "bg-gradient-to-br from-emerald-500/[0.03] to-transparent",
       href: "/admin/leads"
     },
     {
@@ -162,6 +166,8 @@ export default async function AdminDashboard() {
       color: "text-purple-400",
       bg: "bg-purple-500/10",
       shadow: "shadow-purple-500/10",
+      borderGradient: "from-purple-400 to-violet-500",
+      hoverBg: "bg-gradient-to-br from-purple-500/[0.03] to-transparent",
       href: "/admin/leads"
     },
     {
@@ -172,6 +178,8 @@ export default async function AdminDashboard() {
       color: "text-amber-500",
       bg: "bg-amber-500/10",
       shadow: "shadow-amber-500/10",
+      borderGradient: "from-amber-400 to-orange-500",
+      hoverBg: "bg-gradient-to-br from-amber-500/[0.03] to-transparent",
       href: "/admin/bookings"
     },
     {
@@ -182,12 +190,14 @@ export default async function AdminDashboard() {
       color: "text-rose-500",
       bg: "bg-rose-500/10",
       shadow: "shadow-rose-500/10",
+      borderGradient: "from-rose-400 to-pink-500",
+      hoverBg: "bg-gradient-to-br from-rose-500/[0.03] to-transparent",
       href: "/admin/leads"
     },
   ];
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-8 animate-in fade-in duration-700">
       <PageHeader 
         icon={LayoutDashboard} 
         title="Command Centre" 
@@ -195,18 +205,45 @@ export default async function AdminDashboard() {
       />
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {KPIS.map((kpi, idx) => (
-          <Link href={kpi.href} key={idx} className={`block bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 relative overflow-hidden group shadow-lg dark:shadow-2xl transition-all hover:border-blue-500/20 active:scale-95 ${kpi.shadow}`}>
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-widest">{kpi.label}</span>
-              <div className={`p-3 rounded-2xl ${kpi.bg} ${kpi.color} shadow-inner`}>
-                <kpi.icon className="w-5 h-5" />
+          <Link
+            href={kpi.href}
+            key={idx}
+            className={`
+              relative block bg-white dark:bg-zinc-900
+              border border-zinc-100 dark:border-zinc-800/60
+              rounded-[28px] p-6 overflow-hidden group
+              shadow-sm hover:shadow-xl dark:hover:shadow-zinc-950
+              transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]
+            `}
+          >
+            {/* Gradient border glow at the bottom */}
+            <div className={`absolute bottom-0 left-6 right-6 h-[2px] rounded-full bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${kpi.borderGradient}`} />
+
+            {/* Background shimmer on hover */}
+            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-[28px] ${kpi.hoverBg}`} />
+
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-5">
+                <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] leading-none">{kpi.label}</span>
+                <div className={`p-2.5 rounded-xl ${kpi.bg} ${kpi.color} shadow-inner group-hover:scale-110 transition-transform duration-300`}>
+                  <kpi.icon className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className={`text-3xl font-black tracking-tighter mb-1 text-zinc-900 dark:text-white group-hover:${kpi.color} transition-colors duration-300`}>
+                {kpi.value}
+              </div>
+
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">{kpi.trend}</span>
+                <div className={`flex items-center gap-1 text-[9px] font-black ${kpi.color}`}>
+                  <TrendingUp className="w-3 h-3" />
+                  <span className="uppercase tracking-widest">↑</span>
+                </div>
               </div>
             </div>
-            <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">{kpi.value}</div>
-            <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider">{kpi.trend}</div>
-            <div className="absolute inset-0 bg-gradient-to-tr from-zinc-500/[0.02] dark:from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           </Link>
         ))}
       </div>
