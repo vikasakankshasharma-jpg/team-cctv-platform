@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firebase-client";
 import { Loader2, TrendingUp, Eye, FileText, CheckCircle2 } from "lucide-react";
 
 type ServiceArea = {
