@@ -64,7 +64,7 @@ export function ServiceAreaModal() {
             onClick={() => setIsOpen(false)}
           />
           
-          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-[32px] p-8 shadow-2xl border border-zinc-100 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-[32px] p-8 shadow-2xl border border-zinc-100 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200 overflow-visible">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">
