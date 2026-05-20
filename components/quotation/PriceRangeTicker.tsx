@@ -16,6 +16,7 @@ interface PriceRangeTickerProps {
   promoterDiscount?: { percent: number; flat: number };
   evaluatedAddonRules: Record<string, AddonRuleResult>;
   activeOffer?: any;
+  selection: any;
 }
 
 export function PriceRangeTicker({
@@ -26,9 +27,15 @@ export function PriceRangeTicker({
   cablingDone,
   promoterDiscount,
   evaluatedAddonRules,
-  activeOffer
+  activeOffer,
+  selection
 }: PriceRangeTickerProps) {
   const [modalData, setModalData] = useState<{ title: string; pricing: any } | null>(null);
+
+  // Default to HD for absolute lowest, but respect selected tech if it's strictly IP
+  const minTech = (selection.technology === "IP") ? "IP" : "HD";
+  // Default to IP for absolute highest, but respect selected tech if it's strictly HD
+  const maxTech = (selection.technology === "HD") ? "HD" : "IP";
 
   const { lowest, highest } = useMemo(() => {
     if (!products.length || !settings) return { lowest: null, highest: null };
@@ -37,12 +44,13 @@ export function PriceRangeTicker({
     const lowestConfig = calculatePricing({
       selection: {
         camera_count: cameraCount,
-        technology: "HD",
+        technology: minTech,
         plan_type: "budget",
         recording_days: 7,
         selected_addons: [],
-        picture_quality: "good",
-        brand_preference: "all",
+        picture_quality: selection.picture_quality || "good",
+        brand_preference: selection.brand_preference || "all",
+        requested_features: selection.requested_features || [],
         max_budget: null,
         focus_point: "price",
         selected_camera_option: 1 // Lowest
@@ -61,12 +69,13 @@ export function PriceRangeTicker({
     const highestConfig = calculatePricing({
       selection: {
         camera_count: cameraCount,
-        technology: "IP",
+        technology: maxTech,
         plan_type: "premium",
         recording_days: 30, // Maximize storage for highest quote
         selected_addons: [],
-        picture_quality: "crystal_clear",
-        brand_preference: "all",
+        picture_quality: selection.picture_quality || "crystal_clear",
+        brand_preference: selection.brand_preference || "all",
+        requested_features: selection.requested_features || [],
         max_budget: null,
         focus_point: "quality",
         selected_camera_option: 3 // Highest
@@ -82,7 +91,7 @@ export function PriceRangeTicker({
     });
 
     return { lowest: lowestConfig, highest: highestConfig };
-  }, [cameraCount, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer]);
+  }, [cameraCount, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer, selection]);
 
   if (!lowest || !highest) return null;
 
@@ -98,14 +107,14 @@ export function PriceRangeTicker({
               Market Insight for {cameraCount} Cameras
             </p>
             <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-              Explore the absolute lowest and highest possibilities.
+              Explore the absolute lowest and highest possibilities for your current filters.
             </p>
           </div>
         </div>
         
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button 
-            onClick={() => setModalData({ title: "Absolute Lowest Configuration (HD)", pricing: lowest })}
+            onClick={() => setModalData({ title: `Absolute Lowest Configuration (${minTech})`, pricing: lowest })}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-colors group"
           >
             <span className="text-xs font-black text-zinc-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Lowest</span>
@@ -118,7 +127,7 @@ export function PriceRangeTicker({
           <span className="text-zinc-300 dark:text-zinc-700 font-light">—</span>
 
           <button 
-            onClick={() => setModalData({ title: "Ultimate Premium Configuration (IP)", pricing: highest })}
+            onClick={() => setModalData({ title: `Ultimate Premium Configuration (${maxTech})`, pricing: highest })}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-amber-500 dark:hover:border-amber-500 transition-colors group"
           >
             <span className="text-xs font-black text-zinc-500 uppercase tracking-wider group-hover:text-amber-600 transition-colors">Highest</span>
