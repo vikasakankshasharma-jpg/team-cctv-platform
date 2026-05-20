@@ -15,7 +15,7 @@ export default function LocalBusinessSchema({ cityName }: LocalBusinessSchemaPro
     "url": `https://cctvquotation.com/${cityName.toLowerCase()}`,
     "telephone": "+919999999999", // Placeholder, will be updated via environment variable if needed
     "priceRange": "₹₹",
-    "description": `Professional CCTV installation, maintenance, and security blueprinting services in ${cityName}. ISO 27001 certified planning.`,
+    "description": `Professional CCTV installation, maintenance, and security blueprinting services in ${cityName}. Professional planning.`,
     "address": {
       "@type": "PostalAddress",
       "addressLocality": cityName,

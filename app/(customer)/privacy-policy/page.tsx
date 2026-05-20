@@ -7,10 +7,22 @@ export const metadata: Metadata = {
   description:
     "Privacy Policy for CCTVQuotation's online CCTV quotation platform. Learn how we collect, use, and protect your personal data in accordance with the Digital Personal Data Protection Act, 2023.",
   alternates: { canonical: "https://cctvquotation.com/privacy-policy" },
+  openGraph: {
+    title: "Privacy Policy | CCTVQuotation",
+    description: "Privacy policy for CCTVQuotation platform.",
+    siteName: "CCTVQuotation",
+    type: "website",
+    locale: "en_IN",
+  },
+  twitter: {
+    card: "summary",
+    title: "Privacy Policy | CCTVQuotation",
+    description: "Privacy policy for CCTVQuotation platform.",
+  },
 };
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = "16 May 2025";
+  const lastUpdated = "20 May 2026";
   const companyName = "TEAM CCTV (Proprietor: Vikash Akansha Sharma)";
   const domain = "cctvquotation.com";
   const phone = "+91 97726 99395";
@@ -77,8 +89,7 @@ export default function PrivacyPolicyPage() {
             <p>
               <strong className="text-zinc-900 dark:text-white">{companyName}</strong> operates the website{" "}
               <a href={`https://${domain}`} className="text-blue-600 hover:underline">{domain}</a> (the{" "}
-              &quot;Platform&quot;). We provide an online CCTV quotation and installation estimation service
-              specifically for properties in Jaipur, Rajasthan, India.
+              &quot;Platform&quot;). Our active installation service currently operates in Jaipur, Rajasthan. Reference quotations are provided for all India locations.
             </p>
             <p>
               This Privacy Policy describes how we collect, use, store, and protect your personal data when you use
@@ -156,7 +167,6 @@ export default function PrivacyPolicyPage() {
             <ul>
               <li><strong className="text-zinc-900 dark:text-white">Our installation team:</strong> TEAM CCTV technicians in Jaipur who will contact you for the site visit.</li>
               <li><strong className="text-zinc-900 dark:text-white">Firebase / Google Cloud (Firestore):</strong> Our secure cloud database where your lead data is stored. Google adheres to ISO 27001 and SOC 2 Type II standards.</li>
-              <li><strong className="text-zinc-900 dark:text-white">Payment processors (Cashfree Payments):</strong> If you make an advance payment, your transaction details are processed by Cashfree, a PCI-DSS compliant payment gateway. We do not store card details.</li>
               <li><strong className="text-zinc-900 dark:text-white">Analytics (Google Analytics):</strong> Anonymised, aggregated data about website usage. No personally identifiable information is shared.</li>
             </ul>
           </section>

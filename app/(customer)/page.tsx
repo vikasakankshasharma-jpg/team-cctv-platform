@@ -20,17 +20,32 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const metadata: Metadata = {
   title: "CCTVQuotation | Get Free & Instant CCTV Installation Price Online",
-  description: "Get an instant CCTV camera price with professional installation. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
+  description: "Get an instant CCTV camera price with professional installation. Answer a few simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
   keywords: ["CCTV price with installation", "CCTV camera price", "Online CCTV quotation", "CCTVQuotation", "TEAM CCTV"],
   alternates: {
     canonical: "https://cctvquotation.com",
   },
   openGraph: {
     title: "CCTVQuotation | Get Free & Instant CCTV Installation Price Online",
-    description: "Get an instant CCTV camera price with professional installation. Answer 4 simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
+    description: "Get an instant CCTV camera price with professional installation. Answer a few simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
     type: "website",
     url: "https://cctvquotation.com",
     siteName: "CCTVQuotation",
+    locale: "en_IN",
+    images: [
+      {
+        url: "https://cctvquotation.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "CCTVQuotation — Free Instant CCTV Quotation Online",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CCTVQuotation | Get Free & Instant CCTV Installation Price Online",
+    description: "Get an instant CCTV camera price with professional installation. Answer a few simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
+    images: ["https://cctvquotation.com/og-image.png"],
   },
 };
 
@@ -105,7 +120,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-base sm:text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed">
-            Get an exact price for your CCTV setup in under 2 minutes. No technical knowledge needed — answer 4 simple questions and we&apos;ll do the rest.
+            Get an exact price for your CCTV setup in under 2 minutes. No technical knowledge needed — answer a few simple questions and we&apos;ll do the rest.
           </p>
 
           <div className="w-full mb-8 sm:mb-10 md:mb-16">
