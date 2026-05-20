@@ -475,6 +475,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             promoterDiscount={promoterDiscount}
             evaluatedAddonRules={evaluatedRules}
             activeOffer={lead.active_offer}
+            selection={selection}
           />
         </div>
       </div>
