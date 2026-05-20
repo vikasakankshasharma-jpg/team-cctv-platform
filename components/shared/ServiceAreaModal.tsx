@@ -117,7 +117,7 @@ export function ServiceAreaModal() {
                       <input 
                         type="text"
                         value={isDropdownOpen ? searchQuery : selectedCity || ""}
-                        placeholder="Search your city..."
+                        placeholder="Type to search your city..."
                         onFocus={() => {
                           setIsDropdownOpen(true);
                           setSearchQuery("");
