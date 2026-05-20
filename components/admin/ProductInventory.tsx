@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { 
   Search, ChevronDown, ChevronRight, Edit2, Camera, Monitor, 
   Layers, Zap, Package, HardDrive, Cpu, Radio, ShieldCheck,
@@ -286,14 +286,23 @@ interface ProductInventoryProps {
   products: Product[];
   onEdit: (p: Product) => void;
   onToggle: (p: Product) => void;
+  onFiltersChange?: (filters: { category: string; technology: string }) => void;
 }
 
-export function ProductInventory({ products, onEdit, onToggle }: ProductInventoryProps) {
+export function ProductInventory({ products, onEdit, onToggle, onFiltersChange }: ProductInventoryProps) {
   const [search, setSearch]         = useState("");
   const [filterCat, setFilterCat]   = useState<string>("all");
   const [filterTech, setFilterTech] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterBrand, setFilterBrand] = useState<string>("all");
+
+  // Notify parent whenever category or technology filters change
+  useEffect(() => {
+    onFiltersChange?.({
+      category: filterCat === "all" ? "" : filterCat,
+      technology: filterTech === "all" ? "" : filterTech,
+    });
+  }, [filterCat, filterTech, onFiltersChange]);
 
   const brands = useMemo(() => {
     const b = new Set<string>();
