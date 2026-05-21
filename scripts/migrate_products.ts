@@ -58,7 +58,7 @@ async function migrateProducts() {
   console.log(`Found ${snapshot.size} cameras to evaluate.`);
   
   let updatedCount = 0;
-  const batch = db.batch();
+  let batch = db.batch();
   let currentBatchSize = 0;
 
   for (const doc of snapshot.docs) {
@@ -102,10 +102,11 @@ async function migrateProducts() {
     updatedCount++;
     currentBatchSize++;
 
-    // Firestore batch limits to 500 writes
+    // Firestore batch limits to 500 writes — create a new batch after committing
     if (currentBatchSize === 490) {
       await batch.commit();
       console.log(`Committed batch of 490...`);
+      batch = db.batch();
       currentBatchSize = 0;
     }
   }
