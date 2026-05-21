@@ -305,6 +305,171 @@ export default function AdminProductsPage() {
                   </div>
                 </section>
 
+                {/* Visual Section: Camera Specifications */}
+                {editingProduct.category === "camera" && (
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-3">
+                       <span className="w-5 h-px bg-zinc-200 dark:bg-zinc-800" />
+                       <h3 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em]">Hardware Specifications</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      {/* Resolution */}
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Resolution (MP)</label>
+                        <input 
+                          type="number" 
+                          value={editingProduct.resolution_mp || ""}
+                          onChange={e => setEditingProduct({...editingProduct, resolution_mp: e.target.value ? Number(e.target.value) : undefined})}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white"
+                          placeholder="e.g. 5"
+                        />
+                      </div>
+                      {/* Night Vision Type */}
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Night Vision</label>
+                        <select 
+                          value={editingProduct.night_vision_type || "ir"}
+                          onChange={e => setEditingProduct({...editingProduct, night_vision_type: e.target.value as any})}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-[11px] font-black uppercase tracking-widest focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white appearance-none cursor-pointer"
+                        >
+                          <option value="ir">IR (B&W)</option>
+                          <option value="color">Full Color</option>
+                          <option value="dual_light">Dual Light</option>
+                          <option value="starlight">Starlight</option>
+                        </select>
+                      </div>
+                      {/* Form Factor */}
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Form Factor</label>
+                        <select 
+                          value={editingProduct.form_factor || "dome"}
+                          onChange={e => setEditingProduct({...editingProduct, form_factor: e.target.value as any})}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-[11px] font-black uppercase tracking-widest focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white appearance-none cursor-pointer"
+                        >
+                          <option value="dome">Dome</option>
+                          <option value="bullet">Bullet</option>
+                          <option value="ptz">PTZ</option>
+                          <option value="turret">Turret</option>
+                          <option value="fisheye">Fisheye</option>
+                        </select>
+                      </div>
+                      {/* Compression */}
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Compression</label>
+                        <select 
+                          value={editingProduct.compression || "H.265"}
+                          onChange={e => setEditingProduct({...editingProduct, compression: e.target.value as any})}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-[11px] font-black uppercase tracking-widest focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white appearance-none cursor-pointer"
+                        >
+                          <option value="H.264">H.264</option>
+                          <option value="H.265">H.265</option>
+                          <option value="H.265+">H.265+</option>
+                        </select>
+                      </div>
+                      {/* Lens */}
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Lens (mm)</label>
+                        <input 
+                          type="number" step="0.1"
+                          value={editingProduct.lens_mm || ""}
+                          onChange={e => setEditingProduct({...editingProduct, lens_mm: e.target.value ? Number(e.target.value) : undefined})}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white"
+                          placeholder="e.g. 3.6"
+                        />
+                      </div>
+                      {/* IP Rating */}
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">IP Rating</label>
+                        <input 
+                          type="text" 
+                          value={editingProduct.ip_rating || ""}
+                          onChange={e => setEditingProduct({...editingProduct, ip_rating: e.target.value})}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white"
+                          placeholder="e.g. IP67"
+                        />
+                      </div>
+                      {/* Warranty */}
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Warranty (Yrs)</label>
+                        <input 
+                          type="number" 
+                          value={editingProduct.warranty_years || ""}
+                          onChange={e => setEditingProduct({...editingProduct, warranty_years: e.target.value ? Number(e.target.value) : undefined})}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white"
+                          placeholder="e.g. 2"
+                        />
+                      </div>
+                      
+                      {/* Toggles Grid */}
+                      <div className="col-span-1 md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                        <label className="flex items-center gap-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-2xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                          <input type="checkbox" checked={!!editingProduct.has_audio} onChange={e => setEditingProduct({...editingProduct, has_audio: e.target.checked})} className="w-4 h-4 text-blue-600 rounded" />
+                          <span className="text-xs font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-300">Audio Mic</span>
+                        </label>
+                        <label className="flex items-center gap-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-2xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                          <input type="checkbox" checked={!!editingProduct.wdr} onChange={e => setEditingProduct({...editingProduct, wdr: e.target.checked})} className="w-4 h-4 text-blue-600 rounded" />
+                          <span className="text-xs font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-300">WDR</span>
+                        </label>
+                        <label className="flex items-center gap-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-2xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                          <input type="checkbox" checked={!!editingProduct.poe} onChange={e => setEditingProduct({...editingProduct, poe: e.target.checked})} className="w-4 h-4 text-blue-600 rounded" />
+                          <span className="text-xs font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-300">PoE Support</span>
+                        </label>
+                        <label className="flex items-center gap-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-2xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                          <input type="checkbox" checked={!!editingProduct.has_sd_slot} onChange={e => setEditingProduct({...editingProduct, has_sd_slot: e.target.checked})} className="w-4 h-4 text-blue-600 rounded" />
+                          <span className="text-xs font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-300">SD Slot</span>
+                        </label>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* Visual Section: Focus Engine */}
+                {editingProduct.category === "camera" && (
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-3">
+                       <span className="w-5 h-px bg-amber-500" />
+                       <h3 className="text-[11px] font-black text-amber-500 uppercase tracking-[0.3em]">Marketing & Focus Engine</h3>
+                    </div>
+                    <div className="p-8 bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-3xl space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight">Silent Margin Boost</h4>
+                          <p className="text-[10px] font-bold text-zinc-500 mt-1 uppercase tracking-widest">Mark as focus product to organically recommend this in Tier 2.</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" checked={!!editingProduct.is_focus_product} onChange={e => setEditingProduct({...editingProduct, is_focus_product: e.target.checked})} className="sr-only peer" />
+                          <div className="w-14 h-7 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
+                        </label>
+                      </div>
+
+                      {editingProduct.is_focus_product && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-amber-200/50 dark:border-amber-900/30">
+                          <div className="space-y-2.5">
+                            <label className="text-[10px] font-black text-amber-700 dark:text-amber-500 uppercase tracking-widest ml-1">Boost Priority (1-100)</label>
+                            <input 
+                              type="number" 
+                              value={editingProduct.focus_boost_priority || ""}
+                              onChange={e => setEditingProduct({...editingProduct, focus_boost_priority: e.target.value ? Number(e.target.value) : undefined})}
+                              className="w-full bg-white dark:bg-zinc-950 border border-amber-200 dark:border-amber-900/50 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition-all dark:text-white"
+                              placeholder="e.g. 90"
+                            />
+                          </div>
+                          <div className="space-y-2.5">
+                            <label className="text-[10px] font-black text-amber-700 dark:text-amber-500 uppercase tracking-widest ml-1">Internal Reason</label>
+                            <input 
+                              type="text" 
+                              value={editingProduct.focus_reason || ""}
+                              onChange={e => setEditingProduct({...editingProduct, focus_reason: e.target.value})}
+                              className="w-full bg-white dark:bg-zinc-950 border border-amber-200 dark:border-amber-900/50 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition-all dark:text-white"
+                              placeholder="e.g. Q3 Distributor Deal"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                )}
+
                 {/* PRICING ENGINE: High Fidelity */}
                 <section className="bg-zinc-900 dark:bg-white rounded-[32px] p-10 text-white dark:text-zinc-900 shadow-2xl relative overflow-hidden group/pricing transition-all duration-700">
                   <div className="absolute top-0 right-0 p-8 opacity-10 group-hover/pricing:scale-110 transition-transform duration-1000">
