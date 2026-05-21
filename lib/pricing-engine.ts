@@ -458,7 +458,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
         // Prioritize cameras with 4MP+, audio, or PTZ
         const highSpec = pool.slice(Math.floor(pool.length / 2)).find(cam => {
           const feats = (cam.features || []).join(" ").toLowerCase();
-          const name = cam.technical_name.toLowerCase();
+          const name = (cam.technical_name || "").toLowerCase();
           return feats.includes("mic") || feats.includes("audio") || 
                  feats.includes("ptz") || name.includes("4mp") || name.includes("5mp") || name.includes("8mp");
         });
@@ -498,10 +498,10 @@ function resolveHDDCapacity(product: Product & { storage_tb?: number }): number 
     return product.storage_tb;
   }
   // Fallback: extract first number from name (e.g. "Seagate 2TB HDD" → 2)
-  const match = product.technical_name.match(/(\d+(?:\.\d+)?)\s*TB/i);
+  const match = (product.technical_name || "").match(/(\d+(?:\.\d+)?)\s*TB/i);
   if (match) return parseFloat(match[1]);
   // Last resort: any leading number
-  const numMatch = product.technical_name.match(/^(\d+)/);
+  const numMatch = (product.technical_name || "").match(/^(\d+)/);
   return numMatch ? parseFloat(numMatch[1]) : 0;
 }
 
@@ -512,7 +512,7 @@ function resolveHDD(selection: ConfiguratorSelection, products: Product[], tech:
   const requiredGB = selection.camera_count * gbPerDay * recordingDays;
   const requiredTB = requiredGB / 1000;
 
-  const hdds = products.filter(p => p.category === "accessory" && p.technical_name.toLowerCase().includes("hdd"));
+  const hdds = products.filter(p => p.category === "accessory" && (p.technical_name || "").toLowerCase().includes("hdd"));
   hdds.sort((a, b) => resolveHDDCapacity(a) - resolveHDDCapacity(b));
 
   return hdds.find(h => resolveHDDCapacity(h) >= requiredTB) || hdds[hdds.length - 1];
@@ -520,7 +520,7 @@ function resolveHDD(selection: ConfiguratorSelection, products: Product[], tech:
 
 function resolveTransmission(selection: ConfiguratorSelection, products: Product[], tech: "HD" | "IP") {
   const keyword = tech === "IP" ? "poe" : "psu";
-  const options = products.filter(p => p.category === "accessory" && p.technical_name.toLowerCase().includes(keyword));
+  const options = products.filter(p => p.category === "accessory" && (p.technical_name || "").toLowerCase().includes(keyword));
   options.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
   return options.find(o => (o.max_cameras || 0) >= selection.camera_count) || options[options.length - 1];
 }

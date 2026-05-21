@@ -99,7 +99,7 @@ export function calculateSystemScore(
 // ─────────────────────────────────────────────
 
 function scoreResolution(cam: Product): number {
-  const mp = cam.resolution_mp ?? inferResolutionFromName(cam.technical_name);
+  const mp = cam.resolution_mp ?? inferResolutionFromName(cam.technical_name || "");
   if (mp >= 8) return 25;   // 4K / 8MP
   if (mp >= 5) return 21;   // 5MP Ultra-HD
   if (mp >= 4) return 17;   // 4MP Pro-HD
@@ -108,7 +108,7 @@ function scoreResolution(cam: Product): number {
 }
 
 function scoreNightVision(cam: Product): number {
-  const nvType = cam.night_vision_type ?? inferNightVisionFromName(cam.technical_name);
+  const nvType = cam.night_vision_type ?? inferNightVisionFromName(cam.technical_name || "");
   const rangeBonus = Math.min(4, Math.floor((cam.night_vision_range_m ?? 20) / 15));
 
   switch (nvType) {
