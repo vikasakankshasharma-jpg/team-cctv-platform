@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { CompareCards } from "./CompareCards";
+import { SpecCompareTable } from "./SpecCompareTable";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
 import { AllSystemsGrid } from "./AllSystemsGrid";
 import { resolveCardLayout } from "@/lib/card-layout-engine";
@@ -464,6 +465,14 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             promoterDiscount={promoterDiscount}
             evaluatedAddonRules={evaluatedRules}
             activeOffer={lead.active_offer}
+          />
+          
+          <SpecCompareTable
+            compareOptions={compare_options}
+            products={pricingCache.products}
+            selection={selection}
+            settings={pricingCache.settings}
+            cablingDone={cablingDone}
           />
           
           <PriceRangeTicker

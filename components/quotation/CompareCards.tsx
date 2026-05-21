@@ -29,6 +29,7 @@ import type {
   Addon,
 } from "@/types";
 import { calculatePricing } from "@/lib/pricing-engine";
+import { calculateSystemScore } from "@/lib/system-score";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -232,13 +233,20 @@ export function CompareCards({
           return true;
         });
 
-        // Derive spec flags from technical_name
-        const tn = camProduct?.technical_name ?? "";
-        const is5MP = tn.includes("5mp");
-        const is4MP = tn.includes("4mp");
-        const isColorNight = tn.includes("color");
-        const hasAudio =
-          tn.includes("mic") || tn.includes("audio") || (typeof co.option === "number" && co.option > 1);
+        // ── System Score ─────────────────────────────────────────────────────────────
+        const scoreResult = camProduct ? calculateSystemScore(camProduct, { recordingDays }) : null;
+
+        // Derive spec flags from structured fields (fallback to technical_name if missing)
+        const mp = camProduct?.resolution_mp ?? (camProduct?.technical_name?.toLowerCase().includes("5mp") ? 5 : camProduct?.technical_name?.toLowerCase().includes("4mp") ? 4 : 2);
+        const is5MP = mp >= 5;
+        const is4MP = mp >= 4;
+        
+        const nvType = camProduct?.night_vision_type ?? (camProduct?.technical_name?.toLowerCase().includes("color") ? "color" : "ir");
+        const isColorNight = nvType === "color" || nvType === "dual_light" || nvType === "starlight";
+        
+        const hasAudio = camProduct?.has_audio === true || 
+          (camProduct?.technical_name?.includes("mic") || camProduct?.technical_name?.includes("audio")) || 
+          (typeof co.option === "number" && co.option > 1);
         const isIP = co.technology === "IP";
 
         // NVR / DVR info
@@ -277,6 +285,7 @@ export function CompareCards({
           isIP,
           storageLabel,
           recType,
+          scoreResult,
         };
       })
       .sort((a, b) => a.pricing.total_payable - b.pricing.total_payable);
@@ -433,6 +442,22 @@ export function CompareCards({
               >
                 {tierName}
               </div>
+
+              {/* System Score Badge */}
+              {card.scoreResult && (
+                <div className="mb-3 flex items-center justify-center">
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${
+                    card.scoreResult.score >= 80 
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800/30 dark:text-emerald-400" 
+                      : card.scoreResult.score >= 60 
+                        ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800/30 dark:text-blue-400"
+                        : "bg-zinc-50 border-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400"
+                  }`}>
+                    <div className="font-black text-[10px] tracking-widest uppercase">Score</div>
+                    <div className="font-black text-xs leading-none">{card.scoreResult.score}<span className="text-[9px] opacity-60 font-bold">/100</span></div>
+                  </div>
+                </div>
+              )}
 
               {/* Technology badge — HD/DVR vs IP/NVR */}
               <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black border mb-3 ${techBadgeColor}`}>
