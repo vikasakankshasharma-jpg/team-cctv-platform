@@ -19,7 +19,7 @@ interface AllSystemsGridProps {
 }
 
 export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, evaluatedRules, activeOffer }: AllSystemsGridProps) {
-  const { selection, active_checkout_option, setActiveCheckoutOption } = useConfiguratorStore();
+  const { selection, active_checkout_option, setActiveCheckoutOption, updateSelection } = useConfiguratorStore();
 
   const allKits = useMemo(() => {
     let cameras = pricingCache.products.filter(p => p.category === "camera" && p.is_active);
@@ -120,10 +120,13 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
         </div>
         <div className="flex items-center gap-2">
            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Sort By:</span>
-           <select className="bg-transparent text-[10px] font-black text-blue-600 uppercase tracking-widest focus:outline-none">
-              <option>Relevance</option>
-              <option>Price: Low to High</option>
-              <option>Price: High to Low</option>
+           <select 
+              value={selection.focus_point || "price"}
+              onChange={(e) => updateSelection({ focus_point: e.target.value as "price" | "quality" })}
+              className="bg-transparent text-[10px] font-black text-blue-600 uppercase tracking-widest focus:outline-none cursor-pointer"
+           >
+              <option value="price">Price: Low to High</option>
+              <option value="quality">Price: High to Low</option>
            </select>
         </div>
       </div>

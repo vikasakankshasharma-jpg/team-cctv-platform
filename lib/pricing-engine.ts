@@ -426,7 +426,34 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
       // 2. Recommended / Smart Choice
       if (pool.length <= 2) return pool[pool.length - 1];
       
-      // Property-aware logic
+      // 2. Recommended / Smart Choice
+      if (pool.length <= 2) return pool[pool.length - 1];
+      
+      const medianIdx = Math.floor(pool.length / 2);
+      const medianPrice = pool[medianIdx].unit_price;
+
+      // ── Focus Product (Silent Margin Boost) ─────────────────
+      // Find active focus products (is_focus_product === true AND unexpired)
+      const now = new Date().toISOString();
+      const focusProducts = pool.filter(cam => {
+        if (!cam.is_focus_product) return false;
+        // Check expiration if set
+        if (cam.focus_active_until && typeof cam.focus_active_until === 'string') {
+           if (now > cam.focus_active_until) return false;
+        }
+        // Guardrail: Only boost if price is within ±30% of median
+        // This prevents forcing an ₹80,000 8MP camera when the median is ₹20,000
+        const isWithinBudgetGuardrail = cam.unit_price >= (medianPrice * 0.7) && cam.unit_price <= (medianPrice * 1.3);
+        return isWithinBudgetGuardrail;
+      });
+
+      if (focusProducts.length > 0) {
+        // Sort by boost priority (highest first)
+        focusProducts.sort((a, b) => (b.focus_boost_priority || 50) - (a.focus_boost_priority || 50));
+        return focusProducts[0];
+      }
+      
+      // ── Fallback Property-Aware Logic ───────────────────────
       const prop = selection.property_type;
       if (prop === "warehouse" || prop === "office") {
         // Find a high-spec camera near the 60th-80th percentile
@@ -440,7 +467,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
         return highSpec || pool[Math.floor(pool.length * 0.7)]; // Fallback to 70th percentile
       } else {
         // Residential (home, bungalow) -> Median price / solid value
-        return pool[Math.floor(pool.length / 2)];
+        return pool[medianIdx];
       }
     }
   }

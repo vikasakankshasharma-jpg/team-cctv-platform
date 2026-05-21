@@ -120,6 +120,30 @@ export interface Product {
 
   image_url?: string;               // NEW: Option to upload an image for the product/kit
 
+  // ── Camera Specifications (Structured) ──────────────────────────────
+  // These replace fragile string-parsing of technical_name for spec comparison.
+  night_vision_type?: "ir" | "color" | "dual_light" | "starlight";
+  night_vision_range_m?: number;     // IR/color range in meters (e.g., 20, 30, 50)
+  lens_mm?: number;                  // Focal length (e.g., 2.8, 3.6, 6)
+  viewing_angle_deg?: number;        // Field of view in degrees (e.g., 90, 110)
+  form_factor?: "dome" | "bullet" | "ptz" | "turret" | "fisheye";
+  ip_rating?: string;                // e.g., "IP67", "IP66", "IP65", "Indoor"
+  compression?: "H.264" | "H.265" | "H.265+";
+  wdr?: boolean;                     // Wide Dynamic Range
+  has_audio?: boolean;               // Built-in microphone
+  has_sd_slot?: boolean;             // Local SD card storage
+  poe?: boolean;                     // Power over Ethernet
+  ai_features?: string[];            // e.g., ["person_detect", "vehicle_detect", "face_detect", "line_crossing"]
+  warranty_years?: number;           // 1, 2, 3, 5
+
+  // ── Focus Product (Silent Margin Boost) ─────────────────────────────
+  // Admin marks high-margin products for priority placement in the "Recommended" slot.
+  // Customer sees "★ Our Pick" — never sees "Focus" or "Sponsored".
+  is_focus_product?: boolean;
+  focus_boost_priority?: number;     // 1-100: Higher = stronger preference
+  focus_reason?: string;             // Internal note: "Q3 distributor deal", "High margin"
+  focus_active_until?: unknown;      // Date: Auto-expires the boost
+
   created_at?: unknown;
   updated_at?: unknown;
   updated_by?: string;              // Admin UID who last updated this

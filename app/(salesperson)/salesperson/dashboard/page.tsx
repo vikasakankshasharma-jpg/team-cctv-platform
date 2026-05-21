@@ -25,7 +25,7 @@ export default async function SalespersonDashboard() {
   let activeCount = 0;
   let todayFollowUps = 0;
   let activeLeads: Lead[] = [];
-  let todayLeads: Lead[] = [];
+  const todayLeads: Lead[] = [];
   // Simple monthly win data for mini trend (last 5 months)
   const monthlyWins: Record<string, number> = {};
 
