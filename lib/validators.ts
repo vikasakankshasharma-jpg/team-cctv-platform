@@ -90,8 +90,10 @@ export const GenerateQuoteSchema = z.object({
   technology: z.enum(["HD", "IP"]),
   camera_count: z.number().int().min(1).max(16),
   picture_quality: z.enum(["good", "very_clear", "crystal_clear"]),
-  recording_days: z.union([z.literal(7), z.literal(15), z.literal(30)]),
+  recording_days: z.number().int().min(1).max(365),
   selected_addons: z.array(z.string()).default([]),
+  selected_camera_option: z.number().int().optional(),
+  selected_camera_id: z.string().optional(),
 });
 
 export type GenerateQuoteInput = z.infer<typeof GenerateQuoteSchema>;

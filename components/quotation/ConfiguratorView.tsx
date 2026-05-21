@@ -342,9 +342,23 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     });
 
     try {
+      // Build selection payload matching GenerateQuoteSchema on the server
+      const cT = active_checkout_option?.technology ?? selection.technology;
+      const cO = active_checkout_option?.option ?? selection.selected_camera_option;
+
       const payload = {
         lead_id: currentLead.id,
-        quoteData: activePricing,
+        selection: {
+          lead_id: currentLead.id,
+          plan_type: selection.plan_type || "recommended",
+          technology: cT as "HD" | "IP",
+          camera_count: selection.camera_count,
+          picture_quality: selection.picture_quality || "good",
+          recording_days: selection.recording_days,
+          selected_addons: selection.selected_addons || [],
+          selected_camera_option: typeof cO === "number" ? cO : undefined,
+          selected_camera_id: typeof cO === "string" ? cO : undefined,
+        },
         address: currentLead.address,
         firebase_uid: currentLead.firebase_uid,
         status,
