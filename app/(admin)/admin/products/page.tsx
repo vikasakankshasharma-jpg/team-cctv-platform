@@ -464,6 +464,65 @@ export default function AdminProductsPage() {
                           <span className="text-xs font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-300">SD Slot</span>
                         </label>
                       </div>
+
+                      {/* AI Features Tag Input */}
+                      <div className="col-span-1 md:col-span-4 space-y-3 mt-4">
+                        <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">AI / Smart Features</label>
+                        <div className="flex flex-wrap gap-2 min-h-[40px] p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                          {(editingProduct.ai_features || []).map((tag, i) => (
+                            <span key={i} className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                              {tag}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newTags = [...(editingProduct.ai_features || [])];
+                                  newTags.splice(i, 1);
+                                  setEditingProduct({...editingProduct, ai_features: newTags});
+                                }}
+                                className="w-4 h-4 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </span>
+                          ))}
+                          <input
+                            type="text"
+                            placeholder="Type & press Enter..."
+                            className="flex-1 min-w-[120px] bg-transparent text-xs font-bold focus:outline-none dark:text-white"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === ",") {
+                                e.preventDefault();
+                                const val = (e.target as HTMLInputElement).value.trim();
+                                if (val && !(editingProduct.ai_features || []).includes(val)) {
+                                  setEditingProduct({
+                                    ...editingProduct,
+                                    ai_features: [...(editingProduct.ai_features || []), val]
+                                  });
+                                }
+                                (e.target as HTMLInputElement).value = "";
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mr-1 self-center">Quick Add:</span>
+                          {["Human Detection", "Vehicle Detection", "Face Detection", "Line Crossing", "Intrusion Detection", "Motion Tracking", "Smart IR"].filter(
+                            preset => !(editingProduct.ai_features || []).includes(preset)
+                          ).map(preset => (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() => setEditingProduct({
+                                ...editingProduct,
+                                ai_features: [...(editingProduct.ai_features || []), preset]
+                              })}
+                              className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[9px] font-bold text-zinc-500 dark:text-zinc-400 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors uppercase tracking-widest"
+                            >
+                              + {preset}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </section>
                 )}
