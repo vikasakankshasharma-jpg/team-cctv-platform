@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       const catA = a.category || "";
       const catB = b.category || "";
       if (catA !== catB) return catA.localeCompare(catB);
-      return a.display_name.localeCompare(b.display_name);
+      return (a.display_name || "").localeCompare(b.display_name || "");
     });
 
     return NextResponse.json({ success: true, products: items });
@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
     const product: Product = {
       ...body,
       is_active: body.is_active ?? true,
+      is_deleted: body.is_deleted ?? false,
       created_at: new Date(),
       updated_at: new Date()
     };
