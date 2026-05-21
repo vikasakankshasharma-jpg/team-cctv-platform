@@ -426,9 +426,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
       // 2. Recommended / Smart Choice
       if (pool.length <= 2) return pool[pool.length - 1];
       
-      // 2. Recommended / Smart Choice
-      if (pool.length <= 2) return pool[pool.length - 1];
-      
+
       const medianIdx = Math.floor(pool.length / 2);
       const medianPrice = pool[medianIdx].unit_price;
 

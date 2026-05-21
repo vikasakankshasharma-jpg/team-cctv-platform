@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Check, ShieldCheck, Zap, Monitor, Camera, Image as ImageIcon, Star, ShoppingBag, ArrowRight } from "lucide-react";
+import { Check, ShieldCheck, Zap, Monitor, Camera, Star, ShoppingBag, ArrowRight } from "lucide-react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { ConfiguratorSelection, Product, Addon, AppSettings, AddonRuleResult } from "@/types";
