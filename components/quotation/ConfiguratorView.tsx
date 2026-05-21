@@ -109,7 +109,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       if (fl.includes("night") || fl.includes("color")) return "color";
       if (fl.includes("audio") || fl.includes("mic") || fl.includes("sound")) return "mic";
       if (fl.includes("ptz") || fl.includes("360") || fl.includes("pan") || fl.includes("tilt")) return "ptz";
-      if (fl.includes("ultra") || fl.includes("4mp") || fl.includes("5mp") || fl.includes("8mp") || fl.includes("4k")) return "ultra";
+      if (fl.includes("ultra") || fl.includes("4mp") || fl.includes("5mp") || fl.includes("8mp") || fl.includes("4k")) return "4mp";
       if (fl.includes("stqc")) return "stqc";
       return "";
     }).filter(f => f !== "")));
