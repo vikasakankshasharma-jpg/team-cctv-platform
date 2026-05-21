@@ -4,8 +4,6 @@ import React, { useMemo, useState, useCallback } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { calculateSystemScore } from "@/lib/system-score";
 import { 
-  SlidersHorizontal, 
-  ShieldCheck, 
   Zap, 
   Maximize, 
   Mic, 
@@ -19,8 +17,7 @@ import {
   Check,
   Search,
   X,
-  Sparkles,
-  ArrowRight
+  Sparkles
 } from "lucide-react";
 
 /* ──────────────────────────────────────────────────────────────────────────────

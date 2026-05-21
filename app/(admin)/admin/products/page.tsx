@@ -91,6 +91,9 @@ export default function AdminProductsPage() {
 
   const handleAdd = () => {
     setEditingProduct({
+      display_name: "",
+      technical_name: "",
+      brand: "",
       category: "camera",
       technology: "HD",
       is_active: true,
@@ -114,6 +117,15 @@ export default function AdminProductsPage() {
       const payload = { ...editingProduct };
       if (payload.base_cost !== undefined && payload.margin_percentage !== undefined) {
         payload.unit_price = Math.round(Number(payload.base_cost) + (Number(payload.base_cost) * (Number(payload.margin_percentage) / 100)));
+      }
+
+      // Auto-generate technical_name from display_name if empty
+      if (!payload.technical_name && payload.display_name) {
+        payload.technical_name = payload.display_name
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, "")
+          .replace(/\s+/g, "_")
+          .substring(0, 80);
       }
 
       const res = await fetch("/api/admin/products", {
@@ -257,6 +269,17 @@ export default function AdminProductsPage() {
                       />
                     </div>
                   </div>
+                  <div className="mt-6 space-y-2.5">
+                    <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Technical SKU / Internal Name</label>
+                    <input 
+                      type="text" 
+                      value={editingProduct.technical_name || ""}
+                      onChange={e => setEditingProduct({...editingProduct, technical_name: e.target.value})}
+                      className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white font-mono"
+                      placeholder="e.g. hikvision_2mp_colorvu_dome_3.6mm"
+                    />
+                    <p className="text-[9px] text-zinc-400 ml-1">Used by scoring engine for inference fallbacks. Auto-generated from display name if left blank.</p>
+                  </div>
                 </section>
 
                 {/* Visual Section: Classification */}
@@ -397,6 +420,28 @@ export default function AdminProductsPage() {
                           onChange={e => setEditingProduct({...editingProduct, warranty_years: e.target.value ? Number(e.target.value) : undefined})}
                           className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white"
                           placeholder="e.g. 2"
+                        />
+                      </div>
+                      {/* Viewing Angle */}
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">Viewing Angle (°)</label>
+                        <input 
+                          type="number" 
+                          value={editingProduct.viewing_angle_deg || ""}
+                          onChange={e => setEditingProduct({...editingProduct, viewing_angle_deg: e.target.value ? Number(e.target.value) : undefined})}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white"
+                          placeholder="e.g. 108"
+                        />
+                      </div>
+                      {/* Night Vision Range */}
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">NV Range (m)</label>
+                        <input 
+                          type="number" 
+                          value={editingProduct.night_vision_range_m || ""}
+                          onChange={e => setEditingProduct({...editingProduct, night_vision_range_m: e.target.value ? Number(e.target.value) : undefined})}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all dark:text-white"
+                          placeholder="e.g. 30"
                         />
                       </div>
                       
