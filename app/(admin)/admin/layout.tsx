@@ -12,14 +12,14 @@ export default async function AdminLayout({
   
   if (!session.isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] font-sans text-zinc-100">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#0A0A0A] font-sans text-zinc-900 dark:text-zinc-100 transition-colors duration-500">
         {children}
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-[#0A0A0A] overflow-hidden font-sans text-zinc-100 transition-colors duration-500">
+    <div className="flex h-screen bg-slate-50 dark:bg-[#0A0A0A] overflow-hidden font-sans text-zinc-900 dark:text-zinc-100 transition-colors duration-500">
       <OmniSearch />
       <Sidebar />
 

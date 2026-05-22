@@ -131,7 +131,7 @@ export function Sidebar() {
       className={`
         ${isCollapsed ? "w-[72px]" : "w-64"} 
         relative flex flex-col h-screen sticky top-0 overflow-hidden
-        bg-[#050505] border-r border-zinc-800/80
+        bg-white dark:bg-[#050505] border-r border-zinc-200 dark:border-zinc-800/80
         transition-all duration-300 ease-in-out shrink-0
       `}
     >
