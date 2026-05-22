@@ -167,7 +167,7 @@ export function AdminHeader({ userEmail, userRole }: AdminHeaderProps) {
   const { setIsOpen } = useOmniSearchStore();
 
   return (
-    <header className="h-16 border-b border-zinc-800/80 bg-[#050505]/90 backdrop-blur-xl flex items-center justify-between px-6 z-20 shrink-0 gap-4">
+    <header className="h-16 border-b border-zinc-200 dark:border-zinc-800/80 bg-white/90 dark:bg-[#050505]/90 backdrop-blur-xl flex items-center justify-between px-6 z-20 shrink-0 gap-4">
       
       {/* LEFT — Status + Breadcrumb */}
       <div className="flex items-center gap-3 min-w-0">
