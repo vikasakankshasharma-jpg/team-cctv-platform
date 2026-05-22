@@ -441,8 +441,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       {/* High Reach Warning Banner */}
       {(selection.ceiling_height === "high" || selection.ceiling_height === "very_high") && (
         <div className="mx-auto w-full max-w-3xl px-4 mt-6">
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
-            <div className="text-amber-500 mt-0.5">
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-500/50 rounded-xl p-4 flex items-start gap-3 shadow-[0_0_20px_rgba(245,158,11,0.15)] transition-all duration-500 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-amber-400/5 animate-pulse" />
+            <div className="text-amber-500 mt-0.5 relative animate-pulse drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
             </div>
             <div>
