@@ -13,7 +13,7 @@ export function FocusToggle() {
       </label>
       <div className="flex gap-1 bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800/50">
         <button
-          onClick={() => updateSelection({ focus_point: "price" })}
+          onClick={() => updateSelection({ focus_point: "price", resolution_preference: "all" })}
           className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
             selection.focus_point === "price"
               ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white"
@@ -23,7 +23,7 @@ export function FocusToggle() {
           <IndianRupee className="w-3 h-3" /> Best Price
         </button>
         <button
-          onClick={() => updateSelection({ focus_point: "quality" })}
+          onClick={() => updateSelection({ focus_point: "quality", max_budget: null })}
           className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
             selection.focus_point === "quality"
               ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white"

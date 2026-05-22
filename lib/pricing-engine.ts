@@ -367,6 +367,44 @@ function calculateAddons(params: {
  * ──────────────────────────────────────────────────────────────────────────────
  */
 
+/** 
+ * Forward-estimates the total quote value for a specific camera to allow budget filtering 
+ */
+function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, products: Product[], settings: AppSettings, tech: string): number {
+  const qty = selection.camera_count;
+  const camTotal = resolveUnitPrice(cam, qty) * qty;
+  
+  const recorder = resolveRecorder(selection, products, tech);
+  const recTotal = recorder ? recorder.unit_price : 0;
+  
+  const hdd = resolveHDD(selection, products, tech);
+  const hddTotal = hdd ? hdd.unit_price : 0;
+
+  const transmission = resolveTransmission(selection, products, tech);
+  const transQty = transmission ? Math.ceil(qty / (transmission.max_cameras || 4)) : 0;
+  const transTotal = transmission ? transmission.unit_price * transQty : 0;
+
+  const baseHardware = camTotal + recTotal + hddTotal + transTotal;
+
+  const laborRate = tech === "IP" ? (settings.labor_ip_per_camera || 500) : (settings.labor_hd_per_camera || 400);
+  const laborTotal = laborRate * qty;
+
+  const cableMeters = 50; // default estimated average used in engine
+  const cableRate = tech === "IP" ? (settings.cable_copper_coated_ip || 12) : (settings.cable_copper_coated_hd || 8);
+  const cableTotal = cableRate * (cableMeters * qty);
+
+  let amcTotal = 0;
+  if ((selection.selected_addons || []).includes("amc_1yr")) {
+    const pct = settings.amc_1yr_pct || 15;
+    amcTotal = Math.round(baseHardware * (pct / 100));
+  }
+
+  const grossSubtotal = baseHardware + laborTotal + cableTotal + amcTotal;
+  const gstAmount = Math.round(grossSubtotal * ((settings.gst_rate || 18) / 100));
+  
+  return grossSubtotal + gstAmount;
+}
+
 function resolveCamera(selection: ConfiguratorSelection, products: Product[], settings: AppSettings, tech: string) {
   if (selection.selected_camera_id) {
     return products.find(p => p.id === selection.selected_camera_id);
@@ -409,6 +447,22 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
     // drop the filter so we don't return an invalid (camera-less) quote.
     if (filteredPool.length > 0) {
        pool = filteredPool;
+    }
+  }
+
+  // Filter by Max Budget (Total Quote Value Forward-Estimation)
+  if (selection.max_budget) {
+    const budgetFiltered = pool.filter(cam => {
+      const predictedTotal = estimateQuoteTotal(cam, selection, products, settings, tech);
+      return predictedTotal <= selection.max_budget!;
+    });
+    // Fallback: If strict budget matching eliminates ALL cameras, keep the cheapest camera available
+    if (budgetFiltered.length > 0) {
+      pool = budgetFiltered;
+    } else {
+      // If budget is impossibly low, we sort by price and just take the absolute cheapest one
+      pool.sort((a, b) => a.unit_price - b.unit_price);
+      pool = [pool[0]];
     }
   }
 

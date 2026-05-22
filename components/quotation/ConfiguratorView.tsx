@@ -215,7 +215,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     selection.technology, 
     selection.brand_preference, 
     selection.requested_features,
-    selection.max_budget
+    selection.max_budget,
+    selection.resolution_preference,
+    selection.focus_point
   ]);
 
   // Handle Toggle Compare from Table (inline limit message replaces browser alert)
