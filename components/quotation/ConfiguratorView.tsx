@@ -494,16 +494,13 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               compareOptions={compare_options}
               activeCheckoutOption={active_checkout_option}
               onSelectCheckout={setActiveCheckoutOption}
-              cameraCount={selection.camera_count}
-              recordingDays={selection.recording_days}
+              selection={selection}
               products={pricingCache.products}
               addons={pricingCache.addons}
               settings={pricingCache.settings}
               cablingDone={cablingDone}
               recommendation={activeRecommendation}
               customerTechnology={selection.technology}
-              requestedFeatures={selection.requested_features || []}
-              selectedAddons={selection.selected_addons || []}
               promoterDiscount={promoterDiscount}
               evaluatedAddonRules={evaluatedRules}
               activeOffer={lead.active_offer}

@@ -40,18 +40,13 @@ interface CompareCardsProps {
   compareOptions: Array<{ technology: string; option: number | string }>;
   activeCheckoutOption: { technology: string; option: number | string } | null;
   onSelectCheckout: (option: { technology: string; option: number | string }) => void;
-
-  cameraCount: number;
-  recordingDays: number;
+  selection: ConfiguratorSelection;
   products: Product[];
   addons: any[];
   settings: AppSettings;
   cablingDone: boolean;
   recommendation?: RecommendedOutput | null;
-  /** The technology the customer explicitly chose in the wizard (IP / HD / undefined = not sure) */
   customerTechnology?: string;
-  requestedFeatures: string[];
-  selectedAddons: string[];
   promoterDiscount?: { percent: number; flat: number };
   evaluatedAddonRules: any;
   activeOffer?: any;
@@ -167,16 +162,13 @@ export function CompareCards({
   compareOptions,
   activeCheckoutOption,
   onSelectCheckout,
-  cameraCount,
-  recordingDays,
+  selection,
   products,
   addons,
   settings,
   cablingDone,
   recommendation,
   customerTechnology,
-  requestedFeatures,
-  selectedAddons,
   promoterDiscount,
   evaluatedAddonRules,
   activeOffer,
@@ -193,20 +185,17 @@ export function CompareCards({
           else if (co.option === 3) plan_type = "premium";
         }
 
-        const selection: ConfiguratorSelection = {
+        const cardSelection: ConfiguratorSelection = {
+          ...selection,
           technology: co.technology,
-          camera_count: cameraCount,
-          recording_days: recordingDays,
           selected_camera_option: typeof co.option === "number" ? co.option : undefined,
           selected_camera_id: typeof co.option === "string" ? co.option : undefined,
           plan_type,
-          selected_addons: selectedAddons,
-          requested_features: requestedFeatures,
           picture_quality: "good",
         };
 
         const pricing = calculatePricing({
-          selection,
+          selection: cardSelection,
           products,
           addons,
           settings,
@@ -238,7 +227,7 @@ export function CompareCards({
         });
 
         // ── System Score ─────────────────────────────────────────────────────────────
-        const scoreResult = camProduct ? calculateSystemScore(camProduct, { recordingDays }) : null;
+        const scoreResult = camProduct ? calculateSystemScore(camProduct, { recordingDays: selection.recording_days }) : null;
 
         // Derive spec flags from structured fields (fallback to technical_name if missing)
         const mp = camProduct?.resolution_mp ?? (camProduct?.technical_name?.toLowerCase().includes("5mp") ? 5 : camProduct?.technical_name?.toLowerCase().includes("4mp") ? 4 : 2);
@@ -257,21 +246,21 @@ export function CompareCards({
         const recType =
           isIP ? "NVR" : "DVR";
         const nvrTechName = isIP
-          ? `nvr_${cameraCount <= 4 ? "4ch" : cameraCount <= 8 ? "8ch" : "16ch"}`
-          : `dvr_${cameraCount <= 4 ? "4ch" : cameraCount <= 8 ? "8ch" : "16ch"}`;
+          ? `nvr_${selection.camera_count <= 4 ? "4ch" : selection.camera_count <= 8 ? "8ch" : "16ch"}`
+          : `dvr_${selection.camera_count <= 4 ? "4ch" : selection.camera_count <= 8 ? "8ch" : "16ch"}`;
         const recProduct = products.find((p) =>
           p.technical_name?.startsWith(recType.toLowerCase())
         );
 
         // Storage label from recordingDays
         const storageLabel =
-          recordingDays <= 7
+          selection.recording_days <= 7
             ? "7-Day Storage"
-            : recordingDays <= 15
+            : selection.recording_days <= 15
             ? "15-Day Storage"
-            : recordingDays <= 30
+            : selection.recording_days <= 30
             ? "1-Month Storage"
-            : `${recordingDays}-Day Storage`;
+            : `${selection.recording_days}-Day Storage`;
 
         return {
           technology: co.technology,
@@ -295,8 +284,7 @@ export function CompareCards({
       .sort((a, b) => a.pricing.total_payable - b.pricing.total_payable);
   }, [
     compareOptions,
-    cameraCount,
-    recordingDays,
+    selection,
     products,
     addons,
     settings,
@@ -305,8 +293,6 @@ export function CompareCards({
     evaluatedAddonRules,
     recommendation,
     customerTechnology,
-    requestedFeatures,
-    selectedAddons,
     activeOffer,
   ]);
 
@@ -386,8 +372,8 @@ export function CompareCards({
           : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40";
 
         // ── Price per camera ──────────────────────────────────────────────────
-        const pricePerCam = cameraCount > 0
-          ? Math.round(card.pricing.total_payable / cameraCount)
+        const pricePerCam = selection.camera_count > 0
+          ? Math.round(card.pricing.total_payable / selection.camera_count)
           : 0;
 
         // ── Card border / bg ─────────────────────────────────────────────────
@@ -546,7 +532,7 @@ export function CompareCards({
               </div>
               {/* Context: what this price is based on */}
               <div className="text-[9px] font-medium text-zinc-400 dark:text-zinc-500 mt-1">
-                {cameraCount} cameras · {recordingDays} days recording
+                {selection.camera_count} cameras · {selection.recording_days} days recording
               </div>
               
               {/* ── Savings badge (Moved here to prevent overlap) ───────────── */}
@@ -584,10 +570,10 @@ export function CompareCards({
                   const cableItem = card.pricing.items.find(i => products.find(p => p.id === i.product_id)?.category === 'cable');
                   
                   return [
-                    { label: `${cameraCount}× ${card.camProduct?.brand ? card.camProduct.brand + " " : ""}${card.camProduct?.display_name ?? card.technology + " Camera"}`, icon: "📷" },
-                    { label: recorderItem ? `${recorderItem.qty}× ${recorderItem.brand ? recorderItem.brand + " " : ""}${recorderItem.display_name}` : `1× ${card.recType} (${cameraCount <= 4 ? "4" : cameraCount <= 8 ? "8" : "16"}-Ch Recorder)`, icon: "📺" },
+                    { label: `${selection.camera_count}× ${card.camProduct?.brand ? card.camProduct.brand + " " : ""}${card.camProduct?.display_name ?? card.technology + " Camera"}`, icon: "📷" },
+                    { label: recorderItem ? `${recorderItem.qty}× ${recorderItem.brand ? recorderItem.brand + " " : ""}${recorderItem.display_name}` : `1× ${card.recType} (${selection.camera_count <= 4 ? "4" : selection.camera_count <= 8 ? "8" : "16"}-Ch Recorder)`, icon: "📺" },
                     { label: storageItem ? `${storageItem.qty}× ${storageItem.brand ? storageItem.brand + " " : ""}${storageItem.display_name}` : "1× 1TB Surveillance HDD", icon: "💾" },
-                    { label: cableItem ? `~${cableItem.qty}m ${cableItem.display_name}` : (card.isIP ? `Cat6 UTP Cable (~${cameraCount * 25}m)` : `RG59 Coaxial (~${cameraCount * 25}m)`), icon: "🛡️" },
+                    { label: cableItem ? `~${cableItem.qty}m ${cableItem.display_name}` : (card.isIP ? `Cat6 UTP Cable (~${selection.camera_count * 25}m)` : `RG59 Coaxial (~${selection.camera_count * 25}m)`), icon: "🛡️" },
                     { label: "Professional Installation & Testing", icon: "🔧" },
                   ].map(item => (
                     <div key={item.label} className="flex items-center gap-2">
