@@ -3,8 +3,7 @@
 import React, { useMemo } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { 
-  SlidersHorizontal, 
-  RotateCcw
+  SlidersHorizontal
 } from "lucide-react";
 import { BrandSelector } from "./filters/BrandSelector";
 import { BudgetSlider } from "./filters/BudgetSlider";
@@ -40,13 +39,6 @@ export function ExpertFiltersBar() {
     });
   }, [products]);
 
-  const hasActiveFilters = 
-    (selection.brand_preference && selection.brand_preference !== "all") ||
-    (selection.resolution_preference && selection.resolution_preference !== "all") ||
-    selection.max_budget !== null ||
-    (selection.requested_features && selection.requested_features.length > 0) ||
-    selection.focus_point !== "price";
-
   return (
     <div className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[24px] p-5 sm:p-6 shadow-sm mb-10 sm:mb-16">
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">
@@ -62,15 +54,6 @@ export function ExpertFiltersBar() {
         
         <div className="flex items-center gap-4 w-full lg:w-auto overflow-x-auto no-scrollbar pb-2 lg:pb-0">
           <FocusToggle />
-          {hasActiveFilters && (
-            <button 
-              onClick={resetFilters}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-all text-[9px] font-black uppercase tracking-widest shrink-0"
-            >
-              <RotateCcw className="w-3 h-3" /> 
-              Reset Filters
-            </button>
-          )}
         </div>
       </div>
 
