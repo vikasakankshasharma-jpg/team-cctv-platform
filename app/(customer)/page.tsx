@@ -159,7 +159,7 @@ export default function LandingPage() {
               <div className="space-y-6 sm:space-y-8">
                 {[
                   { icon: Target, title: "Perfect Coverage", desc: "We make sure every corner of your property is covered, leaving no blind spots for complete peace of mind." },
-                  { icon: Cpu, title: "Right Cameras", desc: "We'll suggest the best camera quality for your specific needs, whether it's a small home or a large warehouse." },
+                  { icon: Cpu, title: "Right Cameras", desc: "We'll suggest the best camera technology for your specific needs, whether it's a small home or a large warehouse." },
                   { icon: Layers, title: "Clear Pricing", desc: "Get three easy-to-understand price options (Value, Professional, and Elite) so you can choose what fits your budget." },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4 sm:gap-6 group">
