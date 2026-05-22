@@ -13,7 +13,7 @@ export function SmartContextBar({ totalPrice }: SmartContextBarProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   return (
-    <div className="sticky top-0 z-50 w-full px-4 py-3 bg-zinc-900/90 dark:bg-black/90 backdrop-blur-xl border-b border-zinc-800 shadow-2xl transition-all duration-300">
+    <div className="sticky top-4 z-50 max-w-5xl mx-auto w-[95%] px-6 py-3 bg-zinc-900/95 dark:bg-black/95 backdrop-blur-xl border border-zinc-700/50 dark:border-zinc-800 shadow-2xl rounded-full transition-all duration-300">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         
         {/* Core Settings Summary */}
@@ -57,7 +57,7 @@ export function SmartContextBar({ totalPrice }: SmartContextBarProps) {
 
       {/* Inline Editor Dropdown */}
       {isEditing && (
-        <div className="absolute top-full left-0 w-full bg-zinc-900 border-b border-zinc-800 shadow-2xl p-4 sm:p-6 animate-in slide-in-from-top-2 fade-in duration-200">
+        <div className="absolute top-[calc(100%+12px)] left-0 w-full bg-zinc-900/95 dark:bg-black/95 backdrop-blur-xl border border-zinc-700/50 dark:border-zinc-800 shadow-2xl p-4 sm:p-6 rounded-3xl animate-in slide-in-from-top-2 fade-in duration-200">
           <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-8">
             
             {/* Camera Count Edit */}
