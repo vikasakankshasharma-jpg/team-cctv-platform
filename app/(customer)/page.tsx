@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import FaqJsonLd from "@/components/landing/FaqJsonLd";
 import { PincodeWidget } from "@/components/landing/PincodeWidget";
+import { FaqAccordion } from "@/components/landing/FaqAccordion";
 import type { Metadata } from "next";
 
 export const dynamic = 'force-dynamic';
@@ -89,7 +90,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#050B14] transition-colors duration-500">
+    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-[#050B14] transition-colors duration-500">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -98,9 +99,9 @@ export default function LandingPage() {
       {/* 1. Elite Hero Hub: Smart City Theme */}
       <section className="relative px-4 sm:px-6 pt-10 pb-16 sm:pt-16 sm:pb-20 md:pt-24 md:pb-32 overflow-hidden">
         {/* Smart City Background Elements */}
-        <div className="absolute inset-0 overflow-hidden -z-10 bg-[#050B14]">
+        <div className="absolute inset-0 overflow-hidden -z-10 bg-slate-50 dark:bg-[#050B14] transition-colors duration-500">
           {/* Glowing City Grid */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(14,165,233,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(14,165,233,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] dark:[mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
           
           {/* Neon Glow Orbs */}
           <div className="absolute top-[-20%] left-[10%] w-[500px] h-[500px] bg-blue-600/20 blur-[150px] rounded-full mix-blend-screen" />
@@ -119,19 +120,21 @@ export default function LandingPage() {
             <span className="text-emerald-400 hidden sm:inline">100% Free Quotes</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.05]">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.05] transition-colors">
             Secure Your Property. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 drop-shadow-sm">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:via-cyan-300 dark:to-emerald-400 drop-shadow-sm">
               Empower Your City.
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-2xl text-blue-100/70 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed">
+          <p className="text-base sm:text-lg md:text-2xl text-slate-600 dark:text-blue-100/70 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed transition-colors">
             Get an exact price for your CCTV setup in under 2 minutes. Tap into the intelligence of modern security networks.
           </p>
 
-          <div className="w-full mb-8 sm:mb-10 md:mb-16 relative">
-             <div className="absolute -inset-4 bg-blue-500/5 blur-xl rounded-full -z-10" />
+          <div className="w-full mb-8 sm:mb-10 md:mb-16 relative group">
+             {/* Radar Pulse Effect behind Widget */}
+             <div className="absolute inset-0 bg-blue-500/20 rounded-[32px] sm:rounded-[48px] animate-ping opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+             <div className="absolute -inset-4 bg-blue-500/10 dark:bg-blue-500/5 blur-xl rounded-full -z-10 transition-colors" />
              <PincodeWidget variant="hero" />
           </div>
 
@@ -144,14 +147,14 @@ export default function LandingPage() {
       </section>
 
       {/* 2. Architecture Philosophy Section */}
-      <section className="bg-zinc-950 py-16 sm:py-24 md:py-24 px-4 sm:px-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-900 to-transparent" />
+      <section className="bg-white dark:bg-zinc-950 transition-colors duration-500 py-16 sm:py-24 md:py-24 px-4 sm:px-6 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/20 dark:via-blue-900 to-transparent" />
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 sm:gap-24 items-center">
             <div className="space-y-8 sm:space-y-12">
               <div>
-                <h2 className="text-blue-500 font-black text-xs uppercase tracking-[0.4em] mb-4 sm:mb-6">How It Works</h2>
-                <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tighter leading-tight">Smart Security <br /> Made for You.</h3>
+                <h2 className="text-blue-600 dark:text-blue-500 font-black text-xs uppercase tracking-[0.4em] mb-4 sm:mb-6">How It Works</h2>
+                <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight transition-colors">Smart Security <br /> Made for You.</h3>
               </div>
               <div className="space-y-6 sm:space-y-8">
                 {[
@@ -160,12 +163,12 @@ export default function LandingPage() {
                   { icon: Layers, title: "Clear Pricing", desc: "Get three easy-to-understand price options (Value, Professional, and Elite) so you can choose what fits your budget." },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4 sm:gap-6 group">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-[16px] sm:rounded-[20px] bg-white/5 border border-white/10 flex items-center justify-center text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-2xl shrink-0">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-[16px] sm:rounded-[20px] bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-blue-600 dark:text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xl dark:shadow-2xl shrink-0">
                       <item.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-lg sm:text-xl font-black text-white mb-1 sm:mb-2">{item.title}</h4>
-                      <p className="text-zinc-500 font-medium leading-relaxed text-sm sm:text-base">{item.desc}</p>
+                      <h4 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mb-1 sm:mb-2 transition-colors">{item.title}</h4>
+                      <p className="text-slate-600 dark:text-zinc-500 font-medium leading-relaxed text-sm sm:text-base transition-colors">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -173,31 +176,31 @@ export default function LandingPage() {
             </div>
 
             <div className="relative hidden lg:block">
-              <div className="aspect-square bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-[80px] border border-white/10 p-12 relative overflow-hidden group hover:border-blue-500/30 transition-all duration-700">
-                <div className="absolute inset-0 bg-zinc-900/50 backdrop-blur-3xl -z-10" />
-                <div className="bg-black/60 border border-white/10 p-8 rounded-[40px] shadow-2xl space-y-8 h-full flex flex-col justify-center">
+              <div className="aspect-square bg-gradient-to-br from-blue-50 dark:from-blue-600/20 to-indigo-50 dark:to-indigo-600/20 rounded-[80px] border border-slate-200 dark:border-white/10 p-12 relative overflow-hidden group hover:border-blue-500/30 transition-all duration-700">
+                <div className="absolute inset-0 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-3xl -z-10" />
+                <div className="bg-white/80 dark:bg-black/60 border border-slate-200 dark:border-white/10 p-8 rounded-[40px] shadow-2xl space-y-8 h-full flex flex-col justify-center transition-colors">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">System Quality</span>
-                      <span className="text-emerald-500 font-black text-xs">99.9%</span>
+                      <span className="text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-widest">System Quality</span>
+                      <span className="text-emerald-600 dark:text-emerald-500 font-black text-xs">99.9%</span>
                     </div>
-                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
                       <div className="h-full bg-emerald-500 w-[99.9%]" />
                     </div>
                   </div>
                   <div className="space-y-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-500"><Globe className="w-5 h-5" /></div>
+                      <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-500"><Globe className="w-5 h-5" /></div>
                       <div>
-                        <div className="text-sm font-black text-white">View on Your Phone</div>
-                        <div className="text-[10px] font-bold text-zinc-500">Check your cameras from anywhere</div>
+                        <div className="text-sm font-black text-slate-900 dark:text-white transition-colors">View on Your Phone</div>
+                        <div className="text-[10px] font-bold text-slate-500 dark:text-zinc-500">Check your cameras from anywhere</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-500"><Zap className="w-5 h-5" /></div>
+                      <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-500"><Zap className="w-5 h-5" /></div>
                       <div>
-                        <div className="text-sm font-black text-white">Clean Installation</div>
-                        <div className="text-[10px] font-bold text-zinc-500">Neat wiring and professional finish</div>
+                        <div className="text-sm font-black text-slate-900 dark:text-white transition-colors">Clean Installation</div>
+                        <div className="text-[10px] font-bold text-slate-500 dark:text-zinc-500">Neat wiring and professional finish</div>
                       </div>
                     </div>
                   </div>
@@ -209,40 +212,25 @@ export default function LandingPage() {
       </section>
 
       {/* 3. Final Deployment CTA */}
-      <section className="py-16 sm:py-24 md:py-20 px-4 sm:px-6 relative overflow-hidden text-center bg-[#050B14]">
+      <section className="py-16 sm:py-24 md:py-20 px-4 sm:px-6 relative overflow-hidden text-center bg-slate-50 dark:bg-[#050B14] transition-colors duration-500">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
-          <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-500 mb-8 sm:mb-12 animate-bounce shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+          <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 dark:bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-500 mb-8 sm:mb-12 animate-bounce shadow-[0_0_20px_rgba(59,130,246,0.3)]">
             <Zap className="w-7 h-7 sm:w-10 sm:h-10 fill-current" />
           </div>
-          <h2 className="text-4xl sm:text-6xl md:text-8xl font-black text-white tracking-tighter mb-5 sm:mb-8 leading-[0.9] sm:leading-[0.85]">
+          <h2 className="text-4xl sm:text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter mb-5 sm:mb-8 leading-[0.9] sm:leading-[0.85] transition-colors">
             Secure your space <br className="hidden sm:block" /> today.
           </h2>
-          <p className="text-blue-100/70 text-base sm:text-xl md:text-2xl mb-10 sm:mb-16 font-medium max-w-2xl text-center">
+          <p className="text-slate-600 dark:text-blue-100/70 text-base sm:text-xl md:text-2xl mb-10 sm:mb-16 font-medium max-w-2xl text-center transition-colors">
             2-minute setup. No hidden costs. 18% GST included in all plans.
           </p>
 
-          <div className="w-full mb-10 sm:mb-16">
+          <div className="w-full mb-10 sm:mb-16 relative group">
+            {/* Radar Pulse Effect behind Widget */}
+            <div className="absolute inset-0 bg-blue-500/20 rounded-[32px] sm:rounded-[48px] animate-ping opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             <PincodeWidget variant="footer" />
           </div>
 
-          {/* FAQ — INLINE, NO COMPONENT */}
-          <section style={{ padding: "80px 24px", background: "#0F1F3D", width: "100%", marginTop: "64px" }}>
-            <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "left" }}>
-              <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 10 }}>Support &amp; Clarification</p>
-              <h2 style={{ color: "white", fontSize: 28, marginBottom: 32, fontWeight: 700, fontFamily: "serif" }}>Frequently Asked Questions</h2>
-              {[
-                { q: "Is GST included in the quote price?", a: "Yes. All CCTVQuotation quotations include 18% GST with no hidden charges. The price covers cameras, DVR/NVR, HDD, cabling, and professional installation — everything." },
-                { q: "Does the price include installation?", a: "Yes. Every quotation includes full professional installation — camera mounting, cable routing, DVR/NVR setup, mobile app configuration on your phone, and a complete system demonstration." },
-                { q: "How much does a 4-camera CCTV system cost in Jaipur?", a: "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation." },
-                { q: "Are your cameras BIS-ER compliant?", a: "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification — suitable for government tenders, housing societies, and commercial projects." },
-              ].map((item, i) => (
-                <details key={i} open style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", marginBottom: 12 }}>
-                  <summary style={{ color: "rgba(255,255,255,0.85)", fontSize: 16, fontWeight: 500, cursor: "pointer", padding: "14px 0", listStyle: "none" }}>{item.q}</summary>
-                  <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, lineHeight: 1.7, padding: "0 0 14px" }}>{item.a}</p>
-                </details>
-              ))}
-            </div>
-          </section>
+          <FaqAccordion />
           <FaqJsonLd />
 
           {/* Partner Trust Strip */}
