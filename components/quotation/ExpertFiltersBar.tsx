@@ -75,11 +75,24 @@ export function ExpertFiltersBar() {
       </div>
 
       <div className="flex flex-wrap items-start gap-6 lg:gap-10">
-        <BrandSelector brands={uniqueBrands} />
-        <ResolutionSelector resolutions={uniqueResolutions} />
+        <div className="w-40">
+          <BrandSelector brands={uniqueBrands} />
+        </div>
+        
+        {selection.focus_point === "price" && (
+          <div className="w-40">
+            <ResolutionSelector resolutions={uniqueResolutions} />
+          </div>
+        )}
+        
         <FeatureToggleGrid />
+        
         <div className="flex-1 min-w-[200px] max-w-sm">
-          <BudgetSlider />
+          {selection.focus_point === "price" ? (
+            <BudgetSlider />
+          ) : (
+            <ResolutionSelector resolutions={uniqueResolutions} />
+          )}
         </div>
       </div>
     </div>

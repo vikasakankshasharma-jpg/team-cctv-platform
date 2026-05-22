@@ -11,30 +11,22 @@ export function ResolutionSelector({ resolutions }: { resolutions: string[] }) {
       <label className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-1.5">
         <Camera className="w-3 h-3 text-blue-600" /> Resolution / Quality
       </label>
-      <div className="flex flex-wrap gap-1.5">
-        <button
-          onClick={() => updateSelection({ resolution_preference: "all" })}
-          className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-            !selection.resolution_preference || selection.resolution_preference === "all"
-              ? "bg-zinc-900 text-white shadow-md dark:bg-white dark:text-zinc-900"
-              : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-500"
-          }`}
+      <div className="relative">
+        <select
+          value={selection.resolution_preference || "all"}
+          onChange={(e) => updateSelection({ resolution_preference: e.target.value })}
+          className="appearance-none w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-600 transition-all cursor-pointer"
         >
-          All Options
-        </button>
-        {resolutions.map(res => (
-          <button
-            key={res}
-            onClick={() => updateSelection({ resolution_preference: res })}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-              selection.resolution_preference === res
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-500"
-            }`}
-          >
-            {res}
-          </button>
-        ))}
+          <option value="all">All Options</option>
+          {resolutions.map((res) => (
+            <option key={res} value={res}>
+              {res}
+            </option>
+          ))}
+        </select>
+        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+          <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+        </div>
       </div>
     </div>
   );
