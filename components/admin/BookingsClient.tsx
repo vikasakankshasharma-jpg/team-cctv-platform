@@ -42,7 +42,7 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
             placeholder="Search by name or mobile…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60 text-zinc-900 dark:text-white rounded-2xl pl-11 pr-5 py-3 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all placeholder-zinc-400 dark:placeholder-zinc-700"
+            className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl pl-11 pr-5 py-3 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all placeholder-zinc-400 dark:placeholder-zinc-700"
           />
         </div>
       </div>
@@ -55,7 +55,7 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
           { label: "Via Referral", value: bookings.filter(b => b.promoter_name).length, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-500/10" },
           { label: "Direct / Organic", value: bookings.filter(b => !b.promoter_name).length, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
         ].map((s) => (
-          <div key={s.label} className={`${s.bg} border border-zinc-100 dark:border-zinc-800/60 rounded-2xl p-4`}>
+          <div key={s.label} className={`${s.bg} border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4`}>
             <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">{s.label}</p>
             <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
           </div>
@@ -63,10 +63,10 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 rounded-[28px] overflow-hidden shadow-lg dark:shadow-xl">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[28px] overflow-hidden shadow-lg dark:shadow-md">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800/60">
+            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
               <tr className="text-[9px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-600">
                 <th className="px-6 py-4">Date</th>
                 <th className="px-6 py-4">Customer</th>

@@ -250,7 +250,7 @@ export default function AdminLoginForm() {
           {/* Logo */}
           <div className="relative z-10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-2xl shadow-blue-600/40">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-md shadow-blue-600/40">
                 <ShieldCheck className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -282,7 +282,7 @@ export default function AdminLoginForm() {
               { icon: Zap, label: "Automated Quote Engine", sub: "IP & HD hardware topology calculator" },
             ].map(({ icon: Icon, label, sub }) => (
               <div key={label} className="flex items-center gap-4 group">
-                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-blue-500/40 group-hover:bg-blue-500/10 transition-all shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-white border border-white/10 flex items-center justify-center group-hover:border-blue-500/40 group-hover:bg-blue-500/10 transition-all shrink-0">
                   <Icon className="w-4 h-4 text-blue-400" />
                 </div>
                 <div>
@@ -381,7 +381,7 @@ export default function AdminLoginForm() {
                 <button
                   type="submit"
                   disabled={loading || !identifier}
-                  className="group relative w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black uppercase text-[11px] tracking-[0.25em] rounded-2xl transition-all disabled:opacity-40 shadow-xl shadow-blue-600/20 hover:shadow-blue-600/30 hover:shadow-2xl active:scale-[0.98] overflow-hidden"
+                  className="group relative w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black uppercase text-[11px] tracking-[0.25em] rounded-2xl transition-all disabled:opacity-40 shadow-md shadow-blue-600/20 hover:shadow-blue-600/30 hover:shadow-md active:scale-[0.98] overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-3">
                     {loading
@@ -416,7 +416,7 @@ export default function AdminLoginForm() {
                   id="verify-btn"
                   type="submit"
                   disabled={loading || otp.join("").length < 6 || success}
-                  className="group relative w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black uppercase text-[11px] tracking-[0.25em] rounded-2xl transition-all disabled:opacity-40 shadow-xl shadow-blue-600/20 hover:shadow-2xl active:scale-[0.98]"
+                  className="group relative w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black uppercase text-[11px] tracking-[0.25em] rounded-2xl transition-all disabled:opacity-40 shadow-md shadow-blue-600/20 hover:shadow-md active:scale-[0.98]"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-3">
                     {loading

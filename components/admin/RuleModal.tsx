@@ -49,9 +49,9 @@ export function RuleModal({ isOpen, onClose, onSave, initialData }: RuleModalPro
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-zinc-900" onClick={onClose} />
       
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-hidden relative shadow-2xl animate-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden relative shadow-md animate-in zoom-in-95 duration-200">
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           
           {/* Header */}
@@ -211,7 +211,7 @@ export function RuleModal({ isOpen, onClose, onSave, initialData }: RuleModalPro
           </div>
 
           {/* Footer */}
-          <div className="px-8 py-6 bg-zinc-50 dark:bg-zinc-950/40 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-3">
+          <div className="px-8 py-6 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-3">
             <button 
               type="button" 
               onClick={onClose}

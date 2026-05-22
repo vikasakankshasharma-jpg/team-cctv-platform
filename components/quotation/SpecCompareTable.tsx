@@ -4,10 +4,10 @@ import React, { useState, useMemo } from "react";
 import { ChevronDown, ChevronUp, Check, X } from "lucide-react";
 import type { Product, AppSettings, ConfiguratorSelection } from "@/types";
 import { calculatePricing } from "@/lib/pricing-engine";
-import { calculateSystemScore } from "@/lib/system-score";
+import { calculateSystemScore, inferResolutionFromName, inferNightVisionFromName } from "@/lib/system-score";
 
 interface CompareOption {
-  technology: "HD" | "IP";
+  technology: string;
   option: number | string;
 }
 
@@ -47,21 +47,21 @@ const SECTIONS: SpecSection[] = [
       {
         label: "Resolution",
         key: "resolution",
-        getValue: (c) => c.resolution_mp,
+        getValue: (c) => c.resolution_mp ?? inferResolutionFromName(c.technical_name || c.display_name),
         formatValue: (v) => (v ? `${v} MP` : "-"),
         getScore: (v) => Number(v) || 0,
       },
       {
         label: "Compression",
         key: "compression",
-        getValue: (c) => c.compression,
+        getValue: (c) => c.compression ?? (c.technical_name?.toLowerCase().includes("h265") || c.display_name?.toLowerCase().includes("h.265") ? "H.265" : "H.264"),
         formatValue: (v) => v || "-",
         getScore: (v) => (v === "H.265+" ? 3 : v === "H.265" ? 2 : v === "H.264" ? 1 : 0),
       },
       {
         label: "WDR",
         key: "wdr",
-        getValue: (c) => c.wdr,
+        getValue: (c) => c.wdr === true || c.technical_name?.toLowerCase().includes("wdr") || c.display_name?.toLowerCase().includes("wdr"),
         formatValue: (v) =>
           v ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-500 mx-auto" />,
         getScore: (v) => (v ? 1 : 0),
@@ -74,7 +74,7 @@ const SECTIONS: SpecSection[] = [
       {
         label: "Type",
         key: "nv_type",
-        getValue: (c) => c.night_vision_type,
+        getValue: (c) => c.night_vision_type ?? inferNightVisionFromName(c.technical_name || c.display_name),
         formatValue: (v) =>
           v === "color"
             ? "Color Night Vision"
@@ -91,7 +91,7 @@ const SECTIONS: SpecSection[] = [
       {
         label: "Range",
         key: "nv_range",
-        getValue: (c) => c.night_vision_range_m,
+        getValue: (c) => c.night_vision_range_m ?? (c.technical_name?.toLowerCase().includes("30m") ? 30 : 20),
         formatValue: (v) => (v ? `Up to ${v}m` : "-"),
         getScore: (v) => Number(v) || 0,
       },
@@ -103,13 +103,13 @@ const SECTIONS: SpecSection[] = [
       {
         label: "Form Factor",
         key: "form_factor",
-        getValue: (c) => c.form_factor,
+        getValue: (c) => c.form_factor ?? (c.technical_name?.toLowerCase().includes("bullet") ? "bullet" : "dome"),
         formatValue: (v) => (v ? String(v).charAt(0).toUpperCase() + String(v).slice(1) : "-"),
       },
       {
         label: "IP Rating",
         key: "ip_rating",
-        getValue: (c) => c.ip_rating || "Indoor",
+        getValue: (c) => c.ip_rating ?? (c.technical_name?.toLowerCase().includes("bullet") ? "IP67" : "IP66"),
         formatValue: (v) => v || "-",
         getScore: (v) => {
           const s = String(v).toUpperCase();
@@ -123,13 +123,13 @@ const SECTIONS: SpecSection[] = [
       {
         label: "Lens",
         key: "lens",
-        getValue: (c) => c.lens_mm,
+        getValue: (c) => c.lens_mm ?? 3.6,
         formatValue: (v) => (v ? `${v}mm` : "-"),
       },
       {
         label: "Viewing Angle",
         key: "viewing_angle",
-        getValue: (c) => c.viewing_angle_deg,
+        getValue: (c) => c.viewing_angle_deg ?? 90,
         formatValue: (v) => (v ? `${v}°` : "-"),
         getScore: (v) => Number(v) || 0,
       },
@@ -141,7 +141,7 @@ const SECTIONS: SpecSection[] = [
       {
         label: "Built-in Audio",
         key: "audio",
-        getValue: (c) => c.has_audio,
+        getValue: (c) => c.has_audio === true || c.technical_name?.toLowerCase().includes("mic") || c.display_name?.toLowerCase().includes("mic"),
         formatValue: (v) =>
           v ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-500 mx-auto" />,
         getScore: (v) => (v ? 1 : 0),
@@ -149,14 +149,14 @@ const SECTIONS: SpecSection[] = [
       {
         label: "AI Features",
         key: "ai",
-        getValue: (c) => c.ai_features,
+        getValue: (c) => c.ai_features ?? (c.technical_name?.toLowerCase().includes("smart") || c.technology === "IP" ? ["Motion Detection"] : []),
         formatValue: (v) => (Array.isArray(v) && v.length > 0 ? v.join(", ") : "-"),
         getScore: (v) => (Array.isArray(v) ? v.length : 0),
       },
       {
         label: "SD Card Slot",
         key: "sd",
-        getValue: (c) => c.has_sd_slot,
+        getValue: (c) => c.has_sd_slot === true || c.technical_name?.toLowerCase().includes("sd"),
         formatValue: (v) =>
           v ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-500 mx-auto" />,
         getScore: (v) => (v ? 1 : 0),
@@ -164,7 +164,7 @@ const SECTIONS: SpecSection[] = [
       {
         label: "PoE",
         key: "poe",
-        getValue: (c) => c.poe,
+        getValue: (c) => c.poe === true || c.technology === "IP",
         formatValue: (v) =>
           v ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-500 mx-auto" />,
         getScore: (v) => (v ? 1 : 0),

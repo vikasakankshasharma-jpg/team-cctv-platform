@@ -4,6 +4,7 @@ import { adminDb, arrayUnion, serverTimestamp, increment } from "@/lib/firebase-
 import { rateLimit } from "@/lib/rate-limit";
 import { routeLeadToFranchise, incrementFranchiseLeadCount } from "@/lib/lead-router";
 import { ApiResponse } from "@/lib/api-response";
+import { calculateSlaDeadline, OperatingHours } from "@/lib/sla-engine";
 
 /**
  * ENTERPRISE LEAD INGESTION
@@ -61,6 +62,30 @@ export async function POST(request: NextRequest) {
     };
     const locationData = PINCODE_CITY_MAP[pincodePrefix] ?? null;
 
+    // 3.5 Calculate SLA Deadline
+    let slaDeadline: string | null = null;
+    if (routing.franchise_dealer_id) {
+      try {
+        // Fetch Admin Settings for Global SLA defaults
+        const settingsDoc = await adminDb.collection("settings").doc("app_settings").get();
+        const settings = settingsDoc.data();
+        let opsHours = settings?.default_sla_operating_hours as OperatingHours | undefined;
+
+        // Fetch Franchise for Local SLA overrides
+        const franchiseDoc = await adminDb.collection("franchises").doc(routing.franchise_dealer_id).get();
+        const franchise = franchiseDoc.data();
+        
+        if (franchise?.sla_operating_hours) {
+          opsHours = franchise.sla_operating_hours as OperatingHours;
+        }
+
+        // Calculate SLA Deadline
+        slaDeadline = calculateSlaDeadline(new Date().toISOString(), 2, opsHours);
+      } catch (err) {
+        console.error("Failed to calculate SLA Deadline:", err);
+      }
+    }
+
     // 4. Create Lead Document
     const newLeadRef = adminDb.collection("leads").doc();
     const isHotLead = leadData.cabling_done === true;
@@ -82,6 +107,10 @@ export async function POST(request: NextRequest) {
       franchise_dealer_id:   routing.franchise_dealer_id,
       franchise_dealer_name: routing.franchise_dealer_name,
       franchise_match_type:  routing.match_type,
+
+      // SLA Tracking
+      sla_deadline:          slaDeadline,
+      sla_breached:          false,
 
       // Expansion Tracking Fields
       detected_pincode:      pincode || null,

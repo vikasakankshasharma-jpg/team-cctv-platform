@@ -55,9 +55,9 @@ export function WizardQuestionModal({ isOpen, onClose, stepId, question, onSave 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black dark:bg-black animate-in fade-in duration-300">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl w-full max-w-md shadow-md overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
           <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">
             {question?.id ? "Edit Query" : "New Query"}
           </h2>

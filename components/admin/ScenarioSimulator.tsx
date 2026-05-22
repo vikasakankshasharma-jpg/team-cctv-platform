@@ -34,7 +34,7 @@ export function ScenarioSimulator({ products, settings, addons }: ScenarioSimula
   }, [selection, products, settings, addons]);
 
   return (
-    <div className="bg-zinc-900 rounded-[32px] border border-zinc-800 p-8 shadow-2xl relative overflow-hidden">
+    <div className="bg-zinc-900 rounded-2xl border border-zinc-800 p-8 shadow-md relative overflow-hidden">
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
           <Calculator className="w-6 h-6 text-indigo-400" />
@@ -143,13 +143,13 @@ export function ScenarioSimulator({ products, settings, addons }: ScenarioSimula
           <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Line Items</div>
           <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
             {result.items.map((item, i) => (
-              <div key={i} className="flex justify-between items-center text-sm border-b border-zinc-800/50 pb-2">
+              <div key={i} className="flex justify-between items-center text-sm border-b border-zinc-800 pb-2">
                 <span className="text-zinc-300">{item.qty}x {item.display_name}</span>
                 <span className="text-white font-bold">₹{item.line_total.toLocaleString('en-IN')}</span>
               </div>
             ))}
             {result.addons.map((addon, i) => (
-              <div key={`addon-${i}`} className="flex justify-between items-center text-sm border-b border-zinc-800/50 pb-2">
+              <div key={`addon-${i}`} className="flex justify-between items-center text-sm border-b border-zinc-800 pb-2">
                 <span className="text-zinc-400">+ {addon.display_name}</span>
                 <span className="text-zinc-300 font-bold">₹{addon.price.toLocaleString('en-IN')}</span>
               </div>

@@ -102,7 +102,7 @@ export default function RulesClient({ initialRules }: RulesClientProps) {
           <Plus className="w-4 h-4" /> New Rule
         </button>
 
-        <div className="flex items-center gap-4 bg-zinc-100 dark:bg-zinc-900/40 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 backdrop-blur-md">
+        <div className="flex items-center gap-4 bg-zinc-100 dark:bg-zinc-900 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-800">
           <button 
             onClick={() => setTestMode(!testMode)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
@@ -201,9 +201,9 @@ export default function RulesClient({ initialRules }: RulesClientProps) {
       )}
 
       {/* ─── RULES LIST ─────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-zinc-900/40 rounded-[32px] border border-zinc-100 dark:border-zinc-800 shadow-xl overflow-hidden backdrop-blur-md">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-md overflow-hidden">
         <table className="w-full text-left text-sm">
-          <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.2em] font-black">
+          <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.2em] font-black">
             <tr>
               <th className="px-8 py-6 w-16">Prio</th>
               <th className="px-8 py-6">Conditions</th>

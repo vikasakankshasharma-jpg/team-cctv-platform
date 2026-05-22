@@ -186,7 +186,7 @@ export function NewFranchiseClient() {
                 <p className="text-[9px] text-zinc-400">e.g., 6% on ₹25,000 sale = ₹1,500 commission</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center gap-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
               <button
                 type="button"
                 onClick={() => set("territory_exclusivity", !form.territory_exclusivity)}
@@ -262,7 +262,7 @@ export function NewFranchiseClient() {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-3 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-md disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {saving ? "Creating..." : "Create & Set Pricing →"}

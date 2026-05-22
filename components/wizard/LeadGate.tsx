@@ -131,6 +131,11 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
         } catch (_) { /* ignore clear errors */ }
         window.recaptchaVerifier = undefined as any;
       }
+
+      // Fix: clear the DOM element to prevent "already rendered in this element" error
+      const rcContainer = document.getElementById("recaptcha-container");
+      if (rcContainer) rcContainer.innerHTML = "";
+
       window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
         size: "invisible",
       });

@@ -9,7 +9,7 @@ export default function LeadsLoading() {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[28px] p-6">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[28px] p-6">
         <div className="flex gap-4 flex-wrap">
           <div className="h-10 w-48 bg-zinc-100 dark:bg-zinc-800 rounded-xl" />
           <div className="h-10 w-32 bg-zinc-100 dark:bg-zinc-800 rounded-xl" />
@@ -19,9 +19,9 @@ export default function LeadsLoading() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[28px] overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[28px] overflow-hidden">
         {/* Table Header */}
-        <div className="flex items-center gap-4 px-6 py-4 bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-100 dark:border-zinc-800/60">
+        <div className="flex items-center gap-4 px-6 py-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800">
           {[40, 15, 15, 15, 15].map((w, i) => (
             <div key={i} className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full" style={{ width: `${w}%` }} />
           ))}
@@ -29,7 +29,7 @@ export default function LeadsLoading() {
 
         {/* Table Rows */}
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-6 py-5 border-b border-zinc-50 dark:border-zinc-800/40 last:border-0">
+          <div key={i} className="flex items-center gap-4 px-6 py-5 border-b border-zinc-50 dark:border-zinc-800 last:border-0">
             <div className="flex items-center gap-3 w-[40%]">
               <div className="w-9 h-9 bg-zinc-100 dark:bg-zinc-800 rounded-xl shrink-0" />
               <div className="space-y-1.5 flex-1">

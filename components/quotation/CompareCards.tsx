@@ -35,9 +35,9 @@ import { trackEvent } from "@/components/shared/TrackingProvider";
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface CompareCardsProps {
-  compareOptions: Array<{ technology: "HD" | "IP"; option: number | string }>;
-  activeCheckoutOption: { technology: "HD" | "IP"; option: number | string } | null;
-  onSelectCheckout: (option: { technology: "HD" | "IP"; option: number | string }) => void;
+  compareOptions: Array<{ technology: string; option: number | string }>;
+  activeCheckoutOption: { technology: string; option: number | string } | null;
+  onSelectCheckout: (option: { technology: string; option: number | string }) => void;
 
   cameraCount: number;
   recordingDays: number;
@@ -47,7 +47,7 @@ interface CompareCardsProps {
   cablingDone: boolean;
   recommendation?: RecommendedOutput | null;
   /** The technology the customer explicitly chose in the wizard (IP / HD / undefined = not sure) */
-  customerTechnology?: "HD" | "IP";
+  customerTechnology?: string;
   requestedFeatures: string[];
   selectedAddons: string[];
   promoterDiscount?: { percent: number; flat: number };

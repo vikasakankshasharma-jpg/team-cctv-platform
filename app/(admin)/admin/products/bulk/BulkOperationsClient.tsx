@@ -127,7 +127,7 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       
       {/* EXPORT CARD */}
-      <div className="bg-white dark:bg-zinc-900/40 rounded-[32px] border border-zinc-100 dark:border-zinc-800 p-8 shadow-xl backdrop-blur-md flex flex-col items-center text-center relative overflow-hidden group">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-8 shadow-md flex flex-col items-center text-center relative overflow-hidden group">
         <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-colors duration-700" />
         <div className="w-20 h-20 rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center mb-6 relative z-10 group-hover:scale-110 transition-transform duration-500">
           <Download className="w-10 h-10 text-blue-600 dark:text-blue-400" />
@@ -139,7 +139,7 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
         <button
           onClick={handleExport}
           disabled={isExporting}
-          className="w-full relative z-10 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-6 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-600/20 hover:shadow-blue-600/40 active:scale-95 disabled:opacity-50"
+          className="w-full relative z-10 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-6 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-md shadow-blue-600/20 hover:shadow-blue-600/40 active:scale-95 disabled:opacity-50"
         >
           {isExporting ? <RefreshCw className="w-5 h-5 animate-spin" /> : <FileSpreadsheet className="w-5 h-5" />}
           Generate CSV
@@ -147,7 +147,7 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
       </div>
 
       {/* IMPORT CARD */}
-      <div className="bg-zinc-950 rounded-[32px] border border-zinc-800 p-8 shadow-2xl relative overflow-hidden flex flex-col items-center text-center group">
+      <div className="bg-zinc-950 rounded-2xl border border-zinc-800 p-8 shadow-md relative overflow-hidden flex flex-col items-center text-center group">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/30 transition-colors duration-700" />
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-colors duration-700" />
         
@@ -171,7 +171,7 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
             
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full relative z-10 flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-6 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 active:scale-95"
+              className="w-full relative z-10 flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-6 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-md shadow-indigo-600/20 hover:shadow-indigo-600/40 active:scale-95"
             >
               <Upload className="w-5 h-5" />
               Select CSV File

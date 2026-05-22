@@ -45,10 +45,10 @@ export function SortableStep({
     <div 
       ref={setNodeRef} 
       style={style}
-      className="group/step bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 rounded-[40px] overflow-hidden shadow-xl dark:shadow-2xl backdrop-blur-md transition-all hover:border-blue-500/20"
+      className="group/step bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-md dark:shadow-md transition-all hover:border-blue-500/20"
     >
       {/* Step Header */}
-      <div className="bg-zinc-50 dark:bg-zinc-950/40 p-8 border-b border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
+      <div className="bg-zinc-50 dark:bg-zinc-900 p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div 
             {...attributes} 
@@ -74,13 +74,13 @@ export function SortableStep({
         <div className="flex items-center gap-3">
            <button 
             onClick={() => onEdit(step)}
-            className="p-3 bg-white dark:bg-zinc-900/80 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-white rounded-2xl border border-zinc-100 dark:border-zinc-800 transition-all active:scale-90 shadow-sm"
+            className="p-3 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-white rounded-2xl border border-zinc-100 dark:border-zinc-800 transition-all active:scale-90 shadow-sm"
            >
              <Settings2 className="w-5 h-5" />
            </button>
            <button 
             onClick={() => step.id && onDelete(step.id, step.title)}
-            className="p-3 bg-white dark:bg-zinc-900/80 hover:bg-red-50 dark:hover:bg-red-500/10 text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 rounded-2xl border border-zinc-100 dark:border-zinc-800 transition-all active:scale-90 shadow-sm"
+            className="p-3 bg-white dark:bg-zinc-900 hover:bg-red-50 dark:hover:bg-red-500/10 text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 rounded-2xl border border-zinc-100 dark:border-zinc-800 transition-all active:scale-90 shadow-sm"
            >
              <Trash2 className="w-5 h-5" />
            </button>
@@ -101,7 +101,7 @@ export function SortableStep({
         
         <button 
           onClick={() => step.id && onCreateQuestion(step.id)}
-          className="w-full py-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 hover:text-zinc-950 dark:hover:text-white hover:border-zinc-400 dark:hover:border-zinc-600 rounded-[32px] text-xs font-black uppercase tracking-[0.2em] transition-all bg-zinc-50 dark:bg-zinc-950/20 hover:bg-zinc-100 dark:hover:bg-zinc-900/40 flex items-center justify-center gap-3 group/addq shadow-lg"
+          className="w-full py-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 hover:text-zinc-950 dark:hover:text-white hover:border-zinc-400 dark:hover:border-zinc-600 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center gap-3 group/addq shadow-lg"
         >
           <Plus className="w-5 h-5 group-hover/addq:rotate-90 transition-all" />
           Orchestrate New Query

@@ -12,7 +12,14 @@ interface SettingsFormProps {
 }
 
 export function SettingsForm({ initialSettings }: SettingsFormProps) {
-  const [formData, setFormData] = useState<AppSettings>(initialSettings);
+  const [formData, setFormData] = useState<AppSettings>({
+    ...initialSettings,
+    default_sla_operating_hours: initialSettings.default_sla_operating_hours || {
+      start_time: "10:00",
+      end_time: "18:00",
+      days_off: [0] // Sunday
+    }
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -41,13 +48,42 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     }));
   };
 
+  const handleSlaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      default_sla_operating_hours: {
+        ...prev.default_sla_operating_hours!,
+        [name]: value
+      }
+    }));
+  };
+
+  const toggleDayOff = (dayIndex: number) => {
+    setFormData(prev => {
+      const days = prev.default_sla_operating_hours?.days_off || [];
+      const newDays = days.includes(dayIndex) 
+        ? days.filter(d => d !== dayIndex) 
+        : [...days, dayIndex];
+      return {
+        ...prev,
+        default_sla_operating_hours: {
+          ...prev.default_sla_operating_hours!,
+          days_off: newDays
+        }
+      };
+    });
+  };
+
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-700">
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Section: Company Profile */}
-        <div className="bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl dark:shadow-2xl backdrop-blur-sm group hover:border-blue-500/20 transition-all">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md dark:shadow-md group hover:border-blue-500/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-500 border border-blue-100 dark:border-blue-500/20 shadow-inner">
               <Settings2 className="w-5 h-5" />
@@ -105,7 +141,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
 
         {/* Section: Pricing & Taxes */}
-        <div className="bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl dark:shadow-2xl backdrop-blur-sm group hover:border-emerald-500/20 transition-all">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md dark:shadow-md group hover:border-emerald-500/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-500 border border-emerald-100 dark:border-emerald-500/20 shadow-inner">
               <BadgePercent className="w-5 h-5" />
@@ -183,7 +219,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
 
         {/* Section: Brand Tier Management */}
-        <div className="lg:col-span-2 bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl dark:shadow-2xl backdrop-blur-sm group hover:border-blue-500/20 transition-all">
+        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md dark:shadow-md group hover:border-blue-500/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-500 border border-blue-100 dark:border-blue-500/20 shadow-inner">
               <Zap className="w-5 h-5" />
@@ -196,7 +232,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Budget Tier */}
-            <div className="space-y-4 p-5 rounded-[24px] bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800/50">
+            <div className="space-y-4 p-5 rounded-[24px] bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-2 h-2 rounded-full bg-zinc-300 animate-pulse" />
                 <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest text-[9px]">Budget Tier (Value)</h3>
@@ -288,7 +324,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
 
         {/* Section: High-Fidelity Logic (PDF Alignment) */}
-        <div className="lg:col-span-2 bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl dark:shadow-2xl backdrop-blur-sm group hover:border-amber-500/20 transition-all">
+        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md dark:shadow-md group hover:border-amber-500/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-500 border border-amber-100 dark:border-amber-500/20 shadow-inner">
               <Ruler className="w-5 h-5" />
@@ -388,10 +424,74 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
         </div>
+
+        {/* Section: Service Level Agreements (SLA) */}
+        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md dark:shadow-md group hover:border-rose-500/20 transition-all">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-500 border border-rose-100 dark:border-rose-500/20 shadow-inner">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Service Level Agreements (SLA)</h2>
+              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-0.5">Global Franchise Operating Hours</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4 p-5 rounded-[24px] bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+              <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest text-[9px] mb-2">Business Hours (24H Format)</h3>
+              <div className="flex items-center gap-4">
+                <div className="flex-1 space-y-1.5">
+                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest ml-1">Opening Time</label>
+                  <input 
+                    type="time" 
+                    name="start_time"
+                    value={formData.default_sla_operating_hours?.start_time || "10:00"}
+                    onChange={handleSlaChange}
+                    className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 outline-none transition-all font-bold text-sm shadow-sm"
+                  />
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest ml-1">Closing Time</label>
+                  <input 
+                    type="time" 
+                    name="end_time"
+                    value={formData.default_sla_operating_hours?.end_time || "18:00"}
+                    onChange={handleSlaChange}
+                    className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 outline-none transition-all font-bold text-sm shadow-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 p-5 rounded-[24px] bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+              <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest text-[9px] mb-2">Weekly Days Off</h3>
+              <div className="flex flex-wrap gap-2">
+                {DAYS.map((day, idx) => {
+                  const isOff = formData.default_sla_operating_hours?.days_off.includes(idx);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleDayOff(idx)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                        isOff 
+                          ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 border border-rose-600' 
+                          : 'bg-white dark:bg-zinc-900 text-zinc-500 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Section: Communications */}
-      <div className="bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl dark:shadow-2xl backdrop-blur-sm group hover:border-blue-500/20 transition-all">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md dark:shadow-md group hover:border-blue-500/20 transition-all">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-500 border border-blue-100 dark:border-blue-500/20 shadow-inner">
             <MessageSquare className="w-5 h-5" />
@@ -415,7 +515,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             />
           </div>
           
-          <div className="lg:col-span-2 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[24px] space-y-6 shadow-inner">
+          <div className="lg:col-span-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[24px] space-y-6 shadow-inner">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest ml-1">Admin Notification Mobile</label>
               <div className="relative">
@@ -440,7 +540,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 { token: "{{total_amount}}", desc: "Final payable quote" },
                 { token: "{{pdf_url}}", desc: "Dynamic cloud PDF link" }
               ].map((item) => (
-                <div key={item.token} className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/50 group/token shadow-sm">
+                <div key={item.token} className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 group/token shadow-sm">
                   <code className="text-xs font-black text-zinc-900 dark:text-white group-hover/token:text-blue-500 transition-colors uppercase tracking-widest">{item.token}</code>
                   <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">{item.desc}</span>
                 </div>
@@ -451,7 +551,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       </div>
 
       {/* Footer / Global System Settings */}
-      <div className="sticky bottom-6 z-50 bg-white/90 dark:bg-zinc-900/90 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-6 shadow-2xl dark:shadow-2xl backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-8 mt-12">
+      <div className="sticky bottom-6 z-50 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-6 shadow-md dark:shadow-md flex flex-col md:flex-row items-center justify-between gap-8 mt-12">
         <div className="flex flex-wrap gap-8 items-center w-full md:w-auto">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">Cache Performance (TTL)</label>
@@ -493,7 +593,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
           <button 
             type="submit" 
             disabled={isSubmitting}
-            className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:text-zinc-300 dark:disabled:text-zinc-600 text-white px-10 py-4 rounded-[24px] font-black uppercase text-xs tracking-[0.25em] transition-all shadow-2xl shadow-blue-500/20 active:scale-95 disabled:shadow-none"
+            className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:text-zinc-300 dark:disabled:text-zinc-600 text-white px-10 py-4 rounded-[24px] font-black uppercase text-xs tracking-[0.25em] transition-all shadow-md shadow-blue-500/20 active:scale-95 disabled:shadow-none"
           >
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />

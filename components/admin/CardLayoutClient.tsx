@@ -75,7 +75,7 @@ function SlotEditor({
     .sort((a, b) => a.unit_price - b.unit_price);
 
   return (
-    <div className="space-y-3 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+    <div className="space-y-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
       <div className="flex items-center gap-2">
         <GripVertical className="w-4 h-4 text-zinc-300" />
         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${slot.slot === "recommended" ? "bg-amber-100 text-amber-700" : "bg-zinc-100 text-zinc-500"}`}>
@@ -329,7 +329,7 @@ function LayoutRow({ layout, cameras, onSave, onDelete }: {
           </div>
 
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all disabled:opacity-50 shadow-xl">
+            className="flex items-center gap-2 px-6 py-3 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all disabled:opacity-50 shadow-md">
             <Save className="w-4 h-4" />
             {saving ? "Saving…" : "Save Layout"}
           </button>
@@ -390,7 +390,7 @@ export function CardLayoutClient({ initialLayouts, cameras }: {
       {/* Create button */}
       <div className="flex justify-end">
         <button onClick={handleCreate} disabled={creating}
-          className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl disabled:opacity-50">
+          className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-md disabled:opacity-50">
           <Plus className="w-4 h-4" />
           {creating ? "Creating…" : "New Layout"}
         </button>

@@ -85,7 +85,7 @@ function SalesTrendChart({ trend }: { trend: WeeklyBucket[] }) {
             {totalLeads} total · {totalWon} converted · 7-day cycle
           </p>
         </div>
-        <div className="flex items-center gap-4 p-3 bg-zinc-50 dark:bg-zinc-950/40 rounded-2xl border border-zinc-100 dark:border-zinc-800/60">
+        <div className="flex items-center gap-4 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
             <div className="w-2.5 h-2.5 rounded-sm bg-zinc-200 dark:bg-zinc-700" />
             <span className="text-zinc-400 dark:text-zinc-500">Gross</span>
@@ -105,7 +105,7 @@ function SalesTrendChart({ trend }: { trend: WeeklyBucket[] }) {
           return (
             <div key={bucket.label} className="flex-1 flex flex-col items-center gap-3 group cursor-pointer">
               {/* Tooltip */}
-              <div className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 scale-90 group-hover:scale-100 bg-zinc-900 dark:bg-zinc-800 text-white text-[10px] font-black p-3 rounded-xl whitespace-nowrap shadow-2xl border border-zinc-700/50 z-10">
+              <div className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 scale-90 group-hover:scale-100 bg-zinc-900 dark:bg-zinc-800 text-white text-[10px] font-black p-3 rounded-xl whitespace-nowrap shadow-md border border-zinc-700/50 z-10">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
                   {bucket.total} leads
@@ -116,7 +116,7 @@ function SalesTrendChart({ trend }: { trend: WeeklyBucket[] }) {
                 </div>
               </div>
               {/* Bars */}
-              <div className="w-full flex items-end gap-1 p-1 bg-zinc-50 dark:bg-zinc-950/30 rounded-xl shadow-inner" style={{ height: "180px" }}>
+              <div className="w-full flex items-end gap-1 p-1 bg-zinc-50 dark:bg-zinc-900 rounded-xl shadow-inner" style={{ height: "180px" }}>
                 <AnimatedBar height={totalH} className="bg-zinc-200/80 dark:bg-zinc-800/80 group-hover:bg-zinc-300 dark:group-hover:bg-zinc-700 border border-zinc-300/40 dark:border-zinc-700/40 transition-colors" delay={idx * 60} />
                 <AnimatedBar height={wonH} className="bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-[0_4px_12px_rgba(16,185,129,0.2)] dark:shadow-[0_4px_12px_rgba(16,185,129,0.3)]" delay={idx * 60 + 100} />
               </div>
@@ -129,12 +129,12 @@ function SalesTrendChart({ trend }: { trend: WeeklyBucket[] }) {
         })}
       </div>
 
-      <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
+      <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
           <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">7-Day Operational Cycle</span>
         </div>
-        <div className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest bg-zinc-50 dark:bg-zinc-950/40 px-3 py-1.5 rounded-lg border border-zinc-100 dark:border-zinc-800">
+        <div className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest bg-zinc-50 dark:bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-100 dark:border-zinc-800">
           Real-time Telemetry
         </div>
       </div>
@@ -185,7 +185,7 @@ function LeadSourcesPanel({ sources, recentLeads, internalLeads, internalLeadsCo
       </div>
 
       {/* Conversion Donut */}
-      <div className="flex items-center gap-5 p-4 bg-zinc-50 dark:bg-zinc-950/40 rounded-2xl border border-zinc-100 dark:border-zinc-800/60 group overflow-hidden relative">
+      <div className="flex items-center gap-5 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 group overflow-hidden relative">
         <div className="relative w-16 h-16 shrink-0">
           <svg className="w-full h-full -rotate-90 group-hover:scale-110 transition-transform duration-500" viewBox="0 0 36 36">
             <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" className="text-zinc-200 dark:text-zinc-800" strokeWidth="4" />
@@ -249,7 +249,7 @@ function LeadSourcesPanel({ sources, recentLeads, internalLeads, internalLeadsCo
           ) : (
             recentLeads.map((lead) => (
               <Link href="/admin/leads" key={lead.id}
-                className="flex items-center justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-950/30 border border-zinc-100 dark:border-zinc-800/40 rounded-xl hover:bg-white dark:hover:bg-zinc-900/60 hover:border-blue-200 dark:hover:border-blue-500/20 hover:shadow-sm transition-all group/row active:scale-[0.98]">
+                className="flex items-center justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl hover:bg-white dark:hover:bg-zinc-900 hover:border-blue-200 dark:hover:border-blue-500/20 hover:shadow-sm transition-all group/row active:scale-[0.98]">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-[10px] font-black text-zinc-500 dark:text-zinc-400 group-hover/row:from-blue-50 dark:group-hover/row:from-blue-500/10 group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-all shrink-0">
                     {lead.customer_name.charAt(0).toUpperCase()}
@@ -275,10 +275,10 @@ function LeadSourcesPanel({ sources, recentLeads, internalLeads, internalLeadsCo
 export function DashboardClient({ trend, sources, recentLeads, internalLeads, internalLeadsCount, conversionRate }: DashboardClientProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 bg-white dark:bg-[#0F0F0F] border border-zinc-200 dark:border-zinc-800/80 rounded-[32px] p-8 min-h-[480px] flex flex-col shadow-xl backdrop-blur-sm hover:border-blue-300 dark:hover:border-blue-500/20 hover:shadow-2xl hover:shadow-zinc-200 dark:hover:shadow-black transition-all duration-500">
+      <div className="lg:col-span-2 bg-white dark:bg-[#0F0F0F] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 min-h-[480px] flex flex-col shadow-md hover:border-blue-300 dark:hover:border-blue-500/20 hover:shadow-md hover:shadow-zinc-200 dark:hover:shadow-black transition-all duration-500">
         <SalesTrendChart trend={trend} />
       </div>
-      <div className="bg-white dark:bg-[#0F0F0F] border border-zinc-200 dark:border-zinc-800/80 rounded-[32px] p-8 min-h-[480px] flex flex-col shadow-xl backdrop-blur-sm hover:border-purple-300 dark:hover:border-purple-500/20 hover:shadow-2xl hover:shadow-zinc-200 dark:hover:shadow-black transition-all duration-500">
+      <div className="bg-white dark:bg-[#0F0F0F] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 min-h-[480px] flex flex-col shadow-md hover:border-purple-300 dark:hover:border-purple-500/20 hover:shadow-md hover:shadow-zinc-200 dark:hover:shadow-black transition-all duration-500">
         <LeadSourcesPanel
           sources={sources}
           recentLeads={recentLeads}

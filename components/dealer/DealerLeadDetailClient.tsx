@@ -180,7 +180,7 @@ export function DealerLeadDetailClient({ lead, quotes }: Props) {
                     <FileText className="w-4 h-4 text-indigo-500" /> Quotations Generated
                  </h3>
                  {quotes.length === 0 ? (
-                    <div className="bg-zinc-50 dark:bg-zinc-900/40 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center">
+                    <div className="bg-zinc-50 dark:bg-zinc-900 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center">
                        <p className="text-sm text-zinc-500 font-medium italic">No quotations have been generated for this lead yet.</p>
                     </div>
                  ) : (
@@ -228,7 +228,7 @@ export function DealerLeadDetailClient({ lead, quotes }: Props) {
                  <p className="text-xs text-emerald-800/70 dark:text-emerald-400/70 font-medium leading-relaxed mb-4">
                     This lead was automatically routed to you based on the customer&apos;s pincode. You have exclusive rights to serve this inquiry.
                  </p>
-                 <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                 <div className="p-3 bg-white dark:bg-black rounded-lg">
                     <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Assigned Zone</p>
                     <p className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
                        <MapPin className="w-3.5 h-3.5" /> {lead.address?.pincode || "N/A"}

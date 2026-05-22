@@ -34,15 +34,15 @@ export function AuditLogClient({ initialLogs }: AuditLogClientProps) {
             placeholder="Search by product or admin email…"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60 text-zinc-900 dark:text-white rounded-2xl pl-11 pr-5 py-3 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all placeholder-zinc-400 dark:placeholder-zinc-700"
+            className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl pl-11 pr-5 py-3 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all placeholder-zinc-400 dark:placeholder-zinc-700"
           />
         </div>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl backdrop-blur-md transition-all">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-md dark:shadow-md transition-all">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-zinc-300">
-            <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 font-black uppercase text-[10px] tracking-[0.25em]">
+            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 font-black uppercase text-[10px] tracking-[0.25em]">
               <tr className="text-[9px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-600">
                 <th className="px-6 py-4">Product</th>
                 <th className="px-6 py-4">Changed By</th>

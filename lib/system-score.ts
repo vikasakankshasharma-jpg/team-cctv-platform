@@ -210,7 +210,7 @@ function buildHighlights(cam: Product, breakdown: SystemScoreBreakdown): string[
 }
 
 /** Fallback: infer resolution from technical_name when resolution_mp is not set */
-function inferResolutionFromName(name: string): number {
+export function inferResolutionFromName(name: string): number {
   const lower = name.toLowerCase();
   if (lower.includes("8mp") || lower.includes("4k")) return 8;
   if (lower.includes("6mp")) return 6;
@@ -222,7 +222,7 @@ function inferResolutionFromName(name: string): number {
 }
 
 /** Fallback: infer night vision type from technical_name/features */
-function inferNightVisionFromName(name: string): Product["night_vision_type"] {
+export function inferNightVisionFromName(name: string): Product["night_vision_type"] {
   const lower = name.toLowerCase();
   if (lower.includes("starlight")) return "starlight";
   if (lower.includes("dual") && lower.includes("light")) return "dual_light";

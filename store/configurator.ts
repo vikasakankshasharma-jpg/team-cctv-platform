@@ -42,8 +42,8 @@ interface ConfiguratorStore {
   promoter_id: string | null;
 
   // ── Compare State (New 3-Tier SaaS Layout) ──────────────────────────────
-  compare_options: Array<{ technology: "HD" | "IP"; option: number | string }>;
-  active_checkout_option: { technology: "HD" | "IP"; option: number | string } | null;
+  compare_options: Array<{ technology: string; option: number | string }>;
+  active_checkout_option: { technology: string; option: number | string } | null;
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
@@ -65,10 +65,10 @@ interface ConfiguratorStore {
   setPricingResults: (results: ConfiguratorStore["pricing_results"]) => void;
 
   /** Update compare options from table */
-  setCompareOptions: (options: Array<{ technology: "HD" | "IP"; option: number | string }>) => void;
+  setCompareOptions: (options: Array<{ technology: string; option: number | string }>) => void;
 
   /** Set the active checkout option (when clicking a card) */
-  setActiveCheckoutOption: (option: { technology: "HD" | "IP"; option: number | string }) => void;
+  setActiveCheckoutOption: (option: { technology: string; option: number | string }) => void;
 
   /** Apply a referral discount from a validated promoter */
   applyReferral: (discount: number, promoterId: string) => void;

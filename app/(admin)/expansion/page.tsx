@@ -76,11 +76,11 @@ export default function ExpansionDashboard() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xl overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
                 <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">City</th>
                 <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">State</th>
                 <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
@@ -153,7 +153,7 @@ export default function ExpansionDashboard() {
             </tbody>
           </table>
         </div>
-        <div className="px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+        <div className="px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
           <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-center">
             Formula: (Looks × 0.2) + (Leads × 0.5) + (Confirmed × 0.3)
           </p>

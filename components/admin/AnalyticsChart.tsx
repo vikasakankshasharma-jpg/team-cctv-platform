@@ -20,7 +20,7 @@ export function AnalyticsChart({ data, title, color = "bg-blue-600" }: Analytics
   }, [data]);
 
   return (
-    <div className="bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 backdrop-blur-md shadow-xl overflow-hidden group">
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md overflow-hidden group">
       <div className="flex items-center justify-between mb-10">
          <div>
             <h3 className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.4em] mb-1">{title}</h3>
@@ -44,7 +44,7 @@ export function AnalyticsChart({ data, title, color = "bg-blue-600" }: Analytics
           return (
             <div key={i} className="flex-1 flex flex-col items-center gap-3 h-full justify-end group/bar relative">
               <div className="absolute bottom-full mb-2 opacity-0 group-hover/bar:opacity-100 transition-all scale-75 group-hover/bar:scale-100 pointer-events-none z-10">
-                 <div className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-xl font-black text-[10px] shadow-2xl whitespace-nowrap">
+                 <div className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-xl font-black text-[10px] shadow-md whitespace-nowrap">
                     ₹{point.value.toLocaleString()}
                  </div>
               </div>

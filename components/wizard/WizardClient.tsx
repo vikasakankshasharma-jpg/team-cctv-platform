@@ -226,9 +226,9 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
     // Apply Technology Filter
     if (hypotheticalAnswers["q_tech"]) {
-       const tech = (hypotheticalAnswers["q_tech"] as string).toUpperCase();
-       if (tech === "HD" || tech === "IP") {
-         pool = pool.filter(p => p.technology === tech);
+       const tech = hypotheticalAnswers["q_tech"] as string;
+       if (tech) {
+         pool = pool.filter(p => p.technology?.toLowerCase() === tech.toLowerCase());
        }
     }
 

@@ -14,11 +14,11 @@ interface PageHeaderProps {
  */
 export function PageHeader({ icon: Icon, title, description, badge, action }: PageHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 pb-8 mb-8 border-b border-zinc-800/60">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 pb-8 mb-8 border-b border-zinc-800">
       <div className="flex items-center gap-4">
         <BackButton />
 
-        <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-xl shadow-blue-600/20 shrink-0">
+        <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-600/20 shrink-0">
           <Icon className="w-6 h-6 text-white" />
         </div>
         <div>

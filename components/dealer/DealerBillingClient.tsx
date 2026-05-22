@@ -81,7 +81,7 @@ export function DealerBillingClient({ dealer }: Props) {
           
           {/* Main Billing Card */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 shadow-sm">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white">
                   <CreditCard className="w-6 h-6" />
@@ -111,7 +111,7 @@ export function DealerBillingClient({ dealer }: Props) {
                 <button 
                   onClick={handleSubscribe}
                   disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-3"
+                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-3"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
                   Activate Franchise Network Access
@@ -129,7 +129,7 @@ export function DealerBillingClient({ dealer }: Props) {
               )}
             </div>
 
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 shadow-sm">
               <h3 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest mb-6 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-blue-500" /> Billing History
               </h3>
@@ -143,7 +143,7 @@ export function DealerBillingClient({ dealer }: Props) {
 
           {/* Sidebar Info */}
           <div className="space-y-6">
-            <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-500/20 relative overflow-hidden">
+            <div className="bg-blue-600 rounded-2xl p-8 text-white shadow-md shadow-blue-500/20 relative overflow-hidden">
               <div className="relative z-10">
                 <Building2 className="w-8 h-8 opacity-40 mb-4" />
                 <h4 className="text-lg font-black mb-2">Partner Benefits</h4>
@@ -160,10 +160,10 @@ export function DealerBillingClient({ dealer }: Props) {
                   ))}
                 </ul>
               </div>
-              <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+              <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white rounded-full blur-2xl" />
             </div>
 
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
               <div className="flex gap-3">
                 <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
                 <div>

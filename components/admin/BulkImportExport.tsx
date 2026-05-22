@@ -158,6 +158,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
     Papa.parse<ParsedRow>(file, {
       header: true,
       skipEmptyLines: true,
+      dynamicTyping: true, // Converts strings like "5" or "true" to proper JS types
       complete: (results) => {
         const rows = results.data as ParsedRow[];
         const toCreate: ParsedRow[] = [];
@@ -254,7 +255,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
             <>
               {/* backdrop */}
               <div className="fixed inset-0 z-40" onClick={() => setShowExportDropdown(false)} />
-              <div className="absolute right-0 top-full mt-2 z-50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-2xl shadow-zinc-900/10 dark:shadow-black/40 overflow-hidden w-64 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="absolute right-0 top-full mt-2 z-50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-md shadow-zinc-900/10 dark:shadow-black/40 overflow-hidden w-64 animate-in fade-in slide-in-from-top-2 duration-200">
                 <button
                   id="btn-export-all"
                   onClick={() => handleExport(false)}
@@ -284,7 +285,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                     </button>
                   </>
                 )}
-                <div className="px-5 py-3 bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-700">
+                <div className="px-5 py-3 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-700">
                   <p className="text-[10px] text-zinc-400 leading-relaxed">
                     The CSV template can also be re-imported with edits or new rows added.
                   </p>
@@ -307,8 +308,8 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
 
       {/* ── Modal ─────────────────────────────────────────────────────────── */}
       {modalState !== "idle" && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/30 dark:bg-black/70 backdrop-blur-xl animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-zinc-900 rounded-[32px] shadow-[0_40px_80px_rgba(0,0,0,0.12)] dark:shadow-black/60 w-full max-w-2xl border border-zinc-200/50 dark:border-zinc-800/60 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900 dark:bg-black animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-[0_40px_80px_rgba(0,0,0,0.12)] dark:shadow-black/60 w-full max-w-2xl border border-zinc-200/50 dark:border-zinc-800 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
 
             {/* Modal Header */}
             <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-100 dark:border-zinc-800">
@@ -351,7 +352,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleDrop}
                   onClick={() => fileRef.current?.click()}
-                  className={`relative border-2 border-dashed rounded-3xl p-12 text-center cursor-pointer transition-all duration-200 ${
+                  className={`relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200 ${
                     isDragging
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10 scale-[1.01]"
                       : "border-zinc-200 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -359,7 +360,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                 >
                   <input ref={fileRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" id="csv-file-input" />
                   <div className="flex flex-col items-center gap-4">
-                    <div className={`w-16 h-16 rounded-3xl flex items-center justify-center transition-colors ${isDragging ? "bg-blue-500" : "bg-zinc-100 dark:bg-zinc-800"}`}>
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors ${isDragging ? "bg-blue-500" : "bg-zinc-100 dark:bg-zinc-800"}`}>
                       <FileText className={`w-7 h-7 transition-colors ${isDragging ? "text-white" : "text-zinc-400"}`} />
                     </div>
                     <div>
@@ -517,7 +518,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
             {/* ── State: Done ───────────────────────────────────────────────── */}
             {modalState === "done" && importResult && (
               <div className="p-10 flex flex-col items-center gap-6 text-center">
-                <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shadow-xl shadow-emerald-500/10">
+                <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shadow-md shadow-emerald-500/10">
                   <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                 </div>
                 <div>
@@ -539,7 +540,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
             )}
 
             {/* ── Modal Footer ─────────────────────────────────────────────── */}
-            <div className="px-8 py-5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-950/30">
+            <div className="px-8 py-5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900">
               <button
                 onClick={handleClose}
                 disabled={modalState === "importing"}
@@ -553,7 +554,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                   id="btn-confirm-import"
                   onClick={handleConfirmImport}
                   disabled={preview.toCreate.length === 0 && preview.toUpdate.length === 0}
-                  className="flex items-center gap-2.5 px-7 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all shadow-xl shadow-zinc-900/10 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2.5 px-7 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all shadow-md shadow-zinc-900/10 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Confirm & Import
                   <ArrowRight className="w-4 h-4" />

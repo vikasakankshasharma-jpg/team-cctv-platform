@@ -12,7 +12,7 @@ export function ProductsSkeleton() {
       </div>
       
       {/* Skeleton Filter Bar */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-[40px] shadow-sm space-y-8">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl shadow-sm space-y-8">
         <div className="flex items-center gap-4">
            <Skeleton className="w-12 h-12 rounded-[22px]" />
            <div className="space-y-2">
