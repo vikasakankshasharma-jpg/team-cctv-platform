@@ -14,7 +14,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { WizardStep, WizardAnswers } from "@/types";
+import type { WizardStep, WizardAnswers, Product } from "@/types";
 
 // ─────────────────────────────────────────────
 // State Shape
@@ -31,8 +31,12 @@ interface WizardStore {
   // Customer answers: { [questionId]: optionValue | optionValue[] }
   answers: WizardAnswers;
 
+  // Products Catalog (for live faceted counting)
+  products: Product[];
+
   // Actions
   setSteps: (steps: WizardStep[]) => void;
+  setProducts: (products: Product[]) => void;
   setAnswer: (questionId: string, value: string | string[]) => void;
   goToStep: (index: number) => void;
   nextStep: () => void;
@@ -49,6 +53,7 @@ const initialState = {
   is_loaded: false,
   current_step_index: 0,
   answers: {} as WizardAnswers,
+  products: [],
 };
 
 // ─────────────────────────────────────────────
@@ -65,6 +70,9 @@ export const useWizardStore = create<WizardStore>()(
       /** Load wizard steps from Firestore (called once on wizard page mount) */
       setSteps: (steps) =>
         set({ steps, is_loaded: true }),
+      
+      /** Load products from API for live filtering */
+      setProducts: (products) => set({ products }),
 
       /** Record a customer answer for a specific question */
       setAnswer: (questionId, value) =>

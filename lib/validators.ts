@@ -94,6 +94,9 @@ export const GenerateQuoteSchema = z.object({
   selected_addons: z.array(z.string()).default([]),
   selected_camera_option: z.number().int().optional(),
   selected_camera_id: z.string().optional(),
+  selected_recorder_id: z.string().optional(),
+  selected_storage_id: z.string().optional(),
+  selected_power_id: z.string().optional(),
 });
 
 export type GenerateQuoteInput = z.infer<typeof GenerateQuoteSchema>;

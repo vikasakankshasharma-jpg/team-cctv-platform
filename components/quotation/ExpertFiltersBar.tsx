@@ -10,6 +10,7 @@ import { BrandSelector } from "./filters/BrandSelector";
 import { BudgetSlider } from "./filters/BudgetSlider";
 import { FeatureToggleGrid } from "./filters/FeatureToggleGrid";
 import { FocusToggle } from "./filters/FocusToggle";
+import { ResolutionSelector } from "./filters/ResolutionSelector";
 
 export function ExpertFiltersBar() {
   const { selection, products, resetFilters } = useConfiguratorStore();
@@ -22,8 +23,26 @@ export function ExpertFiltersBar() {
     return Array.from(brands).sort();
   }, [products]);
 
+  const uniqueResolutions = useMemo(() => {
+    const res = new Set<string>();
+    products.forEach(p => {
+      if (p.category === "camera" && p.resolution_mp) {
+        // Extract standard megapixel formats like "2MP", "4MP", "5MP"
+        const cleanRes = p.resolution_mp.toUpperCase().trim();
+        if (cleanRes) res.add(cleanRes);
+      }
+    });
+    // Sort numerically if possible (e.g., "2MP" before "4MP")
+    return Array.from(res).sort((a, b) => {
+      const numA = parseFloat(a.replace(/[^0-9.]/g, '')) || 0;
+      const numB = parseFloat(b.replace(/[^0-9.]/g, '')) || 0;
+      return numA - numB;
+    });
+  }, [products]);
+
   const hasActiveFilters = 
     (selection.brand_preference && selection.brand_preference !== "all") ||
+    (selection.resolution_preference && selection.resolution_preference !== "all") ||
     selection.max_budget !== null ||
     (selection.requested_features && selection.requested_features.length > 0) ||
     selection.focus_point !== "price";
@@ -57,8 +76,9 @@ export function ExpertFiltersBar() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-12">
         <BrandSelector brands={uniqueBrands} />
+        <ResolutionSelector resolutions={uniqueResolutions} />
         <FocusToggle />
         <BudgetSlider />
         <FeatureToggleGrid />

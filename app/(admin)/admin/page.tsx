@@ -211,10 +211,10 @@ export default async function AdminDashboard() {
             href={kpi.href}
             key={idx}
             className={`
-              relative block bg-white dark:bg-zinc-900
-              border border-zinc-100 dark:border-zinc-800/60
+              relative block bg-[#0F0F0F]
+              border border-zinc-800/80
               rounded-[28px] p-6 overflow-hidden group
-              shadow-sm hover:shadow-xl dark:hover:shadow-zinc-950
+              shadow-sm hover:shadow-xl hover:shadow-black
               transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]
             `}
           >
@@ -226,13 +226,13 @@ export default async function AdminDashboard() {
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-5">
-                <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] leading-none">{kpi.label}</span>
+                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] leading-none">{kpi.label}</span>
                 <div className={`p-2.5 rounded-xl ${kpi.bg} ${kpi.color} shadow-inner group-hover:scale-110 transition-transform duration-300`}>
                   <kpi.icon className="w-4 h-4" />
                 </div>
               </div>
 
-              <div className={`text-3xl font-black tracking-tighter mb-1 text-zinc-900 dark:text-white group-hover:${kpi.color} transition-colors duration-300`}>
+              <div className={`text-3xl font-black tracking-tighter mb-1 text-white group-hover:${kpi.color} transition-colors duration-300`}>
                 {kpi.value}
               </div>
 

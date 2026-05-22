@@ -179,6 +179,7 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
       selection: {
         ...state.selection,
         brand_preference: "all",
+        resolution_preference: "all",
         max_budget: null,
         requested_features: [],
         focus_point: "price",

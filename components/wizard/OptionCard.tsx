@@ -7,9 +7,10 @@ interface OptionCardProps {
   isSelected: boolean;
   isMulti?: boolean;
   onClick: () => void;
+  prospectiveCount?: number | null;
 }
 
-export function OptionCard({ label, isSelected, isMulti, onClick }: OptionCardProps) {
+export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCount }: OptionCardProps) {
   return (
     <button
       onClick={onClick}
@@ -18,24 +19,24 @@ export function OptionCard({ label, isSelected, isMulti, onClick }: OptionCardPr
       style={{ minHeight: "64px" }}
       className={[
         // base
-        "relative w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left",
+        "relative w-full flex items-center gap-5 px-6 py-5 rounded-3xl text-left",
         "cursor-pointer select-none",
         // transition (use CSS var tokens)
-        "transition-all duration-[250ms] ease-out",
+        "transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1)",
         // selected vs idle
         isSelected
           ? [
-              "bg-blue-50 dark:bg-blue-600/10",
-              "border-2 border-blue-600",
-              "shadow-[0_0_0_4px_rgba(37,99,235,0.10)]",
-              "active:brightness-90 active:scale-[0.98]",
+              "bg-white",
+              "border-[2.5px] border-blue-600",
+              "shadow-[0_10px_40px_-10px_rgba(37,99,235,0.2)]",
+              "active:scale-[0.98]",
             ].join(" ")
           : [
-              "bg-white dark:bg-zinc-900/50",
-              "border-2 border-zinc-100 dark:border-zinc-800",
-              "hover:border-zinc-300 dark:hover:border-zinc-700",
-              "hover:shadow-md hover:-translate-y-[2px]",
-              "active:scale-[0.97]",
+              "bg-white",
+              "border-[2.5px] border-zinc-100",
+              "hover:border-zinc-200 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]",
+              "hover:-translate-y-1",
+              "active:scale-[0.98]",
             ].join(" "),
       ].join(" ")}
     >
@@ -60,26 +61,40 @@ export function OptionCard({ label, isSelected, isMulti, onClick }: OptionCardPr
       <div className="flex-1 min-w-0">
         <span
           className={[
-            "block text-[0.9375rem] leading-snug",
-            "transition-colors duration-[150ms]",
+            "block text-[16px] leading-snug tracking-tight",
+            "transition-colors duration-300",
             isSelected
-              ? "font-semibold text-blue-700 dark:text-blue-300"
-              : "font-medium text-zinc-700 dark:text-zinc-300",
+              ? "font-black text-blue-900"
+              : "font-bold text-zinc-900",
           ].join(" ")}
         >
           {label}
         </span>
         {isMulti && !isSelected && (
-          <span className="block text-[10px] font-semibold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-0.5">
+          <span className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">
             Tap to select
           </span>
         )}
         {isMulti && isSelected && (
-          <span className="block text-[10px] font-semibold text-blue-500 uppercase tracking-widest mt-0.5">
+          <span className="block text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">
             ✓ Added
           </span>
         )}
       </div>
+
+      {/* Prospective Count Badge */}
+      {prospectiveCount !== undefined && prospectiveCount !== null && (
+        <div className={[
+          "shrink-0 ml-2 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all duration-300 shadow-sm",
+          prospectiveCount === 0 
+            ? "bg-red-50 text-red-500 border border-red-200" 
+            : isSelected 
+              ? "bg-blue-600 text-white shadow-blue-600/30 border border-blue-600"
+              : "bg-white text-blue-600 border border-blue-200"
+        ].join(" ")}>
+          {prospectiveCount} {prospectiveCount === 1 ? 'Option' : 'Options'}
+        </div>
+      )}
 
       {/* Selection ring glow (non-layout) */}
       {isSelected && (

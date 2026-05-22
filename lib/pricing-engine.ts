@@ -255,18 +255,8 @@ function calculateLabor(
   });
   totalRetail += lineTotal;
 
-  // High Reach Fee (Enterprise Setting)
-  if (selection.ceiling_height === "high" || selection.ceiling_height === "very_high") {
-    const fee = Math.round((settings.high_reach_fee || 1500) * locationMultiplier);
-    items.push({
-      product_id: "fee_high_reach",
-      display_name: "High-Reach Equipment & Safety Access Fee",
-      qty: 1,
-      unit_price: fee,
-      line_total: fee
-    });
-    totalRetail += fee;
-  }
+  // Note: High Reach Fee is no longer automatically added.
+  // Instead, a UI warning is shown so installers can quote it post-visit.
 
   return { items, totalRetail };
 }
@@ -393,6 +383,21 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
     }
   }
 
+  // Filter by Resolution (Megapixel)
+  if (selection.resolution_preference && selection.resolution_preference !== "all") {
+    // We expect resolution_preference to be something like "2MP" or "4MP"
+    const resPref = selection.resolution_preference.toUpperCase();
+    const resFiltered = pool.filter(cam => {
+      // Safely parse resolution_mp (which might be "2MP", "2.4MP", "4MP", etc.)
+      const camRes = (cam.resolution_mp || "").toUpperCase();
+      return camRes.includes(resPref) || resPref.includes(camRes.replace("MP", ""));
+    });
+    // Fallback: If strict resolution matching eliminates ALL cameras, drop the filter
+    if (resFiltered.length > 0) {
+      pool = resFiltered;
+    }
+  }
+
   // Filter by features
   if (selection.requested_features?.length) {
     const filteredPool = pool.filter(cam => {
@@ -453,7 +458,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
       
       // ── Fallback Property-Aware Logic ───────────────────────
       const prop = selection.property_type;
-      if (prop === "warehouse" || prop === "office") {
+      if (prop === "factory" || prop === "warehouse" || prop === "office") {
         // Find a high-spec camera near the 60th-80th percentile
         // Prioritize cameras with 4MP+, audio, or PTZ
         const highSpec = pool.slice(Math.floor(pool.length / 2)).find(cam => {
@@ -481,6 +486,10 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
 }
 
 function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: "HD" | "IP") {
+  if (selection.selected_recorder_id) {
+    return products.find(p => p.id === selection.selected_recorder_id);
+  }
+
   const recorders = products.filter(p => 
     p.category === "recorder" && 
     p.technology === tech && 
@@ -506,6 +515,10 @@ function resolveHDDCapacity(product: Product & { storage_tb?: number }): number 
 }
 
 function resolveHDD(selection: ConfiguratorSelection, products: Product[], tech: "HD" | "IP") {
+  if (selection.selected_storage_id) {
+    return products.find(p => p.id === selection.selected_storage_id);
+  }
+
   const recordingDays = selection.recording_days || 7;
   // Use product's declared daily_gb_per_camera if available, else sensible defaults
   const gbPerDay = tech === "IP" ? 15 : 10;
@@ -519,6 +532,10 @@ function resolveHDD(selection: ConfiguratorSelection, products: Product[], tech:
 }
 
 function resolveTransmission(selection: ConfiguratorSelection, products: Product[], tech: "HD" | "IP") {
+  if (selection.selected_power_id) {
+    return products.find(p => p.id === selection.selected_power_id);
+  }
+
   const keyword = tech === "IP" ? "poe" : "psu";
   const options = products.filter(p => p.category === "accessory" && (p.technical_name || "").toLowerCase().includes(keyword));
   options.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));

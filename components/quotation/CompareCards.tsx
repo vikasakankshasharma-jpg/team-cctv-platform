@@ -95,8 +95,8 @@ function SpecRow({
         <div
           className={`text-[11px] font-black uppercase tracking-tight leading-tight transition-colors ${
             active
-              ? "text-zinc-900 dark:text-white"
-              : "text-zinc-400 dark:text-zinc-600 opacity-60"
+              ? "text-zinc-900"
+              : "text-zinc-400 opacity-60"
           }`}
         >
           {label}
@@ -386,10 +386,10 @@ export function CompareCards({
 
         // ── Card border / bg ─────────────────────────────────────────────────
         const cardClass = isCheckout
-          ? "border-blue-400 dark:border-blue-500 bg-gradient-to-b from-blue-50/50 to-white dark:from-blue-900/10 dark:to-zinc-900 shadow-[0_20px_40px_-15px_rgba(37,99,235,0.15)] dark:shadow-[0_20px_40px_-15px_rgba(37,99,235,0.25)] scale-105 z-10 ring-2 ring-blue-400/20"
+          ? "border-blue-600 bg-white shadow-[0_20px_60px_-15px_rgba(37,99,235,0.25)] scale-105 z-10 ring-[4px] ring-blue-600/10"
           : card.isRecommended
-          ? "border-amber-300/80 dark:border-amber-500/40 bg-gradient-to-b from-amber-50 to-white dark:from-amber-900/20 dark:to-zinc-900 hover:border-amber-400 dark:hover:border-amber-500/60 shadow-xl hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(251,191,36,0.15)] transition-all duration-300 group"
-          : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group";
+          ? "border-amber-400/60 bg-[#FAFAFA] hover:border-amber-500 shadow-xl hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(251,191,36,0.15)] transition-all duration-300 group"
+          : "border-zinc-200 bg-[#FAFAFA] hover:border-zinc-300 hover:-translate-y-1 hover:shadow-[0_15px_30px_-15px_rgba(0,0,0,0.1)] transition-all duration-300 group";
 
         return (
           <div
@@ -466,11 +466,11 @@ export function CompareCards({
               </div>
 
               <div
-                className={`p-3 rounded-2xl mb-3 transition-all duration-500 group-hover:scale-110 ${
-                  isCheckout ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
-                    : card.isRecommended ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20"
-                    : isUpgradeSuggestion ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20"
-                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+                className={`p-4 rounded-3xl mb-3 transition-all duration-500 group-hover:scale-110 ${
+                  isCheckout ? "bg-blue-600 text-white shadow-xl shadow-blue-600/30"
+                    : card.isRecommended ? "bg-amber-500 text-white shadow-xl shadow-amber-500/30"
+                    : isUpgradeSuggestion ? "bg-indigo-500 text-white shadow-xl shadow-indigo-500/30"
+                    : "bg-white text-zinc-600 shadow-sm border border-zinc-100"
                 }`}
                 aria-label={`${card.technology} camera system`}
               >
@@ -489,10 +489,10 @@ export function CompareCards({
 
             {/* ── Price ────────────────────────────────────────────────────── */}
             <div
-              className={`text-center mb-4 py-5 rounded-2xl animate-in fade-in zoom-in-95 duration-200 ${
+              className={`text-center mb-5 py-6 rounded-3xl animate-in fade-in zoom-in-95 duration-200 border ${
                 isCheckout
-                  ? "bg-blue-50 dark:bg-blue-900/20"
-                  : "bg-white dark:bg-zinc-950"
+                  ? "bg-blue-50/50 border-blue-100"
+                  : "bg-white border-zinc-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]"
               }`}
             >
               <div className="flex items-baseline justify-center">
@@ -515,7 +515,7 @@ export function CompareCards({
                   {card.pricing.total_payable.toLocaleString("en-IN")}
                 </span>
               </div>
-              <div className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 mt-1 uppercase tracking-widest">
+              <div className="text-[9px] font-black text-zinc-400 mt-1.5 uppercase tracking-[0.15em]">
                 Incl. GST &amp; Installation
               </div>
               {/* Price per camera — helps benchmark against competitor quotes */}
@@ -579,7 +579,7 @@ export function CompareCards({
 
             {/* ── Hardware Specs ────────────────────────────────────────────── */}
             <div className="space-y-3">
-              <p className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.18em] mb-4">
+              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.18em] mb-4">
                 Hardware Specifications
               </p>
 

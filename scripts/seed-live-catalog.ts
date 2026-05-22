@@ -549,6 +549,30 @@ const addons = [
     is_active: true,
     is_deleted: false,
   },
+  {
+    id: "addon_monitor",
+    display_name: "32-inch LED Monitor",
+    price: 12500,
+    unit_multiplier: "none",
+    is_active: true,
+    is_deleted: false,
+  },
+  {
+    id: "addon_ups",
+    display_name: "Power Backup (UPS for DVR/Router)",
+    price: 2500,
+    unit_multiplier: "none",
+    is_active: true,
+    is_deleted: false,
+  },
+  {
+    id: "addon_4g",
+    display_name: "4G Cellular Router (SIM slot)",
+    price: 3200,
+    unit_multiplier: "none",
+    is_active: true,
+    is_deleted: false,
+  },
 ];
 
 // ─── APP SETTINGS ─────────────────────────────────────────────────────────────

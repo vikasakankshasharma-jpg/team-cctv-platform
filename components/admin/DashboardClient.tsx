@@ -275,10 +275,10 @@ function LeadSourcesPanel({ sources, recentLeads, internalLeads, internalLeadsCo
 export function DashboardClient({ trend, sources, recentLeads, internalLeads, internalLeadsCount, conversionRate }: DashboardClientProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 min-h-[480px] flex flex-col shadow-xl dark:shadow-none backdrop-blur-sm hover:border-blue-200 dark:hover:border-blue-500/20 hover:shadow-2xl transition-all duration-500">
+      <div className="lg:col-span-2 bg-[#0F0F0F] border border-zinc-800/80 rounded-[32px] p-8 min-h-[480px] flex flex-col shadow-xl backdrop-blur-sm hover:border-blue-500/20 hover:shadow-2xl hover:shadow-black transition-all duration-500">
         <SalesTrendChart trend={trend} />
       </div>
-      <div className="bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 min-h-[480px] flex flex-col shadow-xl dark:shadow-none backdrop-blur-sm hover:border-purple-200 dark:hover:border-purple-500/20 hover:shadow-2xl transition-all duration-500">
+      <div className="bg-[#0F0F0F] border border-zinc-800/80 rounded-[32px] p-8 min-h-[480px] flex flex-col shadow-xl backdrop-blur-sm hover:border-purple-500/20 hover:shadow-2xl hover:shadow-black transition-all duration-500">
         <LeadSourcesPanel
           sources={sources}
           recentLeads={recentLeads}

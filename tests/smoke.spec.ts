@@ -5,13 +5,15 @@ test.describe('CCTV Wizard Smoke Test', () => {
     // 1. Visit homepage
     await page.goto('/');
     
-    // 2. Check for the main CTA
-    const startButton = page.getByRole('link', { name: /start|get cctv quotation/i }).first();
+    // 2. Check for the main CTA (Check Area)
+    const startButton = page.getByRole('button', { name: /check area/i }).first();
     await expect(startButton).toBeVisible();
     
-    // 3. Click and navigate to wizard
+    // 3. Click and navigate to wizard (Note: PincodeWidget requires entering a 6-digit pin first)
+    await page.getByPlaceholder(/enter pincode/i).first().fill('302017');
     await startButton.click({ force: true });
-    await expect(page).toHaveURL(/.*wizard/);
+    // Wait for the city page or wizard redirect
+    await expect(page).toHaveURL(/.*(wizard|302017)/);
     
     // 4. Check if the first question loads
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -23,7 +25,7 @@ test.describe('CCTV Wizard Smoke Test', () => {
 
   test('admin login page should be accessible', async ({ page }) => {
     await page.goto('/admin/login');
-    await expect(page.getByText(/Secure\s*Sign In/i)).toBeVisible();
+    await expect(page.getByText(/Staff Access Portal/i)).toBeVisible();
     await expect(page.getByPlaceholder('admin@example.com')).toBeVisible();
     await expect(page.getByRole('button', { name: /Send Auth Code/i })).toBeVisible();
   });

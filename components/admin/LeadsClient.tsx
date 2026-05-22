@@ -30,8 +30,8 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
 
   const filteredLeads = currentDataset.filter(lead => {
     const searchStr = activeTab === "standard" 
-      ? (lead as Lead).customer_name + lead.mobile_number
-      : (lead as any).phone;
+      ? String((lead as Lead).customer_name || "") + String(lead.mobile_number || "")
+      : String((lead as any).phone || "") + String((lead as any).company_name || "") + String((lead as any).contact_person || "");
       
     const matchesSearch = searchStr.toLowerCase().includes(filter.toLowerCase());
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
