@@ -79,7 +79,7 @@ export async function GET() {
         ]
       },
       {
-        step: { id: "step_tech", position: 4, title: "Technology", description: "Which camera technology do you prefer?", is_active: true },
+        step: { id: "step_technology", position: 4, title: "Camera Technology", description: "Which camera technology do you prefer?", is_active: true },
         questions: [
           {
             id: "q_tech", question_text: "Select technology:", input_type: "single", is_required: true, position: 0,

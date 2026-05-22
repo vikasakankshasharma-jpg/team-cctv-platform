@@ -130,7 +130,7 @@ export async function getWizardConfig() {
 
       const resolutionStep: WizardStep = {
         id: "dynamic_step_resolution",
-        title: "Camera Quality",
+        title: "Image Resolution",
         description: "What image quality do you need?",
         position: 11,
         is_active: true,
@@ -233,7 +233,7 @@ export function getDefaultFallbackWizard(): WizardStep[] {
       ]
     },
     {
-      id: "step_tech",
+      id: "step_technology",
       title: "Camera Technology",
       description: "What level of quality and features do you expect?",
       position: 4,

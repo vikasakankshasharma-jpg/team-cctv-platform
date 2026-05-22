@@ -34,7 +34,7 @@ async function runTest() {
     await page.click('button:has-text("Continue")');
     await page.waitForTimeout(500);
 
-    console.log("Answering Q4: Camera Quality (Smart Digital)");
+    console.log("Answering Q4: Camera Technology (Smart Digital)");
     // Using a more generic selector in case labels changed
     const smartOption = await page.$('text="IP Network Camera"');
     if(smartOption) await smartOption.click();

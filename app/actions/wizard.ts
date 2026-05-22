@@ -205,7 +205,7 @@ export async function seedWizardTemplate() {
   // Define Steps
   const steps = [
     { id: "step_property", position: 0, title: "Property Type", description: "Select the type of property you are securing.", is_active: true },
-    { id: "step_tech", position: 1, title: "Technology", description: "Choose your preferred camera technology.", is_active: true },
+    { id: "step_technology", position: 1, title: "Camera Technology", description: "Choose your preferred camera technology.", is_active: true },
     { id: "step_cameras", position: 2, title: "Coverage Requirements", description: "How many cameras do you need?", is_active: true },
     { id: "step_wiring", position: 3, title: "Installation Status", description: "Is your property pre-wired for CCTV?", is_active: true },
   ];
@@ -220,7 +220,7 @@ export async function seedWizardTemplate() {
         { id: "opt_shop", position: 3, label: "Shop / Retail", value: "shop" }
       ] }
     ],
-    step_tech: [
+    step_technology: [
       { id: "q_tech", position: 0, question_text: "What technology do you prefer?", input_type: "single" as const, is_required: true, options: [
         { id: "opt_ip", position: 0, label: "IP (Digital & High-End)", value: "IP" },
         { id: "opt_hd", position: 1, label: "HD (Analog & Budget)", value: "HD" }
