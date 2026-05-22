@@ -35,6 +35,7 @@ import { AllSystemsGrid } from "./AllSystemsGrid";
 import { resolveCardLayout } from "@/lib/card-layout-engine";
 import { ExpertFiltersBar } from "./ExpertFiltersBar";
 import { PriceRangeTicker } from "./PriceRangeTicker";
+import { SmartContextBar } from "./SmartContextBar";
 
 import { SiteDetailsModal } from "./SiteDetailsModal";
 import { ShareDialog } from "./ShareDialog";
@@ -433,10 +434,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   if (!pricing_results.recommended) return <div className="animate-pulse flex space-y-4 flex-col h-96 bg-zinc-200 rounded-xl" />;
 
   return (
-    <div className="flex flex-col gap-8 sm:gap-16 relative">
-      
+    <div className="flex flex-col gap-8 sm:gap-16 relative pb-24">
+      {/* Smart Context Bar - Zone 0 */}
+      <SmartContextBar totalPrice={activePricing.total_payable} />
+
       {/* Background Decor */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-50/20 blur-[150px] -z-10 rounded-full" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-50/20 blur-[150px] -z-10 rounded-full pointer-events-none" />
 
       {/* High Reach Warning Banner */}
       {(selection.ceiling_height === "high" || selection.ceiling_height === "very_high") && (
@@ -570,67 +573,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         </div>
       )}
 
-        {/* Global Controls: Camera Count & Recording Days */}
-        <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 bg-zinc-50 dark:bg-zinc-900/40 p-5 md:p-8 rounded-[24px] md:rounded-[40px] border border-zinc-100 dark:border-zinc-800 shadow-xl">
-           <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <label className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em]">System Camera Count</label>
-                <span className="text-xs font-black text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full">{selection.camera_count} Cameras</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => updateSelection({ camera_count: Math.max(1, selection.camera_count - 1) })}
-                  className="w-8 h-8 shrink-0 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-90"
-                ><Minus className="w-4 h-4" /></button>
-                <input 
-                  type="range" 
-                  min="1" max="16" step="1"
-                  value={selection.camera_count}
-                  onChange={(e) => updateSelection({ camera_count: parseInt(e.target.value) })}
-                  className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-zinc-900 dark:accent-blue-600 hover:accent-blue-600 transition-all flex-1"
-                />
-                <button 
-                  onClick={() => updateSelection({ camera_count: Math.min(16, selection.camera_count + 1) })}
-                  className="w-8 h-8 shrink-0 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-90"
-                ><Plus className="w-4 h-4" /></button>
-              </div>
-           </div>
 
-           <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <label className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em]">Global Recording Days</label>
-                <div className="flex items-center gap-2 bg-white dark:bg-zinc-950 px-3 py-1 rounded-full border border-zinc-100 dark:border-zinc-800">
-                  <Calendar className="w-3 h-3 text-blue-500" />
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min="1" max="365"
-                    value={selection.recording_days}
-                    onChange={(e) => updateSelection({ recording_days: parseInt(e.target.value) || 7 })}
-                    className="w-10 bg-transparent text-xs font-black text-zinc-900 dark:text-white focus:outline-none"
-                  />
-                  <span className="text-[10px] font-black text-zinc-400 uppercase">Days</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => updateSelection({ recording_days: Math.max(7, selection.recording_days - 1) })}
-                  className="w-8 h-8 shrink-0 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-90"
-                ><Minus className="w-4 h-4" /></button>
-                <input 
-                  type="range" 
-                  min="7" max="60" step="1"
-                  value={selection.recording_days}
-                  onChange={(e) => updateSelection({ recording_days: parseInt(e.target.value) })}
-                  className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-zinc-900 dark:accent-blue-600 hover:accent-blue-600 transition-all flex-1"
-                />
-                <button 
-                  onClick={() => updateSelection({ recording_days: Math.min(60, selection.recording_days + 1) })}
-                  className="w-8 h-8 shrink-0 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-90"
-                ><Plus className="w-4 h-4" /></button>
-              </div>
-           </div>
-        </div>
 
       <div className="bg-white dark:bg-zinc-900 rounded-[32px] sm:rounded-[48px] border border-zinc-100 dark:border-zinc-800 shadow-[0_40px_100px_rgba(0,0,0,0.08)] p-5 sm:p-8 md:p-12 max-w-5xl mx-auto w-full backdrop-blur-md">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
