@@ -79,11 +79,7 @@ export function ExpertFiltersBar() {
           <BrandSelector brands={uniqueBrands} />
         </div>
         
-        {selection.focus_point === "price" && (
-          <div className="w-40">
-            <ResolutionSelector resolutions={uniqueResolutions} />
-          </div>
-        )}
+
         
         <FeatureToggleGrid />
         
