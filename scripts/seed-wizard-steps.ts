@@ -127,7 +127,7 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
   },
 
   step_technology: {
-    title: "Camera Quality",
+    title: "Camera Technology",
     description: "What level of quality and features do you expect?",
     position: 3,
     is_active: true,
@@ -141,6 +141,9 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
         options: [
           { id: "fopt_ip", label: "IP Network Camera (Smart Digital)", value: "IP", position: 0, badge: "Recommended" },
           { id: "fopt_hd", label: "HD Analog Camera (Basic Budget)",   value: "HD", position: 1 },
+          { id: "opt_wifi", label: "WiFi Camera (Wireless Smart)", value: "WiFi", position: 2 },
+          { id: "opt_4g", label: "4G Sim Camera (No WiFi Needed)", value: "4G", position: 3 },
+          { id: "opt_solar", label: "Solar Camera (100% Wire-Free)", value: "Solar", position: 4 },
         ],
       },
     ],
