@@ -189,8 +189,8 @@ export function SpecCompareTable({
 
   // 1. Resolve cameras and system scores for the given options
   const columnData = useMemo(() => {
-    // Only process up to 3 columns to stick to Good, Better, Best format
-    return compareOptions.slice(0, 3).map((opt) => {
+    // Process up to 4 columns
+    return compareOptions.slice(0, 4).map((opt) => {
       const dummySelection: ConfiguratorSelection = {
         ...selection,
         technology: opt.technology,
@@ -226,7 +226,23 @@ export function SpecCompareTable({
     });
   }, [compareOptions, selection, products, settings, cablingDone]);
 
-  const columnHeaders = ["Good", "Better", "Best"];
+  const columnHeaders = columnData.map((col, idx) => {
+    if (idx === 0) return "Good";
+    if (idx === 1) return col.cameraProduct?.is_focus_product ? "Best Value ★" : "Better";
+    if (idx === 2) return "Best";
+    return "Custom";
+  });
+
+  const getGridColsClass = (count: number) => {
+    switch(count) {
+      case 1: return "grid-cols-2";
+      case 2: return "grid-cols-3";
+      case 3: return "grid-cols-4";
+      case 4: return "grid-cols-5";
+      default: return "grid-cols-4";
+    }
+  };
+  const gridColsClass = getGridColsClass(columnData.length);
 
   const isSameValue = (values: any[]) => {
     if (values.length === 0) return true;
@@ -264,9 +280,10 @@ export function SpecCompareTable({
       </div>
 
       {/* Table Container */}
-      <div className="rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
+      <div className="rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-x-auto shadow-sm">
+        <div className="min-w-[600px]">
         {/* Table Header */}
-        <div className="grid grid-cols-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
+        <div className={`grid ${gridColsClass} border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50`}>
           <div className="p-4 flex items-center font-black text-zinc-900 dark:text-white uppercase tracking-tight text-sm">
             Features
           </div>
@@ -350,7 +367,7 @@ export function SpecCompareTable({
                       return (
                         <div
                           key={row.key}
-                          className={`grid grid-cols-4 border-b border-zinc-200 dark:border-zinc-800 transition-colors ${
+                          className={`grid ${gridColsClass} border-b border-zinc-200 dark:border-zinc-800 transition-colors ${
                             rowIdx % 2 === 0
                               ? "bg-white dark:bg-zinc-900"
                               : "bg-zinc-50/50 dark:bg-zinc-800/20"
@@ -394,6 +411,7 @@ export function SpecCompareTable({
               </div>
             );
           })}
+        </div>
         </div>
       </div>
     </div>
