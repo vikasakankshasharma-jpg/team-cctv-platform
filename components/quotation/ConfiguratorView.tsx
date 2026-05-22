@@ -87,6 +87,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
   const [isSaving, setIsSaving] = useState(false);
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<"packages" | "custom">("packages");
   const [compareLimit, setCompareLimit] = useState(false); // replaces browser alert
   const compareInitialized = useRef(false); // prevent re-init on every checkout click
 
@@ -100,7 +101,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     const wantsAmcRaw = lead.wizard_answers["q_amc"];
     const wantsAmc = typeof wantsAmcRaw === 'string' ? wantsAmcRaw === 'true' : !!wantsAmcRaw;
 
-    const reqFeaturesRaw = lead.wizard_answers["q_features"];
+    const reqFeaturesRaw = lead.wizard_answers["q_special_features"] || lead.wizard_answers["q_features"];
     const rawFeaturesArray = Array.isArray(reqFeaturesRaw) ? reqFeaturesRaw : (reqFeaturesRaw ? [reqFeaturesRaw as string] : []);
     
     // Map user-friendly wizard answers to technical tags used by the system
@@ -117,6 +118,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     const surfaceRaw = lead.wizard_answers["q_surface"];
     const surfaceTypes = Array.isArray(surfaceRaw) ? surfaceRaw : (surfaceRaw ? [surfaceRaw as string] : []);
 
+    const generalAddonsRaw = lead.wizard_answers["q_general_addons"];
+    const rawAddonsArray = Array.isArray(generalAddonsRaw) ? generalAddonsRaw : (generalAddonsRaw ? [generalAddonsRaw as string] : []);
+    const selectedAddons = rawAddonsArray
+      .filter(a => a !== "none")
+      .map(a => `addon_${a}`); // maps "monitor" -> "addon_monitor"
+
     updateSelection({
       technology: lead.technology_choice || "HD",
       camera_count: initialCamCount,
@@ -125,6 +132,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       wants_amc: wantsAmc,
       requested_features: requestedFeatures,
       surface_types: surfaceTypes,
+      selected_addons: selectedAddons,
       brand_preference: (lead.wizard_answers["q_brand"] === "recommend" || lead.wizard_answers["q_brand"] === "unsure") ? "all" : (lead.wizard_answers["q_brand"] as string || "all"),
       installation_timeline: (lead.wizard_answers["q_timeline"] as string) || "research",
       property_type: lead.property_type,
@@ -430,102 +438,136 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       {/* Background Decor */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-50/20 blur-[150px] -z-10 rounded-full" />
 
-      {/* ── Hero Section: Top Recommendations ─────────────────────────────── */}
-      <div className="w-full max-w-7xl mx-auto px-2 md:px-4 mb-12 lg:mb-16">
-        <div className="space-y-6">
-          {/* ── Section header ─────────────────────────────────────────────── */}
-          <div className="flex flex-col gap-3 mb-4">
-            <div className="inline-flex self-start items-center gap-2 bg-zinc-900 border border-zinc-800 text-white font-black px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest leading-none">
-              <Zap className="w-3 h-3 text-blue-500" />
-              Top Recommendations
+      {/* High Reach Warning Banner */}
+      {(selection.ceiling_height === "high" || selection.ceiling_height === "very_high") && (
+        <div className="mx-auto w-full max-w-3xl px-4 mt-6">
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
+            <div className="text-amber-500 mt-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
             </div>
-            <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">Compare Featured Systems</h2>
+            <div>
+              <h4 className="text-sm font-bold text-amber-900 dark:text-amber-400">High Reach Installation Detected</h4>
+              <p className="text-xs text-amber-700 dark:text-amber-500 mt-1">Based on your site overview, this installation requires ladders or scaffolding. <strong>Ladder and high-reach equipment charges will be quoted separately after the physical site visit.</strong></p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Tab Navigation ────────────────────────────────────────────────── */}
+      <div className="w-full max-w-sm mx-auto px-4 flex p-1.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-full mt-4 shadow-inner">
+        <button
+          onClick={() => setActiveTab("packages")}
+          className={`flex-1 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full transition-all ${
+            activeTab === "packages" ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-md" : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          }`}
+        >
+          Recommended Packages
+        </button>
+        <button
+          onClick={() => setActiveTab("custom")}
+          className={`flex-1 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full transition-all ${
+            activeTab === "custom" ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-md" : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          }`}
+        >
+          Build Your Own Kit
+        </button>
+      </div>
+
+      {activeTab === "packages" ? (
+        <div className="w-full max-w-7xl mx-auto px-2 md:px-4 mb-4 lg:mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* ── Hero Section: Top Recommendations ─────────────────────────────── */}
+          <div className="space-y-6">
+            {/* ── Section header ─────────────────────────────────────────────── */}
+            <div className="flex flex-col gap-3 mb-4">
+              <div className="inline-flex self-start items-center gap-2 bg-zinc-900 border border-zinc-800 text-white font-black px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest leading-none">
+                <Zap className="w-3 h-3 text-blue-500" />
+                Top Recommendations
+              </div>
+              <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">Compare Featured Systems</h2>
+            </div>
+
+            {/* ── Recommendation reason banner ───────────────────────────────── */}
+            {activeRecommendation && (
+              <div className="flex items-start gap-3 px-4 py-3.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-2xl">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0 mt-0.5">
+                  <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-0.5">
+                    ⭐ Our Recommendation — {lead.property_type.charAt(0).toUpperCase() + lead.property_type.slice(1)} Setup
+                  </div>
+                  <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 leading-snug">
+                    {activeRecommendation.reason}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <ExpertFiltersBar />
+
+            {/* ── Compare Cards ──────────────────────────────────────────────── */}
+            <CompareCards
+              compareOptions={compare_options}
+              activeCheckoutOption={active_checkout_option}
+              onSelectCheckout={setActiveCheckoutOption}
+              cameraCount={selection.camera_count}
+              recordingDays={selection.recording_days}
+              products={pricingCache.products}
+              addons={pricingCache.addons}
+              settings={pricingCache.settings}
+              cablingDone={cablingDone}
+              recommendation={activeRecommendation}
+              customerTechnology={selection.technology}
+              requestedFeatures={selection.requested_features || []}
+              selectedAddons={selection.selected_addons || []}
+              promoterDiscount={promoterDiscount}
+              evaluatedAddonRules={evaluatedRules}
+              activeOffer={lead.active_offer}
+            />
+            
+            <SpecCompareTable
+              compareOptions={compare_options}
+              products={pricingCache.products}
+              selection={selection}
+              settings={pricingCache.settings}
+              cablingDone={cablingDone}
+            />
+            
+            <PriceRangeTicker
+              cameraCount={selection.camera_count}
+              products={pricingCache.products}
+              addons={pricingCache.addons}
+              settings={pricingCache.settings}
+              cablingDone={cablingDone}
+              promoterDiscount={promoterDiscount}
+              evaluatedAddonRules={evaluatedRules}
+              activeOffer={lead.active_offer}
+              selection={selection}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-7xl mx-auto px-2 md:px-4 mb-4 lg:mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* ── Explore Section: Filters + Grid ───────────────────────────────── */}
+          
+          {/* ── Left Sidebar: Filters ────────────────────────────────────── */}
+          <div className="w-full lg:w-[320px] shrink-0 lg:sticky lg:top-24 z-20 space-y-6">
+            <FullCustomizerPanel />
           </div>
 
-          {/* ── Recommendation reason banner ───────────────────────────────── */}
-          {activeRecommendation && (
-            <div className="flex items-start gap-3 px-4 py-3.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-2xl animate-in fade-in duration-500">
-              <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0 mt-0.5">
-                <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-0.5">
-                  ⭐ Our Recommendation — {lead.property_type.charAt(0).toUpperCase() + lead.property_type.slice(1)} Setup
-                </div>
-                <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 leading-snug">
-                  {activeRecommendation.reason}
-                </p>
-              </div>
-            </div>
-          )}
-
-          <ExpertFiltersBar />
-
-          {/* ── Compare Cards ──────────────────────────────────────────────── */}
-          <CompareCards
-            compareOptions={compare_options}
-            activeCheckoutOption={active_checkout_option}
-            onSelectCheckout={setActiveCheckoutOption}
-            cameraCount={selection.camera_count}
-            recordingDays={selection.recording_days}
-            products={pricingCache.products}
-            addons={pricingCache.addons}
-            settings={pricingCache.settings}
-            cablingDone={cablingDone}
-            recommendation={activeRecommendation}
-            customerTechnology={selection.technology}
-            requestedFeatures={selection.requested_features || []}
-            selectedAddons={selection.selected_addons || []}
-            promoterDiscount={promoterDiscount}
-            evaluatedAddonRules={evaluatedRules}
-            activeOffer={lead.active_offer}
-          />
-          
-          <SpecCompareTable
-            compareOptions={compare_options}
-            products={pricingCache.products}
-            selection={selection}
-            settings={pricingCache.settings}
-            cablingDone={cablingDone}
-          />
-          
-          <PriceRangeTicker
-            cameraCount={selection.camera_count}
-            products={pricingCache.products}
-            addons={pricingCache.addons}
-            settings={pricingCache.settings}
-            cablingDone={cablingDone}
-            promoterDiscount={promoterDiscount}
-            evaluatedAddonRules={evaluatedRules}
-            activeOffer={lead.active_offer}
-            selection={selection}
-          />
+          {/* ── Right Content: Results ───────────────────────────────────── */}
+          <div className="flex-1 w-full min-w-0">
+            {/* ── All Systems Grid (Amazon-like View) ────────────────────────── */}
+            <AllSystemsGrid 
+              pricingCache={pricingCache}
+              cablingDone={cablingDone}
+              promoterDiscount={promoterDiscount}
+              evaluatedRules={evaluatedRules}
+              activeOffer={lead.active_offer}
+            />
+          </div>
         </div>
-      </div>
-
-      {/* ── Explore Section: Filters + Grid ───────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-7xl mx-auto px-2 md:px-4">
-        
-        {/* ── Left Sidebar: Filters ────────────────────────────────────── */}
-        <div className="w-full lg:w-[320px] shrink-0 lg:sticky lg:top-24 z-20 space-y-6">
-          <FullCustomizerPanel />
-        </div>
-
-        {/* ── Right Content: Results ───────────────────────────────────── */}
-        <div className="flex-1 w-full min-w-0">
-          
-
-          {/* ── All Systems Grid (Amazon-like View) ────────────────────────── */}
-          <AllSystemsGrid 
-            pricingCache={pricingCache}
-            cablingDone={cablingDone}
-            promoterDiscount={promoterDiscount}
-            evaluatedRules={evaluatedRules}
-            activeOffer={lead.active_offer}
-          />
-          
-        </div>
-      </div>
+      )}
 
         {/* Global Controls: Camera Count & Recording Days */}
         <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 bg-zinc-50 dark:bg-zinc-900/40 p-5 md:p-8 rounded-[24px] md:rounded-[40px] border border-zinc-100 dark:border-zinc-800 shadow-xl">

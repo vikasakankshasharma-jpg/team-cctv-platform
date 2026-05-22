@@ -89,30 +89,10 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
     ],
   },
 
-  step_internet: {
-    title: "Internet at Site",
-    description: "Do you have active WiFi or Internet at the installation site?",
-    position: 1,
-    is_active: true,
-    questions: [
-      {
-        id: "q_internet",
-        question_text: "Internet availability:",
-        input_type: "single",
-        is_required: true,
-        position: 0,
-        options: [
-          { id: "opt_int_yes", label: "Yes, WiFi/Internet is available", value: "true",  position: 0, icon: "📶" },
-          { id: "opt_int_no",  label: "No Internet at site",             value: "false", position: 1, icon: "📵" },
-        ],
-      },
-    ],
-  },
-
   step_install_type: {
     title: "Setup Type",
     description: "Is this a brand new installation or an upgrade?",
-    position: 2,
+    position: 1,
     is_active: true,
     questions: [
       {
@@ -132,7 +112,7 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
   step_cam_count: {
     title: "Camera Count",
     description: "How many cameras do you need?",
-    position: 3,
+    position: 2,
     is_active: true,
     questions: [
       {
@@ -146,86 +126,21 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
     ],
   },
 
-  step_height: {
-    title: "Ceiling Height",
-    description: "How high are your ceilings where cameras will be mounted?",
-    position: 4,
-    is_active: true,
-    questions: [
-      {
-        id: "q_height",
-        question_text: "Select the maximum height:",
-        input_type: "single",
-        is_required: true,
-        position: 0,
-        options: [
-          { id: "fopt_h_std",   label: "Standard (Up to 10 feet)",   value: "standard",  position: 0 },
-          { id: "fopt_h_high",  label: "High (11 to 15 feet)",        value: "high",      position: 1 },
-          { id: "fopt_h_vhigh", label: "Very High (Above 15 feet)",   value: "very_high", position: 2 },
-        ],
-      },
-    ],
-  },
-
-  step_surface: {
-    title: "Mounting Surface",
-    description: "What type of surfaces will the cameras be mounted on?",
-    position: 5,
-    is_active: true,
-    questions: [
-      {
-        id: "q_surface",
-        question_text: "Select all that apply:",
-        input_type: "multi",
-        is_required: true,
-        position: 0,
-        options: [
-          { id: "fopt_std",   label: "Standard (Brick, Concrete walls)",        value: "standard",      position: 0 },
-          { id: "fopt_false", label: "False Ceiling (Gypsum / POP)",             value: "false_ceiling", position: 1 },
-          { id: "fopt_metal", label: "Metal (Sheds, Poles)",                     value: "metal",         position: 2 },
-          { id: "fopt_prem",  label: "Premium Surfaces (Marble, Granite, Tiles)",value: "premium",       position: 3 },
-        ],
-      },
-    ],
-  },
-
   step_technology: {
-    title: "Camera Technology",
-    description: "Which camera technology do you prefer?",
-    position: 6,
+    title: "Camera Quality",
+    description: "What level of quality and features do you expect?",
+    position: 3,
     is_active: true,
     questions: [
       {
         id: "q_tech",
-        question_text: "Select technology:",
+        question_text: "Select security level:",
         input_type: "single",
         is_required: true,
         position: 0,
         options: [
-          { id: "fopt_ip", label: "Smart Digital IP Cameras (Recommended)", value: "IP", position: 0, badge: "Recommended" },
-          { id: "fopt_hd", label: "Standard HD Analog Cameras (Budget)",    value: "HD", position: 1 },
-        ],
-      },
-    ],
-  },
-
-  step_resolution: {
-    title: "Camera Quality",
-    description: "What image quality do you need?",
-    position: 7,
-    is_active: true,
-    questions: [
-      {
-        id: "q_resolution",
-        question_text: "Select resolution:",
-        input_type: "single",
-        is_required: true,
-        position: 0,
-        options: [
-          { id: "opt_res_2mp", label: "2MP Standard HD — Good for most homes",        value: "2mp", position: 0 },
-          { id: "opt_res_4mp", label: "4MP Pro HD — Clearer faces & number plates",   value: "4mp", position: 1, badge: "Popular" },
-          { id: "opt_res_5mp", label: "5MP Ultra HD — Crisp detail, night color",     value: "5mp", position: 2 },
-          { id: "opt_res_8mp", label: "8MP 4K Professional Grade — Banks & factories",value: "8mp", position: 3 },
+          { id: "fopt_ip", label: "IP Network Camera (Smart Digital)", value: "IP", position: 0, badge: "Recommended" },
+          { id: "fopt_hd", label: "HD Analog Camera (Basic Budget)",   value: "HD", position: 1 },
         ],
       },
     ],
@@ -234,7 +149,7 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
   step_storage: {
     title: "Recording Storage",
     description: "How far back do you need to watch old recordings?",
-    position: 8,
+    position: 4,
     is_active: true,
     questions: [
       {
@@ -247,135 +162,83 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
           { id: "fopt_s_7",  label: "1 Week (Standard)",  value: "7",  position: 0 },
           { id: "fopt_s_15", label: "15 Days",             value: "15", position: 1, badge: "Popular" },
           { id: "fopt_s_30", label: "1 Month",             value: "30", position: 2 },
-          { id: "fopt_s_90", label: "3 Months",            value: "90", position: 3 },
         ],
       },
     ],
   },
-
-  step_features: {
+  step_special_features: {
     title: "Special Features",
-    description: "Customize your security system capabilities.",
-    position: 9,
+    description: "Do you need any special camera features?",
+    position: 5,
     is_active: true,
     questions: [
       {
-        id: "q_features",
-        question_text: "Which features do you need? (Select all that apply)",
+        id: "q_special_features",
+        question_text: "Select required camera capabilities (Optional):",
         input_type: "multi",
         is_required: false,
         position: 0,
         options: [
-          { id: "fopt_feat_color",      label: "24/7 Color Night Vision",          value: "feat_color",      position: 0 },
-          { id: "fopt_feat_dual_light", label: "Smart Dual Light (Color on motion)",value: "feat_dual_light", position: 1 },
-          { id: "fopt_feat_mic",        label: "Built-in Microphone",              value: "feat_mic",        position: 2 },
-          { id: "fopt_feat_speaker",    label: "Speaker / Two-Way Talk",           value: "feat_speaker",    position: 3 },
-          { id: "fopt_feat_ik10",       label: "Hammer-Proof (IK10)",              value: "feat_ik10",       position: 4 },
+          { id: "fopt_none",   label: "Not required (Standard cameras are fine)", value: "none",  position: 0 },
+          { id: "fopt_color",  label: "24/7 Color Night Vision",                  value: "color", position: 1 },
+          { id: "fopt_audio",  label: "Built-in Audio / Mic",                     value: "audio", position: 2 },
+          { id: "fopt_ptz",    label: "PTZ (Pan-Tilt-Zoom)",                      value: "ptz",   position: 3 },
         ],
       },
     ],
   },
 
-  step_wiring: {
-    title: "Existing Wiring",
-    description: "Is your property already wired for CCTV?",
-    position: 10,
+  step_general_addons: {
+    title: "Accessories",
+    description: "Would you like to include any extra accessories?",
+    position: 6,
     is_active: true,
     questions: [
       {
-        id: "q_wiring",
-        question_text: "Select cabling status:",
-        input_type: "single",
-        is_required: true,
-        position: 0,
-        options: [
-          { id: "fopt_wired_yes", label: "Yes – Cabling is already done",   value: "true",  position: 0 },
-          { id: "fopt_wired_no",  label: "No – Full installation required",  value: "false", position: 1 },
-        ],
-      },
-    ],
-  },
-
-  step_brand: {
-    title: "Brand Preference",
-    description: "Do you have a specific brand in mind?",
-    position: 11,
-    is_active: true,
-    questions: [
-      {
-        id: "q_brand",
-        question_text: "Select brand preference:",
-        input_type: "single",
-        is_required: true,
-        position: 0,
-        options: [
-          { id: "fopt_b_rec",   label: "Unsure, please recommend the best value", value: "recommend", position: 0, badge: "Recommended" },
-          { id: "fopt_b_cp",    label: "CP Plus",                                 value: "cpplus",    position: 1 },
-          { id: "fopt_b_prama", label: "Prama (Hikvision Technology)",            value: "prama",     position: 2 },
-          { id: "fopt_b_dah",   label: "Dahua",                                   value: "dahua",     position: 3 },
-        ],
-      },
-    ],
-  },
-
-  step_budget: {
-    title: "Budget Range",
-    description: "What is your approximate budget for this project?",
-    position: 12,
-    is_active: true,
-    questions: [
-      {
-        id: "q_budget",
-        question_text: "Select budget range:",
-        input_type: "single",
+        id: "q_general_addons",
+        question_text: "Select additional hardware (Optional):",
+        input_type: "multi",
         is_required: false,
         position: 0,
         options: [
-          { id: "opt_bud_low",  label: "Budget Friendly (Value for money)",       value: "budget",   position: 0 },
-          { id: "opt_bud_mid",  label: "Standard (Performance balanced)",          value: "standard", position: 1, badge: "Popular" },
-          { id: "opt_bud_high", label: "Premium (Best quality & features)",        value: "premium",  position: 2 },
+          { id: "aopt_none",    label: "No extra accessories needed", value: "none",    position: 0 },
+          { id: "aopt_monitor", label: "Monitor Display (32-inch)",   value: "monitor", position: 1 },
+          { id: "aopt_ups",     label: "Power Backup (UPS)",          value: "ups",     position: 2 },
+          { id: "aopt_4g",      label: "4G Router (No WiFi at site)", value: "4g",      position: 3 },
         ],
       },
     ],
   },
 
-  step_timeline: {
-    title: "Installation Timeline",
-    description: "How soon do you need this system installed?",
-    position: 13,
+  step_site_overview: {
+    title: "Site Overview",
+    description: "Help our installers prepare for your site.",
+    position: 7,
     is_active: true,
     questions: [
       {
-        id: "q_timeline",
-        question_text: "Select urgency:",
+        id: "q_height",
+        question_text: "What is the approximate mounting height?",
         input_type: "single",
         is_required: true,
         position: 0,
         options: [
-          { id: "fopt_t_asap",     label: "ASAP (Today/Tomorrow)", value: "asap",     position: 0 },
-          { id: "fopt_t_week",     label: "Within a week",          value: "week",     position: 1 },
-          { id: "fopt_t_month",    label: "Next Month",             value: "month",    position: 2 },
-          { id: "fopt_t_research", label: "Just researching",       value: "research", position: 3 },
+          { id: "hopt_std",   label: "Standard (Up to 10ft)",        value: "standard",  position: 0 },
+          { id: "hopt_high",  label: "High (10ft - 15ft)",           value: "high",      position: 1, badge: "Requires Ladder" },
+          { id: "hopt_vhigh", label: "Very High (15ft+)",            value: "very_high", position: 2, badge: "Requires Ladder" },
         ],
       },
-    ],
-  },
-
-  step_amc: {
-    title: "Maintenance Plan",
-    description: "Would you like an Annual Maintenance Contract (AMC)?",
-    position: 14,
-    is_active: true,
-    questions: [
       {
-        id: "q_amc",
-        question_text: "Select AMC option:",
+        id: "q_surface",
+        question_text: "What kind of surface will the cameras be mounted on?",
         input_type: "single",
         is_required: true,
-        position: 0,
+        position: 1,
         options: [
-          { id: "fopt_amc_yes", label: "Yes, protect my system (Recommended)", value: "true",  position: 0, badge: "Recommended" },
-          { id: "fopt_amc_no",  label: "No, I'll manage it myself",             value: "false", position: 1 },
+          { id: "sopt_brick",  label: "Concrete / Brick Wall",  value: "brick",   position: 0 },
+          { id: "sopt_false",  label: "False Ceiling",          value: "false",   position: 1 },
+          { id: "sopt_marble", label: "Marble / Stone",         value: "marble",  position: 2 },
+          { id: "sopt_metal",  label: "Metal / Pole",           value: "metal",   position: 3 },
         ],
       },
     ],
@@ -390,6 +253,16 @@ async function seedWizardSteps() {
   console.log("🚀 Starting wizard_steps seed...");
   console.log(`   Project: ${process.env.FIREBASE_PROJECT_ID}`);
   console.log(`   Steps to seed: ${Object.keys(WIZARD_STEPS).length}`);
+
+  // Delete all existing steps to ensure a clean slate
+  console.log("🧹 Cleaning up old wizard steps...");
+  const oldSteps = await db.collection("wizard_steps").get();
+  const deleteBatch = db.batch();
+  for (const doc of oldSteps.docs) {
+    deleteBatch.delete(doc.ref);
+  }
+  await deleteBatch.commit();
+  console.log("✅ Old steps deleted.");
 
   const batch = db.batch();
   let operationCount = 0;

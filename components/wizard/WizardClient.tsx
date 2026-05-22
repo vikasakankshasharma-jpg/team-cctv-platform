@@ -12,7 +12,7 @@ import type { WizardQuestion, WizardOption } from "@/types";
 
 export function WizardClient({ initialSteps, initialSettings }: { initialSteps?: any[], initialSettings?: any }) {
   const router = useRouter();
-  const { steps, is_loaded, current_step_index, answers, setSteps, setAnswer, nextStep, previousStep } = useWizardStore();
+  const { steps, is_loaded, current_step_index, answers, products, setSteps, setProducts, setAnswer, nextStep, previousStep } = useWizardStore();
   const isFirstStep = current_step_index === 0;
 
   // Always start loading=true so we never render the error state before the
@@ -68,6 +68,21 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     }
     loadWizard();
   }, [is_loaded, initialSteps, setSteps]);
+
+  // Fetch products for live filtering
+  useEffect(() => {
+    async function loadProducts() {
+      if (products.length > 0) return;
+      try {
+        const res = await fetch("/api/products");
+        const data = await res.json();
+        if (data.products) setProducts(data.products);
+      } catch (err) {
+        console.error("Failed to fetch products for live counting", err);
+      }
+    }
+    loadProducts();
+  }, [products, setProducts]);
 
   // Use store steps if loaded, otherwise fall back to SSR initialSteps while the
   // store hydrates — prevents the error flash before the useEffect runs.
@@ -189,12 +204,79 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     }
   };
 
+  // FACETED COUNTING ENGINE
+  const getProspectiveCount = (questionId: string, optionValue: string, isMulti: boolean) => {
+    if (!products || products.length === 0) return null; // Loading or failed
+
+    // 1. Create a hypothetical answer state
+    const hypotheticalAnswers = { ...answers };
+    if (isMulti) {
+      const currentAns = (answers[questionId] as string[]) || [];
+      if (currentAns.includes(optionValue)) {
+        hypotheticalAnswers[questionId] = currentAns.filter(v => v !== optionValue);
+      } else {
+        hypotheticalAnswers[questionId] = [...currentAns, optionValue];
+      }
+    } else {
+      hypotheticalAnswers[questionId] = optionValue;
+    }
+
+    // 2. Filter products based on hypothetical answers
+    let pool = products.filter(p => p.category === "camera" && p.is_active);
+
+    // Apply Technology Filter
+    if (hypotheticalAnswers["q_tech"]) {
+       const tech = (hypotheticalAnswers["q_tech"] as string).toUpperCase();
+       if (tech === "HD" || tech === "IP") {
+         pool = pool.filter(p => p.technology === tech);
+       }
+    }
+
+    // Apply Resolution Filter
+    if (hypotheticalAnswers["q_resolution"]) {
+       const resVal = hypotheticalAnswers["q_resolution"] as string;
+       const resNum = parseInt(resVal.replace("mp", ""));
+       if (!isNaN(resNum)) {
+         pool = pool.filter(p => p.resolution_mp === resNum);
+       }
+    }
+
+    // Apply Night Vision Filter
+    if (hypotheticalAnswers["q_night_vision"]) {
+       const nv = hypotheticalAnswers["q_night_vision"] as string;
+       if (nv === "color") {
+         pool = pool.filter(p => p.night_vision_type === "color" || p.night_vision_type === "dual_light" || (p.features && p.features.some(f => f.toLowerCase().includes("color"))));
+       } else if (nv === "ir") {
+         pool = pool.filter(p => p.night_vision_type === "ir" || !p.night_vision_type);
+       }
+    }
+    
+    // Apply Features/Priorities Filter
+    if (hypotheticalAnswers["q_priorities"]) {
+       const reqFeats = hypotheticalAnswers["q_priorities"] as string[];
+       if (reqFeats.length > 0) {
+          pool = pool.filter(cam => {
+            const feats = (cam.features || []).map(f => f.toLowerCase().trim());
+            // Simplistic mapping of wizard priorities to features
+            let matchesAll = true;
+            if (reqFeats.includes("color_night") && !feats.some(f => f.includes("color"))) matchesAll = false;
+            if (reqFeats.includes("audio") && !feats.some(f => f.includes("mic") || f.includes("audio"))) matchesAll = false;
+            if (reqFeats.includes("face_id") && !feats.some(f => f.includes("face") || f.includes("ai"))) matchesAll = false;
+            return matchesAll;
+          });
+       }
+    }
+
+    return pool.length;
+  };
+
   return (
-    <div className="flex-1 relative flex flex-col bg-white dark:bg-zinc-950 overflow-x-hidden transition-colors duration-500">
+    <div className="flex-1 relative flex flex-col bg-[#FAFAFA] overflow-x-hidden transition-colors duration-500">
       
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/50 dark:bg-blue-600/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-50/50 dark:bg-indigo-600/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
+      {/* Background Decor (Light Mode Apple Style) */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#000_1px,transparent_1px)] opacity-[0.02] [background-size:24px_24px] pointer-events-none -z-10" />
 
       {/* Toast notification */}
       {toast && (
@@ -224,9 +306,9 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
               const currentVal = (answers[q.id!] as string) || "";
               return (
                 <div key={q.id} id={`question-${q.id}`} className="scroll-mt-24 sm:scroll-mt-32">
-                  <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                     <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-xs shrink-0">#</div>
-                     <h3 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{q.question_text}</h3>
+                  <div className="flex items-center gap-3 mb-6 sm:mb-8">
+                     <div className="w-10 h-10 rounded-[14px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center text-blue-600 font-black text-sm shrink-0">#</div>
+                     <h3 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h3>
                   </div>
                   <div className="relative group max-w-sm">
                     <input
@@ -247,14 +329,14 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                           setAnswer(q.id!, String(val));
                         }
                       }}
-                      className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-[24px] sm:rounded-[32px] px-6 sm:px-10 py-5 sm:py-6 text-2xl font-black text-zinc-900 dark:text-white outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
+                      className="w-full bg-white border-[2px] border-zinc-200 rounded-[24px] sm:rounded-[28px] px-6 sm:px-8 py-5 sm:py-6 text-2xl font-black text-zinc-900 outline-none focus:ring-[6px] focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]"
                       placeholder="1 – 16"
                       min={1}
                       max={16}
                     />
                   </div>
-                  <p className="text-xs font-bold text-zinc-400 dark:text-zinc-600 mt-3 ml-2">
-                    For <span className="font-black text-zinc-700 dark:text-zinc-400">more than 16 cameras</span>, our team will reach out with a custom corporate quote.
+                  <p className="text-xs font-bold text-zinc-400 mt-4 ml-2">
+                    For <span className="font-black text-zinc-700">more than 16 cameras</span>, our team will reach out with a custom corporate quote.
                   </p>
                 </div>
               );
@@ -265,23 +347,23 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
             return (
               <div key={q.id} id={`question-${q.id}`} className="scroll-mt-24 sm:scroll-mt-32">
-                <div className="flex items-center gap-3 mb-4">
-                   <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-xs">?</div>
-                   <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{q.question_text}</h3>
+                <div className="flex items-center gap-3 mb-6 sm:mb-8">
+                   <div className="w-10 h-10 rounded-[14px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center text-blue-600 font-black text-sm shrink-0">?</div>
+                   <h3 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h3>
                 </div>
 
                 {/* Multi-select indicator badge */}
                 {isMulti && (
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 text-blue-700 dark:text-blue-400 px-4 py-2 rounded-full">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center gap-2 bg-white border border-blue-200 text-blue-700 px-4 py-2.5 rounded-xl shadow-sm">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
                       <span className="text-[11px] font-black uppercase tracking-widest">Select all that apply</span>
                     </div>
                     {(currentAns as string[]).length > 0 && (
-                      <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-400 px-3 py-2 rounded-full">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="flex items-center gap-1.5 bg-emerald-500 text-white px-3 py-2.5 rounded-xl shadow-sm shadow-emerald-500/20">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                         <span className="text-[11px] font-black uppercase tracking-widest">{(currentAns as string[]).length} Selected</span>
@@ -292,11 +374,11 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
                 {/* Hint ABOVE options — visible on mobile before scrolling */}
                 {isMulti && (
-                  <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 mb-4 flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <p className="text-sm font-bold text-zinc-400 mb-5 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    You can pick <span className="text-zinc-700 dark:text-zinc-300 font-black">more than one</span> option. Click Continue when done.
+                    You can pick <span className="text-zinc-800 font-black">more than one</span> option. Click Continue when done.
                   </p>
                 )}
 
@@ -306,6 +388,8 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                       ? (currentAns as string[]).includes(opt.value) 
                       : currentAns === opt.value;
                     
+                    const prospectiveCount = getProspectiveCount(q.id!, opt.value, isMulti);
+
                     return (
                       <OptionCard
                         key={opt.id}
@@ -313,6 +397,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                         isSelected={isSelected}
                         isMulti={isMulti}
                         onClick={() => handleOptionSelect(q.id!, opt.value, isMulti)}
+                        prospectiveCount={prospectiveCount}
                       />
                     );
                   })}
@@ -328,11 +413,11 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
       {/* Sticky Navigation Bar */}
       {!showGate && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pb-5 pt-3 bg-gradient-to-t from-white/95 dark:from-zinc-950/95 to-transparent backdrop-blur-sm">
-          <div className="w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-[0_-4px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_40px_rgba(0,0,0,0.3)] rounded-3xl flex items-center justify-between p-3 md:p-4 ring-1 ring-zinc-900/5 dark:ring-white/5 transition-all" style={{paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))'}} >
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pb-5 pt-3 bg-gradient-to-t from-[#FAFAFA] to-transparent backdrop-blur-sm">
+          <div className="w-full max-w-4xl bg-white border border-zinc-200 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] rounded-[28px] flex items-center justify-between p-3 md:p-4 transition-all" style={{paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))'}} >
             <button
               onClick={isFirstStep ? () => router.push('/') : previousStep}
-              className="group h-12 md:h-14 px-8 md:px-6 text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 cursor-pointer touch-manipulation"
+              className="group h-12 md:h-14 px-8 md:px-6 text-zinc-400 hover:text-zinc-900 font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 cursor-pointer touch-manipulation"
               aria-label={isFirstStep ? "Back to homepage" : "Previous question"}
             >
               {isFirstStep
@@ -340,20 +425,20 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                 : <><ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back</>}
             </button>
 
-            <div className="hidden lg:flex items-center gap-6 px-8 border-x border-zinc-100 dark:border-zinc-800">
+            <div className="hidden lg:flex items-center gap-6 px-8 border-x border-zinc-100">
               <div className="flex items-center gap-2">
-                <Lock className="w-3.5 h-3.5 text-zinc-400" />
-                <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-tight">Your Data is Safe</span>
+                <Lock className="w-4 h-4 text-zinc-300" />
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Your Data is Safe</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
-                <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-tight">Smart System Design</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Smart System Design</span>
               </div>
             </div>
 
             <button
               onClick={handleContinue}
-              className="h-12 md:h-14 px-8 md:px-12 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-2xl shadow-xl shadow-zinc-900/20 dark:shadow-blue-500/30 transition-all flex items-center gap-3 active:scale-95 cursor-pointer touch-manipulation"
+              className="h-12 md:h-14 px-8 md:px-12 bg-blue-600 hover:bg-blue-700 hover:shadow-blue-600/40 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-[18px] shadow-[0_8px_20px_-8px_rgba(37,99,235,0.5)] transition-all flex items-center gap-3 active:scale-95 cursor-pointer touch-manipulation"
             >
               {isLastStep ? "Generate Quote" : "Continue"}
               {isLastStep ? <ShieldCheck className="w-4 h-4" /> : <ArrowRight className="w-4 h-4 translate-y-[1px]" />}

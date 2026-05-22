@@ -89,50 +89,56 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
+    <div className="flex-1 flex flex-col bg-[#050B14] transition-colors duration-500">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 1. Elite Hero Hub */}
+      {/* 1. Elite Hero Hub: Smart City Theme */}
       <section className="relative px-4 sm:px-6 pt-10 pb-16 sm:pt-16 sm:pb-20 md:pt-24 md:pb-32 overflow-hidden">
-        {/* Background Depth Elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-zinc-50 dark:bg-zinc-950">
-          <div className="absolute top-[-10%] right-[-10%] w-[600px] sm:w-[800px] h-[600px] sm:h-[800px] bg-blue-200/40 dark:bg-blue-600/10 blur-[120px] rounded-full motion-safe:animate-pulse" />
-          <div className="absolute bottom-[-10%] left-[-10%] w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-indigo-200/20 dark:bg-indigo-600/5 blur-[100px] rounded-full" />
-          <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.07] bg-[radial-gradient(#000_1px,transparent_1px)] dark:bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:32px_32px]" />
+        {/* Smart City Background Elements */}
+        <div className="absolute inset-0 overflow-hidden -z-10 bg-[#050B14]">
+          {/* Glowing City Grid */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(14,165,233,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+          
+          {/* Neon Glow Orbs */}
+          <div className="absolute top-[-20%] left-[10%] w-[500px] h-[500px] bg-blue-600/20 blur-[150px] rounded-full mix-blend-screen" />
+          <div className="absolute top-[10%] right-[5%] w-[400px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full mix-blend-screen" />
+          
+          {/* Horizon Line Glow */}
+          <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]" />
+          <div className="absolute bottom-0 left-0 w-full h-[200px] bg-gradient-to-t from-blue-900/10 to-transparent" />
         </div>
 
-        <div className="max-w-7xl mx-auto flex flex-col items-center lg:items-start text-center lg:text-left relative">
-          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-2xl backdrop-blur-sm">
-            <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-500 shrink-0" />
-            <span>India&apos;s #1 CCTV Estimator</span>
-            <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 hidden sm:block" />
-            <span className="text-blue-600 dark:text-emerald-500 hidden sm:inline">100% Free &amp; Instant</span>
+        <div className="max-w-7xl mx-auto flex flex-col items-center lg:items-start text-center lg:text-left relative z-10">
+          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-blue-950/40 border border-blue-500/20 text-blue-200 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-[0_0_20px_rgba(59,130,246,0.15)] backdrop-blur-md">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+            <span>Enterprise Smart City Security</span>
+            <div className="w-1 h-1 rounded-full bg-blue-500/50 hidden sm:block" />
+            <span className="text-emerald-400 hidden sm:inline">100% Free Quotes</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-9xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[0.9] sm:leading-[0.88]">
-            High-Quality Security. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">
-              On Your Budget.
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.05]">
+            Secure Your Property. <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 drop-shadow-sm">
+              Empower Your City.
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed">
-            Get an exact price for your CCTV setup in under 2 minutes. No technical knowledge needed — answer a few simple questions and we&apos;ll do the rest.
+          <p className="text-base sm:text-lg md:text-2xl text-blue-100/70 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed">
+            Get an exact price for your CCTV setup in under 2 minutes. Tap into the intelligence of modern security networks.
           </p>
 
-          <div className="w-full mb-8 sm:mb-10 md:mb-16">
-            <PincodeWidget variant="hero" />
+          <div className="w-full mb-8 sm:mb-10 md:mb-16 relative">
+             <div className="absolute -inset-4 bg-blue-500/5 blur-xl rounded-full -z-10" />
+             <PincodeWidget variant="hero" />
           </div>
 
-          <div className="flex sm:hidden items-center gap-4 mt-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+          <div className="flex sm:hidden items-center gap-4 mt-8 text-[10px] font-black text-blue-300/50 uppercase tracking-widest">
             <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> 18% GST Bill</span>
             <span>·</span>
             <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> 500+ Installs</span>
-            <span>·</span>
-            <span>GST Included</span>
           </div>
         </div>
       </section>
@@ -203,15 +209,15 @@ export default function LandingPage() {
       </section>
 
       {/* 3. Final Deployment CTA */}
-      <section className="py-16 sm:py-24 md:py-20 px-4 sm:px-6 relative overflow-hidden text-center bg-white dark:bg-zinc-950 transition-colors">
+      <section className="py-16 sm:py-24 md:py-20 px-4 sm:px-6 relative overflow-hidden text-center bg-[#050B14]">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
-          <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-50 dark:bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-500 mb-8 sm:mb-12 animate-bounce">
+          <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-500 mb-8 sm:mb-12 animate-bounce shadow-[0_0_20px_rgba(59,130,246,0.3)]">
             <Zap className="w-7 h-7 sm:w-10 sm:h-10 fill-current" />
           </div>
-          <h2 className="text-4xl sm:text-6xl md:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter mb-5 sm:mb-8 leading-[0.9] sm:leading-[0.85]">
+          <h2 className="text-4xl sm:text-6xl md:text-8xl font-black text-white tracking-tighter mb-5 sm:mb-8 leading-[0.9] sm:leading-[0.85]">
             Secure your space <br className="hidden sm:block" /> today.
           </h2>
-          <p className="text-zinc-500 dark:text-zinc-400 text-base sm:text-xl md:text-2xl mb-10 sm:mb-16 font-medium max-w-2xl text-center">
+          <p className="text-blue-100/70 text-base sm:text-xl md:text-2xl mb-10 sm:mb-16 font-medium max-w-2xl text-center">
             2-minute setup. No hidden costs. 18% GST included in all plans.
           </p>
 

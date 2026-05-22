@@ -198,7 +198,10 @@ export interface ConfiguratorSelection {
   selected_addons: string[];
   plan_type: "budget" | "recommended" | "premium";
   selected_camera_option?: number; // 1-5 for IP, 1-2 for HD
-  selected_camera_id?: string;     // NEW: Specific camera ID to skip option matching
+  selected_camera_id?: string;     // Specific camera ID override
+  selected_recorder_id?: string;   // Specific recorder ID override
+  selected_storage_id?: string;    // Specific storage/HDD ID override
+  selected_power_id?: string;      // Specific power/transmission ID override
   
   // NEW FIELDS FROM WIZARD REDESIGN
   surface_types?: string[];
@@ -206,6 +209,7 @@ export interface ConfiguratorSelection {
   ladder_arrangement?: "customer" | "team";
   requested_features?: string[];
   brand_preference?: string;
+  resolution_preference?: string;
   installation_timeline?: string;
   wants_amc?: boolean;
   focus_point?: "price" | "quality";

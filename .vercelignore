@@ -1,0 +1,16 @@
+# Ignore unnecessary files to speed up Vercel deployments and keep artifact size small
+.vercel/
+playwright-report/
+test-results/
+tests/
+playwright.config.ts
+scripts/
+docs/
+scratch/
+*.html
+*.md
+*.zip
+*.ps1
+lint_output*.txt
+build-log.txt
+extracted_products*.json

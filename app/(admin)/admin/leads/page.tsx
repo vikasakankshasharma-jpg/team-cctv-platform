@@ -17,8 +17,9 @@ export const dynamic = "force-dynamic";
 export default async function LeadsAdminPage({
   searchParams,
 }: {
-  searchParams: { page?: string; lastId?: string; lastDate?: string };
+  searchParams: Promise<{ page?: string; lastId?: string; lastDate?: string }>;
 }) {
+  const resolvedSearchParams = await searchParams;
   const session = await verifySession();
   const isAdmin = session.isAuthenticated && session.role === "super_admin";
   const isSalesStaff = session.isAuthenticated && session.role === "sales_staff";
@@ -51,7 +52,7 @@ export default async function LeadsAdminPage({
   }
 
   const PAGE_SIZE = 25;
-  const lastDate = searchParams.lastDate ? new Date(searchParams.lastDate) : null;
+  const lastDate = resolvedSearchParams.lastDate ? new Date(resolvedSearchParams.lastDate) : null;
   
   let query = adminDb.collection("leads")
     .orderBy("created_at", "desc");

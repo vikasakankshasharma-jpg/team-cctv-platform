@@ -233,10 +233,31 @@ export function getDefaultFallbackWizard(): WizardStep[] {
       ]
     },
     {
+      id: "step_tech",
+      title: "Technology",
+      description: "Do you want standard HD cameras or advanced IP cameras?",
+      position: 4,
+      is_active: true,
+      created_at: null,
+      questions: [
+        {
+          id: "q_tech",
+          question_text: "Select technology:",
+          position: 0,
+          input_type: "single",
+          is_required: true,
+          options: [
+            { id: "opt_ip", label: "IP (Advanced, Better Quality)", value: "IP", position: 0 },
+            { id: "opt_hd", label: "HD (Analog, Budget Friendly)", value: "HD", position: 1 },
+          ]
+        }
+      ]
+    },
+    {
       id: "step_install_type",
       title: "Setup Type",
       description: "Is this a brand new installation or an upgrade?",
-      position: 4,
+      position: 4.5,
       is_active: true,
       created_at: null,
       questions: [
