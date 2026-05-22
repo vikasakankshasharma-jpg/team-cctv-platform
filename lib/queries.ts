@@ -234,21 +234,24 @@ export function getDefaultFallbackWizard(): WizardStep[] {
     },
     {
       id: "step_tech",
-      title: "Technology",
-      description: "Do you want standard HD cameras or advanced IP cameras?",
+      title: "Camera Technology",
+      description: "What level of quality and features do you expect?",
       position: 4,
       is_active: true,
       created_at: null,
       questions: [
         {
           id: "q_tech",
-          question_text: "Select technology:",
+          question_text: "Select security level:",
           position: 0,
           input_type: "single",
           is_required: true,
           options: [
-            { id: "opt_ip", label: "IP (Advanced, Better Quality)", value: "IP", position: 0 },
-            { id: "opt_hd", label: "HD (Analog, Budget Friendly)", value: "HD", position: 1 },
+            { id: "opt_ip", label: "IP Network Camera (Smart Digital)", value: "IP", position: 0 },
+            { id: "opt_hd", label: "HD Analog Camera (Basic Budget)", value: "HD", position: 1 },
+            { id: "opt_wifi", label: "WiFi Camera (Wireless Smart)", value: "WiFi", position: 2 },
+            { id: "opt_4g", label: "4G Sim Camera (No WiFi Needed)", value: "4G", position: 3 },
+            { id: "opt_solar", label: "Solar Camera (100% Wire-Free)", value: "Solar", position: 4 },
           ]
         }
       ]

@@ -82,7 +82,7 @@ export default async function FranchisesAdminPage() {
           { label: "Gross Yield", value: `₹${(totalBusiness / 100000).toFixed(1)}L`, icon: IndianRupee, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/50 dark:bg-blue-500/5" },
           { label: "Clearing Due", value: `₹${totalCommissionDue.toLocaleString("en-IN")}`, icon: TrendingUp, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/50 dark:bg-amber-500/5" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`relative overflow-hidden group ${kpi.bg} border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl shadow-zinc-200/40 dark:shadow-none`}>
+          <div key={kpi.label} className={`relative overflow-hidden group ${kpi.bg} border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md shadow-zinc-200/40 dark:shadow-none`}>
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
                <kpi.icon className="w-20 h-20" />
             </div>
@@ -93,9 +93,9 @@ export default async function FranchisesAdminPage() {
       </div>
 
       {/* Management Toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-100 dark:border-zinc-800 rounded-[32px] p-6 shadow-2xl shadow-zinc-200/50 dark:shadow-none">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-6 shadow-md shadow-zinc-200/50 dark:shadow-none">
         <div className="flex items-center gap-4">
-           <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-950/40 flex items-center justify-center border border-zinc-100 dark:border-zinc-800/60">
+           <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
               <Building2 className="w-6 h-6 text-zinc-400" />
            </div>
            <div>
@@ -107,14 +107,14 @@ export default async function FranchisesAdminPage() {
         </div>
         <Link
           href="/admin/franchises/new"
-          className="flex items-center justify-center gap-3 px-8 py-4 bg-zinc-950 dark:bg-blue-600 hover:scale-105 active:scale-95 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-2xl shadow-blue-500/20"
+          className="flex items-center justify-center gap-3 px-8 py-4 bg-zinc-950 dark:bg-blue-600 hover:scale-105 active:scale-95 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-md shadow-blue-500/20"
         >
           <Plus className="w-4 h-4" /> Initialize New Franchise
         </Link>
       </div>
 
       {fetchError && (
-        <div className="rounded-[40px] border border-rose-100 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-900/10 p-12 text-center">
+        <div className="rounded-2xl border border-rose-100 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-900/10 p-12 text-center">
           <XCircle className="w-12 h-12 text-rose-500 mx-auto mb-4 opacity-50" />
           <p className="text-rose-600 font-black text-sm uppercase tracking-widest">Protocol Failure: Data Unreachable</p>
           <p className="text-zinc-500 text-xs font-bold mt-2 uppercase tracking-tight">Verify Firestore connectivity and security schema.</p>
@@ -123,7 +123,7 @@ export default async function FranchisesAdminPage() {
 
       {/* Franchise Grid */}
       {!fetchError && franchises.length === 0 && (
-        <div className="text-center py-32 border-4 border-dashed border-zinc-50 dark:border-zinc-800/40 rounded-[64px]">
+        <div className="text-center py-32 border-4 border-dashed border-zinc-50 dark:border-zinc-800 rounded-[64px]">
           <Building2 className="w-16 h-16 text-zinc-200 dark:text-zinc-800 mx-auto mb-6" />
           <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight mb-2">Network Expansion Ready</h3>
           <p className="text-xs text-zinc-500 font-bold uppercase tracking-[0.2em] mb-10 max-w-sm mx-auto leading-relaxed">
@@ -131,7 +131,7 @@ export default async function FranchisesAdminPage() {
           </p>
           <Link
             href="/admin/franchises/new"
-            className="inline-flex items-center gap-3 px-10 py-5 bg-zinc-950 dark:bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-3xl hover:scale-105 transition-all shadow-2xl"
+            className="inline-flex items-center gap-3 px-10 py-5 bg-zinc-950 dark:bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:scale-105 transition-all shadow-md"
           >
             <Plus className="w-4 h-4" /> Start Onboarding Workflow
           </Link>
@@ -143,7 +143,7 @@ export default async function FranchisesAdminPage() {
           {franchises.map((dealer) => (
             <div
               key={dealer.id}
-              className={`group bg-white dark:bg-zinc-900/40 backdrop-blur-xl border rounded-[40px] overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-zinc-200/50 dark:hover:shadow-none hover:border-blue-500/30 ${dealer.is_active ? "border-zinc-100 dark:border-zinc-800" : "border-zinc-100 dark:border-zinc-800/40 opacity-40"}`}
+              className={`group bg-white dark:bg-zinc-900 border rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md hover:shadow-zinc-200/50 dark:hover:shadow-none hover:border-blue-500/30 ${dealer.is_active ? "border-zinc-100 dark:border-zinc-800" : "border-zinc-100 dark:border-zinc-800 opacity-40"}`}
             >
               <div className="flex flex-col lg:flex-row lg:items-center gap-8 p-8 sm:p-10">
                 {/* Node Identity */}
@@ -171,7 +171,7 @@ export default async function FranchisesAdminPage() {
                 </div>
 
                 {/* Financial Ledger Preview */}
-                <div className="grid grid-cols-3 gap-8 shrink-0 px-8 border-x border-zinc-50 dark:border-zinc-800/60">
+                <div className="grid grid-cols-3 gap-8 shrink-0 px-8 border-x border-zinc-50 dark:border-zinc-800">
                   <div className="text-center">
                     <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2">Throughput</p>
                     <p className="text-base font-black text-zinc-950 dark:text-white">{dealer.total_leads_received || 0}</p>
@@ -190,7 +190,7 @@ export default async function FranchisesAdminPage() {
                 <div className="flex items-center gap-3 shrink-0">
                   <Link
                     href={`/admin/franchises/${dealer.id}/pricing`}
-                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md"
                   >
                     <IndianRupee className="w-3.5 h-3.5" /> Pricing
                   </Link>
@@ -207,7 +207,7 @@ export default async function FranchisesAdminPage() {
               {dealer.assigned_pincodes && dealer.assigned_pincodes.length > 0 && (
                 <div className="px-10 pb-8 flex flex-wrap gap-2">
                   {dealer.assigned_pincodes.slice(0, 15).map((pin) => (
-                    <span key={pin} className="text-[8px] font-black px-3 py-1 bg-zinc-50 dark:bg-zinc-950/40 text-zinc-500 dark:text-zinc-500 border border-zinc-100 dark:border-zinc-800/60 rounded-lg uppercase tracking-widest">
+                    <span key={pin} className="text-[8px] font-black px-3 py-1 bg-zinc-50 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-500 border border-zinc-100 dark:border-zinc-800 rounded-lg uppercase tracking-widest">
                       {pin}
                     </span>
                   ))}

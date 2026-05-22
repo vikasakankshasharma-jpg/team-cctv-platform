@@ -1,4 +1,4 @@
-export type Technology = "HD" | "IP";
+export type Technology = "HD" | "IP" | "WiFi" | "Solar" | "4G";
 export type PlanType = "budget" | "recommended" | "premium";
 export type WizardAnswers = Record<string, unknown>;
 
@@ -29,7 +29,7 @@ export interface Lead {
   mobile_number: string;
   firebase_uid?: string; // Link to authenticated customer
   property_type: "home" | "office" | "warehouse" | "bungalow";
-  technology_choice: "HD" | "IP";
+  technology_choice: "HD" | "IP" | "WiFi" | "Solar" | "4G";
   cabling_done: boolean;
   address?: Address; // Added for Site Details
   wizard_answers: Record<string, unknown>;
@@ -39,6 +39,8 @@ export interface Lead {
   created_at: unknown;
   updated_at?: unknown;
   site_visit_date?: unknown;
+  sla_breached?: boolean;
+  sla_deadline?: string | null;
   promoter_id?: string | null;
   promoter_name?: string | null;      // NEW: Virtual field for UI
   promoter_business?: string | null;  // NEW: Virtual field for UI
@@ -72,33 +74,42 @@ export interface FollowUpCampaign {
   updated_at?: unknown;
 }
 
+// ── Inventory Category Grouping (Tally-style) ───────────────────────────────
+export interface ProductGroup {
+  id?: string;
+  name: string;               // e.g., "5MP", "Bullet"
+  parent_id: string | null;   // Link to parent group. null if root.
+  full_path: string;          // e.g., "CCTV/IP Cameras/5MP"
+  is_active: boolean;
+  created_at?: unknown;
+  updated_at?: unknown;
+}
+
 export interface Product {
   id?: string;
   technical_name: string;
   display_name: string;
   category: "camera" | "recorder" | "accessory" | "cable";
-  technology: "HD" | "IP" | "Common" | "WiFi" | "4G";
-  base_cost?: number;            // NEW: Cost to business
-  margin_percentage?: number;    // NEW: Expected profit margin
+  technology: "HD" | "IP" | "Common" | "WiFi" | "4G" | "Solar";
+  base_cost?: number;            // Cost to business
+  margin_percentage?: number;    // Expected profit margin
   unit_price: number;            // Computed or manual final selling price
-  unit_price_budget?: number;    // NEW: Manual Budget price override
-  unit_price_premium?: number;   // NEW: Manual Premium price override
-  option_price_overrides?: Record<string, number>; // Dynamic pricing adjustments based on options
+  unit_price_budget?: number;    // Manual Budget price override
+  unit_price_premium?: number;   // Manual Premium price override
+  option_price_overrides?: Record<string, number>;
   is_active: boolean;
-  features?: string[];           // NEW: Array of FeatureTag IDs this product supports
+  features?: string[];           // Array of FeatureTag IDs
   
-  // Compatibility System (Phase 3: Hierarchical Category Tree)
-  // 1. Where does this product live in the catalog?
-  // Example: "CCTV/Cameras/IP/4MP"
-  catalog_path?: string;
+  // Tally-style Grouping
+  group_id?: string | null;      // Link to ProductGroup
+  group_path?: string | null;    // Denormalized path for quick display
 
-  // 2. What folders is this product compatible with?
-  // Example: ["CCTV/Cameras/IP", "CCTV/Cameras/HD/2MP"]
+  catalog_path?: string;         // Legacy string path
   compatible_paths?: string[];
 
-  // Channel / port capacity (for recorders, PoE switches, PSUs)
-  max_cameras?: number;             // Maximum cameras this product supports
-  min_cameras?: number;             // Minimum cameras this product is designed for (optional)
+  // Hardware Channel / Port capacity
+  max_cameras?: number;
+  min_cameras?: number;
 
   // Logic Hardening
   resolution_tier?: "good" | "very_clear" | "crystal_clear";
@@ -180,7 +191,7 @@ export interface AddonRule {
   action: "show_optional" | "show_mandatory" | "hide";
   conditions: {
     property_type?: string;
-    technology?: "HD" | "IP";
+    technology?: Technology | string;
     cabling_done?: boolean;
     requirements?: string[];
     
@@ -194,7 +205,7 @@ export interface ConfiguratorSelection {
   camera_count: number;
   picture_quality: "good" | "very_clear" | "crystal_clear";
   recording_days: number; // Changed from 7|15|30 to allow custom
-  technology: "HD" | "IP";
+  technology: Technology | string;
   selected_addons: string[];
   plan_type: "budget" | "recommended" | "premium";
   selected_camera_option?: number; // 1-5 for IP, 1-2 for HD
@@ -235,7 +246,7 @@ export interface QuoteAddon {
 
 export interface PricingResult {
   plan_type: "budget" | "recommended" | "premium";
-  technology: "HD" | "IP";
+  technology: Technology | string;
   items: QuoteLineItem[];
   addons: QuoteAddon[];
   
@@ -308,6 +319,13 @@ export interface AppSettings {
   updated_at?: unknown;
   updated_by?: string | null;
   admin_notification_phone?: string;
+  
+  // SLA Settings
+  default_sla_operating_hours?: {
+    start_time: string; // HH:mm format, e.g. "10:00"
+    end_time: string;   // HH:mm format, e.g. "18:00"
+    days_off: number[]; // 0=Sunday, 1=Monday...
+  };
 }
 
 export interface Promoter {
@@ -527,6 +545,13 @@ export interface FranchiseDealer {
   total_ex_tax_business: number;         // Cumulative ex-GST sales value
   total_commission_due: number;          // Commission earned, not yet paid
   total_commission_paid: number;         // Commission already disbursed
+
+  // SLA Overrides
+  sla_operating_hours?: {
+    start_time: string; // HH:mm format
+    end_time: string;   // HH:mm format
+    days_off: number[]; // 0=Sunday...
+  };
 
   created_at?: unknown;
   updated_at?: unknown;

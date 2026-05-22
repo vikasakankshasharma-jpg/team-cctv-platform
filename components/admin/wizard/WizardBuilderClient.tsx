@@ -159,7 +159,7 @@ export function WizardBuilderClient({ initialSteps }: WizardBuilderClientProps) 
             )}
             <button
               onClick={handleCreateStep}
-              className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-xl shadow-blue-500/20 active:scale-95"
+              className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-md shadow-blue-500/20 active:scale-95"
             >
               <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
               New Step
@@ -170,8 +170,8 @@ export function WizardBuilderClient({ initialSteps }: WizardBuilderClientProps) 
 
       <div className="space-y-12 max-w-5xl pb-32">
         {steps.length === 0 ? (
-          <div className="bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[40px] p-20 text-center backdrop-blur-sm shadow-xl dark:shadow-2xl">
-            <div className="w-20 h-20 rounded-[32px] bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mx-auto mb-8 shadow-inner">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-20 text-center shadow-md dark:shadow-md">
+            <div className="w-20 h-20 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mx-auto mb-8 shadow-inner">
               <Workflow className="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
             </div>
             <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-3">No Steps Built Yet</h2>
@@ -181,14 +181,14 @@ export function WizardBuilderClient({ initialSteps }: WizardBuilderClientProps) 
             <div className="flex items-center justify-center gap-4 flex-wrap">
               <button 
                 onClick={handleCreateStep}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-xl shadow-blue-500/20 active:scale-95"
+                className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-md shadow-blue-500/20 active:scale-95"
               >
                 Create First Step
               </button>
               <button 
                 onClick={handleSeedTemplate}
                 disabled={isSaving}
-                className="bg-zinc-800 hover:bg-zinc-700 text-white px-10 py-4 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-xl active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                className="bg-zinc-800 hover:bg-zinc-700 text-white px-10 py-4 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-md active:scale-95 flex items-center gap-2 disabled:opacity-50"
               >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 Load Default Template

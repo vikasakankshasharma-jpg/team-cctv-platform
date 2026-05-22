@@ -160,7 +160,7 @@ function calculateHardware(
   selection: ConfiguratorSelection, 
   products: Product[], 
   settings: AppSettings,
-  tech: "HD" | "IP"
+  tech: string
 ) {
   const items: QuoteLineItem[] = [];
   let totalRetail = 0;
@@ -235,7 +235,7 @@ function calculateHardware(
 function calculateLabor(
   selection: ConfiguratorSelection,
   settings: AppSettings,
-  tech: "HD" | "IP",
+  tech: string,
   locationMultiplier = 1.0
 ) {
   const items: QuoteLineItem[] = [];
@@ -264,7 +264,7 @@ function calculateLabor(
 function calculateCabling(
   selection: ConfiguratorSelection,
   settings: AppSettings,
-  tech: "HD" | "IP",
+  tech: string,
   meters: number,
   locationMultiplier = 1.0
 ) {
@@ -367,7 +367,7 @@ function calculateAddons(params: {
  * ──────────────────────────────────────────────────────────────────────────────
  */
 
-function resolveCamera(selection: ConfiguratorSelection, products: Product[], settings: AppSettings, tech: "HD" | "IP") {
+function resolveCamera(selection: ConfiguratorSelection, products: Product[], settings: AppSettings, tech: string) {
   if (selection.selected_camera_id) {
     return products.find(p => p.id === selection.selected_camera_id);
   }
@@ -389,7 +389,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
     const resPref = selection.resolution_preference.toUpperCase();
     const resFiltered = pool.filter(cam => {
       // Safely parse resolution_mp (which might be "2MP", "2.4MP", "4MP", etc.)
-      const camRes = (cam.resolution_mp || "").toUpperCase();
+      const camRes = String(cam.resolution_mp || "").toUpperCase();
       return camRes.includes(resPref) || resPref.includes(camRes.replace("MP", ""));
     });
     // Fallback: If strict resolution matching eliminates ALL cameras, drop the filter
@@ -457,8 +457,8 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
       }
       
       // ── Fallback Property-Aware Logic ───────────────────────
-      const prop = selection.property_type;
-      if (prop === "factory" || prop === "warehouse" || prop === "office") {
+      const propStr = String(selection.property_type);
+      if (propStr === "factory" || propStr === "warehouse" || propStr === "office" || propStr === "shop") {
         // Find a high-spec camera near the 60th-80th percentile
         // Prioritize cameras with 4MP+, audio, or PTZ
         const highSpec = pool.slice(Math.floor(pool.length / 2)).find(cam => {
@@ -485,7 +485,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
   }
 }
 
-function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: "HD" | "IP") {
+function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: string) {
   if (selection.selected_recorder_id) {
     return products.find(p => p.id === selection.selected_recorder_id);
   }
@@ -514,7 +514,7 @@ function resolveHDDCapacity(product: Product & { storage_tb?: number }): number 
   return numMatch ? parseFloat(numMatch[1]) : 0;
 }
 
-function resolveHDD(selection: ConfiguratorSelection, products: Product[], tech: "HD" | "IP") {
+function resolveHDD(selection: ConfiguratorSelection, products: Product[], tech: string) {
   if (selection.selected_storage_id) {
     return products.find(p => p.id === selection.selected_storage_id);
   }
@@ -531,7 +531,7 @@ function resolveHDD(selection: ConfiguratorSelection, products: Product[], tech:
   return hdds.find(h => resolveHDDCapacity(h) >= requiredTB) || hdds[hdds.length - 1];
 }
 
-function resolveTransmission(selection: ConfiguratorSelection, products: Product[], tech: "HD" | "IP") {
+function resolveTransmission(selection: ConfiguratorSelection, products: Product[], tech: string) {
   if (selection.selected_power_id) {
     return products.find(p => p.id === selection.selected_power_id);
   }

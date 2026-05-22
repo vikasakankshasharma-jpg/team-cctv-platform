@@ -86,13 +86,13 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
       <div className="flex items-center gap-2 p-1.5 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-[24px] w-fit shadow-inner">
         <button
           onClick={() => setActiveTab("standard")}
-          className={`px-8 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === "standard" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-xl shadow-zinc-950/20 border border-zinc-200 dark:border-zinc-700" : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"}`}
+          className={`px-8 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === "standard" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-md shadow-zinc-950/20 border border-zinc-200 dark:border-zinc-700" : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"}`}
         >
           Standard Matrix
         </button>
         <button
           onClick={() => setActiveTab("industrial")}
-          className={`px-8 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === "industrial" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-xl shadow-zinc-950/20 border border-zinc-200 dark:border-zinc-700" : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"}`}
+          className={`px-8 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === "industrial" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-md shadow-zinc-950/20 border border-zinc-200 dark:border-zinc-700" : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"}`}
         >
           Industrial Inquiries
         </button>
@@ -108,7 +108,7 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
               placeholder={activeTab === "standard" ? "Query Spectrum (Name, Mobile...)" : "Query Mobile..."}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all font-bold placeholder-zinc-400 dark:placeholder-zinc-700 shadow-inner"
+              className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all font-bold placeholder-zinc-400 dark:placeholder-zinc-700 shadow-inner"
             />
           </div>
           <div className="relative w-64 group">
@@ -116,7 +116,7 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
             <select 
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-10 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all appearance-none cursor-pointer font-black uppercase tracking-widest shadow-inner shadow-zinc-900/5 dark:shadow-none"
+              className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-10 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all appearance-none cursor-pointer font-black uppercase tracking-widest shadow-inner shadow-zinc-900/5 dark:shadow-none"
             >
               <option value="all">All Statuses</option>
               <option value="new">New</option>
@@ -130,10 +130,10 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
         </div>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl backdrop-blur-md transition-all">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-md dark:shadow-md transition-all">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-zinc-300">
-            <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 font-black uppercase text-[10px] tracking-[0.25em]">
+            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 font-black uppercase text-[10px] tracking-[0.25em]">
               <tr>
                 <th className="px-8 py-6">{activeTab === "standard" ? "Customer" : "Contact"}</th>
                 <th className="px-8 py-6">{activeTab === "standard" ? "System & Camera" : "Volume"}</th>
@@ -355,7 +355,7 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
               url.searchParams.set("lastDate", nextCursor);
               router.push(url.pathname + url.search);
             }}
-            className="group flex items-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-10 py-4 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white shadow-xl active:scale-95"
+            className="group flex items-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-10 py-4 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white shadow-md active:scale-95"
           >
             Load Next Batch
             <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

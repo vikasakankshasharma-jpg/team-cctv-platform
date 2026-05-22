@@ -242,8 +242,8 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[75vh]">
         
         {/* Left Pane: Taxonomy Tree */}
-        <div className="lg:col-span-4 bg-zinc-950/40 border border-zinc-800/60 rounded-[32px] flex flex-col overflow-hidden backdrop-blur-md">
-          <div className="p-6 border-b border-zinc-800/60 bg-zinc-900/40">
+        <div className="lg:col-span-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col overflow-hidden">
+          <div className="p-6 border-b border-zinc-800 bg-zinc-900">
             <h2 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
               <Layers className="w-4 h-4 text-indigo-400" />
               Catalog Directory
@@ -270,8 +270,8 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
         </div>
 
         {/* Right Pane: Products in Category */}
-        <div className="lg:col-span-8 bg-zinc-950/40 border border-zinc-800/60 rounded-[32px] flex flex-col overflow-hidden backdrop-blur-md">
-          <div className="p-6 border-b border-zinc-800/60 bg-zinc-900/40 flex items-center justify-between">
+        <div className="lg:col-span-8 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col overflow-hidden">
+          <div className="p-6 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
                 <Package className="w-4 h-4 text-emerald-400" />
@@ -296,7 +296,7 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
               </div>
             ) : (
               displayedProducts.map(product => (
-                <div key={product.id} onClick={() => setEditProduct(product)} className="group bg-zinc-900/50 hover:bg-zinc-800/50 border border-zinc-800/60 hover:border-indigo-500/30 p-5 rounded-2xl cursor-pointer transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div key={product.id} onClick={() => setEditProduct(product)} className="group bg-zinc-900 hover:bg-zinc-800/50 border border-zinc-800 hover:border-indigo-500/30 p-5 rounded-2xl cursor-pointer transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-zinc-800 flex items-center justify-center">

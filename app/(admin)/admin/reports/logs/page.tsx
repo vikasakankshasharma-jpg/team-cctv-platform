@@ -32,10 +32,10 @@ export default async function AuditLogsPage() {
         description="Immutable record of all administrative and security events on the platform."
       />
 
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[32px] overflow-hidden shadow-2xl">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-md">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-zinc-50 dark:bg-zinc-950/50 border-b border-zinc-100 dark:border-zinc-800">
+            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800">
               <tr>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-500">Event / Timestamp</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-500">Actor</th>
@@ -90,7 +90,7 @@ export default async function AuditLogsPage() {
                         <Globe className="w-3 h-3" /> {log.ip_address || "Unknown IP"}
                       </div>
                       {log.metadata && (
-                        <div className="text-[10px] text-zinc-400 font-mono bg-zinc-50 dark:bg-zinc-950/50 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800 hidden group-hover:block absolute z-10 max-w-xs shadow-xl">
+                        <div className="text-[10px] text-zinc-400 font-mono bg-zinc-50 dark:bg-zinc-900 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800 hidden group-hover:block absolute z-10 max-w-xs shadow-md">
                           <pre>{JSON.stringify(log.metadata, null, 2)}</pre>
                         </div>
                       )}

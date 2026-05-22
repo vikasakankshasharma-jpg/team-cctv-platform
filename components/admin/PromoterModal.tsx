@@ -86,16 +86,16 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-3xl animate-in fade-in duration-500" onClick={onClose} />
+      <div className="absolute inset-0 bg-zinc-900 animate-in fade-in duration-500" onClick={onClose} />
       
       {/* Modal Card */}
-      <div className="relative bg-zinc-900/80 border border-zinc-800/60 rounded-[40px] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 fade-in duration-500">
+      <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-md animate-in zoom-in-95 fade-in duration-500">
         
         {/* Header Section */}
         <div className="p-10 pb-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-inner">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-inner">
                 <UserPlus className="w-7 h-7" />
               </div>
               <div>
@@ -127,7 +127,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner"
                   placeholder="Rahul Sharma"
                 />
                 <input
@@ -135,7 +135,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner"
                   placeholder="rahul@example.com"
                 />
               </div>
@@ -151,7 +151,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
                 maxLength={10}
                 value={formData.mobile_number}
                 onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value.replace(/\D/g, "") })}
-                className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner"
                 placeholder="10-digit mobile number"
               />
             </div>
@@ -167,14 +167,14 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
                   disabled={!!promoter}
                   value={formData.referral_code}
                   onChange={(e) => setFormData({ ...formData, referral_code: e.target.value })}
-                  className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-black uppercase tracking-[0.2em] focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner disabled:opacity-50 text-center"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-black uppercase tracking-[0.2em] focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner disabled:opacity-50 text-center"
                   placeholder="TEAMXXXX"
                 />
                 {!promoter && (
                   <button
                     type="button"
                     onClick={handleGenerateCode}
-                    className="w-16 h-16 shrink-0 bg-zinc-800 hover:bg-zinc-700 text-amber-500 rounded-3xl flex items-center justify-center transition-all border border-zinc-700/50 hover:border-amber-500/30 active:scale-90"
+                    className="w-16 h-16 shrink-0 bg-zinc-800 hover:bg-zinc-700 text-amber-500 rounded-2xl flex items-center justify-center transition-all border border-zinc-700/50 hover:border-amber-500/30 active:scale-90"
                     title="Generate Seed Code"
                   >
                     <Dices className="w-6 h-6 animate-pulse" />
@@ -185,7 +185,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
             </div>
 
             {/* Discount Configuration */}
-            <div className="p-6 bg-zinc-950/40 rounded-3xl border border-zinc-800/40 space-y-4">
+            <div className="p-6 bg-zinc-900 rounded-2xl border border-zinc-800 space-y-4">
                <div className="flex items-center justify-between">
                   <p className="text-xs font-black text-white uppercase tracking-widest">Client Benefit (Discount)</p>
                   <div className="flex bg-zinc-900 p-1 rounded-xl border border-zinc-800">
@@ -227,7 +227,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
               <select
                 value={formData.custom_layout_id}
                 onChange={(e) => setFormData({ ...formData, custom_layout_id: e.target.value })}
-                className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner appearance-none"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-inner appearance-none"
               >
                 <option value="">Default System Layout</option>
                 {availableLayouts.map(layout => (
@@ -238,7 +238,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-4 bg-zinc-950/40 p-6 rounded-3xl border border-zinc-800/40">
+          <div className="flex items-center justify-between pt-4 bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
             <div className="space-y-1">
               <p className="text-sm font-black text-white">Authorization Status</p>
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Enables or suspends agent commission tracking</p>
@@ -266,7 +266,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative flex items-center gap-3 bg-amber-600 hover:bg-amber-500 text-white px-10 py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-xl shadow-amber-500/20 active:scale-95 disabled:opacity-50"
+              className="group relative flex items-center gap-3 bg-amber-600 hover:bg-amber-500 text-white px-10 py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-md shadow-amber-500/20 active:scale-95 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

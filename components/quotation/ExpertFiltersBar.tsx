@@ -28,7 +28,7 @@ export function ExpertFiltersBar() {
     products.forEach(p => {
       if (p.category === "camera" && p.resolution_mp) {
         // Extract standard megapixel formats like "2MP", "4MP", "5MP"
-        const cleanRes = p.resolution_mp.toUpperCase().trim();
+        const cleanRes = String(p.resolution_mp).toUpperCase().trim();
         if (cleanRes) res.add(cleanRes);
       }
     });

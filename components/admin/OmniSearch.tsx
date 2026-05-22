@@ -80,9 +80,9 @@ export function OmniSearch() {
       label="Global Command Palette"
       className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4 sm:px-6 md:px-0"
     >
-      <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setOpen(false)} />
+      <div className="fixed inset-0 bg-zinc-900 animate-in fade-in duration-300" onClick={() => setOpen(false)} />
       
-      <div className="relative w-full max-w-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl shadow-md overflow-hidden animate-in zoom-in-95 duration-300">
         <div className="flex items-center border-b border-zinc-100 dark:border-zinc-800 px-6 py-5">
           <Search className="w-5 h-5 text-zinc-400 mr-4 shrink-0" />
           <Command.Input 
@@ -152,7 +152,7 @@ export function OmniSearch() {
           )}
         </Command.List>
 
-        <div className="border-t border-zinc-100 dark:border-zinc-800 px-6 py-4 bg-zinc-50 dark:bg-zinc-950/40 flex items-center justify-between">
+        <div className="border-t border-zinc-100 dark:border-zinc-800 px-6 py-4 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between">
            <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                  <kbd className="px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-[10px] font-bold text-zinc-500 shadow-sm">↵</kbd>

@@ -127,7 +127,7 @@ export function FranchisePricingClient({ dealer, existingOverride, products }: P
 
       {/* Hero Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[32px] p-6 shadow-xl shadow-zinc-200/50 dark:shadow-none flex items-center gap-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-6 shadow-md shadow-zinc-200/50 dark:shadow-none flex items-center gap-4">
           <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
             <ShieldCheck className="w-6 h-6" />
           </div>
@@ -136,7 +136,7 @@ export function FranchisePricingClient({ dealer, existingOverride, products }: P
             <p className="text-sm font-black text-zinc-900 dark:text-white uppercase">Exclusivity Active</p>
           </div>
         </div>
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[32px] p-6 shadow-xl shadow-zinc-200/50 dark:shadow-none flex items-center gap-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-6 shadow-md shadow-zinc-200/50 dark:shadow-none flex items-center gap-4">
           <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400">
             <Lock className="w-6 h-6" />
           </div>
@@ -145,7 +145,7 @@ export function FranchisePricingClient({ dealer, existingOverride, products }: P
             <p className="text-sm font-black text-zinc-900 dark:text-white uppercase">{minMargin}% Floor</p>
           </div>
         </div>
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[32px] p-6 shadow-xl shadow-zinc-200/50 dark:shadow-none flex items-center gap-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-6 shadow-md shadow-zinc-200/50 dark:shadow-none flex items-center gap-4">
           <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 rounded-2xl flex items-center justify-center text-purple-600 dark:text-purple-400">
             <DollarSign className="w-6 h-6" />
           </div>
@@ -179,7 +179,7 @@ export function FranchisePricingClient({ dealer, existingOverride, products }: P
       </div>
 
       {/* Content Area */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[40px] shadow-2xl shadow-zinc-200/40 dark:shadow-none overflow-hidden min-h-[400px]">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl shadow-md shadow-zinc-200/40 dark:shadow-none overflow-hidden min-h-[400px]">
         {activeTab === "global" ? (
           <div className="p-10 space-y-10">
             <div>
@@ -243,7 +243,7 @@ export function FranchisePricingClient({ dealer, existingOverride, products }: P
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-zinc-50/50 dark:bg-zinc-950/40 border-b border-zinc-100 dark:border-zinc-800">
+                <tr className="bg-zinc-50/50 dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800">
                   <th className="px-8 py-5 text-left text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Hardware Identifier</th>
                   <th className="px-8 py-5 text-left text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">TEAM Default</th>
                   <th className="px-8 py-5 text-left text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Local Cost (₹)</th>
@@ -261,7 +261,7 @@ export function FranchisePricingClient({ dealer, existingOverride, products }: P
                     const isOverridden = row.purchase_cost !== "" || row.unit_price_override !== "" || row.margin_percent !== "";
 
                     return (
-                      <tr key={row.product_id} className={`group transition-colors ${isOverridden ? "bg-blue-50/20 dark:bg-blue-500/5" : "hover:bg-zinc-50/50 dark:hover:bg-white/5"}`}>
+                      <tr key={row.product_id} className={`group transition-colors ${isOverridden ? "bg-blue-50/20 dark:bg-blue-500/5" : "hover:bg-zinc-50/50 dark:hover:bg-white"}`}>
                         <td className="px-8 py-6">
                           <p className="text-[11px] font-black text-zinc-950 dark:text-white uppercase tracking-tight mb-1">{row.display_name}</p>
                           <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">{row.brand || "Standard"}</p>
@@ -318,12 +318,12 @@ export function FranchisePricingClient({ dealer, existingOverride, products }: P
       </div>
 
       {/* Save Action Bar */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-6 px-10 py-5 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 rounded-[32px] shadow-2xl shadow-black/40 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-6 px-10 py-5 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 rounded-2xl shadow-md shadow-black/40 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col">
           <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">Franchise Sync</span>
           <span className="text-xs font-bold whitespace-nowrap">{dealer.company_name} · {rows.filter(r => r.purchase_cost !== "" || r.unit_price_override !== "").length} Changes Pending</span>
         </div>
-        <div className="w-px h-8 bg-white/10 dark:bg-black/10 mx-2" />
+        <div className="w-px h-8 bg-white dark:bg-black mx-2" />
         <button
           onClick={handleSave}
           disabled={saving}

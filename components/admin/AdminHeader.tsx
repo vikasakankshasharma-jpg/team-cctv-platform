@@ -126,9 +126,9 @@ function UserDropdown({ userEmail, userRole }: { userEmail: string; userRole: st
 
       {/* Dropdown Panel */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl dark:shadow-zinc-950 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-md dark:shadow-zinc-950 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
           {/* Profile header */}
-          <div className="px-4 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40">
+          <div className="px-4 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-black shadow-lg shadow-blue-600/20">
                 {initials}
@@ -167,7 +167,7 @@ export function AdminHeader({ userEmail, userRole }: AdminHeaderProps) {
   const { setIsOpen } = useOmniSearchStore();
 
   return (
-    <header className="h-16 border-b border-zinc-200 dark:border-zinc-800/80 bg-white/90 dark:bg-[#050505]/90 backdrop-blur-xl flex items-center justify-between px-6 z-20 shrink-0 gap-4">
+    <header className="h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#050505]/90 flex items-center justify-between px-6 z-20 shrink-0 gap-4">
       
       {/* LEFT — Status + Breadcrumb */}
       <div className="flex items-center gap-3 min-w-0">

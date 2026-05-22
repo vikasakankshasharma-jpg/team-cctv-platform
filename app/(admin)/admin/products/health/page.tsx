@@ -37,7 +37,7 @@ export default async function CatalogHealthPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Health Score Card */}
-        <div className="lg:col-span-1 bg-zinc-900 rounded-[32px] border border-zinc-800 p-8 relative overflow-hidden shadow-2xl">
+        <div className="lg:col-span-1 bg-zinc-900 rounded-2xl border border-zinc-800 p-8 relative overflow-hidden shadow-md">
            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-32 h-32 bg-blue-500/20 blur-[40px] rounded-full" />
            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Overall Data Integrity</p>
            <div className="text-6xl font-black text-white tracking-tighter mb-4">{Math.round(healthScore)}%</div>
@@ -53,7 +53,7 @@ export default async function CatalogHealthPage() {
 
         {/* Quick Actions */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white dark:bg-zinc-900/40 p-6 rounded-[28px] border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group">
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-[28px] border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
                 <Database className="w-6 h-6" />
@@ -67,7 +67,7 @@ export default async function CatalogHealthPage() {
           </div>
 
 
-          <Link href="/admin/products" className="bg-white dark:bg-zinc-900/40 p-6 rounded-[28px] border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group">
+          <Link href="/admin/products" className="bg-white dark:bg-zinc-900 p-6 rounded-[28px] border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
                 <Package className="w-6 h-6" />
@@ -87,8 +87,8 @@ export default async function CatalogHealthPage() {
       {/* Diagnostics List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(issues).map(([key, list]) => (
-          <div key={key} className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[32px] overflow-hidden flex flex-col shadow-lg">
-            <div className="p-6 border-b border-zinc-50 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-950/20 flex items-center justify-between">
+          <div key={key} className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden flex flex-col shadow-lg">
+            <div className="p-6 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg ${list.length > 0 ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
                   {list.length > 0 ? <AlertCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
@@ -107,7 +107,7 @@ export default async function CatalogHealthPage() {
                 </div>
               ) : (
                 list.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-800 group">
+                  <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 group">
                     <div className="min-w-0">
                       <p className="text-[11px] font-black text-zinc-900 dark:text-white truncate">{p.display_name}</p>
                       <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest truncate">{p.technical_name}</p>

@@ -29,6 +29,7 @@ const DAILY_GB = 17;
 // Collections to wipe on every seed run
 const toWipe = [
   "products",
+  "product_groups",
   "addons",
   "addon_rules",
   "recommendation_rules",
@@ -465,16 +466,6 @@ export async function GET(request: Request) {
         arr.slice(i * size, i * size + size)
       );
 
-    const productChunks = chunk(products, 450);
-    for (const pChunk of productChunks) {
-      const batch = adminDb.batch();
-      pChunk.forEach(({ id, ...data }) => {
-        const ref = adminDb.collection("products").doc(id);
-        batch.set(ref, { ...data, technical_name: id, created_at: new Date(), updated_at: new Date() });
-      });
-      await batch.commit();
-    }
-
     // ── STEP 3: ADDONS ───────────────────────────────────────────────────────
     const addons = [
       {"id": "local_brand_3_1_video_copper_90y_white_020_copper_7_36_cca_3_1_cctv_cables", "display_name": "Local Brand 3+1 Video Copper 90Y White (020 Copper + 7/36 CCA)", "brand": "Local Brand", "unit_price": 965, "base_cost": 839, "is_active": true, "category": "cable", "technology": "HD", "features": [], "catalog_path": "CCTV/Cable/HD/General"},
@@ -818,6 +809,68 @@ export async function GET(request: Request) {
       {"id": "wd_surveillance_hard_disk_1tb_purple_sata_3_5_inch_surveillance_hard_disk", "display_name": "WD\u00a0 Surveillance Hard Disk\u00a0 1TB Purple SATA 3.5 Inch", "brand": "WD", "unit_price": 10378, "base_cost": 9435, "is_active": true, "category": "storage", "technology": "both", "features": [], "catalog_path": "CCTV/Storage/both/General"},
     ];
 
+    // ─── DYNAMIC HIERARCHY & ID GENERATION ────────────────────────────────────
+    const idMap: Record<string, string> = {};
+    const groupsMap: Record<string, any> = {};
+
+    const now = new Date();
+    const tsStr = now.getFullYear().toString() + 
+                  (now.getMonth()+1).toString().padStart(2, '0') + 
+                  now.getDate().toString().padStart(2, '0') + "-" +
+                  now.getHours().toString().padStart(2, '0') +
+                  now.getMinutes().toString().padStart(2, '0') +
+                  now.getSeconds().toString().padStart(2, '0');
+
+    const processItem = (item: any, prefix: string, idx: number) => {
+      const serial = (idx + 1).toString().padStart(4, "0");
+      const newId = `${prefix}-${tsStr}-${serial}`;
+      idMap[item.id] = newId;
+      item.id = newId;
+
+      if (item.catalog_path) {
+        const parts = item.catalog_path.split("/");
+        let currentPath = "";
+        for (let i = 0; i < parts.length; i++) {
+          const parentPath = currentPath;
+          currentPath = currentPath ? `${currentPath}/${parts[i]}` : parts[i];
+          if (!groupsMap[currentPath]) {
+            groupsMap[currentPath] = {
+              name: parts[i],
+              path: currentPath,
+              level: i,
+              parent_path: parentPath || null,
+              is_active: true,
+            };
+          }
+        }
+        item.group_path = item.catalog_path;
+        item.group_id = item.catalog_path.replace(/\//g, "_");
+      }
+    };
+
+    products.forEach((p, i) => processItem(p, "PRD", i));
+    addons.forEach((a, i) => processItem(a, "ADD", i));
+
+    // ── STEP 2.5: INSERT GROUPS ──────────────────────────────────────────────
+    const groupBatch = adminDb.batch();
+    Object.values(groupsMap).forEach(g => {
+      const safeId = g.path.replace(/\//g, "_");
+      g.parent_id = g.parent_path ? g.parent_path.replace(/\//g, "_") : null;
+      delete g.parent_path;
+      groupBatch.set(adminDb.collection("product_groups").doc(safeId), { ...g, created_at: new Date() });
+    });
+    await groupBatch.commit();
+
+    // ── STEP 3: INSERT PRODUCTS & ADDONS ─────────────────────────────────────
+    const productChunks = chunk(products, 450);
+    for (const pChunk of productChunks) {
+      const batch = adminDb.batch();
+      pChunk.forEach(({ id, ...data }) => {
+        batch.set(adminDb.collection("products").doc(id), { ...data, technical_name: id, created_at: new Date() });
+      });
+      await batch.commit();
+    }
+
     const addonChunks = chunk(addons, 450);
     for (const aChunk of addonChunks) {
       const batch = adminDb.batch();
@@ -900,11 +953,11 @@ export async function GET(request: Request) {
       status: "pending",
       created_at: new Date().toISOString(),
       items: [
-        { product_id: "cam_ip_opt5", display_name: "CP Plus 4MP Pro-HD Color IP", brand: "CP Plus", qty: 4, unit_price: 4015, technology: "IP" },
-        { product_id: "nvr_ip_4ch", display_name: "CP Plus NVR 4CH", brand: "CP Plus", qty: 1, unit_price: 4140, technology: "IP" }
+        { product_id: products[3]?.id || "fallback-cam", display_name: products[3]?.display_name || "Camera", brand: products[3]?.brand || "Generic", qty: 4, unit_price: products[3]?.unit_price || 2000, technology: products[3]?.technology || "HD" },
+        { product_id: products[34]?.id || "fallback-rec", display_name: products[34]?.display_name || "Recorder", brand: products[34]?.brand || "Generic", qty: 1, unit_price: products[34]?.unit_price || 4000, technology: products[34]?.technology || "HD" }
       ],
       addons: [
-        { addon_id: "addon_hdd_1tb", display_name: "1TB Surveillance HDD", brand: "Generic", qty: 1, price: 5555 }
+        { addon_id: addons[2]?.id || "fallback-hdd", display_name: addons[2]?.display_name || "HDD", brand: addons[2]?.brand || "Generic", qty: 1, price: addons[2]?.unit_price || 5000 }
       ],
       labor_cost: 2000,
       cabling_cost: 1000,

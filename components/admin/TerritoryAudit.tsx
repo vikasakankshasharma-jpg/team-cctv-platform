@@ -26,7 +26,7 @@ export function TerritoryAudit() {
   }, []);
 
   if (isLoading) return (
-    <div className="h-64 flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-900/40 rounded-[32px] border border-dashed border-zinc-200 dark:border-zinc-800">
+    <div className="h-64 flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
       <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
       <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Aggregating Geo-Intelligence...</p>
     </div>
@@ -37,7 +37,7 @@ export function TerritoryAudit() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Top 5 Coverage Gaps */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[32px] p-8 shadow-sm">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-sm">
         <div className="flex items-center gap-3 mb-8">
            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500">
              <AlertCircle className="w-5 h-5" />
@@ -53,7 +53,7 @@ export function TerritoryAudit() {
             <div className="text-center py-10 text-zinc-400 text-xs font-bold uppercase tracking-widest">Global Coverage Secured</div>
           ) : (
             topGapZones.map(zone => (
-              <div key={zone.pincode} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-800/60 rounded-2xl group hover:border-amber-500/30 transition-all">
+              <div key={zone.pincode} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl group hover:border-amber-500/30 transition-all">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-xs font-black text-zinc-900 dark:text-white shadow-inner">
                     {zone.pincode}
@@ -73,7 +73,7 @@ export function TerritoryAudit() {
       </div>
 
       {/* Top 5 High Performance Zones */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[32px] p-8 shadow-sm">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-sm">
         <div className="flex items-center gap-3 mb-8">
            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-500">
              <TrendingUp className="w-5 h-5" />
@@ -86,7 +86,7 @@ export function TerritoryAudit() {
 
         <div className="space-y-3">
           {data.slice(0, 5).map(zone => (
-            <div key={zone.pincode} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-800/60 rounded-2xl group hover:border-emerald-500/30 transition-all">
+            <div key={zone.pincode} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl group hover:border-emerald-500/30 transition-all">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-xs font-black text-zinc-900 dark:text-white shadow-inner">
                   {zone.pincode}

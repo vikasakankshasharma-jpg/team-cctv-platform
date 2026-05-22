@@ -59,16 +59,16 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-3xl animate-in fade-in duration-500" onClick={onClose} />
+      <div className="absolute inset-0 bg-zinc-900 animate-in fade-in duration-500" onClick={onClose} />
       
       {/* Modal Card */}
-      <div className="relative bg-zinc-900/80 border border-zinc-800/60 rounded-[40px] w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 fade-in duration-500">
+      <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-xl overflow-hidden shadow-md animate-in zoom-in-95 fade-in duration-500">
         
         {/* Header Section */}
         <div className="p-10 pb-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-3xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-inner">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-inner">
                 <ListPlus className="w-7 h-7" />
               </div>
               <div>
@@ -99,7 +99,7 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
                 type="text"
                 value={formData.display_name}
                 onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
                 placeholder="e.g. 1TB Surveillance HDD"
               />
             </div>
@@ -116,7 +116,7 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
                   min="0"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                  className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
                 />
               </div>
             </div>
@@ -128,7 +128,7 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
               <select
                 value={formData.unit_multiplier}
                 onChange={(e) => setFormData({ ...formData, unit_multiplier: e.target.value as "none" | "camera_count" })}
-                className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
               >
                 <option value="none">Fixed / Flat Rate</option>
                 <option value="camera_count">Dynamic / Per Camera</option>
@@ -141,13 +141,13 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
                 type="text"
                 value={formData.technical_name}
                 onChange={(e) => setFormData({ ...formData, technical_name: e.target.value })}
-                className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-3.5 text-zinc-300 font-medium placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-3.5 text-zinc-300 font-medium placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm"
                 placeholder="e.g. WD10PURZ-Surveillance"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-4 bg-zinc-950/40 p-6 rounded-3xl border border-zinc-800/40">
+          <div className="flex items-center justify-between pt-4 bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
             <div className="space-y-1">
               <p className="text-sm font-black text-white">Visible in Catalyst Wizard</p>
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Controls if this add-on appears to customers</p>
@@ -175,7 +175,7 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-10 py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-xl shadow-blue-500/20 active:scale-95 disabled:opacity-50"
+              className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-10 py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-md shadow-blue-500/20 active:scale-95 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

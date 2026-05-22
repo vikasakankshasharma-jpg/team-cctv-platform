@@ -130,16 +130,16 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-3xl animate-in fade-in duration-500" onClick={onClose} />
+      <div className="absolute inset-0 bg-zinc-900 animate-in fade-in duration-500" onClick={onClose} />
       
       {/* Modal Card */}
-      <div className="relative bg-zinc-900/80 border border-zinc-800/60 rounded-[40px] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 fade-in duration-500 max-h-[90vh] flex flex-col">
+      <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-md animate-in zoom-in-95 fade-in duration-500 max-h-[90vh] flex flex-col">
         
         {/* Header Section */}
         <div className="p-10 pb-6 shrink-0">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-3xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-inner">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-inner">
                 <Package className="w-7 h-7" />
               </div>
               <div>
@@ -172,7 +172,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                 type="text"
                 value={formData.display_name}
                 onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
                 placeholder="e.g. TEAM Smart 2MP Dome"
               />
             </div>
@@ -186,7 +186,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                 type="text"
                 value={formData.technical_name}
                 onChange={(e) => setFormData({ ...formData, technical_name: e.target.value })}
-                className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-zinc-300 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner uppercase tracking-wider"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-zinc-300 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner uppercase tracking-wider"
                 placeholder="e.g. IPC-D120-I"
               />
             </div>
@@ -196,7 +196,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value as "camera" | "recorder" | "accessory" | "cable" })}
-                className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
               >
                 <option value="camera">Camera Unit</option>
                 <option value="recorder">Recorder (DVR/NVR)</option>
@@ -211,20 +211,21 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               </label>
               <select
                 value={formData.technology}
-                onChange={(e) => setFormData({ ...formData, technology: e.target.value as "IP" | "HD" | "Common" | "WiFi" | "4G" })}
-                className="w-full bg-zinc-950/50 border border-zinc-800/60 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
+                onChange={(e) => setFormData({ ...formData, technology: e.target.value as "IP" | "HD" | "Common" | "WiFi" | "4G" | "Solar" })}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
               >
                 <option value="IP">IP (Network / Wired)</option>
                 <option value="HD">HD (Analog)</option>
                 <option value="WiFi">WiFi (Wireless)</option>
                 <option value="4G">4G (Cellular)</option>
+                <option value="Solar">Solar (Wireless Power)</option>
                 <option value="Common">Common / Universal</option>
               </select>
             </div>
           </div>
 
           {/* Pricing & Logic Section */}
-          <div className="bg-zinc-950/40 p-8 rounded-[32px] border border-zinc-800/40 space-y-6">
+          <div className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 space-y-6">
             <h3 className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
                <Activity className="w-3 h-3" /> Logic & Financials
             </h3>
@@ -242,7 +243,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                       min="0"
                       value={formData.base_cost || ""}
                       onChange={(e) => handleBaseCostChange(Number(e.target.value))}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl pl-10 pr-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-10 pr-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>
@@ -259,7 +260,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                       step="0.01"
                       value={formData.margin_percentage || ""}
                       onChange={(e) => handleMarginChange(Number(e.target.value))}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
                     />
                     <span className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">%</span>
                   </div>
@@ -277,7 +278,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                       min="0"
                       value={formData.unit_price}
                       onChange={(e) => handleUnitPriceChange(Number(e.target.value))}
-                      className="w-full bg-zinc-900 border border-blue-500/30 rounded-3xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="w-full bg-zinc-900 border border-blue-500/30 rounded-2xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>
@@ -294,7 +295,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                       value={formData.unit_price_budget || ""}
                       onChange={(e) => setFormData({ ...formData, unit_price_budget: e.target.value ? Number(e.target.value) : undefined })}
                       placeholder="Auto-calculated if empty"
-                      className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl pl-10 pr-6 py-3 text-zinc-300 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all placeholder:text-zinc-700"
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-10 pr-6 py-3 text-zinc-300 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all placeholder:text-zinc-700"
                     />
                   </div>
                 </div>
@@ -311,7 +312,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                       value={formData.unit_price_premium || ""}
                       onChange={(e) => setFormData({ ...formData, unit_price_premium: e.target.value ? Number(e.target.value) : undefined })}
                       placeholder="Auto-calculated if empty"
-                      className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl pl-10 pr-6 py-3 text-zinc-300 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all placeholder:text-zinc-700"
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-10 pr-6 py-3 text-zinc-300 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all placeholder:text-zinc-700"
                     />
                   </div>
                 </div>
@@ -323,7 +324,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                   <select
                     value={formData.resolution_tier || "good"}
                     onChange={(e) => setFormData({ ...formData, resolution_tier: e.target.value as "good" | "very_clear" | "crystal_clear" })}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all appearance-none cursor-pointer"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all appearance-none cursor-pointer"
                   >
                     <option value="good">Good (2MP)</option>
                     <option value="very_clear">Very Clear (4MP/5MP)</option>
@@ -338,7 +339,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                   <select
                     value={formData.channels || 4}
                     onChange={(e) => setFormData({ ...formData, channels: Number(e.target.value) })}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-3xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
                   >
                     <option value={4}>4-Channel Hub</option>
                     <option value={8}>8-Channel Hub</option>
@@ -368,7 +369,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
 
           {/* ── Compatibility Section ─────────────────────────────────────── */}
           {(formData.category === "camera" || formData.category === "recorder" || formData.category === "accessory") && (
-            <div className="bg-zinc-950/40 p-8 rounded-[32px] border border-indigo-800/30 space-y-6">
+            <div className="bg-zinc-900 p-8 rounded-2xl border border-indigo-800/30 space-y-6">
               <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
                 <Link2 className="w-3 h-3" /> Compatibility Engine
               </h3>
@@ -474,7 +475,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-10 py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-xl shadow-blue-500/20 active:scale-95 disabled:opacity-50"
+              className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-10 py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-md shadow-blue-500/20 active:scale-95 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

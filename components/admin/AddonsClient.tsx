@@ -64,10 +64,10 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
         }
       />
 
-      <div className="bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl backdrop-blur-md transition-all">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-md dark:shadow-md transition-all">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-zinc-300">
-            <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.2em] font-black">
+            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.2em] font-black">
               <tr>
                 <th className="px-8 py-6">Add-on Name</th>
                 <th className="px-8 py-6 text-right">Price</th>
@@ -124,7 +124,7 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
                           Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-2 bg-zinc-50 dark:bg-zinc-950/60 text-zinc-400 dark:text-zinc-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-zinc-100 dark:border-zinc-800">
+                        <span className="inline-flex items-center gap-2 bg-zinc-50 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-zinc-100 dark:border-zinc-800">
                           <span className="w-1.5 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800" />
                           Disabled
                         </span>

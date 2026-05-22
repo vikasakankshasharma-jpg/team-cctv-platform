@@ -90,10 +90,10 @@ export default function CampaignsClient({ initialCampaigns }: CampaignsClientPro
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {campaigns.map(campaign => (
-          <div key={campaign.id} className={`bg-white dark:bg-zinc-900/50 border rounded-[24px] p-6 transition-all shadow-md dark:shadow-xl ${
+          <div key={campaign.id} className={`bg-white dark:bg-zinc-900 border rounded-[24px] p-6 transition-all shadow-md dark:shadow-md ${
             campaign.is_active
               ? 'border-blue-200 dark:border-blue-500/20 shadow-blue-500/5'
-              : 'border-zinc-100 dark:border-zinc-800/60 opacity-60'
+              : 'border-zinc-100 dark:border-zinc-800 opacity-60'
           }`}>
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -139,8 +139,8 @@ export default function CampaignsClient({ initialCampaigns }: CampaignsClientPro
       </div>
 
       {(isEditing || isCreating) && (
-        <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl rounded-[32px] p-8 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 bg-zinc-900 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl rounded-2xl p-8 max-h-[90vh] overflow-y-auto shadow-md">
             <h2 className="text-xl font-black uppercase tracking-widest mb-6 text-zinc-900 dark:text-white">
               {isCreating ? "Create Follow-Up Campaign" : "Edit Campaign"}
             </h2>

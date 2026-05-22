@@ -75,10 +75,10 @@ function SubCategoryGroup({
   const [open, setOpen] = useState(true);
   
   return (
-    <div className="border-t border-zinc-100 dark:border-zinc-800/60 first:border-0">
+    <div className="border-t border-zinc-100 dark:border-zinc-800 first:border-0">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-6 py-4 bg-zinc-50/30 dark:bg-zinc-950/20 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/40 transition-all group/sub"
+        className="w-full flex items-center justify-between px-6 py-4 bg-zinc-50/30 dark:bg-zinc-900 hover:bg-zinc-100/50 dark:hover:bg-zinc-900 transition-all group/sub"
       >
         <div className="flex items-center gap-3">
           <div className={`transition-transform duration-300 ${open ? "rotate-180" : ""}`}>
@@ -105,7 +105,7 @@ function SubCategoryGroup({
                 <th className="px-6 py-4 text-center w-[10%]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-50/50 dark:divide-zinc-900/50 bg-white dark:bg-zinc-950/20 transition-colors duration-500">
+            <tbody className="divide-y divide-zinc-50/50 dark:divide-zinc-900/50 bg-white dark:bg-zinc-900 transition-colors duration-500">
               {products.map((p) => (
                 <tr
                   key={p.id}
@@ -237,14 +237,14 @@ function CategorySection({
   if (products.length === 0) return null;
 
   return (
-    <div className="rounded-[40px] border border-zinc-200/50 dark:border-zinc-800/60 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.03)] dark:shadow-none bg-white dark:bg-zinc-950/40 backdrop-blur-sm group/cat transition-all duration-500 hover:shadow-xl">
+    <div className="rounded-2xl border border-zinc-200/50 dark:border-zinc-800 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.03)] dark:shadow-none bg-white dark:bg-zinc-900 group/cat transition-all duration-500 hover:shadow-md">
       <button
         onClick={() => setOpen(!open)}
         className={`w-full flex items-center justify-between px-8 py-6 border-b transition-all duration-500 relative overflow-hidden ${acc}`}
       >
-        <div className="absolute inset-0 bg-white/40 dark:bg-black/10 opacity-0 group-hover/cat:opacity-100 transition-opacity duration-700" />
+        <div className="absolute inset-0 bg-white dark:bg-black opacity-0 group-hover/cat:opacity-100 transition-opacity duration-700" />
         <div className="flex items-center gap-5 relative z-10">
-          <div className={`w-12 h-12 rounded-[22px] flex items-center justify-center border shadow-xl transition-transform duration-500 group-hover/cat:scale-110 group-hover/cat:rotate-3 ${acc}`}>
+          <div className={`w-12 h-12 rounded-[22px] flex items-center justify-center border shadow-md transition-transform duration-500 group-hover/cat:scale-110 group-hover/cat:rotate-3 ${acc}`}>
             <Icon className="w-5 h-5" />
           </div>
           <div className="text-left">
@@ -347,13 +347,13 @@ export function ProductInventory({ products, onEdit, onToggle, onFiltersChange }
       </div>
 
       {/* ── Filter bar ── */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.02)] space-y-8 relative overflow-hidden transition-colors duration-500">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.02)] space-y-8 relative overflow-hidden transition-colors duration-500">
         <div className="absolute top-0 right-0 p-8 opacity-5">
            <Filter className="w-32 h-32 text-zinc-900 dark:text-white" />
         </div>
         
         <div className="flex items-center gap-4 relative z-10">
-          <div className="w-12 h-12 rounded-[22px] bg-zinc-900 dark:bg-zinc-800 flex items-center justify-center shadow-2xl shadow-zinc-900/20 dark:shadow-white/5">
+          <div className="w-12 h-12 rounded-[22px] bg-zinc-900 dark:bg-zinc-800 flex items-center justify-center shadow-md shadow-zinc-900/20 dark:shadow-white/5">
              <ListFilter className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -442,13 +442,13 @@ export function ProductInventory({ products, onEdit, onToggle, onFiltersChange }
 
       {/* ── Empty state ── */}
       {filtered.length === 0 && (
-        <div className="relative flex flex-col items-center gap-8 py-40 text-center bg-white dark:bg-zinc-950/20 border border-zinc-200 dark:border-zinc-800 rounded-[60px] overflow-hidden group/empty transition-all duration-700">
+        <div className="relative flex flex-col items-center gap-8 py-40 text-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[60px] overflow-hidden group/empty transition-all duration-700">
           {/* Decorative background flair */}
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl group-hover/empty:bg-blue-500/10 transition-colors duration-1000" />
           <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-zinc-500/5 rounded-full blur-3xl group-hover/empty:bg-zinc-500/10 transition-colors duration-1000" />
           
           <div className="relative">
-            <div className="w-24 h-24 rounded-[32px] bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-2xl group-hover/empty:rotate-6 transition-transform duration-700">
+            <div className="w-24 h-24 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-md group-hover/empty:rotate-6 transition-transform duration-700">
               <Package className="w-10 h-10 text-zinc-300 dark:text-zinc-600" />
             </div>
             <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center text-white shadow-lg animate-bounce">
@@ -465,7 +465,7 @@ export function ProductInventory({ products, onEdit, onToggle, onFiltersChange }
 
           <button 
             onClick={() => {setSearch(""); setFilterCat("all"); setFilterTech("all"); setFilterStatus("all"); setFilterBrand("all");}}
-            className="relative z-10 px-10 py-4 rounded-[20px] bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:shadow-2xl hover:shadow-blue-500/20 active:scale-95 group/btn overflow-hidden"
+            className="relative z-10 px-10 py-4 rounded-[20px] bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:shadow-md hover:shadow-blue-500/20 active:scale-95 group/btn overflow-hidden"
           >
             <span className="relative z-10">Reset Multi-Channel Filters</span>
             <div className="absolute inset-0 bg-blue-600 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />

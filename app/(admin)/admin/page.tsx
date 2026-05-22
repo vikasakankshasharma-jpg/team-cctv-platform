@@ -212,9 +212,9 @@ export default async function AdminDashboard() {
             key={idx}
             className={`
               relative block bg-[#0F0F0F]
-              border border-zinc-800/80
+              border border-zinc-800
               rounded-[28px] p-6 overflow-hidden group
-              shadow-sm hover:shadow-xl hover:shadow-black
+              shadow-sm hover:shadow-md hover:shadow-black
               transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]
             `}
           >

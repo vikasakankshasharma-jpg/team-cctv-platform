@@ -154,7 +154,7 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
       
       {/* ─── LEFT: Product Catalog Editor (8 Cols) ──────────────────── */}
       <div className="xl:col-span-8 space-y-6">
-        <div className="flex items-center justify-between bg-white dark:bg-zinc-900/40 p-6 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-xl backdrop-blur-md">
+        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-6 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-md">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
               <Zap className="w-6 h-6 text-white" />
@@ -195,14 +195,14 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
         </div>
 
         {categories.map((cat, idx) => (
-          <div key={idx} className="bg-white dark:bg-zinc-900/40 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-xl overflow-hidden backdrop-blur-md">
-            <div className="bg-zinc-50 dark:bg-zinc-950/40 px-8 py-5 border-b border-zinc-100 dark:border-zinc-800/60 flex items-center gap-3">
+          <div key={idx} className="bg-white dark:bg-zinc-900 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-md overflow-hidden">
+            <div className="bg-zinc-50 dark:bg-zinc-900 px-8 py-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3">
               <cat.icon className="w-5 h-5 text-zinc-400" />
               <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-[0.1em] text-xs">{cat.name}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="text-zinc-400 dark:text-zinc-600 uppercase text-[9px] font-black tracking-widest border-b border-zinc-50 dark:border-zinc-800/40">
+                <thead className="text-zinc-400 dark:text-zinc-600 uppercase text-[9px] font-black tracking-widest border-b border-zinc-50 dark:border-zinc-800">
                   <tr>
                     <th className="px-8 py-4">Display Name</th>
                     <th className="px-8 py-4">SKU / Technical Name</th>
@@ -280,13 +280,13 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
       {/* ─── RIGHT: Live Quote Preview (4 Cols) ──────────────────── */}
       <div className="xl:col-span-4 space-y-6">
         <div className="sticky top-6">
-          <div className="bg-zinc-900 rounded-[32px] border border-zinc-800 p-8 shadow-2xl shadow-zinc-950 overflow-hidden relative group">
+          <div className="bg-zinc-900 rounded-2xl border border-zinc-800 p-8 shadow-md shadow-zinc-950 overflow-hidden relative group">
             {/* Animated Background Effect */}
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl group-hover:bg-blue-600/20 transition-all duration-1000" />
             
             <div className="relative space-y-8">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-white border border-white/10 flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-blue-400" />
                 </div>
                 <h3 className="text-lg font-black text-white uppercase tracking-tight">Live Impact Preview</h3>
@@ -302,7 +302,7 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
                       toast.success("Quotation Summary Copied");
                     }}
                     title="Click to copy summary"
-                    className="cursor-pointer flex flex-col rounded-2xl bg-white/5 border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all group/item overflow-hidden active:scale-[0.98]"
+                    className="cursor-pointer flex flex-col rounded-2xl bg-white border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all group/item overflow-hidden active:scale-[0.98]"
                   >
                     <div className="flex items-center justify-between p-5">
                       <div>

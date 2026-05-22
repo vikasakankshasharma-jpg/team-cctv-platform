@@ -51,7 +51,7 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="relative bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 hover:border-amber-500/40 rounded-[32px] p-8 overflow-hidden group transition-all backdrop-blur-md shadow-lg dark:shadow-2xl">
+        <div className="relative bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-amber-500/40 rounded-2xl p-8 overflow-hidden group transition-all shadow-lg dark:shadow-md">
           <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.05] dark:opacity-[0.03] group-hover:opacity-[0.1] dark:group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-110">
             <AlertCircle className="w-40 h-40 text-amber-500" />
           </div>
@@ -65,7 +65,7 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
           </div>
         </div>
 
-        <div className="relative bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 hover:border-emerald-500/40 rounded-[32px] p-8 overflow-hidden group transition-all backdrop-blur-md shadow-lg dark:shadow-2xl">
+        <div className="relative bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-emerald-500/40 rounded-2xl p-8 overflow-hidden group transition-all shadow-lg dark:shadow-md">
           <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.05] dark:opacity-[0.03] group-hover:opacity-[0.1] dark:group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-110">
             <CheckCircle2 className="w-40 h-40 text-emerald-500" />
           </div>
@@ -87,7 +87,7 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
               placeholder="Filter by promoter name..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all font-bold placeholder-zinc-400 dark:placeholder-zinc-700 shadow-inner"
+              className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all font-bold placeholder-zinc-400 dark:placeholder-zinc-700 shadow-inner"
             />
           </div>
           <div className="hidden lg:flex items-center gap-2 text-[10px] font-black text-zinc-300 dark:text-zinc-700 uppercase tracking-[0.3em]">
@@ -96,10 +96,10 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
           </div>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl backdrop-blur-md transition-all">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-md dark:shadow-md transition-all">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-zinc-300">
-              <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.25em] font-black">
+              <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.25em] font-black">
                  <tr className="text-[9px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-600">
                    <th className="px-8 py-6">Record</th>
                    <th className="px-8 py-6">Promoter</th>
@@ -133,7 +133,7 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
                             <span className="font-black text-zinc-900 dark:text-white group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-colors text-base tracking-tight uppercase">
                             {promoterMap[record.promoter_id] || "Unknown"}
                           </span>
-                          <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 mt-1 uppercase tracking-widest bg-zinc-50 dark:bg-zinc-950/40 px-2 py-0.5 rounded border border-zinc-100 dark:border-zinc-800/60 w-fit shadow-inner">{record.promoter_id}</span>
+                          <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 mt-1 uppercase tracking-widest bg-zinc-50 dark:bg-zinc-900 px-2 py-0.5 rounded border border-zinc-100 dark:border-zinc-800 w-fit shadow-inner">{record.promoter_id}</span>
                         </div>
                       </td>
                       <td className="px-8 py-6 text-right">

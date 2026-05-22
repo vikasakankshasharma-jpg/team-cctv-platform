@@ -88,13 +88,7 @@ function NavTooltip({ label, children }: { label: string; children: React.ReactN
   return (
     <div className="relative group/tooltip">
       {children}
-      <div className="
-        pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
-        bg-zinc-900 dark:bg-zinc-800 text-white text-[10px] font-black uppercase tracking-widest
-        px-3 py-2 rounded-xl whitespace-nowrap shadow-2xl border border-zinc-700/50
-        opacity-0 group-hover/tooltip:opacity-100 scale-90 group-hover/tooltip:scale-100
-        transition-all duration-200 origin-left
-      ">
+      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 bg-zinc-900 dark:bg-zinc-800 text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl whitespace-nowrap shadow-md border border-zinc-700/50 opacity-0 group-hover/tooltip:opacity-100 scale-90 group-hover/tooltip:scale-100 transition-all duration-200 origin-left">
         {label}
         <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-zinc-900 dark:border-r-zinc-800" />
       </div>
@@ -131,7 +125,7 @@ export function Sidebar() {
       className={`
         ${isCollapsed ? "w-[72px]" : "w-64"} 
         relative flex flex-col h-screen sticky top-0 overflow-hidden
-        bg-white dark:bg-[#050505] border-r border-zinc-200 dark:border-zinc-800/80
+        bg-white dark:bg-[#050505] border-r border-zinc-200 dark:border-zinc-800
         transition-all duration-300 ease-in-out shrink-0
       `}
     >
@@ -142,7 +136,7 @@ export function Sidebar() {
       </div>
 
       {/* ── BRAND HEADER ──────────────────────────────────────────────────── */}
-      <div className="relative h-16 flex items-center justify-between px-4 border-b border-zinc-100 dark:border-zinc-800/60 shrink-0 overflow-hidden">
+      <div className="relative h-16 flex items-center justify-between px-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0 overflow-hidden">
         {/* Brand glow */}
         <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-20 h-20 bg-blue-500/10 dark:bg-blue-500/20 blur-2xl rounded-full pointer-events-none" />
 
@@ -214,7 +208,7 @@ export function Sidebar() {
                       ${isCollapsed ? "justify-center px-0 mx-1" : "px-3"}
                       ${active
                         ? "bg-gradient-to-r from-blue-50 to-blue-50/50 dark:from-blue-600/15 dark:to-blue-600/5 text-blue-700 dark:text-blue-400 shadow-sm"
-                        : "text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+                        : "text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-900"
                       }
                     `}
                   >
@@ -261,7 +255,7 @@ export function Sidebar() {
       </nav>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      <div className="relative z-10 p-3 border-t border-zinc-100 dark:border-zinc-800/60 shrink-0 space-y-2">
+      <div className="relative z-10 p-3 border-t border-zinc-100 dark:border-zinc-800 shrink-0 space-y-2">
         {/* System Status */}
         {!isCollapsed ? (
           <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50/50 dark:from-emerald-500/5 dark:to-teal-500/5 border border-emerald-100 dark:border-emerald-500/10">

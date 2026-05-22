@@ -37,7 +37,7 @@ export function SortableQuestion({
     <div 
       ref={setNodeRef} 
       style={style}
-      className="relative pl-10 border-l-2 border-zinc-100 dark:border-zinc-800/60 group/q"
+      className="relative pl-10 border-l-2 border-zinc-100 dark:border-zinc-800 group/q"
     >
       <div 
         {...attributes} 
@@ -69,7 +69,7 @@ export function SortableQuestion({
             </div>
           </div>
           <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 mt-2 flex items-center gap-3 uppercase tracking-widest">
-            <span className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1 rounded-full border border-zinc-100 dark:border-zinc-800/40 shadow-inner">
+            <span className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1 rounded-full border border-zinc-100 dark:border-zinc-800 shadow-inner">
                {question.input_type === 'single' ? "Exclusive Choice" : question.input_type === 'multi' ? "Collated Choice" : "Numeric Input"}
             </span>
           </div>
@@ -78,7 +78,7 @@ export function SortableQuestion({
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {question.options?.map(opt => (
-          <div key={opt.id} className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800/60 rounded-3xl p-5 relative group/opt hover:border-blue-500/30 transition-all shadow-inner">
+          <div key={opt.id} className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 relative group/opt hover:border-blue-500/30 transition-all shadow-inner">
             <p className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-widest mb-2 opacity-50">Response Option</p>
             <div className="font-black text-zinc-900 dark:text-white pr-8 text-sm">{opt.label}</div>
             <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 font-mono mt-1 opacity-60">ID: {opt.value}</div>

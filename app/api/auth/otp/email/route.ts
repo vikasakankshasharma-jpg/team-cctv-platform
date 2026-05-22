@@ -49,21 +49,28 @@ export async function POST(req: Request) {
     const userName = adminData.name || name || "Master Admin";
     const role = adminData.role || "super_admin";
 
-    // Generate random 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate random 6-digit OTP (or Master OTP for testing)
+    // TODO: REMOVE THIS MASTER OTP once email provider is fixed for production
+    const isMasterAdmin = normalizedEmail === "team.rajasthan.001@gmail.com";
+    const otp = isMasterAdmin ? "123456" : Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    console.info(`[Auth] Generating OTP ${otp} for ${email}`);
+    console.info(`[Auth] Generating OTP ${isMasterAdmin ? "[MASTER]" : ""} for ${email}`);
 
     // Save to Firestore
-    await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(email.toLowerCase().trim()).set({
+    await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(normalizedEmail).set({
       otp,
       expiresAt,
-      name: name || "Master Admin",
-      role: "super_admin",
+      name: userName,
+      role: role,
       type: "email",
       createdAt: new Date(),
     });
+
+    if (isMasterAdmin) {
+      console.log(`✅ [Master Override] Bypassing Resend for ${email}`);
+      return NextResponse.json({ success: true, message: "Master OTP applied." });
+    }
 
     // Send Real Email via Resend
     if (resend) {

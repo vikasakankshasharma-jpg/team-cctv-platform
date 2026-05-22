@@ -36,14 +36,14 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-3xl animate-in fade-in duration-500" onClick={onClose} />
+      <div className="absolute inset-0 bg-zinc-900 animate-in fade-in duration-500" onClick={onClose} />
       
-      <div className="relative bg-zinc-900 border border-zinc-800 rounded-[40px] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 fade-in duration-500 max-h-[80vh] flex flex-col">
+      <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-md animate-in zoom-in-95 fade-in duration-500 max-h-[80vh] flex flex-col">
         
-        <div className="p-10 pb-6 shrink-0 border-b border-zinc-800/50">
+        <div className="p-10 pb-6 shrink-0 border-b border-zinc-800">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
                 <History className="w-7 h-7" />
               </div>
               <div>
@@ -72,7 +72,7 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
             </div>
           ) : (
             quotes.map((quote) => (
-              <div key={quote.id} className="bg-zinc-950/40 border border-zinc-800/60 rounded-3xl p-6 flex items-center justify-between group hover:border-blue-500/30 transition-all">
+              <div key={quote.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex items-center justify-between group hover:border-blue-500/30 transition-all">
                 <div className="flex items-center gap-6">
                    <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
                       <BadgeIndianRupee className="w-5 h-5" />
