@@ -56,20 +56,20 @@ export function FeatureToggleGrid() {
   if (dynamicFeatures.length === 0) return null;
 
   return (
-    <div className="space-y-5">
-      <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
-        <Zap className="w-3.5 h-3.5 text-blue-600" /> Must-Have Features
+    <div className="space-y-3">
+      <label className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-1.5">
+        <Zap className="w-3 h-3 text-blue-600" /> Must-Have Features
       </label>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1.5">
         {dynamicFeatures.map(feat => {
           const isActive = (selection.requested_features || []).includes(feat.id);
           return (
             <button
               key={feat.id}
               onClick={() => toggleFeature(feat.id)}
-              className={`flex items-center gap-2 p-3 rounded-2xl border transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all ${
                 isActive
-                  ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20"
+                  ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/20"
                   : "bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800/50 dark:border-zinc-800 dark:text-zinc-500"
               }`}
             >
