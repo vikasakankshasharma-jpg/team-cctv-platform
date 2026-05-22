@@ -21,6 +21,7 @@ import {
   Home,
   Building2,
 } from "lucide-react";
+import { AddYourOwnModal } from "./AddYourOwnModal";
 import type {
   Product,
   AppSettings,
@@ -31,6 +32,7 @@ import type {
 import { calculatePricing } from "@/lib/pricing-engine";
 import { calculateSystemScore } from "@/lib/system-score";
 import { trackEvent } from "@/components/shared/TrackingProvider";
+import { useConfiguratorStore } from "@/store/configurator";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -179,6 +181,8 @@ export function CompareCards({
   evaluatedAddonRules,
   activeOffer,
 }: CompareCardsProps) {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
   // ── Compute card data ──────────────────────────────────────────────────────
   const cardsData = useMemo(() => {
     return compareOptions
@@ -338,8 +342,8 @@ export function CompareCards({
 
   return (
     <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
-      {/* Mobile: horizontal scroll carousel | Desktop: 3-col grid */}
-      <div className="flex sm:grid sm:grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible">
+      {/* Mobile: horizontal scroll carousel | Desktop: grid */}
+      <div className={`flex sm:grid sm:grid-cols-1 ${cardsData.length < 4 ? 'lg:grid-cols-3 xl:grid-cols-3' : 'lg:grid-cols-4 xl:grid-cols-4'} gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible`}>
         {/* Spacer for mobile scroll peek */}
       {cardsData.map((card, idx) => {
         const isCheckout =
@@ -348,9 +352,11 @@ export function CompareCards({
 
         // ── Tier label ──────────────────────────────────────────────────────
         // If customer chose HD and this card is IP → label it as "Smart Upgrade"
-        const isUpgradeSuggestion = customerTechnology === "HD" && card.isIP;
+        const isCustom = typeof card.option === 'string';
+        const isUpgradeSuggestion = customerTechnology === "HD" && card.isIP && !isCustom;
         let tierName = idx === 0 ? "Standard" : idx === 1 ? "Value" : "Professional";
-        if (isUpgradeSuggestion) tierName = "Smart Upgrade";
+        if (isCustom) tierName = "Custom Build";
+        else if (isUpgradeSuggestion) tierName = "Smart Upgrade";
         else if (card.isRecommended) tierName = "Recommended";
         else if (idx === cardsData.length - 1 && cardsData.length > 1) {
           tierName = card.isIP ? "Elite" : "Premium";
@@ -410,17 +416,18 @@ export function CompareCards({
             className={`relative p-5 sm:p-6 sm:p-7 rounded-[32px] sm:rounded-[36px] transition-all duration-300 cursor-pointer border-2 flex-none w-[82vw] sm:w-auto snap-center touch-manipulation active:scale-[0.98] ${cardClass.replace('scale-105', 'sm:scale-105')}`}
           >
             {/* ── Top badge ────────────────────────────────────────────────── */}
-            {/* ── Recommendation badge ────────────────────────────────────── */}
             {card.isRecommended && (
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-500/30 whitespace-nowrap flex items-center gap-1.5 z-10 border border-white/20">
                 <Zap className="w-3 h-3 fill-white animate-pulse" />
-                Expert Recommendation
+                {card.camProduct?.is_focus_product ? "★ Our Pick" : "Expert Recommendation"}
               </div>
             )}
             
             {/* ── Best For Tag ─────────────────────────────────────────── */}
             <div className="absolute top-4 right-4 opacity-10 dark:opacity-20 pointer-events-none">
-              {idx === 0 ? (
+              {isCustom ? (
+                <PlusCircle className="w-12 h-12" />
+              ) : idx === 0 ? (
                 <Home className="w-12 h-12" />
               ) : idx === 1 ? (
                 <Building2 className="w-12 h-12" />
@@ -428,6 +435,21 @@ export function CompareCards({
                 <Zap className="w-12 h-12" />
               )}
             </div>
+
+            {/* ── Remove Custom Card Button ──────────────────────────────── */}
+            {isCustom && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const { compare_options, setCompareOptions } = useConfiguratorStore.getState();
+                  setCompareOptions(compare_options.filter(c => c.option !== card.option));
+                }}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center transition-colors z-20 group/remove"
+                aria-label="Remove Custom Card"
+              >
+                <X className="w-4 h-4 text-red-400 group-hover/remove:text-red-600" />
+              </button>
+            )}
 
             {/* ── Tier header ──────────────────────────────────────────────── */}
             <div className="flex flex-col items-center text-center mt-4 mb-5">
@@ -577,68 +599,7 @@ export function CompareCards({
               </div>
             </div>
 
-            {/* ── Hardware Specs ────────────────────────────────────────────── */}
-            <div className="space-y-3">
-              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.18em] mb-4">
-                Hardware Specifications
-              </p>
 
-              {/* System Type */}
-              <SpecRow
-                icon={<ShieldCheck className="w-5 h-5" />}
-                label={card.isIP ? "Smart IP Network" : "Analog HD Pro"}
-                sublabel={
-                  card.isIP
-                    ? "Digital, POE/WiFi cabling"
-                    : "Traditional coaxial cabling"
-                }
-                active={true}
-              />
- 
-              {/* Resolution */}
-              <SpecRow
-                icon={<Monitor className="w-5 h-5" />}
-                label={resLabel}
-                sublabel="Camera sensor resolution"
-                active={true}
-              />
- 
-              {/* Night Vision */}
-              <SpecRow
-                icon={<Moon className="w-5 h-5" />}
-                label={
-                  card.isColorNight
-                    ? "Full-Color Night"
-                    : "IR B&W Night Vision"
-                }
-                sublabel="Low-light performance"
-                active={true}
-              />
- 
-              {/* Audio */}
-              <SpecRow
-                icon={<Mic className="w-5 h-5" />}
-                label={card.hasAudio ? "Built-in Mic" : "No Audio"}
-                sublabel="Ambient sound capture"
-                active={card.hasAudio}
-              />
- 
-              {/* Recorder */}
-              <SpecRow
-                icon={<Activity className="w-5 h-5" />}
-                label={`${card.recType} Hub`}
-                sublabel={`${cameraCount}-channel recording`}
-                active={true}
-              />
- 
-              {/* Storage */}
-              <SpecRow
-                icon={<HardDrive className="w-5 h-5" />}
-                label={card.storageLabel}
-                sublabel={`${recordingDays} days retention`}
-                active={true}
-              />
-            </div>
 
             {/* ── Add-Ons Section ───────────────────────────────────────────── */}
             {card.visibleAddons.length > 0 && (

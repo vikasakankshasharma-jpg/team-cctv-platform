@@ -21,6 +21,8 @@ export function FullCustomizerPanel() {
     setSearch("");
   };
 
+  const [localBrand, setLocalBrand] = useState<string>("all");
+
   // ─────────────────────────────────────────────
   // 1. CAMERAS
   // ─────────────────────────────────────────────
@@ -39,19 +41,17 @@ export function FullCustomizerPanel() {
     if (selection.technology && selection.technology !== "both" as any) {
       list = list.filter(p => p.technology === selection.technology);
     }
-    const bp = selection.brand_preference?.toLowerCase();
-    if (bp && bp !== "all" && bp !== "recommend" && bp !== "unsure") {
-      list = list.filter(p => p.brand?.toLowerCase() === bp);
+    
+    if (localBrand && localBrand !== "all") {
+      list = list.filter(p => p.brand?.toLowerCase() === localBrand.toLowerCase());
     }
-    if (selection.max_budget) {
-      list = list.filter(p => (p.unit_price * selection.camera_count) <= selection.max_budget!);
-    }
+    
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(p => p.display_name.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q));
     }
     return list.sort((a, b) => a.unit_price - b.unit_price);
-  }, [products, selection.technology, selection.brand_preference, selection.max_budget, selection.camera_count, search]);
+  }, [products, selection.technology, localBrand, search]);
 
   // ─────────────────────────────────────────────
   // 2. RECORDERS
@@ -129,64 +129,71 @@ export function FullCustomizerPanel() {
     onRemoveOverride?: () => void
   ) => {
     return (
-      <div className={`p-3 rounded-2xl border transition-all duration-300 ${
+      <div className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col h-full ${
         isSelected
           ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm ring-1 ring-blue-500/20"
           : "bg-white dark:bg-zinc-800/30 border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600"
       }`}>
-        <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? "bg-blue-100 dark:bg-blue-900/40" : "bg-zinc-50 dark:bg-zinc-800"}`}>
-            {item.category === "camera" ? <Camera className="w-4 h-4 text-zinc-400" /> : <Server className="w-4 h-4 text-zinc-400" />}
+        <div className="flex flex-col gap-3 flex-1">
+          <div className="flex items-start justify-between">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? "bg-blue-100 dark:bg-blue-900/40" : "bg-zinc-50 dark:bg-zinc-800"}`}>
+              {item.category === "camera" ? <Camera className="w-4 h-4 text-zinc-400" /> : <Server className="w-4 h-4 text-zinc-400" />}
+            </div>
+            {isCustomOverride && isSelected && (
+              <span className="text-[8px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                <Lock className="w-2 h-2" /> Pinned
+              </span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`text-[11px] font-bold leading-tight line-clamp-2 ${isSelected ? "text-blue-700 dark:text-blue-300" : "text-zinc-700 dark:text-zinc-300"}`}>
+            <p className={`text-[13px] font-bold leading-tight line-clamp-2 ${isSelected ? "text-blue-700 dark:text-blue-300" : "text-zinc-700 dark:text-zinc-300"}`}>
               {item.display_name}
             </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] font-black text-zinc-900 dark:text-white">₹{item.unit_price.toLocaleString()}</span>
-              {isCustomOverride && isSelected && (
-                <span className="text-[8px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                  <Lock className="w-2 h-2" /> Pinned
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs font-black text-zinc-900 dark:text-white">₹{(item.unit_price || 0).toLocaleString()}</span>
+              {item.brand && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 uppercase">
+                  {item.brand}
                 </span>
               )}
             </div>
           </div>
-          <div className="flex flex-col gap-1 items-end">
-            <button 
-              onClick={onSelect}
-              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                isSelected ? "bg-blue-600 text-white shadow-md" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
-              }`}
-            >
-              {isSelected ? "Selected" : "Select"}
+        </div>
+        <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50 flex flex-row items-center justify-between shrink-0">
+          <button 
+            onClick={onSelect}
+            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              isSelected ? "bg-blue-600 text-white shadow-md" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
+            }`}
+          >
+            {isSelected ? "Selected" : "Select"}
+          </button>
+          {isCustomOverride && isSelected && onRemoveOverride && (
+            <button onClick={onRemoveOverride} className="text-[9px] font-bold text-red-500 hover:underline">
+              Remove Lock
             </button>
-            {isCustomOverride && isSelected && onRemoveOverride && (
-              <button onClick={onRemoveOverride} className="text-[8px] font-bold text-red-500 hover:underline">
-                Remove Lock
-              </button>
-            )}
-          </div>
+          )}
         </div>
       </div>
     );
   }
 
   const renderAddonItem = (addon: Addon, isSelected: boolean, onToggle: () => void) => (
-    <div className={`p-3 rounded-2xl border transition-all duration-300 ${
+    <div className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col h-full ${
       isSelected
         ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm ring-1 ring-blue-500/20"
         : "bg-white dark:bg-zinc-800/30 border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600"
     }`}>
-      <div className="flex items-start gap-3">
-        <div className="flex-1 min-w-0">
-          <p className={`text-[11px] font-bold ${isSelected ? "text-blue-700 dark:text-blue-300" : "text-zinc-700 dark:text-zinc-300"}`}>
-            {addon.display_name}
-          </p>
-          <span className="text-[10px] font-black text-zinc-900 dark:text-white mt-1 block">₹{addon.price.toLocaleString()}</span>
-        </div>
+      <div className="flex-1 min-w-0 mb-4">
+        <p className={`text-sm font-bold ${isSelected ? "text-blue-700 dark:text-blue-300" : "text-zinc-700 dark:text-zinc-300"}`}>
+          {addon.display_name}
+        </p>
+        <span className="text-sm font-black text-zinc-900 dark:text-white mt-1 block">₹{addon.price.toLocaleString()}</span>
+      </div>
+      <div className="mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800/50 flex flex-row items-center justify-end">
         <button 
           onClick={onToggle}
-          className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
             isSelected ? "bg-blue-600 text-white shadow-md" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
           }`}
         >
@@ -197,7 +204,7 @@ export function FullCustomizerPanel() {
   );
 
   return (
-    <div className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[32px] overflow-hidden shadow-sm lg:sticky lg:top-24 flex flex-col h-[800px]">
+    <div className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[32px] overflow-hidden shadow-sm flex flex-col min-h-[600px] max-h-[800px]">
       
       {/* Header */}
       <div className="bg-zinc-50 dark:bg-zinc-900/50 px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between shrink-0">
@@ -221,9 +228,9 @@ export function FullCustomizerPanel() {
       {activeTab === "cameras" && (
         <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20 shrink-0 space-y-3">
           <div className="flex flex-wrap gap-2">
-            <FilterPill label="All Brands" active={!selection.brand_preference || selection.brand_preference === "all"} onClick={() => updateSelection({ brand_preference: "all" })} />
+            <FilterPill label="All Brands" active={!localBrand || localBrand === "all"} onClick={() => setLocalBrand("all")} />
             {cameraStats.slice(0, 4).map(([brand]) => (
-               <FilterPill key={brand} label={brand} active={selection.brand_preference === brand} onClick={() => updateSelection({ brand_preference: brand })} />
+               <FilterPill key={brand} label={brand} active={localBrand === brand} onClick={() => setLocalBrand(brand)} />
             ))}
           </div>
         </div>
@@ -244,7 +251,7 @@ export function FullCustomizerPanel() {
       </div>
 
       {/* Scrollable List */}
-      <div className="flex-1 overflow-y-auto p-4 pt-0 space-y-2 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto p-6 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 scrollbar-thin content-start">
         {activeTab === "cameras" && filteredCameras.map(cam => renderProductItem(
           cam, 
           selection.selected_camera_id === cam.id,

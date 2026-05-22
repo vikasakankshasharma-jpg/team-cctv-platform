@@ -19,7 +19,7 @@ interface AllSystemsGridProps {
 }
 
 export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, evaluatedRules, activeOffer }: AllSystemsGridProps) {
-  const { selection, active_checkout_option, setActiveCheckoutOption, updateSelection } = useConfiguratorStore();
+  const { selection, active_checkout_option, setActiveCheckoutOption, updateSelection, compare_options, setCompareOptions } = useConfiguratorStore();
 
   const allKits = useMemo(() => {
     let cameras = pricingCache.products.filter(p => p.category === "camera" && p.is_active);
@@ -244,20 +244,52 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
                       </div>
                     </div>
                     
-                    <button 
-                      onClick={() => setActiveCheckoutOption({ technology: kit.camera.technology as "HD"|"IP", option: kit.camera.id as any })}
-                      className={`h-14 px-8 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-3 group/btn ${
-                        isSelected 
-                          ? "bg-blue-600 text-white shadow-xl shadow-blue-600/30 ring-4 ring-blue-600/10" 
-                          : "bg-zinc-900 dark:bg-zinc-950 text-white hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-600/20"
-                      }`}
-                    >
-                      {isSelected ? (
-                        <>Selected <Check className="w-4 h-4" /></>
-                      ) : (
-                        <>Build Kit <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" /></>
-                      )}
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => {
+                          const exists = compare_options.find(c => c.technology === kit.camera.technology && c.option === kit.camera.id);
+                          if (exists) {
+                            setCompareOptions(compare_options.filter(c => !(c.technology === kit.camera.technology && c.option === kit.camera.id)));
+                          } else {
+                            if (compare_options.length >= 3) {
+                              setCompareOptions([...compare_options.slice(1), { technology: kit.camera.technology as "HD"|"IP", option: kit.camera.id! }]);
+                            } else {
+                              setCompareOptions([...compare_options, { technology: kit.camera.technology as "HD"|"IP", option: kit.camera.id! }]);
+                            }
+                          }
+                          // Scroll up to compare zone smoothly
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className={`h-14 px-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 border ${
+                          compare_options.some(c => c.technology === kit.camera.technology && c.option === kit.camera.id)
+                            ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400"
+                            : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                        }`}
+                      >
+                        <ShieldCheck className="w-4 h-4" /> Compare
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setActiveCheckoutOption({ technology: kit.camera.technology as "HD"|"IP", option: kit.camera.id as any });
+                          updateSelection({ selected_camera_id: kit.camera.id });
+                          // Scroll to build your own section
+                          const el = document.getElementById('build-your-own');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className={`h-14 px-8 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-3 group/btn ${
+                          isSelected 
+                            ? "bg-blue-600 text-white shadow-xl shadow-blue-600/30 ring-4 ring-blue-600/10" 
+                            : "bg-zinc-900 dark:bg-zinc-950 text-white hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-600/20"
+                        }`}
+                      >
+                        {isSelected ? (
+                          <>Building <Check className="w-4 h-4" /></>
+                        ) : (
+                          <>Customize <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" /></>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
             </div>
