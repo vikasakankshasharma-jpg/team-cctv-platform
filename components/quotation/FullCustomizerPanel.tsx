@@ -12,7 +12,7 @@ import type { Product, Addon } from "@/types";
 type Tab = "cameras" | "recorders" | "storage" | "power" | "addons";
 
 export function FullCustomizerPanel() {
-  const { selection, updateSelection, toggleAddon, products, addons, resetFilters, setActiveCheckoutOption } = useConfiguratorStore();
+  const { selection, updateSelection, toggleAddon, products, addons, resetFilters, setActiveCheckoutOption, compare_options, setCompareOptions } = useConfiguratorStore();
   const [activeTab, setActiveTab] = useState<Tab>("cameras");
   const [search, setSearch] = useState("");
 
@@ -256,8 +256,20 @@ export function FullCustomizerPanel() {
           cam, 
           selection.selected_camera_id === cam.id,
           () => {
+            const exists = compare_options.find(c => c.technology === cam.technology && c.option === cam.id);
+            if (!exists) {
+              // Maintain max 4 cards by removing the oldest custom card or the 2nd standard card
+              let newOptions = compare_options;
+              if (newOptions.length >= 4) {
+                newOptions = [newOptions[0], ...newOptions.slice(2)];
+              }
+              setCompareOptions([...newOptions, { technology: cam.technology as any, option: cam.id! }]);
+            }
             setActiveCheckoutOption({ technology: cam.technology as any, option: cam.id! });
             updateSelection({ selected_camera_id: cam.id });
+            
+            // Gently scroll user back up to see their new card
+            document.getElementById("build-your-own")?.scrollIntoView({ behavior: "smooth", block: "start" });
           },
           !!selection.selected_camera_id,
           () => updateSelection({ selected_camera_id: undefined })
@@ -299,7 +311,7 @@ export function FullCustomizerPanel() {
           (activeTab === "storage" && filteredStorage.length === 0) ||
           (activeTab === "power" && filteredPower.length === 0) ||
           (activeTab === "addons" && filteredAddons.length === 0)) && (
-          <div className="py-8 text-center">
+          <div className="py-8 text-center col-span-full">
             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">No items match</p>
           </div>
         )}
