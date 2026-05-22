@@ -6,26 +6,45 @@ import { Camera } from "lucide-react";
 export function ResolutionSelector({ resolutions }: { resolutions: string[] }) {
   const { selection, updateSelection } = useConfiguratorStore();
 
+  const options = ["all", ...resolutions];
+  
+  const currentIndex = selection.resolution_preference 
+    ? options.indexOf(selection.resolution_preference)
+    : 0;
+
+  const validIndex = currentIndex >= 0 ? currentIndex : 0;
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    const selectedRes = options[val];
+    updateSelection({ resolution_preference: selectedRes === "all" ? "all" : selectedRes });
+  };
+
+  const displayValue = validIndex === 0 ? "Any" : options[validIndex];
+
   return (
     <div className="space-y-3">
-      <label className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-1.5">
-        <Camera className="w-3 h-3 text-blue-600" /> Resolution / Quality
-      </label>
-      <div className="relative">
-        <select
-          value={selection.resolution_preference || "all"}
-          onChange={(e) => updateSelection({ resolution_preference: e.target.value })}
-          className="appearance-none w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-600 transition-all cursor-pointer"
-        >
-          <option value="all">All Options</option>
-          {resolutions.map((res) => (
-            <option key={res} value={res}>
-              {res}
-            </option>
-          ))}
-        </select>
-        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-          <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+      <div className="flex justify-between items-center">
+        <label className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-1.5">
+          <Camera className="w-3 h-3 text-blue-600" /> Min Resolution
+        </label>
+        <span className="text-[9px] font-black text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full uppercase tracking-widest">
+          {displayValue}
+        </span>
+      </div>
+      <div className="pt-2 px-1">
+        <input 
+          type="range" 
+          min="0" 
+          max={options.length - 1} 
+          step="1"
+          value={validIndex}
+          onChange={handleSliderChange}
+          className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
+        />
+        <div className="flex justify-between mt-3 text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">
+          <span>Any</span>
+          <span>{options[options.length - 1]}</span>
         </div>
       </div>
     </div>
