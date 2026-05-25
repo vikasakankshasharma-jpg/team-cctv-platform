@@ -22,10 +22,18 @@ declare global {
  * Optimised for small phones (360px+): reordered fields, fixed OTP overflow,
  * autocomplete, removed dead WhatsApp UI, collapsed optional sections.
  */
-export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
+export function LeadGate({ 
+  isIndustrial,
+  mode = "final",
+  onSuccess 
+}: { 
+  isIndustrial?: boolean;
+  mode?: "final" | "partial";
+  onSuccess?: (leadId: string) => void;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { answers } = useWizardStore();
+  const { answers, setPartialLeadId } = useWizardStore();
 
   // ── Field state (reordered: mobile first for ergonomics) ──────────────────
   const [mobile, setMobile] = useState("");
@@ -91,8 +99,18 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
   }, [countdown, otpSent]);
 
   useEffect(() => {
+    // Clear any existing verifier to prevent "reCAPTCHA has already been rendered" in React Strict Mode / Re-renders
+    if (window.recaptchaVerifier) {
+      try {
+        window.recaptchaVerifier.clear();
+      } catch (e) {
+        // Ignore errors during clear
+      }
+      (window as any).recaptchaVerifier = undefined;
+    }
+
     const container = document.getElementById("recaptcha-container");
-    if (container && !window.recaptchaVerifier) {
+    if (container) {
       try {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
           size: "invisible",
@@ -103,6 +121,16 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
         setError("Security System Error: Recaptcha failed to initialize. Please check your connection or refresh.");
       }
     }
+
+    return () => {
+      // Cleanup on unmount
+      if (window.recaptchaVerifier) {
+        try {
+          window.recaptchaVerifier.clear();
+        } catch (e) {}
+        (window as any).recaptchaVerifier = undefined;
+      }
+    };
   }, []);
 
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -123,22 +151,13 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
         return;
       }
 
-      // Always clear and recreate RecaptchaVerifier to prevent auth/argument-error
-      // from stale/expired verifier instances on retry or page revisit.
-      if (window.recaptchaVerifier) {
-        try {
-          window.recaptchaVerifier.clear();
-        } catch (_) { /* ignore clear errors */ }
-        window.recaptchaVerifier = undefined as any;
+      if (!window.recaptchaVerifier) {
+        const rcContainer = document.getElementById("recaptcha-container");
+        if (rcContainer) rcContainer.innerHTML = "";
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+        });
       }
-
-      // Fix: clear the DOM element to prevent "already rendered in this element" error
-      const rcContainer = document.getElementById("recaptcha-container");
-      if (rcContainer) rcContainer.innerHTML = "";
-
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
-      });
 
       const appVerifier = window.recaptchaVerifier;
       const formatPhone = "+91" + mobile;
@@ -174,11 +193,8 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
     } catch (error) {
       const err = error as { code?: string; message?: string };
       console.error("🔥 OTP Transmission Fault:", err);
-      try {
-        window.recaptchaVerifier?.clear?.();
-        // @ts-expect-error - third party lib type mismatch
-        window.recaptchaVerifier = undefined;
-      } catch (_) { /* ignore */ }
+
+      // Do NOT clear the recaptchaVerifier here. Reusing it prevents the "already rendered" error.
 
       if (err.code === "auth/invalid-app-credential" || err.message?.includes("invalid-app-credential")) {
         setError("Firebase reCAPTCHA Error: Add your domain to Firebase Console → Authentication → Settings → Authorized Domains.");
@@ -277,7 +293,8 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
         technology_choice: extractAns("q_tech") || "HD",
         cabling_done: extractAns("q_wiring") === "true",
         camera_count: parseInt(extractAns("q_cam_count") || "0"),
-        competitor_quote_url: competitorQuoteUrl
+        competitor_quote_url: competitorQuoteUrl,
+        status: mode === "partial" ? "partial" : undefined
       };
 
       if (isIndustrial) {
@@ -294,6 +311,7 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
         });
         if (!indRes.ok) throw new Error("Failed to register industrial interest.");
         setShowIndustrialSuccess(true);
+        if (mode === "partial" && onSuccess) onSuccess("industrial");
         return;
       }
 
@@ -310,10 +328,16 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
         customer_name: name,
         property_type: payload.property_type,
         technology_choice: payload.technology_choice,
-        cabling_done: payload.cabling_done
+        cabling_done: payload.cabling_done,
+        mode: mode
       });
 
-      router.push(`/quote/${resData.data.id}`);
+      if (mode === "partial") {
+        setPartialLeadId(resData.data.id);
+        if (onSuccess) onSuccess(resData.data.id);
+      } else {
+        router.push(`/quote/${resData.data.id}`);
+      }
     } catch (error) {
       const err = error as Error;
       setError(err.message);
@@ -630,7 +654,6 @@ export function LeadGate({ isIndustrial }: { isIndustrial?: boolean }) {
           )}
         </div>
       )}
-      <div id="recaptcha-container"></div>
     </div>
   );
 }
