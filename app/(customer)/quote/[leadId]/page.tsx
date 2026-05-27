@@ -49,24 +49,35 @@ export default async function QuoteResultPage({
   let recommendation_rules: any[] = [];
   let card_layouts: any[] = [];
 
-  // HANDLE MOCK SCENARIO (DEMO/E2E)
-  if (leadId === "mock-e2e-lead" || leadId === "mock-lead") {
+  if (leadId === "mock-lead" || leadId === "mock-e2e-lead") {
     lead = {
-      id: "mock-e2e-lead",
-      customer_name: name || "Elite Client",
+      id: leadId,
+      customer_name: name || "Demo Customer",
       mobile_number: mobile || "9876543210",
+      email: "mock@cctvquotation.com",
       property_type: "home",
       technology_choice: "IP",
-      cabling_done: false,
-      wizard_answers: {
-        "q_property": "Home",
-        "q_tech": "IP",
-        "q_features": ["Night Vision", "Mobile Alerts"]
+      camera_count: 4,
+      status: "qualified",
+      created_at: new Date().toISOString(),
+      address: {
+        city: "Jaipur",
+        area: "Vaishali Nagar",
+        pincode: "302001"
       },
-      status: "new",
-      created_at: new Date()
-    };
+      wizard_answers: {
+        lead_pincode: "302001",
+        q_property_type: "home",
+        q_camera_count: 4,
+        q_technology: "IP",
+        q_storage_days: 7,
+        q_features: ["color", "mic"],
+        q_internet: "yes"
+      }
+    } as unknown as Lead;
   }
+
+  // Lead fetching is now strictly database-driven.
 
   try {
     const [
@@ -146,38 +157,7 @@ export default async function QuoteResultPage({
 
   if (!lead) return notFound();
 
-  // DEFAULT FALLBACK DATA (If DB is empty or seed failed)
-  if (products.length === 0) {
-    // Fallback products for mock lead or when DB fails
-    products = [
-      // Cameras
-      { id: "f_i_1", technical_name: "cam_ip_opt1", display_name: "2MP Eco Digital Camera", category: "camera", technology: "IP", unit_price: 2400, resolution_tier: "standard", is_active: true, catalog_path: "TEAM/IP/ECO", features: ["Mic"] },
-      { id: "f_i_2", technical_name: "cam_ip_opt2", display_name: "2MP Smart Digital Camera", category: "camera", technology: "IP", unit_price: 2800, resolution_tier: "good", is_active: true, catalog_path: "TEAM/IP/SMART", features: ["Mic", "Color"] },
-      { id: "f_i_4", technical_name: "cam_ip_opt4", display_name: "2MP Elite Digital Camera", category: "camera", technology: "IP", unit_price: 3500, resolution_tier: "best", is_active: true, catalog_path: "TEAM/IP/ELITE", features: ["Mic", "Color", "PTZ"] },
-      { id: "f_h_1", technical_name: "cam_hd_opt1", display_name: "2MP Classic HD Camera", category: "camera", technology: "HD", unit_price: 1200, resolution_tier: "standard", is_active: true, catalog_path: "TEAM/HD/CLASSIC", features: ["Mic"] },
-      
-      // Recorders
-      { id: "f_r_1", technical_name: "nvr_4ch", display_name: "4-Channel Smart NVR", category: "recorder", technology: "IP", unit_price: 4500, channels: 4, max_cameras: 4, is_active: true, compatible_paths: ["TEAM/IP"] },
-      { id: "f_r_2", technical_name: "nvr_8ch", display_name: "8-Channel Smart NVR", category: "recorder", technology: "IP", unit_price: 7500, channels: 8, max_cameras: 8, is_active: true, compatible_paths: ["TEAM/IP"] },
-      { id: "f_r_3", technical_name: "dvr_4ch", display_name: "4-Channel Pro DVR", category: "recorder", technology: "HD", unit_price: 3200, channels: 4, max_cameras: 4, is_active: true, compatible_paths: ["TEAM/HD"] },
 
-      // Storage
-      { id: "f_s_1", technical_name: "hdd_1tb", display_name: "1TB Surveillance HDD", category: "accessory", technology: "both", unit_price: 3800, is_active: true },
-      { id: "f_s_2", technical_name: "hdd_2tb", display_name: "2TB Surveillance HDD", category: "accessory", technology: "both", unit_price: 5800, is_active: true },
-
-      // Accessories
-      { id: "f_a_1", technical_name: "poe_4port", display_name: "4-Port PoE Switch", category: "accessory", technology: "IP", unit_price: 1800, max_cameras: 4, is_active: true, compatible_paths: ["TEAM/IP"] },
-      { id: "f_a_2", technical_name: "poe_8port", display_name: "8-Port PoE Switch", category: "accessory", technology: "IP", unit_price: 3200, max_cameras: 8, is_active: true, compatible_paths: ["TEAM/IP"] },
-      { id: "f_a_3", technical_name: "psu_4port", display_name: "4-Port Power Supply", category: "accessory", technology: "HD", unit_price: 850, max_cameras: 4, is_active: true, compatible_paths: ["TEAM/HD"] },
-    ] as Product[];
-  }
-
-  if (addons.length === 0) {
-    addons = [
-      { id: "f_add_1", display_name: "Wire Management Box", price: 450, is_active: true },
-      { id: "f_add_2", display_name: "Sound Recording Mic", price: 850, is_active: true },
-    ] as Addon[];
-  }
 
   const finalSettings: AppSettings = settings || {
     company_name: "TEAM CCTV",
@@ -249,17 +229,45 @@ export default async function QuoteResultPage({
            </p>
         </div>
         
-        {/* INTERACTIVE CONFIGURATOR */}
+        {/* INTERACTIVE CONFIGURATOR OR EXPIRED STATE */}
         <div className="w-full animate-in fade-in fill-mode-both delay-300 duration-1000">
-           <ConfiguratorView 
-             lead={lead} 
-             pricingCache={pricingCache} 
-             promoterDiscount={{
-               percent: promoter?.discount_type === "percent" ? (promoter.discount_value || 0) : 0,
-               flat: promoter?.discount_type === "flat" ? (promoter.discount_value || 0) : 0
-             }}
-             customLayoutId={promoter?.custom_layout_id}
-           />
+           {(() => {
+             const leadDate = new Date((lead.created_at as any)?.toDate?.() || lead.created_at || Date.now());
+             const now = new Date();
+             const diffTime = Math.abs(now.getTime() - leadDate.getTime());
+             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+             const isExpired = diffDays > 7;
+
+             if (isExpired && lead.id !== "mock-e2e-lead" && lead.id !== "mock-lead") {
+               return (
+                 <div className="max-w-2xl mx-auto bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 sm:p-12 text-center shadow-2xl relative overflow-hidden">
+                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-amber-500 to-red-500" />
+                   <h2 className="text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter mb-4">Quotation Expired</h2>
+                   <p className="text-zinc-500 dark:text-zinc-400 font-medium mb-8">
+                     This quotation was generated over 7 days ago and has expired. Due to fluctuating market prices for electronic components, we require a new assessment to provide you with the most accurate pricing.
+                   </p>
+                   <a 
+                     href={`/wizard?requote=${lead.id}`}
+                     className="inline-flex items-center justify-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-4 rounded-full font-black uppercase tracking-widest text-sm hover:scale-105 active:scale-95 transition-all shadow-xl"
+                   >
+                     Request Re-quote
+                   </a>
+                 </div>
+               );
+             }
+
+             return (
+               <ConfiguratorView 
+                 lead={lead} 
+                 pricingCache={pricingCache} 
+                 promoterDiscount={{
+                   percent: promoter?.discount_type === "percent" ? (promoter.discount_value || 0) : 0,
+                   flat: promoter?.discount_type === "flat" ? (promoter.discount_value || 0) : 0
+                 }}
+                 customLayoutId={promoter?.custom_layout_id}
+               />
+             );
+           })()}
         </div>
 
 
