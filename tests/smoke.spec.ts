@@ -15,6 +15,14 @@ test.describe('CCTV Wizard Smoke Test', () => {
     // Wait for the city page or wizard redirect
     await expect(page).toHaveURL(/.*(wizard|302017)/);
     
+    // If redirected to the city landing page, click the CTA to navigate to the wizard
+    if (!page.url().includes('wizard')) {
+      const cityCta = page.getByRole('link', { name: /get.*quotation|book.*installation|get.*quote/i }).first();
+      await expect(cityCta).toBeVisible();
+      await cityCta.click({ force: true });
+      await expect(page).toHaveURL(/.*wizard.*/);
+    }
+    
     // 4. Check if the first question loads
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     
