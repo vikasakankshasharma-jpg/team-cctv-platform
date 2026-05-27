@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { CreateLeadSchema } from "@/lib/validators";
 import { adminDb, arrayUnion, serverTimestamp, increment } from "@/lib/firebase-admin";
 import { rateLimit } from "@/lib/rate-limit";
-import { routeLeadToFranchise, incrementFranchiseLeadCount } from "@/lib/lead-router";
 import { ApiResponse } from "@/lib/api-response";
 import { calculateSlaDeadline, OperatingHours } from "@/lib/sla-engine";
 
@@ -48,9 +47,7 @@ export async function POST(request: NextRequest) {
     const city    = String(wizardAnswers?.q_city    || wizardAnswers?.city    || "");
     const state   = String(wizardAnswers?.q_state   || wizardAnswers?.state   || "");
 
-    const routing = await routeLeadToFranchise(pincode, city, state);
-
-    // EXPANSION TRACKING: Resolve location based on pincode prefix
+    // 3. EXPANSION TRACKING: Resolve location based on pincode prefix
     const pincodePrefix = pincode.substring(0, 3);
     const PINCODE_CITY_MAP: Record<string, {city: string, slug: string, served: boolean}> = {
       "302": { city: "Jaipur",  slug: "jaipur",  served: true  },
@@ -62,31 +59,7 @@ export async function POST(request: NextRequest) {
     };
     const locationData = PINCODE_CITY_MAP[pincodePrefix] ?? null;
 
-    // 3.5 Calculate SLA Deadline
-    let slaDeadline: string | null = null;
-    if (routing.franchise_dealer_id) {
-      try {
-        // Fetch Admin Settings for Global SLA defaults
-        const settingsDoc = await adminDb.collection("settings").doc("app_settings").get();
-        const settings = settingsDoc.data();
-        let opsHours = settings?.default_sla_operating_hours as OperatingHours | undefined;
-
-        // Fetch Franchise for Local SLA overrides
-        const franchiseDoc = await adminDb.collection("franchises").doc(routing.franchise_dealer_id).get();
-        const franchise = franchiseDoc.data();
-        
-        if (franchise?.sla_operating_hours) {
-          opsHours = franchise.sla_operating_hours as OperatingHours;
-        }
-
-        // Calculate SLA Deadline
-        slaDeadline = calculateSlaDeadline(new Date().toISOString(), 2, opsHours);
-      } catch (err) {
-        console.error("Failed to calculate SLA Deadline:", err);
-      }
-    }
-
-    // 4. Create Lead Document
+    // 4. Create Lead Document (Unassigned by default, handled by Dispatch)
     const newLeadRef = adminDb.collection("leads").doc();
     const isHotLead = leadData.cabling_done === true;
 
@@ -103,13 +76,12 @@ export async function POST(request: NextRequest) {
       cabling_done:         leadData.cabling_done,
       is_hot_lead:          isHotLead,
 
-      // Franchise load-balanced routing
-      franchise_dealer_id:   routing.franchise_dealer_id,
-      franchise_dealer_name: routing.franchise_dealer_name,
-      franchise_match_type:  routing.match_type,
-
-      // SLA Tracking
-      sla_deadline:          slaDeadline,
+      // Hub & Spoke Unassigned Routing
+      hub_id: null,
+      assigned_installer_id: null,
+      
+      // SLA Tracking (calculated upon assignment)
+      sla_deadline:          null,
       sla_breached:          false,
 
       // Expansion Tracking Fields
@@ -120,22 +92,14 @@ export async function POST(request: NextRequest) {
       service_status:        locationData?.served ? "active" : "waitlist",
       is_reference_quote:    locationData ? !locationData.served : false,
       waitlist_confirmed:    false,
-      franchise_notified_at: null,
 
       created_at:        serverTimestamp(),
       updated_at:        serverTimestamp(),
-      follow_up_notes:   arrayUnion("Lead ingested via enterprise router"),
+      follow_up_notes:   arrayUnion("Lead ingested via enterprise router (Pending Dispatch)"),
       is_deleted:        false,
     });
-
-    // 5. Update Franchise Counters (Async)
-    if (routing.franchise_dealer_id) {
-      incrementFranchiseLeadCount(routing.franchise_dealer_id).catch((err) =>
-        console.error("[Leads API] Counter increment failed:", err)
-      );
-    }
     
-    // 6. Update Service Areas Waitlist Count (Async)
+    // 5. Update Service Areas Waitlist Count (Async)
     if (locationData && !locationData.served) {
       adminDb.collection("service_areas").doc(locationData.slug)
         .update({ waitlist_count: increment(1) })

@@ -41,11 +41,12 @@ export async function POST(request: NextRequest) {
     }
     
     // 2. Fetch Authoritative Data (Server-Side Source of Truth)
-    const [leadDoc, productsSnap, addonsSnap, settingsSnap] = await Promise.all([
+    const [leadDoc, productsSnap, addonsSnap, settingsSnap, geoRulesSnap] = await Promise.all([
       adminDb.collection("leads").doc(lead_id).get(),
       adminDb.collection("products").where("is_active", "==", true).where("is_deleted", "==", false).get(),
       adminDb.collection("addons").where("is_active", "==", true).where("is_deleted", "==", false).get(),
-      adminDb.collection("settings").doc(SETTINGS_DOC_ID).get()
+      adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
+      adminDb.collection("geo_pricing_rules").where("is_active", "==", true).get()
     ]);
 
     if (!leadDoc.exists) {
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
 
     let products = productsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Product[];
     let addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Addon[];
+    let geoRules = geoRulesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
 
     const settings = settingsSnap.data() as AppSettings;
@@ -74,7 +76,11 @@ export async function POST(request: NextRequest) {
       cablingDone: leadData.cabling_done || false,
       referralDiscountPercent: 0, // Injected via promoter lookup if needed
       referralDiscountFlat: 0,
-      activeOffer: leadData.active_offer
+      activeOffer: leadData.active_offer,
+      geoRules,
+      locationParams: {
+        pincode: leadData.address?.pincode
+      }
     });
 
     // 3.5 ZERO-TRUST VALIDATION

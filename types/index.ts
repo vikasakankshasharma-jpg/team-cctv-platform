@@ -13,14 +13,20 @@ export interface Address {
   };
 }
 
-export interface Booking {
+// ── New Execution Models (Hub & Spoke) ──────────────────────────────────────
+export interface Job {
   id?: string;
   lead_id: string;
-  quote_id: string;
+  quote_id?: string;
   address: Address;
+  hub_id?: string | null;            // Which hub supplies hardware
+  installer_id?: string | null;      // Which installer executes
+  type: "survey" | "installation" | "amc_visit";
+  status: "pending_dispatch" | "assigned" | "en_route" | "in_progress" | "pending_customer_approval" | "completed" | "audited" | "cancelled";
   scheduled_at?: unknown;
-  status: "pending" | "confirmed" | "completed" | "cancelled";
+  sla_deadline?: string | null;
   created_at: unknown;
+  updated_at?: unknown;
 }
 
 export interface Lead {
@@ -47,9 +53,11 @@ export interface Lead {
   assigned_to_salesperson_id?: string | null;
   assigned_to_salesperson_name?: string | null;
 
-  // Franchise Network — auto-set on lead creation from pincode routing
-  franchise_dealer_id?: string | null;        // Which franchise dealer owns this lead
-  franchise_dealer_name?: string | null;      // Virtual field for UI display
+  // Hub & Spoke execution mapping
+  hub_id?: string | null;
+  hub_name?: string | null;
+  assigned_installer_id?: string | null;
+  assigned_installer_name?: string | null;
 
   // Follow-Up Engine
   followups_sent?: string[];
@@ -523,76 +531,90 @@ export interface Salesperson {
   updated_at?: unknown;
 }
 
-// ── Franchise Network ─────────────────────────────────────────────────────────
-// A FranchiseDealer is an external CCTV installation business operating under
-// the TEAM CCTV brand. They own exclusive territory (pincodes), execute
-// installations, and earn commission per sale. Admin controls their pricing.
+// ── New Entities (Hub & Spoke / Geo-Pricing) ──────────────────────────────────
 
-export interface FranchiseDealer {
+export interface Hub {
   id?: string;
-  company_name: string;                  // e.g., "Sharma CCTV Dealers"
-  owner_name: string;                    // Contact person
+  name: string;                          // e.g., "Jaipur North Hub"
+  manager_name: string;
   mobile_number: string;                 // OTP login
   email?: string;
-  firebase_uid?: string;                 // Set after first OTP login
+  firebase_uid?: string;
   is_active: boolean;
 
-  // Territory (pincode-based — exclusive rights)
-  assigned_zone_ids?: string[];          // Links to CoverageZone documents
-  assigned_pincodes?: string[];          // Direct pincode list
-  assigned_cities?: string[];            // City-level fallback
-  assigned_states?: string[];            // State-level fallback (broadest)
-  territory_exclusivity: boolean;        // true = no other dealer can serve these pincodes
-
-  // Franchise Agreement & Application
-  status?: "pending" | "approved" | "rejected";
-  gst_number?: string;
-  franchise_fee_monthly: number;         // Monthly fixed fee in INR
-  commission_percent: number;            // % of ex-tax sale value (e.g., 6)
-  agreement_start_date?: unknown;
-  agreement_end_date?: unknown;
-
-  // Performance Counters (updated on lead events)
-  total_leads_received: number;
-  total_leads_won: number;
-  total_ex_tax_business: number;         // Cumulative ex-GST sales value
-  total_commission_due: number;          // Commission earned, not yet paid
-  total_commission_paid: number;         // Commission already disbursed
-
-  // SLA Overrides
-  sla_operating_hours?: {
-    start_time: string; // HH:mm format
-    end_time: string;   // HH:mm format
-    days_off: number[]; // 0=Sunday...
-  };
+  // Inventory & Coverage
+  pincode_coverage: string[];            // Which pincodes this hub serves for hardware
+  location?: Address;
+  stock_capacity?: number;
+  inventory_value?: number;
 
   created_at?: unknown;
   updated_at?: unknown;
 }
 
-// Per-franchise pricing overrides — admin sets different purchase costs
-// and margins per franchise to reflect local supplier pricing and competition.
-export interface FranchisePricingOverride {
+export interface Installer {
   id?: string;
-  franchise_dealer_id: string;           // FK → FranchiseDealer.id
+  name: string;
+  mobile_number: string;                 // OTP login
+  email?: string;
+  firebase_uid?: string;
+  kyc_status: "pending" | "verified" | "suspended";
+  is_active: boolean;
 
-  // Product-level overrides (purchase cost may differ by city/supplier)
-  product_overrides: {
-    product_id: string;
-    purchase_cost: number;               // Local supplier cost
-    margin_percent?: number;             // Custom margin for this franchise
-    unit_price_override?: number;        // Final price lock (skips margin calc)
-  }[];
-
-  // Labor and cabling overrides (differ by city)
-  labor_ip_per_camera?: number;
-  labor_hd_per_camera?: number;
-  cable_cost_per_meter?: number;
-
-  // Admin-enforced pricing guardrails
-  minimum_margin_percent: number;        // Floor — franchise cannot go below this
-  maximum_discount_percent: number;      // Max discount franchise can offer customer
+  // SLA & Dispatch Routing
+  serviceable_pincodes: string[];        // Standard coverage
+  serviceable_geohashes?: string[];      // For proximity fallback
+  skills: string[];                      // e.g., ['ip_camera', 'analog']
+  
+  // Performance & Financials
+  sla_score: number;                     // 0-100 rating for dispatch priority
+  avg_rating: number;
+  jobs_completed: number;
+  sla_breaches: number;
+  wallet_balance: number;                // Cash-in-hand collected via COD. If negative, they owe the platform.
 
   created_at?: unknown;
   updated_at?: unknown;
+}
+
+export interface LedgerTransaction {
+  id?: string;
+  user_id: string;                       // Installer ID or Hub ID
+  user_type: "installer" | "hub";
+  amount: number;
+  type: "cash_collected" | "payout" | "penalty" | "deposit";
+  description: string;
+  job_id?: string;
+  created_at: unknown;
+}
+
+// Deterministic Geo-Pricing Rules
+export interface GeoPricingRule {
+  id?: string;
+  level: "pincode" | "city" | "state" | "surge";
+  target_value: string;                  // e.g., "302001", "Jaipur", "Rajasthan", "diwali2026"
+  priority: number;                      // 1 = highest priority (Surge), 2 = Pincode...
+  
+  // Overrides
+  labor_multiplier?: number;             // e.g., 1.2 (+20% labor)
+  margin_override?: number;              // Fixed margin lock (skips global)
+  flat_travel_fee?: number;              // Add Rs 500
+  
+  is_active: boolean;
+  valid_until?: unknown;                 // For temporary surge/promos
+  created_at?: unknown;
+  updated_at?: unknown;
+  updated_by?: string;
+}
+
+export interface HardwareLedger {
+  id?: string;
+  serial_number: string;
+  sku_id: string;
+  product_name: string;
+  current_holder_id: string;             // hub_id or installer_id or customer_id
+  holder_type: "hub" | "installer" | "customer";
+  status: "in_hub" | "with_installer" | "installed" | "rma_defective";
+  job_id?: string;
+  updated_at: unknown;
 }

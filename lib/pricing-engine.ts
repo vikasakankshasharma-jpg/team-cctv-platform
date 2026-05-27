@@ -12,7 +12,8 @@ import type {
   PricingResult,
   QuoteLineItem,
   QuoteAddon,
-  AddonRuleResult
+  AddonRuleResult,
+  GeoPricingRule
 } from "@/types";
 
 export interface PricingEngineParams {
@@ -22,7 +23,6 @@ export interface PricingEngineParams {
   settings: AppSettings;
   cablingDone: boolean;
   cablingMeters?: number;       // Estimated cable run length in meters
-  locationMultiplier?: number;  // City-specific labor cost multiplier (default: 1.0)
   propertyType?: string;
   requirements?: string[];
   referralDiscountPercent?: number;
@@ -32,6 +32,12 @@ export interface PricingEngineParams {
     type: "discount_percent" | "free_amc";
     value?: number;
     campaign_id: string;
+  };
+  geoRules?: GeoPricingRule[];
+  locationParams?: {
+    pincode?: string;
+    city?: string;
+    state?: string;
   };
 }
 
@@ -46,11 +52,36 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     settings,
     cablingDone,
     cablingMeters = 50,
-    locationMultiplier = 1.0,
     referralDiscountPercent = 0,
     referralDiscountFlat = 0,
-    activeOffer
+    activeOffer,
+    geoRules = [],
+    locationParams
   } = params;
+
+  // Evaluate Geo-Pricing Matrix (Surge > Pincode > City > State)
+  let effectiveLaborMultiplier = 1.0;
+  let effectiveTravelFee = 0;
+  
+  if (geoRules.length > 0 && locationParams) {
+    const validRules = geoRules.filter(r => {
+      if (!r.is_active) return false;
+      if (r.valid_until && new Date(r.valid_until as string) < new Date()) return false;
+      
+      if (r.level === "surge") return true;
+      if (r.level === "pincode" && r.target_value === locationParams.pincode) return true;
+      if (r.level === "city" && r.target_value.toLowerCase() === locationParams.city?.toLowerCase()) return true;
+      if (r.level === "state" && r.target_value.toLowerCase() === locationParams.state?.toLowerCase()) return true;
+      return false;
+    });
+
+    if (validRules.length > 0) {
+      validRules.sort((a, b) => a.priority - b.priority);
+      const winner = validRules[0];
+      if (winner.labor_multiplier !== undefined) effectiveLaborMultiplier = winner.labor_multiplier;
+      if (winner.flat_travel_fee !== undefined) effectiveTravelFee = winner.flat_travel_fee;
+    }
+  }
 
   // 0. Industrial Threshold Check
   const isIndustrial = selection.camera_count > (settings.max_supported_cameras || 16);
@@ -80,7 +111,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     totalPurchaseCost += hardware.totalCost;
 
     // 3. Labor & Equipment Calculation
-    const labor = calculateLabor(selection, settings, effectiveTech, locationMultiplier);
+    const labor = calculateLabor(selection, settings, effectiveTech, effectiveLaborMultiplier);
     lineItems.push(...labor.items);
     baseHardwareCost += labor.totalRetail;
     // Labor purchase cost is usually 0 (internal staff) or a percentage (outsourced)
@@ -88,7 +119,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
     // 3b. Cabling Cost (only if customer hasn't already done cabling)
     if (!cablingDone) {
-      const cabling = calculateCabling(selection, settings, effectiveTech, cablingMeters, locationMultiplier);
+      const cabling = calculateCabling(selection, settings, effectiveTech, cablingMeters, effectiveLaborMultiplier);
       lineItems.push(...cabling.items);
       baseHardwareCost += cabling.totalRetail;
       totalPurchaseCost += cabling.totalCost;
