@@ -236,20 +236,36 @@ export const ReorderStepsSchema = z.array(
 );
 
 // ─────────────────────────────────────────────
-// ONBOARDING — DEALERS / FRANCHISES
+// ADMIN — HUBS & INSTALLERS
 // ─────────────────────────────────────────────
 
-export const DealerOnboardingSchema = z.object({
-  company_name: z.string().min(2, "Company name is required").max(100),
-  owner_name: z.string().min(2, "Owner name is required").max(100),
+export const CreateHubSchema = z.object({
+  name: z.string().min(2, "Hub name is required").max(100),
+  manager_name: z.string().min(2, "Manager name is required").max(100),
   mobile_number: MobileSchema,
-  email: z.string().email("Please provide a valid email address"),
-  gst_number: z.string().optional().nullable(),
-  city: z.string().min(2, "City is required").max(100),
-  pincodes: z.string().min(6, "At least one pincode is required"), // We can parse this into an array on the server
+  email: z.string().email("Please provide a valid email address").optional().nullable(),
+  pincode_coverage: z.array(z.string()).min(1, "At least one pincode is required"),
+  stock_capacity: z.number().int().nonnegative().optional().default(0),
 });
 
-export type DealerOnboardingInput = z.infer<typeof DealerOnboardingSchema>;
+export type CreateHubInput = z.infer<typeof CreateHubSchema>;
+
+export const CreateInstallerSchema = z.object({
+  name: z.string().min(2, "Name is required").max(100),
+  mobile_number: MobileSchema,
+  email: z.string().email().optional().nullable(),
+  serviceable_pincodes: z.array(z.string()).min(1, "At least one pincode is required"),
+  skills: z.array(z.string()).default([]),
+});
+
+export type CreateInstallerInput = z.infer<typeof CreateInstallerSchema>;
+
+export const UpdateInstallerSchema = CreateInstallerSchema.partial().extend({
+  id: z.string().min(1),
+  kyc_status: z.enum(["pending", "verified", "suspended"]).optional(),
+  is_active: z.boolean().optional(),
+});
+export type UpdateInstallerInput = z.infer<typeof UpdateInstallerSchema>;
 
 // ─────────────────────────────────────────────
 // ADMIN — PROMOTERS
@@ -274,6 +290,23 @@ export const UpdatePromoterSchema = CreatePromoterSchema.partial().extend({
 });
 
 export type UpdatePromoterInput = z.infer<typeof UpdatePromoterSchema>;
+
+// ─────────────────────────────────────────────
+// ADMIN — GEO-PRICING RULES
+// ─────────────────────────────────────────────
+
+export const CreateGeoPricingRuleSchema = z.object({
+  level: z.enum(["pincode", "city", "state", "surge"]),
+  target_value: z.string().min(2, "Target value is required").max(100),
+  priority: z.number().int().positive(),
+  labor_multiplier: z.number().positive().optional(),
+  margin_override: z.number().min(0).max(100).optional(),
+  flat_travel_fee: MoneySchema.optional(),
+  is_active: z.boolean().default(true),
+  valid_until: z.string().optional().nullable(),
+});
+
+export type CreateGeoPricingRuleInput = z.infer<typeof CreateGeoPricingRuleSchema>;
 
 /**
  * Validate commission slabs: no gaps, no overlaps.

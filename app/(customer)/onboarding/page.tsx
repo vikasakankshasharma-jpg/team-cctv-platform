@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Building2, User, Phone, Mail, MapPin, FileText, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ShieldCheck, User, Phone, Mail, MapPin, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { DealerOnboardingSchema, DealerOnboardingInput } from "@/lib/validators";
+import { CreateInstallerSchema, CreateInstallerInput } from "@/lib/validators";
 
-export default function DealerOnboardingPage() {
-  const [formData, setFormData] = useState<Partial<DealerOnboardingInput>>({});
+export default function InstallerOnboardingPage() {
+  const [formData, setFormData] = useState<Partial<CreateInstallerInput>>({
+    skills: []
+  });
+  const [pincodesString, setPincodesString] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -18,8 +21,17 @@ export default function DealerOnboardingPage() {
     setErrors({});
     setServerError(null);
 
+    const pincodes = pincodesString
+      .split(",")
+      .map(p => p.trim())
+      .filter(p => p.length === 6 && /^\d+$/.test(p));
+
     // Validate
-    const validation = DealerOnboardingSchema.safeParse(formData);
+    const validation = CreateInstallerSchema.safeParse({
+      ...formData,
+      serviceable_pincodes: pincodes
+    });
+
     if (!validation.success) {
       const newErrors: Record<string, string> = {};
       validation.error.issues.forEach(issue => {
@@ -57,9 +69,9 @@ export default function DealerOnboardingPage() {
           </div>
           <h2 className="text-2xl font-black mb-4">Application Received!</h2>
           <p className="text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed mb-8">
-            Thank you for applying to join the TEAM CCTV Franchise Network. Our partnership team will review your application and contact you shortly.
+            Thank you for applying to join the TEAM CCTV Verified Installer Network. Our dispatch team will review your application and contact you for KYC.
           </p>
-          <Link href="/for-dealers" className="inline-flex items-center justify-center w-full px-6 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-black uppercase tracking-widest text-sm rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-md">
+          <Link href="/" className="inline-flex items-center justify-center w-full px-6 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-black uppercase tracking-widest text-sm rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-md">
             Return to Homepage
           </Link>
         </div>
@@ -74,31 +86,31 @@ export default function DealerOnboardingPage() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/30 blur-[120px] rounded-full pointer-events-none" />
         
         <div className="relative z-10">
-          <Link href="/for-dealers" className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mb-20">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mb-20">
              <ArrowRight className="w-4 h-4 rotate-180" /> Back
           </Link>
           <h1 className="text-4xl xl:text-5xl font-black mb-6 leading-tight tracking-tight">
-            Claim Your <br/><span className="text-blue-500">Exclusive Territory</span>.
+            Become a <br/><span className="text-blue-500">Verified Installer</span>.
           </h1>
           <p className="text-zinc-400 font-medium leading-relaxed max-w-sm">
-            Join India's fastest-growing security franchise network. Fill out the application and our team will evaluate your territory for availability.
+            Join our network to receive steady installation and service jobs directly in your serviceable area.
           </p>
         </div>
 
         <div className="relative z-10 border-t border-zinc-800 pt-8 mt-12">
           <div className="flex items-center gap-4 text-zinc-500 font-black uppercase tracking-widest text-xs">
-            <Building2 className="w-4 h-4" /> 
-            <span>Application Process</span>
+            <ShieldCheck className="w-4 h-4" /> 
+            <span>Verification Process</span>
           </div>
           <ul className="mt-6 space-y-4 text-sm font-medium text-zinc-400">
             <li className="flex gap-3">
               <span className="text-blue-500 font-black">01</span> Submit Details
             </li>
             <li className="flex gap-3">
-              <span className="text-zinc-600 font-black">02</span> Territory Review
+              <span className="text-zinc-600 font-black">02</span> Complete KYC Check
             </li>
             <li className="flex gap-3">
-              <span className="text-zinc-600 font-black">03</span> Partnership Agreement
+              <span className="text-zinc-600 font-black">03</span> Receive Dispatch Jobs
             </li>
           </ul>
         </div>
@@ -109,10 +121,10 @@ export default function DealerOnboardingPage() {
         <div className="max-w-xl w-full">
           
           <div className="lg:hidden mb-12">
-            <Link href="/for-dealers" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors mb-6">
+            <Link href="/" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors mb-6">
               <ArrowRight className="w-4 h-4 rotate-180" /> Back
             </Link>
-            <h1 className="text-3xl font-black tracking-tight">Partner Application</h1>
+            <h1 className="text-3xl font-black tracking-tight">Installer Application</h1>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -122,34 +134,18 @@ export default function DealerOnboardingPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                  <Building2 className="w-3.5 h-3.5" /> Company Name *
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Sharma Security Solutions"
-                  value={formData.company_name || ""}
-                  onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                  className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium"
-                />
-                {errors.company_name && <p className="text-xs text-rose-500 font-bold">{errors.company_name}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                  <User className="w-3.5 h-3.5" /> Owner Name *
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Rahul Sharma"
-                  value={formData.owner_name || ""}
-                  onChange={(e) => setFormData({ ...formData, owner_name: e.target.value })}
-                  className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium"
-                />
-                {errors.owner_name && <p className="text-xs text-rose-500 font-bold">{errors.owner_name}</p>}
-              </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                <User className="w-3.5 h-3.5" /> Full Name *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Rahul Sharma"
+                value={formData.name || ""}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium"
+              />
+              {errors.name && <p className="text-xs text-rose-500 font-bold">{errors.name}</p>}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -169,11 +165,11 @@ export default function DealerOnboardingPage() {
 
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5" /> Email Address *
+                  <Mail className="w-3.5 h-3.5" /> Email Address
                 </label>
                 <input
                   type="email"
-                  placeholder="contact@company.com"
+                  placeholder="contact@example.com"
                   value={formData.email || ""}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium"
@@ -183,46 +179,17 @@ export default function DealerOnboardingPage() {
             </div>
 
             <div className="border-t border-zinc-100 dark:border-zinc-800 pt-6 mt-6 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5" /> City *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Jaipur"
-                    value={formData.city || ""}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium"
-                  />
-                  {errors.city && <p className="text-xs text-rose-500 font-bold">{errors.city}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5" /> GST Number (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="22AAAAA0000A1Z5"
-                    value={formData.gst_number || ""}
-                    onChange={(e) => setFormData({ ...formData, gst_number: e.target.value })}
-                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium"
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5" /> Target Pincodes *
+                  <MapPin className="w-3.5 h-3.5" /> Serviceable Pincodes *
                 </label>
                 <textarea
-                  placeholder="Enter the pincodes you want to cover, separated by commas (e.g. 302001, 302002)"
-                  value={formData.pincodes || ""}
-                  onChange={(e) => setFormData({ ...formData, pincodes: e.target.value })}
+                  placeholder="Enter the pincodes you can service, separated by commas (e.g. 302001, 302002)"
+                  value={pincodesString}
+                  onChange={(e) => setPincodesString(e.target.value)}
                   className="w-full h-24 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium resize-none"
                 />
-                {errors.pincodes && <p className="text-xs text-rose-500 font-bold">{errors.pincodes}</p>}
+                {errors.serviceable_pincodes && <p className="text-xs text-rose-500 font-bold">{errors.serviceable_pincodes}</p>}
               </div>
             </div>
 

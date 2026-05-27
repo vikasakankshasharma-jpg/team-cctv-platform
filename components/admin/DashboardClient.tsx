@@ -150,8 +150,7 @@ export function DashboardClient({ trend, sources, initialRecentLeads, initialInt
       setRecentLeads(leads);
     });
 
-    // Internal Leads Listener
-    const qInternal = query(collection(db, "leads"), where("franchise_dealer_id", "==", null), orderBy("created_at", "desc"), limit(5));
+    const qInternal = query(collection(db, "leads"), where("assigned_installer_id", "==", null), orderBy("created_at", "desc"), limit(5));
     const unsubInternal = onSnapshot(qInternal, (snapshot) => {
       const leads = snapshot.docs.map(doc => {
         const d = doc.data() as Lead;
