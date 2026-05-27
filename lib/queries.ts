@@ -86,7 +86,7 @@ export async function getWizardConfig() {
       } as unknown as WizardStep;
     });
 
-    let wizardSteps = await Promise.all(stepPromises);
+    const wizardSteps = await Promise.all(stepPromises);
 
     // --- INJECT DYNAMIC RESOLUTION STEP ---
     const camerasSnapshot = await adminDb

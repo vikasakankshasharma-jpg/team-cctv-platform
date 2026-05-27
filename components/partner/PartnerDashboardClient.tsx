@@ -87,7 +87,6 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
 
               <div className="w-[100px] h-[100px] bg-white rounded-[20px] p-2 shadow-inner border border-zinc-200 shrink-0 flex items-center justify-center">
                 {typeof window !== "undefined" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img 
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/?ref=' + referralCode)}`} 
                     alt="Referral QR Code" 

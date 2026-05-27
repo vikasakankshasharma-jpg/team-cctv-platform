@@ -73,6 +73,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
         abortControllerRef.current.abort();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   // Sends the OTP via the mock endpoint

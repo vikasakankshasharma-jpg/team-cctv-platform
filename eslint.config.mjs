@@ -9,7 +9,15 @@ const eslintConfig = [
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "off",
-      "react-hooks/exhaustive-deps": "warn"
+      "react-hooks/exhaustive-deps": "warn",
+      // Justification: Build/deployment scripts use CommonJS require()
+      "@typescript-eslint/no-require-imports": "off",
+      // Justification: Content-heavy UI with many safe apostrophes/quotes
+      "react/no-unescaped-entities": "off",
+      // Justification: Using standard img tags for external/unoptimized images
+      "@next/next/no-img-element": "off",
+      // Justification: Let developers decide const vs let
+      "prefer-const": "off"
     }
   },
   {

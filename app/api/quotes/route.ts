@@ -60,9 +60,9 @@ export async function POST(request: NextRequest) {
       return ApiResponse.forbidden("Forbidden: Lead ownership mismatch");
     }
 
-    let products = productsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Product[];
-    let addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Addon[];
-    let geoRules = geoRulesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+    const products = productsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Product[];
+    const addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Addon[];
+    const geoRules = geoRulesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
 
     const settings = settingsSnap.data() as AppSettings;
