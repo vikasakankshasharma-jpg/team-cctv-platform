@@ -21,21 +21,42 @@ interface CityLandingPageProps {
   neighborhoods: string[];
   commercialAreas?: string;
   ctaText?: string;
+  brand?: string;
+  intent?: string;
 }
 
 export default function CityLandingPage({
   cityName,
-  tagline = `Serving All of ${cityName}`,
+  tagline,
   heroHighlight = `Across ${cityName}.`,
-  description = `Protect your home or business in ${cityName}. Get an exact price for your CCTV setup online in under 2 minutes.`,
+  description,
   neighborhoods,
   commercialAreas = "local businesses",
-  ctaText = `Get ${cityName} Quotation`
+  ctaText,
+  brand = "",
+  intent = "installation"
 }: CityLandingPageProps) {
   const currentMonthYear = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
   const searchParams = useSearchParams();
   const pincodeParam = searchParams.get("pincode");
-  const wizardUrl = `/wizard?city=${cityName}${pincodeParam ? `&pincode=${pincodeParam}` : ''}`;
+  const wizardUrl = `/wizard?city=${cityName}${pincodeParam ? `&pincode=${pincodeParam}` : ''}${brand ? `&brand=${brand}` : ''}`;
+
+  const brandPrefix = brand ? `${brand} ` : "";
+  const derivedTagline = tagline || `Serving All of ${cityName} with ${brand || "Premium"} Security`;
+  const derivedDescription = description || (
+    intent === "quotation"
+      ? `Compare exact ${brandPrefix}CCTV camera pricing and installation setup costs online in under 2 minutes for your ${cityName} property.`
+      : `Protect your home or business in ${cityName} with certified ${brandPrefix}CCTV systems. Get an exact, transparent quote online in under 2 minutes.`
+  );
+  const derivedCtaText = ctaText || (
+    intent === "quotation" 
+      ? `Get ${brandPrefix}CCTV Quote` 
+      : `Book ${brandPrefix}Installation`
+  );
+  
+  const mainTitle = intent === "quotation"
+    ? `Get Instant ${brandPrefix}CCTV Quotation`
+    : `Professional ${brandPrefix}CCTV Installation`;
 
   return (
     <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
@@ -61,18 +82,18 @@ export default function CityLandingPage({
         <div className="max-w-7xl mx-auto flex flex-col items-center text-center relative">
           <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-12 shadow-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
             <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-500" />
-            <span>{tagline}</span>
+            <span>{derivedTagline}</span>
             <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
             <span className="text-blue-600 dark:text-emerald-500">Same-Day Survey</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 leading-[0.9] animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            Professional CCTV Installation <br/>
+            {mainTitle} <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">{heroHighlight}</span>
           </h1>
 
           <p className="text-base sm:text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-3xl mb-8 sm:mb-12 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
-             {description}
+             {derivedDescription}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-center w-full sm:w-auto animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
@@ -80,7 +101,7 @@ export default function CityLandingPage({
               href={wizardUrl}
               className="group relative inline-flex justify-center items-center gap-4 sm:gap-5 px-8 sm:px-12 py-4 sm:py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[28px] sm:rounded-[32px] font-black text-lg sm:text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-1 sm:hover:-translate-y-2 active:scale-95 touch-manipulation"
             >
-              {ctaText}
+              {derivedCtaText}
               <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-2 transition-transform duration-300" />
             </Link>
 
@@ -114,7 +135,7 @@ export default function CityLandingPage({
          <div className="max-w-5xl mx-auto">
             {/* Aligned residential pricing to platform base 18k-28k */}
             <div className="text-center mb-16">
-               <h2 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4">CCTV Installation Cost in {cityName}</h2>
+               <h2 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4">{brandPrefix}CCTV Installation Cost in {cityName}</h2>
                <p className="text-zinc-500 dark:text-zinc-400 font-medium">Updated transparent pricing for {currentMonthYear}</p>
             </div>
 
@@ -123,16 +144,16 @@ export default function CityLandingPage({
                   <div className="inline-block px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-6">Residential</div>
                   <h3 className="text-2xl font-black mb-2">Standard 4-Camera Setup</h3>
                   <div className="text-4xl font-black text-zinc-900 dark:text-white mb-6">₹18,000 <span className="text-xl text-zinc-400 font-medium">- ₹28,000</span></div>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">Perfect for independent houses and small shops. Includes CP Plus cameras, DVR, wiring, and professional installation.</p>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">Perfect for independent houses and small shops. Includes {brand || "CP Plus"} cameras, DVR, wiring, and professional installation.</p>
                   <ul className="space-y-4 mb-8">
-                     {["4x 2MP/5MP HD Cameras", "4-Channel DVR + HDD", "Power Supply & Connectors", "Complete Installation Labor"].map((item, i) => (
+                     {[`4x 2MP/5MP HD ${brand || "CP Plus"} Cameras`, "4-Channel DVR + HDD", "Power Supply & Connectors", "Complete Installation Labor"].map((item, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                            <CheckCircle2 className="w-5 h-5 text-emerald-500" /> {item}
                         </li>
                      ))}
                   </ul>
                   <Link
-                    href={`/wizard?segment=residential&city=${encodeURIComponent(cityName)}`}
+                    href={`/wizard?segment=residential&city=${encodeURIComponent(cityName)}${brand ? `&brand=${brand}` : ''}`}
                     className="block w-full py-4 text-center rounded-2xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold transition-colors"
                   >
                     Get Exact Quote →
@@ -146,14 +167,14 @@ export default function CityLandingPage({
                   <div className="text-4xl font-black text-white mb-6">₹30k <span className="text-xl text-zinc-400 font-medium">- ₹80k+</span></div>
                   <p className="text-zinc-300 text-sm mb-8 leading-relaxed">Ideal for offices, warehouses, and factories in {commercialAreas}. High-definition IP cameras with extended storage.</p>
                   <ul className="space-y-4 mb-8">
-                     {["Network/IP Cameras", "High-Capacity NVR System", "Structured Cabling", "Advanced Remote Viewing Setup"].map((item, i) => (
+                     {[`Network/IP ${brand || "Hikvision"} Cameras`, "High-Capacity NVR System", "Structured Cabling", "Advanced Remote Viewing Setup"].map((item, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-medium text-white">
                            <CheckCircle2 className="w-5 h-5 text-blue-300 dark:text-blue-200" /> {item}
                         </li>
                      ))}
                   </ul>
                   <Link
-                    href={`/wizard?segment=commercial&city=${encodeURIComponent(cityName)}`}
+                    href={`/wizard?segment=commercial&city=${encodeURIComponent(cityName)}${brand ? `&brand=${brand}` : ''}`}
                     className="block w-full py-4 text-center rounded-2xl bg-white text-zinc-900 hover:bg-zinc-100 font-bold transition-colors"
                   >
                     Build Custom Setup →

@@ -13239,7 +13239,7 @@
       {
         "name": "Ajmer",
         "slug": "ajmer",
-        "served": false
+        "served": true
       },
       {
         "name": "Aklera",
@@ -13604,7 +13604,7 @@
       {
         "name": "Jodhpur",
         "slug": "jodhpur",
-        "served": false
+        "served": true
       },
       {
         "name": "Kaman",
@@ -13664,7 +13664,7 @@
       {
         "name": "Kota",
         "slug": "kota",
-        "served": false
+        "served": true
       },
       {
         "name": "Kotputli",
