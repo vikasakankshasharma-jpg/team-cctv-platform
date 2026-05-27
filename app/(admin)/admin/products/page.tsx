@@ -129,6 +129,7 @@ export default function AdminProductsPage() {
         setEditingProduct(prev => ({ ...prev, daily_gb_per_camera: estimated }));
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingProduct?.resolution_mp, editingProduct?.compression, editingProduct?.category]);
 
   const handleSave = async (e: React.FormEvent) => {

@@ -38,7 +38,7 @@ export default function DashboardLoading() {
               <div key={i} className="flex-1 flex flex-col items-center gap-3">
                 <div
                   className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-xl"
-                  style={{ height: `${30 + Math.random() * 60}%` }}
+                  style={{ height: `${30 + ((i * 17) % 60)}%` }}
                 />
                 <div className="h-2 w-6 bg-zinc-100 dark:bg-zinc-800 rounded-full" />
               </div>

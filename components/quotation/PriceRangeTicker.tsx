@@ -91,7 +91,7 @@ export function PriceRangeTicker({
     });
 
     return { lowest: lowestConfig, highest: highestConfig };
-  }, [cameraCount, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer, selection]);
+  }, [cameraCount, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer, selection, minTech, maxTech]);
 
   if (!lowest || !highest) return null;
 

@@ -21,6 +21,7 @@ export function ServiceAreaModal() {
   // Load locations when modal opens
   useEffect(() => {
     if (isOpen && locations.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(true);
       fetch("/data/india-locations.json")
         .then(res => res.json())

@@ -144,7 +144,7 @@ export function FullCustomizerPanel() {
       list = list.filter(p => p.display_name.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q));
     }
     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
-  }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]);
+  }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search, activeFilters]);
 
   const filteredRecorders = useMemo(() => {
     let list = products.filter(p => p.category === "recorder" && p.is_active);
@@ -196,7 +196,7 @@ export function FullCustomizerPanel() {
     
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()) || (a.technical_name || "").toLowerCase().includes(search.toLowerCase()));
     return list.sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
-  }, [addons, search, activeFilters]);
+  }, [addons, search, activeFilters, selection.technology]);
 
   const filteredPower = useMemo(() => {
     const keyword = selection.technology === "IP" ? "poe" : "psu";

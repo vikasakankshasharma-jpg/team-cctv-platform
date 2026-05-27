@@ -1,0 +1,338 @@
+C:\Users\hp\Documents\TEAM Website\secure-easy\app\(admin)\admin\loading.tsx
+  41:44 react-hooks/purity Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\app\(admin)\admin\loading.tsx:41:44
+  39 |                 <div
+  40 |                   className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-xl"
+> 41 |                   style={{ height: `${30 + Math.random() * 60}%` }}
+     |                                            ^^^^^^^^^^^^^ Cannot call impure function
+  42 |                 />
+  43 |                 <div className="h-2 w-6 bg-zinc-100 dark:bg-zinc-800 rounded-full" />
+  44 |               </div>
+C:\Users\hp\Documents\TEAM Website\secure-easy\app\(admin)\admin\products\page.tsx
+  132:6 react-hooks/exhaustive-deps React Hook useEffect has a missing dependency: 'editingProduct'. Either include it or remove the dependency array.
+C:\Users\hp\Documents\TEAM Website\secure-easy\app\(customer)\quote\[leadId]\review\[quoteId]\QuoteReviewClient.tsx
+  661:19 @next/next/no-img-element Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+  673:19 @next/next/no-img-element Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+C:\Users\hp\Documents\TEAM Website\secure-easy\app\api\quotes\route.ts
+  63:9 prefer-const 'products' is never reassigned. Use 'const' instead.
+  64:9 prefer-const 'addons' is never reassigned. Use 'const' instead.
+  65:9 prefer-const 'geoRules' is never reassigned. Use 'const' instead.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\admin\BulkImportExport.tsx
+  393:65 react/no-unescaped-entities `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+  393:85 react/no-unescaped-entities `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\admin\CategoryGroupSelector.tsx
+  119:46 react/no-unescaped-entities `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+  119:55 react/no-unescaped-entities `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\admin\ProductInventory.tsx
+  284:5 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\admin\ProductInventory.tsx:284:5
+  282 |
+  283 |   useEffect(() => {
+> 284 |     setVisibleCount(50);
+      |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  285 |   }, [search, filterCat, filterTech, filterStatus, filterBrand]);
+  286 |
+  287 |   const brands = useMemo(() => {
+  424:22 react/no-unescaped-entities `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\landing\PincodeWidget.tsx
+  39:25 react/no-unescaped-entities `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\AddYourOwnModal.tsx
+  76:90 react/no-unescaped-entities `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+  76:103 react/no-unescaped-entities `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\AllSystemsGrid.tsx
+  184:19 @next/next/no-img-element Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\ConfiguratorView.tsx
+  176:6 react-hooks/exhaustive-deps React Hook useEffect has a missing dependency: 'evaluatedRules'. Either include it or remove the dependency array.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\FullCustomizerPanel.tsx
+  99:35 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `activeFilters.type`, but the source dependencies were [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\FullCustomizerPanel.tsx:99:35
+   97 |   }, [products]);
+   98 |
+>  99 |   const filteredCameras = useMemo(() => {
+      |                                   ^^^^^^^
+> 100 |     let list = products.filter(p => p.category === "camera" && p.is_active);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     if (selection.technology && selection.technology !== "both" as any) {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |   }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]);
+      | ^^^^ Could not preserve existing manual memoization
+  148 |
+  149 |   const filteredRecorders = useMemo(() => {
+  150 |     let list = products.filter(p => p.category === "recorder" && p.is_active);
+  99:35 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `activeFilters.lens`, but the source dependencies were [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\FullCustomizerPanel.tsx:99:35
+   97 |   }, [products]);
+   98 |
+>  99 |   const filteredCameras = useMemo(() => {
+      |                                   ^^^^^^^
+> 100 |     let list = products.filter(p => p.category === "camera" && p.is_active);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     if (selection.technology && selection.technology !== "both" as any) {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |   }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]);
+      | ^^^^ Could not preserve existing manual memoization
+  148 |
+  149 |   const filteredRecorders = useMemo(() => {
+  150 |     let list = products.filter(p => p.category === "recorder" && p.is_active);
+  99:35 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `activeFilters.nv`, but the source dependencies were [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\FullCustomizerPanel.tsx:99:35
+   97 |   }, [products]);
+   98 |
+>  99 |   const filteredCameras = useMemo(() => {
+      |                                   ^^^^^^^
+> 100 |     let list = products.filter(p => p.category === "camera" && p.is_active);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     if (selection.technology && selection.technology !== "both" as any) {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |   }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]);
+      | ^^^^ Could not preserve existing manual memoization
+  148 |
+  149 |   const filteredRecorders = useMemo(() => {
+  150 |     let list = products.filter(p => p.category === "recorder" && p.is_active);
+  99:35 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `activeFilters.brand`, but the source dependencies were [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\FullCustomizerPanel.tsx:99:35
+   97 |   }, [products]);
+   98 |
+>  99 |   const filteredCameras = useMemo(() => {
+      |                                   ^^^^^^^
+> 100 |     let list = products.filter(p => p.category === "camera" && p.is_active);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     if (selection.technology && selection.technology !== "both" as any) {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |   }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]);
+      | ^^^^ Could not preserve existing manual memoization
+  148 |
+  149 |   const filteredRecorders = useMemo(() => {
+  150 |     let list = products.filter(p => p.category === "recorder" && p.is_active);
+  99:35 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `activeFilters.mp`, but the source dependencies were [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\FullCustomizerPanel.tsx:99:35
+   97 |   }, [products]);
+   98 |
+>  99 |   const filteredCameras = useMemo(() => {
+      |                                   ^^^^^^^
+> 100 |     let list = products.filter(p => p.category === "camera" && p.is_active);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     if (selection.technology && selection.technology !== "both" as any) {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |   }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]);
+      | ^^^^ Could not preserve existing manual memoization
+  148 |
+  149 |   const filteredRecorders = useMemo(() => {
+  150 |     let list = products.filter(p => p.category === "recorder" && p.is_active);
+  99:35 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `activeFilters.type`, but the source dependencies were [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\FullCustomizerPanel.tsx:99:35
+   97 |   }, [products]);
+   98 |
+>  99 |   const filteredCameras = useMemo(() => {
+      |                                   ^^^^^^^
+> 100 |     let list = products.filter(p => p.category === "camera" && p.is_active);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     if (selection.technology && selection.technology !== "both" as any) {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |   }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]);
+      | ^^^^ Could not preserve existing manual memoization
+  148 |
+  149 |   const filteredRecorders = useMemo(() => {
+  150 |     let list = products.filter(p => p.category === "recorder" && p.is_active);
+  99:35 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `activeFilters.lens`, but the source dependencies were [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\FullCustomizerPanel.tsx:99:35
+   97 |   }, [products]);
+   98 |
+>  99 |   const filteredCameras = useMemo(() => {
+      |                                   ^^^^^^^
+> 100 |     let list = products.filter(p => p.category === "camera" && p.is_active);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     if (selection.technology && selection.technology !== "both" as any) {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |   }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]);
+      | ^^^^ Could not preserve existing manual memoization
+  148 |
+  149 |   const filteredRecorders = useMemo(() => {
+  150 |     let list = products.filter(p => p.category === "recorder" && p.is_active);
+  99:35 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `activeFilters.nv`, but the source dependencies were [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\FullCustomizerPanel.tsx:99:35
+   97 |   }, [products]);
+   98 |
+>  99 |   const filteredCameras = useMemo(() => {
+      |                                   ^^^^^^^
+> 100 |     let list = products.filter(p => p.category === "camera" && p.is_active);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     if (selection.technology && selection.technology !== "both" as any) {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |   }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search]);
+      | ^^^^ Could not preserve existing manual memoization
+  148 |
+  149 |   const filteredRecorders = useMemo(() => {
+  150 |     let list = products.filter(p => p.category === "recorder" && p.is_active);
+  147:6 react-hooks/exhaustive-deps React Hook useMemo has missing dependencies: 'activeFilters.brand', 'activeFilters.lens', 'activeFilters.mp', 'activeFilters.nv', and 'activeFilters.type'. Either include them or remove the dependency array.
+  168:35 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `selection.technology`, but the source dependencies were [addons, search, activeFilters]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\FullCustomizerPanel.tsx:168:35
+  166 |   }, [products, selection.technology, selection.camera_count, search, activeFilters]);
+  167 |
+> 168 |   const filteredStorage = useMemo(() => {
+      |                                   ^^^^^^^
+> 169 |     let list = addons.filter(a => a.category === "storage" && a.is_active);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 170 |     
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 198 |     return list.sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 199 |   }, [addons, search, activeFilters]);
+      | ^^^^ Could not preserve existing manual memoization
+  200 |
+  201 |   const filteredPower = useMemo(() => {
+  202 |     const keyword = selection.technology === "IP" ? "poe" : "psu";
+  199:6 react-hooks/exhaustive-deps React Hook useMemo has a missing dependency: 'selection.technology'. Either include it or remove the dependency array.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\PriceRangeTicker.tsx
+  40:39 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `minTech`, but the source dependencies were [cameraCount, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer, selection]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\PriceRangeTicker.tsx:40:39
+  38 |   const maxTech = (selection.technology === "HD") ? "HD" : "IP";
+  39 |
+> 40 |   const { lowest, highest } = useMemo(() => {
+     |                                       ^^^^^^^
+> 41 |     if (!products.length || !settings) return { lowest: null, highest: null };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 93 |     return { lowest: lowestConfig, highest: highestConfig };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 94 |   }, [cameraCount, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer, selection]);
+     | ^^^^ Could not preserve existing manual memoization
+  95 |
+  96 |   if (!lowest || !highest) return null;
+  97 |
+  40:39 react-hooks/preserve-manual-memoization Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `maxTech`, but the source dependencies were [cameraCount, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer, selection]. Inferred different dependency than source.
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\quotation\PriceRangeTicker.tsx:40:39
+  38 |   const maxTech = (selection.technology === "HD") ? "HD" : "IP";
+  39 |
+> 40 |   const { lowest, highest } = useMemo(() => {
+     |                                       ^^^^^^^
+> 41 |     if (!products.length || !settings) return { lowest: null, highest: null };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 93 |     return { lowest: lowestConfig, highest: highestConfig };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 94 |   }, [cameraCount, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer, selection]);
+     | ^^^^ Could not preserve existing manual memoization
+  95 |
+  96 |   if (!lowest || !highest) return null;
+  97 |
+  94:6 react-hooks/exhaustive-deps React Hook useMemo has missing dependencies: 'maxTech' and 'minTech'. Either include them or remove the dependency array.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\salesperson\WalkInQuoteClient.tsx
+  89:70 react/no-unescaped-entities `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\shared\PhoneCaptureModal.tsx
+  76:6 react-hooks/exhaustive-deps React Hook useEffect has a missing dependency: 'handleAutoSubmit'. Either include it or remove the dependency array.
+  302:21 react/no-unescaped-entities `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+  302:27 react/no-unescaped-entities `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\shared\ServiceAreaModal.tsx
+  24:7 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\hp\Documents\TEAM Website\secure-easy\components\shared\ServiceAreaModal.tsx:24:7
+  22 |   useEffect(() => {
+  23 |     if (isOpen && locations.length === 0) {
+> 24 |       setIsLoading(true);
+     |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |       fetch("/data/india-locations.json")
+  26 |         .then(res => res.json())
+  27 |         .then(data => {
+C:\Users\hp\Documents\TEAM Website\secure-easy\fetch_leads.js
+  1:15 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+  2:22 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+C:\Users\hp\Documents\TEAM Website\secure-easy\lib\queries.ts
+  89:9 prefer-const 'wizardSteps' is never reassigned. Use 'const' instead.
+C:\Users\hp\Documents\TEAM Website\secure-easy\push-vercel-env.js
+  1:22 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+C:\Users\hp\Documents\TEAM Website\secure-easy\replace_theme.js
+  1:12 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+  2:14 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+C:\Users\hp\Documents\TEAM Website\secure-easy\scripts\migrate_products.ts
+  8:26 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+C:\Users\hp\Documents\TEAM Website\secure-easy\scripts\visual_test.js
+  1:22 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+  2:14 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+C:\Users\hp\Documents\TEAM Website\secure-easy\test-lead.js
+  1:15 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+C:\Users\hp\Documents\TEAM Website\secure-easy\test-puppeteer.js
+  1:19 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+  2:18 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+C:\Users\hp\Documents\TEAM Website\secure-easy\test.js
+  1:33 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+  2:26 @typescript-eslint/no-require-imports A `require()` style import is forbidden.
+  3:24 @typescript-eslint/no-require-imports A `require()` style import is forbidden.

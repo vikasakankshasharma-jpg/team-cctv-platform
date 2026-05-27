@@ -281,6 +281,7 @@ export function ProductInventory({ products, onEdit, onToggle, onFiltersChange }
   }, [filterCat, filterTech, onFiltersChange]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleCount(50);
   }, [search, filterCat, filterTech, filterStatus, filterBrand]);
 

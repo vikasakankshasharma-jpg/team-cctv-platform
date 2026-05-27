@@ -173,7 +173,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       setPricingResults({ budget: calcTier("budget"), recommended: calcTier("recommended"), premium: calcTier("premium") });
     }, 300);
     return () => clearTimeout(timeout);
-  }, [selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, propertyType, requirements, setPricingResults, promoterDiscount, lead.active_offer]);
+  }, [selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, propertyType, requirements, setPricingResults, promoterDiscount, lead.active_offer, evaluatedRules]);
 
   const activePricing = useMemo(() => {
     const cT = active_checkout_option?.technology ?? selection.technology;
