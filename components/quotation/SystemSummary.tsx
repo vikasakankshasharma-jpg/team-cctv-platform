@@ -1,19 +1,28 @@
 "use client";
 
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Wrench } from "lucide-react";
 import { QuoteLineItem, QuoteAddon } from "@/types";
 
 interface SystemSummaryProps {
   items: QuoteLineItem[];
   addons: QuoteAddon[];
+  isCustomOverride?: boolean;
 }
 
-export function SystemSummary({ items, addons }: SystemSummaryProps) {
+export function SystemSummary({ items, addons, isCustomOverride }: SystemSummaryProps) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <ShieldCheck className="w-5 h-5 text-emerald-500" />
-        <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">System Summary</h3>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <ShieldCheck className="w-5 h-5 text-emerald-500" />
+          <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">System Summary</h3>
+        </div>
+        {isCustomOverride && (
+          <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50 px-2.5 py-1 rounded-full">
+            <Wrench className="w-3 h-3" />
+            <span className="text-[9px] font-black uppercase tracking-widest">Custom Selection</span>
+          </div>
+        )}
       </div>
 
       <div className="rounded-[24px] border border-zinc-100 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-950 shadow-sm">

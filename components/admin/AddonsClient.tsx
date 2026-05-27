@@ -96,15 +96,27 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
                   <tr key={item.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all group/row">
                     <td className="px-8 py-6">
                       <div className="font-black text-zinc-900 dark:text-white text-base leading-tight group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-colors uppercase tracking-tight">{item.display_name}</div>
-                      {item.technical_name && (
-                        <div className="text-[10px] text-zinc-400 dark:text-zinc-600 font-bold mt-1.5 uppercase tracking-widest flex items-center gap-2">
-                           <span className="w-1 h-1 rounded-full bg-zinc-200 dark:bg-zinc-800" /> {item.technical_name}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                        {item.category && (
+                          <span className="inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-blue-100 dark:border-blue-500/20">
+                            {item.category}
+                          </span>
+                        )}
+                        {item.category === "storage" && item.storage_type && (
+                          <span className="inline-flex items-center gap-1.5 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-purple-100 dark:border-purple-500/20">
+                            {item.storage_type}
+                          </span>
+                        )}
+                        {item.technical_name && (
+                          <div className="text-[10px] text-zinc-400 dark:text-zinc-600 font-bold uppercase tracking-widest flex items-center gap-2">
+                             <span className="w-1 h-1 rounded-full bg-zinc-200 dark:bg-zinc-800" /> {item.technical_name}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-8 py-6 text-right">
                       <div className="flex flex-col items-end">
-                        <span className="font-black text-zinc-900 dark:text-white text-base">₹{item.price.toLocaleString('en-IN')}</span>
+                        <span className="font-black text-zinc-900 dark:text-white text-base">₹{(item.price || item.unit_price || 0).toLocaleString('en-IN')}</span>
                         <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-1">Net Base</span>
                       </div>
                     </td>

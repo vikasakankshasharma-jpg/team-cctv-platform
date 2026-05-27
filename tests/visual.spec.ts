@@ -166,4 +166,56 @@ test.describe('E2E Visual Screen-by-Screen Scanner', () => {
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, '17-admin-settings.png') });
     console.log('Saved 17-admin-settings.png');
   });
+
+  test('3. Salesperson Flow - Authenticate and Scan Dashboard', async ({ context, page }) => {
+    console.log('Setting Salesperson Bypass Cookie...');
+    await context.addCookies([
+      {
+        name: 'admin_session',
+        value: 'mock-salesperson-session',
+        domain: 'localhost',
+        path: '/',
+      }
+    ]);
+    console.log('Navigating to Salesperson Dashboard...');
+    await page.goto('/salesperson/dashboard');
+    await page.waitForTimeout(3000);
+    await page.screenshot({ path: path.join(SCREENSHOTS_DIR, '18-salesperson-dashboard.png') });
+    console.log('Saved 18-salesperson-dashboard.png');
+
+    console.log('Navigating to Salesperson Leads...');
+    await page.goto('/salesperson/leads');
+    await page.waitForTimeout(3000);
+    await page.screenshot({ path: path.join(SCREENSHOTS_DIR, '18b-salesperson-leads.png') });
+    console.log('Saved 18b-salesperson-leads.png');
+  });
+
+  test('4. Dealer Flow - Authenticate and Scan Dashboard', async ({ context, page }) => {
+    console.log('Setting Dealer Bypass Cookie...');
+    await context.addCookies([
+      {
+        name: 'dealer_session',
+        value: 'mock-dealer-session',
+        domain: 'localhost',
+        path: '/',
+      }
+    ]);
+    console.log('Navigating to Dealer Dashboard...');
+    await page.goto('/dealer/dashboard');
+    await page.waitForTimeout(3000);
+    await page.screenshot({ 
+      path: path.join(SCREENSHOTS_DIR, '19-dealer-dashboard.png'),
+      fullPage: true 
+    });
+    console.log('Saved 19-dealer-dashboard.png');
+
+    console.log('Navigating to Dealer Leads...');
+    await page.goto('/dealer/leads');
+    await page.waitForTimeout(3000);
+    await page.screenshot({ 
+      path: path.join(SCREENSHOTS_DIR, '19b-dealer-leads.png'),
+      fullPage: true 
+    });
+    console.log('Saved 19b-dealer-leads.png');
+  });
 });

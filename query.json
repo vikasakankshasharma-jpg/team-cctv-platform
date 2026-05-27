@@ -1,0 +1,18 @@
+{
+  "structuredQuery": {
+    "from": [
+      {
+        "collectionId": "leads"
+      }
+    ],
+    "orderBy": [
+      {
+        "field": {
+          "fieldPath": "created_at"
+        },
+        "direction": "DESCENDING"
+      }
+    ],
+    "limit": 5
+  }
+}

@@ -8,7 +8,7 @@ import type { NextRequest } from 'next/server';
  * 2. Redirection for unauthenticated users
  * 3. Robust Security Headers (CSP, HSTS, X-Frame, etc.)
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = request.cookies.get('admin_session')?.value;
 

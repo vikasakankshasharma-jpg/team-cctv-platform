@@ -83,10 +83,10 @@ export default function WalkInQuoteClient() {
   return (
     <div className="max-w-2xl space-y-8 animate-in fade-in duration-500">
       {!quoteUrl ? (
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 space-y-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 space-y-6 shadow-sm">
           <div>
-            <h2 className="text-xl font-black text-zinc-900 dark:text-white mb-1">Walk-In Customer Details</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Fill in the customer's basic info to generate an instant quotation link.</p>
+            <h2 className="text-xl font-black text-white mb-1">Walk-In Customer Details</h2>
+            <p className="text-sm text-zinc-400">Fill in the customer's basic info to generate an instant quotation link.</p>
           </div>
 
           {/* Name */}
@@ -99,7 +99,7 @@ export default function WalkInQuoteClient() {
               value={form.name}
               onChange={e => set("name", e.target.value)}
               placeholder="e.g. Ramesh Sharma"
-              className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-zinc-400"
+              className="w-full px-4 py-3 rounded-2xl border border-white/10 bg-[#030303] text-white text-sm font-medium focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-zinc-500"
             />
           </div>
 
@@ -115,7 +115,7 @@ export default function WalkInQuoteClient() {
               value={form.mobile}
               onChange={e => set("mobile", e.target.value)}
               placeholder="10-digit mobile number"
-              className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-zinc-400"
+              className="w-full px-4 py-3 rounded-2xl border border-white/10 bg-[#030303] text-white text-sm font-medium focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-zinc-500"
             />
           </div>
 
@@ -130,7 +130,7 @@ export default function WalkInQuoteClient() {
                 value={form.city}
                 onChange={e => set("city", e.target.value)}
                 placeholder="e.g. Jaipur"
-                className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                className="w-full px-4 py-3 rounded-2xl border border-white/10 bg-[#030303] text-white text-sm font-medium focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-zinc-500"
               />
             </div>
             <div className="space-y-1.5">
@@ -140,7 +140,7 @@ export default function WalkInQuoteClient() {
               <select
                 value={form.property_type}
                 onChange={e => set("property_type", e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                className="w-full px-4 py-3 rounded-2xl border border-white/10 bg-[#030303] text-white text-sm font-medium focus:outline-none focus:border-blue-500/50 transition-all"
               >
                 {PROPERTY_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
@@ -180,20 +180,20 @@ export default function WalkInQuoteClient() {
           </button>
         </form>
       ) : (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in zoom-in-95 duration-500">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in zoom-in-95 duration-500">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-xl shadow-emerald-500/30">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
               <Check className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-zinc-900 dark:text-white">Quote Ready!</h2>
-              <p className="text-sm text-zinc-500">Share this link with <span className="font-bold text-zinc-700 dark:text-zinc-300">{form.name}</span></p>
+              <h2 className="text-xl font-black text-white">Quote Ready!</h2>
+              <p className="text-sm text-zinc-400">Share this link with <span className="font-bold text-white">{form.name}</span></p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-            <p className="text-sm font-mono text-zinc-600 dark:text-zinc-300 flex-1 truncate">{quoteUrl}</p>
-            <button onClick={handleCopy} className={`p-2 rounded-xl transition-all ${copied ? "bg-emerald-500 text-white" : "bg-zinc-200 dark:bg-zinc-700 hover:bg-blue-500 hover:text-white"}`}>
+          <div className="flex items-center gap-2 p-4 rounded-2xl bg-[#030303] border border-white/10">
+            <p className="text-sm font-mono text-zinc-300 flex-1 truncate">{quoteUrl}</p>
+            <button onClick={handleCopy} className={`p-2 rounded-xl transition-all ${copied ? "bg-emerald-500 text-white" : "bg-white/10 text-white hover:bg-blue-500 hover:text-white"}`}>
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
@@ -201,13 +201,13 @@ export default function WalkInQuoteClient() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={handleWhatsApp}
-              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20"
+              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]"
             >
               <MessageSquare className="w-4 h-4" /> Send on WhatsApp
             </button>
             <button
               onClick={() => { setQuoteUrl(null); setForm({ name: "", mobile: "", city: "Jaipur", property_type: "home", camera_count: 4 }); }}
-              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all"
+              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-2xl font-black text-sm uppercase tracking-widest transition-all"
             >
               New Quote
             </button>

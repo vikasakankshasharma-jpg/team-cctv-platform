@@ -154,28 +154,28 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
       
       {/* ─── LEFT: Product Catalog Editor (8 Cols) ──────────────────── */}
       <div className="xl:col-span-8 space-y-6">
-        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-6 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-md">
+        <div className="flex items-center justify-between bg-card p-6 rounded-2xl border border-border shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
-              <Zap className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Active Price Board</h2>
-              <p className="text-xs font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">Modified {changedIds.size} SKUs in this session</p>
+              <h2 className="text-lg font-semibold text-foreground tracking-tight">Active Price Board</h2>
+              <p className="text-xs font-medium text-muted-foreground mt-0.5">Modified {changedIds.size} SKUs in this session</p>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
             <Link 
               href="/admin/pricing/logs"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <RotateCcw className="w-4 h-4" /> History
             </Link>
             {changedIds.size > 0 && (
               <button 
                 onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               >
                 <RotateCcw className="w-4 h-4" /> Reset
               </button>
@@ -183,10 +183,10 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
             <button 
               onClick={handlePublish}
               disabled={changedIds.size === 0 || isPublishing}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-xs font-semibold transition-all ${
                 changedIds.size > 0 
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95" 
-                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm" 
+                  : "bg-secondary text-muted-foreground cursor-not-allowed"
               }`}
             >
               {isPublishing ? "Publishing..." : <><Save className="w-4 h-4" /> Publish Prices</>}
@@ -195,76 +195,76 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
         </div>
 
         {categories.map((cat, idx) => (
-          <div key={idx} className="bg-white dark:bg-zinc-900 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-md overflow-hidden">
-            <div className="bg-zinc-50 dark:bg-zinc-900 px-8 py-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3">
-              <cat.icon className="w-5 h-5 text-zinc-400" />
-              <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-[0.1em] text-xs">{cat.name}</h3>
+          <div key={idx} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+            <div className="bg-secondary/50 px-6 py-4 border-b border-border flex items-center gap-3">
+              <cat.icon className="w-4 h-4 text-muted-foreground" />
+              <h3 className="font-semibold text-foreground text-sm tracking-tight">{cat.name}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="text-zinc-400 dark:text-zinc-600 uppercase text-[9px] font-black tracking-widest border-b border-zinc-50 dark:border-zinc-800">
+                <thead className="text-muted-foreground text-xs font-semibold uppercase tracking-wider border-b border-border">
                   <tr>
-                    <th className="px-8 py-4">Display Name</th>
-                    <th className="px-8 py-4">SKU / Technical Name</th>
-                    <th className="px-8 py-4 text-right">Base Cost (₹)</th>
-                    <th className="px-8 py-4 text-right">Margin %</th>
-                    <th className="px-8 py-4 text-right">Selling Price (₹)</th>
+                    <th className="px-6 py-3 font-semibold">Display Name</th>
+                    <th className="px-6 py-3 font-semibold">SKU</th>
+                    <th className="px-6 py-3 font-semibold text-right">Base Cost (₹)</th>
+                    <th className="px-6 py-3 font-semibold text-right">Margin %</th>
+                    <th className="px-6 py-3 font-semibold text-right">Selling Price (₹)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/40">
+                <tbody className="divide-y divide-border">
                   {products.filter(cat.filter).map((product) => (
-                    <tr key={product.id} className={`group transition-all ${changedIds.has(product.id!) ? "bg-blue-50/30 dark:bg-blue-500/5" : "hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20"}`}>
-                      <td className="px-8 py-4">
-                        <div className="font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">{product.display_name}</div>
+                    <tr key={product.id} className={`group transition-all ${changedIds.has(product.id!) ? "bg-primary/5" : "hover:bg-secondary/50"}`}>
+                      <td className="px-6 py-3">
+                        <div className="font-medium text-foreground">{product.display_name}</div>
                       </td>
-                      <td className="px-8 py-4">
+                      <td className="px-6 py-3">
                         <span 
                           onClick={() => {
                             navigator.clipboard.writeText(product.technical_name);
                             toast.success("SKU Copied");
                           }}
                           title="Click to copy SKU"
-                          className="font-mono text-[10px] text-zinc-400 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-950 px-2 py-1 rounded-md cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors"
+                          className="font-mono text-[11px] text-muted-foreground bg-secondary px-2 py-1 rounded-md cursor-pointer hover:bg-secondary/80 transition-colors"
                         >
                           {product.technical_name}
                         </span>
                       </td>
-                      <td className="px-8 py-4 text-right">
+                      <td className="px-6 py-3 text-right">
                         <input 
                           type="number"
                           value={product.base_cost || ""}
                           onChange={(e) => handleInlineChange(product.id!, "base_cost", parseFloat(e.target.value) || 0)}
-                          className={`w-24 bg-transparent text-right font-bold text-sm focus:outline-none focus:ring-0 transition-all ${
-                            changedIds.has(product.id!) ? "text-blue-600 dark:text-blue-400" : "text-zinc-500"
+                          className={`w-24 bg-transparent text-right font-medium text-sm focus:outline-none focus:ring-0 transition-all ${
+                            changedIds.has(product.id!) ? "text-primary" : "text-muted-foreground"
                           }`}
                         />
                       </td>
-                      <td className="px-8 py-4 text-right">
+                      <td className="px-6 py-3 text-right">
                         <div className="flex justify-end items-center gap-1">
                           <input 
                             type="number"
                             value={product.margin_percentage || ""}
                             onChange={(e) => handleInlineChange(product.id!, "margin_percentage", parseFloat(e.target.value) || 0)}
-                            className={`w-16 bg-transparent text-right font-bold text-sm focus:outline-none focus:ring-0 transition-all ${
-                              (product.margin_percentage || 0) < (settings.minimum_margin_threshold || 15) ? "text-red-500" : (changedIds.has(product.id!) ? "text-blue-600 dark:text-blue-400" : "text-zinc-500")
+                            className={`w-16 bg-transparent text-right font-medium text-sm focus:outline-none focus:ring-0 transition-all ${
+                              (product.margin_percentage || 0) < (settings.minimum_margin_threshold || 15) ? "text-destructive" : (changedIds.has(product.id!) ? "text-primary" : "text-muted-foreground")
                             }`}
                           />
-                          <span className="text-zinc-600 text-xs">%</span>
+                          <span className="text-muted-foreground text-xs">%</span>
                         </div>
                       </td>
-                      <td className="px-8 py-4 text-right">
+                      <td className="px-6 py-3 text-right">
                         <div className="flex justify-end items-center gap-3">
-                          {changedIds.has(product.id!) && <AlertCircle className="w-4 h-4 text-blue-500 animate-pulse" />}
+                          {changedIds.has(product.id!) && <AlertCircle className="w-4 h-4 text-primary animate-pulse" />}
                           <div className="relative group/input">
                             <input 
                               type="number"
                               value={product.unit_price}
                               onChange={(e) => handleInlineChange(product.id!, "unit_price", parseFloat(e.target.value) || 0)}
-                              className={`w-32 bg-transparent text-right font-black text-base focus:outline-none focus:ring-0 transition-all ${
-                                changedIds.has(product.id!) ? "text-blue-600 dark:text-blue-400" : "text-zinc-900 dark:text-white"
+                              className={`w-28 bg-transparent text-right font-semibold text-base focus:outline-none focus:ring-0 transition-all ${
+                                changedIds.has(product.id!) ? "text-primary" : "text-foreground"
                               }`}
                             />
-                            <div className="absolute -bottom-1 right-0 w-0 h-0.5 bg-blue-500 group-focus-within/input:w-full transition-all duration-300" />
+                            <div className="absolute -bottom-1 right-0 w-0 h-0.5 bg-primary group-focus-within/input:w-full transition-all duration-300" />
                           </div>
                         </div>
                       </td>
@@ -279,20 +279,20 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
 
       {/* ─── RIGHT: Live Quote Preview (4 Cols) ──────────────────── */}
       <div className="xl:col-span-4 space-y-6">
-        <div className="sticky top-6">
-          <div className="bg-zinc-900 rounded-2xl border border-zinc-800 p-8 shadow-md shadow-zinc-950 overflow-hidden relative group">
-            {/* Animated Background Effect */}
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl group-hover:bg-blue-600/20 transition-all duration-1000" />
-            
-            <div className="relative space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white border border-white/10 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-blue-400" />
+        <div className="sticky top-24">
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-sm relative overflow-hidden group">
+            <div className="relative space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-black text-white uppercase tracking-tight">Live Impact Preview</h3>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground tracking-tight">Live Impact Preview</h3>
+                  <p className="text-xs font-medium text-muted-foreground">Standard Configurations</p>
+                </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {previews.map((prev, idx) => (
                   <div 
                     key={idx} 
@@ -302,24 +302,24 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
                       toast.success("Quotation Summary Copied");
                     }}
                     title="Click to copy summary"
-                    className="cursor-pointer flex flex-col rounded-2xl bg-white border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all group/item overflow-hidden active:scale-[0.98]"
+                    className="cursor-pointer flex flex-col rounded-xl bg-background border border-border hover:bg-secondary/50 transition-all group/item overflow-hidden active:scale-[0.98]"
                   >
-                    <div className="flex items-center justify-between p-5">
+                    <div className="flex items-center justify-between p-4">
                       <div>
-                        <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 group-hover/item:text-blue-400 transition-colors">{prev.label}</div>
-                        <div className="text-xs font-bold text-zinc-400">Total Quotation Value</div>
+                        <div className="text-xs font-semibold text-foreground group-hover/item:text-primary transition-colors">{prev.label}</div>
+                        <div className="text-[10px] font-medium text-muted-foreground mt-0.5">Total Value</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xl font-black text-white">₹{prev.total.toLocaleString('en-IN')}</div>
-                        <div className={`text-[9px] font-bold uppercase tracking-tighter ${prev.profit_percent < (settings.minimum_margin_threshold || 15) ? "text-red-400" : "text-emerald-400"}`}>
+                        <div className="text-base font-semibold text-foreground">₹{prev.total.toLocaleString('en-IN')}</div>
+                        <div className={`text-[10px] font-semibold mt-0.5 ${prev.profit_percent < (settings.minimum_margin_threshold || 15) ? "text-destructive" : "text-success"}`}>
                           Margin: {prev.profit_percent}%
                         </div>
                       </div>
                     </div>
                     {prev.warnings.length > 0 && (
-                      <div className="px-5 pb-3">
-                        <div className="text-[10px] text-red-400 font-bold bg-red-500/10 p-2 rounded-lg border border-red-500/20">
-                          {prev.warnings[0]} {prev.warnings.length > 1 && `(+${prev.warnings.length - 1} more warnings)`}
+                      <div className="px-4 pb-3">
+                        <div className="text-[10px] text-destructive font-medium bg-destructive/10 px-2 py-1.5 rounded-md border border-destructive/20">
+                          {prev.warnings[0]} {prev.warnings.length > 1 && `(+${prev.warnings.length - 1} more)`}
                         </div>
                       </div>
                     )}
@@ -327,13 +327,13 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
                 ))}
               </div>
 
-              <div className="p-6 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-3">
-                <div className="flex items-center gap-2 text-blue-400">
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-2">
+                <div className="flex items-center gap-2 text-primary">
                   <ShieldCheck className="w-4 h-4" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Stability Guard</span>
+                  <span className="text-xs font-semibold">Stability Guard</span>
                 </div>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  Calculations above are performed in real-time using your current session edits. These values will be live for all customers once you click <span className="text-white font-bold">Publish</span>.
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Calculations above are performed in real-time using your current session edits. These values will be live for all customers once you click <span className="text-foreground font-semibold">Publish</span>.
                 </p>
               </div>
             </div>

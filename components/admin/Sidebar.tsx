@@ -69,6 +69,7 @@ const NAV_GROUPS = [
     label: "Financials",
     items: [
       { name: "Franchise Network", href: "/admin/franchises",  icon: Building2 },
+      { name: "Applications",      href: "/admin/franchises/applications", icon: Bell },
       { name: "Promoters",         href: "/admin/promoters",   icon: BadgeDollarSign },
       { name: "Commission Ledger", href: "/admin/commission",  icon: FileBox },
     ],
@@ -88,9 +89,8 @@ function NavTooltip({ label, children }: { label: string; children: React.ReactN
   return (
     <div className="relative group/tooltip">
       {children}
-      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 bg-zinc-900 dark:bg-zinc-800 text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl whitespace-nowrap shadow-md border border-zinc-700/50 opacity-0 group-hover/tooltip:opacity-100 scale-90 group-hover/tooltip:scale-100 transition-all duration-200 origin-left">
+      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 bg-popover text-popover-foreground text-xs font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-md border border-border opacity-0 group-hover/tooltip:opacity-100 scale-95 group-hover/tooltip:scale-100 transition-all duration-200 origin-left">
         {label}
-        <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-zinc-900 dark:border-r-zinc-800" />
       </div>
     </div>
   );
@@ -125,49 +125,36 @@ export function Sidebar() {
       className={`
         ${isCollapsed ? "w-[72px]" : "w-64"} 
         relative flex flex-col h-screen sticky top-0 overflow-hidden
-        bg-white dark:bg-[#050505] border-r border-zinc-200 dark:border-zinc-800
+        bg-sidebar border-r border-sidebar-border text-sidebar-foreground
         transition-all duration-300 ease-in-out shrink-0
       `}
     >
-      {/* ── Subtle background texture */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-blue-500/[0.03] to-transparent dark:from-blue-500/[0.05]" />
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-zinc-50/80 to-transparent dark:from-zinc-900/20" />
-      </div>
-
       {/* ── BRAND HEADER ──────────────────────────────────────────────────── */}
-      <div className="relative h-16 flex items-center justify-between px-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0 overflow-hidden">
-        {/* Brand glow */}
-        <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-20 h-20 bg-blue-500/10 dark:bg-blue-500/20 blur-2xl rounded-full pointer-events-none" />
-
+      <div className="relative h-16 flex items-center justify-between px-4 border-b border-sidebar-border shrink-0">
         {!isCollapsed ? (
           <>
-            <div className="flex items-center gap-3 relative z-10">
-              {/* Logo */}
-              <div className="relative shrink-0">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-600/30">
-                  <ShieldCheck className="w-4 h-4 text-white" />
-                </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-950 shadow-sm shadow-emerald-500/50" />
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-[10px] bg-primary flex items-center justify-center shadow-sm">
+                <ShieldCheck className="w-4 h-4 text-primary-foreground" />
               </div>
               <div className="min-w-0">
-                <p className="text-[8px] font-black text-blue-400 dark:text-blue-500 uppercase tracking-[0.35em] leading-none">TEAM CCTV</p>
-                <p className="text-sm font-black text-zinc-900 dark:text-white leading-tight tracking-tight truncate">Command Centre</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider leading-none mb-1">TEAM CCTV</p>
+                <p className="text-sm font-semibold leading-tight tracking-tight truncate">Command Centre</p>
               </div>
             </div>
             <button
               onClick={() => setIsCollapsed(true)}
-              className="relative z-10 p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 shrink-0 transition-all hover:scale-110 active:scale-95"
+              className="p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/60 hover:text-sidebar-foreground transition-all"
               title="Collapse sidebar"
             >
               <PanelLeftClose className="w-4 h-4" />
             </button>
           </>
         ) : (
-          <div className="w-full flex justify-center relative z-10">
+          <div className="w-full flex justify-center">
             <button
               onClick={() => setIsCollapsed(false)}
-              className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all hover:scale-110 active:scale-95"
+              className="p-2 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/60 hover:text-sidebar-foreground transition-all"
               title="Expand sidebar"
             >
               <PanelLeftOpen className="w-5 h-5" />
@@ -177,22 +164,20 @@ export function Sidebar() {
       </div>
 
       {/* ── NAVIGATION GROUPS ─────────────────────────────────────────────── */}
-      <nav className="relative z-10 flex-1 overflow-y-auto py-4 px-3 space-y-5 scrollbar-none">
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6 scrollbar-none">
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
-            {/* Section Label */}
             {!isCollapsed ? (
-              <p className="text-[8px] font-black text-zinc-300 dark:text-zinc-700 uppercase tracking-[0.35em] px-3 mb-2 leading-none">
+              <p className="text-[11px] font-medium text-sidebar-foreground/50 px-3 mb-2 tracking-wide">
                 {group.label}
               </p>
             ) : (
               group.label !== "Overview" && (
-                <div className="h-px bg-gradient-to-r from-transparent via-zinc-100 dark:via-zinc-800/60 to-transparent my-3 mx-1" />
+                <div className="h-px bg-sidebar-border my-3 mx-2" />
               )
             )}
 
-            {/* Items */}
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {group.items.map((item) => {
                 const active = isActive(item.href);
                 const Icon = item.icon;
@@ -202,42 +187,16 @@ export function Sidebar() {
                     key={item.name}
                     href={item.href}
                     className={`
-                      relative flex items-center gap-3 py-2.5 rounded-2xl
-                      font-black text-[11px] uppercase tracking-wider
-                      transition-all duration-200 group/item
+                      relative flex items-center gap-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200
                       ${isCollapsed ? "justify-center px-0 mx-1" : "px-3"}
                       ${active
-                        ? "bg-gradient-to-r from-blue-50 to-blue-50/50 dark:from-blue-600/15 dark:to-blue-600/5 text-blue-700 dark:text-blue-400 shadow-sm"
-                        : "text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                        ? "bg-primary/10 text-primary"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                       }
                     `}
                   >
-                    {/* Animated active left indicator */}
-                    <div className={`
-                      absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-full
-                      bg-gradient-to-b from-blue-400 to-blue-700 dark:from-blue-400 dark:to-blue-600
-                      shadow-[0_0_10px_rgba(59,130,246,0.6)]
-                      transition-all duration-300
-                      ${active ? "h-6 opacity-100" : "h-0 opacity-0"}
-                    `} />
-
-                    {/* Icon container */}
-                    <div className={`
-                      w-7 h-7 rounded-xl flex items-center justify-center shrink-0
-                      transition-all duration-200
-                      ${active
-                        ? "bg-blue-600/15 dark:bg-blue-500/20 shadow-inner"
-                        : "bg-zinc-50 dark:bg-zinc-900 group-hover/item:bg-white dark:group-hover/item:bg-zinc-800 group-hover/item:shadow-sm"
-                      }
-                    `}>
-                      <Icon className={`w-3.5 h-3.5 transition-transform duration-200 ${active ? "scale-110" : "group-hover/item:scale-110"}`} />
-                    </div>
-
-                    {!isCollapsed && <span className="truncate flex-1 leading-none">{item.name}</span>}
-
-                    {!isCollapsed && active && (
-                      <ChevronRight className="w-3 h-3 text-blue-500/60 shrink-0 animate-pulse" />
-                    )}
+                    <Icon className={`w-[18px] h-[18px] transition-transform duration-200 ${active ? "scale-105" : ""}`} />
+                    {!isCollapsed && <span className="truncate flex-1">{item.name}</span>}
                   </Link>
                 );
 
@@ -255,49 +214,37 @@ export function Sidebar() {
       </nav>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      <div className="relative z-10 p-3 border-t border-zinc-100 dark:border-zinc-800 shrink-0 space-y-2">
-        {/* System Status */}
+      <div className="p-3 border-t border-sidebar-border shrink-0 space-y-2">
         {!isCollapsed ? (
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50/50 dark:from-emerald-500/5 dark:to-teal-500/5 border border-emerald-100 dark:border-emerald-500/10">
-            <div className="relative shrink-0">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-              <div className="absolute inset-0 w-2 h-2 bg-emerald-500 rounded-full animate-ping opacity-60" />
-            </div>
-            <span className="text-[8px] font-black text-emerald-700 dark:text-emerald-500 uppercase tracking-[0.2em]">All Systems Nominal</span>
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-success/10 border border-success/20">
+            <div className="w-2 h-2 bg-success rounded-full" />
+            <span className="text-xs font-medium text-success">All Systems Nominal</span>
           </div>
         ) : (
           <NavTooltip label="All Systems Nominal">
-            <div className="flex justify-center py-1">
-              <div className="relative">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                <div className="absolute inset-0 w-2 h-2 bg-emerald-500 rounded-full animate-ping opacity-60" />
-              </div>
+            <div className="flex justify-center py-2">
+              <div className="w-2 h-2 bg-success rounded-full" />
             </div>
           </NavTooltip>
         )}
 
-        {/* Logout */}
         {isCollapsed ? (
           <NavTooltip label="Secure Logout">
             <button
               onClick={handleLogout}
               disabled={loggingOut}
-              className="w-full flex justify-center py-2.5 rounded-2xl text-zinc-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/5 transition-all group/out disabled:opacity-50"
+              className="w-full flex justify-center py-2 rounded-lg text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
             >
-              <div className="w-7 h-7 rounded-xl bg-zinc-50 dark:bg-zinc-900 group-hover/out:bg-red-50 dark:group-hover/out:bg-red-500/10 flex items-center justify-center transition-colors">
-                <LogOut className={`w-3.5 h-3.5 ${loggingOut ? "animate-spin" : ""}`} />
-              </div>
+              <LogOut className={`w-[18px] h-[18px] ${loggingOut ? "animate-spin" : ""}`} />
             </button>
           </NavTooltip>
         ) : (
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all text-zinc-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/5 group/out text-left disabled:opacity-50"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10 disabled:opacity-50"
           >
-            <div className="w-7 h-7 rounded-xl bg-zinc-50 dark:bg-zinc-900 group-hover/out:bg-red-50 dark:group-hover/out:bg-red-500/10 flex items-center justify-center shrink-0 transition-colors">
-              <LogOut className={`w-3.5 h-3.5 ${loggingOut ? "animate-spin" : ""}`} />
-            </div>
+            <LogOut className={`w-[18px] h-[18px] ${loggingOut ? "animate-spin" : ""}`} />
             <span>{loggingOut ? "Signing out..." : "Secure Logout"}</span>
           </button>
         )}

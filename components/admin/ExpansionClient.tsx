@@ -18,6 +18,11 @@ import {
   AlertCircle
 } from "lucide-react";
 
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+
 interface WaitlistLead {
   id: string;
   customer_name: string;
@@ -95,79 +100,76 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas }: E
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Appointed Notification Toast */}
       {appointedCity && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-6 py-4 rounded-2xl shadow-md flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-6 right-6 z-[100] bg-success text-success-foreground px-5 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-300">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
-          <div>
-            <p className="font-black text-sm uppercase tracking-wider">Franchise Appointed</p>
-            <p className="text-xs opacity-90">Franchise setup initiated for {appointedCity}. Notification dispatch in progress.</p>
+          <div className="flex flex-col">
+            <span className="font-semibold text-sm">Franchise Appointed</span>
+            <span className="text-xs opacity-90">Franchise setup initiated for {appointedCity}.</span>
           </div>
         </div>
       )}
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 relative overflow-hidden group shadow-lg dark:shadow-md transition-all hover:border-blue-500/20 shadow-blue-500/5">
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-widest">Total Waitlist Leads</span>
-            <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500 shadow-inner">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all border-border bg-card">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Waitlist Leads</span>
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-sm">
               <Users className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">
+          <div className="text-3xl font-bold text-foreground mb-1">
             {initialLeads.length}
           </div>
-          <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider">
+          <div className="text-xs font-medium text-muted-foreground">
             Captured across unserved regions
           </div>
-          <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 relative overflow-hidden group shadow-lg dark:shadow-md transition-all hover:border-amber-500/20 shadow-amber-500/5">
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-widest">Top Target Region</span>
-            <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-500 shadow-inner">
+        <Card className="p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all border-border bg-card">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Top Target Region</span>
+            <div className="w-10 h-10 rounded-xl bg-warning/10 text-warning flex items-center justify-center shadow-sm">
               <Target className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">
+          <div className="text-3xl font-bold text-foreground mb-1">
             {topCity !== "None" ? topCity : "N/A"}
           </div>
-          <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider">
+          <div className="text-xs font-medium text-muted-foreground">
             Highest concentration ({topCount} prospects)
           </div>
-          <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 relative overflow-hidden group shadow-lg dark:shadow-md transition-all hover:border-emerald-500/20 shadow-emerald-500/5">
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-widest">Prospects To Notify</span>
-            <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500 shadow-inner">
+        <Card className="p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all border-border bg-card">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Prospects To Notify</span>
+            <div className="w-10 h-10 rounded-xl bg-success/10 text-success flex items-center justify-center shadow-sm">
               <Bell className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">
+          <div className="text-3xl font-bold text-foreground mb-1">
             {totalConfirmedWaitlist}
           </div>
-          <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-wider">
+          <div className="text-xs font-medium text-muted-foreground">
             Confirmed launch alert registrations
           </div>
-          <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        </div>
+        </Card>
       </div>
 
       {/* Grid: City Density Tracker & Management */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* City Waitlist Density Hub */}
-        <div className="lg:col-span-1 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg dark:shadow-md space-y-6">
-          <div>
-            <h3 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight uppercase">Waitlist Density Tracker</h3>
-            <p className="text-xs text-zinc-400 mt-1">Aggregate lead metrics by expansion target.</p>
+        <div className="lg:col-span-1 space-y-4">
+          <div className="flex flex-col gap-1 px-1">
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">Density Tracker</h3>
+            <p className="text-xs text-muted-foreground">Aggregate lead metrics by expansion target.</p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {["jodhpur", "kota", "ajmer", "udaipur"].map((citySlug) => {
               const cityName = citySlug.charAt(0).toUpperCase() + citySlug.slice(1);
               const count = cityGroups[cityName] || 0;
@@ -175,26 +177,26 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas }: E
               const progress = Math.min((count / threshold) * 100, 100);
 
               return (
-                <div key={citySlug} className="space-y-2.5 p-4 rounded-2xl border border-zinc-50 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900 group">
-                  <div className="flex justify-between items-center">
+                <Card key={citySlug} className="p-4 shadow-sm border-border bg-card group">
+                  <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-blue-500" />
-                      <span className="text-xs font-black uppercase text-zinc-800 dark:text-zinc-200">{cityName}</span>
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-semibold text-foreground">{cityName}</span>
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-md">
+                    <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
                       {count} Leads
-                    </span>
+                    </Badge>
                   </div>
 
                   {/* Progress bar toward active threshold */}
-                  <div className="space-y-1">
-                    <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                  <div className="space-y-1.5 mb-4">
+                    <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
                       <div 
-                        className="bg-blue-600 dark:bg-blue-500 h-1.5 rounded-full transition-all duration-500" 
+                        className="bg-primary h-1.5 rounded-full transition-all duration-500" 
                         style={{ width: `${progress}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-[8px] font-black uppercase text-zinc-400">
+                    <div className="flex justify-between text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                       <span>Expansion Goal</span>
                       <span>{count}/{threshold} Leads</span>
                     </div>
@@ -204,57 +206,55 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas }: E
                   <button
                     onClick={() => handleAppointFranchise(citySlug, cityName)}
                     disabled={actionLoading !== null}
-                    className="w-full mt-2 py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-blue-600 dark:hover:bg-blue-500 disabled:bg-zinc-800/50 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+                    className="w-full py-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-primary/50 text-xs font-semibold rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95"
                   >
                     {actionLoading === citySlug ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
-                        <Building2 className="w-3.5 h-3.5" /> Appoint Franchise
+                        <Building2 className="w-4 h-4" /> Appoint Franchise
                       </>
                     )}
                   </button>
-                </div>
+                </Card>
               );
             })}
           </div>
         </div>
 
         {/* Waitlist Leads Interactive CRM */}
-        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg dark:shadow-md space-y-6 flex flex-col h-[600px] overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="lg:col-span-2 space-y-4 flex flex-col h-[650px]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
             <div>
-              <h3 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight uppercase">Waitlist CRM Database</h3>
-              <p className="text-xs text-zinc-400 mt-1">Manage individual unserved city inquiries.</p>
+              <h3 className="text-lg font-semibold text-foreground tracking-tight">Waitlist CRM Database</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Manage individual unserved city inquiries.</p>
             </div>
-
-            {/* Total Filter count indicator */}
-            <div className="text-[10px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-xl self-start sm:self-center">
+            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs font-semibold">
               {filteredLeads.length} Matches
-            </div>
+            </Badge>
           </div>
 
           {/* Dynamic Filters Hub */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-              <input
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
                 type="text"
                 placeholder="Search name, phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-xs outline-none focus:border-blue-500/40 dark:focus:border-blue-500/40 font-medium transition-all"
+                className="pl-9 bg-background border-border shadow-sm text-sm"
               />
             </div>
 
             {/* City Filter */}
             <div className="relative">
-              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <select
                 value={cityFilter}
                 onChange={(e) => setCityFilter(e.target.value)}
-                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-xs outline-none focus:border-blue-500/40 dark:focus:border-blue-500/40 font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 appearance-none"
+                className="w-full appearance-none h-10 bg-background border border-border text-foreground rounded-md pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring shadow-sm font-medium"
               >
                 <option value="all">All Cities</option>
                 <option value="jodhpur">Jodhpur</option>
@@ -262,79 +262,83 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas }: E
                 <option value="ajmer">Ajmer</option>
                 <option value="udaipur">Udaipur</option>
               </select>
-              <ChevronRight className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 rotate-90 pointer-events-none" />
+              <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
 
             {/* Notification Filter */}
             <div className="relative">
-              <Bell className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <Bell className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <select
                 value={notifyFilter}
                 onChange={(e) => setNotifyFilter(e.target.value)}
-                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-xs outline-none focus:border-blue-500/40 dark:focus:border-blue-500/40 font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 appearance-none"
+                className="w-full appearance-none h-10 bg-background border border-border text-foreground rounded-md pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring shadow-sm font-medium"
               >
                 <option value="all">All Notifications</option>
                 <option value="confirmed">Confirmed Alert</option>
                 <option value="pending">Alert Pending</option>
               </select>
-              <ChevronRight className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 rotate-90 pointer-events-none" />
+              <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
           </div>
 
           {/* CRM Leads Table / Scroll Area */}
-          <div className="flex-1 overflow-y-auto border border-zinc-50 dark:border-zinc-800 bg-zinc-50/20 dark:bg-zinc-900 rounded-2xl">
-            {filteredLeads.length > 0 ? (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900 sticky top-0 z-10">
-                    <th className="px-6 py-3.5 text-[9px] font-black uppercase tracking-widest text-zinc-400">Prospect</th>
-                    <th className="px-6 py-3.5 text-[9px] font-black uppercase tracking-widest text-zinc-400">Region & Pincode</th>
-                    <th className="px-6 py-3.5 text-[9px] font-black uppercase tracking-widest text-zinc-400">Notification Alert</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
-                  {filteredLeads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="font-black text-xs text-zinc-800 dark:text-zinc-200 uppercase tracking-wide">
-                          {lead.customer_name}
-                        </div>
-                        <div className="text-[10px] font-bold text-zinc-400 mt-0.5">
-                          {lead.mobile_number}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                          <span className="font-bold text-xs text-zinc-700 dark:text-zinc-300 uppercase">{lead.detected_city}</span>
-                        </div>
-                        <div className="text-[10px] font-bold text-zinc-400 mt-0.5">
-                          PIN: {lead.detected_pincode}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {lead.waitlist_confirmed ? (
-                          <div className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">
-                            <CheckCircle2 className="w-3 h-3" /> Confirmed
+          <Card className="flex-1 overflow-hidden shadow-sm border-border bg-card flex flex-col">
+            <div className="overflow-y-auto flex-1">
+              <Table>
+                <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                  <TableRow>
+                    <TableHead className="font-semibold text-xs tracking-wider">Prospect</TableHead>
+                    <TableHead className="font-semibold text-xs tracking-wider">Region & Pincode</TableHead>
+                    <TableHead className="font-semibold text-xs tracking-wider">Notification Alert</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredLeads.length > 0 ? (
+                    filteredLeads.map((lead) => (
+                      <TableRow key={lead.id} className="hover:bg-muted/30 transition-colors">
+                        <TableCell className="py-4">
+                          <div className="flex flex-col gap-1">
+                            <span className="font-semibold text-sm text-foreground tracking-tight">{lead.customer_name}</span>
+                            <span className="text-xs font-medium text-muted-foreground">{lead.mobile_number}</span>
                           </div>
-                        ) : (
-                          <div className="inline-flex items-center gap-1 bg-zinc-500/10 text-zinc-500 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">
-                            <AlertCircle className="w-3 h-3" /> Inactive
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                              <MapPin className="w-3.5 h-3.5 text-primary" />
+                              {lead.detected_city}
+                            </div>
+                            <span className="text-xs font-medium text-muted-foreground">PIN: {lead.detected_pincode}</span>
                           </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full py-16 text-center">
-                <Search className="w-8 h-8 text-zinc-300 mb-2" />
-                <h4 className="text-xs font-black uppercase text-zinc-400">No matching waitlist leads found</h4>
-                <p className="text-[10px] text-zinc-500 mt-1 max-w-[200px]">Refine your filter metrics or check back later.</p>
-              </div>
-            )}
-          </div>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          {lead.waitlist_confirmed ? (
+                            <Badge variant="secondary" className="bg-success/10 text-success border border-success/20 gap-1.5 text-[10px] uppercase font-semibold">
+                              <CheckCircle2 className="w-3 h-3" /> Confirmed
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="gap-1.5 text-[10px] uppercase font-semibold">
+                              <AlertCircle className="w-3 h-3" /> Inactive
+                            </Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={3} className="h-48 text-center">
+                        <div className="flex flex-col items-center justify-center text-muted-foreground">
+                          <Search className="w-8 h-8 mb-4 opacity-50" />
+                          <p className="text-sm font-medium">No waitlist leads found</p>
+                          <p className="text-xs mt-1">Adjust filters or check back later.</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
         </div>
       </div>
     </div>

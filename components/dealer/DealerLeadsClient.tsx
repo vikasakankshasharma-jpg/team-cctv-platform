@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { db } from "@/lib/firebase-client";
+import { collection, query, orderBy, onSnapshot, where } from "firebase/firestore";
 import { 
   ArrowLeft, 
   Search, 
@@ -31,12 +33,42 @@ interface Props {
   dealerId: string;
 }
 
-export function DealerLeadsClient({ leads }: Props) {
+export function DealerLeadsClient({ leads, dealerId }: Props) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [localLeads, setLocalLeads] = useState<LeadItem[]>(leads);
 
-  const filteredLeads = leads.filter(l => {
+  useEffect(() => {
+    if (!dealerId) return;
+    const q = query(
+      collection(db, "leads"),
+      where("franchise_dealer_id", "==", dealerId),
+      orderBy("created_at", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) return;
+      const fetched = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          created_at: data.created_at?.toDate ? data.created_at.toDate().toISOString() : data.created_at,
+        } as LeadItem;
+      });
+
+      setLocalLeads(prev => {
+        const fetchedIds = new Set(fetched.map(l => l.id));
+        const older = prev.filter(l => !fetchedIds.has(l.id));
+        return [...fetched, ...older].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      });
+    });
+
+    return () => unsubscribe();
+  }, [dealerId]);
+
+  const filteredLeads = localLeads.filter(l => {
     const matchesSearch = l.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           l.mobile_number.includes(searchTerm);
     const matchesStatus = statusFilter === "all" || l.status === statusFilter;
@@ -58,7 +90,7 @@ export function DealerLeadsClient({ leads }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 md:p-10 font-sans">
+    <div className="min-h-screen p-6 md:p-10 font-sans text-white">
       <div className="max-w-7xl mx-auto relative">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/5 blur-[100px] -z-10 rounded-full" />
         
@@ -67,11 +99,11 @@ export function DealerLeadsClient({ leads }: Props) {
           <div>
             <button 
               onClick={() => router.push("/dealer/dashboard")}
-              className="flex items-center gap-2 text-zinc-400 hover:text-zinc-950 dark:hover:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-colors mb-6 group"
+              className="flex items-center gap-2 text-zinc-400 hover:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-colors mb-6 group"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Hub
             </button>
-            <h1 className="text-4xl font-black text-zinc-950 dark:text-white tracking-tighter uppercase mb-2">Territory Pipeline</h1>
+            <h1 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">Territory Pipeline</h1>
             <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest leading-loose">Managing {leads.length} Active Records</p>
           </div>
 
@@ -83,7 +115,7 @@ export function DealerLeadsClient({ leads }: Props) {
         </div>
 
         {/* Search & Filters */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 shadow-md shadow-zinc-200/40 dark:shadow-none">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input 
@@ -91,17 +123,17 @@ export function DealerLeadsClient({ leads }: Props) {
               placeholder="Search by customer name or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-zinc-50/50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl py-3.5 pl-12 pr-4 text-xs font-black uppercase tracking-widest text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/50 outline-none transition-all"
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-xs font-black uppercase tracking-widest text-white placeholder:text-zinc-500 focus:border-blue-500/50 outline-none transition-all"
             />
           </div>
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
+             <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
                <Filter className="w-4 h-4 text-zinc-400" />
              </div>
              <select 
                value={statusFilter}
                onChange={(e) => setStatusFilter(e.target.value)}
-               className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl py-3.5 px-6 text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900"
+               className="bg-[#030303] border border-white/10 rounded-2xl py-3.5 px-6 text-[10px] font-black uppercase tracking-widest text-zinc-400 outline-none transition-all cursor-pointer hover:border-white/20"
              >
                <option value="all">All States</option>
                <option value="new">New</option>
@@ -129,7 +161,7 @@ export function DealerLeadsClient({ leads }: Props) {
                <div 
                  key={lead.id} 
                  onClick={() => router.push(`/dealer/leads/${lead.id}`)}
-                 className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md shadow-zinc-200/50 dark:shadow-none hover:shadow-blue-500/10 hover:border-blue-500/30 transition-all cursor-pointer group flex flex-col relative overflow-hidden"
+                 className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all cursor-pointer group flex flex-col relative overflow-hidden"
                >
                   <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-[40px] rounded-full group-hover:bg-blue-500/10 transition-colors" />
                   
@@ -161,31 +193,31 @@ export function DealerLeadsClient({ leads }: Props) {
                     )}
                   </div>
 
-                  <h3 className="text-lg font-black text-zinc-950 dark:text-white mb-6 group-hover:text-blue-600 transition-colors tracking-tight uppercase leading-tight">{lead.customer_name}</h3>
+                  <h3 className="text-lg font-black text-white mb-6 group-hover:text-blue-400 transition-colors tracking-tight uppercase leading-tight">{lead.customer_name}</h3>
                   
                   <div className="space-y-3.5 mb-10">
-                     <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                        <div className="w-7 h-7 rounded-lg bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
+                     <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-zinc-400">
+                        <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
                            <Phone className="w-3.5 h-3.5 text-blue-500" />
                         </div>
                         +91 {lead.mobile_number}
                      </div>
-                     <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                        <div className="w-7 h-7 rounded-lg bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
+                     <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-zinc-400">
+                        <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
                            <Building className="w-3.5 h-3.5 text-purple-500" />
                         </div>
                         {lead.property_type}
                      </div>
-                     <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                        <div className="w-7 h-7 rounded-lg bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
+                     <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-zinc-400">
+                        <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
                            <ExternalLink className="w-3.5 h-3.5 text-amber-500" />
                         </div>
                         {lead.technology_choice} Setup
                      </div>
                   </div>
 
-                  <div className="mt-auto pt-6 border-t border-zinc-50 dark:border-zinc-800 flex justify-between items-center">
-                     <span className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.2em] group-hover:translate-x-1 transition-transform inline-flex items-center gap-2">
+                  <div className="mt-auto pt-6 border-t border-white/10 flex justify-between items-center">
+                     <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] group-hover:translate-x-1 transition-transform inline-flex items-center gap-2">
                         Execute Workflow <ChevronRight className="w-3.5 h-3.5" />
                      </span>
                   </div>

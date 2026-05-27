@@ -3,6 +3,7 @@ import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
 import { rateLimit } from "@/lib/rate-limit";
 import { ApiResponse } from "@/lib/api-response";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
+import { COLLECTIONS } from "@/lib/constants";
 
 /**
  * ENTERPRISE BOOKING SYSTEM
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Persist Booking
-    const bookingRef = adminDb.collection("bookings").doc();
+    const bookingRef = adminDb.collection(COLLECTIONS.SITE_VISIT_BOOKINGS).doc();
     const bookingPromise = bookingRef.set({
       lead_id,
       quote_id,

@@ -4,6 +4,11 @@ import { useState } from "react";
 import { Calendar, MapPin, Phone, CheckCircle2, Clock, Map, Search, Filter } from "lucide-react";
 import { PageHeader } from "./PageHeader";
 
+import { Card } from "@/components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+
 interface BookingsClientProps {
   initialBookings: any[];
 }
@@ -25,121 +30,126 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
   const pending = bookings.filter((b) => !b.completed_at).length;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <PageHeader
-        icon={Calendar}
-        title="Site Visits"
-        description="All technician visit bookings raised from customer quote confirmations."
-        badge={`${pending} Pending`}
-      />
-
-      {/* Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1 max-w-md group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-500 transition-colors" />
-          <input
-            type="text"
-            placeholder="Search by name or mobile…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl pl-11 pr-5 py-3 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all placeholder-zinc-400 dark:placeholder-zinc-700"
-          />
+    <div className="space-y-6 animate-in fade-in duration-500">
+      
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="flex items-center gap-3 w-full max-w-md">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search by name or mobile..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-10 w-full bg-background border-border shadow-sm text-sm"
+            />
+          </div>
         </div>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total Bookings", value: bookings.length, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-500/10" },
-          { label: "Pending", value: pending, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-500/10" },
-          { label: "Via Referral", value: bookings.filter(b => b.promoter_name).length, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-500/10" },
-          { label: "Direct / Organic", value: bookings.filter(b => !b.promoter_name).length, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
+          { label: "Total Bookings", value: bookings.length },
+          { label: "Pending", value: pending },
+          { label: "Via Referral", value: bookings.filter(b => b.promoter_name).length },
+          { label: "Direct / Organic", value: bookings.filter(b => !b.promoter_name).length },
         ].map((s) => (
-          <div key={s.label} className={`${s.bg} border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4`}>
-            <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">{s.label}</p>
-            <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-          </div>
+          <Card key={s.label} className="p-4 bg-card border-border shadow-sm flex flex-col justify-center">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{s.label}</p>
+            <p className="text-2xl font-bold text-foreground">{s.value}</p>
+          </Card>
         ))}
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[28px] overflow-hidden shadow-lg dark:shadow-md">
+      <Card className="shadow-sm border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-              <tr className="text-[9px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-600">
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Referred by</th>
-                <th className="px-6 py-4">Location</th>
-                <th className="px-6 py-4 text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/40">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead className="font-semibold text-xs tracking-wider">Date</TableHead>
+                <TableHead className="font-semibold text-xs tracking-wider">Customer</TableHead>
+                <TableHead className="font-semibold text-xs tracking-wider">Referred by</TableHead>
+                <TableHead className="font-semibold text-xs tracking-wider">Location</TableHead>
+                <TableHead className="font-semibold text-xs tracking-wider text-center">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-24 text-center">
-                    <p className="text-sm font-medium text-zinc-400 dark:text-zinc-600">No site visits found</p>
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={5} className="h-48 text-center">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <Calendar className="w-8 h-8 mb-4 opacity-50" />
+                      <p className="text-sm font-medium">No site visits found</p>
+                      <p className="text-xs">Try adjusting your search.</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : (
                 filtered.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/20 transition-all group/row">
+                  <TableRow key={booking.id} className="group/row hover:bg-muted/30 transition-colors">
+                    
                     {/* Date */}
-                    <td className="px-6 py-4">
+                    <TableCell className="align-top py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-600/10 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                        <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-sm">
                           <Clock className="w-4 h-4" />
                         </div>
-                        <div>
-                          <div className="text-sm font-bold text-zinc-900 dark:text-white">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-foreground">
                             {new Date(booking.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
-                          </div>
-                          <div className="text-[10px] text-zinc-400 dark:text-zinc-600 font-medium">
+                          </span>
+                          <span className="text-xs font-medium text-muted-foreground">
                             {new Date(booking.created_at).getFullYear()}
-                          </div>
+                          </span>
                         </div>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Customer */}
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-zinc-900 dark:text-white group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-colors">
-                        {booking.customer_name}
+                    <TableCell className="align-top py-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold text-foreground text-sm tracking-tight group-hover/row:text-primary transition-colors">
+                          {booking.customer_name}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                          <Phone className="w-3 h-3" />
+                          {booking.mobile_number}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-medium mt-0.5">
-                        <Phone className="w-3 h-3 text-zinc-300 dark:text-zinc-700" />
-                        {booking.mobile_number}
-                      </div>
-                    </td>
+                    </TableCell>
 
                     {/* Referral */}
-                    <td className="px-6 py-4">
+                    <TableCell className="align-top py-4">
                       {booking.promoter_name ? (
-                        <div>
-                          <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-100 dark:border-amber-500/20">
+                        <div className="flex flex-col gap-1">
+                          <Badge variant="outline" className="w-fit text-[10px] uppercase border-warning/50 text-warning bg-warning/10">
                             {booking.promoter_name}
-                          </span>
+                          </Badge>
                           {booking.promoter_business && (
-                            <p className="text-[9px] text-zinc-400 mt-1 font-medium">{booking.promoter_business}</p>
+                            <span className="text-xs text-muted-foreground font-medium truncate max-w-[140px]">
+                              {booking.promoter_business}
+                            </span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-[10px] text-zinc-400 dark:text-zinc-600 font-medium">Direct / Organic</span>
+                        <span className="text-xs font-medium text-muted-foreground italic">Direct / Organic</span>
                       )}
-                    </td>
+                    </TableCell>
 
                     {/* Location */}
-                    <td className="px-6 py-4">
+                    <TableCell className="align-top py-4">
                       {booking.address ? (
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <div className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
-                              <MapPin className="w-3 h-3 text-blue-500" />
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                              <MapPin className="w-3.5 h-3.5 text-primary" />
                               {booking.address.pincode}
                             </div>
                             {booking.address.landmark1 && (
-                              <div className="text-[10px] text-zinc-400 font-medium mt-0.5 max-w-[140px] truncate">
+                              <div className="text-xs text-muted-foreground truncate max-w-[140px]" title={booking.address.landmark1}>
                                 {booking.address.landmark1}
                               </div>
                             )}
@@ -149,32 +159,34 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
                               href={`https://www.google.com/maps?q=${booking.address.coordinates.lat},${booking.address.coordinates.lng}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-8 h-8 flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-blue-600 hover:border-blue-200 rounded-xl transition-all"
+                              className="w-8 h-8 flex items-center justify-center bg-secondary text-muted-foreground hover:bg-primary hover:text-primary-foreground rounded-md transition-all shadow-sm shrink-0"
                               title="Open in Google Maps"
                             >
-                              <Map className="w-3.5 h-3.5" />
+                              <Map className="w-4 h-4" />
                             </a>
                           )}
                         </div>
                       ) : (
-                        <span className="text-[10px] text-zinc-400 dark:text-zinc-600 font-medium">Not provided</span>
+                        <span className="text-xs font-medium text-muted-foreground italic">Not provided</span>
                       )}
-                    </td>
+                    </TableCell>
 
                     {/* Status */}
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20 text-[9px] font-black uppercase tracking-widest">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        Pending Visit
-                      </span>
-                    </td>
-                  </tr>
+                    <TableCell className="align-top py-4 text-center">
+                      <div className="flex justify-center">
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 gap-1.5 h-6">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                          Pending Visit
+                        </Badge>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -103,10 +103,10 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline, leadVeloc
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans">
+    <div className="flex flex-col md:flex-row min-h-screen font-sans">
       
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col z-30">
+      <aside className="w-full md:w-64 bg-white/[0.02] backdrop-blur-3xl border-r border-white/10 flex flex-col z-30">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-10">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/20">TC</div>
@@ -129,13 +129,13 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline, leadVeloc
           </nav>
         </div>
 
-        <div className="mt-auto p-6 border-t border-zinc-100 dark:border-zinc-800">
-          <div className="flex items-center gap-3 mb-5 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800">
-            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-xs font-black text-white shadow-sm">
+        <div className="mt-auto p-6 border-t border-white/10">
+          <div className="flex items-center gap-3 mb-5 p-3 rounded-2xl bg-white/5 border border-white/10">
+            <div className="w-8 h-8 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-xs font-black text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
               {dealer.owner_name[0]}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black text-zinc-900 dark:text-white truncate uppercase tracking-tight">{dealer.owner_name}</p>
+              <p className="text-[10px] font-black text-white truncate uppercase tracking-tight">{dealer.owner_name}</p>
               <p className="text-[9px] font-bold text-zinc-500 truncate uppercase tracking-widest">{dealer.company_name}</p>
             </div>
           </div>
@@ -165,12 +165,12 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline, leadVeloc
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {[
-            { label: "Pipeline Depth", value: dealer.total_leads_received, icon: Users, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/10", border: "border-blue-100/50 dark:border-blue-500/20" },
-            { label: "Successful Closure", value: dealer.total_leads_won, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/10", border: "border-emerald-100/50 dark:border-emerald-500/20" },
-            { label: "Territory Yield", value: `₹${fmt(dealer.total_commission_due)}`, icon: IndianRupee, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/10", border: "border-amber-100/50 dark:border-amber-500/20" },
-            { label: "Lead Velocity", value: `${leadVelocity}/day`, icon: Zap, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/10", border: "border-purple-100/50 dark:border-purple-500/20" },
+            { label: "Pipeline Depth", value: dealer.total_leads_received, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10 border border-blue-500/20" },
+            { label: "Successful Closure", value: dealer.total_leads_won, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10 border border-emerald-500/20" },
+            { label: "Territory Yield", value: `₹${fmt(dealer.total_commission_due)}`, icon: IndianRupee, color: "text-amber-400", bg: "bg-amber-500/10 border border-amber-500/20" },
+            { label: "Lead Velocity", value: `${leadVelocity}/day`, icon: Zap, color: "text-purple-400", bg: "bg-purple-500/10 border border-purple-500/20" },
           ].map((stat, i) => (
-            <div key={i} className={`bg-white dark:bg-zinc-900 border ${stat.border} rounded-2xl p-6 shadow-md shadow-zinc-200/50 dark:shadow-none group hover:scale-[1.02] transition-transform`}>
+            <div key={i} className={`bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all group hover:scale-[1.02]`}>
               <div className="flex justify-between items-start mb-6">
                 <div className={`${stat.bg} ${stat.color} p-3 rounded-2xl`}>
                   <stat.icon className="w-5 h-5" />
@@ -193,10 +193,10 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline, leadVeloc
               <button onClick={() => router.push("/dealer/leads")} className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest hover:underline">View Ledger</button>
             </div>
             
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-md shadow-zinc-200/40 dark:shadow-none">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-zinc-50/50 dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800">
+                  <thead className="bg-white/5 border-b border-white/10">
                     <tr>
                       <th className="px-8 py-4 text-left text-[10px] font-black text-zinc-400 uppercase tracking-widest">Customer Profile</th>
                       <th className="px-8 py-4 text-left text-[10px] font-black text-zinc-400 uppercase tracking-widest">Current State</th>
@@ -204,7 +204,7 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline, leadVeloc
                       <th className="px-8 py-4"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/40">
+                  <tbody className="divide-y divide-white/5">
                     {recentLeads.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="px-8 py-20 text-center text-[11px] text-zinc-500 font-black uppercase tracking-widest opacity-50">
@@ -244,11 +244,11 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline, leadVeloc
 
           {/* Intelligence Sidebar */}
           <div className="space-y-8">
-             <div className="space-y-4">
-                <h3 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2.5">
+              <div className="space-y-4">
+                <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2.5">
                    <TrendingUp className="w-4 h-4 text-purple-500" /> Closure Intelligence
                 </h3>
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md shadow-zinc-200/40 dark:shadow-none space-y-6">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 space-y-6">
                    {[
                      { label: "New Leads", count: pipeline.new, color: "bg-blue-500", total: dealer.total_leads_received },
                      { label: "Quoted", count: pipeline.quoted, color: "bg-indigo-500", total: dealer.total_leads_received },
@@ -268,16 +268,16 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline, leadVeloc
                      </div>
                    ))}
 
-                   <hr className="border-zinc-50 dark:border-zinc-800 my-6" />
+                   <hr className="border-white/10 my-6" />
                    
                    <div className="space-y-4">
                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Hot Territory Pincodes</p>
                      <div className="space-y-2">
                        {topPincodes.map(([pin, count]) => (
-                         <div key={pin} className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+                         <div key={pin} className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
                            <div className="flex items-center gap-2">
                              <MapPin className="w-3 h-3 text-blue-500" />
-                             <span className="text-[11px] font-black text-zinc-900 dark:text-white">{pin}</span>
+                             <span className="text-[11px] font-black text-white">{pin}</span>
                            </div>
                            <span className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest">{count} Leads</span>
                          </div>
@@ -300,8 +300,8 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline, leadVeloc
              </div>
 
              {/* Local SLA Settings */}
-             <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md">
-                <h3 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2.5 mb-6">
+             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+                <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2.5 mb-6">
                    <Clock className="w-4 h-4 text-blue-500" /> Local Operating Hours
                 </h3>
                 
@@ -313,7 +313,7 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline, leadVeloc
                         type="time" 
                         value={slaHours.start_time}
                         onChange={(e) => setSlaHours(p => ({ ...p, start_time: e.target.value }))}
-                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 outline-none text-sm font-bold"
+                        className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-2.5 outline-none text-sm font-bold focus:border-blue-500/50 transition-colors"
                       />
                     </div>
                     <div className="flex-1 space-y-1.5">
@@ -322,7 +322,7 @@ export function DealerDashboardClient({ dealer, recentLeads, pipeline, leadVeloc
                         type="time" 
                         value={slaHours.end_time}
                         onChange={(e) => setSlaHours(p => ({ ...p, end_time: e.target.value }))}
-                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 outline-none text-sm font-bold"
+                        className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-2.5 outline-none text-sm font-bold focus:border-blue-500/50 transition-colors"
                       />
                     </div>
                   </div>

@@ -155,6 +155,9 @@ export interface Product {
   focus_reason?: string;             // Internal note: "Q3 distributor deal", "High margin"
   focus_active_until?: unknown;      // Date: Auto-expires the boost
 
+  // ── Inventory Tracking ───────────────────────────────────────────────────────
+  stock_quantity?: number;           // Real-time stock for configurator syncing
+
   created_at?: unknown;
   updated_at?: unknown;
   updated_by?: string;              // Admin UID who last updated this
@@ -163,13 +166,21 @@ export interface Product {
 export interface Addon {
   id?: string;
   display_name: string;
-  price: number;
+  price?: number;                 // Legacy support
+  unit_price?: number;            // Actual DB field
   base_cost?: number;            // NEW: Cost to business
   is_active: boolean;
   
   // NEW: Multiplier logic
   unit_multiplier?: "none" | "camera_count";
   brand?: string;                // NEW: Optional brand labeling
+  stock_quantity?: number;       // NEW: Inventory tracking
+  category?: "storage" | "power" | "cable" | "accessory" | "service" | string;
+  storage_type?: "Micro SD" | "Hard Disk" | string;
+  technology?: string;
+  technical_name?: string;
+  max_cameras?: number;
+  channels?: number;
   created_at?: unknown;
   updated_at?: unknown;
 }
@@ -533,7 +544,9 @@ export interface FranchiseDealer {
   assigned_states?: string[];            // State-level fallback (broadest)
   territory_exclusivity: boolean;        // true = no other dealer can serve these pincodes
 
-  // Franchise Agreement
+  // Franchise Agreement & Application
+  status?: "pending" | "approved" | "rejected";
+  gst_number?: string;
   franchise_fee_monthly: number;         // Monthly fixed fee in INR
   commission_percent: number;            // % of ex-tax sale value (e.g., 6)
   agreement_start_date?: unknown;

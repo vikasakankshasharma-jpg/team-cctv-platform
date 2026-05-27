@@ -252,8 +252,8 @@ export default async function AdminDashboard() {
       <DashboardClient
         trend={trend}
         sources={sources}
-        recentLeads={recentLeads}
-        internalLeads={internalLeads}
+        initialRecentLeads={recentLeads}
+        initialInternalLeads={internalLeads}
         internalLeadsCount={internalLeadsCount}
         conversionRate={conversionRate}
       />

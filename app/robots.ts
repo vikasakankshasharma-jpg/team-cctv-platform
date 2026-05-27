@@ -6,17 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         // General public crawlers — allow all customer-facing pages
         userAgent: "*",
-        allow: [
-          "/",
-          "/wizard",
-          "/jaipur",
-          "/jodhpur",
-          "/kota",
-          "/ajmer",
-          "/privacy-policy",
-          "/terms-of-service",
-          "/sitemap.xml",
-        ],
+        allow: "/",
         disallow: [
           "/admin",
           "/admin/",

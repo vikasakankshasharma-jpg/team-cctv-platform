@@ -28,29 +28,45 @@ export function FeatureToggleGrid() {
 
     const uniqueFeatures = Array.from(featureSet).sort();
 
-    return uniqueFeatures.map(feat => {
+    const mappedFeatures = uniqueFeatures.map(feat => {
       let label = feat.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+      let id = feat;
       let icon = <Sparkles className="w-3.5 h-3.5" />;
       
       if (feat.includes("mic") || feat.includes("audio")) {
         label = "Mic / Audio";
+        id = "mic";
         icon = <Mic className="w-3.5 h-3.5" />;
       } else if (feat.includes("color") || feat.includes("night")) {
         label = "Color Night";
+        id = "color";
         icon = <Moon className="w-3.5 h-3.5" />;
       } else if (feat.includes("ptz") || feat.includes("pan") || feat.includes("360")) {
         label = "PTZ";
+        id = "ptz";
         icon = <Maximize className="w-3.5 h-3.5" />;
       } else if (feat.includes("ultra") || feat.includes("4mp") || feat.includes("5mp") || feat.includes("8mp") || feat.includes("4k")) {
         label = "Ultra HD";
+        id = "4mp";
         icon = <Camera className="w-3.5 h-3.5" />;
       } else if (feat.includes("ai") || feat.includes("smart")) {
         label = "AI Smart";
+        id = "ai";
         icon = <Zap className="w-3.5 h-3.5" />;
       }
       
-      return { id: feat, label, icon };
+      return { id, label, icon };
     });
+
+    const deduped = [];
+    const seen = new Set<string>();
+    for (const f of mappedFeatures) {
+      if (!seen.has(f.id)) {
+        seen.add(f.id);
+        deduped.push(f);
+      }
+    }
+    return deduped;
   }, [products]);
 
   if (dynamicFeatures.length === 0) return null;

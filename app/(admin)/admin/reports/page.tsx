@@ -29,6 +29,7 @@ export default async function ReportsAdminPage() {
       ...d,
       created_at: (d.created_at as any)?.toDate?.()?.toISOString() || d.created_at || null,
       updated_at: (d.updated_at as any)?.toDate?.()?.toISOString() || d.updated_at || null,
+      site_visit_date: (d.site_visit_date as any)?.toDate?.()?.toISOString() || d.site_visit_date || null,
     } as Lead;
   });
 
@@ -66,7 +67,14 @@ export default async function ReportsAdminPage() {
         .get();
       
       if (!quotesSnapshot.empty) {
-        quoteData = quotesSnapshot.docs[0].data() as PricingResult;
+        const qData = quotesSnapshot.docs[0].data();
+        quoteData = {
+          ...qData,
+          created_at: (qData.created_at as any)?.toDate?.()?.toISOString() || qData.created_at || null,
+          updated_at: (qData.updated_at as any)?.toDate?.()?.toISOString() || qData.updated_at || null,
+          accepted_at: (qData.accepted_at as any)?.toDate?.()?.toISOString() || qData.accepted_at || null,
+          expires_at: (qData.expires_at as any)?.toDate?.()?.toISOString() || qData.expires_at || null,
+        } as any;
       }
     }
     

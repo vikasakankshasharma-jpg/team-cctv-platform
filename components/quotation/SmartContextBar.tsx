@@ -2,115 +2,99 @@
 
 import { useState } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
-import { Camera, Calendar, HardDrive, Edit2, ChevronDown, Minus, Plus, Cpu, Monitor } from "lucide-react";
+import { Camera, Calendar, HardDrive, Edit2, Cpu, Monitor, Download, Calendar as CalendarIcon, Check, Loader2, PlusCircle, Settings2 } from "lucide-react";
 
 interface SmartContextBarProps {
   totalPrice: number;
+  customizationDiff?: number;
+  baseTierName?: string;
+  isCustomized?: boolean;
+  onAction?: (action: "download" | "whatsapp" | "booking" | "accept") => void;
+  isSaving?: boolean;
 }
 
-export function SmartContextBar({ totalPrice }: SmartContextBarProps) {
-  const { selection, updateSelection } = useConfiguratorStore();
-  const [isEditing, setIsEditing] = useState(false);
+export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierName, isCustomized, onAction, isSaving }: SmartContextBarProps) {
+  const { selection } = useConfiguratorStore();
 
   return (
-    <div className="sticky top-4 z-50 max-w-5xl mx-auto w-[95%] px-6 py-3 bg-zinc-900/95 dark:bg-black/95 backdrop-blur-xl border border-zinc-700/50 dark:border-zinc-800 shadow-2xl rounded-full transition-all duration-300">
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div className="fixed bottom-0 left-0 w-full z-50 bg-[#fbfbfd]/80 dark:bg-[#1d1d1f]/80 backdrop-blur-2xl border-t border-[#d2d2d7]/50 dark:border-[#424245]/50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
         
         {/* Core Settings Summary */}
-        <div className="flex items-center gap-3 sm:gap-6 text-white overflow-x-auto no-scrollbar w-full sm:w-auto">
-          <div className="flex items-center gap-2 shrink-0">
-            <Camera className="w-4 h-4 text-blue-400" />
-            <span className="text-xs font-black uppercase tracking-widest">{selection.camera_count} Cameras</span>
+        <div className="flex items-center gap-5 text-[#1d1d1f] dark:text-[#f5f5f7] overflow-x-auto no-scrollbar w-full sm:w-auto">
+          <div className="flex flex-col shrink-0">
+            <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">System</span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <Camera className="w-3.5 h-3.5" />
+              <span className="text-sm font-medium">{selection.camera_count} Cameras</span>
+            </div>
           </div>
-          <span className="text-zinc-700">/</span>
-          <div className="flex items-center gap-2 shrink-0">
-            {selection.technology === "IP" ? <Cpu className="w-4 h-4 text-emerald-400" /> : <Monitor className="w-4 h-4 text-emerald-400" />}
-            <span className="text-xs font-black uppercase tracking-widest">{selection.technology} System</span>
+          <div className="w-px h-8 bg-[#d2d2d7] dark:bg-[#424245] shrink-0" />
+          <div className="flex flex-col shrink-0">
+            <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">Storage</span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <HardDrive className="w-3.5 h-3.5" />
+              <span className="text-sm font-medium">{selection.recording_days} Days</span>
+            </div>
           </div>
-          <span className="text-zinc-700">/</span>
-          <div className="flex items-center gap-2 shrink-0">
-            <Calendar className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-black uppercase tracking-widest">{selection.recording_days} Days</span>
-          </div>
+
+          {(customizationDiff !== 0 || isCustomized) && (
+            <>
+              <div className="w-px h-8 bg-[#d2d2d7] dark:bg-[#424245] shrink-0" />
+              <div className="flex flex-col shrink-0">
+                <span className={`text-[10px] font-semibold uppercase tracking-wider ${customizationDiff > 0 ? 'text-[#0071e3]' : customizationDiff < 0 ? 'text-[#ff3b30]' : 'text-[#0071e3]'}`}>
+                  {customizationDiff !== 0 ? `Price Diff (vs ${baseTierName || 'Standard'})` : "Configuration"}
+                </span>
+                <div className={`flex items-center gap-1.5 mt-0.5 ${customizationDiff > 0 ? 'text-[#0071e3]' : customizationDiff < 0 ? 'text-[#ff3b30]' : 'text-[#0071e3]'}`}>
+                  {customizationDiff !== 0 ? (
+                    <>
+                      <PlusCircle className={`w-3.5 h-3.5 ${customizationDiff < 0 ? 'rotate-45' : ''}`} />
+                      <span className="text-sm font-semibold">
+                        {customizationDiff > 0 ? '+' : '-'}₹{Math.abs(customizationDiff).toLocaleString("en-IN")}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Settings2 className="w-3.5 h-3.5" />
+                      <span className="text-sm font-semibold">Custom Built</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Live Total & Edit Button */}
+        {/* Live Total & Checkout Buttons */}
         <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-          <div className="flex flex-col sm:items-end">
-            <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Live Estimate</span>
-            <div className="flex items-baseline gap-1 text-white">
-              <span className="text-xs font-black">₹</span>
-              <span className="text-lg font-black tracking-tighter">{totalPrice.toLocaleString("en-IN")}</span>
+          <div className="flex flex-col sm:items-end shrink-0">
+            <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">Total Estimation</span>
+            <div className="flex items-baseline gap-1 text-[#1d1d1f] dark:text-white">
+              <span className="text-sm font-medium">₹</span>
+              <span className="text-2xl font-semibold tracking-tight">{totalPrice.toLocaleString("en-IN")}</span>
             </div>
           </div>
           
-          <button 
-            onClick={() => setIsEditing(!isEditing)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-colors"
-          >
-            <Edit2 className="w-3 h-3" />
-            Edit Scope
-          </button>
+          <div className="flex gap-2 shrink-0">
+            <button 
+              onClick={() => onAction && onAction("download")}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#2d2d2f] hover:bg-[#f5f5f7] dark:hover:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white border border-[#d2d2d7] dark:border-[#424245] rounded-full text-xs font-medium transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Save PDF
+            </button>
+            <button 
+              onClick={() => onAction && onAction("booking")}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-6 py-2.5 bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Book Site Visit</>}
+            </button>
+          </div>
         </div>
 
       </div>
-
-      {/* Inline Editor Dropdown */}
-      {isEditing && (
-        <div className="absolute top-[calc(100%+12px)] left-0 w-full bg-zinc-900/95 dark:bg-black/95 backdrop-blur-xl border border-zinc-700/50 dark:border-zinc-800 shadow-2xl p-4 sm:p-6 rounded-3xl animate-in slide-in-from-top-2 fade-in duration-200">
-          <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-8">
-            
-            {/* Camera Count Edit */}
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex justify-between">
-                <span>Camera Count</span>
-                <span className="text-white">{selection.camera_count}</span>
-              </label>
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => updateSelection({ camera_count: Math.max(1, selection.camera_count - 1) })}
-                  className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
-                ><Minus className="w-4 h-4" /></button>
-                <input 
-                  type="range" min="1" max="32" step="1"
-                  value={selection.camera_count}
-                  onChange={(e) => updateSelection({ camera_count: parseInt(e.target.value) })}
-                  className="w-full h-1 bg-zinc-800 rounded-full appearance-none accent-blue-500"
-                />
-                <button 
-                  onClick={() => updateSelection({ camera_count: Math.min(32, selection.camera_count + 1) })}
-                  className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
-                ><Plus className="w-4 h-4" /></button>
-              </div>
-            </div>
-
-            {/* Recording Days Edit */}
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex justify-between">
-                <span>Recording Days</span>
-                <span className="text-white">{selection.recording_days}</span>
-              </label>
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => updateSelection({ recording_days: Math.max(7, selection.recording_days - 7) })}
-                  className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
-                ><Minus className="w-4 h-4" /></button>
-                <input 
-                  type="range" min="7" max="90" step="1"
-                  value={selection.recording_days}
-                  onChange={(e) => updateSelection({ recording_days: parseInt(e.target.value) })}
-                  className="w-full h-1 bg-zinc-800 rounded-full appearance-none accent-blue-500"
-                />
-                <button 
-                  onClick={() => updateSelection({ recording_days: Math.min(90, selection.recording_days + 7) })}
-                  className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
-                ><Plus className="w-4 h-4" /></button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
     </div>
   );
 }

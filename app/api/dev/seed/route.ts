@@ -827,6 +827,15 @@ export async function GET(request: Request) {
       idMap[item.id] = newId;
       item.id = newId;
 
+      // Base data for all items
+      const baseData = {
+        is_active: true,
+        is_deleted: false,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      Object.assign(item, baseData);
+
       if (item.catalog_path) {
         const parts = item.catalog_path.split("/");
         let currentPath = "";

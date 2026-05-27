@@ -38,10 +38,10 @@ export function ServiceAreaModal() {
   const cityData = stateData?.children?.find((c) => c.name === selectedCity);
 
   const handleContinue = () => {
-    if (cityData?.served && cityData?.slug) {
+    if (cityData?.slug) {
       setIsOpen(false);
-      router.push(`/${cityData.slug}`); // e.g. /jaipur
-    } else {
+      router.push(`/${cityData.slug}`); // e.g. /jaipur, /abu
+    } else if (selectedCity) {
       setIsOpen(false);
       router.push(`/wizard?city=${encodeURIComponent(selectedCity)}`);
     }

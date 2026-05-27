@@ -74,7 +74,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
   if (!isIndustrial) {
     // 2. Core Hardware Calculation
-    const hardware = calculateHardware(selection, products, settings, effectiveTech);
+    const hardware = calculateHardware(selection, products, addons, settings, effectiveTech);
     lineItems.push(...hardware.items);
     baseHardwareCost += hardware.totalRetail;
     totalPurchaseCost += hardware.totalCost;
@@ -159,6 +159,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 function calculateHardware(
   selection: ConfiguratorSelection, 
   products: Product[], 
+  addons: Addon[],
   settings: AppSettings,
   tech: string
 ) {
@@ -167,7 +168,7 @@ function calculateHardware(
   let totalCost = 0;
 
   // 1. Camera Selection
-  const camera = resolveCamera(selection, products, settings, tech);
+  const camera = resolveCamera(selection, products, addons, settings, tech);
   if (camera) {
     const qty = selection.camera_count;
     const unitPrice = resolveUnitPrice(camera, qty);
@@ -200,32 +201,34 @@ function calculateHardware(
   }
 
   // 3. Storage (HDD)
-  const hdd = resolveHDD(selection, products, tech);
+  const hdd = resolveHDD(selection, addons, tech);
   if (hdd) {
+    const unitPrice = hdd.unit_price || hdd.price || 0;
     items.push({
       product_id: hdd.id!,
       display_name: hdd.display_name,
       brand: hdd.brand,
       qty: 1,
-      unit_price: hdd.unit_price,
-      line_total: hdd.unit_price
+      unit_price: unitPrice,
+      line_total: unitPrice
     });
-    totalRetail += hdd.unit_price;
+    totalRetail += unitPrice;
     totalCost += (hdd.base_cost || 0);
   }
 
   // 4. Transmission (PoE/PSU)
-  const transmission = resolveTransmission(selection, products, tech);
+  const transmission = resolveTransmission(selection, addons, tech);
   if (transmission) {
     const qty = Math.ceil(selection.camera_count / (transmission.max_cameras || 4));
+    const unitPrice = transmission.unit_price || transmission.price || 0;
     items.push({
       product_id: transmission.id!,
       display_name: transmission.display_name,
       qty,
-      unit_price: transmission.unit_price,
-      line_total: transmission.unit_price * qty
+      unit_price: unitPrice,
+      line_total: unitPrice * qty
     });
-    totalRetail += transmission.unit_price * qty;
+    totalRetail += unitPrice * qty;
     totalCost += (transmission.base_cost || 0) * qty;
   }
 
@@ -314,11 +317,12 @@ function calculateAddons(params: {
     let qty = 1;
     if (addon.unit_multiplier === "camera_count") qty = selection.camera_count;
     
-    const lineTotal = addon.price * qty;
+    const price = addon.price || 0;
+    const lineTotal = price * qty;
     items.push({
       addon_id: addon.id!,
       display_name: addon.display_name,
-      price: addon.price,
+      price: price,
       qty
     });
     totalRetail += lineTotal;
@@ -370,19 +374,19 @@ function calculateAddons(params: {
 /** 
  * Forward-estimates the total quote value for a specific camera to allow budget filtering 
  */
-function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, products: Product[], settings: AppSettings, tech: string): number {
+function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, products: Product[], addons: Addon[], settings: AppSettings, tech: string): number {
   const qty = selection.camera_count;
   const camTotal = resolveUnitPrice(cam, qty) * qty;
   
   const recorder = resolveRecorder(selection, products, tech);
   const recTotal = recorder ? recorder.unit_price : 0;
   
-  const hdd = resolveHDD(selection, products, tech);
-  const hddTotal = hdd ? hdd.unit_price : 0;
+  const hdd = resolveHDD(selection, addons, tech);
+  const hddTotal = hdd ? (hdd.unit_price || hdd.price || 0) : 0;
 
-  const transmission = resolveTransmission(selection, products, tech);
+  const transmission = resolveTransmission(selection, addons, tech);
   const transQty = transmission ? Math.ceil(qty / (transmission.max_cameras || 4)) : 0;
-  const transTotal = transmission ? transmission.unit_price * transQty : 0;
+  const transTotal = transmission ? (transmission.unit_price || transmission.price || 0) * transQty : 0;
 
   const baseHardware = camTotal + recTotal + hddTotal + transTotal;
 
@@ -405,7 +409,7 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
   return grossSubtotal + gstAmount;
 }
 
-function resolveCamera(selection: ConfiguratorSelection, products: Product[], settings: AppSettings, tech: string) {
+function resolveCamera(selection: ConfiguratorSelection, products: Product[], addons: Addon[], settings: AppSettings, tech: string) {
   if (selection.selected_camera_id) {
     return products.find(p => p.id === selection.selected_camera_id);
   }
@@ -453,7 +457,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], se
   // Filter by Max Budget (Total Quote Value Forward-Estimation)
   if (selection.max_budget) {
     const budgetFiltered = pool.filter(cam => {
-      const predictedTotal = estimateQuoteTotal(cam, selection, products, settings, tech);
+      const predictedTotal = estimateQuoteTotal(cam, selection, products, addons, settings, tech);
       return predictedTotal <= selection.max_budget!;
     });
     // Fallback: If strict budget matching eliminates ALL cameras, keep the cheapest camera available
@@ -556,21 +560,21 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
 /** Safely resolves storage capacity in TB from a product.
  *  Prefers the dedicated `storage_tb` field, falls back to name parsing.
  */
-function resolveHDDCapacity(product: Product & { storage_tb?: number }): number {
+function resolveHDDCapacity(product: Addon & { storage_tb?: number }): number {
   if (typeof product.storage_tb === "number" && product.storage_tb > 0) {
     return product.storage_tb;
   }
   // Fallback: extract first number from name (e.g. "Seagate 2TB HDD" → 2)
-  const match = (product.technical_name || "").match(/(\d+(?:\.\d+)?)\s*TB/i);
+  const match = (product.technical_name || product.display_name || "").match(/(\d+(?:\.\d+)?)\s*TB/i);
   if (match) return parseFloat(match[1]);
   // Last resort: any leading number
-  const numMatch = (product.technical_name || "").match(/^(\d+)/);
+  const numMatch = (product.technical_name || product.display_name || "").match(/^(\d+)/);
   return numMatch ? parseFloat(numMatch[1]) : 0;
 }
 
-function resolveHDD(selection: ConfiguratorSelection, products: Product[], tech: string) {
+function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: string) {
   if (selection.selected_storage_id) {
-    return products.find(p => p.id === selection.selected_storage_id);
+    return addons.find(a => a.id === selection.selected_storage_id);
   }
 
   const recordingDays = selection.recording_days || 7;
@@ -579,26 +583,30 @@ function resolveHDD(selection: ConfiguratorSelection, products: Product[], tech:
   const requiredGB = selection.camera_count * gbPerDay * recordingDays;
   const requiredTB = requiredGB / 1000;
 
-  const hdds = products.filter(p => p.category === "accessory" && (p.technical_name || "").toLowerCase().includes("hdd"));
+  const hdds = addons.filter(a => a.category === "storage");
+  if (hdds.length === 0) return undefined;
+  
   hdds.sort((a, b) => resolveHDDCapacity(a) - resolveHDDCapacity(b));
 
   return hdds.find(h => resolveHDDCapacity(h) >= requiredTB) || hdds[hdds.length - 1];
 }
 
-function resolveTransmission(selection: ConfiguratorSelection, products: Product[], tech: string) {
+function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], tech: string) {
   if (selection.selected_power_id) {
-    return products.find(p => p.id === selection.selected_power_id);
+    return addons.find(a => a.id === selection.selected_power_id);
   }
 
   const keyword = tech === "IP" ? "poe" : "psu";
-  const options = products.filter(p => p.category === "accessory" && (p.technical_name || "").toLowerCase().includes(keyword));
+  const options = addons.filter(a => a.category === "addon" && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword));
+  if (options.length === 0) return undefined;
+  
   options.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
   return options.find(o => (o.max_cameras || 0) >= selection.camera_count) || options[options.length - 1];
 }
 
 function resolveUnitPrice(product: Product, qty: number) {
   if (product.bulk_discount_threshold && qty >= product.bulk_discount_threshold) {
-    return product.bulk_unit_price || product.unit_price;
+    return product.bulk_unit_price || product.unit_price || 0;
   }
-  return product.unit_price;
+  return product.unit_price || 0;
 }

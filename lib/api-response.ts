@@ -11,7 +11,8 @@ export type ApiErrorCode =
   | "NOT_FOUND" 
   | "VALIDATION_ERROR" 
   | "INTERNAL_ERROR" 
-  | "RATE_LIMIT_EXCEEDED";
+  | "RATE_LIMIT_EXCEEDED"
+  | "PRICE_TAMPERING_OR_STALE";
 
 export class ApiResponse {
   static success(data: any, status = 200) {

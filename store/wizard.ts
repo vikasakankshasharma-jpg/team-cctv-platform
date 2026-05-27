@@ -34,10 +34,14 @@ interface WizardStore {
   // Products Catalog (for live faceted counting)
   products: Product[];
 
+  // Lead Tracking (Cart Abandonment)
+  partial_lead_id: string | null;
+
   // Actions
   setSteps: (steps: WizardStep[]) => void;
   setProducts: (products: Product[]) => void;
   setAnswer: (questionId: string, value: string | string[]) => void;
+  setPartialLeadId: (id: string | null) => void;
   goToStep: (index: number) => void;
   nextStep: () => void;
   previousStep: () => void;
@@ -54,6 +58,7 @@ const initialState = {
   current_step_index: 0,
   answers: {} as WizardAnswers,
   products: [],
+  partial_lead_id: null,
 };
 
 // ─────────────────────────────────────────────
@@ -79,6 +84,8 @@ export const useWizardStore = create<WizardStore>()(
         set((state) => ({
           answers: { ...state.answers, [questionId]: value },
         })),
+
+      setPartialLeadId: (id) => set({ partial_lead_id: id }),
 
       /** Jump to a specific step index (used by back button and progress bar) */
       goToStep: (index) => {
@@ -130,6 +137,7 @@ export const useWizardStore = create<WizardStore>()(
       partialize: (state): any => ({
         answers: state.answers,
         current_step_index: state.current_step_index,
+        partial_lead_id: state.partial_lead_id,
       }),
     }
   )

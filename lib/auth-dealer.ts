@@ -41,6 +41,17 @@ export async function verifyDealerSession(): Promise<DealerSession> {
   const sessionCookie = cookieStore.get("dealer_session")?.value;
   if (!sessionCookie) return EMPTY;
 
+  // E2E Mock Session bypass for automated visual scans (development only)
+  if (sessionCookie === "mock-dealer-session" && process.env.NODE_ENV === "development") {
+    return {
+      isAuthenticated: true,
+      dealerId: "mock-dealer-id",
+      dealerName: "E2E Mock Dealer",
+      companyName: "E2E CCTV Reseller",
+      uid: "mock-dealer-uid",
+    };
+  }
+
   try {
     const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
 

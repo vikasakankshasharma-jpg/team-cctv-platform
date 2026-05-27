@@ -1,8 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Loader2, Package, Tag, Layers, Cpu, BadgeIndianRupee, Activity, Link2, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { X, Loader2, Package, Tag, Layers, Cpu, BadgeIndianRupee, Activity, Link2 } from "lucide-react";
 import type { Product } from "@/types";
+
+const productSchema = z.object({
+  display_name: z.string().min(1, "Display name is required"),
+  technical_name: z.string().min(1, "Technical name is required"),
+  category: z.enum(["camera", "recorder", "accessory", "cable"]),
+  technology: z.enum(["IP", "HD", "Common", "WiFi", "4G", "Solar"]),
+  base_cost: z.number().min(0),
+  margin_percentage: z.number().min(0).max(99),
+  unit_price: z.number().min(0),
+  unit_price_budget: z.number().optional().nullable(),
+  unit_price_premium: z.number().optional().nullable(),
+  is_active: z.boolean(),
+  resolution_tier: z.enum(["good", "very_clear", "crystal_clear"]).optional(),
+  channels: z.number().optional(),
+  catalog_path: z.string().optional(),
+  compatible_paths: z.array(z.string()),
+  max_cameras: z.number().optional().nullable(),
+  min_cameras: z.number().optional().nullable(),
+  brand: z.string().optional().nullable(),
+});
+
+type ProductFormValues = z.infer<typeof productSchema>;
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -13,29 +38,43 @@ interface ProductModalProps {
 
 export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<Omit<Product, "id">>({
-    display_name: "",
-    technical_name: "",
-    category: "camera",
-    technology: "IP",
-    base_cost: 0,
-    margin_percentage: 0,
-    unit_price: 0,
-    is_active: true,
+  const [newCompatiblePath, setNewCompatiblePath] = useState("");
+
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      display_name: "",
+      technical_name: "",
+      category: "camera",
+      technology: "IP",
+      base_cost: 0,
+      margin_percentage: 0,
+      unit_price: 0,
+      is_active: true,
+      catalog_path: "",
+      compatible_paths: [],
+    },
   });
+
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = form;
+
+  const category = watch("category");
+  const compatiblePaths = watch("compatible_paths");
 
   useEffect(() => {
     if (product && isOpen) {
-      setFormData({
+      form.reset({
         display_name: product.display_name,
         technical_name: product.technical_name,
-        category: product.category,
-        technology: product.technology,
+        category: product.category as any,
+        technology: product.technology as any,
         base_cost: product.base_cost ?? 0,
         margin_percentage: product.margin_percentage ?? 0,
         unit_price: product.unit_price,
+        unit_price_budget: product.unit_price_budget,
+        unit_price_premium: product.unit_price_premium,
         is_active: product.is_active ?? true,
-        resolution_tier: product.resolution_tier,
+        resolution_tier: product.resolution_tier as any,
         channels: product.channels,
         catalog_path: product.catalog_path ?? "",
         compatible_paths: product.compatible_paths ?? [],
@@ -44,7 +83,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         brand: product.brand,
       });
     } else {
-      setFormData({
+      form.reset({
         display_name: "",
         technical_name: "",
         category: "camera",
@@ -57,59 +96,16 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         compatible_paths: [],
       });
     }
-  }, [product, isOpen]);
-
-  const [newCompatiblePath, setNewCompatiblePath] = useState("");
-
-  const addCompatiblePath = () => {
-    if (!newCompatiblePath.trim()) return;
-    const current = formData.compatible_paths ?? [];
-    if (!current.includes(newCompatiblePath.trim())) {
-      setFormData({ ...formData, compatible_paths: [...current, newCompatiblePath.trim()] });
-    }
     setNewCompatiblePath("");
-  };
-
-  const removeCompatiblePath = (path: string) => {
-    const current = formData.compatible_paths ?? [];
-    setFormData({ ...formData, compatible_paths: current.filter(p => p !== path) });
-  };
-
-  const handleBaseCostChange = (val: number) => {
-    const margin = formData.margin_percentage || 0;
-    let newUnitPrice = formData.unit_price;
-    if (margin > 0 && margin < 100) {
-      newUnitPrice = Math.round(val / (1 - margin / 100));
-    }
-    setFormData({ ...formData, base_cost: val, unit_price: newUnitPrice });
-  };
-
-  const handleMarginChange = (val: number) => {
-    const cost = formData.base_cost || 0;
-    let newUnitPrice = formData.unit_price;
-    if (val > 0 && val < 100 && cost > 0) {
-      newUnitPrice = Math.round(cost / (1 - val / 100));
-    }
-    setFormData({ ...formData, margin_percentage: val, unit_price: newUnitPrice });
-  };
-
-  const handleUnitPriceChange = (val: number) => {
-    const cost = formData.base_cost || 0;
-    let newMargin = formData.margin_percentage || 0;
-    if (val > 0 && cost > 0) {
-      newMargin = Number((((val - cost) / val) * 100).toFixed(2));
-    }
-    setFormData({ ...formData, unit_price: val, margin_percentage: newMargin });
-  };
+  }, [product, isOpen, form]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: ProductFormValues) => {
     setIsSubmitting(true);
     
     // Clean up conditional fields before save
-    const dataToSave = { ...formData };
+    const dataToSave: any = { ...data };
     if (dataToSave.category !== "camera") {
       delete dataToSave.resolution_tier;
     }
@@ -118,8 +114,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
     }
 
     try {
-      await onSave(dataToSave);
-      onClose();
+      await onSave(dataToSave as Omit<Product, "id">);
     } catch (error) {
       console.error("Failed to save product:", error);
     } finally {
@@ -127,31 +122,75 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
     }
   };
 
+  const addCompatiblePath = () => {
+    if (!newCompatiblePath.trim()) return;
+    const current = form.getValues("compatible_paths") ?? [];
+    if (!current.includes(newCompatiblePath.trim())) {
+      setValue("compatible_paths", [...current, newCompatiblePath.trim()]);
+    }
+    setNewCompatiblePath("");
+  };
+
+  const removeCompatiblePath = (path: string) => {
+    const current = form.getValues("compatible_paths") ?? [];
+    setValue("compatible_paths", current.filter(p => p !== path));
+  };
+
+  const handleBaseCostChange = (val: number) => {
+    const margin = form.getValues("margin_percentage") || 0;
+    let newUnitPrice = form.getValues("unit_price");
+    if (margin > 0 && margin < 100) {
+      newUnitPrice = Math.round(val / (1 - margin / 100));
+    }
+    setValue("base_cost", val);
+    setValue("unit_price", newUnitPrice);
+  };
+
+  const handleMarginChange = (val: number) => {
+    const cost = form.getValues("base_cost") || 0;
+    let newUnitPrice = form.getValues("unit_price");
+    if (val > 0 && val < 100 && cost > 0) {
+      newUnitPrice = Math.round(cost / (1 - val / 100));
+    }
+    setValue("margin_percentage", val);
+    setValue("unit_price", newUnitPrice);
+  };
+
+  const handleUnitPriceChange = (val: number) => {
+    const cost = form.getValues("base_cost") || 0;
+    let newMargin = form.getValues("margin_percentage") || 0;
+    if (val > 0 && cost > 0) {
+      newMargin = Number((((val - cost) / val) * 100).toFixed(2));
+    }
+    setValue("unit_price", val);
+    setValue("margin_percentage", newMargin);
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-zinc-900 animate-in fade-in duration-500" onClick={onClose} />
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in duration-500" onClick={onClose} />
       
       {/* Modal Card */}
-      <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-md animate-in zoom-in-95 fade-in duration-500 max-h-[90vh] flex flex-col">
+      <div className="relative bg-background border border-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-xl animate-in zoom-in-95 fade-in duration-500 max-h-[90vh] flex flex-col">
         
         {/* Header Section */}
-        <div className="p-10 pb-6 shrink-0">
+        <div className="p-8 pb-6 shrink-0 border-b border-border bg-secondary/30">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-inner">
-                <Package className="w-7 h-7" />
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <Package className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-3xl font-black text-white tracking-tight">
+                <h2 className="text-xl font-semibold text-foreground tracking-tight">
                   {product ? "Refine Product" : "Catalogue Entry"}
                 </h2>
-                <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Core Hardware Specification</p>
+                <p className="text-[11px] font-medium text-muted-foreground mt-0.5">Core Hardware Specification</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center text-zinc-500 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 rounded-2xl transition-all"
+              className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-foreground bg-secondary hover:bg-secondary/80 rounded-xl transition-all"
             >
               <X className="w-5 h-5" />
             </button>
@@ -159,44 +198,39 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         </div>
 
         {/* Scrollable Form Content */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-10 pb-10 space-y-8 custom-scrollbar">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
           
           {/* Identity Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2 col-span-2">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                <Tag className="w-3 h-3" /> Marketing Display Name
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-2">
+                <Tag className="w-3.5 h-3.5" /> Marketing Display Name
               </label>
               <input
-                required
-                type="text"
-                value={formData.display_name}
-                onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
+                {...register("display_name")}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
                 placeholder="e.g. TEAM Smart 2MP Dome"
               />
+              {errors.display_name && <span className="text-[10px] text-destructive">{errors.display_name.message}</span>}
             </div>
 
             <div className="space-y-2 col-span-2">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                <Layers className="w-3 h-3" /> Technical SKU / Model
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5" /> Technical SKU / Model
               </label>
               <input
-                required
-                type="text"
-                value={formData.technical_name}
-                onChange={(e) => setFormData({ ...formData, technical_name: e.target.value })}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-zinc-300 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner uppercase tracking-wider"
+                {...register("technical_name")}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm uppercase tracking-wider"
                 placeholder="e.g. IPC-D120-I"
               />
+              {errors.technical_name && <span className="text-[10px] text-destructive">{errors.technical_name.message}</span>}
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2">Type Category</label>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Type Category</label>
               <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as "camera" | "recorder" | "accessory" | "cable" })}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
+                {...register("category")}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer shadow-sm"
               >
                 <option value="camera">Camera Unit</option>
                 <option value="recorder">Recorder (DVR/NVR)</option>
@@ -206,13 +240,12 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                <Cpu className="w-3 h-3" /> Tech Standard
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-2">
+                <Cpu className="w-3.5 h-3.5" /> Tech Standard
               </label>
               <select
-                value={formData.technology}
-                onChange={(e) => setFormData({ ...formData, technology: e.target.value as "IP" | "HD" | "Common" | "WiFi" | "4G" | "Solar" })}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
+                {...register("technology")}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer shadow-sm"
               >
                 <option value="IP">IP (Network / Wired)</option>
                 <option value="HD">HD (Analog)</option>
@@ -225,31 +258,31 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
           </div>
 
           {/* Pricing & Logic Section */}
-          <div className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 space-y-6">
-            <h3 className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
-               <Activity className="w-3 h-3" /> Logic & Financials
+          <div className="bg-secondary/20 p-6 rounded-2xl border border-border space-y-6">
+            <h3 className="text-[11px] font-semibold text-primary uppercase tracking-wider flex items-center gap-2">
+               <Activity className="w-3.5 h-3.5" /> Logic & Financials
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-2">
                     Purchase Cost (Base)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">₹</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
                     <input
                       type="number"
                       min="0"
-                      value={formData.base_cost || ""}
+                      value={watch("base_cost") || ""}
                       onChange={(e) => handleBaseCostChange(Number(e.target.value))}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-10 pr-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                      className="w-full bg-background border border-border rounded-xl pl-8 pr-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-2">
                     Target Margin %
                   </label>
                   <div className="relative">
@@ -258,73 +291,70 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                       min="0"
                       max="99"
                       step="0.01"
-                      value={formData.margin_percentage || ""}
+                      value={watch("margin_percentage") || ""}
                       onChange={(e) => handleMarginChange(Number(e.target.value))}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
                     />
-                    <span className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                    <BadgeIndianRupee className="w-3 h-3" /> Final Selling Price
+                  <label className="text-[11px] font-semibold text-primary uppercase tracking-wider ml-1 flex items-center gap-2">
+                    <BadgeIndianRupee className="w-3.5 h-3.5" /> Final Selling Price
                   </label>
                   <div className="relative">
-                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-blue-500 font-black">₹</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-bold">₹</span>
                     <input
                       required
                       type="number"
                       min="0"
-                      value={formData.unit_price}
+                      value={watch("unit_price")}
                       onChange={(e) => handleUnitPriceChange(Number(e.target.value))}
-                      className="w-full bg-zinc-900 border border-blue-500/30 rounded-2xl pl-10 pr-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="w-full bg-background border border-primary/30 rounded-xl pl-8 pr-4 py-3 text-foreground font-bold text-base focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">
                     Value / Budget Price <span className="normal-case tracking-normal font-normal opacity-70">(Optional)</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">₹</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
                     <input
                       type="number"
                       min="0"
-                      value={formData.unit_price_budget || ""}
-                      onChange={(e) => setFormData({ ...formData, unit_price_budget: e.target.value ? Number(e.target.value) : undefined })}
+                      {...register("unit_price_budget", { valueAsNumber: true })}
                       placeholder="Auto-calculated if empty"
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-10 pr-6 py-3 text-zinc-300 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all placeholder:text-zinc-700"
+                      className="w-full bg-background border border-border rounded-xl pl-8 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">
                     Elite / Premium Price <span className="normal-case tracking-normal font-normal opacity-70">(Optional)</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">₹</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
                     <input
                       type="number"
                       min="0"
-                      value={formData.unit_price_premium || ""}
-                      onChange={(e) => setFormData({ ...formData, unit_price_premium: e.target.value ? Number(e.target.value) : undefined })}
+                      {...register("unit_price_premium", { valueAsNumber: true })}
                       placeholder="Auto-calculated if empty"
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl pl-10 pr-6 py-3 text-zinc-300 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all placeholder:text-zinc-700"
+                      className="w-full bg-background border border-border rounded-xl pl-8 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
                     />
                   </div>
                 </div>
               </div>
 
-              {formData.category === "camera" && (
+              {category === "camera" && (
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 text-emerald-500">Resolution Payload</label>
+                  <label className="text-[11px] font-semibold text-success uppercase tracking-wider ml-1">Resolution Payload</label>
                   <select
-                    value={formData.resolution_tier || "good"}
-                    onChange={(e) => setFormData({ ...formData, resolution_tier: e.target.value as "good" | "very_clear" | "crystal_clear" })}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all appearance-none cursor-pointer"
+                    {...register("resolution_tier")}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-success/20 transition-all appearance-none cursor-pointer shadow-sm"
                   >
                     <option value="good">Good (2MP)</option>
                     <option value="very_clear">Very Clear (4MP/5MP)</option>
@@ -333,13 +363,12 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                 </div>
               )}
 
-              {formData.category === "recorder" && (
+              {category === "recorder" && (
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 text-indigo-400">Channel Capacity</label>
+                  <label className="text-[11px] font-semibold text-primary uppercase tracking-wider ml-1">Channel Capacity</label>
                   <select
-                    value={formData.channels || 4}
-                    onChange={(e) => setFormData({ ...formData, channels: Number(e.target.value) })}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
+                    {...register("channels", { valueAsNumber: true })}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer shadow-sm"
                   >
                     <option value={4}>4-Channel Hub</option>
                     <option value={8}>8-Channel Hub</option>
@@ -352,46 +381,44 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
 
             <div className="flex items-center justify-between pt-4 mt-2">
               <div className="space-y-1">
-                <p className="text-sm font-black text-white uppercase tracking-tight">Active Catalogue State</p>
-                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Controls availability in live estimation wizard</p>
+                <p className="text-sm font-semibold text-foreground tracking-tight">Active Catalogue State</p>
+                <p className="text-[11px] font-medium text-muted-foreground">Controls availability in live estimation wizard</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  {...register("is_active")}
                   className="sr-only peer"
                 />
-                <div className="w-14 h-7 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-zinc-400 after:border-zinc-400 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-checked:after:bg-white peer-checked:after:border-white transition-all"></div>
+                <div className="w-11 h-6 bg-secondary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary transition-all shadow-inner"></div>
               </label>
             </div>
           </div>
 
           {/* ── Compatibility Section ─────────────────────────────────────── */}
-          {(formData.category === "camera" || formData.category === "recorder" || formData.category === "accessory") && (
-            <div className="bg-zinc-900 p-8 rounded-2xl border border-indigo-800/30 space-y-6">
-              <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
-                <Link2 className="w-3 h-3" /> Compatibility Engine
+          {(category === "camera" || category === "recorder" || category === "accessory") && (
+            <div className="bg-secondary/20 p-6 rounded-2xl border border-border space-y-6">
+              <h3 className="text-[11px] font-semibold text-primary uppercase tracking-wider flex items-center gap-2">
+                <Link2 className="w-3.5 h-3.5" /> Compatibility Engine
               </h3>
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1 block">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 block">
                     Catalog Path <span className="normal-case font-normal opacity-60">(e.g., CCTV/Cameras/IP/4MP)</span>
                   </label>
                   <input
                     type="text"
-                    value={formData.catalog_path ?? ""}
-                    onChange={(e) => setFormData({ ...formData, catalog_path: e.target.value })}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all"
+                    {...register("catalog_path")}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
                     placeholder="Category / Subcategory / Type"
                   />
                 </div>
 
-                {(formData.category === "recorder" || formData.category === "accessory") && (
+                {(category === "recorder" || category === "accessory") && (
                   <>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1 block">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 block">
                         Compatible Paths <span className="normal-case font-normal opacity-60">(What this device supports)</span>
                       </label>
                       <div className="flex gap-2">
@@ -405,26 +432,26 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                               addCompatiblePath();
                             }
                           }}
-                          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
+                          className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-success/20 transition-all shadow-sm"
                           placeholder="e.g., CCTV/Cameras/IP"
                         />
                         <button
                           type="button"
                           onClick={addCompatiblePath}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors"
+                          className="px-5 py-2.5 bg-success hover:bg-success/90 text-success-foreground font-semibold text-xs rounded-xl transition-colors shadow-sm"
                         >
                           Add
                         </button>
                       </div>
                       <div className="flex flex-wrap gap-2 mt-3">
-                        {(formData.compatible_paths ?? []).length === 0 && (
-                          <span className="text-xs text-zinc-600 font-medium italic">No compatible paths added.</span>
+                        {compatiblePaths.length === 0 && (
+                          <span className="text-xs text-muted-foreground font-medium italic">No compatible paths added.</span>
                         )}
-                        {(formData.compatible_paths ?? []).map(path => (
-                          <span key={path} className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                        {compatiblePaths.map(path => (
+                          <span key={path} className="px-3 py-1.5 rounded-full bg-success/10 border border-success/20 text-[11px] font-semibold text-success flex items-center gap-2">
                             {path}
-                            <button type="button" onClick={() => removeCompatiblePath(path)} className="text-emerald-500 hover:text-emerald-300">
-                              <X className="w-3 h-3" />
+                            <button type="button" onClick={() => removeCompatiblePath(path)} className="text-success hover:text-success/70">
+                              <X className="w-3.5 h-3.5" />
                             </button>
                           </span>
                         ))}
@@ -433,11 +460,11 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1 block">Max Cameras</label>
-                      <select value={formData.max_cameras ?? ""}
-                        onChange={e => setFormData({ ...formData, max_cameras: e.target.value ? Number(e.target.value) : undefined })}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all appearance-none">
-                        <option value="">— Not Set —</option>
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 block">Max Cameras</label>
+                      <select 
+                        {...register("max_cameras", { valueAsNumber: true })}
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none shadow-sm">
+                        <option value={0}>— Not Set —</option>
                         <option value={1}>1 Camera</option>
                         <option value={4}>4 Cameras</option>
                         <option value={8}>8 Cameras</option>
@@ -446,11 +473,11 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1 block">Min Cameras</label>
-                      <select value={formData.min_cameras ?? ""}
-                        onChange={e => setFormData({ ...formData, min_cameras: e.target.value ? Number(e.target.value) : undefined })}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all appearance-none">
-                        <option value="">— Not Set —</option>
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 block">Min Cameras</label>
+                      <select 
+                        {...register("min_cameras", { valueAsNumber: true })}
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none shadow-sm">
+                        <option value={0}>— Not Set —</option>
                         <option value={1}>1 Camera</option>
                         <option value={5}>5 Cameras</option>
                         <option value={9}>9 Cameras</option>
@@ -463,24 +490,24 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
             </div>
           )}
 
-          <div className="flex justify-end gap-4 pt-4 sticky bottom-0 bg-transparent">
+          <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-background/80 backdrop-blur-md py-4 -mb-4">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-8 py-4 text-xs font-black text-zinc-500 hover:text-white uppercase tracking-[0.2em] transition-all disabled:opacity-50"
+              className="px-6 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-all disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-10 py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-md shadow-blue-500/20 active:scale-95 disabled:opacity-50"
+              className="group relative flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-2.5 rounded-full font-semibold text-sm transition-all shadow-sm active:scale-95 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Package className="w-4 h-4 group-hover:scale-125 transition-transform" />
+                <Package className="w-4 h-4" />
               )}
               {product ? "Sync System" : "Commit to Inventory"}
             </button>

@@ -15,7 +15,7 @@ export function BrandSelector({ brands }: { brands: string[] }) {
         <select
           value={selection.brand_preference || "all"}
           onChange={(e) => updateSelection({ brand_preference: e.target.value })}
-          className="appearance-none w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-600 transition-all cursor-pointer"
+          className="appearance-none w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white pl-4 pr-10 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-600 transition-all cursor-pointer"
         >
           <option value="all">All Brands</option>
           {brands.map((brand) => (

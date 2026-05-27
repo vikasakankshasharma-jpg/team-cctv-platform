@@ -19,6 +19,8 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
     price: 0,
     is_active: true,
     unit_multiplier: "none" as "none" | "camera_count",
+    category: "accessory" as string,
+    storage_type: "" as string,
   });
 
   useEffect(() => {
@@ -29,6 +31,8 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
         price: addon.price || 0,
         is_active: addon.is_active ?? true,
         unit_multiplier: addon.unit_multiplier || "none",
+        category: addon.category || "accessory",
+        storage_type: addon.storage_type || "",
       });
     } else {
       setFormData({
@@ -37,6 +41,8 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
         price: 0,
         is_active: true,
         unit_multiplier: "none",
+        category: "accessory",
+        storage_type: "",
       });
     }
   }, [addon, isOpen]);
@@ -145,6 +151,35 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
                 placeholder="e.g. WD10PURZ-Surveillance"
               />
             </div>
+            
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2">Category</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
+              >
+                <option value="accessory">Accessory</option>
+                <option value="storage">Storage</option>
+                <option value="power">Power</option>
+                <option value="cable">Cable</option>
+              </select>
+            </div>
+
+            {formData.category === "storage" && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2">Storage Type</label>
+                <select
+                  value={formData.storage_type}
+                  onChange={(e) => setFormData({ ...formData, storage_type: e.target.value })}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
+                >
+                  <option value="">Select Type (Optional)</option>
+                  <option value="Hard Disk">Hard Disk</option>
+                  <option value="Micro SD">Micro SD</option>
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between pt-4 bg-zinc-900 p-6 rounded-2xl border border-zinc-800">

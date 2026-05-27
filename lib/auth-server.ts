@@ -32,6 +32,18 @@ export async function verifySession(): Promise<SessionResult> {
       role: "super_admin"
     };
   }
+  
+  if (sessionCookie === "mock-salesperson-session" && process.env.NODE_ENV === "development") {
+    return {
+      isAuthenticated: true,
+      user: {
+        uid: "mock-salesperson-uid",
+        email: "sales@example.com",
+        role: "sales_staff",
+      } as any,
+      role: "sales_staff"
+    };
+  }
 
   try {
     // Verify the session cookie and obtain the decoded claims
