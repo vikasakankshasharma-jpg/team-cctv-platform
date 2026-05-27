@@ -58,6 +58,9 @@ export function LeadGate({
   const [countdown, setCountdown] = useState(0);
   const [canResend, setCanResend] = useState(false);
 
+  // Firebase Auth availability detection
+  const [firebaseBlocked, setFirebaseBlocked] = useState(false);
+
   // ── Pincode city auto-detection ───────────────────────────────────────────
   const [detectedCity, setDetectedCity] = useState<string | null>(null);
   const [pincodeLoading, setPincodeLoading] = useState(false);
@@ -118,7 +121,8 @@ export function LeadGate({
       } catch (error) {
         const err = error as Error;
         console.error("🔒 Recaptcha Initialization Fault:", err);
-        setError("Security System Error: Recaptcha failed to initialize. Please check your connection or refresh.");
+        // Don't show error immediately on init — only show when user tries to send OTP
+        setFirebaseBlocked(true);
       }
     }
 
@@ -194,16 +198,21 @@ export function LeadGate({
       const err = error as { code?: string; message?: string };
       console.error("🔥 OTP Transmission Fault:", err);
 
-      // Do NOT clear the recaptchaVerifier here. Reusing it prevents the "already rendered" error.
+      // Check if this is an infrastructure/config error (not user error)
+      const isInfraError = (
+        err.code === "auth/invalid-app-credential" ||
+        err.code === "auth/unauthorized-domain" ||
+        err.code === "auth/internal-error" ||
+        err.message?.includes("invalid-app-credential") ||
+        err.message?.includes("internal-error") ||
+        err.message?.includes("unauthorized-domain")
+      );
 
-      if (err.code === "auth/invalid-app-credential" || err.message?.includes("invalid-app-credential")) {
-        setError("Firebase reCAPTCHA Error: Add your domain to Firebase Console → Authentication → Settings → Authorized Domains.");
+      if (isInfraError) {
+        setFirebaseBlocked(true);
+        setError(`OTP service temporarily unavailable on this domain. Use the express option below to get your quote instantly.`);
       } else if (err.code === "auth/too-many-requests") {
         setError("Too many attempts. Please wait a few minutes and try again.");
-      } else if (err.code === "auth/unauthorized-domain") {
-        setError(`Domain '${window.location.hostname}' is not whitelisted. Add it in Firebase Console → Authentication → Authorized Domains.`);
-      } else if (err.code === "auth/internal-error" || err.message?.includes("internal-error")) {
-        setError(`Firebase Configuration Error: Ensure '${window.location.hostname}' is added to Firebase Authorized Domains AND your Google Cloud API Key HTTP Referrer restrictions allow this domain.`);
       } else {
         setError(`OTP Error: ${err.message || "Failed to send OTP. Please retry."}`);
       }
@@ -401,18 +410,42 @@ export function LeadGate({
             </p>
           </div>
 
+          {/* Firebase Blocked — show prominent bypass BEFORE any error message */}
+          {firebaseBlocked && !otpSent && (
+            <div className="mb-5 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-2xl p-4 mb-3">
+                <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">📡 OTP Service Restricted on This Domain</p>
+                <p className="text-xs text-amber-600 dark:text-amber-500 font-medium">SMS verification is temporarily unavailable. Use express access below — our team will call you to verify.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (name.length < 2) { setError("Please enter your full name first."); return; }
+                  if (!/^[6-9]\d{9}$/.test(mobile)) { setError("Please enter your 10-digit mobile number first."); return; }
+                  if (!/^\d{6}$/.test(pincode)) { setError("Please enter your 6-digit pincode first."); return; }
+                  setError("");
+                  finalizeLead("express_fallback_" + Date.now());
+                }}
+                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2 touch-manipulation"
+              >
+                Get My Quote — Express Access
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {error && (
             <div className="space-y-3 mb-5 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="bg-red-500 text-white px-4 py-3 rounded-2xl text-sm font-bold text-center flex items-start gap-3 shadow-lg shadow-red-500/20" role="alert" aria-live="polite">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-2xl text-sm font-bold flex items-start gap-3" role="alert" aria-live="polite">
                 <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
-              
-              {/* Resilient Lead Ingestion Fallback */}
-              {(error.includes("Firebase") || error.includes("Security System") || error.includes("Domain") || error.includes("Configuration")) && (
+
+              {/* Resilient Lead Ingestion Fallback — shown on any Firebase/config error */}
+              {!firebaseBlocked && (error.includes("Firebase") || error.includes("Security System") || error.includes("Domain") || error.includes("Configuration") || error.includes("OTP service")) && (
                 <button
                   type="button"
-                  onClick={() => finalizeLead("unverified_fallback")}
+                  onClick={() => finalizeLead("unverified_fallback_" + Date.now())}
                   className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 touch-manipulation"
                 >
                   Proceed via Backup Server
