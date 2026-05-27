@@ -1,96 +1,88 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb, increment, serverTimestamp } from "@/lib/firebase-admin";
+import https from "https";
 
-/**
- * GET /api/pincode/[pin]
- *
- * Proxies the free Indian Postal API to avoid CORS and add server-side caching.
- * Returns the district and state for a valid 6-digit Indian pincode.
- *
- * Response shape:
- *   200 { district: string, state: string, city: string }
- *   400 { error: "Invalid pincode format" }
- *   404 { error: "Pincode not found" }
- */
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ pin: string }> }
 ) {
   const { pin } = await params;
-
-  // Validate — must be exactly 6 digits
-  if (!/^\d{6}$/.test(pin)) {
-    return NextResponse.json({ error: "Invalid pincode format" }, { status: 400 });
-  }
-
   try {
-    const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`, {
-      next: {
-        // Cache for 7 days — pincode data rarely changes
-        revalidate: 604800,
-      },
+    const zipData: any = await new Promise((resolve, reject) => {
+      console.log("Fetching pincode for PIN: '" + pin + "'");
+      https.get(`https://api.zippopotam.us/in/${pin}`, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
+      }, (res) => {
+        console.log("Zippo API returned status:", res.statusCode);
+        if (res.statusCode === 404) {
+          resolve(null);
+          return;
+        }
+        if (res.statusCode !== 200) {
+          reject(new Error(`API returned ${res.statusCode}`));
+          return;
+        }
+        
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          try {
+            console.log("Zippo API response data:", data);
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(new Error("Failed to parse response"));
+          }
+        });
+      }).on('error', (e) => {
+        reject(e);
+      });
     });
 
-    if (!res.ok) {
-      return NextResponse.json({ error: "Postal API unavailable" }, { status: 502 });
-    }
-
-    const data = await res.json();
-
-    // API returns an array; first element has Status and PostOffice array
-    const block = data?.[0];
-
-    if (!block || block.Status !== "Success" || !block.PostOffice?.length) {
+    if (!zipData) {
       return NextResponse.json({ error: "Pincode not found" }, { status: 404 });
     }
 
-    const office = block.PostOffice[0];
-    const district: string = office.District ?? "";
-    const state: string = office.State ?? "";
-    // Use Division or District as "city" — Division is often the nearest city
-    const city: string = office.Division || office.District || "";
-
-    const dLower = district.toLowerCase();
-    let citySlug = "";
-    let served = false;
-
-    if (dLower.includes("jaipur") || pin.startsWith("302")) {
-      citySlug = "jaipur";
-      served = true;
-    } else if (dLower.includes("jodhpur") || pin.startsWith("342")) {
-      citySlug = "jodhpur";
-      served = false;
-    } else if (dLower.includes("kota") || pin.startsWith("324")) {
-      citySlug = "kota";
-      served = false;
-    } else if (dLower.includes("ajmer") || pin.startsWith("305")) {
-      citySlug = "ajmer";
-      served = false;
-    } else {
-      citySlug = city.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    }
-
-    if (citySlug) {
-      adminDb.collection("city_impressions").doc(citySlug).set({
-        city: city,
-        state: state,
-        total_lookups: increment(1),
-        last_lookup: serverTimestamp(),
-      }, { merge: true }).catch(err => console.error("Impression log failed:", err));
-    }
-
-    return NextResponse.json(
-      { district, state, city, served, citySlug },
-      {
-        status: 200,
-        headers: {
-          // Browser cache: 1 day
-          "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
-        },
+    if (zipData.places && zipData.places.length > 0) {
+      let cityName = "";
+      let citySlug = "";
+      
+      const allPlaceNames = zipData.places.map((p: any) => (p["place name"] || "").toLowerCase());
+      const stateName = (zipData.places[0].state || "").toLowerCase();
+      
+      const hasMatch = (keyword: string) => {
+        return allPlaceNames.some((name: string) => name.includes(keyword)) || stateName.includes(keyword);
+      };
+      
+      if (hasMatch("jaipur")) {
+        cityName = "Jaipur";
+        citySlug = "jaipur";
+      } else if (hasMatch("jodhpur")) {
+        cityName = "Jodhpur";
+        citySlug = "jodhpur";
+      } else if (hasMatch("kota")) {
+        cityName = "Kota";
+        citySlug = "kota";
+      } else if (hasMatch("ajmer")) {
+        cityName = "Ajmer";
+        citySlug = "ajmer";
+      } else if (stateName.includes("delhi")) {
+        cityName = "New Delhi";
+        citySlug = "new-delhi";
+      } else {
+        const rawPlaceName = zipData.places[0]["place name"];
+        cityName = rawPlaceName;
+        citySlug = rawPlaceName.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
       }
-    );
-  } catch (err) {
-    console.error("[pincode-api] fetch error:", err);
-    return NextResponse.json({ error: "Failed to lookup pincode" }, { status: 500 });
+
+      return NextResponse.json(
+        { district: cityName, state: zipData.places[0].state, city: cityName, served: true, citySlug: citySlug },
+        { status: 200 }
+      );
+    }
+    
+    return NextResponse.json({ error: "Pincode not found" }, { status: 404 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed" }, { status: 500 });
   }
 }
