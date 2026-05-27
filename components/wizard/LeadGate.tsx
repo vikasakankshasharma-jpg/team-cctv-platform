@@ -402,9 +402,23 @@ export function LeadGate({
           </div>
 
           {error && (
-            <div className="bg-red-500 text-white px-4 py-3 rounded-2xl text-sm mb-5 font-bold text-center flex items-start gap-3 shadow-lg shadow-red-500/20" role="alert" aria-live="polite">
-              <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{error}</span>
+            <div className="space-y-3 mb-5 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="bg-red-500 text-white px-4 py-3 rounded-2xl text-sm font-bold text-center flex items-start gap-3 shadow-lg shadow-red-500/20" role="alert" aria-live="polite">
+                <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+              
+              {/* Resilient Lead Ingestion Fallback */}
+              {(error.includes("Firebase") || error.includes("Security System") || error.includes("Domain") || error.includes("Configuration")) && (
+                <button
+                  type="button"
+                  onClick={() => finalizeLead("unverified_fallback")}
+                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 touch-manipulation"
+                >
+                  Proceed via Backup Server
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
             </div>
           )}
 
