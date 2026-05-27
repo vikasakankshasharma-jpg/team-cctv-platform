@@ -4,7 +4,10 @@ import { adminDb } from "@/lib/firebase-admin";
 
 /**
  * Server-side OTP sender — no Firebase Phone Auth / reCAPTCHA dependency.
- * Uses Fast2SMS (Indian bulk SMS) as primary, with fallback to console log.
+ * Delivery priority:
+ *  1. Fast2SMS (Indian SMS gateway) — if FAST2SMS_API_KEY set
+ *  2. Resend email — if email provided and RESEND_API_KEY set
+ *  3. Logs OTP to Vercel Function logs (visible to admin)
  */
 export async function POST(req: NextRequest) {
   try {
@@ -15,33 +18,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid 10-digit mobile number" }, { status: 400 });
     }
 
-    // ── Test numbers (dev bypass) ───────────────────────────────────────────
-    let code = "";
+    // ── Test numbers (bypass) ───────────────────────────────────────────────
     if (mobile === "9999999999" || mobile === "9876543210") {
-      code = "123456";
       await adminDb.collection("temp_otps").doc(mobile).set({
-        code,
+        code: "123456",
         expiresAt: new Date(Date.now() + 5 * 60 * 1000),
         attempts: 0,
         mobile,
       });
-      return NextResponse.json({ success: true, message: "OTP sent (dev mode)" }, {
+      return NextResponse.json({ success: true, message: "OTP sent (test mode)" }, {
         headers: { "Cache-Control": "no-store" }
       });
     }
 
     // ── Generate and store OTP ──────────────────────────────────────────────
-    code = await generateOtp(mobile);
+    const code = await generateOtp(mobile);
 
-    // WebOTP API-compatible format: @origin #code
+    // WebOTP API-compatible SMS text
     const smsText = `${code} is your TEAM CCTV verification code. Valid 5 mins.\n\n@cctvquotation.com #${code}`;
 
     let smsSent = false;
-    let smsError = "";
+    let deliveryMethod = "none";
 
-    // ── Primary: Fast2SMS (Indian SMS gateway — free tier available) ────────
+    // ── 1. Fast2SMS (primary Indian SMS) ───────────────────────────────────
     const fast2smsKey = process.env.FAST2SMS_API_KEY;
-    if (fast2smsKey) {
+    if (fast2smsKey && fast2smsKey !== "placeholder") {
       try {
         const smsRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
           method: "POST",
@@ -59,62 +60,88 @@ export async function POST(req: NextRequest) {
         const smsData = await smsRes.json();
         if (smsData.return === true) {
           smsSent = true;
-          console.log(`[send-otp] SMS sent via Fast2SMS to ${mobile}`);
+          deliveryMethod = "fast2sms";
+          console.log(`[send-otp] ✅ SMS sent via Fast2SMS to ${mobile}`);
         } else {
-          smsError = smsData.message || "Fast2SMS error";
-          console.error("[send-otp] Fast2SMS error:", smsData);
+          console.error("[send-otp] Fast2SMS error:", JSON.stringify(smsData));
         }
       } catch (e: any) {
-        smsError = e.message;
         console.error("[send-otp] Fast2SMS exception:", e.message);
       }
     }
 
-    // ── Secondary: Resend (email OTP if email provided and SMS failed) ──────
-    if (!smsSent && email && process.env.RESEND_API_KEY) {
-      try {
-        const emailRes = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "TEAM CCTV <noreply@cctvquotation.com>",
-            to: [email],
-            subject: `${code} — Your TEAM CCTV Verification Code`,
-            html: `
-              <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
-                <h2 style="color:#1e3a5f;margin-bottom:8px">Your Verification Code</h2>
-                <p style="color:#555;margin-bottom:24px">Use the code below to access your CCTV quote.</p>
-                <div style="background:#f0f4ff;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
-                  <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#1e3a5f">${code}</span>
+    // ── 2. Resend email OTP (secondary) ────────────────────────────────────
+    const resendKey = process.env.RESEND_API_KEY;
+    if (!smsSent && resendKey) {
+      // Try to send to a derived email or provided email
+      const targetEmail = email || null;
+      if (targetEmail) {
+        try {
+          const emailRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${resendKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "TEAM CCTV <noreply@cctvquotation.com>",
+              to: [targetEmail],
+              subject: `${code} — Your TEAM CCTV Verification Code`,
+              html: `
+                <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#fff">
+                  <div style="background:#1e3a5f;padding:20px 24px;border-radius:12px 12px 0 0">
+                    <h1 style="color:#fff;margin:0;font-size:20px;font-weight:900">TEAM CCTV</h1>
+                    <p style="color:rgba(255,255,255,0.7);margin:4px 0 0;font-size:13px">Verification Code</p>
+                  </div>
+                  <div style="padding:28px 24px;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 12px 12px">
+                    <p style="color:#374151;font-size:15px;margin:0 0 20px">Use this code to verify your phone number and access your CCTV quotation:</p>
+                    <div style="background:#f0f4ff;border-radius:12px;padding:24px;text-align:center;margin-bottom:20px">
+                      <div style="font-size:42px;font-weight:900;letter-spacing:14px;color:#1e3a5f;font-family:monospace">${code}</div>
+                    </div>
+                    <p style="color:#6b7280;font-size:13px;margin:0">Valid for <strong>5 minutes</strong>. Do not share with anyone.</p>
+                    <p style="color:#6b7280;font-size:13px;margin:8px 0 0">This is for phone <strong>+91 ${mobile}</strong></p>
+                  </div>
                 </div>
-                <p style="color:#888;font-size:13px">This code expires in 5 minutes. Do not share it with anyone.</p>
-              </div>
-            `,
-          }),
-        });
-        if (emailRes.ok) {
-          smsSent = true;
-          console.log(`[send-otp] OTP sent via email to ${email}`);
+              `,
+            }),
+          });
+          if (emailRes.ok) {
+            smsSent = true;
+            deliveryMethod = "resend_email";
+            console.log(`[send-otp] ✅ OTP sent via Resend email to ${targetEmail}`);
+          } else {
+            const errBody = await emailRes.text();
+            console.error("[send-otp] Resend error:", errBody);
+          }
+        } catch (e: any) {
+          console.error("[send-otp] Resend exception:", e.message);
         }
-      } catch (e: any) {
-        console.error("[send-otp] Resend email error:", e.message);
       }
     }
 
-    // ── Fallback: Log to console (visible in Vercel logs) ──────────────────
+    // ── 3. Final fallback — log to Vercel function output ──────────────────
     if (!smsSent) {
-      console.log(`\n💬 [OTP FALLBACK] To: +91 ${mobile}\nCode: ${code}\nError: ${smsError}\n`);
+      // This is visible in Vercel dashboard → Logs for /api/send-otp
+      console.log(`
+╔═══════════════════════════════════════════╗
+║  [OTP FALLBACK — No SMS gateway active]   ║
+║  Mobile : +91 ${mobile}              ║
+║  Code   : ${code}                         ║
+║  Valid  : 5 minutes                       ║
+╚═══════════════════════════════════════════╝
+      `);
+      deliveryMethod = "logs_only";
     }
 
     const isDev = process.env.NODE_ENV === "development";
     return NextResponse.json({
       success: true,
-      message: smsSent ? "OTP sent successfully" : "OTP generated (SMS gateway unavailable — check logs)",
       smsSent,
-      // Only expose code in dev
+      deliveryMethod,
+      message: smsSent
+        ? `Verification code sent via ${deliveryMethod === "fast2sms" ? "SMS" : "email"}`
+        : "OTP generated — SMS gateway not configured. Contact support.",
+      // Only expose in local dev
       ...(isDev && { devCode: code }),
     }, {
       headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" }

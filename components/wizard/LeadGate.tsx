@@ -117,6 +117,15 @@ export function LeadGate({
       setCountdown(30);
       setCanResend(false);
 
+      // If SMS wasn't delivered, show a helpful notice
+      if (!data.smsSent) {
+        setError(
+          data.deliveryMethod === "resend_email"
+            ? "Code sent to your email (SMS unavailable). Check your inbox."
+            : "⚠️ SMS gateway not configured. Please WhatsApp us at +91-XXXXXXXXXX or call for your code."
+        );
+      }
+
       // WebOTP API auto-fill support
       if (typeof window !== "undefined" && "OTPCredential" in window) {
         setTimeout(async () => {
