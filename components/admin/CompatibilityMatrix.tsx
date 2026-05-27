@@ -225,15 +225,15 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-6 flex-wrap">
+      <div className="flex items-start justify-between gap-6 flex-wrap pb-6 border-b border-border">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+          <div className="flex items-center gap-3 mb-1.5">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <Link2 className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Category Rules & Compatibility</h1>
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">Category Rules & Compatibility</h1>
           </div>
-          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 max-w-lg">
+          <p className="text-sm font-medium text-muted-foreground max-w-lg">
             Manage your hardware inventory hierarchically. Define rules by mapping Recorders or Accessories to compatible Camera groups.
           </p>
         </div>
@@ -242,20 +242,20 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[75vh]">
         
         {/* Left Pane: Taxonomy Tree */}
-        <div className="lg:col-span-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col overflow-hidden">
-          <div className="p-6 border-b border-zinc-800 bg-zinc-900">
-            <h2 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-              <Layers className="w-4 h-4 text-indigo-400" />
+        <div className="lg:col-span-4 bg-card border border-border rounded-2xl flex flex-col overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-border bg-secondary/30">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Layers className="w-4 h-4 text-primary" />
               Catalog Directory
             </h2>
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Select a folder to view items</p>
+            <p className="text-[11px] font-medium text-muted-foreground mt-0.5">Select a folder to view items</p>
           </div>
           <div className="p-4 overflow-y-auto flex-1 custom-scrollbar space-y-1">
             {treePaths.length === 0 ? (
               <div className="text-center py-10">
-                <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-3 opacity-50" />
-                <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">No Paths Defined</p>
-                <p className="text-[10px] text-zinc-600 mt-1 px-4">Edit a product and assign it a Catalog Path (e.g., CCTV/Cameras/IP).</p>
+                <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-3 opacity-50" />
+                <p className="text-xs font-semibold text-muted-foreground">No Paths Defined</p>
+                <p className="text-[11px] text-muted-foreground/70 mt-1 px-4">Edit a product and assign it a Catalog Path (e.g., CCTV/Cameras/IP).</p>
               </div>
             ) : (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -270,20 +270,20 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
         </div>
 
         {/* Right Pane: Products in Category */}
-        <div className="lg:col-span-8 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col overflow-hidden">
-          <div className="p-6 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between">
+        <div className="lg:col-span-8 bg-card border border-border rounded-2xl flex flex-col overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-border bg-secondary/30 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-                <Package className="w-4 h-4 text-emerald-400" />
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Package className="w-4 h-4 text-success" />
                 Items in {selectedPath ? getLeafName(selectedPath) : "Category"}
               </h2>
               {selectedPath && (
-                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">
+                <p className="text-[11px] font-medium text-muted-foreground mt-0.5">
                   {selectedPath.replace(/\//g, " > ")}
                 </p>
               )}
             </div>
-            <div className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+            <div className="px-3 py-1 rounded-full bg-background border border-border text-[11px] font-semibold text-muted-foreground">
               {displayedProducts.length} Items
             </div>
           </div>
@@ -291,40 +291,40 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
           <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-4">
             {displayedProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full opacity-50">
-                <Package className="w-12 h-12 text-zinc-600 mb-4" />
-                <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Select a populated folder</p>
+                <Package className="w-12 h-12 text-muted-foreground mb-4" />
+                <p className="text-sm font-semibold text-muted-foreground">Select a populated folder</p>
               </div>
             ) : (
               displayedProducts.map(product => (
-                <div key={product.id} onClick={() => setEditProduct(product)} className="group bg-zinc-900 hover:bg-zinc-800/50 border border-zinc-800 hover:border-indigo-500/30 p-5 rounded-2xl cursor-pointer transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div key={product.id} onClick={() => setEditProduct(product)} className="group bg-background hover:bg-secondary/50 border border-border hover:border-primary/30 p-5 rounded-2xl cursor-pointer transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-zinc-800 flex items-center justify-center">
-                        {product.category === 'camera' ? <Package className="w-4 h-4 text-indigo-400" /> : <Cpu className="w-4 h-4 text-emerald-400" />}
+                      <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center">
+                        {product.category === 'camera' ? <Package className="w-4 h-4 text-primary" /> : <Cpu className="w-4 h-4 text-success" />}
                       </div>
                       <div>
-                        <h3 className="text-sm font-black text-white group-hover:text-indigo-300 transition-colors">{product.display_name}</h3>
-                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{product.technical_name}</p>
+                        <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{product.display_name}</h3>
+                        <p className="text-[11px] font-medium text-muted-foreground mt-0.5">{product.technical_name}</p>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 pl-11">
                       {product.catalog_path ? (
                         product.catalog_path.split('/').map((segment, idx, arr) => (
                           <div key={idx} className="flex items-center gap-1.5">
-                            <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest border ${
-                              idx === 0 ? "bg-zinc-900 border-zinc-800 text-zinc-500" :
-                              idx === 1 ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" :
-                              idx === 2 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
-                              "bg-purple-500/10 border-purple-500/20 text-purple-400"
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                              idx === 0 ? "bg-secondary border-border text-muted-foreground" :
+                              idx === 1 ? "bg-primary/10 border-primary/20 text-primary" :
+                              idx === 2 ? "bg-success/10 border-success/20 text-success" :
+                              "bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400"
                             }`}>
-                              <span className="opacity-50 mr-1">{idx === 0 ? "DOMAIN:" : idx === 1 ? "CAT:" : idx === 2 ? "TECH:" : "SPEC:"}</span>
+                              <span className="opacity-60 mr-1">{idx === 0 ? "Domain:" : idx === 1 ? "Cat:" : idx === 2 ? "Tech:" : "Spec:"}</span>
                               {segment}
                             </span>
-                            {idx < arr.length - 1 && <ChevronRight className="w-3 h-3 text-zinc-700 shrink-0" />}
+                            {idx < arr.length - 1 && <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />}
                           </div>
                         ))
                       ) : (
-                        <span className="px-2 py-1 rounded bg-zinc-950 border border-zinc-800 text-[9px] font-black text-zinc-400 uppercase tracking-widest">
+                        <span className="px-2 py-0.5 rounded-md bg-secondary border border-border text-[10px] font-semibold text-muted-foreground">
                           Uncategorized
                         </span>
                       )}
@@ -334,24 +334,24 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
                   {/* Compatibility Rules Display */}
                   {(product.category === "recorder" || product.category === "accessory") && (
                     <div className="sm:text-right space-y-2 max-w-xs">
-                      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center sm:justify-end gap-1.5">
+                      <p className="text-[11px] font-semibold text-success flex items-center sm:justify-end gap-1.5">
                         <Link2 className="w-3 h-3" /> Compatible With:
                       </p>
                       <div className="flex flex-wrap sm:justify-end gap-1.5">
                         {(product.compatible_paths ?? []).length > 0 ? (
                           (product.compatible_paths ?? []).map(cp => (
-                            <span key={cp} className="px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-400 uppercase tracking-widest text-right">
+                            <span key={cp} className="px-2 py-0.5 rounded-md bg-success/10 border border-success/20 text-[10px] font-semibold text-success text-right">
                               {cp}
                             </span>
                           ))
                         ) : (
-                          <span className="text-[9px] font-black text-red-400 uppercase tracking-widest border border-red-500/20 bg-red-500/10 px-2 py-1 rounded">
+                          <span className="text-[10px] font-semibold text-destructive border border-destructive/20 bg-destructive/10 px-2 py-0.5 rounded-md">
                             No Rules Defined
                           </span>
                         )}
                       </div>
                       {product.max_cameras && (
-                        <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
+                        <p className="text-[10px] font-medium text-muted-foreground mt-1">
                           Capacity: Max {product.max_cameras} Units
                         </p>
                       )}

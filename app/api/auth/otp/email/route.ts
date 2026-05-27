@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     if (resend) {
       try {
         const { data, error } = await resend.emails.send({
-          from: "TEAM CCTV <onboarding@resend.dev>", 
+          from: "TEAM CCTV <onboarding@cctvquotation.com>", 
           to: email,
           subject: `${otp} is your TEAM Elite Verification Code`,
           html: `

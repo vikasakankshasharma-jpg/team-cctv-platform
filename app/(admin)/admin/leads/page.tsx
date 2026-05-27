@@ -144,6 +144,8 @@ export default async function LeadsAdminPage({
           nextCursor={nextCursor}
           salespeople={salespeople}
           isAdmin={isAdmin}
+          allowedPincodes={allowedPincodes}
+          isSalesStaff={isSalesStaff}
         />
       </div>
     </div>

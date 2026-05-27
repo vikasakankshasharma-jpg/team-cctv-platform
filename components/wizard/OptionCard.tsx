@@ -8,36 +8,42 @@ interface OptionCardProps {
   isMulti?: boolean;
   onClick: () => void;
   prospectiveCount?: number | null;
+  isDisabled?: boolean;
 }
 
-export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCount }: OptionCardProps) {
+export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCount, isDisabled = false }: OptionCardProps) {
   return (
     <button
-      onClick={onClick}
+      onClick={isDisabled ? undefined : onClick}
+      disabled={isDisabled}
       role={isMulti ? "checkbox" : "radio"}
       aria-checked={isSelected}
+      aria-disabled={isDisabled}
       style={{ minHeight: "64px" }}
       className={[
         // base
         "relative w-full flex items-center gap-5 px-6 py-5 rounded-3xl text-left",
-        "cursor-pointer select-none",
-        // transition (use CSS var tokens)
+        "select-none",
+        isDisabled ? "cursor-not-allowed opacity-50 grayscale" : "cursor-pointer",
+        // transition
         "transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1)",
-        // selected vs idle
-        isSelected
+        // selected vs idle vs disabled
+        isSelected && !isDisabled
           ? [
               "bg-white",
               "border-[2.5px] border-blue-600",
               "shadow-[0_10px_40px_-10px_rgba(37,99,235,0.2)]",
               "active:scale-[0.98]",
             ].join(" ")
-          : [
-              "bg-white",
-              "border-[2.5px] border-zinc-100",
-              "hover:border-zinc-200 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]",
-              "hover:-translate-y-1",
-              "active:scale-[0.98]",
-            ].join(" "),
+          : isDisabled 
+            ? "bg-zinc-50 border-[2.5px] border-zinc-200"
+            : [
+                "bg-white",
+                "border-[2.5px] border-zinc-100",
+                "hover:border-zinc-200 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]",
+                "hover:-translate-y-1",
+                "active:scale-[0.98]",
+              ].join(" "),
       ].join(" ")}
     >
       {/* Icon bubble */}
@@ -45,7 +51,7 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
         className={[
           "w-9 h-9 rounded-xl shrink-0 flex items-center justify-center",
           "transition-all duration-[250ms] ease-out",
-          isSelected
+          isSelected && !isDisabled
             ? "bg-blue-600 text-white shadow-md shadow-blue-600/30 scale-105"
             : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500",
         ].join(" ")}
@@ -63,19 +69,24 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
           className={[
             "block text-[16px] leading-snug tracking-tight",
             "transition-colors duration-300",
-            isSelected
+            isSelected && !isDisabled
               ? "font-black text-blue-900"
               : "font-bold text-zinc-900",
           ].join(" ")}
         >
           {label}
         </span>
-        {isMulti && !isSelected && (
+        {isDisabled && (
+          <span className="block text-[10px] font-bold text-zinc-500 mt-1">
+            Not available with current selection
+          </span>
+        )}
+        {isMulti && !isSelected && !isDisabled && (
           <span className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">
             Tap to select
           </span>
         )}
-        {isMulti && isSelected && (
+        {isMulti && isSelected && !isDisabled && (
           <span className="block text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">
             ✓ Added
           </span>
@@ -87,7 +98,7 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
         <div className={[
           "shrink-0 ml-2 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all duration-300 shadow-sm",
           prospectiveCount === 0 
-            ? "bg-red-50 text-red-500 border border-red-200" 
+            ? "bg-zinc-100 text-zinc-500 border border-zinc-200" 
             : isSelected 
               ? "bg-blue-600 text-white shadow-blue-600/30 border border-blue-600"
               : "bg-white text-blue-600 border border-blue-200"
@@ -97,7 +108,7 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
       )}
 
       {/* Selection ring glow (non-layout) */}
-      {isSelected && (
+      {isSelected && !isDisabled && (
         <div className="pointer-events-none absolute inset-0 rounded-2xl bg-blue-500/5 dark:bg-blue-500/10 -z-10" />
       )}
     </button>

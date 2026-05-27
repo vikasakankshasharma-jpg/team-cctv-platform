@@ -132,7 +132,7 @@ export async function getWizardConfig() {
         id: "dynamic_step_resolution",
         title: "Image Resolution",
         description: "What image quality do you need?",
-        position: 11,
+        position: 5,
         is_active: true,
         created_at: new Date().toISOString(),
         questions: [
@@ -146,13 +146,6 @@ export async function getWizardConfig() {
           }
         ]
       };
-
-      wizardSteps = wizardSteps.map(step => {
-        if (step.position >= 1) {
-          return { ...step, position: step.position + 1 };
-        }
-        return step;
-      });
 
       wizardSteps.push(resolutionStep);
       wizardSteps.sort((a, b) => (a.position || 0) - (b.position || 0));
@@ -172,25 +165,45 @@ export function getDefaultFallbackWizard(): WizardStep[] {
       id: "step_prop_type",
       title: "Property Type",
       description: "What type of property are you securing?",
-      position: 1,
+      position: 0,
       is_active: true,
       created_at: null,
       questions: [
         {
           id: "q_prop_type",
           question_text: "Select property type:",
-          position: 0,
           input_type: "single",
           is_required: true,
+          position: 0,
           options: [
-            { id: "opt_home", label: "Home / Residential", value: "home", position: 0 },
-            { id: "opt_shop", label: "Shop / Retail", value: "shop", position: 1 },
-            { id: "opt_office", label: "Office / Commercial", value: "office", position: 2 },
-            { id: "opt_factory", label: "Factory / Warehouse", value: "factory", position: 3 },
-            { id: "opt_society", label: "Society / Apartment", value: "society", position: 4 },
-          ]
-        }
-      ]
+            { id: "opt_home",    label: "Home / Residential",      value: "home",      position: 0, icon: "🏠" },
+            { id: "opt_office",  label: "Office / Commercial",     value: "office",    position: 1, icon: "🏢" },
+            { id: "opt_shop",    label: "Shop / Retail",           value: "shop",      position: 2, icon: "🏪" },
+            { id: "opt_factory", label: "Factory / Warehouse",     value: "factory",   position: 3, icon: "🏭" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "step_install_type",
+      title: "Setup Type",
+      description: "Is this a brand new installation or an upgrade?",
+      position: 1,
+      is_active: true,
+      created_at: null,
+      questions: [
+        {
+          id: "q_install_type",
+          question_text: "Select setup type:",
+          input_type: "single",
+          is_required: true,
+          position: 0,
+          options: [
+            { id: "opt_ins_new", label: "New Installation",         value: "new",     position: 0, icon: "✨" },
+            { id: "opt_ins_upg", label: "Upgrade Existing System",  value: "upgrade", position: 1, icon: "⬆️" },
+          ],
+        },
+      ],
     },
     {
       id: "step_cam_count",
@@ -203,147 +216,139 @@ export function getDefaultFallbackWizard(): WizardStep[] {
         {
           id: "q_cam_count",
           question_text: "Enter number of cameras:",
-          position: 0,
           input_type: "number",
           is_required: true,
-          options: []
-        }
-      ]
-    },
-    {
-      id: "step_placement",
-      title: "Camera Placement",
-      description: "Where will the cameras be installed?",
-      position: 3,
-      is_active: true,
-      created_at: null,
-      questions: [
-        {
-          id: "q_placement",
-          question_text: "Select placement:",
           position: 0,
-          input_type: "single",
-          is_required: true,
-          options: [
-            { id: "opt_in_out", label: "Mix of Indoor & Outdoor", value: "both", position: 0 },
-            { id: "opt_indoor", label: "Mostly Indoor", value: "indoor", position: 1 },
-            { id: "opt_outdoor", label: "Mostly Outdoor", value: "outdoor", position: 2 },
-          ]
-        }
-      ]
+          options: [],
+        },
+      ],
     },
     {
       id: "step_technology",
       title: "Camera Technology",
       description: "What level of quality and features do you expect?",
-      position: 4,
+      position: 3,
       is_active: true,
       created_at: null,
       questions: [
         {
           id: "q_tech",
           question_text: "Select security level:",
-          position: 0,
           input_type: "single",
           is_required: true,
+          position: 0,
           options: [
-            { id: "opt_ip", label: "IP Network Camera (Smart Digital)", value: "IP", position: 0 },
-            { id: "opt_hd", label: "HD Analog Camera (Basic Budget)", value: "HD", position: 1 },
+            { id: "fopt_ip", label: "IP Network Camera (Smart Digital)", value: "IP", position: 0 },
+            { id: "fopt_hd", label: "HD Analog Camera (Basic Budget)",   value: "HD", position: 1 },
             { id: "opt_wifi", label: "WiFi Camera (Wireless Smart)", value: "WiFi", position: 2 },
             { id: "opt_4g", label: "4G Sim Camera (No WiFi Needed)", value: "4G", position: 3 },
             { id: "opt_solar", label: "Solar Camera (100% Wire-Free)", value: "Solar", position: 4 },
-          ]
-        }
-      ]
+          ],
+        },
+      ],
     },
     {
-      id: "step_install_type",
-      title: "Setup Type",
-      description: "Is this a brand new installation or an upgrade?",
-      position: 4.5,
+      id: "step_storage",
+      title: "Recording Storage",
+      description: "How far back do you need to watch old recordings?",
+      position: 4,
       is_active: true,
       created_at: null,
       questions: [
         {
-          id: "q_install_type",
-          question_text: "Select setup type:",
-          position: 0,
+          id: "q_storage",
+          question_text: "Select recording duration:",
           input_type: "single",
           is_required: true,
+          position: 0,
           options: [
-            { id: "opt_ins_new", label: "New Installation", value: "new", position: 0 },
-            { id: "opt_ins_upg", label: "Upgrade Existing System", value: "upgrade", position: 1 },
-          ]
-        }
-      ]
+            { id: "fopt_s_7",  label: "1 Week (Standard)",  value: "7",  position: 0 },
+            { id: "fopt_s_15", label: "15 Days",             value: "15", position: 1 },
+            { id: "fopt_s_30", label: "1 Month",             value: "30", position: 2 },
+          ],
+        },
+      ],
     },
     {
-      id: "step_priorities",
-      title: "Top Priorities",
-      description: "What are the most important features for you? (Select all that apply)",
+      id: "step_special_features",
+      title: "Special Features",
+      description: "Do you need any special camera features?",
       position: 5,
       is_active: true,
       created_at: null,
       questions: [
         {
-          id: "q_priorities",
-          question_text: "Aapko CCTV se kya chahiye?",
-          position: 0,
+          id: "q_special_features",
+          question_text: "Select required camera capabilities (Optional):",
           input_type: "multi",
-          is_required: true,
+          is_required: false,
+          position: 0,
           options: [
-            { id: "basic",       label: "Basic monitoring",           value: "basic",        position: 0, icon: "👁",  tier_hint: "value" },
-            { id: "face_id",     label: "Chehra clearly pehchanna",   value: "face_id",      position: 1, icon: "👤",  tier_hint: "professional" },
-            { id: "number_plate",label: "Number plate padhna",        value: "number_plate", position: 2, icon: "🚗",  tier_hint: "elite" },
-            { id: "large_area",  label: "Bada area cover karna",      value: "large_area",   position: 3, icon: "📡",  tier_hint: "elite" },
-            { id: "color_night", label: "Color night vision",         value: "color_night",  position: 4, icon: "🌙",  tier_hint: "professional" },
-            { id: "stqc",        label: "STQC / Govt Certified",      value: "stqc",         position: 5, icon: "🏛️",  tier_hint: "elite" },
-          ]
-        }
-      ]
+            { id: "fopt_none",   label: "Not required (Standard cameras are fine)", value: "none",  position: 0 },
+            { id: "fopt_color",  label: "24/7 Color Night Vision",                  value: "color", position: 1 },
+            { id: "fopt_audio",  label: "Built-in Audio / Mic",                     value: "audio", position: 2 },
+            { id: "fopt_ptz",    label: "PTZ (Pan-Tilt-Zoom)",                      value: "ptz",   position: 3 },
+          ],
+        },
+      ],
     },
     {
-      id: "step_budget",
-      title: "Budget Range",
-      description: "What is your approximate budget for this project?",
+      id: "step_general_addons",
+      title: "Accessories",
+      description: "Would you like to include any extra accessories?",
       position: 6,
       is_active: true,
       created_at: null,
       questions: [
         {
-          id: "q_budget",
-          question_text: "Select budget range:",
-          position: 0,
-          input_type: "single",
+          id: "q_general_addons",
+          question_text: "Select additional hardware (Optional):",
+          input_type: "multi",
           is_required: false,
+          position: 0,
           options: [
-            { id: "opt_bud_low", label: "Budget Friendly (Value for money)", value: "budget", position: 0 },
-            { id: "opt_bud_mid", label: "Standard (Performance balanced)",  value: "standard", position: 1 },
-            { id: "opt_bud_high", label: "Premium (Best quality & features)", value: "premium", position: 2 },
-          ]
-        }
-      ]
+            { id: "aopt_none",    label: "No extra accessories needed", value: "none",    position: 0 },
+            { id: "aopt_monitor", label: "Monitor Display (32-inch)",   value: "monitor", position: 1 },
+            { id: "aopt_ups",     label: "Power Backup (UPS)",          value: "ups",     position: 2 },
+            { id: "aopt_4g",      label: "4G Router (No WiFi at site)", value: "4g",      position: 3 },
+          ],
+        },
+      ],
     },
     {
-      id: "step_night_vision",
-      title: "Night Vision",
-      description: "How important is night-time clarity?",
+      id: "step_site_overview",
+      title: "Site Overview",
+      description: "Help our installers prepare for your site.",
       position: 7,
       is_active: true,
       created_at: null,
       questions: [
         {
-          id: "q_night_vision",
-          question_text: "Select night vision preference:",
-          position: 0,
+          id: "q_height",
+          question_text: "What is the approximate mounting height?",
           input_type: "single",
           is_required: true,
+          position: 0,
           options: [
-            { id: "nv_color", label: "24/7 Full Color (Smart Dual Light)", value: "color", position: 0 },
-            { id: "nv_ir", label: "Standard IR (Black & White at night)", value: "ir", position: 1 },
-          ]
-        }
-      ]
-    }
+            { id: "hopt_std",   label: "Standard (Up to 10ft)",        value: "standard",  position: 0 },
+            { id: "hopt_high",  label: "High (10ft - 15ft)",           value: "high",      position: 1 },
+            { id: "hopt_vhigh", label: "Very High (15ft+)",            value: "very_high", position: 2 },
+          ],
+        },
+        {
+          id: "q_surface",
+          question_text: "What kind of surface will the cameras be mounted on?",
+          input_type: "single",
+          is_required: true,
+          position: 1,
+          options: [
+            { id: "sopt_brick",  label: "Concrete / Brick Wall",  value: "brick",   position: 0 },
+            { id: "sopt_false",  label: "False Ceiling",          value: "false",   position: 1 },
+            { id: "sopt_marble", label: "Marble / Stone",         value: "marble",  position: 2 },
+            { id: "sopt_metal",  label: "Metal / Pole",           value: "metal",   position: 3 },
+          ],
+        },
+      ],
+    },
   ];
 }

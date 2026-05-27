@@ -1,0 +1,21 @@
+{
+  "name": "TEAM Sales Portal",
+  "short_name": "TEAM Sales",
+  "description": "Enterprise-Grade Security Systems - Sales Dashboard",
+  "start_url": "/salesperson/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/og-image.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/og-image.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

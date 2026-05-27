@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       customer_name:        leadData.customer_name,
       mobile_number:        leadData.mobile_number,
       firebase_uid:         leadData.firebase_uid,
-      status:               "new",
+      status:               leadData.status || "new",
       promoter_id:          promoterId,
       referral_code_used:   leadData.referral_code || null,
       wizard_answers:       leadData.wizard_answers,

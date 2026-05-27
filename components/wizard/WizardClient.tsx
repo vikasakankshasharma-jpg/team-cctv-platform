@@ -84,6 +84,24 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     loadProducts();
   }, [products, setProducts]);
 
+  // Debounce patching the partial lead
+  useEffect(() => {
+    const state = useWizardStore.getState();
+    if (!state.partial_lead_id || current_step_index <= 1) return;
+
+    const timer = setTimeout(() => {
+      fetch(`/api/leads/${state.partial_lead_id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wizard_answers: answers
+        })
+      }).catch(console.error);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [answers, current_step_index]);
+
   // Use store steps if loaded, otherwise fall back to SSR initialSteps while the
   // store hydrates — prevents the error flash before the useEffect runs.
   const effectiveSteps = steps.length > 0 ? steps : (initialSteps || []);
@@ -175,6 +193,30 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     }
   };
 
+
+  const completePartialLead = async (leadId: string, finalAnswers: any) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wizard_answers: finalAnswers,
+          status: "completed",
+          property_type: finalAnswers["q_prop_type"] || "home",
+          technology_choice: finalAnswers["q_tech"] || "HD",
+          cabling_done: finalAnswers["q_wiring"] === "true",
+          camera_count: parseInt(finalAnswers["q_cam_count"] || "0")
+        })
+      });
+      if (!res.ok) throw new Error("Failed to complete quote");
+      router.push(`/quote/${leadId}`);
+    } catch (err) {
+      showToast("Error generating quote. Please try again.");
+      setLoading(false);
+    }
+  };
+
   // Validate step before advancing
   const handleContinue = () => {
     let isValid = true;
@@ -192,8 +234,13 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       return;
     }
 
+    const state = useWizardStore.getState();
     if (isLastStep) {
-      setShowGate(true);
+      if (state.partial_lead_id) {
+        completePartialLead(state.partial_lead_id, state.answers);
+      } else {
+        setShowGate(true);
+      }
     } else {
       trackEvent("wizard_step_complete", {
         step_index: current_step_index,
@@ -206,6 +253,10 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
   // FACETED COUNTING ENGINE
   const getProspectiveCount = (questionId: string, optionValue: string, isMulti: boolean) => {
+    // Only show prospective counts for questions that actually filter the camera catalog
+    const filterableQuestions = ["q_tech", "q_resolution", "q_brand", "q_special_features"];
+    if (!filterableQuestions.includes(questionId)) return null;
+
     if (!products || products.length === 0) return null; // Loading or failed
 
     // 1. Create a hypothetical answer state
@@ -251,17 +302,25 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
        }
     }
     
-    // Apply Features/Priorities Filter
-    if (hypotheticalAnswers["q_priorities"]) {
-       const reqFeats = hypotheticalAnswers["q_priorities"] as string[];
-       if (reqFeats.length > 0) {
+    // Apply Brand Filter
+    if (hypotheticalAnswers["q_brand"]) {
+       const brand = hypotheticalAnswers["q_brand"] as string;
+       if (brand && brand !== "recommend") {
+         pool = pool.filter(p => p.brand?.toLowerCase() === brand.toLowerCase());
+       }
+    }
+
+    // Apply Features/Priorities Filter (Wizard uses q_special_features now)
+    if (hypotheticalAnswers["q_special_features"]) {
+       const reqFeats = hypotheticalAnswers["q_special_features"] as string[];
+       // If they picked 'none', we don't filter out cameras
+       if (reqFeats.length > 0 && !reqFeats.includes("none")) {
           pool = pool.filter(cam => {
             const feats = (cam.features || []).map(f => f.toLowerCase().trim());
-            // Simplistic mapping of wizard priorities to features
             let matchesAll = true;
-            if (reqFeats.includes("color_night") && !feats.some(f => f.includes("color"))) matchesAll = false;
-            if (reqFeats.includes("audio") && !feats.some(f => f.includes("mic") || f.includes("audio"))) matchesAll = false;
-            if (reqFeats.includes("face_id") && !feats.some(f => f.includes("face") || f.includes("ai"))) matchesAll = false;
+            if (reqFeats.includes("color") && !feats.some(f => f.includes("color") || f.includes("night"))) matchesAll = false;
+            if (reqFeats.includes("audio") && !feats.some(f => f.includes("mic") || f.includes("audio") || f.includes("speaker") || f.includes("talk"))) matchesAll = false;
+            if (reqFeats.includes("ptz") && !feats.some(f => f.includes("ptz") || f.includes("pan") || f.includes("tilt") || f.includes("360"))) matchesAll = false;
             return matchesAll;
           });
        }
@@ -398,6 +457,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                         isMulti={isMulti}
                         onClick={() => handleOptionSelect(q.id!, opt.value, isMulti)}
                         prospectiveCount={prospectiveCount}
+                        isDisabled={prospectiveCount === 0}
                       />
                     );
                   })}
@@ -409,7 +469,19 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         </div>
       </div>
 
-      {showGate && <LeadGate isIndustrial={parseInt(answers["q_cam_count"] as string) > (settings?.max_supported_cameras || 16)} />}
+      {showGate && (
+        <LeadGate 
+          isIndustrial={parseInt(answers["q_cam_count"] as string) > (settings?.max_supported_cameras || 16)} 
+          mode={isLastStep ? "final" : "partial"}
+          onSuccess={(leadId) => {
+            setShowGate(false);
+            if (!isLastStep) {
+              nextStep();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }}
+        />
+      )}
 
       {/* Sticky Navigation Bar */}
       {!showGate && (

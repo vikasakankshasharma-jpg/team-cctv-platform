@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     // 1. Validate Input Structure
     const validation = GenerateQuoteSchema.safeParse(body.selection);
     if (!validation.success) {
+      console.error("ZOD VALIDATION FAILED", JSON.stringify(validation.error.format(), null, 2));
       return ApiResponse.badRequest("Invalid selection payload", validation.error.format());
     }
 
@@ -58,13 +59,15 @@ export async function POST(request: NextRequest) {
       return ApiResponse.forbidden("Forbidden: Lead ownership mismatch");
     }
 
-    const products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-    const addons = addonsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Addon));
+    let products = productsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Product[];
+    let addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Addon[];
+
+
     const settings = settingsSnap.data() as AppSettings;
 
     // 3. SERVER-SIDE PRICE RECALCULATION (IMMUTABLE BY CLIENT)
     const pricing = calculatePricing({
-      selection,
+      selection: selection as any, // Cast to any to bypass strict null checking from Zod schema vs internal type
       products,
       addons,
       settings,
@@ -74,17 +77,38 @@ export async function POST(request: NextRequest) {
       activeOffer: leadData.active_offer
     });
 
-    // 4. Prepare and Save Quote
+    // 3.5 ZERO-TRUST VALIDATION
+    if (selection.expected_total_payable !== undefined && selection.expected_total_payable !== null) {
+      // Allow up to ₹1 difference for potential floating-point rounding mismatches
+      if (Math.abs(pricing.total_payable - selection.expected_total_payable) > 1) {
+        console.error(`[Zero-Trust Validation] Price mismatch detected for lead ${lead_id}. Backend calculated: ${pricing.total_payable}, Frontend expected: ${selection.expected_total_payable}`);
+        console.error("Backend Pricing Snapshot:", JSON.stringify(pricing, null, 2));
+        console.error("Backend Products Count:", products.length, "Backend Addons Count:", addons.length);
+        console.error("Selection received:", JSON.stringify(selection, null, 2));
+        return ApiResponse.error(
+          "Price mismatch. Pricing has been updated since you loaded the page. Please refresh to see the latest prices.",
+          "PRICE_TAMPERING_OR_STALE",
+          400
+        );
+      }
+    }
+
+    const cleanPricing = JSON.parse(JSON.stringify(pricing));
+    
+    // 4. PERSIST QUOTE TO DATABASE
     const quoteRef = adminDb.collection("leads").doc(lead_id).collection("quotes").doc();
 
     const quotePromise = quoteRef.set({
-      ...pricing,
+      ...cleanPricing,
       plan_type: selection.plan_type,
       technology: selection.technology,
-      configuration_snapshot: pricing.items, 
+      configuration_snapshot: cleanPricing.items, 
+      addons_snapshot: cleanPricing.addons,
+      expected_total_payable: selection.expected_total_payable || cleanPricing.total_payable,
       status: status || "draft",
       accepted_at: accepted_at ? new Date(accepted_at) : null,
-      created_at: serverTimestamp(),
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       recalculated_on_server: true,
     });
 

@@ -6,6 +6,10 @@ import { Plus, Edit2, Trash2, Power, MessageCircle, Clock, Percent, Zap } from "
 import { updateCampaign, deleteCampaign, createCampaign } from "@/app/actions/campaigns";
 import { toast } from "sonner";
 
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+
 interface CampaignsClientProps {
   initialCampaigns: FollowUpCampaign[];
 }
@@ -74,85 +78,86 @@ export default function CampaignsClient({ initialCampaigns }: CampaignsClientPro
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
         <div>
-          <h2 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight">Follow-Up Campaigns</h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Automated outreach triggered by lead status changes.</p>
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">Follow-Up Campaigns</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Automated outreach triggered by lead status changes.</p>
         </div>
         <button
           onClick={() => setIsCreating(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+          className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-full text-xs font-semibold transition-all shadow-sm active:scale-95 self-start sm:self-center"
         >
           <Plus className="w-4 h-4" /> New Campaign
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {campaigns.map(campaign => (
-          <div key={campaign.id} className={`bg-white dark:bg-zinc-900 border rounded-[24px] p-6 transition-all shadow-md dark:shadow-md ${
+          <Card key={campaign.id} className={`p-5 transition-all shadow-sm ${
             campaign.is_active
-              ? 'border-blue-200 dark:border-blue-500/20 shadow-blue-500/5'
-              : 'border-zinc-100 dark:border-zinc-800 opacity-60'
+              ? 'border-border bg-card hover:shadow-md'
+              : 'border-border bg-muted/30 opacity-70 hover:opacity-100'
           }`}>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="font-black text-sm text-zinc-900 dark:text-white tracking-tight">{campaign.name}</h3>
-                <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5 block">Triggers on: <span className="font-bold text-zinc-700 dark:text-zinc-300">{campaign.trigger_status}</span></span>
+                <h3 className="font-semibold text-sm text-foreground tracking-tight">{campaign.name}</h3>
+                <span className="text-[10px] font-medium text-muted-foreground mt-1 block">Triggers on: <span className="font-semibold text-foreground uppercase tracking-wider">{campaign.trigger_status}</span></span>
               </div>
               <button 
                 onClick={() => handleToggle(campaign)}
-                className={`p-2 rounded-full ${campaign.is_active ? 'bg-blue-500/10 text-blue-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'}`}
+                className={`p-2 rounded-full transition-colors ${campaign.is_active ? 'bg-success/10 text-success hover:bg-success/20' : 'bg-secondary text-muted-foreground hover:bg-secondary/80'}`}
+                title={campaign.is_active ? "Pause Campaign" : "Activate Campaign"}
               >
                 <Power className="w-4 h-4" />
               </button>
             </div>
             
-            <div className="space-y-3 mb-6">
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400">
-                <Clock className="w-3.5 h-3.5 text-zinc-400" /> Wait {campaign.delay_hours} hours
+            <div className="space-y-2.5 mb-5">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase text-muted-foreground">
+                <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Wait {campaign.delay_hours} hours
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase text-success">
                 <Percent className="w-3.5 h-3.5" /> 
                 {campaign.offer_type === 'discount_percent' ? `${campaign.offer_value}% Discount` : campaign.offer_type === 'free_amc' ? 'Free AMC' : 'No Offer'}
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase text-primary">
                 <MessageCircle className="w-3.5 h-3.5" /> Via {campaign.action_channel}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-              <button onClick={() => setIsEditing(campaign)} className="flex-1 flex justify-center items-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg transition-colors">
+            <div className="flex items-center gap-2 pt-4 border-t border-border">
+              <button onClick={() => setIsEditing(campaign)} className="flex-1 flex justify-center items-center gap-2 py-1.5 text-[10px] font-semibold uppercase bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md transition-colors">
                 <Edit2 className="w-3.5 h-3.5" /> Edit
               </button>
-              <button onClick={() => handleDelete(campaign.id!)} className="flex-1 flex justify-center items-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-500 rounded-lg transition-colors">
+              <button onClick={() => handleDelete(campaign.id!)} className="flex-1 flex justify-center items-center gap-2 py-1.5 text-[10px] font-semibold uppercase bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-md transition-colors">
                 <Trash2 className="w-3.5 h-3.5" /> Delete
               </button>
             </div>
-          </div>
+          </Card>
         ))}
         {campaigns.length === 0 && (
-          <div className="col-span-full py-12 text-center text-zinc-500 font-bold uppercase tracking-widest text-xs border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[24px]">
+          <div className="col-span-full py-12 text-center text-muted-foreground font-medium text-xs border border-dashed border-border rounded-xl">
             No campaigns found. Create one to get started.
           </div>
         )}
       </div>
 
       {(isEditing || isCreating) && (
-        <div className="fixed inset-0 bg-zinc-900 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl rounded-2xl p-8 max-h-[90vh] overflow-y-auto shadow-md">
-            <h2 className="text-xl font-black uppercase tracking-widest mb-6 text-zinc-900 dark:text-white">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto shadow-lg animate-in fade-in zoom-in-95 duration-200">
+            <h2 className="text-xl font-semibold tracking-tight mb-6 text-foreground">
               {isCreating ? "Create Follow-Up Campaign" : "Edit Campaign"}
             </h2>
-            <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+            <form onSubmit={handleSave} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Campaign Name</label>
-                  <input name="name" defaultValue={isEditing?.name || ""} required className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-bold" />
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Campaign Name</label>
+                  <Input name="name" defaultValue={isEditing?.name || ""} required className="w-full" placeholder="e.g. Abandoned Cart - 48h" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Trigger Status</label>
-                  <select name="trigger_status" defaultValue={isEditing?.trigger_status || "quoted"} className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-bold">
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Trigger Status</label>
+                  <select name="trigger_status" defaultValue={isEditing?.trigger_status || "quoted"} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none">
                     <option value="new">New</option>
                     <option value="contacted">Contacted</option>
                     <option value="site_visit">Site Visit</option>
@@ -160,52 +165,52 @@ export default function CampaignsClient({ initialCampaigns }: CampaignsClientPro
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Delay (Hours)</label>
-                  <input type="number" name="delay_hours" defaultValue={isEditing?.delay_hours || 48} required min="1" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-bold" />
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Delay (Hours)</label>
+                  <Input type="number" name="delay_hours" defaultValue={isEditing?.delay_hours || 48} required min="1" className="w-full" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Action Channel</label>
-                  <select name="action_channel" defaultValue={isEditing?.action_channel || "whatsapp"} className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-bold">
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Action Channel</label>
+                  <select name="action_channel" defaultValue={isEditing?.action_channel || "whatsapp"} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none">
                     <option value="whatsapp">WhatsApp</option>
                     <option value="email">Email</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Offer Type</label>
-                  <select name="offer_type" defaultValue={isEditing?.offer_type || "discount_percent"} className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-bold">
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Offer Type</label>
+                  <select name="offer_type" defaultValue={isEditing?.offer_type || "discount_percent"} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none">
                     <option value="discount_percent">Discount (%)</option>
                     <option value="free_amc">Free 1-Yr AMC</option>
                     <option value="none">No Offer</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Offer Value (if discount)</label>
-                  <input type="number" step="0.1" name="offer_value" defaultValue={isEditing?.offer_value || 5} min="0" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-bold" />
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Offer Value (if discount)</label>
+                  <Input type="number" step="0.1" name="offer_value" defaultValue={isEditing?.offer_value || 5} min="0" className="w-full" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Message Template</label>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Message Template</label>
                 <textarea 
                   name="message_template" 
                   defaultValue={isEditing?.message_template || "Hi {{name}}, we noticed you haven't finalized your CCTV setup yet. Click here to claim your special {{offer}}! {{quote_link}}"} 
                   required 
                   rows={4}
-                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-medium" 
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-                <p className="text-[10px] text-zinc-500 mt-2 font-medium">Variables: {"{{name}}, {{offer}}, {{quote_link}}"}</p>
+                <p className="text-[10px] text-muted-foreground mt-1.5 font-medium">Variables: {"{{name}}, {{offer}}, {{quote_link}}"}</p>
               </div>
 
               <div className="flex items-center gap-3">
-                <input type="checkbox" name="is_active" id="is_active" defaultChecked={isEditing ? isEditing.is_active : true} className="w-4 h-4 rounded border-zinc-300" />
-                <label htmlFor="is_active" className="text-sm font-bold">Campaign is Active</label>
+                <input type="checkbox" name="is_active" id="is_active" defaultChecked={isEditing ? isEditing.is_active : true} className="w-4 h-4 rounded border-input accent-primary" />
+                <label htmlFor="is_active" className="text-sm font-semibold text-foreground">Campaign is Active</label>
               </div>
 
-              <div className="flex gap-4 pt-6 mt-6 border-t border-zinc-100 dark:border-zinc-800">
-                <button type="button" onClick={() => { setIsEditing(null); setIsCreating(false); }} className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-xl transition-all">
+              <div className="flex gap-4 pt-6 mt-6 border-t border-border">
+                <button type="button" onClick={() => { setIsEditing(null); setIsCreating(false); }} className="flex-1 py-2.5 text-xs font-semibold bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-xl transition-all">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSubmitting} className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all disabled:opacity-50">
+                <button type="submit" disabled={isSubmitting} className="flex-1 py-2.5 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-sm">
                   {isSubmitting ? "Saving..." : "Save Campaign"}
                 </button>
               </div>

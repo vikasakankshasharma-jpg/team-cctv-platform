@@ -1,18 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Geist } from "next/font/google";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { TrackingProvider } from "@/components/shared/TrackingProvider";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { WebVitalsReporter } from "@/components/shared/WebVitalsReporter";
+import { PwaRegistry } from "@/components/shared/PwaRegistry";
 import { Suspense } from "react";
 import { headers } from "next/headers";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cctvquotation.com"),
+  manifest: "/manifest.json",
   title: "CCTV Quotation Online | Free Instant Quote in Jaipur | CCTVQuotation by TEAM",
   description: "Get an instant CCTV quotation online in Jaipur. We install premium cameras like CP Plus with 18% GST included. 100% Free Smart Estimate.",
   openGraph: {
@@ -66,7 +71,7 @@ export default async function RootLayout({
   const nonce = headersList.get("x-nonce") || undefined;
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <head>
         {/* ── DNS Preconnect: Firebase Auth + Firestore (used at wizard start) ── */}
         <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
@@ -87,6 +92,7 @@ export default async function RootLayout({
           <Suspense fallback={null}>
             <TrackingProvider nonce={nonce} />
           </Suspense>
+          <PwaRegistry />
           <WebVitalsReporter />
           <JsonLd />
           {children}

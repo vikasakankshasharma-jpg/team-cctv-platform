@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { TrendingUp, Users, Zap, Hash, Activity, ArrowRight, ArrowUpRight, BarChart3 } from "lucide-react";
+import { TrendingUp, Users, Zap, Hash, Activity, ArrowRight, ArrowUpRight, BarChart3, Clock } from "lucide-react";
+import { collection, query, orderBy, limit, onSnapshot, where } from "firebase/firestore";
+import { db } from "@/lib/firebase-client";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Lead } from "@/types";
 
 export interface WeeklyBucket {
   label: string;
@@ -27,27 +32,20 @@ export interface RecentActivity {
 export interface DashboardClientProps {
   trend: WeeklyBucket[];
   sources: SourceBreakdown[];
-  recentLeads: RecentActivity[];
-  internalLeads: RecentActivity[];
+  initialRecentLeads: RecentActivity[];
+  initialInternalLeads: RecentActivity[];
   internalLeadsCount: number;
   conversionRate: number;
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  new:        "bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-500/30",
-  contacted:  "bg-amber-500/10 text-amber-600 border-amber-200 dark:border-amber-500/30",
-  site_visit: "bg-purple-500/10 text-purple-600 border-purple-200 dark:border-purple-500/30",
-  quoted:     "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700",
-  won:        "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-500/30",
-  lost:       "bg-red-500/10 text-red-500 border-red-200 dark:border-red-500/30",
+  new:        "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400",
+  contacted:  "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400",
+  site_visit: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400",
+  quoted:     "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400",
+  won:        "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400",
+  lost:       "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400",
 };
-
-const SOURCE_COLORS = [
-  { bar: "bg-gradient-to-r from-amber-400 to-orange-500", glow: "shadow-amber-500/20", pill: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30" },
-  { bar: "bg-gradient-to-r from-blue-400 to-indigo-500", glow: "shadow-blue-500/20", pill: "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30" },
-  { bar: "bg-gradient-to-r from-teal-400 to-emerald-500", glow: "shadow-teal-500/20", pill: "text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-500/30" },
-  { bar: "bg-gradient-to-r from-rose-400 to-pink-500", glow: "shadow-rose-500/20", pill: "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30" },
-];
 
 // ─── ANIMATED BAR ─────────────────────────────────────────────────────────────
 function AnimatedBar({ height, className, delay = 0 }: { height: number; className: string; delay?: number }) {
@@ -58,10 +56,10 @@ function AnimatedBar({ height, className, delay = 0 }: { height: number; classNa
   }, [delay]);
   return (
     <div
-      className={`flex-1 rounded-xl transition-all duration-700 ease-out ${className}`}
+      className={`flex-1 rounded-sm transition-all duration-700 ease-out ${className}`}
       style={{
         height: animated ? `${height}%` : "0%",
-        minHeight: animated && height > 0 ? "6px" : "0",
+        minHeight: animated && height > 0 ? "4px" : "0",
       }}
     />
   );
@@ -77,215 +75,183 @@ function SalesTrendChart({ trend }: { trend: WeeklyBucket[] }) {
     <div className="h-full flex flex-col">
       <div className="flex items-start justify-between mb-8">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-500 mb-1.5 flex items-center gap-2">
-            <Activity className="w-3 h-3" /> Temporal Analysis
-          </p>
-          <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter">Weekly Flux</h3>
-          <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-1">
+          <h3 className="text-xl font-semibold text-foreground tracking-tight">Weekly Flux</h3>
+          <p className="text-sm font-medium text-muted-foreground mt-1">
             {totalLeads} total · {totalWon} converted · 7-day cycle
           </p>
         </div>
-        <div className="flex items-center gap-4 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-            <div className="w-2.5 h-2.5 rounded-sm bg-zinc-200 dark:bg-zinc-700" />
-            <span className="text-zinc-400 dark:text-zinc-500">Gross</span>
+        <div className="flex items-center gap-4 p-2 bg-muted/50 rounded-lg border border-border">
+          <div className="flex items-center gap-2 text-xs font-medium">
+            <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+            <span className="text-muted-foreground">Gross</span>
           </div>
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-            <div className="w-2.5 h-2.5 rounded-sm bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
-            <span className="text-emerald-700 dark:text-emerald-500">Won</span>
+          <div className="flex items-center gap-2 text-xs font-medium">
+            <div className="w-2 h-2 rounded-full bg-primary" />
+            <span className="text-foreground">Won</span>
           </div>
         </div>
       </div>
 
       {/* Chart Body */}
-      <div className="flex-1 flex items-end gap-3 pb-8 min-h-0">
+      <div className="flex-1 flex items-end gap-4 pb-4 min-h-[240px]">
         {trend.map((bucket, idx) => {
           const totalH = (bucket.total / maxTotal) * 100;
           const wonH   = (bucket.won / maxTotal) * 100;
           return (
-            <div key={bucket.label} className="flex-1 flex flex-col items-center gap-3 group cursor-pointer">
+            <div key={bucket.label} className="flex-1 flex flex-col items-center gap-3 group cursor-pointer h-full justify-end">
               {/* Tooltip */}
-              <div className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 scale-90 group-hover:scale-100 bg-zinc-900 dark:bg-zinc-800 text-white text-[10px] font-black p-3 rounded-xl whitespace-nowrap shadow-md border border-zinc-700/50 z-10">
+              <div className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 bg-popover text-popover-foreground text-xs font-medium p-2.5 rounded-lg shadow-md border border-border z-10 absolute -mt-16 -ml-4 whitespace-nowrap">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
                   {bucket.total} leads
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                   {bucket.won} won
                 </div>
               </div>
               {/* Bars */}
-              <div className="w-full flex items-end gap-1 p-1 bg-zinc-50 dark:bg-zinc-900 rounded-xl shadow-inner" style={{ height: "180px" }}>
-                <AnimatedBar height={totalH} className="bg-zinc-200/80 dark:bg-zinc-800/80 group-hover:bg-zinc-300 dark:group-hover:bg-zinc-700 border border-zinc-300/40 dark:border-zinc-700/40 transition-colors" delay={idx * 60} />
-                <AnimatedBar height={wonH} className="bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-[0_4px_12px_rgba(16,185,129,0.2)] dark:shadow-[0_4px_12px_rgba(16,185,129,0.3)]" delay={idx * 60 + 100} />
+              <div className="w-full flex items-end justify-center gap-1.5 h-full relative">
+                <AnimatedBar height={totalH} className="bg-secondary group-hover:bg-muted-foreground/20 w-full max-w-[24px]" delay={idx * 60} />
+                <AnimatedBar height={wonH} className="bg-primary w-full max-w-[24px]" delay={idx * 60 + 100} />
               </div>
               {/* Day Label */}
-              <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+              <span className="text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
                 {bucket.label}
               </span>
             </div>
           );
         })}
       </div>
-
-      <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-          <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">7-Day Operational Cycle</span>
-        </div>
-        <div className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest bg-zinc-50 dark:bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-100 dark:border-zinc-800">
-          Real-time Telemetry
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── LEAD SOURCE PANEL ────────────────────────────────────────────────────────
-function LeadSourcesPanel({ sources, recentLeads, internalLeads, internalLeadsCount, conversionRate }: {
-  sources: SourceBreakdown[];
-  recentLeads: RecentActivity[];
-  internalLeads: RecentActivity[];
-  internalLeadsCount: number;
-  conversionRate: number;
-}) {
-  return (
-    <div className="h-full flex flex-col gap-6">
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-600 dark:text-purple-500 mb-1.5 flex items-center gap-2">
-          <Hash className="w-3 h-3" /> Lead Sources
-        </p>
-        <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter">Origin Matrix</h3>
-      </div>
-
-      {/* Unassigned Queue */}
-      <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-900/10 dark:to-orange-900/5 border border-amber-100 dark:border-amber-800/30 rounded-2xl">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-[9px] font-black text-amber-700 dark:text-amber-500 uppercase tracking-widest">Unassigned Queue</span>
-          </div>
-          <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${internalLeadsCount > 0 ? "text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20" : "text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20"}`}>
-            {internalLeadsCount} Leads
-          </span>
-        </div>
-        <div className="space-y-1.5">
-          {internalLeads.length === 0 ? (
-            <p className="text-[10px] font-bold text-amber-600/60 dark:text-amber-700 text-center py-2">Queue Empty — Great work!</p>
-          ) : (
-            internalLeads.map(lead => (
-              <Link key={lead.id} href="/admin/leads" className="flex items-center justify-between p-2 bg-white dark:bg-zinc-900 rounded-lg border border-amber-100 dark:border-amber-800/20 shadow-sm hover:scale-[1.02] hover:shadow-md transition-all group/ql">
-                <span className="text-[11px] font-black text-zinc-900 dark:text-white truncate group-hover/ql:text-amber-600 dark:group-hover/ql:text-amber-400 transition-colors">{lead.customer_name}</span>
-                <ArrowRight className="w-3 h-3 text-amber-500 shrink-0" />
-              </Link>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Conversion Donut */}
-      <div className="flex items-center gap-5 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 group overflow-hidden relative">
-        <div className="relative w-16 h-16 shrink-0">
-          <svg className="w-full h-full -rotate-90 group-hover:scale-110 transition-transform duration-500" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" className="text-zinc-200 dark:text-zinc-800" strokeWidth="4" />
-            <circle cx="18" cy="18" r="14" fill="none" stroke="#10b981" strokeWidth="4" strokeLinecap="round"
-              strokeDasharray={`${conversionRate * 0.879} 87.9`}
-              className="drop-shadow-[0_0_6px_rgba(16,185,129,0.5)]"
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-sm font-black text-zinc-900 dark:text-white leading-none">{conversionRate}%</span>
-          </div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-base font-black text-zinc-900 dark:text-white mb-0.5">Conversion Rate</div>
-          <p className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Lead-to-project pipeline efficacy</p>
-          <div className="flex items-center gap-1.5 mt-2">
-            <ArrowUpRight className="w-3 h-3 text-emerald-500" />
-            <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500">Active momentum</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Source Bars */}
-      <div className="space-y-4">
-        {sources.map((s, i) => {
-          const colorSet = SOURCE_COLORS[i % SOURCE_COLORS.length];
-          return (
-            <div key={s.label} className="group/bar">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest group-hover/bar:text-zinc-900 dark:group-hover/bar:text-white transition-colors">{s.label}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600">{s.count} leads</span>
-                  <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${colorSet.pill}`}>{s.percent}%</span>
-                </div>
-              </div>
-              <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-900 rounded-full overflow-hidden shadow-inner">
-                <div
-                  className={`h-full rounded-full shadow-sm ${colorSet.bar} ${colorSet.glow} transition-all duration-1000`}
-                  style={{ width: `${s.percent}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Recent Activity */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Zap className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Recent Activity</span>
-          </div>
-          <Link href="/admin/leads" className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline flex items-center gap-1">
-            View All <ArrowRight className="w-2.5 h-2.5" />
-          </Link>
-        </div>
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-none">
-          {recentLeads.length === 0 ? (
-            <p className="text-zinc-400 dark:text-zinc-600 text-[10px] font-black uppercase text-center py-8 tracking-widest border border-dashed border-zinc-100 dark:border-zinc-800 rounded-xl">No recent activity</p>
-          ) : (
-            recentLeads.map((lead) => (
-              <Link href="/admin/leads" key={lead.id}
-                className="flex items-center justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl hover:bg-white dark:hover:bg-zinc-900 hover:border-blue-200 dark:hover:border-blue-500/20 hover:shadow-sm transition-all group/row active:scale-[0.98]">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-[10px] font-black text-zinc-500 dark:text-zinc-400 group-hover/row:from-blue-50 dark:group-hover/row:from-blue-500/10 group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-all shrink-0">
-                    {lead.customer_name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[11px] font-black text-zinc-900 dark:text-white truncate block group-hover/row:text-blue-700 dark:group-hover/row:text-blue-400 transition-colors">{lead.customer_name}</span>
-                    <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">New Inquiry</span>
-                  </div>
-                </div>
-                <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border shadow-inner shrink-0 ${STATUS_COLORS[lead.status] || "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700"}`}>
-                  {lead.status.replace("_", " ")}
-                </span>
-              </Link>
-            ))
-          )}
-        </div>
-      </div>
     </div>
   );
 }
 
 // ─── MAIN EXPORT ──────────────────────────────────────────────────────────────
-export function DashboardClient({ trend, sources, recentLeads, internalLeads, internalLeadsCount, conversionRate }: DashboardClientProps) {
+export function DashboardClient({ trend, sources, initialRecentLeads, initialInternalLeads, internalLeadsCount, conversionRate }: DashboardClientProps) {
+  const [recentLeads, setRecentLeads] = useState<RecentActivity[]>(initialRecentLeads);
+  const [internalLeads, setInternalLeads] = useState<RecentActivity[]>(initialInternalLeads);
+  const [liveInternalCount, setLiveInternalCount] = useState(internalLeadsCount);
+
+  // Setup Firebase Realtime Listeners
+  useEffect(() => {
+    // Recent Leads Listener
+    const qRecent = query(collection(db, "leads"), orderBy("created_at", "desc"), limit(7));
+    const unsubRecent = onSnapshot(qRecent, (snapshot) => {
+      const leads = snapshot.docs.map(doc => {
+        const d = doc.data() as Lead;
+        return {
+          id: doc.id,
+          customer_name: d.customer_name ?? "Unknown",
+          status: d.status ?? "new",
+          created_at: (d.created_at as any)?.toDate?.()?.toISOString() ?? "",
+        } as RecentActivity;
+      });
+      setRecentLeads(leads);
+    });
+
+    // Internal Leads Listener
+    const qInternal = query(collection(db, "leads"), where("franchise_dealer_id", "==", null), orderBy("created_at", "desc"), limit(5));
+    const unsubInternal = onSnapshot(qInternal, (snapshot) => {
+      const leads = snapshot.docs.map(doc => {
+        const d = doc.data() as Lead;
+        return {
+          id: doc.id,
+          customer_name: d.customer_name ?? "Unknown",
+          status: d.status ?? "new",
+          created_at: (d.created_at as any)?.toDate?.()?.toISOString() ?? "",
+        } as RecentActivity;
+      });
+      setInternalLeads(leads);
+      
+      // Update count roughly based on snapshot, although real count might be higher if > 5. 
+      // We rely on initial SSR count, and increment/decrement based on changes.
+      // For a truly accurate live count, we'd need a counter document, but this is a good UI approximation.
+      if (snapshot.docs.length < 5) {
+        setLiveInternalCount(snapshot.docs.length);
+      }
+    });
+
+    return () => {
+      unsubRecent();
+      unsubInternal();
+    };
+  }, []);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 bg-white dark:bg-[#0F0F0F] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 min-h-[480px] flex flex-col shadow-md hover:border-blue-300 dark:hover:border-blue-500/20 hover:shadow-md hover:shadow-zinc-200 dark:hover:shadow-black transition-all duration-500">
-        <SalesTrendChart trend={trend} />
-      </div>
-      <div className="bg-white dark:bg-[#0F0F0F] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 min-h-[480px] flex flex-col shadow-md hover:border-purple-300 dark:hover:border-purple-500/20 hover:shadow-md hover:shadow-zinc-200 dark:hover:shadow-black transition-all duration-500">
-        <LeadSourcesPanel
-          sources={sources}
-          recentLeads={recentLeads}
-          internalLeads={internalLeads}
-          internalLeadsCount={internalLeadsCount}
-          conversionRate={conversionRate}
-        />
+      <Card className="lg:col-span-2 shadow-sm border-border bg-card">
+        <CardContent className="p-6 md:p-8 h-full min-h-[480px]">
+          <SalesTrendChart trend={trend} />
+        </CardContent>
+      </Card>
+      
+      <div className="flex flex-col gap-6">
+        
+        {/* Unassigned Queue */}
+        <Card className="shadow-sm border-border bg-card">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                Unassigned Queue
+              </CardTitle>
+              <Badge variant={liveInternalCount > 0 ? "secondary" : "outline"} className={liveInternalCount > 0 ? "bg-warning/20 text-warning-foreground" : "bg-success/20 text-success-foreground"}>
+                {liveInternalCount} Leads
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {internalLeads.length === 0 ? (
+              <p className="text-sm font-medium text-muted-foreground text-center py-4">Queue Empty — Great work!</p>
+            ) : (
+              internalLeads.map(lead => (
+                <Link key={lead.id} href="/admin/leads" className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg border border-border/50 hover:bg-secondary transition-colors group">
+                  <span className="text-sm font-medium text-foreground truncate">{lead.customer_name}</span>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card className="flex-1 shadow-sm border-border bg-card min-h-[280px]">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                Live Activity
+              </CardTitle>
+              <Link href="/admin/leads" className="text-xs font-medium text-primary hover:underline">
+                View All
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-[300px] overflow-y-auto scrollbar-none">
+            {recentLeads.length === 0 ? (
+              <p className="text-sm font-medium text-muted-foreground text-center py-8">No recent activity</p>
+            ) : (
+              recentLeads.map((lead) => (
+                <Link href="/admin/leads" key={lead.id}
+                  className="flex items-center justify-between gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors group">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                      {lead.customer_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-sm font-medium text-foreground truncate block">{lead.customer_name}</span>
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Inquiry</span>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className={`font-medium capitalize ${STATUS_COLORS[lead.status] || "bg-muted text-muted-foreground"}`}>
+                    {lead.status.replace("_", " ")}
+                  </Badge>
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );

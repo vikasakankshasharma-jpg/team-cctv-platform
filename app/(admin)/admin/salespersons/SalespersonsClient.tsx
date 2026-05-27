@@ -19,6 +19,10 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "sonner";
 import type { Salesperson, CoverageZone } from "@/types";
 
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+
 export default function SalespersonsClient() {
   const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
   const [zones, setZones] = useState<CoverageZone[]>([]);
@@ -133,13 +137,13 @@ export default function SalespersonsClient() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-12 pb-24">
+    <div className="space-y-12 pb-24 animate-in fade-in duration-500">
       <PageHeader 
         icon={Users} 
         title="Salesforce Orchestrator" 
@@ -147,15 +151,15 @@ export default function SalespersonsClient() {
         badge={`${salespersons.length} Agents Active`}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Salespersons List */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">Active Agents</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">Active Agents</h3>
             <button 
               onClick={() => setShowAddSalesperson(true)}
-              className="flex items-center gap-2 bg-zinc-900 dark:bg-blue-600 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md"
+              className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95"
             >
               <UserPlus className="w-4 h-4" /> Add Agent
             </button>
@@ -163,63 +167,63 @@ export default function SalespersonsClient() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {salespersons.map(s => (
-              <div key={s.id} className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[24px] shadow-sm hover:shadow-md transition-all group relative">
+              <Card key={s.id} className="p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group relative border-border bg-card">
                 <button 
                   onClick={() => handleDeleteSalesperson(s.id!)}
-                  className="absolute top-4 right-4 p-2 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                  className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
                 
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-lg">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
                     {s.name.charAt(0)}
                   </div>
                   <div>
-                    <h4 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">{s.name}</h4>
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{s.mobile_number}</p>
+                    <h4 className="font-semibold text-foreground tracking-tight">{s.name}</h4>
+                    <p className="text-xs font-medium text-muted-foreground mt-0.5">{s.mobile_number}</p>
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                    <div className="flex flex-wrap gap-1.5">
                      {s.assigned_zone_ids && s.assigned_zone_ids.length > 0 ? (
                        s.assigned_zone_ids.map(zid => {
                          const zone = zones.find(z => z.id === zid);
                          return (
-                           <span key={zid} className="px-2 py-1 bg-zinc-50 dark:bg-zinc-800 text-[8px] font-black uppercase text-zinc-500 rounded-md border border-zinc-100 dark:border-zinc-700">
+                           <Badge key={zid} variant="secondary" className="text-[10px] uppercase font-semibold">
                              {zone?.name || zid}
-                           </span>
+                           </Badge>
                          );
                        })
                      ) : (
-                       <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-1">
+                       <span className="text-[10px] font-semibold text-warning uppercase flex items-center gap-1">
                          <AlertCircle className="w-3 h-3" /> No Zones Assigned
                        </span>
                      )}
                    </div>
                    
-                   <div className="flex items-center justify-between pt-2 border-t border-zinc-50 dark:border-zinc-800">
-                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${s.is_active ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                   <div className="flex items-center justify-between pt-3 border-t border-border">
+                      <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${s.is_active ? 'bg-success/10 text-success border border-success/20' : 'bg-destructive/10 text-destructive border border-destructive/20'}`}>
                         {s.is_active ? 'Online' : 'Offline'}
                       </span>
-                      <span className="text-[8px] font-black text-zinc-400 uppercase tracking-tighter italic">
+                      <span className="text-[10px] font-medium text-muted-foreground italic">
                          Added {s.created_at ? new Date(s.created_at as any).toLocaleDateString() : 'Recently'}
                       </span>
                    </div>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
 
         {/* Zones Column */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">Coverage Zones</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">Coverage Zones</h3>
             <button 
               onClick={() => setShowAddZone(true)}
-              className="p-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-xl hover:bg-zinc-200 transition-all"
+              className="p-2 bg-secondary text-secondary-foreground rounded-full hover:bg-primary/10 hover:text-primary transition-all"
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -227,20 +231,20 @@ export default function SalespersonsClient() {
 
           <div className="space-y-3">
             {zones.map(z => (
-              <div key={z.id} className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl flex items-center justify-between group">
+              <Card key={z.id} className="p-4 rounded-xl flex items-center justify-between group border-border shadow-sm bg-card">
                 <div>
-                  <h5 className="text-[11px] font-black text-zinc-900 dark:text-white uppercase tracking-widest">{z.name}</h5>
-                  <p className="text-[9px] text-zinc-400 font-medium truncate max-w-[180px]">
+                  <h5 className="text-sm font-semibold text-foreground tracking-tight">{z.name}</h5>
+                  <p className="text-xs text-muted-foreground font-medium mt-1 truncate max-w-[180px]" title={z.pincodes.join(", ")}>
                     {z.pincodes.join(", ")}
                   </p>
                 </div>
                 <button 
                   onClick={() => handleDeleteZone(z.id!)}
-                  className="p-2 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                  className="p-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
@@ -249,36 +253,34 @@ export default function SalespersonsClient() {
       {/* Modals */}
       {showAddSalesperson && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-zinc-900" onClick={() => setShowAddSalesperson(false)} />
-          <div className="relative bg-white dark:bg-zinc-900 w-full max-w-lg rounded-2xl p-8 shadow-md border border-zinc-100 dark:border-zinc-800 animate-in fade-in zoom-in duration-300">
-            <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter mb-6 uppercase">Deploy New Agent</h2>
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setShowAddSalesperson(false)} />
+          <div className="relative bg-card w-full max-w-lg rounded-2xl p-6 shadow-lg border border-border animate-in fade-in zoom-in-95 duration-200">
+            <h2 className="text-xl font-semibold text-foreground tracking-tight mb-6">Deploy New Agent</h2>
             
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2 block">Full Name</label>
-                <input 
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Full Name</label>
+                <Input 
                   type="text" 
                   value={newSalesperson.name || ""} 
                   onChange={e => setNewSalesperson(prev => ({...prev, name: e.target.value}))}
-                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500/20"
                   placeholder="e.g. Rahul Sharma"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2 block">Mobile (WhatsApp for OTP)</label>
-                <input 
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Mobile (WhatsApp for OTP)</label>
+                <Input 
                   type="tel" 
                   value={newSalesperson.mobile_number || ""} 
                   onChange={e => setNewSalesperson(prev => ({...prev, mobile_number: e.target.value}))}
-                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500/20"
                   placeholder="10-digit mobile"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2 block">Zone Assignments</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Zone Assignments</label>
+                <div className="flex flex-wrap gap-2 mt-2">
                   {zones.map(z => {
                     const isSelected = newSalesperson.assigned_zone_ids?.includes(z.id!);
                     return (
@@ -292,7 +294,7 @@ export default function SalespersonsClient() {
                             setNewSalesperson(prev => ({...prev, assigned_zone_ids: [...current, z.id!]}));
                           }
                         }}
-                        className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-zinc-700 text-zinc-400'}`}
+                        className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all border ${isSelected ? 'bg-primary border-primary text-primary-foreground shadow-sm' : 'bg-secondary border-border text-muted-foreground hover:bg-secondary/80'}`}
                       >
                         {z.name}
                       </button>
@@ -305,13 +307,13 @@ export default function SalespersonsClient() {
                 <button 
                   onClick={handleAddSalesperson}
                   disabled={isSaving}
-                  className="flex-1 bg-zinc-900 dark:bg-blue-600 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 hover:bg-blue-600 transition-all shadow-md shadow-blue-500/20"
+                  className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm active:scale-95"
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Deploy Agent
                 </button>
                 <button 
                   onClick={() => setShowAddSalesperson(false)}
-                  className="px-6 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-black uppercase text-[10px] rounded-2xl"
+                  className="px-6 bg-secondary text-secondary-foreground font-semibold text-sm rounded-xl hover:bg-secondary/80 transition-colors"
                 >
                   Cancel
                 </button>
@@ -323,29 +325,28 @@ export default function SalespersonsClient() {
 
       {showAddZone && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-zinc-900" onClick={() => setShowAddZone(false)} />
-          <div className="relative bg-white dark:bg-zinc-900 w-full max-w-lg rounded-2xl p-8 shadow-md border border-zinc-100 dark:border-zinc-800 animate-in fade-in zoom-in duration-300">
-            <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter mb-6 uppercase">Define Coverage Zone</h2>
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setShowAddZone(false)} />
+          <div className="relative bg-card w-full max-w-lg rounded-2xl p-6 shadow-lg border border-border animate-in fade-in zoom-in-95 duration-200">
+            <h2 className="text-xl font-semibold text-foreground tracking-tight mb-6">Define Coverage Zone</h2>
             
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2 block">Zone Name</label>
-                <input 
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Zone Name</label>
+                <Input 
                   type="text" 
                   value={newZone.name || ""} 
                   onChange={e => setNewZone(prev => ({...prev, name: e.target.value}))}
-                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500/20"
                   placeholder="e.g. South Delhi"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2 block">Pincodes (Comma Separated)</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Pincodes (Comma Separated)</label>
                 <textarea 
                   rows={4}
                   value={newZone.pincodes?.join(", ") || ""} 
                   onChange={e => setNewZone(prev => ({...prev, pincodes: e.target.value.split(",").map(p => p.trim()).filter(p => p !== "")}))}
-                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="110001, 110002, 110003..."
                 />
               </div>
@@ -354,13 +355,13 @@ export default function SalespersonsClient() {
                 <button 
                   onClick={handleAddZone}
                   disabled={isSaving}
-                  className="flex-1 bg-zinc-900 dark:bg-blue-600 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 hover:bg-blue-600 transition-all shadow-md shadow-blue-500/20"
+                  className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm active:scale-95"
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} Establish Zone
                 </button>
                 <button 
                   onClick={() => setShowAddZone(false)}
-                  className="px-6 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-black uppercase text-[10px] rounded-2xl"
+                  className="px-6 bg-secondary text-secondary-foreground font-semibold text-sm rounded-xl hover:bg-secondary/80 transition-colors"
                 >
                   Cancel
                 </button>

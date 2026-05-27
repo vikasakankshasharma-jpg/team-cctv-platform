@@ -1,4 +1,5 @@
 export const metadata = {
+  manifest: "/manifest-partner.json",
   title: "Partner Portal | TEAM CCTV",
   description: "Secure partner access for managing referrals and commissions.",
 };

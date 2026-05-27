@@ -60,7 +60,6 @@ export default async function FranchisesAdminPage() {
   return (
     <div className="space-y-10 pb-20 font-sans">
       <div className="relative">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full -z-10" />
         <PageHeader
           icon={Building2}
           title="Territory Hub"
@@ -77,61 +76,61 @@ export default async function FranchisesAdminPage() {
       {/* KPI Summary Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: "Active Nodes", value: String(franchises.length), icon: Building2, color: "text-zinc-950 dark:text-white", bg: "bg-zinc-50 dark:bg-zinc-800/40" },
-          { label: "Market Reach", value: String(activeFranchises.length), icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/50 dark:bg-emerald-500/5" },
-          { label: "Gross Yield", value: `₹${(totalBusiness / 100000).toFixed(1)}L`, icon: IndianRupee, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/50 dark:bg-blue-500/5" },
-          { label: "Clearing Due", value: `₹${totalCommissionDue.toLocaleString("en-IN")}`, icon: TrendingUp, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50/50 dark:bg-amber-500/5" },
+          { label: "Active Nodes", value: String(franchises.length), icon: Building2, color: "text-foreground", bg: "bg-background" },
+          { label: "Market Reach", value: String(activeFranchises.length), icon: CheckCircle2, color: "text-success", bg: "bg-success/5" },
+          { label: "Gross Yield", value: `₹${(totalBusiness / 100000).toFixed(1)}L`, icon: IndianRupee, color: "text-primary", bg: "bg-primary/5" },
+          { label: "Clearing Due", value: `₹${totalCommissionDue.toLocaleString("en-IN")}`, icon: TrendingUp, color: "text-warning", bg: "bg-warning/5" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`relative overflow-hidden group ${kpi.bg} border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md shadow-zinc-200/40 dark:shadow-none`}>
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+          <div key={kpi.label} className={`relative overflow-hidden group ${kpi.bg} border border-border rounded-2xl p-6 shadow-sm`}>
+            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:scale-110 transition-transform">
                <kpi.icon className="w-20 h-20" />
             </div>
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-3">{kpi.label}</p>
-            <p className={`text-3xl font-black ${kpi.color} tracking-tight`}>{kpi.value}</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{kpi.label}</p>
+            <p className={`text-2xl font-semibold ${kpi.color} tracking-tight`}>{kpi.value}</p>
           </div>
         ))}
       </div>
 
       {/* Management Toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-6 shadow-md shadow-zinc-200/50 dark:shadow-none">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border border-border rounded-2xl p-5 shadow-sm">
         <div className="flex items-center gap-4">
-           <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
-              <Building2 className="w-6 h-6 text-zinc-400" />
+           <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center border border-border">
+              <Building2 className="w-5 h-5 text-muted-foreground" />
            </div>
            <div>
-             <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1.5">Network Management</p>
-             <p className="text-sm font-black text-zinc-900 dark:text-white uppercase">
+             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1">Network Management</p>
+             <p className="text-sm font-semibold text-foreground tracking-tight">
                {franchises.length === 0 ? "Fleet Initializing..." : `${franchises.length} Registered Partners`}
              </p>
            </div>
         </div>
         <Link
           href="/admin/franchises/new"
-          className="flex items-center justify-center gap-3 px-8 py-4 bg-zinc-950 dark:bg-blue-600 hover:scale-105 active:scale-95 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-md shadow-blue-500/20"
+          className="flex items-center justify-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/90 active:scale-95 text-primary-foreground text-xs font-semibold rounded-full transition-all shadow-sm"
         >
           <Plus className="w-4 h-4" /> Initialize New Franchise
         </Link>
       </div>
 
       {fetchError && (
-        <div className="rounded-2xl border border-rose-100 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-900/10 p-12 text-center">
-          <XCircle className="w-12 h-12 text-rose-500 mx-auto mb-4 opacity-50" />
-          <p className="text-rose-600 font-black text-sm uppercase tracking-widest">Protocol Failure: Data Unreachable</p>
-          <p className="text-zinc-500 text-xs font-bold mt-2 uppercase tracking-tight">Verify Firestore connectivity and security schema.</p>
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-10 text-center">
+          <XCircle className="w-10 h-10 text-destructive mx-auto mb-3 opacity-80" />
+          <p className="text-destructive font-semibold text-sm">Protocol Failure: Data Unreachable</p>
+          <p className="text-muted-foreground text-xs font-medium mt-1">Verify Firestore connectivity and security schema.</p>
         </div>
       )}
 
       {/* Franchise Grid */}
       {!fetchError && franchises.length === 0 && (
-        <div className="text-center py-32 border-4 border-dashed border-zinc-50 dark:border-zinc-800 rounded-[64px]">
-          <Building2 className="w-16 h-16 text-zinc-200 dark:text-zinc-800 mx-auto mb-6" />
-          <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight mb-2">Network Expansion Ready</h3>
-          <p className="text-xs text-zinc-500 font-bold uppercase tracking-[0.2em] mb-10 max-w-sm mx-auto leading-relaxed">
+        <div className="text-center py-24 border-2 border-dashed border-border rounded-3xl bg-secondary/20">
+          <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+          <h3 className="text-lg font-semibold text-foreground tracking-tight mb-2">Network Expansion Ready</h3>
+          <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">
             Begin the territorial onboarding process to start routing leads and tracking regional performance.
           </p>
           <Link
             href="/admin/franchises/new"
-            className="inline-flex items-center gap-3 px-10 py-5 bg-zinc-950 dark:bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:scale-105 transition-all shadow-md"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground text-xs font-semibold rounded-full hover:bg-primary/90 transition-all shadow-sm"
           >
             <Plus className="w-4 h-4" /> Start Onboarding Workflow
           </Link>
@@ -143,77 +142,77 @@ export default async function FranchisesAdminPage() {
           {franchises.map((dealer) => (
             <div
               key={dealer.id}
-              className={`group bg-white dark:bg-zinc-900 border rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md hover:shadow-zinc-200/50 dark:hover:shadow-none hover:border-blue-500/30 ${dealer.is_active ? "border-zinc-100 dark:border-zinc-800" : "border-zinc-100 dark:border-zinc-800 opacity-40"}`}
+              className={`group bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-sm hover:border-primary/30 ${!dealer.is_active && "opacity-60"}`}
             >
-              <div className="flex flex-col lg:flex-row lg:items-center gap-8 p-8 sm:p-10">
+              <div className="flex flex-col lg:flex-row lg:items-center gap-6 p-6 sm:p-8">
                 {/* Node Identity */}
-                <div className="flex items-center gap-5 flex-1 min-w-0">
-                  <div className={`w-14 h-14 rounded-[20px] flex items-center justify-center shrink-0 border-2 transition-colors ${dealer.is_active ? "bg-emerald-50 dark:bg-emerald-500/5 border-emerald-100 dark:border-emerald-500/20 text-emerald-500" : "bg-zinc-50 dark:bg-zinc-950 border-zinc-100 dark:border-zinc-800 text-zinc-400"}`}>
-                    <Building2 className="w-7 h-7" />
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${dealer.is_active ? "bg-success/10 border-success/20 text-success" : "bg-secondary border-border text-muted-foreground"}`}>
+                    <Building2 className="w-6 h-6" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-lg font-black text-zinc-950 dark:text-white tracking-tight uppercase leading-none mb-2 group-hover:text-blue-600 transition-colors">{dealer.company_name}</p>
-                    <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">{dealer.owner_name} · <span className="text-zinc-500">ID: {dealer.id.slice(-6)}</span></p>
+                    <p className="text-base font-semibold text-foreground tracking-tight mb-0.5 group-hover:text-primary transition-colors truncate">{dealer.company_name}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground truncate">{dealer.owner_name} · <span className="opacity-70">ID: {dealer.id.slice(-6)}</span></p>
                   </div>
                 </div>
 
                 {/* Territory Signature */}
-                <div className="flex flex-col lg:items-end gap-2 shrink-0">
-                   <div className="flex items-center gap-2 px-4 py-2 bg-blue-50/50 dark:bg-blue-500/5 border border-blue-100/60 dark:border-blue-500/10 rounded-2xl">
-                      <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                      <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest whitespace-nowrap">
+                <div className="flex flex-col lg:items-end gap-1.5 shrink-0">
+                   <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 border border-primary/10 rounded-lg">
+                      <MapPin className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-[11px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap">
                          {dealer.assigned_pincodes?.length || 0} Exclusive Zones
                       </span>
                    </div>
-                   <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest text-right px-2">
+                   <p className="text-[11px] font-medium text-muted-foreground text-right px-1">
                       {dealer.assigned_cities?.join(", ") || "Unassigned Region"}
                    </p>
                 </div>
 
                 {/* Financial Ledger Preview */}
-                <div className="grid grid-cols-3 gap-8 shrink-0 px-8 border-x border-zinc-50 dark:border-zinc-800">
+                <div className="grid grid-cols-3 gap-6 shrink-0 px-6 border-x border-border">
                   <div className="text-center">
-                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2">Throughput</p>
-                    <p className="text-base font-black text-zinc-950 dark:text-white">{dealer.total_leads_received || 0}</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Throughput</p>
+                    <p className="text-sm font-semibold text-foreground">{dealer.total_leads_received || 0}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2">Yield</p>
-                    <p className="text-base font-black text-blue-600 dark:text-blue-500">₹{((dealer.total_ex_tax_business || 0) / 1000).toFixed(0)}k</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Yield</p>
+                    <p className="text-sm font-semibold text-primary">₹{((dealer.total_ex_tax_business || 0) / 1000).toFixed(0)}k</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2">Due</p>
-                    <p className="text-base font-black text-amber-600 dark:text-amber-500">₹{(dealer.total_commission_due || 0).toLocaleString("en-IN")}</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Due</p>
+                    <p className="text-sm font-semibold text-warning">₹{(dealer.total_commission_due || 0).toLocaleString("en-IN")}</p>
                   </div>
                 </div>
 
                 {/* Control Actions */}
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <Link
                     href={`/admin/franchises/${dealer.id}/pricing`}
-                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary text-foreground text-[11px] font-semibold hover:bg-secondary/80 transition-all border border-border"
                   >
                     <IndianRupee className="w-3.5 h-3.5" /> Pricing
                   </Link>
                   <Link
                     href={`/admin/franchises/${dealer.id}`}
-                    className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-800 text-zinc-400 hover:text-blue-500 border border-zinc-100 dark:border-zinc-700 transition-all shadow-inner"
+                    className="flex items-center justify-center w-9 h-9 rounded-lg bg-secondary text-muted-foreground hover:text-primary border border-border transition-all"
                   >
-                    <TrendingUp className="w-5 h-5" />
+                    <TrendingUp className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
               
               {/* Regional Node Map (Pincodes) */}
               {dealer.assigned_pincodes && dealer.assigned_pincodes.length > 0 && (
-                <div className="px-10 pb-8 flex flex-wrap gap-2">
+                <div className="px-8 pb-6 flex flex-wrap gap-1.5 border-t border-border/50 pt-4 bg-secondary/10">
                   {dealer.assigned_pincodes.slice(0, 15).map((pin) => (
-                    <span key={pin} className="text-[8px] font-black px-3 py-1 bg-zinc-50 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-500 border border-zinc-100 dark:border-zinc-800 rounded-lg uppercase tracking-widest">
+                    <span key={pin} className="text-[10px] font-medium px-2 py-0.5 bg-secondary text-muted-foreground border border-border rounded-md">
                       {pin}
                     </span>
                   ))}
                   {dealer.assigned_pincodes.length > 15 && (
-                    <span className="text-[8px] font-black px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 rounded-lg uppercase tracking-widest">
-                      +{dealer.assigned_pincodes.length - 15} Additional Nodes
+                    <span className="text-[10px] font-medium px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-md">
+                      +{dealer.assigned_pincodes.length - 15} more
                     </span>
                   )}
                 </div>

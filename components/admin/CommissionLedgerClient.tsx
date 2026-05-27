@@ -51,137 +51,137 @@ export function CommissionLedgerClient({ initialRecords, promoterMap, stats }: C
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="relative bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-amber-500/40 rounded-2xl p-8 overflow-hidden group transition-all shadow-lg dark:shadow-md">
-          <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.05] dark:opacity-[0.03] group-hover:opacity-[0.1] dark:group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-110">
-            <AlertCircle className="w-40 h-40 text-amber-500" />
+        <div className="relative bg-card border border-border hover:border-warning/30 rounded-2xl p-8 overflow-hidden group transition-all shadow-sm">
+          <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-110">
+            <AlertCircle className="w-40 h-40 text-warning" />
           </div>
-          <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.4em] mb-4">Unpaid Liability</p>
-          <p className="text-5xl font-black text-amber-600 dark:text-amber-500 tracking-tighter group-hover:scale-105 origin-left transition-transform">₹{stats.totalPending.toLocaleString('en-IN')}</p>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Unpaid Liability</p>
+          <p className="text-4xl font-semibold text-warning tracking-tight group-hover:scale-105 origin-left transition-transform">₹{stats.totalPending.toLocaleString('en-IN')}</p>
           <div className="flex items-center gap-3 mt-6">
-             <span className="text-[10px] font-black bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500 px-4 py-1.5 rounded-full border border-amber-100 dark:border-amber-500/20 uppercase tracking-widest shadow-inner">
+             <span className="text-[11px] font-semibold bg-warning/10 text-warning px-3 py-1 rounded-md border border-warning/20">
                 {pendingCount} Records Pending
              </span>
-             <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+             <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
           </div>
         </div>
 
-        <div className="relative bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-emerald-500/40 rounded-2xl p-8 overflow-hidden group transition-all shadow-lg dark:shadow-md">
-          <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.05] dark:opacity-[0.03] group-hover:opacity-[0.1] dark:group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-110">
-            <CheckCircle2 className="w-40 h-40 text-emerald-500" />
+        <div className="relative bg-card border border-border hover:border-success/30 rounded-2xl p-8 overflow-hidden group transition-all shadow-sm">
+          <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-110">
+            <CheckCircle2 className="w-40 h-40 text-success" />
           </div>
-          <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.4em] mb-4">All-Time Settled</p>
-          <p className="text-5xl font-black text-emerald-600 dark:text-emerald-500 tracking-tighter group-hover:scale-105 origin-left transition-transform">₹{stats.totalPaid.toLocaleString('en-IN')}</p>
-          <div className="flex items-center gap-3 mt-6 text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
-             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">All-Time Settled</p>
+          <p className="text-4xl font-semibold text-success tracking-tight group-hover:scale-105 origin-left transition-transform">₹{stats.totalPaid.toLocaleString('en-IN')}</p>
+          <div className="flex items-center gap-2 mt-6 text-[11px] font-medium text-muted-foreground">
+             <CheckCircle2 className="w-4 h-4 text-success" />
               Fully settled
            </div>
         </div>
       </div>
 
       <div className="space-y-6">
-        <div className="flex items-center gap-6 px-2">
+        <div className="flex items-center gap-6 px-1">
           <div className="relative flex-1 max-w-lg group">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-500 transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input
               type="text"
               placeholder="Filter by promoter name..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all font-bold placeholder-zinc-400 dark:placeholder-zinc-700 shadow-inner"
+              className="w-full bg-background border border-border text-foreground rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder-muted-foreground shadow-sm"
             />
           </div>
-          <div className="hidden lg:flex items-center gap-2 text-[10px] font-black text-zinc-300 dark:text-zinc-700 uppercase tracking-[0.3em]">
-             <div className="w-12 h-[1px] bg-zinc-200 dark:bg-zinc-800" />
+          <div className="hidden lg:flex items-center gap-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+             <div className="w-10 h-[1px] bg-border" />
              Historical Ledger
           </div>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-md dark:shadow-md transition-all">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm transition-all">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-zinc-300">
-              <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.25em] font-black">
-                 <tr className="text-[9px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-600">
-                   <th className="px-8 py-6">Record</th>
-                   <th className="px-8 py-6">Promoter</th>
-                   <th className="px-8 py-6 text-right">Sale Value</th>
-                   <th className="px-8 py-6 text-right">Commission</th>
-                   <th className="px-8 py-6 text-center">Status</th>
-                   <th className="px-8 py-6 text-right">Action</th>
+            <table className="w-full text-left text-sm text-foreground">
+              <thead className="bg-secondary/40 border-b border-border text-muted-foreground uppercase text-[11px] font-semibold tracking-wider">
+                 <tr>
+                   <th className="px-6 py-4">Record</th>
+                   <th className="px-6 py-4">Promoter</th>
+                   <th className="px-6 py-4 text-right">Sale Value</th>
+                   <th className="px-6 py-4 text-right">Commission</th>
+                   <th className="px-6 py-4 text-center">Status</th>
+                   <th className="px-6 py-4 text-right">Action</th>
                  </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40 text-zinc-500 dark:text-zinc-400 font-medium">
+              <tbody className="divide-y divide-border text-muted-foreground font-medium">
                 {filteredRecords.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-8 py-32 text-center">
-                      <div className="flex flex-col items-center gap-4 opacity-50">
-                        <HandCoins className="w-12 h-12 text-zinc-300 dark:text-zinc-800" />
-                        <p className="text-sm font-medium text-zinc-400 dark:text-zinc-600">No records found matching your search</p>
+                    <td colSpan={6} className="px-6 py-24 text-center">
+                      <div className="flex flex-col items-center gap-3 opacity-60">
+                        <HandCoins className="w-10 h-10 text-muted-foreground" />
+                        <p className="text-sm font-medium">No records found matching your search</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   filteredRecords.map((record) => (
-                    <tr key={record.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all group/row">
-                      <td className="px-8 py-6">
-                        <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-mono">REF-{record.id!.slice(-8).toUpperCase()}</span>
-                           <span className="text-[9px] font-medium text-zinc-400 dark:text-zinc-600 mt-1 block">Lead: {record.lead_id.slice(-8).toUpperCase()}</span>
+                    <tr key={record.id} className="hover:bg-secondary/40 transition-colors group/row">
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                           <span className="text-[11px] font-semibold uppercase tracking-wider font-mono text-muted-foreground">REF-{record.id!.slice(-8).toUpperCase()}</span>
+                           <span className="text-[10px] font-medium text-muted-foreground">Lead: {record.lead_id.slice(-8).toUpperCase()}</span>
                         </div>
                       </td>
-                      <td className="px-8 py-6">
-                        <div className="flex flex-col">
-                            <span className="font-black text-zinc-900 dark:text-white group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-colors text-base tracking-tight uppercase">
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                            <span className="font-semibold text-foreground group-hover/row:text-primary transition-colors text-sm truncate max-w-[200px]">
                             {promoterMap[record.promoter_id] || "Unknown"}
                           </span>
-                          <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 mt-1 uppercase tracking-widest bg-zinc-50 dark:bg-zinc-900 px-2 py-0.5 rounded border border-zinc-100 dark:border-zinc-800 w-fit shadow-inner">{record.promoter_id}</span>
+                          <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[200px]">{record.promoter_id}</span>
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-right">
-                        <div className="flex flex-col items-end">
-                          <span className="font-bold text-zinc-400 dark:text-zinc-500 text-sm italic">₹{record.ex_tax_amount.toLocaleString('en-IN')}</span>
-                           <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest mt-1">Ex-Tax Sale</span>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="font-medium text-foreground text-sm">₹{record.ex_tax_amount.toLocaleString('en-IN')}</span>
+                           <span className="text-[10px] text-muted-foreground">Ex-Tax</span>
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-right">
-                        <div className="flex flex-col items-end">
-                          <span className="font-black text-xl text-emerald-600 dark:text-emerald-500 tracking-tighter">₹{record.commission_amount.toLocaleString('en-IN')}</span>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="font-semibold text-base text-success tracking-tight">₹{record.commission_amount.toLocaleString('en-IN')}</span>
                           {record.status === 'paid' && (record.paid_at as any) && (
-                            <span className="text-[8px] font-black text-emerald-700 dark:text-zinc-600 bg-emerald-50 dark:bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-100 dark:border-emerald-500/10 mt-2 uppercase tracking-tight">
-                              Settled {new Date((record.paid_at as any).seconds * 1000).toLocaleDateString()}
+                            <span className="text-[10px] font-medium text-muted-foreground mt-1">
+                              {new Date((record.paid_at as any).seconds * 1000).toLocaleDateString()}
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-center">
+                      <td className="px-6 py-4 text-center">
                         {record.status === 'paid' ? (
-                          <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-500">
+                          <div className="inline-flex items-center justify-center gap-1.5 text-success bg-success/10 px-2.5 py-1 rounded-md">
                              <CheckCircle2 className="w-3.5 h-3.5" />
-                             <span className="text-[10px] font-black uppercase tracking-widest">Paid</span>
+                             <span className="text-[11px] font-semibold">Paid</span>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-center gap-2 text-amber-500">
-                             <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                             <span className="text-[10px] font-black uppercase tracking-widest">Pending</span>
+                          <div className="inline-flex items-center justify-center gap-1.5 text-warning bg-warning/10 px-2.5 py-1 rounded-md">
+                             <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+                             <span className="text-[11px] font-semibold">Pending</span>
                           </div>
                         )}
                       </td>
-                      <td className="px-8 py-6 text-right">
+                      <td className="px-6 py-4 text-right">
                          {record.status === 'pending' ? (
                            <button
                              onClick={() => handleMarkPaid(record.id!)}
                              disabled={isProcessing === record.id}
-                             className="group flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-4 rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ml-auto shadow-lg shadow-emerald-600/20 active:scale-95 disabled:opacity-50"
+                             className="group flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-full text-xs font-semibold transition-all ml-auto shadow-sm active:scale-95 disabled:opacity-50"
                            >
                              {isProcessing === record.id ? (
                                <Loader2 className="w-4 h-4 animate-spin" />
                              ) : (
-                               <HandCoins className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
+                               <HandCoins className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
                              )}
-                            Mark Paid
+                            Settle
                            </button>
                         ) : (
-                            <div className="text-zinc-300 dark:text-zinc-700 text-[10px] font-bold uppercase tracking-widest flex justify-end items-center gap-2">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500/40" />
+                            <div className="text-muted-foreground text-[11px] font-medium flex justify-end items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 text-success" />
                               Settled
                             </div>
                         )}

@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { Users, Eye, Phone, MapPin, Search, Filter, Loader2, Target, Zap, Waves, ChevronRight, History } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Users, Eye, Phone, MapPin, Search, Filter, Loader2, Target, Waves, ChevronRight, History } from "lucide-react";
 import type { Lead } from "@/types";
 import { updateLeadStatus, assignLeadToSalesperson } from "@/app/actions/leads";
 import Link from "next/link";
-import { PageHeader } from "./PageHeader";
 import { useRouter } from "next/navigation";
 import { QuoteHistoryModal } from "./QuoteHistoryModal";
+import { db } from "@/lib/firebase-client";
+import { collection, query, orderBy, limit, onSnapshot, where } from "firebase/firestore";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 interface LeadsClientProps {
   initialLeads: Lead[];
@@ -15,9 +21,11 @@ interface LeadsClientProps {
   nextCursor?: string | null;
   salespeople?: { id: string; name: string }[];
   isAdmin?: boolean;
+  isSalesStaff?: boolean;
+  allowedPincodes?: string[];
 }
 
-export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespeople = [], isAdmin = false }: LeadsClientProps) {
+export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespeople = [], isAdmin = false, isSalesStaff = false, allowedPincodes = [] }: LeadsClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"standard" | "industrial">("standard");
   const [filter, setFilter] = useState("");
@@ -26,7 +34,67 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
   const [isAssigning, setIsAssigning] = useState<string | null>(null);
   const [historyLead, setHistoryLead] = useState<{ id: string, name: string } | null>(null);
 
-  const currentDataset = activeTab === "standard" ? initialLeads : industrialLeads;
+  const [localLeads, setLocalLeads] = useState<Lead[]>(initialLeads);
+  const [localIndLeads, setLocalIndLeads] = useState<any[]>(industrialLeads);
+
+  useEffect(() => {
+    // Standard Leads Listener
+    let q = query(collection(db, "leads"), orderBy("created_at", "desc"), limit(25));
+    if (isSalesStaff) {
+      if (allowedPincodes.length > 0) {
+        q = query(collection(db, "leads"), where("address.pincode", "in", allowedPincodes.slice(0, 30)), orderBy("created_at", "desc"), limit(25));
+      } else {
+        q = query(collection(db, "leads"), where("address.pincode", "==", "NONE_ASSIGNED"), orderBy("created_at", "desc"), limit(25));
+      }
+    }
+
+    const unsubStandard = onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) return;
+      const fetched = snapshot.docs.map(doc => {
+        const data = doc.data() as any;
+        return {
+          ...data,
+          id: doc.id,
+          created_at: data.created_at?.toDate ? data.created_at.toDate().toISOString() : data.created_at,
+          updated_at: data.updated_at?.toDate ? data.updated_at.toDate().toISOString() : data.updated_at,
+        } as Lead;
+      });
+      
+      // Merge: take fetched (which has latest), append any from localLeads that are older and not in fetched
+      setLocalLeads(prev => {
+        const fetchedIds = new Set(fetched.map(l => l.id));
+        const older = prev.filter(l => !fetchedIds.has(l.id));
+        return [...fetched, ...older];
+      });
+    });
+
+    // Industrial Leads Listener
+    const indQ = query(collection(db, "industrial_leads"), orderBy("created_at", "desc"), limit(25));
+    const unsubInd = onSnapshot(indQ, (snapshot) => {
+      if (snapshot.empty) return;
+      const fetched = snapshot.docs.map(doc => {
+        const data = doc.data() as any;
+        return {
+          ...data,
+          id: doc.id,
+          status: data.status || "new",
+          created_at: data.created_at?.toDate ? data.created_at.toDate().toISOString() : data.created_at,
+        };
+      });
+      setLocalIndLeads(prev => {
+        const fetchedIds = new Set(fetched.map(l => l.id));
+        const older = prev.filter(l => !fetchedIds.has(l.id));
+        return [...fetched, ...older];
+      });
+    });
+
+    return () => {
+      unsubStandard();
+      unsubInd();
+    };
+  }, [isSalesStaff, allowedPincodes]);
+
+  const currentDataset = activeTab === "standard" ? localLeads : localIndLeads;
 
   const filteredLeads = currentDataset.filter(lead => {
     const searchStr = activeTab === "standard" 
@@ -69,56 +137,60 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'new': return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      case 'contacted': return "bg-amber-500/10 text-amber-500 border-amber-500/20";
-      case 'site_visit': return "bg-purple-500/10 text-purple-400 border-purple-500/20";
-      case 'quoted': return "bg-zinc-800 text-zinc-400 border-zinc-700";
-      case 'won': return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]";
-      case 'lost': return "bg-red-500/10 text-red-500 border-red-500/20";
-      default: return "bg-zinc-800 text-zinc-400 border-zinc-700";
+      case 'partial': return "bg-muted text-muted-foreground border-transparent";
+      case 'new': return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400";
+      case 'contacted': return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400";
+      case 'site_visit': return "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400";
+      case 'quoted': return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400";
+      case 'won': return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400";
+      case 'lost': return "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400";
+      default: return "bg-muted text-muted-foreground border-transparent";
     }
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500">
       
-      {/* Tab Orchestrator */}
-      <div className="flex items-center gap-2 p-1.5 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-[24px] w-fit shadow-inner">
-        <button
-          onClick={() => setActiveTab("standard")}
-          className={`px-8 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === "standard" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-md shadow-zinc-950/20 border border-zinc-200 dark:border-zinc-700" : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"}`}
-        >
-          Standard Matrix
-        </button>
-        <button
-          onClick={() => setActiveTab("industrial")}
-          className={`px-8 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === "industrial" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-md shadow-zinc-950/20 border border-zinc-200 dark:border-zinc-700" : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"}`}
-        >
-          Industrial Inquiries
-        </button>
-      </div>
+      {/* Filters and Tabs */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        
+        {/* Tabs */}
+        <div className="flex items-center gap-1 p-1 bg-secondary/50 border border-border rounded-lg shadow-sm">
+          <button
+            onClick={() => setActiveTab("standard")}
+            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "standard" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Standard Matrix
+          </button>
+          <button
+            onClick={() => setActiveTab("industrial")}
+            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "industrial" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Industrial Inquiries
+          </button>
+        </div>
 
-      {/* Search & Filter Orchestrator */}
-      <div className="flex flex-col lg:flex-row gap-6 items-end justify-between px-2">
-        <div className="flex flex-1 gap-4 w-full max-w-3xl">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-500 transition-colors" />
-            <input 
+        {/* Search & Filter */}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
               type="text"
-              placeholder={activeTab === "standard" ? "Query Spectrum (Name, Mobile...)" : "Query Mobile..."}
+              placeholder={activeTab === "standard" ? "Search Name, Mobile..." : "Search Mobile, Company..."}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-6 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all font-bold placeholder-zinc-400 dark:placeholder-zinc-700 shadow-inner"
+              className="pl-9 h-10 w-full bg-background border-border shadow-sm text-sm"
             />
           </div>
-          <div className="relative w-64 group">
-            <Filter className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-600 group-focus-within:text-blue-500 pointer-events-none transition-colors" />
+          <div className="relative w-full md:w-40">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <select 
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-[24px] pl-14 pr-10 py-5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all appearance-none cursor-pointer font-black uppercase tracking-widest shadow-inner shadow-zinc-900/5 dark:shadow-none"
+              className="h-10 w-full appearance-none bg-background border border-border text-foreground rounded-md pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring shadow-sm font-medium"
             >
               <option value="all">All Statuses</option>
+              <option value="partial">Partial / Cart</option>
               <option value="new">New</option>
               <option value="contacted">Contacted</option>
               <option value="site_visit">Site Visit</option>
@@ -130,189 +202,179 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
         </div>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-md dark:shadow-md transition-all">
+      <Card className="shadow-sm border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-zinc-300">
-            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 font-black uppercase text-[10px] tracking-[0.25em]">
-              <tr>
-                <th className="px-8 py-6">{activeTab === "standard" ? "Customer" : "Contact"}</th>
-                <th className="px-8 py-6">{activeTab === "standard" ? "System & Camera" : "Volume"}</th>
-                <th className="px-8 py-6">{activeTab === "standard" ? "Location" : "Site Type"}</th>
-                <th className="px-8 py-6">{activeTab === "standard" ? "Source Origin" : "Captured At"}</th>
-                <th className="px-8 py-6 text-center">Lifecycle Status</th>
-                <th className="px-8 py-6 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead className="font-semibold text-xs tracking-wider">{activeTab === "standard" ? "Customer" : "Contact"}</TableHead>
+                <TableHead className="font-semibold text-xs tracking-wider">{activeTab === "standard" ? "System" : "Volume"}</TableHead>
+                <TableHead className="font-semibold text-xs tracking-wider">{activeTab === "standard" ? "Location" : "Site Type"}</TableHead>
+                <TableHead className="font-semibold text-xs tracking-wider">{activeTab === "standard" ? "Source" : "Captured At"}</TableHead>
+                <TableHead className="font-semibold text-xs tracking-wider text-center">Lifecycle Status</TableHead>
+                <TableHead className="font-semibold text-xs tracking-wider text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filteredLeads.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-8 py-32 text-center">
-                    <div className="flex flex-col items-center gap-4">
-                       <div className="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-300 dark:text-zinc-700 shadow-inner">
-                         <Users className="w-8 h-8" />
-                       </div>
-                       <div className="space-y-1">
-                         <p className="font-black text-xl text-zinc-900 dark:text-white tracking-widest uppercase">No Subjects Found</p>
-                         <p className="text-zinc-400 dark:text-zinc-600 text-xs font-bold uppercase tracking-tight">The lead matrix is currently empty for this query.</p>
-                       </div>
+                <TableRow>
+                  <TableCell colSpan={6} className="h-48 text-center">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <Users className="w-8 h-8 mb-4 opacity-50" />
+                      <p className="text-sm font-medium">No results found</p>
+                      <p className="text-xs">Adjust your search or filters to find leads.</p>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all group/row">
-                    <td className="px-8 py-6">
-                      <div className="flex flex-col">
+                  <TableRow key={lead.id} className="group/row hover:bg-muted/30">
+                    <TableCell className="align-top py-4">
+                      <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-black text-zinc-900 dark:text-white text-lg leading-none tracking-tight group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-colors uppercase">
+                          <span className="font-semibold text-foreground text-sm tracking-tight group-hover/row:text-primary transition-colors">
                             {activeTab === "standard" ? (lead as Lead).customer_name : "Industrial Lead"}
                           </span>
                           {(lead as Lead).wizard_answers?.q_timeline === 'asap' && (
-                            <span className="bg-red-500/10 text-red-500 border border-red-500/20 text-[8px] px-2 py-0.5 rounded-full uppercase tracking-widest">Urgent</span>
+                            <Badge variant="destructive" className="h-5 px-1.5 text-[9px] uppercase">Urgent</Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-zinc-400 dark:text-zinc-500 mt-2 font-black tracking-widest uppercase">
-                          <Phone className="w-3.5 h-3.5 text-blue-500/50" /> {activeTab === "standard" ? (lead as Lead).mobile_number : (lead as any).phone}
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                          <Phone className="w-3 h-3" /> 
+                          {activeTab === "standard" ? (lead as Lead).mobile_number : (lead as any).phone}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-8 py-6">
+                    </TableCell>
+                    <TableCell className="align-top py-4">
                       {activeTab === "standard" ? (
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-3">
-                            <span className="capitalize font-black text-[9px] text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/5 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-500/10 tracking-widest shadow-inner">
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="secondary" className="capitalize font-medium text-xs">
                                {(lead as Lead).property_type}
-                            </span>
-                            <span className={`text-[9px] font-black px-3 py-1 rounded-full border tracking-[0.2em] shadow-inner ${(lead as Lead).technology_choice === 'IP' ? 'bg-purple-50 dark:bg-purple-500/5 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-purple-500/10' : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700'}`}>
+                            </Badge>
+                            <Badge variant="outline" className={`font-semibold text-[10px] uppercase ${(lead as Lead).technology_choice === 'IP' ? 'text-primary border-primary/50' : 'text-muted-foreground'}`}>
                               {(lead as Lead).technology_choice}
-                            </span>
+                            </Badge>
                           </div>
-                          {(() => {
-                            const surfaces = (lead as Lead).wizard_answers?.q_surface;
-                            const hasHazards = Array.isArray(surfaces) && surfaces.some(s => s === 'metal' || s === 'premium');
-                            if (hasHazards) {
-                              return <span className="text-[8px] text-amber-500 font-bold uppercase flex items-center gap-1 w-fit"><Zap className="w-3 h-3"/> Surface Hazard: Metal/Premium</span>
-                            }
-                            return null;
-                          })()}
                         </div>
                       ) : (
-                        <div className="flex items-center gap-3">
-                          <span className="font-black text-xs text-blue-600 dark:text-blue-400">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm text-primary">
                              {(lead as any).requested_camera_count} Units
                           </span>
-                          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                          <Badge variant="outline" className="text-[10px] uppercase">
                             {(lead as any).technology}
-                          </span>
+                          </Badge>
                         </div>
                       )}
-                    </td>
-                    <td className="px-8 py-6">
+                    </TableCell>
+                    <TableCell className="align-top py-4">
                       {activeTab === "standard" ? (
                         (lead as Lead).address ? (
-                          <div className="flex items-center gap-4">
-                            <div className="flex flex-col min-w-[140px]">
-                              <div className="flex items-center gap-2 text-zinc-900 dark:text-white text-[11px] font-black tracking-widest uppercase">
-                                <MapPin className="w-3.5 h-3.5 text-blue-600 dark:text-blue-500" /> {(lead as Lead).address!.pincode}
-                              </div>
-                              <div className="text-zinc-400 dark:text-zinc-600 text-[9px] font-black mt-1.5 uppercase tracking-wide truncate max-w-[160px] italic">
-                                  {(lead as Lead).address!.landmark1 || "No Landmark Recorded"}
-                              </div>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                              <MapPin className="w-3.5 h-3.5 text-primary" /> 
+                              {(lead as Lead).address!.pincode}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate max-w-[160px]" title={(lead as Lead).address!.landmark1}>
+                                {(lead as Lead).address!.landmark1 || "No Landmark"}
                             </div>
                           </div>
                         ) : (
-                          <span className="text-zinc-300 dark:text-zinc-800 text-[10px] font-black uppercase tracking-[0.2em]">Geo-Unlinked</span>
+                          <span className="text-xs font-medium text-muted-foreground italic">No Location</span>
                         )
                       ) : (
-                        <span className="capitalize font-black text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
+                        <span className="capitalize text-xs font-medium text-muted-foreground">
                           {(lead as any).property_type}
                         </span>
                       )}
-                    </td>
-                    <td className="px-8 py-6">
+                    </TableCell>
+                    <TableCell className="align-top py-4">
                       {activeTab === "standard" ? (
                         (lead as Lead).referral_code ? (
-                          <div className="flex flex-col">
-                            <span className="text-amber-700 dark:text-amber-500 font-black text-[10px] tracking-[0.25em] uppercase whitespace-nowrap bg-amber-50 dark:bg-amber-500/5 px-2 py-1 rounded border border-amber-100 dark:border-amber-500/10 w-fit">
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="outline" className="w-fit text-[10px] uppercase border-warning/50 text-warning bg-warning/10">
                               {(lead as Lead).referral_code}
+                            </Badge>
+                            <span className="text-xs font-medium text-foreground truncate max-w-[120px]" title={(lead as Lead).promoter_name || "Unknown"}>
+                              {(lead as Lead).promoter_name || "Unknown Agent"}
                             </span>
-                            <div className="mt-2 flex flex-col gap-0.5">
-                               <span className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-tight">
-                                  {(lead as Lead).promoter_name || "Unknown Agent"}
-                               </span>
-                            </div>
                           </div>
                         ) : (
-                          <span className="text-zinc-300 dark:text-zinc-700 text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5 ml-1">
-                             <Waves className="w-3 h-3" /> Organic Cycle
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                             <Waves className="w-3 h-3" /> Organic
+                          </div>
                         )
                       ) : (
-                        <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
+                        <span className="text-xs font-medium text-muted-foreground">
                           {new Date(lead.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                         </span>
                       )}
-                    </td>
-                    <td className="px-8 py-6 text-center">
-                      <div className="relative group/status inline-block">
-                         <select 
-                          value={lead.status}
-                          onChange={(e) => handleStatusChange(lead.id!, e.target.value)}
-                          disabled={isUpdating === lead.id}
-                          className={`appearance-none font-black text-[10px] uppercase px-5 py-2.5 rounded-full border cursor-pointer transition-all outline-none text-center pr-2 shadow-inner group-hover/status:border-opacity-100 ${getStatusColor(lead.status)} ${isUpdating === lead.id ? 'opacity-50' : ''}`}
-                         >
-                           <option value="new">Incoming</option>
-                           <option value="contacted">Synthesized</option>
-                           <option value="site_visit">Deployment</option>
-                           <option value="quoted">Finalizing</option>
-                           <option value="won">Captured</option>
-                           <option value="lost">Terminated</option>
-                         </select>
-                         {isUpdating === lead.id && (
-                           <Loader2 className="w-3.5 h-3.5 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400" />
+                    </TableCell>
+                    <TableCell className="align-top py-4 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="relative inline-block w-32">
+                           <select 
+                            value={lead.status}
+                            onChange={(e) => handleStatusChange(lead.id!, e.target.value)}
+                            disabled={isUpdating === lead.id}
+                            className={`appearance-none font-semibold text-[11px] uppercase px-3 py-1.5 rounded-full border cursor-pointer transition-all outline-none text-center w-full shadow-sm ${getStatusColor(lead.status)} ${isUpdating === lead.id ? 'opacity-50' : ''}`}
+                           >
+                             <option value="partial">Partial</option>
+                             <option value="new">Incoming</option>
+                             <option value="contacted">Contacted</option>
+                             <option value="site_visit">Site Visit</option>
+                             <option value="quoted">Quoted</option>
+                             <option value="won">Won</option>
+                             <option value="lost">Lost</option>
+                           </select>
+                           {isUpdating === lead.id && (
+                             <Loader2 className="w-3 h-3 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                           )}
+                         </div>
+                         
+                         {/* Salesperson Assignment Dropdown */}
+                         {activeTab === "standard" && isAdmin && (
+                           <div className="relative w-32">
+                              <select
+                                value={(lead as Lead).assigned_to_salesperson_id || "unassigned"}
+                                onChange={(e) => handleAssignSalesperson(lead.id!, e.target.value)}
+                                disabled={isAssigning === lead.id}
+                                className={`appearance-none bg-secondary/50 border ${(lead as Lead).assigned_to_salesperson_id ? 'border-primary/30 text-primary' : 'border-border text-muted-foreground'} font-medium text-[10px] px-2 py-1 rounded-md w-full outline-none cursor-pointer text-center truncate ${isAssigning === lead.id ? 'opacity-50' : ''}`}
+                              >
+                                <option value="unassigned">Unassigned</option>
+                                {salespeople.map(sp => (
+                                  <option key={sp.id} value={sp.id}>{sp.name}</option>
+                                ))}
+                              </select>
+                              {isAssigning === lead.id && (
+                                <Loader2 className="w-2.5 h-2.5 animate-spin absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                              )}
+                           </div>
                          )}
-                       </div>
-                       
-                       {/* Salesperson Assignment Dropdown */}
-                       {activeTab === "standard" && isAdmin && (
-                         <div className="mt-2 relative">
-                            <select
-                              value={(lead as Lead).assigned_to_salesperson_id || "unassigned"}
-                              onChange={(e) => handleAssignSalesperson(lead.id!, e.target.value)}
-                              disabled={isAssigning === lead.id}
-                              className={`appearance-none bg-zinc-50 dark:bg-zinc-900 border ${(lead as Lead).assigned_to_salesperson_id ? 'border-blue-500/30 text-blue-600 dark:text-blue-400' : 'border-zinc-200 dark:border-zinc-800 text-zinc-500'} font-bold text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-lg w-full max-w-[120px] outline-none cursor-pointer text-center truncate ${isAssigning === lead.id ? 'opacity-50' : ''}`}
-                            >
-                              <option value="unassigned">Unassigned</option>
-                              {salespeople.map(sp => (
-                                <option key={sp.id} value={sp.id}>{sp.name}</option>
-                              ))}
-                            </select>
-                            {isAssigning === lead.id && (
-                              <Loader2 className="w-3 h-3 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400" />
-                            )}
-                         </div>
-                       )}
-                       {activeTab === "standard" && !isAdmin && (lead as Lead).assigned_to_salesperson_name && (
-                         <div className="mt-2 text-[9px] font-black text-blue-500 uppercase tracking-widest">
-                           Assigned to: {(lead as Lead).assigned_to_salesperson_name}
-                         </div>
-                       )}
-                    </td>
-                    <td className="px-8 py-6 text-right">
+                         {activeTab === "standard" && !isAdmin && (lead as Lead).assigned_to_salesperson_name && (
+                           <div className="text-[10px] font-semibold text-primary truncate max-w-[120px]">
+                             {(lead as Lead).assigned_to_salesperson_name}
+                           </div>
+                         )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="align-top py-4 text-right">
                       {activeTab === "standard" ? (
                         <div className="flex flex-col items-end gap-2">
-                          <div className="flex items-center justify-end">
+                          <div className="flex items-center justify-end gap-2">
                             <Link 
                               href={`/quote/${lead.id}`} 
                               target="_blank"
-                              className="flex items-center gap-2 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-white dark:hover:text-white bg-blue-500/10 hover:bg-zinc-900 dark:hover:bg-blue-600 border border-blue-500/20 hover:border-zinc-900 dark:hover:border-blue-500/30 rounded-xl transition-all shadow-inner active:scale-95" 
+                              className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors shadow-sm"
+                              title="View Quote"
                             >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>View Quote</span>
+                              <Eye className="w-4 h-4" />
                             </Link>
                             <button 
                               onClick={() => setHistoryLead({ id: lead.id!, name: (lead as Lead).customer_name })}
-                              className="w-10 h-10 flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-amber-500 hover:border-amber-500/30 rounded-xl transition-all shadow-inner active:scale-90 ml-2"
+                              className="flex items-center justify-center w-8 h-8 rounded-md bg-secondary text-muted-foreground hover:bg-warning/20 hover:text-warning transition-colors shadow-sm"
+                              title="View History"
                             >
                               <History className="w-4 h-4" />
                             </button>
@@ -322,40 +384,40 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                               href={(lead as Lead).competitor_quote_url} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-amber-500 hover:underline"
+                              className="flex items-center gap-1 text-[9px] font-semibold text-warning hover:underline"
                             >
-                              <Target className="w-3 h-3" /> Competitor Quote Attached
+                              <Target className="w-3 h-3" /> Competitor Quote
                             </a>
                           )}
                         </div>
                       ) : (
                         <a 
                           href={`tel:+91${(lead as any).phone}`}
-                          className="flex items-center gap-2 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:text-white bg-emerald-500/10 hover:bg-emerald-600 border border-emerald-500/20 rounded-xl transition-all shadow-inner active:scale-95"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-success/10 text-success hover:bg-success hover:text-success-foreground transition-colors shadow-sm"
+                          title="Call Lead"
                         >
-                          <Phone className="w-3.5 h-3.5" />
-                          <span>Call Lead</span>
+                          <Phone className="w-4 h-4" />
                         </a>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
-      </div>
+      </Card>
 
       {/* Pagination Controller */}
       {nextCursor && activeTab === "standard" && (
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center pt-4">
           <button
             onClick={() => {
               const url = new URL(window.location.href);
               url.searchParams.set("lastDate", nextCursor);
               router.push(url.pathname + url.search);
             }}
-            className="group flex items-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-10 py-4 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white shadow-md active:scale-95"
+            className="group flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm transition-all hover:bg-primary/90 shadow-md active:scale-95"
           >
             Load Next Batch
             <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

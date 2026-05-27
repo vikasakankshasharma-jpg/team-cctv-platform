@@ -23,8 +23,8 @@ export async function generateMetadata({
   const data = doc.data() as Lead;
 
   return {
-    title: `CCTV Quotation for ${data?.customer_name || "Client"} | TEAM CCTV`,
-    description: `Personalized security system quotation for ${data?.property_type || "your"} property. Review high-fidelity IP and HD configurations tailored for maximum coverage.`,
+    title: `Quotation for ${data?.customer_name || "Client"} - TEAM CCTV`,
+    description: `Personalized security system quotation for your property. Compare tailored packages and configure your ideal setup.`,
   };
 }
 
@@ -77,8 +77,6 @@ export default async function QuoteResultPage({
     } as unknown as Lead;
   }
 
-  // Lead fetching is now strictly database-driven.
-
   try {
     const [
       leadSnap,
@@ -98,15 +96,12 @@ export default async function QuoteResultPage({
       adminDb.collection("comparison_card_layouts").where("is_active", "==", true).get()
     ]);
 
-    // Populate Lead if not in mock mode
     if (!lead && leadSnap && leadSnap.exists) {
       lead = { id: leadSnap.id, ...leadSnap.data() } as Lead;
     }
 
-    // Populate Pricing Components (Masked for Client Security)
     products = productsSnap.docs.map(doc => {
       const data = doc.data() as Product;
-      // STRIP SENSITIVE FIELDS: Never expose internal costs/margins to the browser
       const { base_cost, margin_percentage, ...publicData } = data;
       return { id: doc.id, ...publicData } as Product;
     });
@@ -131,7 +126,6 @@ export default async function QuoteResultPage({
       .map((doc: any) => ({ id: doc.id, ...doc.data() }))
       .sort((a: any, b: any) => (a.priority || 0) - (b.priority || 0));
 
-    // 1.5 Fetch Promoter if exists
     if (lead?.promoter_id) {
       const promoterSnap = await adminDb.collection("promoters").doc(lead.promoter_id).get();
       if (promoterSnap.exists) {
@@ -139,8 +133,6 @@ export default async function QuoteResultPage({
       }
     }
 
-    // 2. SERIALIZATION FOR CLIENT COMPONENTS ─────────────────────────────────
-    // Essential for Next.js Server Components to pass data to Client Components
     const { serializeDoc } = await import("@/lib/serialize");
     lead = serializeDoc(lead);
     products = serializeDoc(products);
@@ -156,8 +148,6 @@ export default async function QuoteResultPage({
   }
 
   if (!lead) return notFound();
-
-
 
   const finalSettings: AppSettings = settings || {
     company_name: "TEAM CCTV",
@@ -189,7 +179,6 @@ export default async function QuoteResultPage({
     card_layouts
   };
 
-  // Check if pincode belongs to an unserved/coming soon city
   const leadPincode = String(lead.wizard_answers?.lead_pincode || "");
   let unservedCityName: string | null = null;
   
@@ -199,80 +188,61 @@ export default async function QuoteResultPage({
     else if (leadPincode.startsWith("305")) unservedCityName = "Ajmer";
   }
 
+  // Check expiration (7 days)
+  const leadDate = new Date((lead.created_at as any)?.toDate?.() || lead.created_at || Date.now());
+  const now = new Date();
+  const diffDays = Math.ceil(Math.abs(now.getTime() - leadDate.getTime()) / (1000 * 60 * 60 * 24));
+  const isExpired = diffDays > 7 && lead.id !== "mock-e2e-lead" && lead.id !== "mock-lead";
+
   return (
-    <main className="min-h-screen bg-white dark:bg-zinc-950 relative overflow-hidden font-sans selection:bg-blue-100 dark:selection:bg-blue-900 transition-colors duration-500">
+    <main className="min-h-screen bg-[#f5f5f7] dark:bg-black font-sans selection:bg-blue-200 dark:selection:bg-blue-900 transition-colors duration-500 pb-32">
       
-      {/* ELITE PREMIERE GRADIENT DESIGN */}
-      <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-[800px] h-[800px] bg-blue-100/40 dark:bg-blue-600/10 blur-[160px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-[600px] h-[600px] bg-indigo-100/30 dark:bg-indigo-600/5 blur-[140px] rounded-full pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto py-12 sm:py-24 px-4 sm:px-6 md:px-12 lg:px-16 flex flex-col items-center">
-        
-        {/* ELITE HEADER SECTION */}
-        <div className="max-w-3xl w-full text-center mb-12 sm:mb-24 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-           <div className="inline-flex items-center gap-2 bg-zinc-900 dark:bg-zinc-800 border border-zinc-800 dark:border-zinc-700 text-white font-black px-5 py-2 rounded-full text-[10px] uppercase tracking-[0.15em] mb-6 sm:mb-8 shadow-xl">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-              Calculated for {lead.customer_name}
-           </div>
-
+      {/* MINIMALIST HERO SECTION (Apple Aesthetic) */}
+      <div className="max-w-5xl mx-auto pt-16 sm:pt-24 pb-8 sm:pb-12 px-4 sm:px-6 md:px-12">
+        <div className="flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-6 duration-1000">
+           
            {unservedCityName && lead.id && (
              <WaitlistBanner leadId={lead.id} unservedCityName={unservedCityName} />
            )}
            
-           <h1 className="text-4xl sm:text-6xl md:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter leading-[0.9] sm:leading-[0.85] mb-5 sm:mb-8">
-              Your Security<br/>
-              <span className="text-blue-600 dark:text-blue-400">Quote.</span>
+           <h1 className="text-4xl sm:text-5xl md:text-7xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight leading-tight mb-4">
+              Your security,<br />
+              <span className="text-[#0066cc] dark:text-[#2997ff]">configured for you.</span>
            </h1>
            
-           <p className="text-base sm:text-xl md:text-2xl text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed max-w-2xl mx-auto">
-              We have engineered three professional security tiers for your <span className="text-zinc-900 dark:text-white font-bold">{lead.property_type.toUpperCase()}</span>, precisely tailored to your requirements.
+           <p className="text-lg sm:text-xl text-[#86868b] dark:text-[#a1a1a6] font-normal leading-relaxed max-w-2xl mx-auto">
+              Prepared exclusively for <span className="text-[#1d1d1f] dark:text-white font-medium">{lead.customer_name}</span>. Review your recommended {lead.property_type.toLowerCase()} packages below or build a custom solution.
            </p>
         </div>
-        
-        {/* INTERACTIVE CONFIGURATOR OR EXPIRED STATE */}
-        <div className="w-full animate-in fade-in fill-mode-both delay-300 duration-1000">
-           {(() => {
-             const leadDate = new Date((lead.created_at as any)?.toDate?.() || lead.created_at || Date.now());
-             const now = new Date();
-             const diffTime = Math.abs(now.getTime() - leadDate.getTime());
-             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-             const isExpired = diffDays > 7;
-
-             if (isExpired && lead.id !== "mock-e2e-lead" && lead.id !== "mock-lead") {
-               return (
-                 <div className="max-w-2xl mx-auto bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 sm:p-12 text-center shadow-2xl relative overflow-hidden">
-                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-amber-500 to-red-500" />
-                   <h2 className="text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter mb-4">Quotation Expired</h2>
-                   <p className="text-zinc-500 dark:text-zinc-400 font-medium mb-8">
-                     This quotation was generated over 7 days ago and has expired. Due to fluctuating market prices for electronic components, we require a new assessment to provide you with the most accurate pricing.
-                   </p>
-                   <a 
-                     href={`/wizard?requote=${lead.id}`}
-                     className="inline-flex items-center justify-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-4 rounded-full font-black uppercase tracking-widest text-sm hover:scale-105 active:scale-95 transition-all shadow-xl"
-                   >
-                     Request Re-quote
-                   </a>
-                 </div>
-               );
-             }
-
-             return (
-               <ConfiguratorView 
-                 lead={lead} 
-                 pricingCache={pricingCache} 
-                 promoterDiscount={{
-                   percent: promoter?.discount_type === "percent" ? (promoter.discount_value || 0) : 0,
-                   flat: promoter?.discount_type === "flat" ? (promoter.discount_value || 0) : 0
-                 }}
-                 customLayoutId={promoter?.custom_layout_id}
-               />
-             );
-           })()}
-        </div>
-
-
+      </div>
+      
+      {/* MAIN CONFIGURATOR VIEW */}
+      <div className="w-full animate-in fade-in fill-mode-both delay-300 duration-1000">
+         {isExpired ? (
+           <div className="max-w-2xl mx-auto bg-white dark:bg-[#1d1d1f] rounded-3xl p-8 sm:p-12 text-center shadow-sm">
+             <h2 className="text-2xl sm:text-4xl font-semibold text-[#1d1d1f] dark:text-white tracking-tight mb-4">Quotation Expired</h2>
+             <p className="text-[#86868b] font-normal mb-8">
+               This quotation was generated over 7 days ago. Prices for electronic components fluctuate, so a new assessment is required for accuracy.
+             </p>
+             <a 
+               href={`/wizard?requote=${lead.id}`}
+               className="inline-flex items-center justify-center bg-[#0071e3] hover:bg-[#0077ED] text-white px-8 py-3.5 rounded-full font-medium text-[15px] transition-colors"
+             >
+               Request Re-quote
+             </a>
+           </div>
+         ) : (
+           <ConfiguratorView 
+             lead={lead} 
+             pricingCache={pricingCache} 
+             promoterDiscount={{
+               percent: promoter?.discount_type === "percent" ? (promoter.discount_value || 0) : 0,
+               flat: promoter?.discount_type === "flat" ? (promoter.discount_value || 0) : 0
+             }}
+             customLayoutId={promoter?.custom_layout_id}
+           />
+         )}
       </div>
     </main>
   );
 }
-

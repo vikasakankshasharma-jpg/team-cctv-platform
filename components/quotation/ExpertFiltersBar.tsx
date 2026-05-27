@@ -17,15 +17,19 @@ export function ExpertFiltersBar() {
   const uniqueBrands = useMemo(() => {
     const brands = new Set<string>();
     products.forEach(p => {
-      if (p.category === "camera" && p.brand) brands.add(p.brand);
+      if (p.category === "camera" && p.brand && p.is_active) {
+        if (selection.technology && selection.technology !== "both" && p.technology !== selection.technology) return;
+        brands.add(p.brand);
+      }
     });
     return Array.from(brands).sort();
-  }, [products]);
+  }, [products, selection.technology]);
 
   const uniqueResolutions = useMemo(() => {
     const res = new Set<string>();
     products.forEach(p => {
-      if (p.category === "camera" && p.resolution_mp) {
+      if (p.category === "camera" && p.resolution_mp && p.is_active) {
+        if (selection.technology && selection.technology !== "both" && p.technology !== selection.technology) return;
         // Extract standard megapixel formats like "2MP", "4MP", "5MP"
         const cleanRes = String(p.resolution_mp).toUpperCase().trim();
         if (cleanRes) res.add(cleanRes);
@@ -37,7 +41,7 @@ export function ExpertFiltersBar() {
       const numB = parseFloat(b.replace(/[^0-9.]/g, '')) || 0;
       return numA - numB;
     });
-  }, [products]);
+  }, [products, selection.technology]);
 
   return (
     <div className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[24px] p-5 sm:p-6 shadow-sm mb-10 sm:mb-16">
@@ -58,7 +62,7 @@ export function ExpertFiltersBar() {
       </div>
 
       <div className="flex flex-wrap items-start gap-6 lg:gap-10">
-        <div className="w-40">
+        <div className="w-full sm:w-48">
           <BrandSelector brands={uniqueBrands} />
         </div>
         

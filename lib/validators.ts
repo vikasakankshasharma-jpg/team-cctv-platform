@@ -68,13 +68,14 @@ export const CreateLeadSchema = z.object({
   property_type: z.enum(["home", "shop", "office", "factory", "other"]),
   technology_choice: z.enum(["HD", "IP"]),
   cabling_done: z.boolean(),
+  status: z.enum(["partial", "new", "contacted", "site_visit", "won", "lost"]).optional(),
 });
 
 export type CreateLeadInput = z.infer<typeof CreateLeadSchema>;
 
 export const UpdateLeadStatusSchema = z.object({
   lead_id: z.string().min(1),
-  status: z.enum(["new", "contacted", "site_visit", "won", "lost"]),
+  status: z.enum(["partial", "new", "contacted", "site_visit", "won", "lost"]),
   note: z.string().max(500).optional(),
 });
 
@@ -97,6 +98,12 @@ export const GenerateQuoteSchema = z.object({
   selected_recorder_id: z.string().optional(),
   selected_storage_id: z.string().optional(),
   selected_power_id: z.string().optional(),
+  expected_total_payable: z.number().nonnegative().optional(),
+  brand_preference: z.string().nullable().optional(),
+  resolution_preference: z.string().nullable().optional(),
+  property_type: z.string().nullable().optional(),
+  requested_features: z.array(z.string()).nullable().optional(),
+  max_budget: z.number().nullable().optional(),
 });
 
 export type GenerateQuoteInput = z.infer<typeof GenerateQuoteSchema>;
@@ -227,6 +234,22 @@ export const ReorderStepsSchema = z.array(
     position: z.number().int().nonnegative(),
   })
 );
+
+// ─────────────────────────────────────────────
+// ONBOARDING — DEALERS / FRANCHISES
+// ─────────────────────────────────────────────
+
+export const DealerOnboardingSchema = z.object({
+  company_name: z.string().min(2, "Company name is required").max(100),
+  owner_name: z.string().min(2, "Owner name is required").max(100),
+  mobile_number: MobileSchema,
+  email: z.string().email("Please provide a valid email address"),
+  gst_number: z.string().optional().nullable(),
+  city: z.string().min(2, "City is required").max(100),
+  pincodes: z.string().min(6, "At least one pincode is required"), // We can parse this into an array on the server
+});
+
+export type DealerOnboardingInput = z.infer<typeof DealerOnboardingSchema>;
 
 // ─────────────────────────────────────────────
 // ADMIN — PROMOTERS

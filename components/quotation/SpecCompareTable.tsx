@@ -37,7 +37,7 @@ const SECTIONS: SpecSection[] = [
     title: "System Overview",
     rows: [
       { label: "Camera Model", key: "model", getValue: (c) => c.display_name },
-      { label: "Brand", key: "brand", getValue: (c) => c.brand || "Standard" },
+      { label: "Brand", key: "brand", getValue: (c) => c.brand || "Premium" },
       { label: "Technology", key: "technology", getValue: (c) => c.technology },
     ],
   },
@@ -62,8 +62,7 @@ const SECTIONS: SpecSection[] = [
         label: "WDR",
         key: "wdr",
         getValue: (c) => c.wdr === true || c.technical_name?.toLowerCase().includes("wdr") || c.display_name?.toLowerCase().includes("wdr"),
-        formatValue: (v) =>
-          v ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-500 mx-auto" />,
+        formatValue: (v) => v ? <Check className="w-5 h-5 text-[#0071e3] mx-auto" /> : <X className="w-5 h-5 text-[#d2d2d7] mx-auto" />,
         getScore: (v) => (v ? 1 : 0),
       },
     ],
@@ -76,17 +75,11 @@ const SECTIONS: SpecSection[] = [
         key: "nv_type",
         getValue: (c) => c.night_vision_type ?? inferNightVisionFromName(c.technical_name || c.display_name),
         formatValue: (v) =>
-          v === "color"
-            ? "Color Night Vision"
-            : v === "starlight"
-            ? "Starlight"
-            : v === "dual_light"
-            ? "Dual Light"
-            : v === "ir"
-            ? "Standard IR"
-            : "-",
-        getScore: (v) =>
-          v === "starlight" ? 4 : v === "dual_light" ? 3 : v === "color" ? 2 : v === "ir" ? 1 : 0,
+          v === "color" ? "Color Night Vision"
+          : v === "starlight" ? "Starlight"
+          : v === "dual_light" ? "Dual Light"
+          : v === "ir" ? "Standard IR" : "-",
+        getScore: (v) => v === "starlight" ? 4 : v === "dual_light" ? 3 : v === "color" ? 2 : v === "ir" ? 1 : 0,
       },
       {
         label: "Range",
@@ -142,8 +135,7 @@ const SECTIONS: SpecSection[] = [
         label: "Built-in Audio",
         key: "audio",
         getValue: (c) => c.has_audio === true || c.technical_name?.toLowerCase().includes("mic") || c.display_name?.toLowerCase().includes("mic"),
-        formatValue: (v) =>
-          v ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-500 mx-auto" />,
+        formatValue: (v) => v ? <Check className="w-5 h-5 text-[#0071e3] mx-auto" /> : <X className="w-5 h-5 text-[#d2d2d7] mx-auto" />,
         getScore: (v) => (v ? 1 : 0),
       },
       {
@@ -157,16 +149,14 @@ const SECTIONS: SpecSection[] = [
         label: "SD Card Slot",
         key: "sd",
         getValue: (c) => c.has_sd_slot === true || c.technical_name?.toLowerCase().includes("sd"),
-        formatValue: (v) =>
-          v ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-500 mx-auto" />,
+        formatValue: (v) => v ? <Check className="w-5 h-5 text-[#0071e3] mx-auto" /> : <X className="w-5 h-5 text-[#d2d2d7] mx-auto" />,
         getScore: (v) => (v ? 1 : 0),
       },
       {
         label: "PoE",
         key: "poe",
         getValue: (c) => c.poe === true || c.technology === "IP",
-        formatValue: (v) =>
-          v ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-500 mx-auto" />,
+        formatValue: (v) => v ? <Check className="w-5 h-5 text-[#0071e3] mx-auto" /> : <X className="w-5 h-5 text-[#d2d2d7] mx-auto" />,
         getScore: (v) => (v ? 1 : 0),
       },
     ],
@@ -187,9 +177,7 @@ export function SpecCompareTable({
     setCollapsedSections((prev) => ({ ...prev, [title]: !prev[title] }));
   };
 
-  // 1. Resolve cameras and system scores for the given options
   const columnData = useMemo(() => {
-    // Process up to 4 columns
     return compareOptions.slice(0, 4).map((opt) => {
       const dummySelection: ConfiguratorSelection = {
         ...selection,
@@ -199,50 +187,23 @@ export function SpecCompareTable({
         selected_camera_id: undefined,
       };
 
-      const quote = calculatePricing({
-        selection: dummySelection,
-        products,
-        addons: [],
-        settings,
-        cablingDone,
-      });
+      const quote = calculatePricing({ selection: dummySelection, products, addons: [], settings, cablingDone });
+      const cameraItem = quote.items.find((item) => products.some((p) => p.id === item.product_id && p.category === "camera"));
+      const cameraProduct = cameraItem ? products.find((p) => p.id === cameraItem.product_id) : undefined;
+      const scoreResult = cameraProduct ? calculateSystemScore(cameraProduct, { recordingDays: selection.recording_days }) : null;
 
-      const cameraItem = quote.items.find((item) =>
-        products.some((p) => p.id === item.product_id && p.category === "camera")
-      );
-      const cameraProduct = cameraItem
-        ? products.find((p) => p.id === cameraItem.product_id)
-        : undefined;
-
-      const scoreResult = cameraProduct
-        ? calculateSystemScore(cameraProduct, { recordingDays: selection.recording_days })
-        : null;
-
-      return {
-        opt,
-        cameraProduct,
-        scoreResult,
-      };
+      return { opt, cameraProduct, scoreResult };
     });
   }, [compareOptions, selection, products, settings, cablingDone]);
 
   const columnHeaders = columnData.map((col, idx) => {
-    if (idx === 0) return "Good";
-    if (idx === 1) return col.cameraProduct?.is_focus_product ? "Best Value ★" : "Better";
-    if (idx === 2) return "Best";
+    if (idx === 0) return "Standard";
+    if (idx === 1) return "Professional";
+    if (idx === 2) return "Elite";
     return "Custom";
   });
 
-  const getGridColsClass = (count: number) => {
-    switch(count) {
-      case 1: return "grid-cols-2";
-      case 2: return "grid-cols-3";
-      case 3: return "grid-cols-4";
-      case 4: return "grid-cols-5";
-      default: return "grid-cols-4";
-    }
-  };
-  const gridColsClass = getGridColsClass(columnData.length);
+  const gridColsClass = columnData.length === 1 ? "grid-cols-2" : columnData.length === 2 ? "grid-cols-3" : columnData.length === 3 ? "grid-cols-4" : "grid-cols-5";
 
   const isSameValue = (values: any[]) => {
     if (values.length === 0) return true;
@@ -250,64 +211,42 @@ export function SpecCompareTable({
     return values.every((v) => JSON.stringify(v) === first);
   };
 
-  const getWinnerLabel = (scores: number[], index: number, label: string) => {
-    const maxScore = Math.max(...scores);
-    const minScore = Math.min(...scores);
-    if (maxScore === minScore || isNaN(maxScore) || isNaN(minScore)) return null;
-
-    if (scores[index] === maxScore) {
-      const winnersCount = scores.filter((s) => s === maxScore).length;
-      return winnersCount === 1 ? `Best ${label}` : `Better ${label}`;
-    }
-    return null;
-  };
-
   return (
     <div className="w-full">
-      {/* Controls */}
       <div className="flex items-center justify-end mb-4">
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={showDiffOnly}
             onChange={(e) => setShowDiffOnly(e.target.checked)}
-            className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+            className="w-4 h-4 rounded border-[#d2d2d7] text-[#0071e3] focus:ring-[#0071e3]"
           />
-          <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-tight">
+          <span className="text-sm font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">
             Show Differences Only
           </span>
         </label>
       </div>
 
-      {/* Table Container */}
-      <div className="rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-x-auto shadow-sm">
+      <div className="rounded-3xl bg-white dark:bg-[#1d1d1f] border border-[#d2d2d7] dark:border-[#424245] overflow-x-auto shadow-sm">
         <div className="min-w-[600px]">
         {/* Table Header */}
-        <div className={`grid ${gridColsClass} border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50`}>
-          <div className="p-4 flex items-center font-black text-zinc-900 dark:text-white uppercase tracking-tight text-sm">
+        <div className={`grid ${gridColsClass} border-b border-[#d2d2d7] dark:border-[#424245] bg-[#fbfbfd] dark:bg-[#1d1d1f]`}>
+          <div className="p-5 flex items-center font-medium text-[#86868b] text-sm uppercase tracking-wider">
             Features
           </div>
           {columnData.map((col, idx) => (
-            <div
-              key={idx}
-              className="p-4 border-l border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-between text-center"
-            >
-              <h3 className="font-black text-lg text-zinc-900 dark:text-white uppercase tracking-tight">
-                {columnHeaders[idx] || `Option ${idx + 1}`}
+            <div key={idx} className="p-5 border-l border-[#d2d2d7] dark:border-[#424245] flex flex-col items-center justify-between text-center">
+              <h3 className="font-semibold text-lg text-[#1d1d1f] dark:text-[#f5f5f7]">
+                {columnHeaders[idx]}
               </h3>
               {col.scoreResult && (
                 <div className="w-full mt-3">
-                  <div className="flex justify-between text-[10px] font-bold mb-1 uppercase tracking-wider">
-                    <span className="text-zinc-500">System Score</span>
-                    <span className="text-blue-600 dark:text-blue-400">
-                      {col.scoreResult.score}/100
-                    </span>
+                  <div className="flex justify-between text-[11px] font-semibold mb-1 uppercase tracking-wider">
+                    <span className="text-[#86868b]">Score</span>
+                    <span className="text-[#0071e3]">{col.scoreResult.score}/100</span>
                   </div>
-                  <div className="h-1.5 w-full bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-600 dark:bg-blue-500 rounded-full"
-                      style={{ width: `${col.scoreResult.score}%` }}
-                    />
+                  <div className="h-1.5 w-full bg-[#f5f5f7] dark:bg-[#2d2d2f] rounded-full overflow-hidden">
+                    <div className="h-full bg-[#0071e3] rounded-full" style={{ width: `${col.scoreResult.score}%` }} />
                   </div>
                 </div>
               )}
@@ -318,88 +257,44 @@ export function SpecCompareTable({
         {/* Table Body */}
         <div className="flex flex-col">
           {SECTIONS.map((section) => {
-            // Filter rows based on "Show Differences Only"
             const visibleRows = section.rows.filter((row) => {
               if (!showDiffOnly) return true;
-              const values = columnData.map((col) =>
-                col.cameraProduct ? row.getValue(col.cameraProduct) : undefined
-              );
+              const values = columnData.map((col) => col.cameraProduct ? row.getValue(col.cameraProduct) : undefined);
               return !isSameValue(values);
             });
 
             if (visibleRows.length === 0) return null;
-
             const isCollapsed = collapsedSections[section.title];
 
             return (
               <div key={section.title} className="flex flex-col">
-                {/* Section Header */}
                 <button
                   onClick={() => toggleSection(section.title)}
-                  className="flex items-center justify-between p-3 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-800 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  className="flex items-center justify-between p-4 bg-[#fbfbfd] dark:bg-[#1d1d1f] border-b border-[#d2d2d7] dark:border-[#424245] transition-colors hover:bg-[#f5f5f7] dark:hover:bg-[#2d2d2f]"
                 >
-                  <span className="font-black text-sm text-zinc-900 dark:text-white uppercase tracking-tight">
+                  <span className="font-semibold text-[15px] text-[#1d1d1f] dark:text-[#f5f5f7]">
                     {section.title}
                   </span>
-                  {isCollapsed ? (
-                    <ChevronDown className="w-5 h-5 text-zinc-500" />
-                  ) : (
-                    <ChevronUp className="w-5 h-5 text-zinc-500" />
-                  )}
+                  {isCollapsed ? <ChevronDown className="w-5 h-5 text-[#86868b]" /> : <ChevronUp className="w-5 h-5 text-[#86868b]" />}
                 </button>
 
-                {/* Section Rows */}
                 {!isCollapsed && (
                   <div className="flex flex-col">
                     {visibleRows.map((row, rowIdx) => {
-                      const values = columnData.map((col) =>
-                        col.cameraProduct ? row.getValue(col.cameraProduct) : undefined
-                      );
-                      const scores =
-                        row.getScore && values.every((v) => v !== undefined)
-                          ? values.map((v) => row.getScore!(v))
-                          : [];
-
-                      const maxScore = scores.length > 0 ? Math.max(...scores) : -Infinity;
-                      const minScore = scores.length > 0 ? Math.min(...scores) : Infinity;
-                      const hasWinner = maxScore > minScore && maxScore !== -Infinity;
-
+                      const values = columnData.map((col) => col.cameraProduct ? row.getValue(col.cameraProduct) : undefined);
+                      
                       return (
-                        <div
-                          key={row.key}
-                          className={`grid ${gridColsClass} border-b border-zinc-200 dark:border-zinc-800 transition-colors ${
-                            rowIdx % 2 === 0
-                              ? "bg-white dark:bg-zinc-900"
-                              : "bg-zinc-50/50 dark:bg-zinc-800/20"
-                          } hover:bg-zinc-50 dark:hover:bg-zinc-800`}
-                        >
-                          <div className="p-3 flex items-center text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-tight">
+                        <div key={row.key} className={`grid ${gridColsClass} border-b border-[#d2d2d7] dark:border-[#424245] last:border-0 transition-colors bg-white dark:bg-[#1d1d1f] hover:bg-[#fbfbfd] dark:hover:bg-[#2d2d2f]`}>
+                          <div className="p-4 flex items-center text-[13px] font-medium text-[#86868b]">
                             {row.label}
                           </div>
                           {columnData.map((col, colIdx) => {
                             const val = values[colIdx];
-                            const isWinner = hasWinner && scores[colIdx] === maxScore;
-                            const winnerLabel = hasWinner
-                              ? getWinnerLabel(scores, colIdx, row.label)
-                              : null;
-
                             return (
-                              <div
-                                key={colIdx}
-                                className={`p-3 border-l border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center text-center ${
-                                  isWinner
-                                    ? "bg-green-50/50 dark:bg-green-900/10"
-                                    : ""
-                                }`}
-                              >
-                                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                              <div key={colIdx} className="p-4 border-l border-[#d2d2d7] dark:border-[#424245] flex flex-col items-center justify-center text-center">
+                                <span className="text-[14px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">
                                   {row.formatValue ? row.formatValue(val) : String(val ?? "-")}
                                 </span>
-                                {isWinner && winnerLabel && (
-                                  <span className="mt-1 text-[10px] font-black text-green-600 dark:text-green-400 uppercase tracking-wider bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded-full">
-                                    {winnerLabel}
-                                  </span>
-                                )}
                               </div>
                             );
                           })}
