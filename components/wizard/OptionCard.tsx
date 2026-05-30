@@ -85,7 +85,7 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
           </span>
         )}
         {isMulti && !isSelected && !isDisabled && (
-          <span className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">
+          <span className="block text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mt-1">
             Tap to select
           </span>
         )}
