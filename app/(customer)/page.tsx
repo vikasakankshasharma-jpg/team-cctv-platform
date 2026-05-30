@@ -113,11 +113,11 @@ export default function LandingPage() {
         </div>
 
         <div className="max-w-7xl mx-auto flex flex-col items-center lg:items-start text-center lg:text-left relative z-10">
-          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-slate-900 dark:bg-blue-950 border border-blue-500/20 text-blue-200 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-[0_0_20px_rgba(59,130,246,0.15)] backdrop-blur-md">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-blue-500/20 text-slate-800 dark:text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_0_20px_rgba(59,130,246,0.15)] backdrop-blur-md">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)] dark:drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
             <span>Enterprise Smart City Security</span>
-            <div className="w-1 h-1 rounded-full bg-blue-500/50 hidden sm:block" />
-            <span className="text-emerald-400 hidden sm:inline">100% Free Quotes</span>
+            <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-blue-500/50 hidden sm:block" />
+            <span className="text-emerald-600 dark:text-emerald-400 hidden sm:inline">100% Free Quotes</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.05] transition-colors">

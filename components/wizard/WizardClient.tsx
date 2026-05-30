@@ -116,8 +116,8 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
              <ShieldCheck className="w-6 h-6 text-blue-600" />
           </div>
         </div>
-        <h2 className="text-2xl font-black text-zinc-900 tracking-tighter mb-2">Preparing your plan...</h2>
-        <p className="text-zinc-400 font-bold uppercase tracking-widest text-[10px]">Just a few more seconds</p>
+        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">Preparing your plan...</h2>
+        <p className="text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest text-[10px]">Just a few more seconds</p>
       </div>
     );
   }
@@ -467,8 +467,8 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                     </div>
                   )}
                   
-                  <p className="text-xs font-bold text-zinc-400 mt-4 ml-2">
-                    For <span className="font-black text-zinc-700">more than 16 cameras</span>, our team will reach out with a custom corporate quote.
+                  <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mt-4 ml-2">
+                    For <span className="font-black text-zinc-700 dark:text-zinc-300">more than 16 cameras</span>, our team will reach out with a custom corporate quote.
                   </p>
                 </div>
               );
@@ -506,11 +506,11 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
                 {/* Hint ABOVE options — visible on mobile before scrolling */}
                 {isMulti && (
-                  <p className="text-sm font-bold text-zinc-400 mb-5 flex items-center gap-2">
+                  <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 mb-5 flex items-center gap-2">
                     <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    You can pick <span className="text-zinc-800 font-black">more than one</span> option. Click Continue when done.
+                    You can pick <span className="text-zinc-800 dark:text-zinc-200 font-black">more than one</span> option. Click Continue when done.
                   </p>
                 )}
 
