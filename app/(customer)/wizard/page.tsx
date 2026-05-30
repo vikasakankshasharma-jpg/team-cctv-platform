@@ -20,6 +20,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Get Free CCTV Quote | CCTVQuotation by TEAM",
     description: "Get your free CCTV quote in 2 minutes. All India.",
+    images: ["https://cctvquotation.com/og-wizard.png"],
   },
 };
 
