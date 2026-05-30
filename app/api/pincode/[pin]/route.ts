@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import https from "https";
+import { adminDb, serverTimestamp, increment } from "@/lib/firebase-admin";
 
 export const dynamic = 'force-dynamic';
 
@@ -73,6 +74,27 @@ export async function GET(
         const rawPlaceName = zipData.places[0]["place name"];
         cityName = rawPlaceName;
         citySlug = rawPlaceName.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+      }
+
+      try {
+        const batch = adminDb.batch();
+        const impressionRef = adminDb.collection("city_impressions").doc(citySlug);
+        batch.set(impressionRef, {
+          city: cityName,
+          state: zipData.places[0].state,
+          total_lookups: increment(1),
+          last_lookup: serverTimestamp(),
+        }, { merge: true });
+
+        const serviceAreaRef = adminDb.collection("service_areas").doc(citySlug);
+        batch.set(serviceAreaRef, {
+          priority_score: increment(0.2),
+          updated_at: serverTimestamp()
+        }, { merge: true });
+        
+        await batch.commit();
+      } catch (logErr) {
+        console.error("Failed to log city impression:", logErr);
       }
 
       return NextResponse.json(

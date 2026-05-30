@@ -1,0 +1,428 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;font-size:13.5px;color:#1C1C28;background:#FAFAF7}
+.w{padding:.5rem 0 2rem}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px}
+.tab{padding:7px 13px;border-radius:8px;font-size:12.5px;border:0.5px solid #D8D8D0;background:transparent;color:#6B7380;cursor:pointer;transition:all .15s;font-family:inherit}
+.tab.active{background:#0F1F3D;border-color:#0F1F3D;color:white;font-weight:500}
+.sec{display:none}.sec.active{display:block}
+.sh{font-size:13px;font-weight:600;color:#0F1F3D;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #E4E4DC}
+.slist{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.sitem{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:8px;border:0.5px solid #E4E4DC;background:white}
+.sitem.crit{border-left:3px solid #E24B4A;background:#FFF5F5}
+.sitem.warn{border-left:3px solid #EF9F27;background:#FFFBF0}
+.sitem.good{border-left:3px solid #639922;background:#F4FAE8}
+.sitem.info{border-left:3px solid #185FA5;background:#EFF6FF}
+.snum{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;flex-shrink:0;margin-top:1px}
+.sn-r{background:#FCEBEB;color:#801515}.sn-g{background:#EAF3DE;color:#2B5A0D}.sn-a{background:#FAEEDA;color:#6B3A00}.sn-b{background:#E6F1FB;color:#0B3B73}
+.st{font-size:13px;font-weight:500;margin-bottom:2px}
+.sn{font-size:11.5px;color:#6B7380;line-height:1.55}
+.code{font-size:10.5px;font-family:monospace;background:#F0F0EA;padding:2px 6px;border-radius:4px;color:#3D3D50;display:inline}
+.fix{background:#0F1F3D;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:10.5px;color:rgba(255,255,255,.85);line-height:1.7;margin-top:6px;overflow-x:auto}
+.fix .cmt{color:#C8922A}.fix .kw{color:#7EC8FF}.fix .str{color:#A8E6A0}.fix .bad{color:#FC8181}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.sg{background:white;border:0.5px solid #E4E4DC;border-radius:10px;padding:10px;text-align:center}
+.sg-n{font-size:26px;font-weight:700;line-height:1}
+.sg-l{font-size:10.5px;color:#6B7380;margin-top:3px}
+.table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:10px}
+.table th{background:#0F1F3D;color:white;padding:7px 10px;text-align:left;font-size:10.5px;font-weight:500}
+.table td{padding:7px 10px;border-bottom:0.5px solid #E4E4DC;vertical-align:top}
+.table tr:nth-child(even) td{background:#F9F9F6}
+.f{font-family:monospace;color:#185FA5;font-size:10.5px}
+.pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.p-r{background:#FCEBEB;color:#801515}.p-a{background:#FAEEDA;color:#6B3A00}.p-g{background:#EAF3DE;color:#2B5A0D}.p-b{background:#E6F1FB;color:#0B3B73}
+</style>
+
+<div class="w">
+<div class="tabs">
+  <button class="tab active" onclick="show('overview',this)">📊 Overview</button>
+  <button class="tab" onclick="show('branding',this)">🎨 Branding</button>
+  <button class="tab" onclick="show('seo',this)">🔍 SEO</button>
+  <button class="tab" onclick="show('content',this)">📝 Content</button>
+  <button class="tab" onclick="show('legal',this)">⚖️ Legal</button>
+  <button class="tab" onclick="show('arch',this)">🏗️ Architecture</button>
+  <button class="tab" onclick="show('priority',this)">🎯 Priority fixes</button>
+</div>
+
+<!-- OVERVIEW -->
+<div id="overview" class="sec active">
+  <div class="summary-grid">
+    <div class="sg"><div class="sg-n" style="color:#E24B4A">6</div><div class="sg-l">Critical issues</div></div>
+    <div class="sg"><div class="sg-n" style="color:#EF9F27">9</div><div class="sg-l">Medium issues</div></div>
+    <div class="sg"><div class="sg-n" style="color:#639922">8</div><div class="sg-l">Working correctly</div></div>
+    <div class="sg"><div class="sg-n" style="color:#185FA5">5</div><div class="sg-l">Pages audited</div></div>
+  </div>
+
+  <div class="sh">Pages scanned — confirmed live</div>
+  <table class="table">
+    <tr><th>Page</th><th>Title (server HTML)</th><th>Status</th></tr>
+    <tr><td class="f">/</td><td>CCTVQuotation | Get Free &amp; Instant CCTV Installation Price Online</td><td><span class="pill p-a">1 issue</span></td></tr>
+    <tr><td class="f">/jaipur</td><td>CCTV Installation Cost in Jaipur, Free Online Quote | CCTVQuotation by TEAM</td><td><span class="pill p-g">Clean ✓</span></td></tr>
+    <tr><td class="f">/wizard</td><td>Get Free CCTV Quote | CCTVQuotation by TEAM</td><td><span class="pill p-a">2 issues</span></td></tr>
+    <tr><td class="f">/privacy-policy</td><td>Privacy Policy | TEAM CCTV — cctvquotation.com</td><td><span class="pill p-r">4 issues</span></td></tr>
+    <tr><td class="f">/terms-of-service</td><td>Terms of Service | TEAM CCTV — cctvquotation.com</td><td><span class="pill p-r">4 issues</span></td></tr>
+  </table>
+
+  <div class="sh">What is working well ✅</div>
+  <div class="slist">
+    <div class="sitem good"><div class="snum sn-g">✓</div><div><div class="st">/jaipur page — fully correct</div><div class="sn">Title, canonical, og:site_name, price ₹18K-₹28K, wizard pre-fill with city=Jaipur, 12 localities, footer "Serving all of India" — all correct.</div></div></div>
+    <div class="sitem good"><div class="snum sn-g">✓</div><div><div class="st">FAQ answers in server HTML</div><div class="sn">All 4 FAQ answers are present in server-rendered HTML — Google can index them.</div></div></div>
+    <div class="sitem good"><div class="snum sn-g">✓</div><div><div class="st">Wizard loading (not broken)</div><div class="sn">"Preparing your plan... Just a few more seconds" — SSR fallback working correctly.</div></div></div>
+    <div class="sitem good"><div class="snum sn-g">✓</div><div><div class="st">Cities dropdown in navbar</div><div class="sn">Jaipur, Jodhpur, Kota, Ajmer links in homepage navbar — confirmed present.</div></div></div>
+    <div class="sitem good"><div class="snum sn-g">✓</div><div><div class="st">Privacy Policy — full content</div><div class="sn">12 complete sections, DPDP Act compliant, Grievance Officer details, data table — excellent.</div></div></div>
+    <div class="sitem good"><div class="snum sn-g">✓</div><div><div class="st">Terms of Service — full content</div><div class="sn">13 sections, 50% advance policy, 1-year warranty, ±10% variance disclosure, Cashfree payment mention — legally solid.</div></div></div>
+    <div class="sitem good"><div class="snum sn-g">✓</div><div><div class="st">CP Plus + Prama branding consistent on /jaipur</div><div class="sn">Brand names correct on city page and pricing section.</div></div></div>
+    <div class="sitem good"><div class="snum sn-g">✓</div><div><div class="st">robots index/follow on all pages</div><div class="sn">All 5 pages correctly set meta-robots: index, follow.</div></div></div>
+  </div>
+</div>
+
+<!-- BRANDING -->
+<div id="branding" class="sec">
+  <div class="sh">Critical branding inconsistency — privacy & terms pages</div>
+
+  <div class="slist">
+    <div class="sitem crit">
+      <div class="snum sn-r">1</div>
+      <div>
+        <div class="st">Privacy Policy navbar shows "TEAM CCTV" not "CCTVQuotation"</div>
+        <div class="sn">Server HTML: <span class="code">TEAM CCTVSmart Security Ecosystem</span> in navbar. Homepage shows <span class="code">CCTVQuotation by TEAM</span>. A customer who clicks Privacy Policy from the footer sees a completely different brand — creates trust doubts.</div>
+        <div class="fix"><span class="bad">CURRENT:</span> app/(customer)/privacy-policy/page.tsx — uses old layout<br/><span class="str">FIX:</span> privacy-policy and terms-of-service must use the <br/>same <span class="kw">app/(customer)/layout.tsx</span> as homepage.<br/>Check if they have their own layout.tsx that overrides it.</div>
+      </div>
+    </div>
+
+    <div class="sitem crit">
+      <div class="snum sn-r">2</div>
+      <div>
+        <div class="st">Footer on legal pages: "TEAM SECURE SYSTEMS PVT LTD" + old WhatsApp</div>
+        <div class="sn">Privacy & Terms pages show: <span class="code">© 2026 TEAM SECURE SYSTEMS PVT LTD.</span> and WhatsApp: <span class="code">Hi TEAM CCTV!</span>. Homepage shows <span class="code">© 2026 CCTVQuotation — A TEAM Platform</span> and <span class="code">Hi CCTVQuotation Team!</span> — completely different footer.</div>
+        <div class="fix"><span class="bad">ROOT CAUSE:</span> privacy-policy + terms-of-service use a <span class="kw">different layout</span><br/>than the rest of the customer pages. They have their own<br/><span class="kw">app/(customer)/privacy-policy/layout.tsx</span> that imports old components.<br/><span class="str">FIX:</span> Delete their individual layout files — let them inherit<br/>the parent <span class="kw">app/(customer)/layout.tsx</span> automatically.</div>
+      </div>
+    </div>
+
+    <div class="sitem crit">
+      <div class="snum sn-r">3</div>
+      <div>
+        <div class="st">og:site_name on legal pages: "TEAM Security Ecosystem"</div>
+        <div class="sn">Both privacy & terms pages: <span class="code">og:site_name: TEAM Security Ecosystem</span>. Homepage: <span class="code">og:site_name: CCTVQuotation</span>. When these pages are shared on WhatsApp or Facebook, they'll show wrong brand name.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">4</div>
+      <div>
+        <div class="st">Homepage footer: still "Active Operations: Jaipur · Expanding Next"</div>
+        <div class="sn">Server HTML confirms: <span class="code">Active Operations: Jaipur · Expanding Next: Jodhpur Kota Ajmer</span>. Developer edited SiteFooter.tsx to say "🇮🇳 Serving all of India" but /jaipur page shows updated footer. Homepage hasn't received this update. Deploy mismatch between pages.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">5</div>
+      <div>
+        <div class="st">meta-keywords still has "TEAM CCTV" on all pages</div>
+        <div class="sn">Every page has <span class="code">meta-keywords: ...TEAM CCTV</span>. While Google largely ignores keywords meta tag, consistency matters. Should be <span class="code">CCTVQuotation, TEAM CCTV</span> (both — for brand coverage).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEO -->
+<div id="seo" class="sec">
+  <div class="sh">SEO audit — page by page</div>
+
+  <div class="slist">
+    <div class="sitem crit">
+      <div class="snum sn-r">1</div>
+      <div>
+        <div class="st">twitter:description is hardcoded "Jaipur" on all pages</div>
+        <div class="sn">Every single page — homepage, wizard, jaipur, privacy, terms — has identical: <span class="code">twitter:description: Instant professional CCTV blueprints and installation cost for Jaipur property owners.</span> This is wrong for Jodhpur/Kota/Ajmer pages and for wizard page. Google uses twitter cards for previews — duplicate content signal.</div>
+        <div class="fix"><span class="str">FIX:</span> Each page must have its own twitter:description.<br/>wizard: "Get your free CCTV quote in 2 minutes. All India."<br/>privacy: "Privacy policy for CCTVQuotation platform."<br/>terms: "Terms of service — CCTVQuotation by TEAM."</div>
+      </div>
+    </div>
+
+    <div class="sitem crit">
+      <div class="snum sn-r">2</div>
+      <div>
+        <div class="st">twitter:title is wrong on all pages — shows old TEAM CCTV</div>
+        <div class="sn">All pages: <span class="code">twitter:title: CCTV Quotation Online | Free Instant Quote in Jaipur | TEAM CCTV</span>. This is the old brand. Should match each page's actual title with CCTVQuotation branding. This is set in root layout and never overridden.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">3</div>
+      <div>
+        <div class="st">Wizard page has no canonical tag</div>
+        <div class="sn">Server HTML for /wizard: no <span class="code">canonical</span> meta tag present. Without canonical, if wizard is accessed via /wizard?city=Jaipur or /wizard?city=Delhi — Google may index duplicate pages for the same wizard URL with different params.</div>
+        <div class="fix"><span class="str">FIX:</span> Add <span class="kw">alternates: {{ canonical: "https://cctvquotation.com/wizard" }}</span><br/>to wizard page.tsx metadata. This tells Google the base URL<br/>is canonical regardless of query params.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">4</div>
+      <div>
+        <div class="st">og:locale missing on homepage and wizard</div>
+        <div class="sn">Homepage and wizard page missing <span class="code">og:locale: en_IN</span>. /jaipur and legal pages have it. Inconsistent — Facebook/WhatsApp previews may not format currency correctly without locale.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">5</div>
+      <div>
+        <div class="st">og:image missing on homepage (only twitter:image present)</div>
+        <div class="sn">Homepage has <span class="code">twitter:image: .../og-image.png</span> but no <span class="code">og:image</span> tag. Facebook, WhatsApp, LinkedIn use og:image — not twitter:image. When homepage URL is shared, no preview image will appear.</div>
+        <div class="fix"><span class="str">ADD to homepage metadata:</span><br/>openGraph: {{ images: [{{ url: "/og-image.png", width: 1200, height: 630 }}] }}</div>
+      </div>
+    </div>
+
+    <div class="sitem good">
+      <div class="snum sn-g">✓</div>
+      <div>
+        <div class="st">JSON-LD FAQPage schema present on homepage</div>
+        <div class="sn">FAQ answers are in server HTML — Google can create rich results. LocalBusiness schema also present. Both correct.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div id="content" class="sec">
+  <div class="sh">Content issues — what customers see</div>
+
+  <div class="slist">
+    <div class="sitem warn">
+      <div class="snum sn-a">1</div>
+      <div>
+        <div class="st">Homepage says "answer 4 simple questions" — wizard has 7+ questions</div>
+        <div class="sn">Homepage hero: <span class="code">"No technical knowledge needed — answer 4 simple questions"</span>. But wizard actually has 7-8 questions. Customer expects 4, gets 7 — feels misled. Either change copy to "a few simple questions" or reduce wizard to 4 visible steps.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">2</div>
+      <div>
+        <div class="st">Terms says "exclusively Jaipur" — contradicts All India strategy</div>
+        <div class="sn">Terms of Service Section 2: <span class="code">"Our service is currently available exclusively for properties located in Jaipur, Rajasthan, India."</span> But you now give reference quotes for all of India. A Mumbai customer with a reference quote — your Terms say you don't serve them. Legal inconsistency.</div>
+        <div class="fix"><span class="str">UPDATE Terms Section 2 to:</span><br/>"Our active installation service currently operates in Jaipur,<br/>Rajasthan. Reference quotations are provided for all India<br/>locations. Installation in other cities is subject to availability<br/>and franchise partner deployment."</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">3</div>
+      <div>
+        <div class="st">Privacy Policy says "specifically for properties in Jaipur"</div>
+        <div class="sn">Section 1: <span class="code">"specifically for properties in Jaipur, Rajasthan"</span> — same problem as Terms. You're collecting data from all India now. DPDP Act requires accurate description of what service you actually provide.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">4</div>
+      <div>
+        <div class="st">"ISO 27001 Certified Planner" — is this actually certified?</div>
+        <div class="sn">Both homepage and city page show <span class="code">ISO 27001 Certified Planner</span>. ISO 27001 is an actual certification that requires audit by an accredited body. If TEAM CCTV doesn't have this certification, this is a false claim — legal risk under Consumer Protection Act 2019 and BIS rules. Verify before keeping.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">5</div>
+      <div>
+        <div class="st">Terms last updated "16 May 2025" — one year in the past</div>
+        <div class="sn">Both Privacy Policy and Terms show <span class="code">Last updated: 16 May 2025</span>. Today is May 2026 — these have been updated multiple times since then. Wrong date reduces legal credibility. Update to current date.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEGAL -->
+<div id="legal" class="sec">
+  <div class="sh">Legal issues — must fix before scaling</div>
+
+  <div class="slist">
+    <div class="sitem crit">
+      <div class="snum sn-r">1</div>
+      <div>
+        <div class="st">Terms mentions "Cashfree Payments" — is this actually integrated?</div>
+        <div class="sn">Terms Section 6: <span class="code">"payments are processed securely via Cashfree Payments"</span>. Privacy Policy Section 5 also mentions Cashfree. But no payment gateway is currently live on the site. Mentioning a payment processor you don't use is a misrepresentation. Either integrate Cashfree/Razorpay now OR remove this reference.</div>
+      </div>
+    </div>
+
+    <div class="sitem crit">
+      <div class="snum sn-r">2</div>
+      <div>
+        <div class="st">Terms says advance is "non-refundable" — contradicts consumer law</div>
+        <div class="sn">Section 6: <span class="code">"Advance payments are non-refundable if project is cancelled by customer after hardware procured"</span>. Under Consumer Protection Act 2019, blanket non-refund clauses are challengeable. You need a clear refund policy with conditions — not a blanket ban. Add: "Refund of advance minus actual procurement costs" as the policy.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">3</div>
+      <div>
+        <div class="st">Privacy Policy mentions "hello@cctvquotation.com" — does this exist?</div>
+        <div class="sn">Grievance Officer contact shows <span class="code">hello@cctvquotation.com</span>. Under DPDP Act 2023, this email must be actively monitored and respond within 30 days. If this inbox doesn't exist or bounces — non-compliance with DPDP.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">4</div>
+      <div>
+        <div class="st">Quotation validity: Terms says 15 days, quote page says 7 days</div>
+        <div class="sn">Terms Section 3: <span class="code">validity is 15 days</span>. But previously we implemented 7-day auto-expiry on quotes. Contradiction between Terms and system behavior. Decide one — 7 days recommended (creates urgency). Update Terms accordingly.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div id="arch" class="sec">
+  <div class="sh">Architecture issues — from code patterns</div>
+
+  <div class="slist">
+    <div class="sitem crit">
+      <div class="snum sn-r">1</div>
+      <div>
+        <div class="st">Legal pages have separate layout — causing branding split</div>
+        <div class="sn">Privacy Policy and Terms render with old "TEAM CCTV" navbar and "TEAM SECURE SYSTEMS PVT LTD" footer. This proves they have their own layout file that overrides the parent layout. Every other page inherits app/(customer)/layout.tsx correctly.</div>
+        <div class="fix"><span class="str">CHECK and DELETE if exists:</span><br/>app/(customer)/privacy-policy/layout.tsx<br/>app/(customer)/terms-of-service/layout.tsx<br/><span class="cmt">// Deleting these forces them to inherit parent layout</span><br/><span class="cmt">// automatically — navbar + footer will match homepage.</span></div>
+      </div>
+    </div>
+
+    <div class="sitem crit">
+      <div class="snum sn-r">2</div>
+      <div>
+        <div class="st">Homepage footer not deploying — two-footer problem</div>
+        <div class="sn">/jaipur shows "🇮🇳 Serving all of India" footer. Homepage shows "Active Operations: Jaipur". Both use SiteFooter.tsx — but server HTML is different. This means homepage and /jaipur are using different builds or different layout files. Need to check if homepage has its own layout.tsx overriding the parent.</div>
+        <div class="fix"><span class="str">CHECK:</span> app/(customer)/layout.tsx vs any page-level layout<br/>Run: <span class="kw">Get-ChildItem "app/(customer)" -Filter "layout.tsx" -Recurse</span><br/>Multiple layout.tsx files = multiple footers</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">3</div>
+      <div>
+        <div class="st">Wizard navbar is missing Cities dropdown</div>
+        <div class="sn">Homepage navbar: Cities → Jaipur/Jodhpur/Kota/Ajmer. Wizard page navbar: no Cities dropdown. Wizard has its own simpler navbar (just logo + support). Customer in wizard has no way to navigate back to city pages.</div>
+      </div>
+    </div>
+
+    <div class="sitem warn">
+      <div class="snum sn-a">4</div>
+      <div>
+        <div class="st">india-locations.json deployment not confirmed</div>
+        <div class="sn">Developer downloaded India locations JSON and put it in public/data/. Not verifiable from server HTML — it's a static asset. Need to confirm file size and availability: <span class="code">https://cctvquotation.com/data/india-locations.json</span> should return the JSON file.</div>
+      </div>
+    </div>
+
+    <div class="sitem info">
+      <div class="snum sn-b">i</div>
+      <div>
+        <div class="st">city_impressions tracking not yet implemented</div>
+        <div class="sn">Pincode API endpoint exists but city_impressions Firestore write not added yet. Every pincode lookup is lost data. Admin expansion dashboard priority score cannot be calculated without Level 1 impression data.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRIORITY -->
+<div id="priority" class="sec">
+  <div class="sh">Priority fix list — in exact order</div>
+
+  <table class="table">
+    <tr><th>#</th><th>Fix</th><th>File</th><th>Time</th><th>Priority</th></tr>
+    <tr>
+      <td>1</td>
+      <td>Delete separate layout.tsx on privacy-policy + terms pages</td>
+      <td class="f">app/(customer)/privacy-policy/layout.tsx<br/>app/(customer)/terms-of-service/layout.tsx</td>
+      <td>5 min</td>
+      <td><span class="pill p-r">CRITICAL</span></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Fix twitter:title + twitter:description — unique per page</td>
+      <td class="f">app/layout.tsx + each page.tsx</td>
+      <td>30 min</td>
+      <td><span class="pill p-r">CRITICAL</span></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Add og:image to homepage</td>
+      <td class="f">app/(customer)/page.tsx</td>
+      <td>5 min</td>
+      <td><span class="pill p-r">CRITICAL</span></td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Update Terms + Privacy: "Jaipur only" → "All India reference quotes"</td>
+      <td class="f">Both legal page.tsx files</td>
+      <td>20 min</td>
+      <td><span class="pill p-r">CRITICAL</span></td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>Update "Last Updated" date on Terms + Privacy to May 2026</td>
+      <td class="f">Both legal page.tsx files</td>
+      <td>2 min</td>
+      <td><span class="pill p-r">CRITICAL</span></td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>Remove Cashfree from Terms+Privacy until actually integrated</td>
+      <td class="f">Terms Section 6, Privacy Section 5</td>
+      <td>10 min</td>
+      <td><span class="pill p-r">CRITICAL</span></td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>Homepage copy: "4 simple questions" → "a few simple questions"</td>
+      <td class="f">app/(customer)/page.tsx</td>
+      <td>2 min</td>
+      <td><span class="pill p-a">MEDIUM</span></td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>Add canonical to wizard page</td>
+      <td class="f">app/(customer)/wizard/page.tsx</td>
+      <td>5 min</td>
+      <td><span class="pill p-a">MEDIUM</span></td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>Add og:locale to homepage + wizard</td>
+      <td class="f">app/(customer)/page.tsx + wizard/page.tsx</td>
+      <td>5 min</td>
+      <td><span class="pill p-a">MEDIUM</span></td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>Verify ISO 27001 claim — remove if not certified</td>
+      <td class="f">app/(customer)/page.tsx + jaipur layout</td>
+      <td>2 min</td>
+      <td><span class="pill p-a">MEDIUM</span></td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td>Add quotation validity consistency: 7 days in both system + Terms</td>
+      <td class="f">Terms Section 3</td>
+      <td>5 min</td>
+      <td><span class="pill p-a">MEDIUM</span></td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td>Add city_impressions tracking to pincode API</td>
+      <td class="f">app/api/pincode/[pin]/route.ts</td>
+      <td>15 min</td>
+      <td><span class="pill p-b">FUTURE</span></td>
+    </tr>
+  </table>
+
+  <div style="padding:10px 14px;background:#EAF3DE;border-radius:8px;border:0.5px solid #C0DD97;font-size:12px;color:#2B5A0D;margin-top:4px">
+    <strong>Ek commit mein sab fix ho sakta hai.</strong> Fixes 1-6 sab legal + branding fixes hain. Developer ko ek saath commit karo: "fix: legal pages layout, twitter meta, og:image, legal content updates" → vercel --prod --force --yes
+  </div>
+</div>
+
+</div>
+<script>
+function show(id,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
