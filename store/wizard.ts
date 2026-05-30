@@ -40,7 +40,7 @@ interface WizardStore {
   // Actions
   setSteps: (steps: WizardStep[]) => void;
   setProducts: (products: Product[]) => void;
-  setAnswer: (questionId: string, value: string | string[]) => void;
+  setAnswer: (questionId: string, value: any) => void;
   setPartialLeadId: (id: string | null) => void;
   goToStep: (index: number) => void;
   nextStep: () => void;

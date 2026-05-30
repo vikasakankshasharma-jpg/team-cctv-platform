@@ -35,8 +35,8 @@ export default async function AdminDashboard() {
     adminDb.collection("leads").where("status", "==", "won").count().get(),
     adminDb.collection("promoters").get(),
     adminDb.collection("leads").orderBy("created_at", "desc").limit(7).get(),
-    adminDb.collection("leads").where("assigned_installer_id", "==", null).count().get(),
-    adminDb.collection("leads").where("assigned_installer_id", "==", null).orderBy("created_at", "desc").limit(5).get(),
+    adminDb.collection("leads").where("is_escalated", "==", true).count().get(),
+    adminDb.collection("leads").where("is_escalated", "==", true).limit(5).get(),
   ]);
 
   const internalLeadsCount = internalCountRes.data().count;

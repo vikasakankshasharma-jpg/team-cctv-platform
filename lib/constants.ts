@@ -23,6 +23,9 @@ export const COLLECTIONS = {
   FRANCHISE_DEALERS: "franchise_dealers",
   FRANCHISE_PRICING_OVERRIDES: "franchise_pricing_overrides",
   DEALER_OTP_VERIFICATIONS: "dealer_otp_verifications",
+  INSTALLERS: "installers",
+  INSTALLER_OTP_VERIFICATIONS: "installer_otp_verifications",
+  LEDGER_TRANSACTIONS: "ledger_transactions",
 } as const;
 
 

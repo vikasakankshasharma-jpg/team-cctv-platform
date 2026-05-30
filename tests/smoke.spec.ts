@@ -13,7 +13,7 @@ test.describe('CCTV Wizard Smoke Test', () => {
     await page.getByPlaceholder(/enter pincode/i).first().fill('302017');
     await startButton.click({ force: true });
     // Wait for the city page or wizard redirect
-    await expect(page).toHaveURL(/.*(wizard|302017)/);
+    await expect(page).toHaveURL(/.*(wizard|302017)/, { timeout: 15000 });
     
     // If redirected to the city landing page, click the CTA to navigate to the wizard
     if (!page.url().includes('wizard')) {

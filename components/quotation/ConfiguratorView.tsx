@@ -10,8 +10,12 @@ import { CompareCards } from "./CompareCards";
 import { SpecCompareTable } from "./SpecCompareTable";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
 import { SmartContextBar } from "./SmartContextBar";
-import { SiteDetailsModal } from "./SiteDetailsModal";
-import { ShareDialog } from "./ShareDialog";
+import dynamic from "next/dynamic";
+import { Shield, ChevronDown, ChevronRight, CheckCircle2, Sparkles } from "lucide-react";
+const SiteDetailsModal = dynamic(() => import("./SiteDetailsModal").then(mod => mod.SiteDetailsModal), { ssr: false });
+const ShareDialog = dynamic(() => import("./ShareDialog").then(mod => mod.ShareDialog), { ssr: false });
+const CompetitorQuoteUploader = dynamic(() => import("@/components/shared/CompetitorQuoteUploader").then(mod => mod.CompetitorQuoteUploader), { ssr: false });
+const PriceMatchPopup = dynamic(() => import("./PriceMatchPopup").then(mod => mod.PriceMatchPopup), { ssr: false });
 import { useRealtimeInventory } from "@/hooks/useRealtimeInventory";
 
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, CardLayoutRule } from "@/types";
@@ -40,6 +44,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
   const [savedPdfUrl, setSavedPdfUrl] = useState<string | null>(null);
+
+  // Price Match
+  const [showPriceMatchUploader, setShowPriceMatchUploader] = useState(false);
+  const [priceMatchSubmitted, setPriceMatchSubmitted] = useState(false);
+  const [isPriceMatchSubmitting, setIsPriceMatchSubmitting] = useState(false);
 
   const { 
     setPricingCache, 
@@ -98,9 +107,13 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     if (mappedBrand === "recommend" || mappedBrand === "unsure") mappedBrand = "all";
     if (mappedBrand === "cpplus") mappedBrand = "CP-Plus";
 
+    const isMixedMode = lead.wizard_answers["use_mixed_mode"] === true;
+    const mixedReqs = isMixedMode ? (lead.wizard_answers["mixed_camera_requirements"] as any[]) : undefined;
+
     updateSelection({
       technology: lead.technology_choice || "HD",
       camera_count: initialCamCount,
+      mixed_camera_requirements: mixedReqs,
       recording_days: initialDays,
       ceiling_height: (lead.wizard_answers["q_height"] as any) || "standard",
       wants_amc: wantsAmc,
@@ -268,7 +281,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         lead_id: currentLead.id,
         selection: {
           lead_id: currentLead.id, plan_type: selection.plan_type || "recommended", technology: cT as "HD" | "IP",
-          camera_count: selection.camera_count, picture_quality: selection.picture_quality || "good", recording_days: selection.recording_days,
+          camera_count: selection.camera_count, mixed_camera_requirements: selection.mixed_camera_requirements,
+          picture_quality: selection.picture_quality || "good", recording_days: selection.recording_days,
           selected_addons: selection.selected_addons || [], selected_camera_option: typeof cO === "number" ? cO : undefined,
           selected_camera_id: typeof cO === "string" ? cO : undefined, expected_total_payable: activePricing.total_payable,
           brand_preference: selection.brand_preference, resolution_preference: selection.resolution_preference,
@@ -358,6 +372,63 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             cablingDone={cablingDone}
           />
         </div>
+
+        {/* PRICE MATCH — Subtle inline link (main UX is via the smart popup) */}
+        <div className="mb-16">
+          {priceMatchSubmitted ? (
+            <div className="max-w-xl mx-auto rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 sm:p-12 text-center shadow-sm animate-in fade-in zoom-in-95 duration-500">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h4 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">Quote Received</h4>
+              <p className="text-[15px] text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
+                We&apos;ve received your quote. Our team will review it and get back to you within 24 hours with a guaranteed best price.
+              </p>
+            </div>
+          ) : showPriceMatchUploader ? (
+            <div className="max-w-xl mx-auto animate-in slide-in-from-top-4 fade-in duration-400">
+              <CompetitorQuoteUploader
+                leadId={lead.id!}
+                customerName={lead.customer_name}
+                onSubmit={async (data) => {
+                  setIsPriceMatchSubmitting(true);
+                  try {
+                    const res = await fetch(`/api/leads/${lead.id}/price-match`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(data),
+                    });
+                    if (!res.ok) throw new Error("Failed to submit price match");
+                    setPriceMatchSubmitted(true);
+                    setShowPriceMatchUploader(false);
+                  } catch (err) {
+                    console.error(err);
+                    throw err;
+                  } finally {
+                    setIsPriceMatchSubmitting(false);
+                  }
+                }}
+                onCancel={() => setShowPriceMatchUploader(false)}
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-3 py-4">
+              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center">
+                <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              </div>
+              <span className="text-[13px] text-zinc-500 dark:text-zinc-400">
+                Already have a quote from another company?
+              </span>
+              <button
+                onClick={() => setShowPriceMatchUploader(true)}
+                className="group inline-flex items-center gap-1 text-[13px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+              >
+                Upload it for a guaranteed best price
+                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="h-px w-full max-w-4xl mx-auto bg-[#d2d2d7] dark:bg-[#424245]" />
@@ -380,6 +451,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         isCustomized={isCustomized}
         onAction={triggerActionWithAddress} 
         isSaving={isSaving} 
+        lead={lead}
+        quote={activePricing}
+        settings={pricingCache.settings}
       />
 
       {showAddressModal && (
@@ -404,6 +478,15 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           onClose={() => setShowShareDialog(false)}
         />
       )}
+
+      {/* SMART DELAYED POPUP — appears after 45 seconds of browsing */}
+      <PriceMatchPopup
+        leadId={lead.id!}
+        customerName={lead.customer_name}
+        delayMs={45000}
+        alreadySubmitted={priceMatchSubmitted}
+        onSubmitted={() => setPriceMatchSubmitted(true)}
+      />
     </div>
   );
 }

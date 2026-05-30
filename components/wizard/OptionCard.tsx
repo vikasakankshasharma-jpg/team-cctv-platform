@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface OptionCardProps {
   label: string;
@@ -13,7 +14,9 @@ interface OptionCardProps {
 
 export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCount, isDisabled = false }: OptionCardProps) {
   return (
-    <button
+    <motion.button
+      whileHover={isDisabled ? {} : { scale: 1.02, y: -2 }}
+      whileTap={isDisabled ? {} : { scale: 0.98 }}
       onClick={isDisabled ? undefined : onClick}
       disabled={isDisabled}
       role={isMulti ? "checkbox" : "radio"}
@@ -23,45 +26,45 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
       className={[
         // base
         "relative w-full flex items-center gap-5 px-6 py-5 rounded-3xl text-left",
-        "select-none",
+        "select-none backdrop-blur-sm",
         isDisabled ? "cursor-not-allowed opacity-50 grayscale" : "cursor-pointer",
         // transition
-        "transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1)",
+        "transition-colors duration-300",
         // selected vs idle vs disabled
         isSelected && !isDisabled
           ? [
-              "bg-white",
+              "bg-white/90 dark:bg-zinc-800/90",
               "border-[2.5px] border-blue-600",
-              "shadow-[0_10px_40px_-10px_rgba(37,99,235,0.2)]",
-              "active:scale-[0.98]",
+              "shadow-[0_10px_40px_-10px_rgba(37,99,235,0.25)]",
             ].join(" ")
           : isDisabled 
-            ? "bg-zinc-50 border-[2.5px] border-zinc-200"
+            ? "bg-zinc-50/50 dark:bg-zinc-900/50 border-[2.5px] border-zinc-200/50 dark:border-zinc-800/50"
             : [
-                "bg-white",
-                "border-[2.5px] border-zinc-100",
-                "hover:border-zinc-200 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]",
-                "hover:-translate-y-1",
-                "active:scale-[0.98]",
+                "bg-white/70 dark:bg-zinc-900/70",
+                "border-[2.5px] border-zinc-100 dark:border-zinc-800",
+                "hover:border-zinc-200 dark:hover:border-zinc-700 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]",
               ].join(" "),
       ].join(" ")}
     >
       {/* Icon bubble */}
-      <div
+      <motion.div
+        animate={isSelected && !isDisabled ? { scale: 1.1 } : { scale: 1 }}
         className={[
           "w-9 h-9 rounded-xl shrink-0 flex items-center justify-center",
-          "transition-all duration-[250ms] ease-out",
+          "transition-colors duration-300",
           isSelected && !isDisabled
-            ? "bg-blue-600 text-white shadow-md shadow-blue-600/30 scale-105"
+            ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
             : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500",
         ].join(" ")}
       >
         {isSelected ? (
-          <Check className="w-4 h-4 stroke-[3px]" />
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300 }}>
+            <Check className="w-4 h-4 stroke-[3px]" />
+          </motion.div>
         ) : (
           <span className="w-2 h-2 rounded-full bg-current opacity-30" />
         )}
-      </div>
+      </motion.div>
 
       {/* Label */}
       <div className="flex-1 min-w-0">
@@ -70,8 +73,8 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
             "block text-[16px] leading-snug tracking-tight",
             "transition-colors duration-300",
             isSelected && !isDisabled
-              ? "font-black text-blue-900"
-              : "font-bold text-zinc-900",
+              ? "font-black text-blue-900 dark:text-white"
+              : "font-bold text-zinc-900 dark:text-zinc-100",
           ].join(" ")}
         >
           {label}
@@ -98,10 +101,10 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
         <div className={[
           "shrink-0 ml-2 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all duration-300 shadow-sm",
           prospectiveCount === 0 
-            ? "bg-zinc-100 text-zinc-500 border border-zinc-200" 
+            ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700" 
             : isSelected 
               ? "bg-blue-600 text-white shadow-blue-600/30 border border-blue-600"
-              : "bg-white text-blue-600 border border-blue-200"
+              : "bg-white dark:bg-zinc-900 text-blue-600 border border-blue-200 dark:border-blue-900/50"
         ].join(" ")}>
           {prospectiveCount} {prospectiveCount === 1 ? 'Option' : 'Options'}
         </div>
@@ -109,9 +112,9 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
 
       {/* Selection ring glow (non-layout) */}
       {isSelected && !isDisabled && (
-        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-blue-500/5 dark:bg-blue-500/10 -z-10" />
+        <div className="pointer-events-none absolute inset-0 rounded-[22px] bg-blue-500/5 dark:bg-blue-500/10 -z-10" />
       )}
-    </button>
+    </motion.button>
   );
 }
 

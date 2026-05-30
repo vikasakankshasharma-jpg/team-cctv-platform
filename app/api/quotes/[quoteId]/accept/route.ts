@@ -10,7 +10,8 @@ export async function POST(
   try {
     const { quoteId } = await params;
     const body = await request.json();
-    const { leadId, paymentMethod = "emi" } = body;
+    // paymentType: "advance" | "full", paymentMethod: "all" | "emi"
+    const { leadId, paymentType = "full", paymentMethod = "all" } = body;
 
     if (!leadId) {
       return NextResponse.json({ error: "Missing leadId" }, { status: 400 });
@@ -28,8 +29,14 @@ export async function POST(
     const quote = quoteDoc.data()!;
 
     // 2. Create Cashfree Order
+    let amount = quote.total_payable || 0;
+    
+    if (paymentType === "advance") {
+      const advancePercent = quote.advance_percent || 30;
+      amount = Math.round(amount * (advancePercent / 100));
+    }
+
     const orderId = `order_${quoteId}_${Date.now()}`;
-    const amount = quote.total_payable || 0;
 
     const cfOrder = await createCashfreeOrder({
       order_id: orderId,
@@ -45,8 +52,12 @@ export async function POST(
         return_url: `${request.nextUrl.origin}/quote/${leadId}/review/${quoteId}?status=payment_success`,
         notify_url: `${request.nextUrl.origin}/api/webhooks/cashfree`,
         payment_methods: paymentMethod === "emi" ? "emi" : undefined
+      },
+      order_tags: {
+        lead_id: leadId,
+        quote_id: quoteId
       }
-    });
+    } as any);
 
     // 3. Log the attempt in Lead history or a new collection
     await leadRef.update({

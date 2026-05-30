@@ -490,6 +490,66 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
       </div>
 
+      {/* Section: PDF Generation */}
+      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all mt-6">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+            <Settings2 className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold text-foreground tracking-tight">PDF Quotation Generator</h2>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Customize Downloadable Quotations</p>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8 items-start">
+          <div className="space-y-4 p-5 rounded-xl bg-secondary/30 border border-border">
+            <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">PDF Header Logo</h3>
+            <div className="space-y-2">
+              <input 
+                type="text" 
+                name="pdf_logo_url"
+                value={formData.pdf_logo_url || ""}
+                onChange={handleChange}
+                placeholder="Leave blank to use main brand logo"
+                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-medium shadow-sm" 
+              />
+              <p className="text-[10px] font-medium text-muted-foreground italic">Use a clean, high-resolution logo for PDFs</p>
+            </div>
+          </div>
+
+          <div className="space-y-4 p-5 rounded-xl bg-secondary/30 border border-border">
+            <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Bank Details</h3>
+            <div className="space-y-2">
+              <textarea 
+                name="bank_details"
+                value={formData.bank_details || ""}
+                onChange={handleChange}
+                placeholder="A/c Name: TEAM CCTV\nA/c No: 5020...\nIFSC: HDFC...\nUPI ID: teamcctv@okhdfc"
+                rows={5}
+                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none font-mono text-xs leading-relaxed whitespace-pre-wrap transition-all shadow-sm"
+              />
+              <p className="text-[10px] font-medium text-muted-foreground italic">Printed on TAX INVOICE for payment collection.</p>
+            </div>
+          </div>
+          
+          <div className="space-y-4 p-5 rounded-xl bg-secondary/30 border border-border">
+            <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Terms & Conditions</h3>
+            <div className="space-y-2">
+              <textarea 
+                name="pdf_terms"
+                value={formData.pdf_terms || ""}
+                onChange={handleChange}
+                placeholder="1. Prices valid for 7 days...\n2. 1-Year AMC included..."
+                rows={5}
+                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none font-mono text-xs leading-relaxed whitespace-pre-wrap transition-all shadow-sm"
+              />
+              <p className="text-[10px] font-medium text-muted-foreground italic">This text prints at the footer of every generated PDF</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Section: Communications */}
       <div className="bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all">
         <div className="flex items-center gap-3 mb-8">

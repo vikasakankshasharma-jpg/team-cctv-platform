@@ -1,4 +1,4 @@
-﻿# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
 node_modules/
@@ -60,3 +60,10 @@ lint_output*.txt
 *.pdf
 .vercel
 .env*.local
+.agent/skills/cashfree-skills/
+
+# temp debug files
+debug-page-content.html
+debug-partner-auth.txt
+test-api.js
+

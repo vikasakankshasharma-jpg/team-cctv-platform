@@ -29,6 +29,9 @@ export default async function SalespersonDashboard() {
   // Simple monthly win data for mini trend (last 5 months)
   const monthlyWins: Record<string, number> = {};
 
+  let spId = "";
+  let spName = "";
+
   if (session.user) {
     const spSnap = await adminDb.collection("salespeople")
       .where("firebase_uid", "==", session.user.uid)
@@ -36,25 +39,40 @@ export default async function SalespersonDashboard() {
       .get();
 
     if (!spSnap.empty) {
-      const spId = spSnap.docs[0].id;
+      spId = spSnap.docs[0].id;
+      spName = spSnap.docs[0].data().name;
 
-      const leadsSnap = await adminDb.collection("leads")
+      const assignedLeadsPromise = adminDb.collection("leads")
         .where("assigned_to_salesperson_id", "==", spId)
         .orderBy("created_at", "desc")
         .get();
 
-      totalAssigned = leadsSnap.size;
+      const broadcastLeadsPromise = adminDb.collection("leads")
+        .where("broadcasted_to_salesperson_ids", "array-contains", spId)
+        .orderBy("created_at", "desc")
+        .get();
+
+      const [assignedSnap, broadcastSnap] = await Promise.all([assignedLeadsPromise, broadcastLeadsPromise]);
+
+      const mergedDocs = new Map();
+      assignedSnap.docs.forEach(d => mergedDocs.set(d.id, d));
+      broadcastSnap.docs.forEach(d => mergedDocs.set(d.id, d));
+
+      totalAssigned = assignedSnap.size; // Only count assigned ones for the KPI, or both? Let's count assigned.
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      const allLeads = leadsSnap.docs.map(doc => ({
+      const allLeads = Array.from(mergedDocs.values()).map(doc => ({
         id: doc.id,
         ...doc.data(),
         created_at: (doc.data().created_at as any)?.toDate?.() ?? new Date(doc.data().created_at),
       } as Lead));
+
+      // Sort merged array
+      allLeads.sort((a, b) => (b.created_at as Date).getTime() - (a.created_at as Date).getTime());
 
       allLeads.forEach(lead => {
         if (lead.status === "won") {
@@ -175,7 +193,7 @@ export default async function SalespersonDashboard() {
               View All →
             </Link>
           </div>
-          <ActivePipeline leads={activeLeads} />
+          <ActivePipeline leads={activeLeads} partnerId={spId} partnerName={spName} role="salesperson" />
         </div>
 
         {/* Right column: Trend + Quick Actions */}

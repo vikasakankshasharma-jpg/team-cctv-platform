@@ -113,7 +113,7 @@ export default function LandingPage() {
         </div>
 
         <div className="max-w-7xl mx-auto flex flex-col items-center lg:items-start text-center lg:text-left relative z-10">
-          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-blue-950/40 border border-blue-500/20 text-blue-200 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-[0_0_20px_rgba(59,130,246,0.15)] backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-slate-900 dark:bg-blue-950 border border-blue-500/20 text-blue-200 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-[0_0_20px_rgba(59,130,246,0.15)] backdrop-blur-md">
             <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
             <span>Enterprise Smart City Security</span>
             <div className="w-1 h-1 rounded-full bg-blue-500/50 hidden sm:block" />
@@ -235,7 +235,7 @@ export default function LandingPage() {
 
           {/* Partner Trust Strip */}
           <div className="mt-16 sm:mt-20 flex flex-col items-center gap-6 sm:gap-8 w-full">
-            <div className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Trusted Hardware Partners &amp; Verified Installs</div>
+            <div className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Trusted Hardware Partners &amp; Verified Installs</div>
             <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-12 md:gap-20 grayscale opacity-60 dark:opacity-40">
               <Image src="/partners/cpplus.png" alt="CP PLUS" width={120} height={40} className="h-6 md:h-8 w-auto object-contain" />
               <Image src="/partners/prama.png" alt="PRAMA" width={120} height={40} className="h-6 md:h-8 w-auto object-contain" />

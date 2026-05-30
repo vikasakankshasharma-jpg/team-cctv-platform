@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { Camera, Calendar, HardDrive, Edit2, Cpu, Monitor, Download, Calendar as CalendarIcon, Check, Loader2, PlusCircle, Settings2 } from "lucide-react";
+import { DownloadQuoteButton } from "@/components/pdf/DownloadQuoteButton";
+
+import type { Lead, PricingResult, AppSettings } from "@/types";
 
 interface SmartContextBarProps {
   totalPrice: number;
@@ -11,9 +14,12 @@ interface SmartContextBarProps {
   isCustomized?: boolean;
   onAction?: (action: "download" | "whatsapp" | "booking" | "accept") => void;
   isSaving?: boolean;
+  lead?: Lead | null;
+  quote?: PricingResult | null;
+  settings?: AppSettings | null;
 }
 
-export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierName, isCustomized, onAction, isSaving }: SmartContextBarProps) {
+export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierName, isCustomized, onAction, isSaving, lead, quote, settings }: SmartContextBarProps) {
   const { selection } = useConfiguratorStore();
 
   return (
@@ -43,9 +49,9 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
               <div className="w-px h-8 bg-[#d2d2d7] dark:bg-[#424245] shrink-0" />
               <div className="flex flex-col shrink-0">
                 <span className={`text-[10px] font-semibold uppercase tracking-wider ${customizationDiff > 0 ? 'text-[#0071e3]' : customizationDiff < 0 ? 'text-[#ff3b30]' : 'text-[#0071e3]'}`}>
-                  {customizationDiff !== 0 ? `Price Diff (vs ${baseTierName || 'Standard'})` : "Configuration"}
+                  {customizationDiff > 0 ? 'Upgrades' : customizationDiff < 0 ? 'Savings' : 'Modified'}
                 </span>
-                <div className={`flex items-center gap-1.5 mt-0.5 ${customizationDiff > 0 ? 'text-[#0071e3]' : customizationDiff < 0 ? 'text-[#ff3b30]' : 'text-[#0071e3]'}`}>
+                <div className="flex items-center gap-1.5 mt-0.5">
                   {customizationDiff !== 0 ? (
                     <>
                       <PlusCircle className={`w-3.5 h-3.5 ${customizationDiff < 0 ? 'rotate-45' : ''}`} />
@@ -69,21 +75,30 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
         <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
           <div className="flex flex-col sm:items-end shrink-0">
             <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">Total Estimation</span>
-            <div className="flex items-baseline gap-1 text-[#1d1d1f] dark:text-white">
+            <div className="flex items-center gap-1 text-[#1d1d1f] dark:text-white">
               <span className="text-sm font-medium">₹</span>
               <span className="text-2xl font-semibold tracking-tight">{totalPrice.toLocaleString("en-IN")}</span>
             </div>
           </div>
           
           <div className="flex gap-2 shrink-0">
-            <button 
-              onClick={() => onAction && onAction("download")}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#2d2d2f] hover:bg-[#f5f5f7] dark:hover:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white border border-[#d2d2d7] dark:border-[#424245] rounded-full text-xs font-medium transition-colors"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Save PDF
-            </button>
+            {lead && quote ? (
+              <DownloadQuoteButton 
+                lead={lead} 
+                quote={quote} 
+                settings={settings || null}
+                className="!px-4 !py-2.5 !text-xs !rounded-full !bg-white dark:!bg-[#2d2d2f] !text-[#1d1d1f] dark:!text-white border border-[#d2d2d7] dark:border-[#424245]"
+              />
+            ) : (
+              <button 
+                onClick={() => onAction && onAction("download")}
+                disabled={isSaving}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#2d2d2f] hover:bg-[#f5f5f7] dark:hover:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white border border-[#d2d2d7] dark:border-[#424245] rounded-full text-xs font-medium transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Save PDF
+              </button>
+            )}
             <button 
               onClick={() => onAction && onAction("booking")}
               disabled={isSaving}

@@ -25,6 +25,34 @@ const headers = {
   "Accept": "application/json",
 };
 
+const PAYOUT_BASE_URL = ENV === "production" ? "https://payout-api.cashfree.com/payout/v1" : "https://payout-gamma.cashfree.com/payout/v1";
+
+// For payouts, sometimes bearer token is needed, but we'll use X-Client-Id approach if supported, or standard v1 headers.
+const payoutHeaders = {
+  "X-Client-Id": CLIENT_ID,
+  "X-Client-Secret": CLIENT_SECRET,
+  "Content-Type": "application/json",
+};
+
+// 1. addCashfreeBeneficiary
+export async function addCashfreeBeneficiary(data: { beneId: string; name: string; email: string; phone: string; bankAccount: string; ifsc: string; address1: string; }) {
+  try {
+    const res = await axios.post(`${PAYOUT_BASE_URL}/addBeneficiary`, data, { headers: payoutHeaders });
+    if (res.data.subCode !== "200") throw new Error(res.data.message);
+    return res.data;
+  } catch (err: any) { throw new Error(err.response?.data?.message || err.message); }
+}
+
+// 2. requestCashfreeTransfer
+export async function requestCashfreeTransfer(data: { beneId: string; amount: number; transferId: string; transferMode?: string; remarks?: string }) {
+  try {
+    const payload = { ...data, transferMode: data.transferMode || "imps" };
+    const res = await axios.post(`${PAYOUT_BASE_URL}/requestTransfer`, payload, { headers: payoutHeaders });
+    if (res.data.subCode !== "200") throw new Error(res.data.message);
+    return res.data;
+  } catch (err: any) { throw new Error(err.response?.data?.message || err.message); }
+}
+
 /**
  * Creates a Cashfree Order for Customer EMI.
  */

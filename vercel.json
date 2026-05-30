@@ -20,5 +20,11 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/sla-escalation",
+      "schedule": "*/5 * * * *"
+    }
   ]
 }

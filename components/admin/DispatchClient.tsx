@@ -7,13 +7,33 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Workflow, AlertCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { assignJob } from "@/app/actions/dispatch";
+import { toast } from "sonner";
 
 export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: Hub[], installers: Installer[] }) {
   const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
+  const [isAssigning, setIsAssigning] = useState<string | null>(null);
 
   const activeJobs = jobs.filter(j => !["completed", "audited", "cancelled"].includes(j.status));
   const completedJobs = jobs.filter(j => ["completed", "audited", "cancelled"].includes(j.status));
   const displayJobs = activeTab === "active" ? activeJobs : completedJobs;
+
+  const handleAssign = async (jobId: string, field: "hub_id" | "installer_id", value: string | null) => {
+    if (!jobId) return;
+    setIsAssigning(jobId);
+    try {
+      const res = await assignJob(jobId, { [field]: value });
+      if (res.success) {
+        toast.success(`Successfully assigned ${field.replace("_id", "")}.`);
+      } else {
+        toast.error(res.error || "Assignment failed.");
+      }
+    } catch (err) {
+      toast.error("Failed to assign.");
+    } finally {
+      setIsAssigning(null);
+    }
+  };
 
   return (
     <div className="space-y-6 flex-1 flex flex-col min-h-0">
@@ -73,7 +93,11 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Select defaultValue={job.hub_id || ""}>
+                      <Select 
+                        defaultValue={job.hub_id || ""}
+                        disabled={isAssigning === job.id}
+                        onValueChange={(val) => handleAssign(job.id!, "hub_id", val)}
+                      >
                         <SelectTrigger className="h-8 w-40 text-xs bg-black/20 border-border/50">
                           <SelectValue placeholder="Assign Hub..." />
                         </SelectTrigger>
@@ -83,7 +107,11 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Select defaultValue={job.installer_id || ""}>
+                      <Select 
+                        defaultValue={job.installer_id || ""}
+                        disabled={isAssigning === job.id}
+                        onValueChange={(val) => handleAssign(job.id!, "installer_id", val)}
+                      >
                         <SelectTrigger className="h-8 w-40 text-xs bg-black/20 border-border/50">
                           <SelectValue placeholder="Assign Installer..." />
                         </SelectTrigger>

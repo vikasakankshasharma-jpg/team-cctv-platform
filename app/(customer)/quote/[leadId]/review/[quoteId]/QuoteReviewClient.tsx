@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { load } from "@cashfreepayments/cashfree-js";
 import type { Cashfree } from "@cashfreepayments/cashfree-js";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
@@ -156,7 +157,18 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const [accepted, setAccepted] = useState(quote.status === "accepted");
   const [isAccepting, setIsAccepting] = useState(false);
   const [isPayingEMI, setIsPayingEMI] = useState(false);
+  const [isPayingFull, setIsPayingFull] = useState(false);
+  const [isPayingAdvance, setIsPayingAdvance] = useState(false);
   const [cashfree, setCashfree] = useState<Cashfree | null>(null);
+
+  const NAVY = "#0F1F3D";
+  const GOLD = "#C8922A";
+  
+  const subtotal = quote.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
+  const total = subtotal + (subtotal * quote.gstPercent / 100);
+  const halfGst = (subtotal * quote.gstPercent / 100) / 2;
+  const advance = Math.round(total * (quote.advancePercent / 100));
+  const daysLeft = daysUntil(quote.validUntil);
 
   useEffect(() => {
     const initCashfree = async () => {
@@ -170,21 +182,24 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     initCashfree();
   }, []);
 
-  const handlePayEMI = async () => {
+  const handlePayment = async (type: "advance" | "full", method: "all" | "emi") => {
     if (!cashfree) {
       toast.error("Payment system not ready. Please refresh.");
       return;
     }
 
-    setIsPayingEMI(true);
+    if (method === "emi") setIsPayingEMI(true);
+    else if (type === "full") setIsPayingFull(true);
+    else setIsPayingAdvance(true);
+
     try {
       const res = await fetch(`/api/quotes/${quote.id}/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadId: quote.leadId, paymentMethod: "emi" }),
+        body: JSON.stringify({ leadId: quote.leadId, paymentType: type, paymentMethod: method }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to initiate EMI payment");
+      if (!res.ok) throw new Error(data.error || "Failed to initiate payment");
 
       const checkoutOptions = {
         paymentSessionId: data.payment_session_id,
@@ -197,43 +212,23 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
       console.error(err);
     } finally {
       setIsPayingEMI(false);
+      setIsPayingFull(false);
+      setIsPayingAdvance(false);
     }
   };
 
-  const subtotal = quote.lineItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
-  const halfGst  = (subtotal * quote.gstPercent) / 200;
-  const total    = subtotal + halfGst * 2;
-  const advance  = Math.round(total * quote.advancePercent / 100);
-  const daysLeft = daysUntil(quote.validUntil);
-
-  const NAVY  = "#0F1F3D";
-  const GOLD  = "#C8922A";
-
-  async function handleAccept() {
-    setIsAccepting(true);
-    try {
-      await updateDoc(
-        doc(db, "leads", quote.leadId, "quotes", quote.id),
-        {
-          status: "accepted",
-          accepted_at: serverTimestamp(),
-          accepted_by_uid: auth.currentUser?.uid || "anonymous",
-        }
-      );
-      setAccepted(true);
-      toast.success("Quote accepted successfully! We will contact you soon.");
-    } catch (err) {
-      console.error(err);
-      toast.error("Could not save your acceptance. Please try again.");
-    } finally {
-      setIsAccepting(false);
-    }
-  }
+  const handlePayEMI = () => handlePayment("full", "emi");
 
   const handleDownloadPDF = async () => {
     try {
       toast.info("Generating your PDF...");
-      const pdfRes = await fetch(`/api/v1/leads/${quote.leadId}/quotes/${quote.id}/pdf`);
+      const user = auth.currentUser;
+      const token = user ? await user.getIdToken() : "";
+      const pdfRes = await fetch(`/api/v1/leads/${quote.leadId}/quotes/${quote.id}/pdf`, {
+        headers: {
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        }
+      });
       if (pdfRes.ok) {
         const contentType = pdfRes.headers.get("Content-Type");
         if (contentType === "application/pdf") {
@@ -658,9 +653,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid #E4E4DC" }}>
-                  <img 
+                  <Image 
                     src="/comparisons/2mp.png" 
                     alt="2MP View" 
+                    width={800}
+                    height={450}
+                    className="w-full h-auto object-cover aspect-video"
                     style={{ width: "100%", display: "block", aspectRatio: "16/9", objectFit: "cover" }} 
                   />
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 12px", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", color: "white" }}>
@@ -670,9 +668,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 </div>
 
                 <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid #C8922A" }}>
-                  <img 
+                  <Image 
                     src="/comparisons/5mp.png" 
                     alt="5MP View" 
+                    width={800}
+                    height={450}
+                    className="w-full h-auto object-cover aspect-video"
                     style={{ width: "100%", display: "block", aspectRatio: "16/9", objectFit: "cover" }} 
                   />
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 12px", background: "rgba(200,146,42,0.9)", color: "white" }}>
@@ -693,32 +694,59 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             {/* Action buttons */}
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               {!accepted ? (
-                <button
-                  onClick={handleAccept}
-                  disabled={isAccepting}
-                  style={{
-                    flex: 1,
-                    minWidth: 160,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    padding: "13px 24px",
-                    borderRadius: 8,
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: isAccepting ? "not-allowed" : "pointer",
-                    border: "none",
-                    background: NAVY,
-                    color: "white",
-                    transition: "all .18s",
-                    opacity: isAccepting ? 0.7 : 1,
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  {isAccepting ? "Accepting..." : "Accept This Quote"}
-                </button>
+                <>
+                  <button
+                    onClick={() => handlePayment("advance", "all")}
+                    disabled={isPayingAdvance || isPayingFull}
+                    style={{
+                      flex: 1,
+                      minWidth: 160,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      padding: "13px 24px",
+                      borderRadius: 8,
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      cursor: (isPayingAdvance || isPayingFull) ? "not-allowed" : "pointer",
+                      border: "none",
+                      background: NAVY,
+                      color: "white",
+                      transition: "all .18s",
+                      opacity: (isPayingAdvance || isPayingFull) ? 0.7 : 1,
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    {isPayingAdvance ? "Processing..." : `Pay Advance (${formatINR(advance)})`}
+                  </button>
+                  <button
+                    onClick={() => handlePayment("full", "all")}
+                    disabled={isPayingAdvance || isPayingFull}
+                    style={{
+                      flex: 1,
+                      minWidth: 160,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      padding: "13px 24px",
+                      borderRadius: 8,
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      cursor: (isPayingAdvance || isPayingFull) ? "not-allowed" : "pointer",
+                      border: `1.5px solid ${NAVY}`,
+                      background: "transparent",
+                      color: NAVY,
+                      transition: "all .18s",
+                      opacity: (isPayingAdvance || isPayingFull) ? 0.7 : 1,
+                    }}
+                  >
+                    {isPayingFull ? "Processing..." : `Pay Full Amount (${formatINR(total)})`}
+                  </button>
+                </>
               ) : (
                 <div
                   style={{
@@ -737,7 +765,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Quote Accepted!
+                  Quote Accepted & Paid!
                 </div>
               )}
 

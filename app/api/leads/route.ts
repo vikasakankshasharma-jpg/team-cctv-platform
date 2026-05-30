@@ -47,7 +47,6 @@ export async function POST(request: NextRequest) {
     const city    = String(wizardAnswers?.q_city    || wizardAnswers?.city    || "");
     const state   = String(wizardAnswers?.q_state   || wizardAnswers?.state   || "");
 
-    // 3. EXPANSION TRACKING: Resolve location based on pincode prefix
     const pincodePrefix = pincode.substring(0, 3);
     const PINCODE_CITY_MAP: Record<string, {city: string, slug: string, served: boolean}> = {
       "302": { city: "Jaipur",  slug: "jaipur",  served: true  },
@@ -59,9 +58,64 @@ export async function POST(request: NextRequest) {
     };
     const locationData = PINCODE_CITY_MAP[pincodePrefix] ?? null;
 
-    // 4. Create Lead Document (Unassigned by default, handled by Dispatch)
+    // --- TERRITORY MAPPING & AUTO ASSIGNMENT ---
+    const { findEligiblePartners } = await import("@/lib/territory");
+    const { sendCustomerWhatsApp, sendAdminNotification } = await import("@/lib/notification-service");
+    const mockAddress = { pincode, city, state, full_address: `${city} ${state} ${pincode}`, coordinates: { lat: 0, lng: 0 }, landmark1: "", landmark2: "" };
+    
+    // Fetch active Salespersons
+    const salespersonsSnap = await adminDb.collection("salespersons").where("is_active", "==", true).get();
+    const allSalespersons = salespersonsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+    const eligibleSalespersons = findEligiblePartners(mockAddress, allSalespersons);
+    
+    // Fetch active Installers
+    const installersSnap = await adminDb.collection("installers").where("is_active", "==", true).get();
+    const allInstallers = installersSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+    const eligibleInstallers = findEligiblePartners(mockAddress, allInstallers);
+
+    let assigned_salesperson_id: string | null = null;
+    let broadcasted_to_salesperson_ids: string[] = [];
+    
+    if (eligibleSalespersons.length === 1) {
+      assigned_salesperson_id = eligibleSalespersons[0];
+      
+      // Notify the Auto-Assigned Salesperson
+      const spDoc = allSalespersons.find(s => s.id === assigned_salesperson_id);
+      if (spDoc && spDoc.mobile_number) {
+        await sendCustomerWhatsApp(
+          spDoc.mobile_number,
+          `🎯 *New Lead Auto-Assigned!*\nLead: ${leadData.customer_name}\nPincode: ${pincode}\nPlease check your Salesperson dashboard to assist the customer.`
+        );
+      }
+    } else if (eligibleSalespersons.length > 1) {
+      broadcasted_to_salesperson_ids = eligibleSalespersons;
+    }
+
+    let assigned_installer_id: string | null = null;
+    let broadcasted_to_installer_ids: string[] = [];
+    
+    if (eligibleInstallers.length === 1) {
+      assigned_installer_id = eligibleInstallers[0];
+    } else if (eligibleInstallers.length > 1) {
+      broadcasted_to_installer_ids = eligibleInstallers;
+    }
+    
+    // --- ESCALATION CHECK ---
+    let is_escalated = false;
+    if (eligibleSalespersons.length === 0) {
+      is_escalated = true;
+      await sendAdminNotification(`⚠️ *Unmapped Territory Alert*\nNew lead (${leadData.customer_name}) generated in Pincode: ${pincode}, but no Internal Salesperson covers this area. Please dispatch manually.`);
+    }
+
+    // 4. Create Lead Document
     const newLeadRef = adminDb.collection("leads").doc();
     const isHotLead = leadData.cabling_done === true;
+    
+    // Dynamic SLA Timeout Logic:
+    // If it's a hot lead (ready for install/cabling done), SLA is tighter (e.g. 15 mins)
+    // Otherwise, SLA is more relaxed (e.g. 60 mins)
+    const slaTimeoutMinutes = isHotLead ? 15 : 60;
+    const slaBreachAt = new Date(Date.now() + slaTimeoutMinutes * 60 * 1000);
 
     await newLeadRef.set({
       customer_name:        leadData.customer_name,
@@ -76,13 +130,18 @@ export async function POST(request: NextRequest) {
       cabling_done:         leadData.cabling_done,
       is_hot_lead:          isHotLead,
 
-      // Hub & Spoke Unassigned Routing
+      // Hub & Spoke Routing
       hub_id: null,
-      assigned_installer_id: null,
       
-      // SLA Tracking (calculated upon assignment)
-      sla_deadline:          null,
-      sla_breached:          false,
+      // Auto-Assignment & Broadcast Fields
+      assigned_salesperson_id,
+      assigned_installer_id,
+      broadcasted_to_salesperson_ids,
+      broadcasted_to_installer_ids,
+      
+      // SLA Tracking
+      sla_breach_at:         slaBreachAt,
+      is_escalated:          is_escalated,
 
       // Expansion Tracking Fields
       detected_pincode:      pincode || null,

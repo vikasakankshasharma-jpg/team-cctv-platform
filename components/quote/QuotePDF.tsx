@@ -24,24 +24,29 @@ import {
   StyleSheet,
   Font,
   pdf,
+  Image,
 } from "@react-pdf/renderer";
 
+import path from "path";
+
 // ─── Font Registration ────────────────────────────────────────────────────────
-// Swap these URLs for locally hosted font files in /public/fonts/ for reliability.
+// Use process.cwd() to resolve the public directory safely in Next.js Server environments
+const publicDir = typeof process !== "undefined" && process.cwd ? path.join(process.cwd(), "public") : "";
+
 Font.register({
   family: "DM Sans",
   fonts: [
-    { src: "/fonts/dm-sans.woff2", fontWeight: 400 },
-    { src: "/fonts/dm-sans.woff2", fontWeight: 500 },
-    { src: "/fonts/dm-sans.woff2", fontWeight: 700 },
+    { src: `${publicDir}/fonts/dm-sans.woff2`, fontWeight: 400 },
+    { src: `${publicDir}/fonts/dm-sans.woff2`, fontWeight: 500 },
+    { src: `${publicDir}/fonts/dm-sans.woff2`, fontWeight: 700 },
   ],
 });
 
 Font.register({
   family: "Playfair Display",
   fonts: [
-    { src: "/fonts/playfair-display.woff2", fontWeight: 600 },
-    { src: "/fonts/playfair-display.woff2", fontWeight: 700 },
+    { src: `${publicDir}/fonts/playfair-display.woff2`, fontWeight: 600 },
+    { src: `${publicDir}/fonts/playfair-display.woff2`, fontWeight: 700 },
   ],
 });
 
@@ -133,13 +138,20 @@ const s = StyleSheet.create({
   },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   brandIconBox: {
-    width: 36,
-    height: 36,
+    width: 48,
+    height: 48,
     backgroundColor: C.gold,
     borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
+    overflow: "hidden",
+  },
+  brandIconImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    backgroundColor: C.white,
   },
   brandIconText: { color: C.white, fontSize: 18 },
   brandName: {
@@ -368,13 +380,23 @@ const s = StyleSheet.create({
   termTitle: { fontSize: 8.5, fontWeight: 700, color: C.text, marginBottom: 2 },
   termBody:  { fontSize: 7.5, color: C.muted, lineHeight: 1.45 },
 
-  // ── Note
+  // ── Note & Custom Info
   noteBox: {
     backgroundColor: C.noteBg,
     borderLeftWidth: 2.5,
     borderLeftColor: C.navy,
     borderWidth: 0.5,
     borderColor: C.noteBdr,
+    borderRadius: 5,
+    padding: "10 12",
+    marginBottom: 20,
+  },
+  bankBox: {
+    backgroundColor: "#F0F4F0",
+    borderLeftWidth: 2.5,
+    borderLeftColor: C.green,
+    borderWidth: 0.5,
+    borderColor: "#D2E8D2",
     borderRadius: 5,
     padding: "10 12",
     marginBottom: 20,
@@ -387,7 +409,24 @@ const s = StyleSheet.create({
     textTransform: "uppercase",
     marginBottom: 3,
   },
+  bankTitle: {
+    fontSize: 7.5,
+    fontWeight: 700,
+    color: C.green,
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+    marginBottom: 3,
+  },
   noteBody: { fontSize: 8.5, color: "#2C3E6B", lineHeight: 1.55 },
+  termsBox: {
+    backgroundColor: "#FAFAF7",
+    borderWidth: 0.5,
+    borderColor: C.border,
+    borderRadius: 5,
+    padding: "10 12",
+    marginBottom: 20,
+  },
+  termsBody: { fontSize: 8, color: C.muted, lineHeight: 1.55 },
 
   // ── Signature
   signatureRow: {
@@ -432,17 +471,19 @@ const s = StyleSheet.create({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function QuotePDF({ quote }: { quote: QuoteData }) {
+export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, settings?: any, isInvoice?: boolean }) {
   const subtotal  = quote.lineItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
   const halfGst   = (subtotal * quote.gstPercent) / 200;
   const total     = subtotal + halfGst * 2;
   const advance   = Math.round(total * quote.advancePercent / 100);
+  
+  const docTitle = isInvoice ? "TAX INVOICE" : "QUOTATION";
 
   return (
     <Document
-      title={`TEAM CCTV — Quotation #${quote.quoteNumber}`}
+      title={`TEAM CCTV — ${docTitle} #${quote.quoteNumber}`}
       author="TEAM CCTV"
-      subject="CCTV Installation Quotation"
+      subject={`CCTV Installation ${docTitle}`}
     >
       <Page size="A4" style={s.page}>
 
@@ -451,7 +492,11 @@ export function QuotePDF({ quote }: { quote: QuoteData }) {
           <View style={s.headerTop}>
             <View style={s.brandRow}>
               <View style={s.brandIconBox}>
-                <Text style={s.brandIconText}>▶</Text>
+                {settings?.pdf_logo_url ? (
+                  <Image src={settings.pdf_logo_url} style={s.brandIconImage} />
+                ) : (
+                  <Text style={s.brandIconText}>▶</Text>
+                )}
               </View>
               <View>
                 <Text style={s.brandName}>TEAM CCTV</Text>
@@ -459,7 +504,7 @@ export function QuotePDF({ quote }: { quote: QuoteData }) {
               </View>
             </View>
             <View style={s.quoteLabel}>
-              <Text style={s.quoteLabelText}>Quotation</Text>
+              <Text style={s.quoteLabelText}>{docTitle}</Text>
               <Text style={s.quoteNumber}>#{quote.quoteNumber}</Text>
             </View>
           </View>
@@ -597,6 +642,22 @@ export function QuotePDF({ quote }: { quote: QuoteData }) {
             ))}
           </View>
 
+          {/* Bank Details */}
+          {isInvoice && settings?.bank_details && (
+            <View style={s.bankBox}>
+              <Text style={s.bankTitle}>Bank Details for Payment</Text>
+              <Text style={s.noteBody}>{settings.bank_details}</Text>
+            </View>
+          )}
+
+          {/* Custom Terms */}
+          {settings?.pdf_terms && (
+            <View style={s.termsBox}>
+              <Text style={s.noteTitle}>Terms &amp; Conditions</Text>
+              <Text style={s.termsBody}>{settings.pdf_terms}</Text>
+            </View>
+          )}
+
           {/* Notes */}
           {quote.notes && (
             <View style={s.noteBox}>
@@ -661,8 +722,8 @@ export function QuotePDF({ quote }: { quote: QuoteData }) {
  *     },
  *   });
  */
-export async function generateQuotePdfBuffer(quote: QuoteData): Promise<Buffer> {
-  const blob   = await pdf(<QuotePDF quote={quote} />).toBlob();
+export async function generateQuotePdfBuffer(quote: QuoteData, settings?: any, isInvoice?: boolean): Promise<Buffer> {
+  const blob   = await pdf(<QuotePDF quote={quote} settings={settings} isInvoice={isInvoice} />).toBlob();
   const arrBuf = await blob.arrayBuffer();
   return Buffer.from(arrBuf);
 }

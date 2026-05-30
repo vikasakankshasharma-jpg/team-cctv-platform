@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import { Check, ShieldCheck, Zap, Monitor, Camera, Star, ShoppingBag, ArrowRight } from "lucide-react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { calculatePricing } from "@/lib/pricing-engine";
@@ -181,10 +182,11 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
               {/* Image Section */}
               <div className="w-full sm:w-[220px] h-[220px] sm:h-auto bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center border-b sm:border-b-0 sm:border-r border-zinc-100 dark:border-zinc-800 shrink-0 relative p-8 group-hover:bg-white dark:group-hover:bg-zinc-800 transition-colors duration-500">
                 {kit.camera.image_url ? (
-                  <img 
+                  <Image 
                     src={kit.camera.image_url} 
                     alt={kit.camera.display_name} 
-                    className="object-contain w-full h-full transform group-hover:scale-110 transition-transform duration-700" 
+                    fill
+                    className="object-contain p-4 transform group-hover:scale-110 transition-transform duration-700" 
                   />
                 ) : (
                   <div className="flex flex-col items-center opacity-20 group-hover:opacity-40 transition-opacity">

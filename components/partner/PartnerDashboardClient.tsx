@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, IndianRupee, Target, TrendingUp, CheckCircle2, ChevronRight, Activity, Clock } from "lucide-react";
+import { Copy, IndianRupee, Target, TrendingUp, CheckCircle2, ChevronRight, Activity, Clock, AlertTriangle, Map } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -148,6 +148,58 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
           </div>
         </div>
       )}
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* ── SLA TRACKER ────────────────────────────────────────────────────── */}
+        <div className="xl:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl flex flex-col">
+          <div className="p-6 border-b border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950/40">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center shadow-inner">
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-500" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">SLA Action Required</h2>
+                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Acknowledge within 24h</p>
+              </div>
+            </div>
+            <Link href="/partner/leads" className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-colors">
+              View All
+            </Link>
+          </div>
+          <div className="p-6 flex-1 flex flex-col justify-center items-center text-center">
+             <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center text-emerald-500 mb-4">
+               <CheckCircle2 className="w-8 h-8" />
+             </div>
+             <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">All Clear</h3>
+             <p className="text-sm font-medium text-zinc-500 mt-2 max-w-sm">
+               You have no pending leads requiring immediate SLA acknowledgment. Great work!
+             </p>
+          </div>
+        </div>
+
+        {/* ── TERRITORY HEATMAP ──────────────────────────────────────────────── */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl flex flex-col">
+          <div className="p-6 border-b border-zinc-100 dark:border-zinc-800/60 flex items-center gap-3 bg-zinc-50 dark:bg-zinc-950/40">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shadow-inner">
+              <Map className="w-5 h-5 text-blue-600 dark:text-blue-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Territory Heatmap</h2>
+              <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Demand Hotspots</p>
+            </div>
+          </div>
+          <div className="p-6 flex-1 flex flex-col">
+             <div className="flex-1 rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-zinc-800 dark:to-zinc-900 border border-zinc-200 dark:border-zinc-800/50 flex items-center justify-center p-6 min-h-[200px]">
+                <div className="grid grid-cols-5 gap-2 w-full h-full opacity-60">
+                   {Array.from({ length: 25 }).map((_, i) => (
+                     <div key={i} className={`rounded-lg ${Math.random() > 0.7 ? 'bg-amber-500/80 animate-pulse' : Math.random() > 0.4 ? 'bg-amber-500/30' : 'bg-zinc-200 dark:bg-zinc-800'}`} />
+                   ))}
+                </div>
+             </div>
+             <p className="text-[10px] font-bold text-center text-zinc-400 uppercase tracking-widest mt-4">Simulated Regional Activity</p>
+          </div>
+        </div>
+      </div>
 
       {/* ── RECENT WINS ────────────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] overflow-hidden shadow-xl dark:shadow-2xl">
