@@ -50,22 +50,13 @@ export function JsonLd() {
     "@type": "LocalBusiness",
     "name": "CCTVQuotation",
     "alternateName": "TEAM CCTV",
-    "description": "Professional CCTV installation in Jaipur with CP Plus and Prama cameras.",
+    "description": "Professional CCTV and Security System installation across India. We provide AI-driven exact quotes for CP Plus, Hikvision, and Prama cameras.",
     "url": "https://cctvquotation.com",
-    "telephone": "+919772699395",
-    "email": "hello@cctvquotation.com",
+    "telephone": "+910000000000",
+    "email": "support@cctvquotation.com",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Malviya Nagar",
-      "addressLocality": "Jaipur",
-      "addressRegion": "Rajasthan",
-      "postalCode": "302017",
       "addressCountry": "IN"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": 26.8467,
-      "longitude": 75.8073
     },
     "openingHoursSpecification": {
       "@type": "OpeningHoursSpecification",
@@ -74,7 +65,7 @@ export function JsonLd() {
       "closes": "19:00"
     },
     "priceRange": "₹₹",
-    "areaServed": "Jaipur, Rajasthan, India",
+    "areaServed": "India",
     "sameAs": []
   };
 

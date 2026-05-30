@@ -36,6 +36,7 @@ export function ProgressBar({ currentStepIndex, totalSteps }: ProgressBarProps) 
       <div
         className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden"
         role="progressbar"
+        aria-label="Wizard progress"
         aria-valuenow={Math.round(progress)}
         aria-valuemin={0}
         aria-valuemax={100}

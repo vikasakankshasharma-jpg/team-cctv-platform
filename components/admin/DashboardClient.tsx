@@ -47,27 +47,35 @@ const STATUS_COLORS: Record<string, string> = {
   lost:       "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400",
 };
 
-// ─── ANIMATED BAR ─────────────────────────────────────────────────────────────
-function AnimatedBar({ height, className, delay = 0 }: { height: number; className: string; delay?: number }) {
-  const [animated, setAnimated] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setAnimated(true), delay);
-    return () => clearTimeout(t);
-  }, [delay]);
-  return (
-    <div
-      className={`flex-1 rounded-sm transition-all duration-700 ease-out ${className}`}
-      style={{
-        height: animated ? `${height}%` : "0%",
-        minHeight: animated && height > 0 ? "4px" : "0",
-      }}
-    />
-  );
-}
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
+
+// ─── ANIMATED BAR (REMOVED) ─────────────────────────────────────────────────────────────
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#1d1d1f]/95 text-[#f5f5f7] p-3 border border-[#424245] shadow-2xl rounded-xl">
+        <p className="text-xs font-semibold uppercase tracking-wider mb-2 text-[#86868b]">{label}</p>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#0071e3]" />
+            <span className="text-sm font-medium">Total: {payload[0].value}</span>
+          </div>
+          {payload[1] && (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#34c759]" />
+              <span className="text-sm font-medium">Won: {payload[1].value}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 // ─── SALES TREND CHART ────────────────────────────────────────────────────────
 function SalesTrendChart({ trend }: { trend: WeeklyBucket[] }) {
-  const maxTotal = Math.max(...trend.map((b) => b.total), 1);
   const totalLeads = trend.reduce((s, b) => s + b.total, 0);
   const totalWon   = trend.reduce((s, b) => s + b.won, 0);
 
@@ -75,53 +83,35 @@ function SalesTrendChart({ trend }: { trend: WeeklyBucket[] }) {
     <div className="h-full flex flex-col">
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h3 className="text-xl font-semibold text-foreground tracking-tight">Weekly Flux</h3>
+          <h3 className="text-2xl font-semibold text-foreground tracking-tight">Weekly Analytics</h3>
           <p className="text-sm font-medium text-muted-foreground mt-1">
             {totalLeads} total · {totalWon} converted · 7-day cycle
           </p>
         </div>
-        <div className="flex items-center gap-4 p-2 bg-muted/50 rounded-lg border border-border">
-          <div className="flex items-center gap-2 text-xs font-medium">
-            <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
-            <span className="text-muted-foreground">Gross</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs font-medium">
-            <div className="w-2 h-2 rounded-full bg-primary" />
-            <span className="text-foreground">Won</span>
-          </div>
-        </div>
       </div>
 
-      {/* Chart Body */}
-      <div className="flex-1 flex items-end gap-4 pb-4 min-h-[240px]">
-        {trend.map((bucket, idx) => {
-          const totalH = (bucket.total / maxTotal) * 100;
-          const wonH   = (bucket.won / maxTotal) * 100;
-          return (
-            <div key={bucket.label} className="flex-1 flex flex-col items-center gap-3 group cursor-pointer h-full justify-end">
-              {/* Tooltip */}
-              <div className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 bg-popover text-popover-foreground text-xs font-medium p-2.5 rounded-lg shadow-md border border-border z-10 absolute -mt-16 -ml-4 whitespace-nowrap">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
-                  {bucket.total} leads
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  {bucket.won} won
-                </div>
-              </div>
-              {/* Bars */}
-              <div className="w-full flex items-end justify-center gap-1.5 h-full relative">
-                <AnimatedBar height={totalH} className="bg-secondary group-hover:bg-muted-foreground/20 w-full max-w-[24px]" delay={idx * 60} />
-                <AnimatedBar height={wonH} className="bg-primary w-full max-w-[24px]" delay={idx * 60 + 100} />
-              </div>
-              {/* Day Label */}
-              <span className="text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-                {bucket.label}
-              </span>
-            </div>
-          );
-        })}
+      <div className="flex-1 w-full min-h-[280px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#0071e3" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#0071e3" stopOpacity={0}/>
+              </linearGradient>
+              <linearGradient id="colorWon" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#34c759" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#34c759" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#d2d2d7" opacity={0.3} />
+            <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#86868b', fontSize: 12 }} dy={10} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#86868b', fontSize: 12 }} />
+            <RechartsTooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(134,134,139,0.3)', strokeWidth: 2, strokeDasharray: '3 3' }} />
+            <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
+            <Area type="monotone" dataKey="total" name="Total Leads" stroke="#0071e3" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" activeDot={{ r: 6, fill: '#0071e3', stroke: '#fff', strokeWidth: 2 }} />
+            <Area type="monotone" dataKey="won" name="Won Deals" stroke="#34c759" strokeWidth={3} fillOpacity={1} fill="url(#colorWon)" activeDot={{ r: 6, fill: '#34c759', stroke: '#fff', strokeWidth: 2 }} />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
@@ -150,7 +140,7 @@ export function DashboardClient({ trend, sources, initialRecentLeads, initialInt
       setRecentLeads(leads);
     });
 
-    const qInternal = query(collection(db, "leads"), where("assigned_installer_id", "==", null), orderBy("created_at", "desc"), limit(5));
+    const qInternal = query(collection(db, "leads"), where("is_escalated", "==", true), limit(5));
     const unsubInternal = onSnapshot(qInternal, (snapshot) => {
       const leads = snapshot.docs.map(doc => {
         const d = doc.data() as Lead;
@@ -187,26 +177,30 @@ export function DashboardClient({ trend, sources, initialRecentLeads, initialInt
       
       <div className="flex flex-col gap-6">
         
-        {/* Unassigned Queue */}
-        <Card className="shadow-sm border-border bg-card">
+        {/* Urgent Escalated Queue */}
+        <Card className={`shadow-sm border-border ${liveInternalCount > 0 ? "bg-red-500/5 border-red-500/20" : "bg-card"}`}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                Unassigned Queue
+              <CardTitle className={`text-lg font-semibold flex items-center gap-2 ${liveInternalCount > 0 ? "text-red-500 animate-pulse" : "text-foreground"}`}>
+                {liveInternalCount > 0 && <span className="text-xl">🚨</span>}
+                Urgent Action Required
               </CardTitle>
-              <Badge variant={liveInternalCount > 0 ? "secondary" : "outline"} className={liveInternalCount > 0 ? "bg-warning/20 text-warning-foreground" : "bg-success/20 text-success-foreground"}>
-                {liveInternalCount} Leads
+              <Badge variant={liveInternalCount > 0 ? "destructive" : "outline"} className={liveInternalCount > 0 ? "animate-pulse" : "bg-success/20 text-success-foreground"}>
+                {liveInternalCount} Escalated
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
             {internalLeads.length === 0 ? (
-              <p className="text-sm font-medium text-muted-foreground text-center py-4">Queue Empty — Great work!</p>
+              <p className="text-sm font-medium text-muted-foreground text-center py-4">No escalated issues — Great work!</p>
             ) : (
               internalLeads.map(lead => (
-                <Link key={lead.id} href="/admin/leads" className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg border border-border/50 hover:bg-secondary transition-colors group">
-                  <span className="text-sm font-medium text-foreground truncate">{lead.customer_name}</span>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                <Link key={lead.id} href="/admin/dispatch" className="flex items-center justify-between p-3 bg-red-500/10 rounded-lg border border-red-500/20 hover:bg-red-500/20 transition-colors group">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-red-600 dark:text-red-400 truncate">{lead.customer_name}</span>
+                    <span className="text-xs text-red-500/80">Unmapped Territory (Manual Dispatch Required)</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-red-500 group-hover:translate-x-1 transition-transform" />
                 </Link>
               ))
             )}

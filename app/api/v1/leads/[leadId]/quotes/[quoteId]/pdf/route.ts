@@ -70,9 +70,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  // Check if it's an invoice
+  const isInvoice = quote.status === "accepted";
+
   // ── 3. Check Storage cache ─────────────────────────────────────────────────
   const bucket     = adminStorage.bucket();
-  const storagePath = `quotes/${leadId}/${quoteId}.pdf`;
+  const storagePath = `quotes/${leadId}/${quoteId}${isInvoice ? "_invoice" : ""}.pdf`;
   const file        = bucket.file(storagePath);
 
   try {
@@ -114,9 +117,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     notes:               quote.notes ? String(quote.notes) : undefined,
   };
 
+  // Fetch settings for custom PDF logo and terms
+  const settingsSnap = await adminFirestore.collection("settings").doc("app_settings").get();
+  const settings = settingsSnap.exists ? settingsSnap.data() : undefined;
+
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await generateQuotePdfBuffer(quoteData as Parameters<typeof generateQuotePdfBuffer>[0]);
+    pdfBuffer = await generateQuotePdfBuffer(quoteData as Parameters<typeof generateQuotePdfBuffer>[0], settings, isInvoice);
   } catch (err) {
     console.error("[QuotePDF] Generation failed:", err);
     return NextResponse.json({ error: "PDF generation failed" }, { status: 500 });

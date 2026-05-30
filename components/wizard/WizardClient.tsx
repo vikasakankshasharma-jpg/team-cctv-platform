@@ -9,6 +9,7 @@ import { LeadGate } from "@/components/wizard/LeadGate";
 import { ArrowLeft, ArrowRight, ShieldAlert, Loader2, ShieldCheck, Lock, CheckCircle2, Home } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 import type { WizardQuestion, WizardOption } from "@/types";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function WizardClient({ initialSteps, initialSettings }: { initialSteps?: any[], initialSettings?: any }) {
   const router = useRouter();
@@ -359,41 +360,113 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
           <p className="text-zinc-500 dark:text-zinc-400 text-base sm:text-xl mt-3 sm:mt-4 font-medium max-w-2xl">{currentStep.description}</p>
         )}
 
-        <div key={current_step_index} className="space-y-16 wizard-step-enter mb-12">
-          {currentStep.questions?.map((q: WizardQuestion) => {
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={current_step_index} 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="space-y-16 mb-12"
+          >
+            {currentStep.questions?.map((q: WizardQuestion) => {
             if (q.input_type === "number") {
               const currentVal = (answers[q.id!] as string) || "";
+              const isMixedMode = answers["use_mixed_mode"] === true;
+              const mixedReqs = (answers["mixed_camera_requirements"] as any[]) || [
+                { type: "Standard Indoor", count: 1 },
+                { type: "Standard Outdoor", count: 0 },
+                { type: "PTZ", count: 0 },
+                { type: "Solar", count: 0 },
+                { type: "4G", count: 0 }
+              ];
+
+              const totalMixed = mixedReqs.reduce((sum, req) => sum + req.count, 0);
+
               return (
                 <div key={q.id} id={`question-${q.id}`} className="scroll-mt-24 sm:scroll-mt-32">
                   <div className="flex items-center gap-3 mb-6 sm:mb-8">
                      <div className="w-10 h-10 rounded-[14px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center text-blue-600 font-black text-sm shrink-0">#</div>
-                     <h3 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h3>
+                     <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h2>
                   </div>
-                  <div className="relative group max-w-sm">
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={currentVal}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        setAnswer(q.id!, raw); // Allow raw string during typing
-                      }}
-                      onBlur={(e) => {
-                        // On blur, snap any empty / out-of-range value back to a valid number
-                        const parsed = parseInt(e.target.value);
-                        if (isNaN(parsed)) {
-                          setAnswer(q.id!, "1"); // Default to 1 if empty/invalid
-                        } else {
-                          const val = Math.max(1, Math.min(16, parsed));
-                          setAnswer(q.id!, String(val));
+
+                  <div className="mb-6 flex justify-end">
+                    <button
+                      onClick={() => {
+                        setAnswer("use_mixed_mode", !isMixedMode);
+                        if (!isMixedMode) {
+                          // Initialize mix
+                          setAnswer("mixed_camera_requirements", mixedReqs);
+                          setAnswer(q.id!, String(Math.max(1, totalMixed)));
                         }
                       }}
-                      className="w-full bg-white border-[2px] border-zinc-200 rounded-[24px] sm:rounded-[28px] px-6 sm:px-8 py-5 sm:py-6 text-2xl font-black text-zinc-900 outline-none focus:ring-[6px] focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]"
-                      placeholder="1 – 16"
-                      min={1}
-                      max={16}
-                    />
+                      className="text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-100 transition-colors"
+                    >
+                      {isMixedMode ? "Use Simple Count" : "Advanced: Mix & Match Types"}
+                    </button>
                   </div>
+
+                  {!isMixedMode ? (
+                    <div className="relative group max-w-sm">
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        value={currentVal}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          setAnswer(q.id!, raw); // Allow raw string during typing
+                        }}
+                        onBlur={(e) => {
+                          const parsed = parseInt(e.target.value);
+                          if (isNaN(parsed)) {
+                            setAnswer(q.id!, "1");
+                          } else {
+                            const val = Math.max(1, Math.min(16, parsed));
+                            setAnswer(q.id!, String(val));
+                          }
+                        }}
+                        className="w-full bg-white border-[2px] border-zinc-200 rounded-[24px] sm:rounded-[28px] px-6 sm:px-8 py-5 sm:py-6 text-2xl font-black text-zinc-900 outline-none focus:ring-[6px] focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]"
+                        placeholder="1 – 16"
+                        min={1}
+                        max={16}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-w-md bg-white p-6 rounded-[28px] border-[2px] border-zinc-200 shadow-sm">
+                      <div className="flex justify-between items-end mb-4 border-b border-zinc-100 pb-4">
+                        <span className="font-bold text-zinc-500">Total Cameras</span>
+                        <span className="text-3xl font-black text-zinc-900">{totalMixed}</span>
+                      </div>
+                      {mixedReqs.map((req, idx) => (
+                        <div key={req.type} className="flex items-center justify-between py-2">
+                          <span className="font-bold text-zinc-700">{req.type}</span>
+                          <div className="flex items-center gap-4 bg-zinc-50 rounded-xl p-1 border border-zinc-200">
+                            <button
+                              onClick={() => {
+                                const newReqs = [...mixedReqs];
+                                newReqs[idx].count = Math.max(0, newReqs[idx].count - 1);
+                                setAnswer("mixed_camera_requirements", newReqs);
+                                setAnswer(q.id!, String(newReqs.reduce((s, r) => s + r.count, 0) || 1));
+                              }}
+                              className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm font-bold text-zinc-600 hover:text-red-500 disabled:opacity-50"
+                              disabled={req.count === 0}
+                            >-</button>
+                            <span className="w-4 text-center font-black text-zinc-900">{req.count}</span>
+                            <button
+                              onClick={() => {
+                                const newReqs = [...mixedReqs];
+                                newReqs[idx].count += 1;
+                                setAnswer("mixed_camera_requirements", newReqs);
+                                setAnswer(q.id!, String(newReqs.reduce((s, r) => s + r.count, 0)));
+                              }}
+                              className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm font-bold text-zinc-600 hover:text-blue-600"
+                            >+</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
                   <p className="text-xs font-bold text-zinc-400 mt-4 ml-2">
                     For <span className="font-black text-zinc-700">more than 16 cameras</span>, our team will reach out with a custom corporate quote.
                   </p>
@@ -408,7 +481,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
               <div key={q.id} id={`question-${q.id}`} className="scroll-mt-24 sm:scroll-mt-32">
                 <div className="flex items-center gap-3 mb-6 sm:mb-8">
                    <div className="w-10 h-10 rounded-[14px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center text-blue-600 font-black text-sm shrink-0">?</div>
-                   <h3 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h3>
+                   <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h2>
                 </div>
 
                 {/* Multi-select indicator badge */}
@@ -466,7 +539,8 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
               </div>
             );
           })}
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {showGate && (
@@ -489,7 +563,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
           <div className="w-full max-w-4xl bg-white border border-zinc-200 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] rounded-[28px] flex items-center justify-between p-3 md:p-4 transition-all" style={{paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))'}} >
             <button
               onClick={isFirstStep ? () => router.push('/') : previousStep}
-              className="group h-12 md:h-14 px-8 md:px-6 text-zinc-400 hover:text-zinc-900 font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 cursor-pointer touch-manipulation"
+              className="group h-12 md:h-14 px-8 md:px-6 text-zinc-500 hover:text-zinc-900 font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 cursor-pointer touch-manipulation"
               aria-label={isFirstStep ? "Back to homepage" : "Previous question"}
             >
               {isFirstStep
@@ -500,11 +574,11 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
             <div className="hidden lg:flex items-center gap-6 px-8 border-x border-zinc-100">
               <div className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-zinc-300" />
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Your Data is Safe</span>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tight">Your Data is Safe</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Smart System Design</span>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tight">Smart System Design</span>
               </div>
             </div>
 

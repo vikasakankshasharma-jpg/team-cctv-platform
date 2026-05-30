@@ -10,7 +10,9 @@ import type { NextRequest } from 'next/server';
  */
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const session = request.cookies.get('admin_session')?.value;
+  const adminSession = request.cookies.get('admin_session')?.value;
+  const partnerSession = request.cookies.get('partner_session')?.value;
+  const session = adminSession || partnerSession;
 
   // 1. Route Protection Logic
   const protectedPaths = ['/admin', '/partner', '/dealer', '/salesperson'];

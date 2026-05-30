@@ -234,7 +234,7 @@ export function FullCustomizerPanel() {
     const unitPrice = item.unit_price || ("price" in item ? item.price : 0) || 0;
     
     return (
-      <div className={`p-5 rounded-[24px] border transition-all duration-300 flex flex-col h-full ${
+      <div key={item.id} className={`p-5 rounded-[24px] border transition-all duration-300 flex flex-col h-full ${
         isSelected
           ? "bg-[#0071e3]/5 border-[#0071e3] shadow-[0_4px_12px_rgba(0,113,227,0.1)] ring-2 ring-[#0071e3]/20"
           : isOutOfStock
@@ -295,7 +295,7 @@ export function FullCustomizerPanel() {
     const isOutOfStock = addon.stock_quantity !== undefined && addon.stock_quantity <= 0;
     
     return (
-      <div className={`p-5 rounded-[24px] border transition-all duration-300 flex flex-col h-full ${
+      <div key={addon.id} className={`p-5 rounded-[24px] border transition-all duration-300 flex flex-col h-full ${
         isSelected
           ? "bg-[#0071e3]/5 border-[#0071e3] shadow-[0_4px_12px_rgba(0,113,227,0.1)] ring-2 ring-[#0071e3]/20"
           : isOutOfStock

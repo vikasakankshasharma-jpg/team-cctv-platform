@@ -97,6 +97,22 @@ service firebase.storage {
     }
 
     // ──────────────────────────────────────────
+    // /leads/{leadId}/competitor/{filename} — Competitor Quote uploads
+    // Read: admin or any authenticated user
+    // Create: authenticated, PDF or image, max 10MB
+    // Delete: admin only
+    // ──────────────────────────────────────────
+
+    match /leads/{leadId}/competitor/{filename} {
+      allow read: if isAdmin() || (request.auth != null);
+      allow create: if request.auth != null
+                    && request.resource.size < 10 * 1024 * 1024
+                    && (request.resource.contentType.matches('application/pdf')
+                        || request.resource.contentType.matches('image/.*'));
+      allow delete: if isAdmin();
+    }
+
+    // ──────────────────────────────────────────
     // Default deny all — explicit allow required
     // ──────────────────────────────────────────
 

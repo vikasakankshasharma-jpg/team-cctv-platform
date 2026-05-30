@@ -1,6 +1,6 @@
 "use server";
 
-import { adminDb, arrayUnion } from "@/lib/firebase-admin";
+import { adminDb, arrayUnion, serverTimestamp } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
 import { COLLECTIONS, SUBCOLLECTIONS } from "@/lib/constants";
@@ -152,4 +152,267 @@ export async function assignLeadToSalesperson(leadId: string, salespersonId: str
   
   revalidatePath("/admin/leads");
   return { success: true };
+}
+
+/**
+ * Fetches all price match requests for a specific lead.
+ */
+export async function getPriceMatchRequests(leadId: string) {
+  await requireAdmin();
+
+  const snapshot = await adminDb
+    .collection(COLLECTIONS.LEADS)
+    .doc(leadId)
+    .collection("price_match_requests")
+    .orderBy("created_at", "desc")
+    .get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      created_at:
+        (data.created_at as any)?.toDate?.()?.toISOString() ||
+        data.created_at ||
+        null,
+      reviewed_at:
+        (data.reviewed_at as any)?.toDate?.()?.toISOString() ||
+        data.reviewed_at ||
+        null,
+    };
+  });
+}
+
+/**
+ * Reviews a price match request (approve, reject, or counter-offer).
+ * Checks salesperson discount limits and updates the lead accordingly.
+ */
+export async function reviewPriceMatchRequest(
+  requestId: string,
+  leadId: string,
+  reviewData: {
+    status: "approved" | "rejected" | "counter_offered";
+    review_notes?: string;
+    approved_discount_percent?: number;
+    approved_discount_flat?: number;
+    counter_offer_amount?: number;
+  }
+) {
+  const session = await requireAdmin();
+  const reviewerUid = session.user!.uid;
+
+  const leadRef = adminDb.collection(COLLECTIONS.LEADS).doc(leadId);
+  const requestRef = leadRef.collection("price_match_requests").doc(requestId);
+
+  const [leadDoc, requestDoc] = await Promise.all([
+    leadRef.get(),
+    requestRef.get(),
+  ]);
+
+  if (!leadDoc.exists) throw new Error("Lead not found");
+  if (!requestDoc.exists) throw new Error("Price match request not found");
+
+  // Determine reviewer info
+  let reviewerName = session.user!.email || "Staff";
+  let reviewerRole: "admin" | "salesperson" = "admin";
+
+  if (session.role === "sales_staff") {
+    reviewerRole = "salesperson";
+
+    const salespersonSnap = await adminDb
+      .collection("salespersons")
+      .where("firebase_uid", "==", reviewerUid)
+      .limit(1)
+      .get();
+
+    if (!salespersonSnap.empty) {
+      const salesperson = salespersonSnap.docs[0].data() as import("@/types").Salesperson;
+      reviewerName = salesperson.name;
+
+      if (
+        reviewData.approved_discount_percent &&
+        salesperson.max_discount_approval_percent !== undefined &&
+        reviewData.approved_discount_percent > salesperson.max_discount_approval_percent
+      ) {
+        throw new Error(
+          `Discount exceeds your approval limit of ${salesperson.max_discount_approval_percent}%. Please escalate to Admin.`
+        );
+      }
+    }
+  }
+
+  // Update the price match request
+  const updatePayload: Record<string, unknown> = {
+    status: reviewData.status,
+    reviewer_id: reviewerUid,
+    reviewer_name: reviewerName,
+    reviewer_role: reviewerRole,
+    review_notes: reviewData.review_notes || null,
+    reviewed_at: new Date(),
+  };
+
+  if (reviewData.approved_discount_percent !== undefined) {
+    updatePayload.approved_discount_percent = reviewData.approved_discount_percent;
+  }
+  if (reviewData.approved_discount_flat !== undefined) {
+    updatePayload.approved_discount_flat = reviewData.approved_discount_flat;
+  }
+  if (reviewData.counter_offer_amount !== undefined) {
+    updatePayload.counter_offer_amount = reviewData.counter_offer_amount;
+  }
+
+  await requestRef.update(updatePayload);
+
+  // Update lead's price_match_status
+  const leadUpdate: Record<string, unknown> = {
+    price_match_status: reviewData.status,
+    updated_at: new Date(),
+  };
+
+  if (reviewData.status === "approved" && reviewData.approved_discount_percent) {
+    leadUpdate.active_offer = {
+      type: "discount_percent",
+      value: reviewData.approved_discount_percent,
+      campaign_id: `price_match_${requestId}`,
+    };
+  }
+
+  await leadRef.update(leadUpdate);
+
+  revalidatePath("/admin/leads");
+  return { success: true };
+}
+
+/**
+ * Uber-Style Lead Claiming
+ * Allows an eligible Salesperson or Installer to claim a broadcasted lead.
+ * Uses a Firestore transaction to ensure atomic 'first-to-claim' safety.
+ */
+export async function claimBroadcastedLead(leadId: string, partnerId: string, partnerName: string, role: 'salesperson' | 'installer') {
+  try {
+    const leadRef = adminDb.collection('leads').doc(leadId);
+    
+    await adminDb.runTransaction(async (transaction) => {
+      const doc = await transaction.get(leadRef);
+      if (!doc.exists) {
+        throw new Error('Lead does not exist');
+      }
+      
+      const data = doc.data()!;
+      
+      if (role === 'salesperson') {
+        // Check if already claimed
+        if (data.assigned_salesperson_id) {
+          throw new Error('Lead has already been claimed by another salesperson.');
+        }
+        // Verify eligibility
+        const eligibleList = data.broadcasted_to_salesperson_ids || [];
+        if (!eligibleList.includes(partnerId)) {
+          throw new Error('You are not eligible to claim this lead territory.');
+        }
+        
+        transaction.update(leadRef, {
+          assigned_salesperson_id: partnerId,
+          assigned_to_salesperson_name: partnerName,
+          broadcasted_to_salesperson_ids: [], // Clear broadcast
+          follow_up_notes: arrayUnion(`Claimed by Salesperson: ${partnerName}`),
+          updated_at: serverTimestamp()
+        });
+      } else if (role === 'installer') {
+        // Check if already claimed
+        if (data.assigned_installer_id) {
+          throw new Error('Lead has already been claimed by another installer/dealer.');
+        }
+        // Verify eligibility
+        const eligibleList = data.broadcasted_to_installer_ids || [];
+        if (!eligibleList.includes(partnerId)) {
+          throw new Error('You are not eligible to claim this lead territory.');
+        }
+        
+        transaction.update(leadRef, {
+          assigned_installer_id: partnerId,
+          assigned_installer_name: partnerName,
+          broadcasted_to_installer_ids: [], // Clear broadcast
+          follow_up_notes: arrayUnion(`Claimed by Installer/Dealer: ${partnerName}`),
+          updated_at: serverTimestamp()
+        });
+      }
+    });
+    
+    revalidatePath('/admin/leads');
+    // Also revalidate portal paths if needed
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error claiming lead:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// --- CRM / PROGRESSIVE DIALER ACTIONS ---
+
+export async function getLeadActivities(leadId: string) {
+  try {
+    const snap = await adminDb
+      .collection("leads")
+      .doc(leadId)
+      .collection("activities")
+      .orderBy("created_at", "desc")
+      .get();
+    
+    return snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        created_at: data.created_at?.toDate ? data.created_at.toDate().toISOString() : new Date().toISOString()
+      };
+    });
+  } catch (error) {
+    console.error("Failed to get activities:", error);
+    return [];
+  }
+}
+
+export async function addLeadActivity(leadId: string, activityData: { type: string; content: string; created_by_name: string; created_by_id: string }) {
+  try {
+    await adminDb.collection("leads").doc(leadId).collection("activities").add({
+      ...activityData,
+      created_at: serverTimestamp()
+    });
+    
+    // Auto-update lead updatedAt
+    await adminDb.collection("leads").doc(leadId).update({
+      updated_at: serverTimestamp()
+    });
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to add activity:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateNextFollowUp(leadId: string, dateString: string | null) {
+  try {
+    await adminDb.collection("leads").doc(leadId).update({
+      next_followup_date: dateString,
+      updated_at: serverTimestamp()
+    });
+    
+    // Add an automatic system activity for this change
+    await adminDb.collection("leads").doc(leadId).collection("activities").add({
+      type: "system",
+      content: dateString ? `Scheduled next follow-up for ${dateString}` : "Cleared follow-up schedule",
+      created_by_name: "System",
+      created_by_id: "system",
+      created_at: serverTimestamp()
+    });
+    
+    revalidatePath('/admin/leads');
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to update follow-up date:", error);
+    return { success: false, error: error.message };
+  }
 }

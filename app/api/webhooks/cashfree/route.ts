@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, serverTimestamp, increment } from "@/lib/firebase-admin";
+import { sendCustomerWhatsApp, sendAdminNotification } from "@/lib/notification-service";
 import { COLLECTIONS } from "@/lib/constants";
 import { verifyWebhookSignature } from "@/lib/cashfree";
 
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = JSON.parse(rawBody);
-    const eventType = payload.type;
+    const eventType = payload.type || payload.event;
 
     console.log(`[Cashfree Webhook] Received ${eventType}`, payload);
 
@@ -34,6 +35,16 @@ export async function POST(request: NextRequest) {
           quote_accepted_id: quote_id,
           updated_at: serverTimestamp()
         });
+
+        // Update Quote status to accepted
+        if (quote_id) {
+          const quoteRef = leadRef.collection("quotes").doc(quote_id);
+          await quoteRef.update({
+            status: "accepted",
+            accepted_at: serverTimestamp(),
+            accepted_by_uid: "system_webhook"
+          });
+        }
 
         // Trigger Commission Logic if routed to a dealer
         const leadDoc = await leadRef.get();
@@ -55,6 +66,47 @@ export async function POST(request: NextRequest) {
             created_at: serverTimestamp()
           });
         }
+
+        // --- AUTOMATED JOB CREATION & DISPATCH ---
+        const leadData = leadDoc.data();
+        if (leadData) {
+          const installerId = leadData.assigned_installer_id || null;
+          
+          const newJobRef = adminDb.collection("jobs").doc();
+          await newJobRef.set({
+            lead_id,
+            quote_id: quote_id || null,
+            address: {
+              pincode: leadData.detected_pincode || "",
+              city: leadData.detected_city || "",
+              state: leadData.detected_state || "",
+              full_address: leadData.wizard_answers?.full_address || `${leadData.detected_city} ${leadData.detected_state} ${leadData.detected_pincode}`,
+            },
+            installer_id: installerId,
+            hub_id: null,
+            type: "installation",
+            status: installerId ? "dispatched" : "pending_dispatch",
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp()
+          });
+
+          // Notify Installer if Auto-Assigned
+          if (installerId) {
+            const installerDoc = await adminDb.collection("installers").doc(installerId).get();
+            if (installerDoc.exists) {
+              const installer = installerDoc.data();
+              if (installer?.mobile_number) {
+                await sendCustomerWhatsApp(
+                  installer.mobile_number,
+                  `🚀 *New Job Dispatched!*\nJob ID: ${newJobRef.id}\nCustomer: ${leadData.customer_name}\nLocation: ${leadData.detected_pincode}\nPlease check your Installer App for details.`
+                );
+              }
+            }
+          } else {
+            // Escalate to Admin
+            await sendAdminNotification(`🚨 *URGENT: Unassigned Paid Job*\nJob ID: ${newJobRef.id}\nCustomer: ${leadData.customer_name} has paid the advance, but no Installer covers Pincode ${leadData.detected_pincode}.\nPlease dispatch immediately via the Admin Dispatch Center.`);
+          }
+        }
       }
     }
 
@@ -69,6 +121,65 @@ export async function POST(request: NextRequest) {
           is_active: status === "ACTIVE",
           updated_at: serverTimestamp()
         });
+      }
+    }
+
+    // 4. Handle Payout Success
+    if (eventType === "TRANSFER_SUCCESS") {
+      const transferId = payload.transferId || payload.data?.transfer?.transferId || payload.data?.transferId;
+      if (transferId) {
+        const payoutId = transferId.replace("transfer_", "");
+        const payoutRef = adminDb.collection("payout_requests").doc(payoutId);
+        const payoutDoc = await payoutRef.get();
+        
+        if (payoutDoc.exists) {
+          const payoutData = payoutDoc.data() as any;
+          if (payoutData.status === "processing") {
+            await payoutRef.update({
+              status: "success",
+              updated_at: serverTimestamp()
+            });
+
+            // Update user wallet balance
+            const userRef = adminDb.collection(payoutData.user_type + "s").doc(payoutData.user_id);
+            await userRef.update({
+              wallet_balance: increment(-payoutData.gross_amount),
+              updated_at: serverTimestamp()
+            });
+
+            // Create ledger entry
+            await adminDb.collection("ledger_transactions").add({
+              user_id: payoutData.user_id,
+              user_type: payoutData.user_type,
+              amount: -payoutData.gross_amount,
+              type: "payout",
+              description: `Payout processed successfully (Net: Rs ${payoutData.net_amount}, TDS: Rs ${payoutData.tds_amount})`,
+              created_at: serverTimestamp(),
+              payout_id: payoutId,
+            });
+          }
+        }
+      }
+    }
+
+    // 5. Handle Payout Failure
+    if (eventType === "TRANSFER_FAILED" || eventType === "TRANSFER_REJECTED") {
+      const transferId = payload.transferId || payload.data?.transfer?.transferId || payload.data?.transferId;
+      if (transferId) {
+        const payoutId = transferId.replace("transfer_", "");
+        const payoutRef = adminDb.collection("payout_requests").doc(payoutId);
+        const payoutDoc = await payoutRef.get();
+        
+        if (payoutDoc.exists) {
+          const payoutData = payoutDoc.data() as any;
+          if (payoutData.status === "processing") {
+            await payoutRef.update({
+              status: "failed",
+              failure_reason: payload.reason || payload.data?.transfer?.reason || "Transfer failed",
+              updated_at: serverTimestamp()
+            });
+          }
+        }
       }
     }
 

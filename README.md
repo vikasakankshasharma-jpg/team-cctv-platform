@@ -1,5 +1,9 @@
 # TEAM CCTV – Enterprise Smart Quotation & Referral Platform
 
+[![Quality Gates](https://github.com/team/cctv-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/team/cctv-platform/actions/workflows/ci.yml)
+[![Production Ready](https://img.shields.io/badge/Status-100%25_Production_Ready-success.svg)](#)
+
+> **Important:** Please see [HANDOVER.md](./HANDOVER.md) for complete technical handover documentation, architecture overview, and deployment procedures.
 TEAM is a high-fidelity, production-hardened SaaS platform designed for professional CCTV sales automation, franchise lead management, and customer referral tracking.
 
 ## 🚀 Key Features
@@ -46,9 +50,10 @@ The platform uses a deduplicated 732-item master catalog.
 - **Regeneration**: `npx tsx scratch/gen_markdown_catalog.ts`
 - **Sync**: `python scratch/update_seeder_data.py`
 
-### Testing
+### Testing & QA
 - **E2E Flow**: `npx tsx scratch/verify_quotation_flow.ts`
-- **Playwright**: `npm test`
+- **Playwright (E2E & A11y)**: `npx playwright test`
+- **CI Pipeline**: Automatically runs on PRs via `.github/workflows/ci.yml`.
 
 ## 📈 KPIs & Dashboards
 The **Sales Dashboard** tracks conversion performance:

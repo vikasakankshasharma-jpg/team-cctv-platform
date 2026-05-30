@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, Eye, Phone, MapPin, Search, Filter, Loader2, Target, Waves, ChevronRight, History } from "lucide-react";
+import { Users, Eye, Phone, MapPin, Search, Filter, Loader2, Target, Waves, ChevronRight, History, Download, Shield } from "lucide-react";
 import type { Lead } from "@/types";
-import { updateLeadStatus, assignLeadToSalesperson } from "@/app/actions/leads";
+import { updateLeadStatus, assignLeadToSalesperson, getPriceMatchRequests, getLeadQuotes } from "@/app/actions/leads";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { QuoteHistoryModal } from "./QuoteHistoryModal";
+import { PriceMatchReviewModal } from "./PriceMatchReviewModal";
+import { LeadDetailsDrawer } from "./LeadDetailsDrawer";
+import { ProgressiveDialer } from "./ProgressiveDialer";
+import { toast } from "sonner";
 import { db } from "@/lib/firebase-client";
 import { collection, query, orderBy, limit, onSnapshot, where } from "firebase/firestore";
 
@@ -14,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { KanbanBoard } from "./kanban/KanbanBoard";
 
 interface LeadsClientProps {
   initialLeads: Lead[];
@@ -28,6 +33,7 @@ interface LeadsClientProps {
 export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespeople = [], isAdmin = false, isSalesStaff = false, allowedPincodes = [] }: LeadsClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"standard" | "industrial">("standard");
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("kanban");
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
@@ -36,6 +42,36 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
 
   const [localLeads, setLocalLeads] = useState<Lead[]>(initialLeads);
   const [localIndLeads, setLocalIndLeads] = useState<any[]>(industrialLeads);
+  const [priceMatchLead, setPriceMatchLead] = useState<{ lead: Lead; request: any } | null>(null);
+  
+  const [selectedLeadForDrawer, setSelectedLeadForDrawer] = useState<Lead | null>(null);
+  const [isDialerOpen, setIsDialerOpen] = useState(false);
+
+  const handleOpenPriceMatch = async (lead: Lead) => {
+    if (!lead.price_match_request_id) return;
+    try {
+      const requests = await getPriceMatchRequests(lead.id!);
+      const request = requests.find((r: any) => r.id === lead.price_match_request_id) || requests[0];
+      if (request) {
+        const quotes = await getLeadQuotes(lead.id!);
+        const latestQuote = quotes[0] as any;
+        const originalTotal = latestQuote?.net_taxable_amount || latestQuote?.total_payable || 0;
+        
+        setPriceMatchLead({
+          lead,
+          request: {
+            ...request,
+            our_original_total: originalTotal
+          }
+        });
+      } else {
+        toast.error("No active price match request found");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error loading price match details");
+    }
+  };
 
   useEffect(() => {
     // Standard Leads Listener
@@ -105,6 +141,17 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
 
     return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    // Sort escalated leads to the top
+    const aEscalated = (a as Lead).is_escalated ? 1 : 0;
+    const bEscalated = (b as Lead).is_escalated ? 1 : 0;
+    if (aEscalated !== bEscalated) {
+      return bEscalated - aEscalated;
+    }
+    // Then sort by date (newest first)
+    const dateA = (a.created_at as any)?.toMillis?.() || 0;
+    const dateB = (b.created_at as any)?.toMillis?.() || 0;
+    return dateB - dateA;
   });
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
@@ -135,6 +182,57 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
     }
   };
 
+  const exportToCSV = () => {
+    const dataToExport = filteredLeads.map(lead => {
+      if (activeTab === "standard") {
+        const l = lead as Lead;
+        return {
+          "ID": l.id,
+          "Customer Name": l.customer_name,
+          "Mobile": l.mobile_number,
+          "Property Type": l.property_type,
+          "Technology": l.technology_choice,
+          "Pincode": l.address?.pincode || "",
+          "Status": l.status,
+          "Promoter": l.promoter_name || "Organic",
+          "Salesperson": l.assigned_to_salesperson_name || "Unassigned",
+          "Created At": new Date(l.created_at as string | number).toLocaleString('en-IN')
+        };
+      } else {
+        const l = lead as any;
+        return {
+          "ID": l.id,
+          "Contact Person": l.contact_person,
+          "Company": l.company_name,
+          "Phone": l.phone,
+          "Property Type": l.property_type,
+          "Camera Count": l.requested_camera_count,
+          "Technology": l.technology,
+          "Status": l.status,
+          "Created At": new Date(l.created_at as string | number).toLocaleString('en-IN')
+        };
+      }
+    });
+
+    if (dataToExport.length === 0) return;
+
+    const headers = Object.keys(dataToExport[0]).join(",");
+    const rows = dataToExport.map(row => 
+      Object.values(row).map(val => `"${String(val).replace(/"/g, '""')}"`).join(",")
+    );
+    
+    const csvContent = [headers, ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Leads_Export_${activeTab}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'partial': return "bg-muted text-muted-foreground border-transparent";
@@ -154,20 +252,58 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
       {/* Filters and Tabs */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         
-        {/* Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-secondary/50 border border-border rounded-lg shadow-sm">
-          <button
-            onClick={() => setActiveTab("standard")}
-            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "standard" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Standard Matrix
-          </button>
-          <button
-            onClick={() => setActiveTab("industrial")}
-            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "industrial" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Industrial Inquiries
-          </button>
+        {/* Tabs and Dialer */}
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="flex items-center gap-1 p-1 bg-secondary/50 border border-border rounded-lg shadow-sm">
+            <button
+              onClick={() => setActiveTab("standard")}
+              className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "standard" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Standard Matrix
+            </button>
+            <button
+              onClick={() => setActiveTab("industrial")}
+              className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "industrial" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Industrial Inquiries
+            </button>
+          </div>
+
+          {activeTab === "standard" && (
+            <div className="flex items-center gap-1 p-1 bg-secondary/50 border border-border rounded-lg shadow-sm">
+              <button
+                onClick={() => setViewMode("table")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === "table" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Table View
+              </button>
+              <button
+                onClick={() => setViewMode("kanban")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === "kanban" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Kanban Board
+              </button>
+            </div>
+          )}
+
+          {isAdmin && (
+            <button
+              onClick={exportToCSV}
+              className="px-3 py-1.5 rounded-md text-xs font-semibold text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all shadow-sm flex items-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export CSV
+            </button>
+          )}
+
+          {activeTab === "standard" && (
+            <button
+              onClick={() => setIsDialerOpen(true)}
+              className="px-4 py-1.5 rounded-md text-xs font-black text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all shadow-sm flex items-center gap-2 border border-green-600/50"
+            >
+              🚀 Launch Dialer
+            </button>
+          )}
         </div>
 
         {/* Search & Filter */}
@@ -202,9 +338,17 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
         </div>
       </div>
 
-      <Card className="shadow-sm border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
+      {activeTab === "standard" && viewMode === "kanban" ? (
+        <KanbanBoard 
+          leads={filteredLeads as Lead[]} 
+          onStatusChange={handleStatusChange} 
+          isAdmin={isAdmin}
+          onLeadClick={(lead) => setSelectedLeadForDrawer(lead)}
+        />
+      ) : (
+        <Card className="shadow-sm border-border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead className="font-semibold text-xs tracking-wider">{activeTab === "standard" ? "Customer" : "Contact"}</TableHead>
@@ -228,15 +372,28 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                 </TableRow>
               ) : (
                 filteredLeads.map((lead) => (
-                  <TableRow key={lead.id} className="group/row hover:bg-muted/30">
+                  <TableRow key={lead.id} className="group/row hover:bg-muted/30 cursor-pointer" onClick={() => { if(activeTab === "standard") setSelectedLeadForDrawer(lead as Lead) }}>
                     <TableCell className="align-top py-4">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-foreground text-sm tracking-tight group-hover/row:text-primary transition-colors">
                             {activeTab === "standard" ? (lead as Lead).customer_name : "Industrial Lead"}
                           </span>
+                          {(lead as Lead).price_match_status === 'pending' && (
+                            <Badge variant="outline" className="h-5 px-1.5 text-[9px] font-black uppercase bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 animate-pulse flex items-center gap-1">
+                              <Shield className="w-2.5 h-2.5" /> Price Match
+                            </Badge>
+                          )}
+                          {(lead as Lead).is_escalated && (
+                            <Badge variant="destructive" className="h-5 px-1.5 text-[9px] font-black uppercase animate-pulse flex items-center gap-1">
+                              Escalated
+                            </Badge>
+                          )}
                           {(lead as Lead).wizard_answers?.q_timeline === 'asap' && (
                             <Badge variant="destructive" className="h-5 px-1.5 text-[9px] uppercase">Urgent</Badge>
+                          )}
+                          {(lead as Lead).next_followup_date === new Date().toISOString().split("T")[0] && (
+                            <Badge variant="outline" className="h-5 px-1.5 text-[9px] uppercase bg-blue-500/10 text-blue-500 border-blue-500/20">Follow-up Today</Badge>
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
@@ -311,7 +468,7 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="align-top py-4 text-center">
+                    <TableCell className="align-top py-4 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-col items-center gap-2">
                         <div className="relative inline-block w-32">
                            <select 
@@ -359,10 +516,19 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                          )}
                       </div>
                     </TableCell>
-                    <TableCell className="align-top py-4 text-right">
+                    <TableCell className="align-top py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       {activeTab === "standard" ? (
                         <div className="flex flex-col items-end gap-2">
                           <div className="flex items-center justify-end gap-2">
+                            {lead.price_match_status === 'pending' && (
+                              <button 
+                                onClick={() => handleOpenPriceMatch(lead)}
+                                className="flex items-center justify-center w-8 h-8 rounded-md bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-600 hover:text-white hover:border-transparent transition-colors shadow-sm border border-amber-200 dark:border-amber-500/20"
+                                title="Review Price Match"
+                              >
+                                <Shield className="w-4 h-4" />
+                              </button>
+                            )}
                             <Link 
                               href={`/quote/${lead.id}`} 
                               target="_blank"
@@ -407,6 +573,7 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
           </Table>
         </div>
       </Card>
+      )}
 
       {/* Pagination Controller */}
       {nextCursor && activeTab === "standard" && (
@@ -433,6 +600,34 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
           customerName={historyLead.name}
         />
       )}
+
+      {priceMatchLead && (
+        <PriceMatchReviewModal
+          leadId={priceMatchLead.lead.id!}
+          leadName={priceMatchLead.lead.customer_name}
+          request={priceMatchLead.request}
+          onClose={() => setPriceMatchLead(null)}
+          onReviewed={() => {
+            setPriceMatchLead(null);
+            router.refresh();
+          }}
+        />
+      )}
+
+      <LeadDetailsDrawer
+        lead={selectedLeadForDrawer}
+        isOpen={!!selectedLeadForDrawer}
+        onClose={() => setSelectedLeadForDrawer(null)}
+        currentUser={{ id: "admin", name: "Admin User", role: "admin" }} // In a real app, pass actual user
+        onStatusChange={handleStatusChange}
+      />
+
+      <ProgressiveDialer
+        leads={localLeads}
+        isOpen={isDialerOpen}
+        onClose={() => setIsDialerOpen(false)}
+        currentUser={{ id: "admin", name: "Admin User", role: "admin" }} // In a real app, pass actual user
+      />
     </div>
   );
 }

@@ -199,21 +199,58 @@ function calculateHardware(
   let totalCost = 0;
 
   // 1. Camera Selection
-  const camera = resolveCamera(selection, products, addons, settings, tech);
-  if (camera) {
-    const qty = selection.camera_count;
-    const unitPrice = resolveUnitPrice(camera, qty);
-    const lineTotal = unitPrice * qty;
-    items.push({
-      product_id: camera.id!,
-      display_name: camera.display_name,
-      brand: camera.brand,
-      qty,
-      unit_price: unitPrice,
-      line_total: lineTotal
-    });
-    totalRetail += lineTotal;
-    totalCost += (camera.base_cost || 0) * qty;
+  if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+    for (const req of selection.mixed_camera_requirements) {
+      const proxySelection = { ...selection };
+      proxySelection.camera_count = req.count;
+      if (req.resolution) proxySelection.resolution_preference = req.resolution;
+      
+      const extraFeatures = proxySelection.requested_features ? [...proxySelection.requested_features] : [];
+      const typeLower = req.type.toLowerCase();
+      if (typeLower.includes("ptz")) extraFeatures.push("ptz");
+      if (typeLower.includes("solar")) extraFeatures.push("solar");
+      if (typeLower.includes("4g")) extraFeatures.push("4g");
+      if (typeLower.includes("audio") || typeLower.includes("speaker") || typeLower.includes("mic")) extraFeatures.push("audio");
+      if (typeLower.includes("color")) extraFeatures.push("color");
+      proxySelection.requested_features = extraFeatures;
+      
+      const proxyTech = req.technology || tech;
+
+      const camera = resolveCamera(proxySelection, products, addons, settings, proxyTech);
+      if (camera) {
+        const qty = req.count;
+        const unitPrice = resolveUnitPrice(camera, qty);
+        const lineTotal = unitPrice * qty;
+        items.push({
+          product_id: camera.id!,
+          display_name: `${req.type} - ${camera.display_name}`,
+          brand: camera.brand,
+          qty,
+          unit_price: unitPrice,
+          line_total: lineTotal
+        });
+        totalRetail += lineTotal;
+        totalCost += (camera.base_cost || 0) * qty;
+      }
+    }
+  } else {
+    // Standard single camera logic
+    const camera = resolveCamera(selection, products, addons, settings, tech);
+    if (camera) {
+      const qty = selection.camera_count;
+      const unitPrice = resolveUnitPrice(camera, qty);
+      const lineTotal = unitPrice * qty;
+      items.push({
+        product_id: camera.id!,
+        display_name: camera.display_name,
+        brand: camera.brand,
+        qty,
+        unit_price: unitPrice,
+        line_total: lineTotal
+      });
+      totalRetail += lineTotal;
+      totalCost += (camera.base_cost || 0) * qty;
+    }
   }
 
   // 2. Recorder Selection
@@ -303,8 +340,24 @@ function calculateCabling(
   locationMultiplier = 1.0
 ) {
   const items: QuoteLineItem[] = [];
-  // Estimated total cable = meters per camera × camera count
-  const totalMeters = meters * selection.camera_count;
+  
+  // Exclude Wireless/Solar/4G cameras from cabling meter counts
+  let wiredCameraCount = selection.camera_count;
+  if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+    wiredCameraCount = selection.mixed_camera_requirements
+      .filter(req => {
+        const t = req.type.toLowerCase();
+        return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
+      })
+      .reduce((sum, req) => sum + req.count, 0);
+  }
+
+  if (wiredCameraCount <= 0) {
+    return { items, totalRetail: 0, totalCost: 0 };
+  }
+
+  // Estimated total cable = meters per wired camera × wired camera count
+  const totalMeters = meters * wiredCameraCount;
   const baseCostPerMeter = tech === "IP"
     ? (settings.cable_copper_coated_ip || 12)
     : (settings.cable_copper_coated_hd || 8);
@@ -446,7 +499,30 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
   }
 
   let pool = products.filter(p => p.category === "camera" && p.technology === tech && p.is_active);
-  
+
+  // ── Specialty Camera Guardrail ──────────────────────────────
+  // Prevent Elite/Premium tiers from accidentally picking highly expensive PTZ/Solar/4G/Wireless cameras
+  // unless the customer explicitly requested them.
+  const requestedSpecialties = (selection.requested_features || []).map(f => f.toLowerCase().trim());
+  const hasSpecialtyRequest = requestedSpecialties.some(rf => 
+    ["ptz", "solar", "4g", "wireless", "panoramic"].includes(rf)
+  ) || ((selection as any).type && ["ptz", "solar", "4g", "wireless"].some(t => (selection as any).type.toLowerCase().includes(t)));
+
+  if (!hasSpecialtyRequest) {
+    const nonSpecialtyPool = pool.filter(cam => {
+      const name = (cam.technical_name + " " + cam.display_name).toLowerCase();
+      const feats = (cam.features || []).map(f => f.toLowerCase());
+      const isSpecialty = ["ptz", "solar", "4g", "wireless", "panoramic"].some(
+        sp => name.includes(sp) || feats.includes(sp)
+      );
+      return !isSpecialty;
+    });
+    // Fallback: only apply if it doesn't empty the pool
+    if (nonSpecialtyPool.length > 0) {
+      pool = nonSpecialtyPool;
+    }
+  }
+
   // Filter by Brand
   if (selection.brand_preference && selection.brand_preference !== "all") {
     const brandFiltered = pool.filter(cam => cam.brand?.toLowerCase() === selection.brand_preference?.toLowerCase());

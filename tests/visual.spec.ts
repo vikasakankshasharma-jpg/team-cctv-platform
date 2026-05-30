@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 // Path to save screenshots - directly in the artifacts directory
-const SCREENSHOTS_DIR = 'C:\\Users\\hp\\.gemini\\antigravity\\brain\\8c22ab33-d2d1-47d3-b968-bb8e91be9fb2\\visual_screenshots';
+const SCREENSHOTS_DIR = 'C:\\Users\\hp\\.gemini\\antigravity\\brain\\250a6cc5-24fa-4bb6-9bb2-4f398adbc65f\\visual_screenshots';
 
 // Ensure the directory exists
 if (!fs.existsSync(SCREENSHOTS_DIR)) {

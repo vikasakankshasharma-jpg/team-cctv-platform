@@ -47,7 +47,7 @@ export const CommissionSlabSchema = z.object({
 /** Answers submitted from the wizard — keyed by questionId */
 export const WizardAnswersSchema = z.record(
   z.string().min(1),
-  z.union([z.string().min(1), z.array(z.string().min(1))])
+  z.any()
 );
 
 /** POST /api/wizard — not needed (GET only), but kept for completeness */
@@ -90,6 +90,12 @@ export const GenerateQuoteSchema = z.object({
   plan_type: z.enum(["budget", "recommended", "premium"]),
   technology: z.enum(["HD", "IP"]),
   camera_count: z.number().int().min(1).max(16),
+  mixed_camera_requirements: z.array(z.object({
+    type: z.string(),
+    count: z.number().int().min(1),
+    resolution: z.string().optional(),
+    technology: z.string().optional()
+  })).optional(),
   picture_quality: z.enum(["good", "very_clear", "crystal_clear"]),
   recording_days: z.number().int().min(1).max(365),
   selected_addons: z.array(z.string()).default([]),
@@ -402,6 +408,31 @@ export const ReportQuerySchema = z.object({
 });
 
 export type ReportQueryInput = z.infer<typeof ReportQuerySchema>;
+
+// ─────────────────────────────────────────────
+// PRICE MATCH
+// ─────────────────────────────────────────────
+
+export const PriceMatchSubmitSchema = z.object({
+  lead_id: z.string().min(1),
+  competitor_quote_url: z.string().url(),
+  competitor_name: z.string().optional(),
+  competitor_total: z.number().positive().optional(),
+  notes: z.string().max(500).optional(),
+  uploaded_by_name: z.string().min(1),
+});
+
+export type PriceMatchSubmitInput = z.infer<typeof PriceMatchSubmitSchema>;
+
+export const PriceMatchReviewSchema = z.object({
+  status: z.enum(["approved", "rejected", "counter_offered"]),
+  review_notes: z.string().max(500).optional(),
+  approved_discount_percent: z.number().min(0).max(50).optional(),
+  approved_discount_flat: z.number().min(0).optional(),
+  counter_offer_amount: z.number().positive().optional(),
+});
+
+export type PriceMatchReviewInput = z.infer<typeof PriceMatchReviewSchema>;
 
 // ─────────────────────────────────────────────
 // API AUTH HELPERS

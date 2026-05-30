@@ -52,16 +52,15 @@ test.describe('Quote & Booking End-to-End Flow', () => {
       await expect(page.locator('text=Unlock Your Proposal')).toBeVisible({ timeout: 15000 });
 
       // Fill Lead Gate details (Use bypass value)
-      await page.fill('input[placeholder="98765 43210"]', '9999999999');
-      await page.fill('input[placeholder="e.g. Rahul Sharma"]', 'E2E Test User');
-      await page.fill('input[placeholder="e.g. 302001"]', '302001');
-      await page.fill('input[placeholder="name@example.com"]', 'e2e@example.com');
+      await page.fill('input[placeholder="Enter mobile number"]', '9999999999');
+      await page.fill('input[placeholder="Enter full name"]', 'E2E Test User');
+      await page.fill('input[placeholder="6-digit pincode"]', '302001');
       
       // Send OTP
       await page.click('button:has-text("Send Verification Code")');
 
       // Wait for OTP form to appear
-      await expect(page.locator('text=Enter Your Code')).toBeVisible({ timeout: 15000 });
+      await expect(page.locator('text=Verify Your Number')).toBeVisible({ timeout: 15000 });
       
       // Fill the 6 OTP input boxes
       const otpInputs = page.locator('input[inputmode="numeric"]');
@@ -69,7 +68,7 @@ test.describe('Quote & Booking End-to-End Flow', () => {
         await otpInputs.nth(i).fill(String(i + 1));
       }
 
-      await page.click('button:has-text("Verify & Access Proposal")');
+      await page.click('button:has-text("Verify & View Quote")');
 
       // Wait for navigation to the quotation page
       await expect(page).toHaveURL(/\/quote\/.+/, { timeout: 15000 });
@@ -80,10 +79,10 @@ test.describe('Quote & Booking End-to-End Flow', () => {
     // ---------------------------------------------------------
     await test.step('View Quotation Dashboard', async () => {
       // Wait for the comparison cards to load
-      await expect(page.locator('h1', { hasText: /Your Security.*Quote/i })).toBeVisible({ timeout: 15000 });
+      await expect(page.locator('h1', { hasText: /Your security/i })).toBeVisible({ timeout: 15000 });
       
       // Ensure that we see the cards
-      await expect(page.locator('text=Choose Plan').first()).toBeVisible();
+      await expect(page.locator('button:has-text("Select")').first()).toBeVisible();
     });
 
     // ---------------------------------------------------------
@@ -91,10 +90,10 @@ test.describe('Quote & Booking End-to-End Flow', () => {
     // ---------------------------------------------------------
     await test.step('Open Build Your Own Customizer', async () => {
       // Scroll to the FullCustomizerPanel (Pro Customizer)
-      await expect(page.locator('h3', { hasText: 'Pro Customizer' })).toBeVisible();
+      await expect(page.locator('h3', { hasText: 'Configuration Tool' })).toBeVisible();
 
-      // Switch to Add-ons tab
-      await page.locator('button', { hasText: 'Add-ons' }).click();
+      // Switch to Accessories tab
+      await page.locator('button', { hasText: 'Accessories' }).click();
 
       // Wait for add-ons to load
       await expect(page.locator('button', { hasText: /^Add$/i }).first()).toBeVisible();
@@ -110,11 +109,10 @@ test.describe('Quote & Booking End-to-End Flow', () => {
     // STEP 4: Review Details & Book Visit
     // ---------------------------------------------------------
     await test.step('Review & Submit Booking', async () => {
-      // Ensure the summary section is present
-      await expect(page.locator('text=What Happens Next?')).toBeVisible();
+      // Removed the summary section check as it's no longer present.
 
-      // Click the "Accept Quote" button from the ActionPanel
-      await page.locator('button', { hasText: 'Accept Quote' }).click();
+      // Click the "Save PDF" button from the SmartContextBar
+      await page.locator('button', { hasText: 'Save PDF' }).click();
 
       // Wait for the SiteDetailsModal to appear
       await expect(page.locator('h2', { hasText: 'Pinpoint Your Site' })).toBeVisible();
@@ -138,7 +136,7 @@ test.describe('Quote & Booking End-to-End Flow', () => {
 
       // Ensure navigation happens and Review page loads
       await expect(page).toHaveURL(/\/quote\/.+\/review\/.+/, { timeout: 15000 });
-      await expect(page.locator('text=BILL TO')).toBeVisible();
+      await expect(page.locator('text=Bill To')).toBeVisible();
     });
   });
 });

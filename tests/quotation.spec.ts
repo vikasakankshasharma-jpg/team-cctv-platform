@@ -5,6 +5,6 @@ test.describe('Live Quotation Engine E2E', () => {
     await page.goto('/quote/mock-lead?name=Test+Customer&mobile=9876543210');
     
     // Wait for the UI to load
-    await expect(page.getByRole('heading', { name: /Compare Featured Systems/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1', { hasText: /Your security/i })).toBeVisible({ timeout: 10000 });
   });
 });

@@ -107,6 +107,14 @@ service cloud.firestore {
       }
     }
 
+    match /industrial_leads/{leadId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin(); 
+      allow create: if false; 
+      allow update: if isAdmin();
+      allow delete: if false; 
+    }
+
     // ──────────────────────────────────────────
     // /products/{productId}
     // Public read (needed for price display on landing page).

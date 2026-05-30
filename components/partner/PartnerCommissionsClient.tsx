@@ -29,9 +29,9 @@ export function PartnerCommissionsClient({ records, summary }: PartnerCommission
   });
 
   const STATS = [
-    { label: "Total Earned", value: summary.totalEarned, icon: IndianRupee, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { label: "Pending Verification", value: summary.totalPending, icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Cleared to Bank", value: summary.totalPaid, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { label: "Total Earned", value: summary.totalEarned, icon: IndianRupee, color: "text-amber-500", bg: "bg-amber-500/10", stroke: "#f59e0b", percentage: 100 },
+    { label: "Pending Verification", value: summary.totalPending, icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10", stroke: "#3b82f6", percentage: summary.totalEarned > 0 ? Math.round((summary.totalPending / summary.totalEarned) * 100) : 0 },
+    { label: "Cleared to Bank", value: summary.totalPaid, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10", stroke: "#10b981", percentage: summary.totalEarned > 0 ? Math.round((summary.totalPaid / summary.totalEarned) * 100) : 0 },
   ];
 
   return (
@@ -55,7 +55,7 @@ export function PartnerCommissionsClient({ records, summary }: PartnerCommission
         {STATS.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <div key={i} className="bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[28px] p-6 shadow-lg shadow-zinc-200/20 dark:shadow-none hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+            <div key={i} className="bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60 rounded-[28px] p-6 shadow-lg shadow-zinc-200/20 dark:shadow-none hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group flex items-center justify-between">
               <div className={`absolute -right-6 -top-6 w-24 h-24 ${stat.bg} rounded-full blur-[40px] opacity-50 group-hover:opacity-100 transition-opacity`} />
               <div className="relative z-10 flex flex-col gap-4">
                 <div className={`w-10 h-10 rounded-[14px] ${stat.bg} flex items-center justify-center`}>
@@ -64,6 +64,34 @@ export function PartnerCommissionsClient({ records, summary }: PartnerCommission
                 <div>
                   <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">{stat.label}</p>
                   <p className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">₹{stat.value.toLocaleString('en-IN')}</p>
+                </div>
+              </div>
+              
+              {/* Progress Ring */}
+              <div className="relative w-20 h-20 flex-shrink-0 z-10 hidden sm:block">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  {/* Background Circle */}
+                  <path
+                    className="text-zinc-100 dark:text-zinc-800"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  />
+                  {/* Progress Circle */}
+                  <path
+                    style={{ color: stat.stroke }}
+                    className="transition-all duration-1000 ease-out"
+                    strokeDasharray={`${stat.percentage}, 100`}
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className={`text-[10px] font-bold ${stat.color}`}>{stat.percentage}%</span>
                 </div>
               </div>
             </div>

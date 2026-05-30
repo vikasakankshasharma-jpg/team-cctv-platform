@@ -29,6 +29,40 @@ export interface Job {
   updated_at?: unknown;
 }
 
+export interface LeadActivity {
+  id?: string;
+  lead_id: string;
+  type: "note" | "call" | "email" | "site_visit" | "status_change" | "system";
+  content: string;
+  created_by_id: string;
+  created_by_name: string;
+  created_at: unknown;
+}
+
+export interface PriceMatchRequest {
+  id?: string;
+  lead_id: string;
+  uploaded_by: string;
+  uploaded_by_name: string;
+  competitor_name?: string;
+  competitor_quote_url: string;
+  competitor_total?: number;
+  notes?: string;
+  status: "pending" | "under_review" | "approved" | "rejected" | "counter_offered";
+  reviewer_id?: string;
+  reviewer_name?: string;
+  reviewer_role?: "admin" | "salesperson";
+  review_notes?: string;
+  approved_discount_percent?: number;
+  approved_discount_flat?: number;
+  counter_offer_amount?: number;
+  our_original_total?: number;
+  our_new_total?: number;
+  created_at: unknown;
+  reviewed_at?: unknown;
+  updated_at?: unknown;
+}
+
 export interface Lead {
   id?: string;
   customer_name: string;
@@ -41,6 +75,22 @@ export interface Lead {
   wizard_answers: Record<string, unknown>;
   referral_code?: string | null;
   competitor_quote_url?: string;
+  
+  // Assigned internal staff
+  assigned_salesperson_id?: string | null;
+  assigned_installer_id?: string | null;
+  
+  // Uber-Style Broadcast Claiming
+  broadcasted_to_salesperson_ids?: string[];
+  broadcasted_to_installer_ids?: string[];
+  
+  // SLA Escalation
+  sla_breach_at?: unknown; // Firestore Timestamp
+  is_escalated?: boolean;
+  
+  // CRM Features
+  next_followup_date?: string | null; // ISO Date String (YYYY-MM-DD)
+  
   status: "new" | "contacted" | "site_visit" | "quoted" | "won" | "lost";
   created_at: unknown;
   updated_at?: unknown;
@@ -56,7 +106,6 @@ export interface Lead {
   // Hub & Spoke execution mapping
   hub_id?: string | null;
   hub_name?: string | null;
-  assigned_installer_id?: string | null;
   assigned_installer_name?: string | null;
 
   // Follow-Up Engine
@@ -66,6 +115,10 @@ export interface Lead {
     value?: number;
     campaign_id: string;
   };
+
+  // Price Match
+  price_match_request_id?: string | null;
+  price_match_status?: "pending" | "under_review" | "approved" | "rejected" | "counter_offered" | null;
 }
 
 export interface FollowUpCampaign {
@@ -220,6 +273,13 @@ export interface AddonRule {
   };
 }
 
+export interface MixedCameraRequirement {
+  type: string; // e.g. "Indoor", "Outdoor", "PTZ", "Solar", "4G"
+  count: number;
+  resolution?: string; // Optional specific resolution override e.g. "4MP", "8MP"
+  technology?: string; // Optional tech override if mixed
+}
+
 export interface ConfiguratorSelection {
   camera_count: number;
   picture_quality: "good" | "very_clear" | "crystal_clear";
@@ -232,6 +292,7 @@ export interface ConfiguratorSelection {
   selected_recorder_id?: string;   // Specific recorder ID override
   selected_storage_id?: string;    // Specific storage/HDD ID override
   selected_power_id?: string;      // Specific power/transmission ID override
+  mixed_camera_requirements?: MixedCameraRequirement[]; // NEW: For advanced mixed configuration
   
   // NEW FIELDS FROM WIZARD REDESIGN
   surface_types?: string[];
@@ -334,6 +395,12 @@ export interface AppSettings {
   minimum_margin_threshold?: number; // E.g., 20 for 20% minimum target margin
   high_reach_fee?: number;           // Fee for high ceilings
   labor_cost_margin_percent?: number; // Purchase cost of labor as % of retail (e.g. 70%)
+  
+  // NEW: PDF Quote Generation
+  pdf_logo_url?: string | null;
+  bank_details?: string | null;
+  custom_terms?: string | null;
+  pdf_terms?: string | null;
 
   updated_at?: unknown;
   updated_by?: string | null;
@@ -363,6 +430,13 @@ export interface Promoter {
   discount_type?: "flat" | "percent";
   discount_value?: number;
   custom_layout_id?: string | null;
+  bank_details?: {
+    account_number: string;
+    ifsc_code: string;
+    account_holder_name: string;
+    pan_number: string;
+  };
+  cashfree_beneficiary_id?: string;
 
   created_at?: unknown;
   updated_at?: unknown;
@@ -374,6 +448,14 @@ export interface PartnerSession {
   promoterName: string | null;
   uid: string | null;
   role: "partner" | null;
+}
+
+export interface InstallerSession {
+  isAuthenticated: boolean;
+  installerId: string | null;
+  installerName: string | null;
+  uid: string | null;
+  role: "installer" | null;
 }
 
 export interface WizardOption {
@@ -522,11 +604,20 @@ export interface Salesperson {
   mobile_number: string;
   firebase_uid?: string;                 // Set after first OTP login
   is_active: boolean;
-  // Geographic coverage — at least one must be set
-  assigned_zone_ids?: string[];          // Zone IDs from coverage_zones collection
-  assigned_pincodes?: string[];          // Direct pincode overrides
+  // Geographic coverage
+  assigned_zone_ids?: string[];          // Legacy/Zone IDs from coverage_zones collection
+  assigned_pincodes?: string[];          // Legacy direct pincode overrides
   assigned_cities?: string[];
   assigned_states?: string[];
+  territory?: {
+    allowed_pincodes?: string[];
+    allowed_cities?: string[];
+    allowed_states?: string[];
+    operating_radius_km?: number;
+    base_coordinates?: { lat: number; lng: number };
+    base_address_text?: string;
+  };
+  max_discount_approval_percent?: number;  // Admin-configured: max discount % this salesperson can approve
   created_at?: unknown;
   updated_at?: unknown;
 }
@@ -562,8 +653,16 @@ export interface Installer {
   is_active: boolean;
 
   // SLA & Dispatch Routing
-  serviceable_pincodes: string[];        // Standard coverage
+  serviceable_pincodes?: string[];        // Standard coverage
   serviceable_geohashes?: string[];      // For proximity fallback
+  territory?: {
+    allowed_pincodes?: string[];
+    allowed_cities?: string[];
+    allowed_states?: string[];
+    operating_radius_km?: number;
+    base_coordinates?: { lat: number; lng: number };
+    base_address_text?: string;
+  };
   skills: string[];                      // e.g., ['ip_camera', 'analog']
   
   // Performance & Financials
@@ -572,6 +671,20 @@ export interface Installer {
   jobs_completed: number;
   sla_breaches: number;
   wallet_balance: number;                // Cash-in-hand collected via COD. If negative, they owe the platform.
+  
+  // Bank Details
+  bank_account?: string;
+  bank_ifsc?: string;
+  bank_account_verified?: boolean;
+  bank_verified_name?: string;
+  
+  bank_details?: {
+    account_number: string;
+    ifsc_code: string;
+    account_holder_name: string;
+    pan_number: string;
+  };
+  cashfree_beneficiary_id?: string;
 
   created_at?: unknown;
   updated_at?: unknown;
@@ -617,4 +730,20 @@ export interface HardwareLedger {
   status: "in_hub" | "with_installer" | "installed" | "rma_defective";
   job_id?: string;
   updated_at: unknown;
+}
+
+export interface PayoutRequest {
+  id?: string;
+  user_id: string;
+  user_type: "installer" | "promoter";
+  user_name: string;
+  gross_amount: number;
+  tds_percent: number;
+  tds_amount: number;
+  net_amount: number;
+  status: "pending" | "processing" | "success" | "failed";
+  cashfree_transfer_id?: string;
+  utr_number?: string;
+  created_at: unknown;
+  updated_at?: unknown;
 }
