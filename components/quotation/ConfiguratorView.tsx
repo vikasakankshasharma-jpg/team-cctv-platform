@@ -329,7 +329,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   if (!pricing_results.recommended) return <div className="animate-pulse flex space-y-4 flex-col h-96 bg-zinc-200 rounded-xl" />;
 
   return (
-    <div className="flex flex-col gap-12 sm:gap-20 relative">
+    <div className="flex flex-col gap-12 sm:gap-20 relative pb-28">
       
       {/* 3-CARD COMPARISON & SPEC TABLE - APPLE AESTHETIC */}
       <div className="w-full max-w-7xl mx-auto px-4">

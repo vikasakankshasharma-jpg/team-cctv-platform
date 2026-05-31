@@ -16,7 +16,7 @@ export function WhatsAppFloat() {
   const pathname = usePathname();
 
   // Hide during wizard and on admin/partner/salesperson portals
-  const hideOn = ["/wizard", "/admin", "/partner", "/salesperson", "/onboarding", "/platform"];
+  const hideOn = ["/wizard", "/admin", "/partner", "/salesperson", "/onboarding", "/platform", "/quote", "/installer", "/for-installers"];
   if (hideOn.some((p) => pathname.startsWith(p))) return null;
 
   return (

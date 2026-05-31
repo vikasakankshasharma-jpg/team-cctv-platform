@@ -256,10 +256,33 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         minHeight: "100vh",
         background: "#FAFAF7",
         fontFamily: "'DM Sans', system-ui, sans-serif",
-        padding: "24px 16px 80px",
       }}
+      className="px-3 sm:px-4 py-6 pb-20"
     >
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
+
+        {/* ← Back to configurator */}
+        {!accepted && (
+          <a
+            href={`/quote/${quote.leadId}`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 500,
+              color: "#6B7380",
+              textDecoration: "none",
+              marginBottom: 16,
+              transition: "color .15s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#1C1C28")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#6B7380")}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Modify Quote
+          </a>
+        )}
 
         {/* ── Status bar ─────────────────────────────────────────────── */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 8 }}>
@@ -304,10 +327,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           <div
             style={{
               background: NAVY,
-              padding: "32px 36px 28px",
               position: "relative",
               overflow: "hidden",
             }}
+            className="px-5 py-6 sm:px-9 sm:py-8"
           >
             {/* decorative circles */}
             <div style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "rgba(200,146,42,.07)", pointerEvents: "none" }} />
@@ -337,7 +360,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,.08)", margin: "22px 0", position: "relative" }} />
 
             {/* meta row */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, position: "relative", zIndex: 1 }}>
+            <div style={{ position: "relative", zIndex: 1 }} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
               {[
                 ["Date Issued", formatDate(quote.issuedAt)],
                 ["Prepared For", quote.customer.name],
@@ -352,10 +375,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           </div>
 
           {/* ── Body ──────────────────────────────────────────────────── */}
-          <div style={{ padding: "32px 36px" }}>
+          <div className="px-5 py-6 sm:px-9 sm:py-8">
 
             {/* Bill to / install site */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 28 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-7">
               {[
                 {
                   label: "Bill To",
@@ -397,7 +420,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase", color: "#1C1C28" }}>What Happens Next?</div>
                </div>
                
-               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                  {[
                    { title: "Site Survey", desc: "Book a visit for a precise wiring measurement." },
                    { title: "Installation", desc: "Professional setup by our certified team." },
@@ -528,7 +551,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </div>
 
               {/* EMI Option Chips */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 20 }}>
+              <div className="grid grid-cols-3 gap-2 sm:gap-2.5 mt-5">
                 {[
                   { months: 3,  label: "3 Months",  emoji: "⚡" },
                   { months: 6,  label: "6 Months",  emoji: "✨" },
@@ -599,7 +622,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             </div>
 
             {/* Trust term cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 28 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
 
               <TermCard
                 iconBg="#F5E6C8"
@@ -651,7 +674,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 Visual Intelligence: Resolution Comparison
               </div>
               
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid #E4E4DC" }}>
                   <Image 
                     src="/comparisons/2mp.png" 
@@ -820,13 +843,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             style={{
               background: "#F5F5F0",
               borderTop: "1px solid #E4E4DC",
-              padding: "18px 36px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              flexWrap: "wrap",
             }}
+            className="px-5 py-4 sm:px-9 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
           >
             <div style={{ fontSize: 12, color: "#6B7380" }}>
               <strong style={{ color: "#1C1C28", fontWeight: 600 }}>TEAM CCTV</strong>

@@ -26,8 +26,8 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
     <div className="fixed bottom-0 left-0 w-full z-50 bg-[#fbfbfd]/80 dark:bg-[#1d1d1f]/80 backdrop-blur-2xl border-t border-[#d2d2d7]/50 dark:border-[#424245]/50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
         
-        {/* Core Settings Summary */}
-        <div className="flex items-center gap-5 text-[#1d1d1f] dark:text-[#f5f5f7] overflow-x-auto no-scrollbar w-full sm:w-auto">
+        {/* Core Settings Summary — hidden on mobile to prevent truncation */}
+        <div className="hidden sm:flex items-center gap-5 text-[#1d1d1f] dark:text-[#f5f5f7] overflow-x-auto no-scrollbar w-full sm:w-auto">
           <div className="flex flex-col shrink-0">
             <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">System</span>
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -67,6 +67,27 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
                   )}
                 </div>
               </div>
+            </>
+          )}
+        </div>
+
+        {/* Mobile-only compact summary */}
+        <div className="flex sm:hidden items-center gap-3 text-[#1d1d1f] dark:text-[#f5f5f7] w-full">
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#86868b]">
+            <Camera className="w-3 h-3" />
+            <span>{selection.camera_count}</span>
+          </div>
+          <div className="w-px h-4 bg-[#d2d2d7] dark:bg-[#424245]" />
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#86868b]">
+            <HardDrive className="w-3 h-3" />
+            <span>{selection.recording_days}d</span>
+          </div>
+          {customizationDiff !== 0 && (
+            <>
+              <div className="w-px h-4 bg-[#d2d2d7] dark:bg-[#424245]" />
+              <span className={`text-[11px] font-bold ${customizationDiff > 0 ? 'text-[#0071e3]' : 'text-[#ff3b30]'}`}>
+                {customizationDiff > 0 ? '+' : '-'}₹{Math.abs(customizationDiff).toLocaleString("en-IN")}
+              </span>
             </>
           )}
         </div>
