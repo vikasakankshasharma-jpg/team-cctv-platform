@@ -39,7 +39,7 @@ export default function CustomerLayout({
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 md:h-20 flex items-center justify-between relative">
 
           {/* Left — Logo & Cities Dropdown */}
-          <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-6 shrink-0">
             <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
               <div className="bg-zinc-900 dark:bg-blue-600 text-white p-2 sm:p-2.5 rounded-xl sm:rounded-2xl group-hover:bg-blue-600 dark:group-hover:bg-blue-500 transition-all duration-300 shadow-lg shadow-zinc-900/10 group-hover:shadow-blue-500/30">
                 <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -70,7 +70,7 @@ export default function CustomerLayout({
           </div>
 
           {/* Right — Support + Portal */}
-          <div className="flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-4 md:gap-6 shrink-0">
             {/* Phone icon visible on mobile, full button on desktop */}
             <a
               href="tel:+919772699395"
