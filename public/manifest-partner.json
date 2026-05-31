@@ -1,7 +1,7 @@
 {
-  "name": "TEAM Partner Portal",
-  "short_name": "TEAM Partner",
-  "description": "Enterprise-Grade Security Systems - Partner Dashboard",
+  "name": "CCTVQuotation Partner Portal",
+  "short_name": "CCTV Partner",
+  "description": "CCTVQuotation - Partner Dashboard",
   "start_url": "/partner/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -10,12 +10,14 @@
     {
       "src": "/og-image.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
     },
     {
       "src": "/og-image.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
     }
   ]
 }

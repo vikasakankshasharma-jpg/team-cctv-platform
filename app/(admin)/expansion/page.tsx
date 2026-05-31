@@ -143,7 +143,7 @@ export default function ExpansionDashboard() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-transform shadow-lg">
-                          Appoint Franchise
+                          Appoint Installer
                         </button>
                       </td>
                     </tr>
@@ -155,7 +155,7 @@ export default function ExpansionDashboard() {
         </div>
         <div className="px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
           <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-center">
-            Formula: (Looks × 0.2) + (Leads × 0.5) + (Confirmed × 0.3)
+            Formula: (Looks × 0.2) + (Leads × 0.5) + (Confirmed × 0.8)
           </p>
         </div>
       </div>

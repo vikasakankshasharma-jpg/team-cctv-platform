@@ -31,6 +31,17 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
       }
 
       if (data.citySlug) {
+        // Log impression silently
+        fetch("/api/impressions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            city: data.citySlug,
+            pincode: pincode,
+            source: "homepage_widget"
+          })
+        }).catch(console.error);
+
         // Redirect directly to the beautiful local city landing page with pincode context!
         router.push(`/${data.citySlug}?pincode=${pincode}`);
       } else {

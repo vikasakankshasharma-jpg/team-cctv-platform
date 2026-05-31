@@ -5,9 +5,8 @@ import Link from "next/link";
 import { TrendingUp, Users, Zap, Hash, Activity, ArrowRight, ArrowUpRight, BarChart3, Clock } from "lucide-react";
 import { collection, query, orderBy, limit, onSnapshot, where } from "firebase/firestore";
 import { db } from "@/lib/firebase-client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Lead } from "@/types";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 
 export interface WeeklyBucket {
   label: string;
@@ -39,32 +38,30 @@ export interface DashboardClientProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  new:        "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400",
-  contacted:  "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400",
-  site_visit: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400",
-  quoted:     "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400",
-  won:        "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400",
-  lost:       "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400",
+  new:        "sp-new",
+  contacted:  "sp-new",
+  site_visit: "sp-site",
+  quoted:     "sp-quote",
+  won:        "sp-won",
+  lost:       "sp-lost",
+  waitlist:   "sp-waitlist",
 };
 
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
-
-// ─── ANIMATED BAR (REMOVED) ─────────────────────────────────────────────────────────────
-
+// ─── RECHARTS TOOLTIP ─────────────────────────────────────────────────────────────
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1d1d1f]/95 text-[#f5f5f7] p-3 border border-[#424245] shadow-2xl rounded-xl">
-        <p className="text-xs font-semibold uppercase tracking-wider mb-2 text-[#86868b]">{label}</p>
+      <div className="bg-[var(--surface3)] text-[var(--text)] p-3 border border-[var(--border)] shadow-xl rounded-lg">
+        <p className="text-[10.5px] font-semibold uppercase tracking-wider mb-2 text-[var(--muted)]">{label}</p>
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#0071e3]" />
-            <span className="text-sm font-medium">Total: {payload[0].value}</span>
+            <div className="w-2 h-2 rounded-full" style={{ background: "var(--blue)" }} />
+            <span className="text-[12px] font-medium">Total: {payload[0].value}</span>
           </div>
           {payload[1] && (
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#34c759]" />
-              <span className="text-sm font-medium">Won: {payload[1].value}</span>
+              <div className="w-2 h-2 rounded-full" style={{ background: "var(--green)" }} />
+              <span className="text-[12px] font-medium">Won: {payload[1].value}</span>
             </div>
           )}
         </div>
@@ -80,36 +77,27 @@ function SalesTrendChart({ trend }: { trend: WeeklyBucket[] }) {
   const totalWon   = trend.reduce((s, b) => s + b.won, 0);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h3 className="text-2xl font-semibold text-foreground tracking-tight">Weekly Analytics</h3>
-          <p className="text-sm font-medium text-muted-foreground mt-1">
-            {totalLeads} total · {totalWon} converted · 7-day cycle
-          </p>
-        </div>
-      </div>
-
+    <div className="h-full flex flex-col" style={{ height: "400px" }}>
       <div className="flex-1 w-full min-h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#0071e3" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#0071e3" stopOpacity={0}/>
+                <stop offset="5%" stopColor="var(--blue)" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="var(--blue)" stopOpacity={0}/>
               </linearGradient>
               <linearGradient id="colorWon" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#34c759" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#34c759" stopOpacity={0}/>
+                <stop offset="5%" stopColor="var(--green)" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="var(--green)" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#d2d2d7" opacity={0.3} />
-            <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#86868b', fontSize: 12 }} dy={10} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#86868b', fontSize: 12 }} />
-            <RechartsTooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(134,134,139,0.3)', strokeWidth: 2, strokeDasharray: '3 3' }} />
-            <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
-            <Area type="monotone" dataKey="total" name="Total Leads" stroke="#0071e3" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" activeDot={{ r: 6, fill: '#0071e3', stroke: '#fff', strokeWidth: 2 }} />
-            <Area type="monotone" dataKey="won" name="Won Deals" stroke="#34c759" strokeWidth={3} fillOpacity={1} fill="url(#colorWon)" activeDot={{ r: 6, fill: '#34c759', stroke: '#fff', strokeWidth: 2 }} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border2)" opacity={0.5} />
+            <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'var(--muted)', fontSize: 11 }} dy={10} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--muted)', fontSize: 11 }} />
+            <RechartsTooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--border2)', strokeWidth: 2, strokeDasharray: '3 3' }} />
+            <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', color: 'var(--muted)', paddingTop: '20px' }} />
+            <Area type="monotone" dataKey="total" name="Total Leads" stroke="var(--blue)" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" activeDot={{ r: 6, fill: 'var(--blue)', stroke: 'var(--surface)', strokeWidth: 2 }} />
+            <Area type="monotone" dataKey="won" name="Won Deals" stroke="var(--green)" strokeWidth={3} fillOpacity={1} fill="url(#colorWon)" activeDot={{ r: 6, fill: 'var(--green)', stroke: 'var(--surface)', strokeWidth: 2 }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -153,9 +141,6 @@ export function DashboardClient({ trend, sources, initialRecentLeads, initialInt
       });
       setInternalLeads(leads);
       
-      // Update count roughly based on snapshot, although real count might be higher if > 5. 
-      // We rely on initial SSR count, and increment/decrement based on changes.
-      // For a truly accurate live count, we'd need a counter document, but this is a good UI approximation.
       if (snapshot.docs.length < 5) {
         setLiveInternalCount(snapshot.docs.length);
       }
@@ -168,82 +153,76 @@ export function DashboardClient({ trend, sources, initialRecentLeads, initialInt
   }, []);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card className="lg:col-span-2 shadow-sm border-border bg-card">
-        <CardContent className="p-6 md:p-8 h-full min-h-[480px]">
+    <div className="two-col">
+      {/* Left Panel: Analytics */}
+      <div className="panel">
+        <div className="panel-head">
+          <div className="panel-title">Sales Analytics</div>
+          <Link href="/admin/reports" className="panel-action" style={{ textDecoration: 'none' }}>View Report</Link>
+        </div>
+        <div className="panel-body">
           <SalesTrendChart trend={trend} />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       
-      <div className="flex flex-col gap-6">
+      {/* Right Column: Actions & Feed */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         
         {/* Urgent Escalated Queue */}
-        <Card className={`shadow-sm border-border ${liveInternalCount > 0 ? "bg-red-500/5 border-red-500/20" : "bg-card"}`}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className={`text-lg font-semibold flex items-center gap-2 ${liveInternalCount > 0 ? "text-red-500 animate-pulse" : "text-foreground"}`}>
-                {liveInternalCount > 0 && <span className="text-xl">🚨</span>}
-                Urgent Action Required
-              </CardTitle>
-              <Badge variant={liveInternalCount > 0 ? "destructive" : "outline"} className={liveInternalCount > 0 ? "animate-pulse" : "bg-success/20 text-success-foreground"}>
-                {liveInternalCount} Escalated
-              </Badge>
+        <div className="panel" style={liveInternalCount > 0 ? { borderColor: "var(--red)", background: "rgba(239,68,68,0.05)" } : {}}>
+          <div className="panel-head border-b-0 pb-0">
+            <div className="panel-title" style={{ display: "flex", alignItems: "center", gap: "8px", color: liveInternalCount > 0 ? "var(--red)" : "inherit" }}>
+              {liveInternalCount > 0 && <span className="animate-pulse">🚨</span>}
+              Urgent Action Required
             </div>
-          </CardHeader>
-          <CardContent className="space-y-2">
+            {liveInternalCount > 0 && (
+              <div style={{ fontSize: "10px", fontWeight: "700", padding: "3px 8px", background: "var(--red)", color: "white", borderRadius: "10px" }}>
+                {liveInternalCount}
+              </div>
+            )}
+          </div>
+          <div className="panel-body pt-3">
             {internalLeads.length === 0 ? (
-              <p className="text-sm font-medium text-muted-foreground text-center py-4">No escalated issues — Great work!</p>
+              <p style={{ fontSize: "11.5px", color: "var(--muted)", textAlign: "center", padding: "10px 0" }}>No escalated issues — Great work!</p>
             ) : (
               internalLeads.map(lead => (
-                <Link key={lead.id} href="/admin/dispatch" className="flex items-center justify-between p-3 bg-red-500/10 rounded-lg border border-red-500/20 hover:bg-red-500/20 transition-colors group">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-red-600 dark:text-red-400 truncate">{lead.customer_name}</span>
-                    <span className="text-xs text-red-500/80">Unmapped Territory (Manual Dispatch Required)</span>
+                <Link key={lead.id} href="/admin/dispatch" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px", background: "rgba(239,68,68,0.1)", borderRadius: "var(--r)", border: "1px solid rgba(239,68,68,0.2)", marginBottom: "8px", textDecoration: "none" }}>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--red)" }}>{lead.customer_name}</span>
+                    <span style={{ fontSize: "10px", color: "var(--red)" }}>Unmapped Territory (Dispatch Required)</span>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-red-500 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight style={{ width: "14px", height: "14px", color: "var(--red)" }} />
                 </Link>
               ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Recent Activity */}
-        <Card className="flex-1 shadow-sm border-border bg-card min-h-[280px]">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Clock className="w-4 h-4 text-muted-foreground" />
-                Live Activity
-              </CardTitle>
-              <Link href="/admin/leads" className="text-xs font-medium text-primary hover:underline">
-                View All
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2 max-h-[300px] overflow-y-auto scrollbar-none">
+        <div className="panel" style={{ flex: 1 }}>
+          <div className="panel-head">
+            <div className="panel-title">Live Activity</div>
+            <Link href="/admin/leads" className="panel-action" style={{ textDecoration: 'none' }}>View All</Link>
+          </div>
+          <div className="panel-body p-0 max-h-[300px] overflow-y-auto scrollbar-none">
             {recentLeads.length === 0 ? (
-              <p className="text-sm font-medium text-muted-foreground text-center py-8">No recent activity</p>
+              <p style={{ fontSize: "11.5px", color: "var(--muted)", textAlign: "center", padding: "20px 0" }}>No recent activity</p>
             ) : (
               recentLeads.map((lead) => (
-                <Link href="/admin/leads" key={lead.id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors group">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                      {lead.customer_name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-sm font-medium text-foreground truncate block">{lead.customer_name}</span>
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Inquiry</span>
-                    </div>
+                <Link href="/admin/leads" key={lead.id} className="activity-item px-4" style={{ textDecoration: 'none' }}>
+                  <div className="act-dot" style={{ background: "var(--blue)" }}></div>
+                  <div className="act-text">
+                    <strong>{lead.customer_name}</strong> - Inquiry <br/>
+                    <span className={`status-pill mt-1 ${STATUS_COLORS[lead.status] || "sp-new"}`}>
+                      {lead.status.replace("_", " ")}
+                    </span>
                   </div>
-                  <Badge variant="outline" className={`font-medium capitalize ${STATUS_COLORS[lead.status] || "bg-muted text-muted-foreground"}`}>
-                    {lead.status.replace("_", " ")}
-                  </Badge>
+                  <div className="act-time">Just now</div>
                 </Link>
               ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
       </div>
     </div>

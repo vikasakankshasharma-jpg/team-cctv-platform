@@ -1,21 +1,23 @@
 {
-  "name": "TEAM CCTV Platform",
-  "short_name": "TEAM CCTV",
+  "name": "CCTVQuotation",
+  "short_name": "CCTVQuotation",
   "description": "Enterprise-Grade Security Systems & Quotes",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "theme_color": "#0F1F3D",
   "icons": [
     {
       "src": "/og-image.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
     },
     {
       "src": "/og-image.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
     }
   ]
 }

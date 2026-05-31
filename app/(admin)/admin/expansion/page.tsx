@@ -52,16 +52,26 @@ export default async function AdminExpansionPage() {
     };
   });
 
+  // 3. Fetch impressions
+  const impressionsSnap = await adminDb.collection("demand_impressions").get();
+  const impressions = impressionsSnap.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      city: data.city || "",
+      pincode: data.pincode || ""
+    };
+  });
+
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       <PageHeader 
         icon={MapPin} 
         title="Regional Expansion Hub" 
-        description="Analyze waitlist metrics across unserved territories and orchestrate franchise launch campaigns."
+        description="Analyze waitlist metrics across unserved territories and orchestrate installer hub launch campaigns."
         badge={`${leads.length} Prospects Enrolled`}
       />
 
-      <ExpansionClient initialLeads={leads} initialServiceAreas={serviceAreas} />
+      <ExpansionClient initialLeads={leads} initialServiceAreas={serviceAreas} initialImpressions={impressions} />
     </div>
   );
 }

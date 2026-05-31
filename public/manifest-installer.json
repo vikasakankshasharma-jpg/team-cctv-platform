@@ -1,11 +1,11 @@
 {
-  "name": "CCTVQuotation Admin",
-  "short_name": "CCTVQuotation",
-  "description": "CCTVQuotation - Admin Dashboard",
-  "start_url": "/admin",
+  "name": "CCTVQuotation Installer Portal",
+  "short_name": "CCTV Installer",
+  "description": "CCTVQuotation - Installer Dashboard",
+  "start_url": "/installer/dashboard",
   "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#ef4444",
+  "background_color": "#ffffff",
+  "theme_color": "#eab308",
   "icons": [
     {
       "src": "/og-image.png",

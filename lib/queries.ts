@@ -112,11 +112,11 @@ export async function getWizardConfig() {
     if (sortedResolutions.length > 0 && !hasResolutionStep) {
       const resOptions: WizardOption[] = [];
       const resLabels: Record<number, string> = {
-        2: "2MP Standard HD — Good for most homes",
-        4: "4MP Pro HD — Clearer faces & number plates",
-        5: "5MP Ultra HD — Crisp detail, night color",
-        6: "6MP Premium — Large premises & retail",
-        8: "8MP Professional Grade — Banks & factories"
+        2: "2MP Standard HD",
+        4: "4MP Pro HD",
+        5: "5MP Ultra HD",
+        6: "6MP Premium",
+        8: "8MP Professional Grade"
       };
       
       sortedResolutions.forEach((mp, index) => {

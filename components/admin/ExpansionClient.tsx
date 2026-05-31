@@ -21,7 +21,6 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
 interface WaitlistLead {
   id: string;
@@ -41,32 +40,64 @@ interface ServiceArea {
   served: boolean;
 }
 
+interface Impression {
+  city: string;
+  pincode: string;
+}
+
 interface ExpansionClientProps {
   initialLeads: WaitlistLead[];
   initialServiceAreas: ServiceArea[];
+  initialImpressions?: Impression[];
 }
 
-export default function ExpansionClient({ initialLeads, initialServiceAreas }: ExpansionClientProps) {
+export default function ExpansionClient({ initialLeads, initialServiceAreas, initialImpressions = [] }: ExpansionClientProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [cityFilter, setCityFilter] = useState("all");
   const [notifyFilter, setNotifyFilter] = useState("all");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [appointedCity, setAppointedCity] = useState<string | null>(null);
 
-  // Group leads by city
-  const cityGroups = initialLeads.reduce((acc, lead) => {
-    const city = lead.detected_city;
+  // Group impressions by city
+  const impressionGroups = initialImpressions.reduce((acc, imp) => {
+    // Normalizing city name to match lead groupings
+    const city = imp.city.charAt(0).toUpperCase() + imp.city.slice(1).toLowerCase();
     acc[city] = (acc[city] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  // Determine top waitlisted city
+  // Group leads by city and status
+  const cityIntentGroups = initialLeads.reduce((acc, lead) => {
+    const city = lead.detected_city;
+    if (!acc[city]) acc[city] = { intent: 0, confirmed: 0 };
+    
+    if (lead.waitlist_confirmed) {
+      acc[city].confirmed += 1;
+    } else {
+      acc[city].intent += 1;
+    }
+    return acc;
+  }, {} as Record<string, { intent: number, confirmed: number }>);
+
+  // Calculate Demand Score for each city
+  const cityScores: Record<string, number> = {};
+  const allCities = new Set([...Object.keys(cityIntentGroups), ...Object.keys(impressionGroups)]);
+  
+  allCities.forEach(city => {
+    const impressions = impressionGroups[city] || 0;
+    const intent = cityIntentGroups[city]?.intent || 0;
+    const confirmed = cityIntentGroups[city]?.confirmed || 0;
+    
+    cityScores[city] = (impressions * 0.2) + (intent * 0.5) + (confirmed * 0.8);
+  });
+
+  // Determine top waitlisted city by score
   let topCity = "None";
-  let topCount = 0;
-  Object.entries(cityGroups).forEach(([city, count]) => {
-    if (count > topCount) {
+  let topScore = 0;
+  Object.entries(cityScores).forEach(([city, score]) => {
+    if (score > topScore) {
       topCity = city;
-      topCount = count;
+      topScore = score;
     }
   });
 
@@ -89,14 +120,31 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas }: E
     return matchesSearch && matchesCity && matchesNotify;
   });
 
-  const handleAppointFranchise = async (citySlug: string, cityName: string) => {
+  const handleAppointInstaller = async (citySlug: string, cityName: string) => {
     setActionLoading(citySlug);
-    // Simulate API call to appoint franchise
-    setTimeout(() => {
-      setActionLoading(null);
+    try {
+      const res = await fetch("/api/admin/coverage-zones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: cityName,
+          slug: citySlug,
+          type: "installer_hub",
+          status: "pending_installer",
+          created_at: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to create hub");
+
       setAppointedCity(cityName);
       setTimeout(() => setAppointedCity(null), 5000);
-    }, 1500);
+    } catch (error) {
+      console.error("Appoint installer failed:", error);
+      setAppointedCity(null);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   return (
@@ -106,58 +154,40 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas }: E
         <div className="fixed bottom-6 right-6 z-[100] bg-success text-success-foreground px-5 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-300">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <div className="flex flex-col">
-            <span className="font-semibold text-sm">Franchise Appointed</span>
-            <span className="text-xs opacity-90">Franchise setup initiated for {appointedCity}.</span>
+            <span className="font-semibold text-sm">Installer Hub Created</span>
+            <span className="text-xs opacity-90">Installer hub setup initiated for {appointedCity}.</span>
           </div>
         </div>
       )}
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all border-border bg-card">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Waitlist Leads</span>
-            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-sm">
-              <Users className="w-5 h-5" />
-            </div>
+      <div className="kpi-grid">
+        <div className="kpi">
+          <div className="kpi-label">Total Waitlist Leads</div>
+          <div className="kpi-value">{initialLeads.length}</div>
+          <div className="kpi-delta neutral">Captured across unserved regions</div>
+          <div className="kpi-icon" style={{ background: 'var(--blue-dim)', color: 'var(--blue)' }}>
+            <Users className="w-5 h-5" />
           </div>
-          <div className="text-3xl font-bold text-foreground mb-1">
-            {initialLeads.length}
-          </div>
-          <div className="text-xs font-medium text-muted-foreground">
-            Captured across unserved regions
-          </div>
-        </Card>
+        </div>
 
-        <Card className="p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all border-border bg-card">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Top Target Region</span>
-            <div className="w-10 h-10 rounded-xl bg-warning/10 text-warning flex items-center justify-center shadow-sm">
-              <Target className="w-5 h-5" />
-            </div>
+        <div className="kpi">
+          <div className="kpi-label">Top Target Region</div>
+          <div className="kpi-value">{topCity !== "None" ? topCity : "N/A"}</div>
+          <div className="kpi-delta neutral">Highest demand score ({topScore.toFixed(1)})</div>
+          <div className="kpi-icon" style={{ background: 'var(--amber-dim)', color: 'var(--amber)' }}>
+            <Target className="w-5 h-5" />
           </div>
-          <div className="text-3xl font-bold text-foreground mb-1">
-            {topCity !== "None" ? topCity : "N/A"}
-          </div>
-          <div className="text-xs font-medium text-muted-foreground">
-            Highest concentration ({topCount} prospects)
-          </div>
-        </Card>
+        </div>
 
-        <Card className="p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all border-border bg-card">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Prospects To Notify</span>
-            <div className="w-10 h-10 rounded-xl bg-success/10 text-success flex items-center justify-center shadow-sm">
-              <Bell className="w-5 h-5" />
-            </div>
+        <div className="kpi">
+          <div className="kpi-label">Prospects To Notify</div>
+          <div className="kpi-value">{totalConfirmedWaitlist}</div>
+          <div className="kpi-delta neutral">Confirmed launch alert registrations</div>
+          <div className="kpi-icon" style={{ background: 'var(--green-dim)', color: 'var(--green)' }}>
+            <Bell className="w-5 h-5" />
           </div>
-          <div className="text-3xl font-bold text-foreground mb-1">
-            {totalConfirmedWaitlist}
-          </div>
-          <div className="text-xs font-medium text-muted-foreground">
-            Confirmed launch alert registrations
-          </div>
-        </Card>
+        </div>
       </div>
 
       {/* Grid: City Density Tracker & Management */}
@@ -172,51 +202,61 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas }: E
           <div className="space-y-4">
             {["jodhpur", "kota", "ajmer", "udaipur"].map((citySlug) => {
               const cityName = citySlug.charAt(0).toUpperCase() + citySlug.slice(1);
-              const count = cityGroups[cityName] || 0;
-              const threshold = 10; // Target leads before franchise activation
-              const progress = Math.min((count / threshold) * 100, 100);
+              const score = cityScores[cityName] || 0;
+              const threshold = 15; // Target Score before franchise activation
+              const progress = Math.min((score / threshold) * 100, 100);
+
+              const impressions = impressionGroups[cityName] || 0;
+              const intent = cityIntentGroups[cityName]?.intent || 0;
+              const confirmed = cityIntentGroups[cityName]?.confirmed || 0;
 
               return (
-                <Card key={citySlug} className="p-4 shadow-sm border-border bg-card group">
+                <div key={citySlug} className="panel p-4 group">
                   <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-semibold text-foreground">{cityName}</span>
+                      <MapPin className="w-4 h-4 text-[var(--primary)]" />
+                      <span className="text-[13px] font-semibold text-[var(--text)]">{cityName}</span>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
-                      {count} Leads
-                    </Badge>
+                    <span className="status-pill sp-waitlist text-[10px] uppercase font-semibold">
+                      Score: {score.toFixed(1)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between gap-1 mb-4 text-[10px] font-semibold text-[var(--muted)]">
+                    <span title="Impressions (0.2x)">👁 {impressions}</span>
+                    <span title="Intent Leads (0.5x)">⚡ {intent}</span>
+                    <span title="Confirmed (0.8x)">✅ {confirmed}</span>
                   </div>
 
                   {/* Progress bar toward active threshold */}
                   <div className="space-y-1.5 mb-4">
-                    <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+                    <div className="w-full bg-[var(--surface3)] rounded-full h-1.5 overflow-hidden">
                       <div 
-                        className="bg-primary h-1.5 rounded-full transition-all duration-500" 
+                        className="bg-[var(--blue)] h-1.5 rounded-full transition-all duration-500" 
                         style={{ width: `${progress}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <div className="flex justify-between text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wider">
                       <span>Expansion Goal</span>
-                      <span>{count}/{threshold} Leads</span>
+                      <span>{score.toFixed(1)}/{threshold} Score</span>
                     </div>
                   </div>
 
-                  {/* Appoint Franchise Button */}
+                  {/* Appoint Installer Button */}
                   <button
-                    onClick={() => handleAppointFranchise(citySlug, cityName)}
+                    onClick={() => handleAppointInstaller(citySlug, cityName)}
                     disabled={actionLoading !== null}
-                    className="w-full py-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-primary/50 text-xs font-semibold rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95"
+                    className="w-full py-2 bg-[var(--blue)] text-white hover:bg-[#1C5BB8] disabled:bg-[var(--blue-dim)] disabled:text-[var(--blue)] text-[11px] font-semibold rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95"
                   >
                     {actionLoading === citySlug ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
-                        <Building2 className="w-4 h-4" /> Appoint Franchise
+                        <Building2 className="w-4 h-4" /> Appoint Installer
                       </>
                     )}
                   </button>
-                </Card>
+                </div>
               );
             })}
           </div>
@@ -226,12 +266,12 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas }: E
         <div className="lg:col-span-2 space-y-4 flex flex-col h-[650px]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
             <div>
-              <h3 className="text-lg font-semibold text-foreground tracking-tight">Waitlist CRM Database</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Manage individual unserved city inquiries.</p>
+              <h3 className="text-lg font-semibold text-[var(--text)] tracking-tight">Waitlist CRM Database</h3>
+              <p className="text-[11px] text-[var(--muted)] mt-0.5">Manage individual unserved city inquiries.</p>
             </div>
-            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs font-semibold">
+            <span className="status-pill sp-site font-semibold">
               {filteredLeads.length} Matches
-            </Badge>
+            </span>
           </div>
 
           {/* Dynamic Filters Hub */}
@@ -282,63 +322,63 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas }: E
           </div>
 
           {/* CRM Leads Table / Scroll Area */}
-          <Card className="flex-1 overflow-hidden shadow-sm border-border bg-card flex flex-col">
+          <div className="panel flex-1 overflow-hidden flex flex-col">
             <div className="overflow-y-auto flex-1">
-              <Table>
-                <TableHeader className="bg-muted/50 sticky top-0 z-10">
-                  <TableRow>
-                    <TableHead className="font-semibold text-xs tracking-wider">Prospect</TableHead>
-                    <TableHead className="font-semibold text-xs tracking-wider">Region & Pincode</TableHead>
-                    <TableHead className="font-semibold text-xs tracking-wider">Notification Alert</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <table className="lead-table w-full">
+                <thead className="sticky top-0 z-10">
+                  <tr>
+                    <th>Prospect</th>
+                    <th>Region & Pincode</th>
+                    <th>Notification Alert</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {filteredLeads.length > 0 ? (
                     filteredLeads.map((lead) => (
-                      <TableRow key={lead.id} className="hover:bg-muted/30 transition-colors">
-                        <TableCell className="py-4">
+                      <tr key={lead.id}>
+                        <td>
                           <div className="flex flex-col gap-1">
-                            <span className="font-semibold text-sm text-foreground tracking-tight">{lead.customer_name}</span>
-                            <span className="text-xs font-medium text-muted-foreground">{lead.mobile_number}</span>
+                            <span className="cell-name">{lead.customer_name}</span>
+                            <span className="cell-phone">{lead.mobile_number}</span>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-4">
+                        </td>
+                        <td>
                           <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                              <MapPin className="w-3.5 h-3.5 text-primary" />
+                            <div className="flex items-center gap-1.5 text-[12.5px] font-medium text-[var(--text)]">
+                              <MapPin className="w-3.5 h-3.5 text-[var(--blue)]" />
                               {lead.detected_city}
                             </div>
-                            <span className="text-xs font-medium text-muted-foreground">PIN: {lead.detected_pincode}</span>
+                            <span className="text-[10px] font-medium text-[var(--muted)]">PIN: {lead.detected_pincode}</span>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-4">
+                        </td>
+                        <td>
                           {lead.waitlist_confirmed ? (
-                            <Badge variant="secondary" className="bg-success/10 text-success border border-success/20 gap-1.5 text-[10px] uppercase font-semibold">
+                            <span className="status-pill sp-won gap-1.5 uppercase font-semibold">
                               <CheckCircle2 className="w-3 h-3" /> Confirmed
-                            </Badge>
+                            </span>
                           ) : (
-                            <Badge variant="secondary" className="gap-1.5 text-[10px] uppercase font-semibold">
+                            <span className="status-pill sp-lost gap-1.5 uppercase font-semibold">
                               <AlertCircle className="w-3 h-3" /> Inactive
-                            </Badge>
+                            </span>
                           )}
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))
                   ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} className="h-48 text-center">
-                        <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <tr>
+                      <td colSpan={3} className="h-48 text-center">
+                        <div className="flex flex-col items-center justify-center text-[var(--muted)]">
                           <Search className="w-8 h-8 mb-4 opacity-50" />
-                          <p className="text-sm font-medium">No waitlist leads found</p>
-                          <p className="text-xs mt-1">Adjust filters or check back later.</p>
+                          <p className="text-[12px] font-medium">No waitlist leads found</p>
+                          <p className="text-[10px] mt-1">Adjust filters or check back later.</p>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   )}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     </div>
