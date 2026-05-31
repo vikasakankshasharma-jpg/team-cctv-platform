@@ -195,8 +195,10 @@ export default function LandingPage() {
           <div className="mt-16 sm:mt-20 flex flex-col items-center gap-6 sm:gap-8 w-full">
             <div className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Trusted Hardware Partners &amp; Verified Installs</div>
             <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-12 md:gap-20 grayscale opacity-60 dark:opacity-40">
-              <Image src="/partners/cpplus.png" alt="CP PLUS" width={120} height={40} className="h-6 md:h-8 w-auto object-contain" />
-              <Image src="/partners/prama.png" alt="PRAMA" width={120} height={40} className="h-6 md:h-8 w-auto object-contain" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/partners/cpplus.png" alt="CP PLUS" className="h-6 md:h-8 w-auto object-contain" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/partners/prama.png" alt="PRAMA" className="h-6 md:h-8 w-auto object-contain" />
               <div className="flex items-center gap-3">
                 <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" />
                 <span className="font-black text-lg sm:text-xl tracking-tight uppercase">BIS-ER</span>
