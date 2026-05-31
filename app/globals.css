@@ -443,7 +443,8 @@ body::before {
 .ptab.active { background: var(--surface2); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
 
 /* ── KPI CARDS ── */
-.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+@media (min-width: 768px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
 .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px; position: relative; overflow: hidden; cursor: pointer; transition: border-color .15s; }
 .kpi:hover { border-color: var(--border2); }
 .kpi-label { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
@@ -457,7 +458,8 @@ body::before {
 .kpi-bar { position: absolute; bottom: 0; left: 0; height: 3px; border-radius: 0 3px 0 0; }
 
 /* ── TWO-COL GRID ── */
-.two-col { display: grid; grid-template-columns: 1fr 380px; gap: 16px; margin-bottom: 16px; }
+.two-col { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
+@media (min-width: 1024px) { .two-col { grid-template-columns: 1fr 380px; } }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); overflow: hidden; }
 .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .panel-title { font-size: 13px; font-weight: 600; color: var(--text); }
