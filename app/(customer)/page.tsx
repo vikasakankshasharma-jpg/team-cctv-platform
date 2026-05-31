@@ -184,15 +184,9 @@ export default function LandingPage() {
           <h2 className="text-4xl sm:text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter mb-5 sm:mb-8 leading-[0.9] sm:leading-[0.85] transition-colors">
             Secure your space <br className="hidden sm:block" /> today.
           </h2>
-          <p className="text-slate-600 dark:text-blue-100/70 text-base sm:text-xl md:text-2xl mb-10 sm:mb-16 font-medium max-w-2xl text-center transition-colors">
+          <p className="text-slate-600 dark:text-blue-100/70 text-base sm:text-xl md:text-2xl mb-12 sm:mb-16 font-medium max-w-2xl text-center transition-colors">
             2-minute setup. No hidden costs. 18% GST included in all plans.
           </p>
-
-          <div className="w-full mb-10 sm:mb-16 relative group">
-            {/* Radar Pulse Effect behind Widget */}
-            <div className="absolute inset-0 bg-blue-500/20 rounded-[32px] sm:rounded-[48px] animate-ping opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            <PincodeWidget variant="footer" />
-          </div>
 
           <FaqAccordion />
           <FaqJsonLd />
