@@ -102,8 +102,8 @@ export function InstallerPipeline({ leads, partnerId, partnerName, role = "sales
 
   if (leads.length === 0) {
     return (
-      <div className="bg-white/5 border border-dashed border-white/20 rounded-[32px] py-20 text-center">
-        <p className="text-zinc-400 font-bold italic">No active leads requiring immediate attention.</p>
+      <div className="bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-300 dark:border-white/20 rounded-[32px] py-20 text-center">
+        <p className="text-zinc-400 dark:text-zinc-400 font-bold italic">No active leads requiring immediate attention.</p>
       </div>
     );
   }
@@ -116,14 +116,14 @@ export function InstallerPipeline({ leads, partnerId, partnerName, role = "sales
           : !lead.assigned_installer_id && lead.broadcasted_to_installer_ids?.includes(partnerId || "");
 
         return (
-          <div key={lead.id} className={`backdrop-blur-xl border p-6 rounded-[28px] transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${isBroadcast ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}>
+          <div key={lead.id} className={`backdrop-blur-xl border p-6 rounded-[28px] transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${isBroadcast ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-300 dark:border-indigo-500/30' : 'bg-white dark:bg-white/5 border-zinc-200 dark:border-white/10 hover:bg-zinc-50 dark:hover:bg-white/10'}`}>
             <div className="flex items-start gap-4 flex-1 min-w-0">
-              <div className={`w-12 h-12 rounded-[18px] flex items-center justify-center transition-colors shrink-0 text-lg font-black border ${isBroadcast ? 'bg-indigo-500/20 text-indigo-500 border-indigo-500/30' : 'bg-white/5 text-zinc-400 group-hover:bg-blue-500/10 group-hover:text-blue-500 border-white/5'}`}>
+              <div className={`w-12 h-12 rounded-[18px] flex items-center justify-center transition-colors shrink-0 text-lg font-black border ${isBroadcast ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-500 border-indigo-300 dark:border-indigo-500/30' : 'bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 group-hover:text-blue-500 border-zinc-200 dark:border-white/5'}`}>
                 {(lead.customer_name ?? "?")[0].toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <h4 className="text-base font-black text-white tracking-tight truncate">{lead.customer_name}</h4>
+                  <h4 className="text-base font-black text-zinc-900 dark:text-white tracking-tight truncate">{lead.customer_name}</h4>
                   <StatusBadge status={lead.status} />
                   {isBroadcast && (
                     <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border bg-red-500/20 text-red-400 border-red-500/30 animate-pulse">
@@ -167,13 +167,13 @@ export function InstallerPipeline({ leads, partnerId, partnerName, role = "sales
               ) : (
                 <>
                   <StatusDropdown leadId={lead.id!} currentStatus={lead.status} />
-                  <a href={`tel:${lead.mobile_number}`} className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white/5 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500/10 hover:text-emerald-500 transition-all border border-white/10 hover:border-emerald-500/30">
+                  <a href={`tel:${lead.mobile_number}`} className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-zinc-100 dark:bg-white/5 text-zinc-700 dark:text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-500 transition-all border border-zinc-200 dark:border-white/10 hover:border-emerald-300 dark:hover:border-emerald-500/30">
                     <Phone className="w-3.5 h-3.5" /> Call
                   </a>
                   <a href={`https://wa.me/91${lead.mobile_number}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all">
                     <MessageSquare className="w-3.5 h-3.5" /> WA
                   </a>
-                  <Link href={`/${role}/leads`} className="w-10 h-10 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-white hover:bg-blue-600 transition-all shadow-lg hover:border-blue-500/50">
+                  <Link href={`/${role}/leads`} className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-white/10 border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-600 dark:text-white hover:bg-blue-600 hover:text-white transition-all shadow-lg hover:border-blue-500/50">
                     <ArrowUpRight className="w-4 h-4" />
                   </Link>
                 </>
