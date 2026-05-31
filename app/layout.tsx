@@ -10,6 +10,7 @@ import { PwaRegistry } from "@/components/shared/PwaRegistry";
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { cn } from "@/lib/utils";
+import { Toaster } from "sonner";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -96,6 +97,7 @@ export default async function RootLayout({
           <PwaRegistry />
           <WebVitalsReporter />
           <JsonLd />
+          <Toaster position="top-center" richColors closeButton />
           {children}
         </ThemeProvider>
       </body>
