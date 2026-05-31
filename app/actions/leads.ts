@@ -123,12 +123,17 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
  * Updates the lead status and adds a proof of installation photo (for Installers)
  */
 export async function updateLeadInstallationProof(leadId: string, photoUrl: string, status: string, note?: string) {
-  // We can't strictly requireAdmin here because Installers use this.
-  // We should verify session, but for server actions currently `requireAdmin` checks role.
-  // Instead, just verify any valid session.
   const { verifySession } = await import("@/lib/auth-server");
-  const session = await verifySession();
-  if (!session.isAuthenticated || (session.role !== "installer" && session.role !== "super_admin")) {
+  const { verifyInstallerSession } = await import("@/lib/auth-installer");
+  
+  const adminSession = await verifySession();
+  const installerSession = await verifyInstallerSession();
+  
+  const isAuthorized = 
+    (adminSession.isAuthenticated && adminSession.role === "super_admin") || 
+    installerSession.isAuthenticated;
+
+  if (!isAuthorized) {
     throw new Error("Unauthorized");
   }
 
