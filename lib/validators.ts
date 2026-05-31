@@ -248,9 +248,12 @@ export const ReorderStepsSchema = z.array(
 export const CreateHubSchema = z.object({
   name: z.string().min(2, "Hub name is required").max(100),
   manager_name: z.string().min(2, "Manager name is required").max(100),
+  city_name: z.string().min(2, "City name is required").max(100),
   mobile_number: MobileSchema,
   email: z.string().email("Please provide a valid email address").optional().nullable(),
   pincode_coverage: z.array(z.string()).min(1, "At least one pincode is required"),
+  latitude: z.number().min(-90).max(90, "Invalid latitude"),
+  longitude: z.number().min(-180).max(180, "Invalid longitude"),
   stock_capacity: z.number().int().nonnegative().optional().default(0),
 });
 
