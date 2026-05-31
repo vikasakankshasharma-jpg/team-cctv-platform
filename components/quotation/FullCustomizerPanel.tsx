@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { calculateSystemScore } from "@/lib/system-score";
 import { 
@@ -212,13 +212,46 @@ export function FullCustomizerPanel() {
     return list.sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
   }, [addons, search]);
 
+  // Tab bar scroll tracking
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const [showTabFade, setShowTabFade] = useState(true);
+
+  // Auto-scroll active tab into view
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (!container) return;
+    const activeButton = container.querySelector('[data-active="true"]') as HTMLElement;
+    if (activeButton) {
+      activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [activeTab]);
+
+  // Track scroll to show/hide right fade
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 10;
+      setShowTabFade(!isAtEnd);
+    };
+    handleScroll(); // Check on mount
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const renderTabs = () => (
-    <div className="flex overflow-x-auto shrink-0 scrollbar-none px-6 gap-6 border-b border-[#d2d2d7] dark:border-[#424245]">
-      <TabButton active={activeTab === "cameras"} onClick={() => handleTabChange("cameras")} label="Cameras" />
-      <TabButton active={activeTab === "recorders"} onClick={() => handleTabChange("recorders")} label="Recorders" />
-      <TabButton active={activeTab === "storage"} onClick={() => handleTabChange("storage")} label="Storage" />
-      <TabButton active={activeTab === "power"} onClick={() => handleTabChange("power")} label="Power" />
-      <TabButton active={activeTab === "addons"} onClick={() => handleTabChange("addons")} label="Accessories" />
+    <div className="relative">
+      <div ref={tabsContainerRef} className="flex overflow-x-auto shrink-0 scrollbar-none px-6 gap-6 border-b border-[#d2d2d7] dark:border-[#424245]">
+        <TabButton active={activeTab === "cameras"} onClick={() => handleTabChange("cameras")} label="Cameras" />
+        <TabButton active={activeTab === "recorders"} onClick={() => handleTabChange("recorders")} label="Recorders" />
+        <TabButton active={activeTab === "storage"} onClick={() => handleTabChange("storage")} label="Storage" />
+        <TabButton active={activeTab === "power"} onClick={() => handleTabChange("power")} label="Power" />
+        <TabButton active={activeTab === "addons"} onClick={() => handleTabChange("addons")} label="Accessories" />
+      </div>
+      {/* Right fade gradient hint */}
+      {showTabFade && (
+        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#fbfbfd] dark:from-[#1d1d1f] to-transparent pointer-events-none sm:hidden" />
+      )}
     </div>
   );
 
@@ -449,6 +482,7 @@ function TabButton({ active, onClick, label }: { active: boolean; onClick: () =>
   return (
     <button
       onClick={onClick}
+      data-active={active}
       className={`px-1 py-4 text-[14px] font-medium transition-all whitespace-nowrap border-b-2 -mb-px ${
         active 
           ? "border-[#1d1d1f] dark:border-[#f5f5f7] text-[#1d1d1f] dark:text-[#f5f5f7]" 
