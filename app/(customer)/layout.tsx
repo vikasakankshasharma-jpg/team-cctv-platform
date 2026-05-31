@@ -3,6 +3,7 @@ import { ShieldCheck, PhoneCall, Zap, ArrowRight, ChevronDown } from "lucide-rea
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/shared/SiteFooter";
 import { WhatsAppFloat } from "@/components/shared/WhatsAppFloat";
+import { GetQuotationButton } from "@/components/shared/GetQuotationButton";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -60,13 +61,7 @@ export default function CustomerLayout({
 
           {/* Centre — Get Quotation CTA */}
           <div className="hidden lg:flex flex-1 justify-center">
-            <Link
-              href="/wizard"
-              className="group flex items-center gap-2 px-4 py-2 md:px-6 md:py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all active:scale-95 touch-manipulation"
-            >
-              <Zap className="w-3 h-3 group-hover:animate-pulse" />
-              <span>Get Quotation</span>
-            </Link>
+            <GetQuotationButton />
           </div>
 
           {/* Right — Support + Portal */}
