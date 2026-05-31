@@ -1,11 +1,12 @@
-const CACHE_NAME = 'team-cctv-v2';
+const CACHE_NAME = 'cctvquotation-v3';
 const OFFLINE_URL = '/offline';
 const URLS_TO_CACHE = [
   '/',
   OFFLINE_URL,
   '/manifest.json',
   '/favicon.ico',
-  '/og-image.png'
+  '/og-image.png',
+  '/data/india-locations.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -32,9 +33,47 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
   if (event.request.method !== 'GET') return;
-  
+
+  const url = new URL(event.request.url);
+
+  // Cache-first for wizard API
+  if (url.pathname.startsWith('/api/wizard')) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          // Revalidate in background
+          fetch(event.request).then((networkResponse) => {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, networkResponse.clone());
+            });
+          }).catch(() => {});
+          return cachedResponse;
+        }
+        return fetch(event.request).then((networkResponse) => {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // Cache-first for firebase storage images
+  if (url.hostname === 'firebasestorage.googleapis.com') {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        return cachedResponse || fetch(event.request).then((networkResponse) => {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
   // For HTML navigation requests, try network first, then cache, then offline fallback
   if (event.request.mode === 'navigate') {
     event.respondWith(
@@ -44,7 +83,6 @@ self.addEventListener('fetch', (event) => {
             if (cachedResponse) {
               return cachedResponse;
             }
-            // Return the offline page if network and cache fail
             return caches.match(OFFLINE_URL);
           });
         })
@@ -61,9 +99,7 @@ self.addEventListener('fetch', (event) => {
             cache.put(event.request, networkResponse.clone());
           });
           return networkResponse;
-        }).catch(() => {
-          // If offline and not in cache, silently fail
-        });
+        }).catch(() => {});
         
         return cachedResponse || fetchPromise;
       })

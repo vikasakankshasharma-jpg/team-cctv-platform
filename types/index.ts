@@ -643,6 +643,19 @@ export interface Hub {
   updated_at?: unknown;
 }
 
+export interface InstallerApplication {
+  id?: string;
+  name: string;
+  mobile_number: string;
+  company_name?: string;
+  primary_pincode: string;
+  years_experience: number;
+  gstin?: string;
+  status: "pending" | "reviewed" | "approved" | "rejected";
+  created_at: unknown;
+  updated_at?: unknown;
+}
+
 export interface Installer {
   id?: string;
   name: string;

@@ -2,9 +2,8 @@ import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard, TrendingUp } from "lucide-react";
+import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { DashboardClient, type WeeklyBucket, type SourceBreakdown, type RecentActivity } from "@/components/admin/DashboardClient";
-import { PageHeader } from "@/components/admin/PageHeader";
 import type { Metadata } from "next";
 import type { Promoter, Lead } from "@/types";
 
@@ -29,7 +28,6 @@ function getDayLabel(daysOffset = 0) {
 export default async function AdminDashboard() {
   await requireAdmin();
 
-  // ... (aggregation logic remains same)
   const [leadsCountRes, wonLeadsCountRes, promotersSnapshot, recentLeadsSnap, internalCountRes, internalSnap] = await Promise.all([
     adminDb.collection("leads").count().get(),
     adminDb.collection("leads").where("status", "==", "won").count().get(),
@@ -99,13 +97,13 @@ export default async function AdminDashboard() {
       label: "Referral Network",
       count: referralCount,
       percent: leadsCount > 0 ? Math.round((referralCount / leadsCount) * 100) : 0,
-      color: "bg-amber-500/20 text-amber-400",
+      color: "bg-[var(--gold)] text-white",
     },
     {
       label: "Organic / Direct",
       count: organicCount,
       percent: leadsCount > 0 ? Math.round((organicCount / leadsCount) * 100) : 0,
-      color: "bg-zinc-700 text-zinc-300",
+      color: "bg-[var(--surface3)] text-[var(--text)]",
     },
   ];
 
@@ -139,11 +137,11 @@ export default async function AdminDashboard() {
       value: leadsCount.toLocaleString("en-IN"),
       icon: Users,
       trend: "Leads captured via Catalyst",
-      color: "text-blue-500",
-      bg: "bg-blue-500/10",
-      shadow: "shadow-blue-500/10",
-      borderGradient: "from-blue-400 to-indigo-500",
-      hoverBg: "bg-gradient-to-br from-blue-500/[0.03] to-transparent",
+      trendIcon: TrendingUp,
+      trendClass: "up",
+      colorVar: "var(--blue)",
+      dimVar: "var(--blue-dim)",
+      progress: "75%",
       href: "/admin/leads"
     },
     {
@@ -151,11 +149,11 @@ export default async function AdminDashboard() {
       value: wonLeadsCount.toLocaleString("en-IN"),
       icon: FileText,
       trend: "Closed/Won transactions",
-      color: "text-emerald-500",
-      bg: "bg-emerald-500/10",
-      shadow: "shadow-emerald-500/10",
-      borderGradient: "from-emerald-400 to-teal-500",
-      hoverBg: "bg-gradient-to-br from-emerald-500/[0.03] to-transparent",
+      trendIcon: TrendingUp,
+      trendClass: "up",
+      colorVar: "var(--green)",
+      dimVar: "var(--green-dim)",
+      progress: "42%",
       href: "/admin/leads"
     },
     {
@@ -163,11 +161,11 @@ export default async function AdminDashboard() {
       value: `${conversionRate}%`,
       icon: Percent,
       trend: "Lead conversion efficacy",
-      color: "text-purple-400",
-      bg: "bg-purple-500/10",
-      shadow: "shadow-purple-500/10",
-      borderGradient: "from-purple-400 to-violet-500",
-      hoverBg: "bg-gradient-to-br from-purple-500/[0.03] to-transparent",
+      trendIcon: Minus,
+      trendClass: "neutral",
+      colorVar: "var(--purple)",
+      dimVar: "var(--purple-dim)",
+      progress: conversionRate + "%",
       href: "/admin/leads"
     },
     {
@@ -175,80 +173,38 @@ export default async function AdminDashboard() {
       value: `₹${Math.floor(totalExTaxBusiness/1000)}k`,
       icon: BadgeIndianRupee,
       trend: "Ex-tax net business volume",
-      color: "text-amber-500",
-      bg: "bg-amber-500/10",
-      shadow: "shadow-amber-500/10",
-      borderGradient: "from-amber-400 to-orange-500",
-      hoverBg: "bg-gradient-to-br from-amber-500/[0.03] to-transparent",
+      trendIcon: TrendingUp,
+      trendClass: "up",
+      colorVar: "var(--gold)",
+      dimVar: "var(--gold-dim)",
+      progress: "80%",
       href: "/admin/bookings"
-    },
-    {
-      label: "Lead Velocity",
-      value: leadVelocity,
-      icon: TrendingUp,
-      trend: "Avg leads per day (7d)",
-      color: "text-rose-500",
-      bg: "bg-rose-500/10",
-      shadow: "shadow-rose-500/10",
-      borderGradient: "from-rose-400 to-pink-500",
-      hoverBg: "bg-gradient-to-br from-rose-500/[0.03] to-transparent",
-      href: "/admin/leads"
     },
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      <PageHeader 
-        icon={LayoutDashboard} 
-        title="Command Centre" 
-        description="Real-time operational intelligence and platform performance metrics."
-      />
-
+    <div className="animate-in fade-in duration-700 pb-12">
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="kpi-grid">
         {KPIS.map((kpi, idx) => (
-          <Link
-            href={kpi.href}
-            key={idx}
-            className={`
-              relative block bg-[#0F0F0F]
-              border border-zinc-800
-              rounded-[28px] p-6 overflow-hidden group
-              shadow-sm hover:shadow-md hover:shadow-black
-              transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]
-            `}
-          >
-            {/* Gradient border glow at the bottom */}
-            <div className={`absolute bottom-0 left-6 right-6 h-[2px] rounded-full bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${kpi.borderGradient}`} />
-
-            {/* Background shimmer on hover */}
-            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-[28px] ${kpi.hoverBg}`} />
-
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-5">
-                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] leading-none">{kpi.label}</span>
-                <div className={`p-2.5 rounded-xl ${kpi.bg} ${kpi.color} shadow-inner group-hover:scale-110 transition-transform duration-300`}>
-                  <kpi.icon className="w-4 h-4" />
-                </div>
-              </div>
-
-              <div className={`text-3xl font-black tracking-tighter mb-1 text-white group-hover:${kpi.color} transition-colors duration-300`}>
-                {kpi.value}
-              </div>
-
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">{kpi.trend}</span>
-                <div className={`flex items-center gap-1 text-[9px] font-black ${kpi.color}`}>
-                  <TrendingUp className="w-3 h-3" />
-                  <span className="uppercase tracking-widest">↑</span>
-                </div>
-              </div>
+          <Link href={kpi.href} key={idx} className="kpi block" style={{ textDecoration: 'none' }}>
+            <div className="kpi-label">{kpi.label}</div>
+            <div className="kpi-value">{kpi.value}</div>
+            <div className={`kpi-delta ${kpi.trendClass}`}>
+              <kpi.trendIcon style={{ width: '12px', height: '12px' }} />
+              {kpi.trend}
             </div>
+            
+            <div className="kpi-icon" style={{ background: kpi.dimVar, color: kpi.colorVar }}>
+              <kpi.icon />
+            </div>
+            
+            <div className="kpi-bar" style={{ background: kpi.colorVar, width: kpi.progress }}></div>
           </Link>
         ))}
       </div>
 
-      {/* Live Charts */}
+      {/* Two-Column Grid for live charts/tables */}
       <DashboardClient
         trend={trend}
         sources={sources}

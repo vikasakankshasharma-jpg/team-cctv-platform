@@ -9,7 +9,6 @@ const eslintConfig = [
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "off",
-      "react-hooks/exhaustive-deps": "warn",
       // Justification: Build/deployment scripts use CommonJS require()
       "@typescript-eslint/no-require-imports": "off",
       // Justification: Content-heavy UI with many safe apostrophes/quotes

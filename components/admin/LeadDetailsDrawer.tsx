@@ -21,13 +21,6 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
   const [noteContent, setNoteContent] = useState("");
   const [followUpDate, setFollowUpDate] = useState(lead?.next_followup_date || "");
 
-  useEffect(() => {
-    if (isOpen && lead?.id) {
-      setFollowUpDate(lead.next_followup_date || "");
-      loadActivities();
-    }
-  }, [isOpen, lead?.id]);
-
   const loadActivities = async () => {
     if (!lead?.id) return;
     setLoading(true);
@@ -35,6 +28,14 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
     setActivities(data as LeadActivity[]);
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (isOpen && lead?.id) {
+      setFollowUpDate(lead.next_followup_date || "");
+      loadActivities();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, lead?.id]);
 
   const handleAddActivity = async (type: "note" | "call" | "site_visit") => {
     if (!lead?.id) return;

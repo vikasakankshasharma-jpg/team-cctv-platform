@@ -1,7 +1,7 @@
 {
-  "name": "TEAM Sales Portal",
-  "short_name": "TEAM Sales",
-  "description": "Enterprise-Grade Security Systems - Sales Dashboard",
+  "name": "CCTVQuotation Sales Portal",
+  "short_name": "CCTV Sales",
+  "description": "CCTVQuotation - Sales Dashboard",
   "start_url": "/salesperson/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -10,12 +10,14 @@
     {
       "src": "/og-image.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
     },
     {
       "src": "/og-image.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
     }
   ]
 }

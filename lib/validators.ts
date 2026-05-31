@@ -273,6 +273,16 @@ export const UpdateInstallerSchema = CreateInstallerSchema.partial().extend({
 });
 export type UpdateInstallerInput = z.infer<typeof UpdateInstallerSchema>;
 
+export const ApplyInstallerSchema = z.object({
+  name: z.string().min(2, "Name is required").max(100),
+  mobile_number: MobileSchema,
+  company_name: z.string().max(100).optional().nullable(),
+  primary_pincode: z.string().length(6, "Pincode must be exactly 6 digits"),
+  years_experience: z.coerce.number().min(0, "Experience must be valid"),
+  gstin: z.string().max(20).optional().nullable(),
+});
+export type ApplyInstallerInput = z.infer<typeof ApplyInstallerSchema>;
+
 // ─────────────────────────────────────────────
 // ADMIN — PROMOTERS
 // ─────────────────────────────────────────────

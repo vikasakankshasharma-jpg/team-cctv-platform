@@ -11,13 +11,13 @@ import {
   LogOut,
   ShieldCheck,
   ChevronRight,
-  Wallet,
+  BookOpen,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { name: "Overview", href: "/installer/dashboard", icon: LayoutDashboard },
   { name: "My Leads", href: "/installer/jobs", icon: ClipboardList },
-  { name: "Commissions", href: "/installer/wallet", icon: Wallet },
+  { name: "Ledger", href: "/installer/ledger", icon: BookOpen },
   { name: "Profile", href: "/installer/profile", icon: Settings2 },
 ];
 

@@ -3,11 +3,11 @@ import { verifyInstallerSession } from "@/lib/auth-installer";
 import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import type { LedgerTransaction, Installer } from "@/types";
-import { WalletClient } from "./WalletClient";
+import { LedgerClient } from "./LedgerClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function InstallerWalletPage() {
+export default async function InstallerLedgerPage() {
   const session = await verifyInstallerSession();
   if (!session.isAuthenticated) redirect("/installer/login");
   const installerId = session.installerId!;
@@ -37,7 +37,7 @@ export default async function InstallerWalletPage() {
   });
 
   return (
-    <WalletClient 
+    <LedgerClient 
       installer={installerData} 
       balance={balance} 
       transactions={transactions} 

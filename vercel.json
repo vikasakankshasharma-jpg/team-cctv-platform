@@ -23,8 +23,12 @@
   ],
   "crons": [
     {
-      "path": "/api/cron/sla-escalation",
+      "path": "/api/cron/followups",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/sla-escalation",
+      "schedule": "0 1 * * *"
     }
   ]
 }

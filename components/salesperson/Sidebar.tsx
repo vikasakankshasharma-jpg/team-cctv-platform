@@ -27,12 +27,6 @@ const NAV_GROUPS = [
       { name: "Walk-In Quote",href: "/salesperson/create-quote", icon: FileText },
     ]
   },
-  {
-    label: "Insights",
-    items: [
-      { name: "My Performance", href: "/salesperson/dashboard", icon: TrendingUp },
-    ]
-  }
 ];
 
 export function Sidebar() {

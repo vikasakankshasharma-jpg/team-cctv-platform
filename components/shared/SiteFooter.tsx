@@ -36,7 +36,7 @@ export function SiteFooter() {
           <div className="flex flex-wrap gap-4 sm:gap-8">
              <Link href="/privacy-policy" className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
              <Link href="/terms-of-service" className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Terms of Service</Link>
-             <Link href="/admin/login" className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Partner Login</Link>
+             <Link href="/partner/login" className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Partner Login</Link>
           </div>
           <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-[0.2em] mt-4">
             © {new Date().getFullYear()} CCTVQuotation — A TEAM Platform

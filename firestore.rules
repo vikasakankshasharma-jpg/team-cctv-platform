@@ -317,6 +317,18 @@ service cloud.firestore {
     }
 
     // ──────────────────────────────────────────
+    // /installers/{installerId}
+    // Admin full access.
+    // Installers can read their own profile.
+    // ──────────────────────────────────────────
+
+    match /installers/{installerId} {
+      allow read: if isAdmin() ||
+                    (isAuthenticated() && resource.data.firebase_uid == request.auth.uid);
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // ──────────────────────────────────────────
     // /admins/{adminId}
     // Only super_admins can manage the admin list.
     // ──────────────────────────────────────────
