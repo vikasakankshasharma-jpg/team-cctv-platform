@@ -173,7 +173,7 @@ export function InstallerPipeline({ leads, partnerId, partnerName, role = "sales
                   <a href={`https://wa.me/91${lead.mobile_number}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all">
                     <MessageSquare className="w-3.5 h-3.5" /> WA
                   </a>
-                  <Link href={`/${role}/leads`} className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-white/10 border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-600 dark:text-white hover:bg-blue-600 hover:text-white transition-all shadow-lg hover:border-blue-500/50">
+                  <Link href={`/${role}/jobs/${lead.id}`} className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-white/10 border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-600 dark:text-white hover:bg-blue-600 hover:text-white transition-all shadow-lg hover:border-blue-500/50">
                     <ArrowUpRight className="w-4 h-4" />
                   </Link>
                 </>

@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
 
         // Trigger Commission Logic if routed to a dealer
         const leadDoc = await leadRef.get();
-        const dealerId = leadDoc.data()?.franchise_dealer_id;
+        const leadData = leadDoc.data();
+        const dealerId = leadData?.franchise_dealer_id;
         
         if (dealerId) {
           await adminDb.collection(COLLECTIONS.FRANCHISE_DEALERS).doc(dealerId).update({
@@ -67,8 +68,15 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        // --- CUSTOMER PAYMENT RECEIPT ---
+        if (leadData?.mobile_number) {
+          await sendCustomerWhatsApp(
+            leadData.mobile_number,
+            `🎉 *Payment Successful!*\n\nHi ${leadData.customer_name || 'Customer'},\nWe have received your payment of ₹${payment_amount}.\n\nYour order is confirmed! Our installation team will contact you shortly to schedule your setup.\n\nThank you for choosing TEAM CCTV! 🛡️`
+          );
+        }
+
         // --- AUTOMATED JOB CREATION & DISPATCH ---
-        const leadData = leadDoc.data();
         if (leadData) {
           const installerId = leadData.assigned_installer_id || null;
           

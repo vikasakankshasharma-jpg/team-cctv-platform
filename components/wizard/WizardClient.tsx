@@ -147,11 +147,22 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     const newAnswers = { ...answers };
     
     if (isMulti) {
-      const currentAns = (answers[questionId] as string[]) || [];
-      if (currentAns.includes(optionValue)) {
-        newAnswers[questionId] = currentAns.filter(v => v !== optionValue);
+      let currentAns = (answers[questionId] as string[]) || [];
+      
+      if (optionValue === "none") {
+        // If clicking "none", it replaces everything else. Or toggles off if already selected.
+        if (currentAns.includes("none")) {
+          newAnswers[questionId] = [];
+        } else {
+          newAnswers[questionId] = ["none"];
+        }
       } else {
-        newAnswers[questionId] = [...currentAns, optionValue];
+        // If clicking a normal option, make sure "none" is removed
+        if (currentAns.includes(optionValue)) {
+          newAnswers[questionId] = currentAns.filter(v => v !== optionValue);
+        } else {
+          newAnswers[questionId] = [...currentAns.filter(v => v !== "none"), optionValue];
+        }
       }
       setAnswer(questionId, newAnswers[questionId] as string[]);
     } else {

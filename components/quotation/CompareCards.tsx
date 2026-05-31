@@ -286,16 +286,33 @@ export function CompareCards({
               </div>
             </div>
 
-            {/* Button */}
-            <button
-              className={`w-full mt-8 py-3 rounded-xl font-medium text-[13px] transition-colors ${
-                isCheckout
-                  ? "bg-[#0071e3] text-white"
-                  : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-white hover:bg-[#e8e8ed] dark:hover:bg-[#3d3d3f]"
-              }`}
-            >
-              {isCheckout ? "Selected" : "Select"}
-            </button>
+            {/* Buttons */}
+            {isCheckout ? (
+              <div className="flex flex-col gap-2 mt-8">
+                <button
+                  className="w-full py-2.5 rounded-xl font-medium text-[13px] transition-colors bg-[#0071e3] text-white cursor-default"
+                >
+                  Selected
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const { startCompareMode } = useConfiguratorStore.getState();
+                    startCompareMode(card.pricing, tierName);
+                    document.getElementById('build-your-own')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="w-full py-2.5 rounded-xl font-medium text-[13px] transition-colors bg-white dark:bg-transparent border border-[#0071e3] text-[#0071e3] hover:bg-blue-50 dark:hover:bg-[#0071e3]/10"
+                >
+                  Customize & Compare
+                </button>
+              </div>
+            ) : (
+              <button
+                className="w-full mt-8 py-3 rounded-xl font-medium text-[13px] transition-colors bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-white hover:bg-[#e8e8ed] dark:hover:bg-[#3d3d3f]"
+              >
+                Select
+              </button>
+            )}
           </div>
         );
       })}

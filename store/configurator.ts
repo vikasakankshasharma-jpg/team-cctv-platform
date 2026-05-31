@@ -45,6 +45,11 @@ interface ConfiguratorStore {
   compare_options: Array<{ technology: string; option: number | string }>;
   active_checkout_option: { technology: string; option: number | string } | null;
 
+  // ── Compare Mode (2-Quotation Layout) ──────────────────────────────────────
+  is_compare_mode: boolean;
+  base_quote_pricing: PricingResult | null;
+  base_tier_name: string | null;
+
   // ── Actions ────────────────────────────────────────────────────────────────
 
   /** Load all pricing config from Firestore into the cache */
@@ -69,6 +74,12 @@ interface ConfiguratorStore {
 
   /** Set the active checkout option (when clicking a card) */
   setActiveCheckoutOption: (option: { technology: string; option: number | string }) => void;
+
+  /** Enter 2-Quotation comparison mode */
+  startCompareMode: (basePricing: PricingResult, tierName: string) => void;
+
+  /** Exit compare mode */
+  exitCompareMode: () => void;
 
   /** Apply a referral discount from a validated promoter */
   applyReferral: (discount: number, promoterId: string) => void;
@@ -118,6 +129,10 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
   promoter_id: null,
   compare_options: [],
   active_checkout_option: null,
+  
+  is_compare_mode: false,
+  base_quote_pricing: null,
+  base_tier_name: null,
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
@@ -159,6 +174,18 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
     }
   }),
 
+  startCompareMode: (basePricing, tierName) => set({
+    is_compare_mode: true,
+    base_quote_pricing: basePricing,
+    base_tier_name: tierName,
+  }),
+
+  exitCompareMode: () => set({
+    is_compare_mode: false,
+    base_quote_pricing: null,
+    base_tier_name: null,
+  }),
+
   applyReferral: (discount, promoterId) =>
     set({ referral_discount: discount, promoter_id: promoterId }),
 
@@ -172,6 +199,9 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
       promoter_id: null,
       compare_options: [],
       active_checkout_option: null,
+      is_compare_mode: false,
+      base_quote_pricing: null,
+      base_tier_name: null,
     }),
 
   resetFilters: () =>

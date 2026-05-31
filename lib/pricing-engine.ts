@@ -681,10 +681,13 @@ function resolveHDDCapacity(product: Addon & { storage_tb?: number }): number {
 
 function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: string) {
   if (selection.selected_storage_id) {
+    if (selection.selected_storage_id === "none") return undefined; // Explicit no-storage request
     return addons.find(a => a.id === selection.selected_storage_id);
   }
 
-  const recordingDays = selection.recording_days || 7;
+  const recordingDays = selection.recording_days ?? 7;
+  if (recordingDays === 0) return undefined;
+
   // Use product's declared daily_gb_per_camera if available, else sensible defaults
   const gbPerDay = tech === "IP" ? 15 : 10;
   const requiredGB = selection.camera_count * gbPerDay * recordingDays;

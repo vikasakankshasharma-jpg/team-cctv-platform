@@ -279,6 +279,19 @@ export default function SalespersonsClient() {
               </div>
 
               <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Max Discount % (Optional)</label>
+                <Input 
+                  type="number" 
+                  min="0"
+                  max="100"
+                  value={newSalesperson.max_discount_approval_percent || ""} 
+                  onChange={e => setNewSalesperson(prev => ({...prev, max_discount_approval_percent: parseFloat(e.target.value) || 0}))}
+                  placeholder="e.g. 10"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">Maximum discount this salesperson can approve in the Manual Quote Builder.</p>
+              </div>
+
+              <div>
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Zone Assignments</label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {zones.map(z => {

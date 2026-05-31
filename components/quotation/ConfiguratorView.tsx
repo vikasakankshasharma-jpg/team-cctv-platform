@@ -10,8 +10,9 @@ import { CompareCards } from "./CompareCards";
 import { SpecCompareTable } from "./SpecCompareTable";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
 import { SmartContextBar } from "./SmartContextBar";
+import { BaseQuoteSummary } from "./BaseQuoteSummary";
 import dynamic from "next/dynamic";
-import { Shield, ChevronDown, ChevronRight, CheckCircle2, Sparkles } from "lucide-react";
+import { Shield, ChevronDown, ChevronRight, CheckCircle2, Sparkles, ArrowLeftRight } from "lucide-react";
 const SiteDetailsModal = dynamic(() => import("./SiteDetailsModal").then(mod => mod.SiteDetailsModal), { ssr: false });
 const ShareDialog = dynamic(() => import("./ShareDialog").then(mod => mod.ShareDialog), { ssr: false });
 const CompetitorQuoteUploader = dynamic(() => import("@/components/shared/CompetitorQuoteUploader").then(mod => mod.CompetitorQuoteUploader), { ssr: false });
@@ -59,7 +60,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     compare_options,
     active_checkout_option,
     setCompareOptions,
-    setActiveCheckoutOption
+    setActiveCheckoutOption,
+    is_compare_mode,
+    base_quote_pricing,
+    base_tier_name: store_base_tier_name
   } = useConfiguratorStore();
 
   const [isSaving, setIsSaving] = useState(false);
@@ -207,6 +211,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   }, [activePricing]);
 
   const basePricing = useMemo(() => {
+    if (is_compare_mode && base_quote_pricing) return base_quote_pricing;
     const cT = selection.technology || "IP";
     const baseOption = typeof active_checkout_option?.option === "number" ? active_checkout_option.option : (selection.selected_camera_option || 2);
     
@@ -225,12 +230,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0,
       evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer,
     });
-  }, [active_checkout_option, selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, promoterDiscount, evaluatedRules, lead.active_offer]);
+  }, [active_checkout_option, selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, promoterDiscount, evaluatedRules, lead.active_offer, is_compare_mode, base_quote_pricing]);
 
   const customizationDiff = activePricing.total_payable - basePricing.total_payable;
 
   const baseOptionNum = typeof active_checkout_option?.option === "number" ? active_checkout_option.option : (selection.selected_camera_option || 2);
-  const baseTierName = baseOptionNum === 1 ? "Standard" : baseOptionNum === 3 ? "Elite" : "Professional";
+  const baseTierName = (is_compare_mode && store_base_tier_name) ? store_base_tier_name : (baseOptionNum === 1 ? "Standard" : baseOptionNum === 3 ? "Elite" : "Professional");
 
   const isCustomized = typeof active_checkout_option?.option === "string" 
     || !!selection.selected_camera_id 
@@ -440,7 +445,25 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
            <p className="text-[15px] text-[#86868b] mt-2">Fine-tune every aspect of your security configuration.</p>
         </div>
         
-        <FullCustomizerPanel />
+        {is_compare_mode ? (
+          <>
+            {/* Mobile swipe instruction */}
+            <div className="md:hidden flex items-center justify-center gap-2 mb-4 text-xs font-medium text-zinc-500 animate-pulse">
+              <ArrowLeftRight className="w-4 h-4" />
+              Swipe to compare Base vs Custom
+            </div>
+            <div className="flex flex-nowrap md:flex-wrap md:flex-row gap-4 md:gap-8 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 no-scrollbar">
+              <div className="w-[90vw] md:w-full lg:w-[35%] shrink-0 snap-center order-1">
+                <BaseQuoteSummary />
+              </div>
+              <div className="w-[90vw] md:w-full lg:w-[62%] shrink-0 snap-center order-2">
+                <FullCustomizerPanel />
+              </div>
+            </div>
+          </>
+        ) : (
+          <FullCustomizerPanel />
+        )}
       </div>
 
       {/* STICKY CHECKOUT BAR (Apple Style) */}

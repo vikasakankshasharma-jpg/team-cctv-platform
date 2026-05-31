@@ -499,9 +499,30 @@ export function FullCustomizerPanel() {
           rec, selection.selected_recorder_id === rec.id, () => { updateSelection({ selected_recorder_id: rec.id }); advanceToNextTab("recorders"); }, !!selection.selected_recorder_id, () => updateSelection({ selected_recorder_id: undefined })
         ))}
 
-        {activeTab === "storage" && filteredStorage.map(hdd => renderProductItem(
-          hdd, selection.selected_storage_id === hdd.id, () => { updateSelection({ selected_storage_id: hdd.id }); advanceToNextTab("storage"); }, !!selection.selected_storage_id, () => updateSelection({ selected_storage_id: undefined })
-        ))}
+        {activeTab === "storage" && (
+          <>
+            {renderProductItem(
+              {
+                id: "none",
+                display_name: "No Storage Required",
+                brand: "None",
+                unit_price: 0,
+                price: 0,
+                features: ["Cloud Only", "Customer Provided", "Live View Only"],
+                image_url: "",
+                category: "storage",
+                is_active: true
+              } as any,
+              selection.selected_storage_id === "none" || (selection.recording_days === 0 && !selection.selected_storage_id),
+              () => { updateSelection({ selected_storage_id: "none", recording_days: 0 }); advanceToNextTab("storage"); },
+              selection.selected_storage_id === "none" || (selection.recording_days === 0 && !selection.selected_storage_id),
+              () => updateSelection({ selected_storage_id: undefined })
+            )}
+            {filteredStorage.map(hdd => renderProductItem(
+              hdd, selection.selected_storage_id === hdd.id, () => { updateSelection({ selected_storage_id: hdd.id }); advanceToNextTab("storage"); }, !!selection.selected_storage_id, () => updateSelection({ selected_storage_id: undefined })
+            ))}
+          </>
+        )}
 
         {activeTab === "power" && filteredPower.map(pwr => renderProductItem(
           pwr, selection.selected_power_id === pwr.id, () => { updateSelection({ selected_power_id: pwr.id }); toast.success("Power supply pinned!", { description: "Your system is fully configured. Review your quote below.", duration: 3000 }); }, !!selection.selected_power_id, () => updateSelection({ selected_power_id: undefined })
