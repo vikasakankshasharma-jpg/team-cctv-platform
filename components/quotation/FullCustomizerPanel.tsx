@@ -5,8 +5,9 @@ import { useConfiguratorStore } from "@/store/configurator";
 import { calculateSystemScore } from "@/lib/system-score";
 import { 
   Zap, Maximize, Mic, Moon, Camera, Server, HardDrive, Plug, PlusCircle,
-  Search, X, Sparkles, Check, ChevronDown, ChevronUp, Unlock, Lock, Wrench
+  Search, X, Sparkles, Check, CheckCircle2, ChevronDown, ChevronUp, Unlock, Lock, Wrench, ArrowRight
 } from "lucide-react";
+import { toast } from "sonner";
 import type { Product, Addon } from "@/types";
 
 type Tab = "cameras" | "recorders" | "storage" | "power" | "addons";
@@ -22,6 +23,36 @@ export function FullCustomizerPanel() {
     setSearch("");
     setActiveFilters({});
   };
+
+  // Step completion tracking
+  const TAB_FLOW: Tab[] = ["cameras", "recorders", "storage", "power"];
+  const TAB_LABELS: Record<Tab, string> = { cameras: "Camera", recorders: "Recorder", storage: "Storage", power: "Power", addons: "Accessories" };
+
+  const stepCompletion = useMemo(() => ({
+    cameras: !!selection.selected_camera_id,
+    recorders: !!selection.selected_recorder_id,
+    storage: !!selection.selected_storage_id,
+    power: !!selection.selected_power_id,
+    addons: selection.selected_addons.length > 0,
+  }), [selection.selected_camera_id, selection.selected_recorder_id, selection.selected_storage_id, selection.selected_power_id, selection.selected_addons]);
+
+  const completedSteps = TAB_FLOW.filter(t => stepCompletion[t]).length;
+  const totalSteps = TAB_FLOW.length;
+
+  // Auto-advance to next tab after selection
+  const advanceToNextTab = useCallback((currentTab: Tab) => {
+    const currentIdx = TAB_FLOW.indexOf(currentTab);
+    if (currentIdx === -1 || currentIdx >= TAB_FLOW.length - 1) return;
+    const nextTab = TAB_FLOW[currentIdx + 1];
+    const nextLabel = TAB_LABELS[nextTab];
+    toast.success(`${TAB_LABELS[currentTab]} pinned!`, {
+      description: `Now choose a ${nextLabel} →`,
+      duration: 2500,
+    });
+    setTimeout(() => {
+      handleTabChange(nextTab);
+    }, 800);
+  }, []);
 
   const filterCategories = useMemo(() => {
     if (activeTab === "cameras") {
@@ -242,11 +273,11 @@ export function FullCustomizerPanel() {
   const renderTabs = () => (
     <div className="relative">
       <div ref={tabsContainerRef} className="flex overflow-x-auto shrink-0 scrollbar-none px-6 gap-6 border-b border-[#d2d2d7] dark:border-[#424245]">
-        <TabButton active={activeTab === "cameras"} onClick={() => handleTabChange("cameras")} label="Cameras" />
-        <TabButton active={activeTab === "recorders"} onClick={() => handleTabChange("recorders")} label="Recorders" />
-        <TabButton active={activeTab === "storage"} onClick={() => handleTabChange("storage")} label="Storage" />
-        <TabButton active={activeTab === "power"} onClick={() => handleTabChange("power")} label="Power" />
-        <TabButton active={activeTab === "addons"} onClick={() => handleTabChange("addons")} label="Accessories" />
+        <TabButton active={activeTab === "cameras"} onClick={() => handleTabChange("cameras")} label="Cameras" completed={stepCompletion.cameras} />
+        <TabButton active={activeTab === "recorders"} onClick={() => handleTabChange("recorders")} label="Recorders" completed={stepCompletion.recorders} />
+        <TabButton active={activeTab === "storage"} onClick={() => handleTabChange("storage")} label="Storage" completed={stepCompletion.storage} />
+        <TabButton active={activeTab === "power"} onClick={() => handleTabChange("power")} label="Power" completed={stepCompletion.power} />
+        <TabButton active={activeTab === "addons"} onClick={() => handleTabChange("addons")} label="Accessories" completed={stepCompletion.addons} />
       </div>
       {/* Right fade gradient hint */}
       {showTabFade && (
@@ -365,21 +396,38 @@ export function FullCustomizerPanel() {
     <div className="w-full bg-[#fbfbfd] dark:bg-[#1d1d1f] border border-[#d2d2d7] dark:border-[#424245] rounded-[32px] overflow-hidden shadow-sm flex flex-col min-h-[600px] max-h-[800px]">
       
       {/* Header */}
-      <div className="bg-[#fbfbfd] dark:bg-[#1d1d1f] px-6 py-6 border-b border-[#d2d2d7] dark:border-[#424245] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="text-xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Configuration Tool</h3>
-          <p className="text-[13px] text-[#86868b] mt-1">Select and pin components to build a fully customized setup.</p>
+      <div className="bg-[#fbfbfd] dark:bg-[#1d1d1f] px-6 py-6 border-b border-[#d2d2d7] dark:border-[#424245] flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Configuration Tool</h3>
+            <p className="text-[13px] text-[#86868b] mt-1">Select and pin components to build a fully customized setup.</p>
+          </div>
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#86868b]" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={`Search ${activeTab}...`}
+              className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-[#2d2d2f] border border-[#d2d2d7] dark:border-[#424245] rounded-full text-[13px] font-medium text-[#1d1d1f] dark:text-white placeholder:text-[#86868b] focus:outline-none focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all shadow-sm"
+            />
+          </div>
         </div>
-        <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#86868b]" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={`Search ${activeTab}...`}
-            className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-[#2d2d2f] border border-[#d2d2d7] dark:border-[#424245] rounded-full text-[13px] font-medium text-[#1d1d1f] dark:text-white placeholder:text-[#86868b] focus:outline-none focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all shadow-sm"
-          />
-        </div>
+
+        {/* Progress Bar */}
+        {completedSteps > 0 && (
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-1.5 bg-[#f5f5f7] dark:bg-[#2d2d2f] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#0071e3] rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${(completedSteps / totalSteps) * 100}%` }}
+              />
+            </div>
+            <span className="text-[11px] font-bold text-[#0071e3] whitespace-nowrap">
+              {completedSteps}/{totalSteps} selected
+            </span>
+          </div>
+        )}
       </div>
 
       {renderTabs()}
@@ -440,7 +488,7 @@ export function FullCustomizerPanel() {
             }
             setActiveCheckoutOption({ technology: cam.technology as any, option: cam.id! });
             updateSelection({ selected_camera_id: cam.id });
-            document.getElementById("build-your-own")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            advanceToNextTab("cameras");
           },
           !!selection.selected_camera_id,
           () => updateSelection({ selected_camera_id: undefined }),
@@ -448,15 +496,15 @@ export function FullCustomizerPanel() {
         ))}
 
         {activeTab === "recorders" && filteredRecorders.map(rec => renderProductItem(
-          rec, selection.selected_recorder_id === rec.id, () => updateSelection({ selected_recorder_id: rec.id }), !!selection.selected_recorder_id, () => updateSelection({ selected_recorder_id: undefined })
+          rec, selection.selected_recorder_id === rec.id, () => { updateSelection({ selected_recorder_id: rec.id }); advanceToNextTab("recorders"); }, !!selection.selected_recorder_id, () => updateSelection({ selected_recorder_id: undefined })
         ))}
 
         {activeTab === "storage" && filteredStorage.map(hdd => renderProductItem(
-          hdd, selection.selected_storage_id === hdd.id, () => updateSelection({ selected_storage_id: hdd.id }), !!selection.selected_storage_id, () => updateSelection({ selected_storage_id: undefined })
+          hdd, selection.selected_storage_id === hdd.id, () => { updateSelection({ selected_storage_id: hdd.id }); advanceToNextTab("storage"); }, !!selection.selected_storage_id, () => updateSelection({ selected_storage_id: undefined })
         ))}
 
         {activeTab === "power" && filteredPower.map(pwr => renderProductItem(
-          pwr, selection.selected_power_id === pwr.id, () => updateSelection({ selected_power_id: pwr.id }), !!selection.selected_power_id, () => updateSelection({ selected_power_id: undefined })
+          pwr, selection.selected_power_id === pwr.id, () => { updateSelection({ selected_power_id: pwr.id }); toast.success("Power supply pinned!", { description: "Your system is fully configured. Review your quote below.", duration: 3000 }); }, !!selection.selected_power_id, () => updateSelection({ selected_power_id: undefined })
         ))}
 
         {activeTab === "addons" && filteredAddons.map(addon => renderAddonItem(
@@ -478,18 +526,25 @@ export function FullCustomizerPanel() {
   );
 }
 
-function TabButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+function TabButton({ active, onClick, label, completed }: { active: boolean; onClick: () => void; label: string; completed?: boolean }) {
   return (
     <button
       onClick={onClick}
       data-active={active}
-      className={`px-1 py-4 text-[14px] font-medium transition-all whitespace-nowrap border-b-2 -mb-px ${
+      className={`relative px-1 py-4 text-[14px] font-medium transition-all whitespace-nowrap border-b-2 -mb-px flex items-center gap-1.5 ${
         active 
           ? "border-[#1d1d1f] dark:border-[#f5f5f7] text-[#1d1d1f] dark:text-[#f5f5f7]" 
           : "border-transparent text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7]"
       }`}
     >
       {label}
+      {completed && (
+        <span className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </span>
+      )}
     </button>
   );
 }
