@@ -85,7 +85,7 @@ export default function InstallerJobDetailClient({
             <h1 className="text-2xl font-black text-foreground tracking-tight">{lead.customer_name}</h1>
             <div className="flex items-center gap-2 text-muted-foreground mt-2 font-medium text-sm">
               <MapPin className="w-4 h-4" /> 
-              {lead.address?.full_address || lead.detected_city || "Address not provided"}
+              {lead.address?.full_address || (lead as any).detected_city || "Address not provided"}
             </div>
             {lead.mobile_number && (
               <div className="flex items-center gap-2 text-muted-foreground mt-1 font-medium text-sm">

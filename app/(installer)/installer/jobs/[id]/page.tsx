@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/auth-server";
+import { verifyInstallerSession } from "@/lib/auth-installer";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Wrench } from "lucide-react";
@@ -13,11 +13,13 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function InstallerJobDetailPage({ params }: { params: { id: string } }) {
-  const session = await verifySession();
+  const session = await verifyInstallerSession();
 
-  if (!session.isAuthenticated || session.role !== "installer") {
+  if (!session.isAuthenticated) {
     redirect("/installer/login");
   }
+
+  const installerId = session.installerId!;
 
   // Fetch lead to verify assignment
   const leadDoc = await adminDb.collection("leads").doc(params.id).get();
@@ -27,8 +29,8 @@ export default async function InstallerJobDetailPage({ params }: { params: { id:
 
   const lead = leadDoc.data();
   // Ensure the installer is authorized to view this job
-  const isAssigned = lead?.assigned_installer_id === session.user?.uid;
-  const isBroadcasted = lead?.broadcasted_to_installer_ids?.includes(session.user?.uid);
+  const isAssigned = lead?.assigned_to_installer_id === installerId;
+  const isBroadcasted = lead?.broadcasted_to_installer_ids?.includes(installerId);
 
   if (!isAssigned && !isBroadcasted) {
     redirect("/installer/jobs");
