@@ -77,13 +77,13 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       addons: currentAddons
     });
     
-    const initialCamCount = parseInt(lead.wizard_answers["q_cam_count"] as string) || 4;
-    const initialDays = parseInt(lead.wizard_answers["q_storage"] as string) || 15;
+    const initialCamCount = parseInt(lead.wizard_answers?.["q_cam_count"] as string) || 4;
+    const initialDays = parseInt(lead.wizard_answers?.["q_storage"] as string) || 15;
     
-    const wantsAmcRaw = lead.wizard_answers["q_amc"];
+    const wantsAmcRaw = lead.wizard_answers?.["q_amc"];
     const wantsAmc = typeof wantsAmcRaw === 'string' ? wantsAmcRaw === 'true' : !!wantsAmcRaw;
 
-    const reqFeaturesRaw = lead.wizard_answers["q_special_features"] || lead.wizard_answers["q_features"];
+    const reqFeaturesRaw = lead.wizard_answers?.["q_special_features"] || lead.wizard_answers?.["q_features"];
     const rawFeaturesArray = Array.isArray(reqFeaturesRaw) ? reqFeaturesRaw : (reqFeaturesRaw ? [reqFeaturesRaw as string] : []);
     
     const requestedFeatures = Array.from(new Set(rawFeaturesArray.map(f => {
@@ -96,32 +96,32 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       return "";
     }).filter(f => f !== "")));
 
-    const surfaceRaw = lead.wizard_answers["q_surface"];
+    const surfaceRaw = lead.wizard_answers?.["q_surface"];
     const surfaceTypes = Array.isArray(surfaceRaw) ? surfaceRaw : (surfaceRaw ? [surfaceRaw as string] : []);
 
-    const generalAddonsRaw = lead.wizard_answers["q_general_addons"];
+    const generalAddonsRaw = lead.wizard_answers?.["q_general_addons"];
     const rawAddonsArray = Array.isArray(generalAddonsRaw) ? generalAddonsRaw : (generalAddonsRaw ? [generalAddonsRaw as string] : []);
     const selectedAddons = rawAddonsArray.filter(a => a !== "none").map(a => `addon_${a}`);
 
-    let mappedBrand = lead.wizard_answers["q_brand"] as string || "all";
+    let mappedBrand = (lead.wizard_answers?.["q_brand"] as string) || "all";
     if (mappedBrand === "recommend" || mappedBrand === "unsure") mappedBrand = "all";
     if (mappedBrand === "cpplus") mappedBrand = "CP-Plus";
 
-    const isMixedMode = lead.wizard_answers["use_mixed_mode"] === true;
-    const mixedReqs = isMixedMode ? (lead.wizard_answers["mixed_camera_requirements"] as any[]) : undefined;
+    const isMixedMode = lead.wizard_answers?.["use_mixed_mode"] === true;
+    const mixedReqs = isMixedMode ? (lead.wizard_answers?.["mixed_camera_requirements"] as any[]) : undefined;
 
     updateSelection({
       technology: lead.technology_choice || "HD",
       camera_count: initialCamCount,
       mixed_camera_requirements: mixedReqs,
       recording_days: initialDays,
-      ceiling_height: (lead.wizard_answers["q_height"] as any) || "standard",
+      ceiling_height: (lead.wizard_answers?.["q_height"] as any) || "standard",
       wants_amc: wantsAmc,
       requested_features: requestedFeatures,
       surface_types: surfaceTypes,
       selected_addons: selectedAddons,
       brand_preference: mappedBrand,
-      installation_timeline: (lead.wizard_answers["q_timeline"] as string) || "research",
+      installation_timeline: (lead.wizard_answers?.["q_timeline"] as string) || "research",
       property_type: lead.property_type,
     });
 
@@ -133,7 +133,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const propertyType = lead.property_type;
   
   const requirements = useMemo(() => {
-    const reqValues = lead.wizard_answers["q_special_features"] || lead.wizard_answers["q_features"];
+    const reqValues = lead.wizard_answers?.["q_special_features"] || lead.wizard_answers?.["q_features"];
     return Array.isArray(reqValues) ? reqValues : (reqValues ? [reqValues] : []);
   }, [lead.wizard_answers]);
 

@@ -211,7 +211,7 @@ export default async function QuoteResultPage({
            </h1>
            
            <p className="text-lg sm:text-xl text-[#86868b] dark:text-[#a1a1a6] font-normal leading-relaxed max-w-2xl mx-auto">
-              Prepared exclusively for <span className="text-[#1d1d1f] dark:text-white font-medium">{lead.customer_name}</span>. Review your recommended {lead.property_type.toLowerCase()} packages below or build a custom solution.
+              Prepared exclusively for <span className="text-[#1d1d1f] dark:text-white font-medium">{lead.customer_name}</span>. Review your recommended {(lead.property_type || "").toLowerCase()} packages below or build a custom solution.
            </p>
         </div>
       </div>
