@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { ChevronDown, ChevronUp, Check, X } from "lucide-react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, X } from "lucide-react";
 import type { Product, AppSettings, ConfiguratorSelection } from "@/types";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { calculateSystemScore, inferResolutionFromName, inferNightVisionFromName } from "@/lib/system-score";
@@ -211,6 +211,37 @@ export function SpecCompareTable({
     return values.every((v) => JSON.stringify(v) === first);
   };
 
+  // Mobile scroll tracking for spec table
+  const specScrollRef = useRef<HTMLDivElement>(null);
+  const [activeSpecCol, setActiveSpecCol] = useState(0);
+  const totalSpecCols = columnData.length;
+
+  useEffect(() => {
+    const container = specScrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft;
+      const scrollWidth = container.scrollWidth - container.clientWidth;
+      if (scrollWidth <= 0) return;
+      const progress = scrollLeft / scrollWidth;
+      const idx = Math.round(progress * (totalSpecCols - 1));
+      setActiveSpecCol(Math.min(idx, totalSpecCols - 1));
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [totalSpecCols]);
+
+  const scrollSpecToCol = useCallback((index: number) => {
+    const container = specScrollRef.current;
+    if (!container) return;
+    const scrollWidth = container.scrollWidth - container.clientWidth;
+    if (scrollWidth <= 0) return;
+    const targetScroll = (index / (totalSpecCols - 1)) * scrollWidth;
+    container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  }, [totalSpecCols]);
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-end mb-4">
@@ -227,7 +258,7 @@ export function SpecCompareTable({
         </label>
       </div>
 
-      <div className="rounded-3xl bg-white dark:bg-[#1d1d1f] border border-[#d2d2d7] dark:border-[#424245] overflow-x-auto shadow-sm">
+      <div ref={specScrollRef} className="rounded-3xl bg-white dark:bg-[#1d1d1f] border border-[#d2d2d7] dark:border-[#424245] overflow-x-auto shadow-sm">
         <div className="min-w-[600px]">
         {/* Table Header */}
         <div className={`grid ${gridColsClass} border-b border-[#d2d2d7] dark:border-[#424245] bg-[#fbfbfd] dark:bg-[#1d1d1f]`}>
@@ -309,6 +340,52 @@ export function SpecCompareTable({
         </div>
         </div>
       </div>
+
+      {/* Mobile Spec Table Pagination */}
+      {totalSpecCols > 1 && (
+        <div className="flex sm:hidden flex-col items-center gap-2 mt-4 mx-4">
+          <div className="w-full flex items-center justify-between bg-white dark:bg-[#1d1d1f] border border-[#d2d2d7] dark:border-[#424245] rounded-2xl px-4 py-3 shadow-lg shadow-black/5">
+            <button
+              onClick={() => scrollSpecToCol(Math.max(0, activeSpecCol - 1))}
+              disabled={activeSpecCol === 0}
+              className="w-10 h-10 rounded-xl bg-[#0071e3]/10 dark:bg-[#0071e3]/20 flex items-center justify-center text-[#0071e3] disabled:opacity-25 transition-all active:scale-90"
+              aria-label="Previous spec column"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2.5">
+                {columnData.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => scrollSpecToCol(i)}
+                    className={`rounded-full transition-all duration-300 ${
+                      i === activeSpecCol
+                        ? "w-8 h-2.5 bg-[#0071e3] shadow-sm shadow-[#0071e3]/30"
+                        : "w-2.5 h-2.5 bg-[#d2d2d7] dark:bg-[#424245] hover:bg-[#86868b]"
+                    }`}
+                    aria-label={`Go to spec column ${i + 1}`}
+                  />
+                ))}
+              </div>
+              <p className="text-[13px] font-bold text-[#1d1d1f] dark:text-white tracking-tight">
+                <span className="text-[#0071e3]">{columnHeaders[activeSpecCol]}</span>
+                <span className="text-[#86868b] font-medium"> — {activeSpecCol + 1} of {totalSpecCols}</span>
+              </p>
+            </div>
+
+            <button
+              onClick={() => scrollSpecToCol(Math.min(totalSpecCols - 1, activeSpecCol + 1))}
+              disabled={activeSpecCol === totalSpecCols - 1}
+              className="w-10 h-10 rounded-xl bg-[#0071e3]/10 dark:bg-[#0071e3]/20 flex items-center justify-center text-[#0071e3] disabled:opacity-25 transition-all active:scale-90"
+              aria-label="Next spec column"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
