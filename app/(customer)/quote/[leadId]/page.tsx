@@ -5,6 +5,7 @@ import { Lead, Product, Addon, AddonRule, AppSettings, Promoter } from "@/types"
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { WaitlistBanner } from "@/components/quotation/WaitlistBanner";
+import { getPincodeCoordinates, findNearestHub, HubWithCoordinates } from "@/lib/geo-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,7 @@ export default async function QuoteResultPage({
   let promoter: Promoter | null = null;
   let recommendation_rules: any[] = [];
   let card_layouts: any[] = [];
+  let hubs: HubWithCoordinates[] = [];
 
   if (leadId === "mock-lead" || leadId === "mock-e2e-lead") {
     lead = {
@@ -85,7 +87,8 @@ export default async function QuoteResultPage({
       rulesSnap,
       settingsSnap,
       rulesSnap2,
-      layoutsSnap
+      layoutsSnap,
+      hubsSnap
     ] = await Promise.all([
       lead ? Promise.resolve(null) : adminDb.collection("leads").doc(leadId).get(),
       adminDb.collection("products").where("is_active", "==", true).where("is_deleted", "==", false).get(),
@@ -93,7 +96,8 @@ export default async function QuoteResultPage({
       adminDb.collection("addon_rules").get(),
       adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
       adminDb.collection("recommendation_rules").orderBy("priority", "asc").get(),
-      adminDb.collection("comparison_card_layouts").where("is_active", "==", true).get()
+      adminDb.collection("comparison_card_layouts").where("is_active", "==", true).get(),
+      adminDb.collection("hubs").where("is_active", "==", true).get()
     ]);
 
     if (!lead && leadSnap && leadSnap.exists) {
@@ -125,6 +129,8 @@ export default async function QuoteResultPage({
     card_layouts = layoutsSnap.docs
       .map((doc: any) => ({ id: doc.id, ...doc.data() }))
       .sort((a: any, b: any) => (a.priority || 0) - (b.priority || 0));
+
+    hubs = hubsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
 
     if (lead?.promoter_id) {
       const promoterSnap = await adminDb.collection("promoters").doc(lead.promoter_id).get();
@@ -181,11 +187,25 @@ export default async function QuoteResultPage({
 
   const leadPincode = String(lead.wizard_answers?.lead_pincode || "");
   let unservedCityName: string | null = null;
+  let nearestHubName: string | undefined = undefined;
+  let distanceKm: number | undefined = undefined;
   
   if (leadPincode && leadPincode.length === 6) {
+    // Check hardcoded regions first as fallbacks or exact maps
     if (leadPincode.startsWith("342")) unservedCityName = "Jodhpur";
     else if (leadPincode.startsWith("324")) unservedCityName = "Kota";
     else if (leadPincode.startsWith("305")) unservedCityName = "Ajmer";
+    else unservedCityName = (lead.wizard_answers?.lead_city as string) || "Your Area"; // fallback city
+
+    // Compute exact distance
+    const customerCoords = getPincodeCoordinates(leadPincode);
+    if (customerCoords) {
+      const nearest = findNearestHub(customerCoords, hubs);
+      if (nearest) {
+        nearestHubName = nearest.hub.city_name || nearest.hub.name;
+        distanceKm = nearest.distanceKm;
+      }
+    }
   }
 
   // Check expiration (7 days)
@@ -198,12 +218,17 @@ export default async function QuoteResultPage({
     <main className="min-h-screen bg-[#f5f5f7] dark:bg-black font-sans selection:bg-blue-200 dark:selection:bg-blue-900 transition-colors duration-500 pb-32">
       
       {/* MINIMALIST HERO SECTION (Apple Aesthetic) */}
-      <div className="max-w-5xl mx-auto pt-16 sm:pt-24 pb-8 sm:pb-12 px-4 sm:px-6 md:px-12">
-        <div className="flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-6 duration-1000">
-           
-           {unservedCityName && lead.id && (
-             <WaitlistBanner leadId={lead.id} unservedCityName={unservedCityName} />
-           )}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 pt-16 sm:pt-24 pb-8 sm:pb-12 text-center">
+          
+          {/* DYNAMIC WAITLIST BANNER WITH DISTANCE */}
+          {unservedCityName && (
+            <WaitlistBanner 
+              leadId={lead.id!} 
+              unservedCityName={unservedCityName} 
+              nearestHubName={nearestHubName}
+              distanceKm={distanceKm}
+            />
+          )}
            
            <h1 className="text-4xl sm:text-5xl md:text-7xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight leading-tight mb-4">
               Your security,<br />
@@ -213,8 +238,7 @@ export default async function QuoteResultPage({
            <p className="text-lg sm:text-xl text-[#86868b] dark:text-[#a1a1a6] font-normal leading-relaxed max-w-2xl mx-auto">
               Prepared exclusively for <span className="text-[#1d1d1f] dark:text-white font-medium">{lead.customer_name}</span>. Review your recommended {(lead.property_type || "").toLowerCase()} packages below or build a custom solution.
            </p>
-        </div>
-      </div>
+         </div>
       
       {/* MAIN CONFIGURATOR VIEW */}
       <div className="w-full animate-in fade-in fill-mode-both delay-300 duration-1000">

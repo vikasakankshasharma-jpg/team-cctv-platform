@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Shield, X, ChevronRight, CheckCircle2, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 
 const CompetitorQuoteUploader = dynamic(
@@ -32,7 +33,12 @@ export function PriceMatchPopup({
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Smart delayed trigger
   useEffect(() => {
@@ -102,9 +108,9 @@ export function PriceMatchPopup({
     }
   };
 
-  if (alreadySubmitted || dismissed) return null;
+  if (alreadySubmitted || dismissed || !mounted) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {visible && (
         <>
@@ -245,6 +251,7 @@ export function PriceMatchPopup({
           </div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
