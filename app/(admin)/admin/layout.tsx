@@ -62,12 +62,14 @@ export default async function AdminLayout({
       <Sidebar />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <AdminHeader 
-          userEmail={session.user?.email || session.user?.phone_number || "Unknown"} 
-          userRole={session.role || "admin"} 
-        />
+        <div className="hidden md:block">
+          <AdminHeader 
+            userEmail={session.user?.email || session.user?.phone_number || "Unknown"} 
+            userRole={session.role || "admin"} 
+          />
+        </div>
 
-        <main className="flex-1 overflow-y-auto p-6 relative scrollbar-none bg-[var(--bg)]">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6 pt-18 md:pt-4 lg:pt-6 relative scrollbar-none bg-[var(--bg)]">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

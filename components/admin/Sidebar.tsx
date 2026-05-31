@@ -30,6 +30,8 @@ import {
   HeartPulse,
   MapPin,
   Bell,
+  Menu,
+  X,
 } from "lucide-react";
 
 // ─── NAVIGATION STRUCTURE ─────────────────────────────────────────────────────
@@ -106,6 +108,7 @@ export function Sidebar() {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -123,7 +126,7 @@ export function Sidebar() {
   const isActive = (href: string) =>
     href === "/admin" ? pathname === href : pathname.startsWith(href);
 
-  return (
+  const sidebarContent = (
     <div className={`sidebar ${isCollapsed ? "w-[72px]" : "w-[220px]"} transition-all duration-300 admin-theme`} style={isCollapsed ? { width: '72px' } : {}}>
       {/* ── BRAND HEADER ──────────────────────────────────────────────────── */}
       <div className="sb-logo flex items-center justify-between">
@@ -182,6 +185,7 @@ export function Sidebar() {
                   <Link
                     key={item.name}
                     href={item.href}
+                    onClick={() => setMobileOpen(false)}
                     className={`sb-item ${active ? 'active' : ''} ${isCollapsed ? 'justify-center px-0 mx-2' : ''}`}
                   >
                     <Icon className={`w-[15px] h-[15px] transition-transform duration-200 ${active ? "scale-105" : ""}`} />
@@ -225,5 +229,42 @@ export function Sidebar() {
         </div>
       )}
     </div>
+  );
+
+  return (
+    <>
+      {/* Mobile header bar with hamburger */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4" style={{ background: '#0A0E1A', borderBottom: '1px solid #1E2D45' }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(212,149,58,0.12)' }}>
+            <ShieldCheck className="w-4 h-4" style={{ color: '#D4953A' }} />
+          </div>
+          <span className="text-sm font-black" style={{ color: '#E8EDF5' }}>Admin</span>
+        </div>
+        <button onClick={() => setMobileOpen(true)} className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#111827', color: '#8A98B4' }}>
+          <Menu className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Desktop sidebar */}
+      <div className="hidden md:block">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile drawer overlay */}
+      {mobileOpen && (
+        <>
+          <div className="md:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="md:hidden fixed inset-y-0 left-0 z-50 w-72 shadow-2xl animate-in slide-in-from-left duration-200" style={{ background: '#0A0E1A' }}>
+            <div className="absolute top-4 right-4 z-10">
+              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#111827', color: '#8A98B4' }}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {sidebarContent}
+          </div>
+        </>
+      )}
+    </>
   );
 }
