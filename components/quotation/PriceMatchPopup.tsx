@@ -201,7 +201,7 @@ export function PriceMatchPopup({
                 </div>
               ) : (
                 /* ─── Collapsed: Teaser Card ─── */
-                <div className="p-4 sm:p-5">
+                <div className="relative p-4 sm:p-5">
                   {/* Dismiss button */}
                   <button
                     onClick={handleDismiss}
