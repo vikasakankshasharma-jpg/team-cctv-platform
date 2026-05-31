@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { FileText } from "lucide-react";
 import type { Metadata } from "next";
-import WalkInQuoteClient from "@/components/salesperson/WalkInQuoteClient";
+import ManualQuoteBuilderClient from "@/components/salesperson/ManualQuoteBuilderClient";
 
 export const metadata: Metadata = {
   title: "Create Quote | Sales Portal",
@@ -22,10 +22,10 @@ export default async function SalespersonCreateQuotePage() {
     <div className="space-y-10 animate-in fade-in duration-700">
       <PageHeader
         icon={FileText}
-        title="Walk-In Quote"
-        description="Generate an instant quotation link for a walk-in customer and share it via WhatsApp."
+        title="Manual Quote Builder"
+        description="Build custom quotes by selecting catalog items and applying approved discounts."
       />
-      <WalkInQuoteClient />
+      <ManualQuoteBuilderClient />
     </div>
   );
 }

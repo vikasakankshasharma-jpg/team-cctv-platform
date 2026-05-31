@@ -29,9 +29,10 @@ interface PartnerDashboardClientProps {
     won: number;
     lost: number;
   };
+  slaBreachesCount?: number;
 }
 
-export function PartnerDashboardClient({ partnerName, referralCode, stats, recentWins, pipeline }: PartnerDashboardClientProps) {
+export function PartnerDashboardClient({ partnerName, referralCode, stats, recentWins, pipeline, slaBreachesCount = 0 }: PartnerDashboardClientProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -167,13 +168,27 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
             </Link>
           </div>
           <div className="p-6 flex-1 flex flex-col justify-center items-center text-center">
-             <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center text-emerald-500 mb-4">
-               <CheckCircle2 className="w-8 h-8" />
-             </div>
-             <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">All Clear</h3>
-             <p className="text-sm font-medium text-zinc-500 mt-2 max-w-sm">
-               You have no pending leads requiring immediate SLA acknowledgment. Great work!
-             </p>
+             {slaBreachesCount > 0 ? (
+               <>
+                 <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50 flex items-center justify-center text-red-500 mb-4 animate-pulse">
+                   <AlertTriangle className="w-8 h-8" />
+                 </div>
+                 <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">{slaBreachesCount} Leads Escalated</h3>
+                 <p className="text-sm font-medium text-zinc-500 mt-2 max-w-sm">
+                   You have SLA breaches that require immediate attention.
+                 </p>
+               </>
+             ) : (
+               <>
+                 <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center text-emerald-500 mb-4">
+                   <CheckCircle2 className="w-8 h-8" />
+                 </div>
+                 <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">All Clear</h3>
+                 <p className="text-sm font-medium text-zinc-500 mt-2 max-w-sm">
+                   You have no pending leads requiring immediate SLA acknowledgment. Great work!
+                 </p>
+               </>
+             )}
           </div>
         </div>
 

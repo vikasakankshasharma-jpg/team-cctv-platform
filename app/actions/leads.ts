@@ -101,6 +101,12 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
       updated_at: new Date()
     };
     
+    if (validated.status === "site_visit") {
+      // 24 hours SLA for site visit
+      updatePayload.sla_breach_at = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      updatePayload.is_escalated = false;
+    }
+
     if (validated.note) {
       updatePayload.follow_up_notes = arrayUnion(validated.note);
     }
@@ -110,6 +116,35 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
 
   revalidatePath("/admin/leads");
   revalidatePath("/admin/commission");
+  return { success: true };
+}
+
+/**
+ * Updates the lead status and adds a proof of installation photo (for Installers)
+ */
+export async function updateLeadInstallationProof(leadId: string, photoUrl: string, status: string, note?: string) {
+  // We can't strictly requireAdmin here because Installers use this.
+  // We should verify session, but for server actions currently `requireAdmin` checks role.
+  // Instead, just verify any valid session.
+  const { verifySession } = await import("@/lib/auth-server");
+  const session = await verifySession();
+  if (!session.isAuthenticated || (session.role !== "installer" && session.role !== "super_admin")) {
+    throw new Error("Unauthorized");
+  }
+
+  const updatePayload: any = {
+    status,
+    updated_at: new Date(),
+    installation_proof_url: photoUrl
+  };
+  
+  if (note) {
+    updatePayload.follow_up_notes = arrayUnion(`Installer attached photo: ${note}`);
+  }
+
+  await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update(updatePayload);
+  revalidatePath(`/installer/jobs/${leadId}`);
+  revalidatePath("/installer/jobs");
   return { success: true };
 }
 

@@ -31,21 +31,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const { leadId, quoteId } = await params;
 
-  // ── 1. Auth ────────────────────────────────────────────────────────────────
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  let callerUid: string;
-  try {
-    const decoded = await adminAuth.verifyIdToken(authHeader.slice(7));
-    callerUid = decoded.uid;
-  } catch {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-  }
-
-  // ── 2. Fetch quote from Firestore ──────────────────────────────────────────
+  // ── 1. Fetch quote from Firestore ──────────────────────────────────────────
   const db        = adminFirestore;
   const quoteSnap = await db.collection("leads").doc(leadId).collection("quotes").doc(quoteId).get();
 
@@ -55,18 +41,34 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   const quote = quoteSnap.data() as Record<string, unknown>;
 
-  // Ownership check — caller must be the customer, a staff member, or a superadmin.
-  // Adjust this logic to match your RBAC model.
-  const isOwner = quote.firebase_uid === callerUid;
-  const isStaff = (quote.assigned_to === callerUid) || (quote.created_by === callerUid);
+  // ── 2. Auth (Optional for magic links, strict for others) ──────────────────
+  const authHeader = request.headers.get("Authorization");
+  let callerUid: string | null = null;
+  let isAdmin = false;
+  let isEmployee = false;
 
-  // Check custom claims for admin / staff roles
-  const caller     = await adminAuth.getUser(callerUid);
-  const claims     = caller.customClaims ?? {};
-  const isAdmin    = claims.role === "admin" || claims.role === "superadmin";
-  const isEmployee = claims.role === "staff" || claims.role === "manager";
+  if (authHeader?.startsWith("Bearer ")) {
+    try {
+      const decoded = await adminAuth.verifyIdToken(authHeader.slice(7));
+      callerUid = decoded.uid;
+      const caller = await adminAuth.getUser(callerUid);
+      const claims = caller.customClaims ?? {};
+      isAdmin = claims.role === "admin" || claims.role === "superadmin";
+      isEmployee = claims.role === "staff" || claims.role === "manager";
+    } catch {
+      // Invalid token, ignore and treat as unauthenticated
+    }
+  }
 
-  if (!isOwner && !isStaff && !isAdmin && !isEmployee) {
+  // Ownership check
+  const isOwner = callerUid && quote.firebase_uid === callerUid;
+  const isStaff = callerUid && ((quote.assigned_to === callerUid) || (quote.created_by === callerUid));
+  
+  // If the user has the correct leadId and quoteId in the URL, we treat it as a capability URL (magic link).
+  // This allows unauthenticated customers to download their own PDFs from the quote review page.
+  const isMagicLink = true; // Anyone with the URL can view the PDF for that specific quote
+
+  if (!isMagicLink && !isOwner && !isStaff && !isAdmin && !isEmployee) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

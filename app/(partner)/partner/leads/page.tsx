@@ -12,12 +12,32 @@ export default async function PartnerLeadsPage() {
   if (!session.isAuthenticated) redirect("/partner/login");
   const promoterId = session.promoterId!;
 
-  // Fetch leads where promoter_id matches
-  const leadsSnap = await adminDb
-    .collection(COLLECTIONS.LEADS)
-    .where("promoter_id", "==", promoterId)
-    .orderBy("created_at", "desc")
-    .get();
+  const { Filter } = require("firebase-admin/firestore");
+
+  const promoterSnap = await adminDb.collection("promoters").doc(promoterId).get();
+  const promoter = promoterSnap.data();
+  const isDealer = promoter?.partner_type === "dealer";
+
+  let leadsSnap;
+  if (isDealer) {
+    leadsSnap = await adminDb
+      .collection(COLLECTIONS.LEADS)
+      .where(
+        Filter.or(
+          Filter.where("promoter_id", "==", promoterId),
+          Filter.where("assigned_installer_id", "==", promoterId),
+          Filter.where("broadcasted_to_installer_ids", "array-contains", promoterId)
+        )
+      )
+      .orderBy("created_at", "desc")
+      .get();
+  } else {
+    leadsSnap = await adminDb
+      .collection(COLLECTIONS.LEADS)
+      .where("promoter_id", "==", promoterId)
+      .orderBy("created_at", "desc")
+      .get();
+  }
 
   // Also fetch commissions to attach commission amounts to won leads
   const commsSnap = await adminDb
@@ -57,6 +77,7 @@ export default async function PartnerLeadsPage() {
       created_at: (leadData.created_at as any)?.toDate?.()?.toISOString() || leadData.created_at,
       total_payable: totalPayable,
       commission_amount: commissionMap.get(doc.id) || 0,
+      is_installer_job: leadData.assigned_installer_id === promoterId || leadData.broadcasted_to_installer_ids?.includes(promoterId),
     };
   });
 

@@ -30,6 +30,8 @@ export async function assignJob(
       updates.installer_id = payload.installer_id;
       updates.status = "dispatched";
       updates.dispatched_at = new Date();
+      updates.sla_breach_at = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      updates.is_escalated = false;
     }
 
     await jobRef.update(updates);

@@ -28,7 +28,7 @@
     },
     {
       "path": "/api/cron/sla-escalation",
-      "schedule": "0 1 * * *"
+      "schedule": "*/15 * * * *"
     }
   ]
 }

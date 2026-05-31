@@ -15,42 +15,55 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // 2. Find all "new" leads that have breached SLA and aren't escalated yet
     const now = new Date();
+    const batch = adminDb.batch();
+    const { sendAdminNotification } = await import("@/lib/notification-service");
     
-    // We cannot use inequality on multiple fields in Firestore easily without composite indexes,
-    // so we query for: status == 'new', is_escalated == false, 
-    // and sla_breach_at <= now
-    const leadsSnap = await adminDb
-      .collection(COLLECTIONS.LEADS)
-      .where("status", "==", "new")
-      .where("is_escalated", "==", false)
-      .where("sla_breach_at", "<=", now)
-      .get();
+    // We track SLAs for leads sitting in these queues too long
+    const statusesToTrack = ["new", "site_visit", "dispatched"];
+    let escalatedCount = 0;
+    const notificationPromises: Promise<any>[] = [];
 
-    if (leadsSnap.empty) {
+    for (const status of statusesToTrack) {
+      const leadsSnap = await adminDb
+        .collection(COLLECTIONS.LEADS)
+        .where("status", "==", status)
+        .where("is_escalated", "==", false)
+        .where("sla_breach_at", "<=", now)
+        .get();
+
+      leadsSnap.docs.forEach((doc: any) => {
+        const lead = doc.data();
+        const leadRef = doc.ref;
+        
+        batch.update(leadRef, {
+          is_escalated: true,
+          follow_up_notes: arrayUnion(`[SYSTEM] SLA Breached at ${now.toISOString()} while in '${status}' status. Escalated to Admin queue.`)
+        });
+        
+        escalatedCount++;
+        
+        // Push notification promise
+        const leadName = lead.customer_name || "Unknown Customer";
+        const msg = `🚨 *SLA BREACH ALERT*\nLead: ${leadName}\nStatus: ${status}\nThis lead has breached its SLA timeout and requires immediate attention!`;
+        notificationPromises.push(sendAdminNotification(msg).catch(() => {}));
+      });
+    }
+
+    if (escalatedCount === 0) {
       return NextResponse.json({ success: true, message: "No leads to escalate", escalatedCount: 0 });
     }
 
-    // 3. Process Escalate in Batch
-    const batch = adminDb.batch();
-    let count = 0;
-
-    leadsSnap.docs.forEach((doc) => {
-      const leadRef = doc.ref;
-      batch.update(leadRef, {
-        is_escalated: true,
-        follow_up_notes: arrayUnion(`[SYSTEM] SLA Breached at ${now.toISOString()}. Escalated to Admin queue.`)
-      });
-      count++;
-    });
-
+    // Commit DB updates
     await batch.commit();
+    
+    // Send notifications in parallel
+    await Promise.all(notificationPromises);
 
     return NextResponse.json({ 
       success: true, 
-      message: `Escalated ${count} leads.`,
-      escalatedCount: count 
+      message: `Escalated ${escalatedCount} leads.`,
+      escalatedCount 
     });
 
   } catch (error: any) {

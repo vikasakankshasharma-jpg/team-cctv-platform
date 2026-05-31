@@ -96,10 +96,11 @@ export async function GET() {
           {
             id: "q_storage", question_text: "Select recording duration:", input_type: "single", is_required: true, position: 0,
             options: [
-              { id: "fopt_s_7", label: "1 Week (Standard)", value: "7", position: 0 },
-              { id: "fopt_s_15", label: "15 Days", value: "15", position: 1 },
-              { id: "fopt_s_30", label: "1 Month", value: "30", position: 2 },
-              { id: "fopt_s_90", label: "3 Months", value: "90", position: 3 },
+              { id: "fopt_s_0", label: "No Storage Required", value: "0", position: 0 },
+              { id: "fopt_s_7", label: "1 Week (Standard)", value: "7", position: 1 },
+              { id: "fopt_s_15", label: "15 Days", value: "15", position: 2 },
+              { id: "fopt_s_30", label: "1 Month", value: "30", position: 3 },
+              { id: "fopt_s_90", label: "3 Months", value: "90", position: 4 },
             ]
           }
         ]

@@ -83,6 +83,19 @@ export default async function PartnerDashboardPage() {
   const promoterDoc = await adminDb.collection(COLLECTIONS.PROMOTERS).doc(promoterId).get();
   const referralCode = promoterDoc.data()?.referral_code || "";
 
+  // 5. Calculate SLA Breaches
+  const now = new Date();
+  let slaBreachesCount = 0;
+  leadsSnap.docs.forEach(doc => {
+    const data = doc.data() as Lead;
+    if (data.sla_breach_at) {
+      const breachDate = (data.sla_breach_at as any)?.toDate?.() || new Date(data.sla_breach_at as any);
+      if (breachDate < now && data.status !== "won" && data.status !== "lost" && data.status !== "quoted") {
+        slaBreachesCount++;
+      }
+    }
+  });
+
   return (
     <PartnerDashboardClient 
       partnerName={session.promoterName || "Partner"}
@@ -95,6 +108,7 @@ export default async function PartnerDashboardPage() {
       }}
       recentWins={recentWins}
       pipeline={pipeline}
+      slaBreachesCount={slaBreachesCount}
     />
   );
 }
