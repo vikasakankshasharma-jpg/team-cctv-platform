@@ -150,62 +150,26 @@ export default function LandingPage() {
       <section className="bg-white dark:bg-zinc-950 transition-colors duration-500 py-16 sm:py-24 md:py-24 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/20 dark:via-blue-900 to-transparent" />
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 sm:gap-24 items-center">
-            <div className="space-y-8 sm:space-y-12">
-              <div>
-                <h2 className="text-blue-600 dark:text-blue-500 font-black text-xs uppercase tracking-[0.4em] mb-4 sm:mb-6">How It Works</h2>
-                <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight transition-colors">Smart Security <br /> Made for You.</h3>
-              </div>
-              <div className="space-y-6 sm:space-y-8">
-                {[
-                  { icon: Target, title: "Perfect Coverage", desc: "We make sure every corner of your property is covered, leaving no blind spots for complete peace of mind." },
-                  { icon: Cpu, title: "Right Cameras", desc: "We'll suggest the best camera technology for your specific needs, whether it's a small home or a large warehouse." },
-                  { icon: Layers, title: "Clear Pricing", desc: "Get three easy-to-understand price options (Value, Professional, and Elite) so you can choose what fits your budget." },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4 sm:gap-6 group">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-[16px] sm:rounded-[20px] bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-blue-600 dark:text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xl dark:shadow-2xl shrink-0">
-                      <item.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mb-1 sm:mb-2 transition-colors">{item.title}</h4>
-                      <p className="text-slate-600 dark:text-zinc-500 font-medium leading-relaxed text-sm sm:text-base transition-colors">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="space-y-12 sm:space-y-16">
+            <div className="text-center max-w-2xl mx-auto">
+              <h2 className="text-blue-600 dark:text-blue-500 font-black text-xs uppercase tracking-[0.4em] mb-4 sm:mb-6">How It Works</h2>
+              <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none transition-colors">Smart Security <br /> Made for You.</h3>
             </div>
-
-            <div className="relative hidden lg:block">
-              <div className="aspect-square bg-gradient-to-br from-blue-50 dark:from-blue-600/20 to-indigo-50 dark:to-indigo-600/20 rounded-[80px] border border-slate-200 dark:border-white/10 p-12 relative overflow-hidden group hover:border-blue-500/30 transition-all duration-700">
-                <div className="absolute inset-0 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-3xl -z-10" />
-                <div className="bg-white/80 dark:bg-black/60 border border-slate-200 dark:border-white/10 p-8 rounded-[40px] shadow-2xl space-y-8 h-full flex flex-col justify-center transition-colors">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-widest">System Quality</span>
-                      <span className="text-emerald-600 dark:text-emerald-500 font-black text-xs">99.9%</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 w-[99.9%]" />
-                    </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+              {[
+                { icon: Target, title: "Perfect Coverage", desc: "We make sure every corner of your property is covered, leaving no blind spots for complete peace of mind." },
+                { icon: Cpu, title: "Right Cameras", desc: "We'll suggest the best camera technology for your specific needs, whether it's a small home or a large warehouse." },
+                { icon: Layers, title: "Clear Pricing", desc: "Get three easy-to-understand price options (Value, Professional, and Elite) so you can choose what fits your budget." },
+              ].map((item, i) => (
+                <div key={i} className="flex flex-col items-center text-center p-8 rounded-[32px] bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 shadow-sm hover:-translate-y-1.5 transition-all duration-300 group hover:shadow-lg dark:hover:shadow-none hover:border-blue-500/30">
+                  <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 flex items-center justify-center text-blue-600 dark:text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-md shrink-0 mb-6">
+                    <item.icon className="w-6 h-6" />
                   </div>
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-500"><Globe className="w-5 h-5" /></div>
-                      <div>
-                        <div className="text-sm font-black text-slate-900 dark:text-white transition-colors">View on Your Phone</div>
-                        <div className="text-[10px] font-bold text-slate-500 dark:text-zinc-500">Check your cameras from anywhere</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-500"><Zap className="w-5 h-5" /></div>
-                      <div>
-                        <div className="text-sm font-black text-slate-900 dark:text-white transition-colors">Clean Installation</div>
-                        <div className="text-[10px] font-bold text-slate-500 dark:text-zinc-500">Neat wiring and professional finish</div>
-                      </div>
-                    </div>
-                  </div>
+                  <h4 className="text-xl font-black text-slate-900 dark:text-white mb-3 transition-colors">{item.title}</h4>
+                  <p className="text-slate-600 dark:text-zinc-400 font-medium leading-relaxed text-sm transition-colors">{item.desc}</p>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
