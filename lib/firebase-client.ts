@@ -77,13 +77,13 @@ function getClientApp(): FirebaseApp {
 /** Firebase Client App instance */
 export const clientApp = getClientApp();
 
-/** Firestore Client instance */
-// Enable offline persistence with multiple tab support
-export const db = initializeFirestore(clientApp, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
-});
+export const db = typeof window !== "undefined"
+  ? initializeFirestore(clientApp, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    })
+  : getFirestore(clientApp);
 
 /** Firebase Auth Client instance */
 export const auth = getAuth(clientApp);
