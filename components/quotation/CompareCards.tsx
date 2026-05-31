@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Check, Zap, Monitor, Camera, Network, PlusCircle, ArrowDown, X, Info, Home, Building2, Settings2, Sparkles } from "lucide-react";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import { Check, Zap, Monitor, Camera, Network, PlusCircle, ArrowDown, X, Info, Home, Building2, Settings2, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product, AppSettings, ConfiguratorSelection, RecommendedOutput, Addon } from "@/types";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { calculateSystemScore } from "@/lib/system-score";
@@ -124,9 +124,61 @@ export function CompareCards({
     );
   }
 
+  // Mobile scroll tracking
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeCardIdx, setActiveCardIdx] = useState(0);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const cards = Array.from(container.children) as HTMLElement[];
+    if (cards.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+            const index = cards.indexOf(entry.target as HTMLElement);
+            if (index !== -1) setActiveCardIdx(index);
+          }
+        });
+      },
+      { root: container, threshold: 0.6 }
+    );
+
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, [cardsData.length]);
+
+  // Hide swipe hint after first interaction
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const handleScroll = () => setShowSwipeHint(false);
+    container.addEventListener('scroll', handleScroll, { once: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Auto-dismiss swipe hint after 4 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSwipeHint(false), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const scrollToCard = useCallback((index: number) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const cards = Array.from(container.children) as HTMLElement[];
+    if (cards[index]) {
+      cards[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, []);
+
   return (
     <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
-      <div className={`flex sm:grid sm:grid-cols-1 ${cardsData.length < 4 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible`}>
+      <div ref={scrollRef} className={`flex sm:grid sm:grid-cols-1 ${cardsData.length < 4 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible`}>
       {cardsData.map((card, idx) => {
         const isCheckout = activeCheckoutOption?.technology === card.technology && activeCheckoutOption?.option === card.option;
         const isCustom = typeof card.option === 'string';
@@ -248,6 +300,61 @@ export function CompareCards({
         );
       })}
       </div>
+
+      {/* Mobile Pagination Indicator */}
+      {cardsData.length > 1 && (
+        <div className="flex sm:hidden flex-col items-center gap-3 mt-4">
+          {/* Dots + Arrows */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => scrollToCard(Math.max(0, activeCardIdx - 1))}
+              disabled={activeCardIdx === 0}
+              className="w-8 h-8 rounded-full bg-[#f5f5f7] dark:bg-[#2d2d2f] flex items-center justify-center text-[#86868b] disabled:opacity-30 transition-opacity active:scale-90"
+              aria-label="Previous quotation"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2">
+              {cardsData.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => scrollToCard(i)}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === activeCardIdx
+                      ? "w-6 h-2 bg-[#0071e3]"
+                      : "w-2 h-2 bg-[#d2d2d7] dark:bg-[#424245] hover:bg-[#86868b]"
+                  }`}
+                  aria-label={`Go to quotation ${i + 1}`}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={() => scrollToCard(Math.min(cardsData.length - 1, activeCardIdx + 1))}
+              disabled={activeCardIdx === cardsData.length - 1}
+              className="w-8 h-8 rounded-full bg-[#f5f5f7] dark:bg-[#2d2d2f] flex items-center justify-center text-[#86868b] disabled:opacity-30 transition-opacity active:scale-90"
+              aria-label="Next quotation"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Counter Label */}
+          <p className="text-[11px] font-medium text-[#86868b] tracking-wide">
+            {activeCardIdx + 1} of {cardsData.length} packages
+          </p>
+
+          {/* Swipe Hint (first load only) */}
+          {showSwipeHint && (
+            <div className="flex items-center gap-1.5 text-[11px] text-[#86868b] animate-pulse">
+              <ChevronLeft className="w-3 h-3" />
+              <span>Swipe to compare</span>
+              <ChevronRight className="w-3 h-3" />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
