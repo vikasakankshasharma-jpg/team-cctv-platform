@@ -303,54 +303,59 @@ export function CompareCards({
 
       {/* Mobile Pagination Indicator */}
       {cardsData.length > 1 && (
-        <div className="flex sm:hidden flex-col items-center gap-3 mt-4">
-          {/* Dots + Arrows */}
-          <div className="flex items-center gap-3">
+        <div className="flex sm:hidden flex-col items-center gap-2 mt-6 mx-4">
+          {/* Main Pagination Bar */}
+          <div className="w-full flex items-center justify-between bg-white dark:bg-[#1d1d1f] border border-[#d2d2d7] dark:border-[#424245] rounded-2xl px-4 py-3 shadow-lg shadow-black/5">
+            {/* Left Arrow */}
             <button
               onClick={() => scrollToCard(Math.max(0, activeCardIdx - 1))}
               disabled={activeCardIdx === 0}
-              className="w-8 h-8 rounded-full bg-[#f5f5f7] dark:bg-[#2d2d2f] flex items-center justify-center text-[#86868b] disabled:opacity-30 transition-opacity active:scale-90"
+              className="w-10 h-10 rounded-xl bg-[#0071e3]/10 dark:bg-[#0071e3]/20 flex items-center justify-center text-[#0071e3] disabled:opacity-25 transition-all active:scale-90"
               aria-label="Previous quotation"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-2">
-              {cardsData.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => scrollToCard(i)}
-                  className={`rounded-full transition-all duration-300 ${
-                    i === activeCardIdx
-                      ? "w-6 h-2 bg-[#0071e3]"
-                      : "w-2 h-2 bg-[#d2d2d7] dark:bg-[#424245] hover:bg-[#86868b]"
-                  }`}
-                  aria-label={`Go to quotation ${i + 1}`}
-                />
-              ))}
+            {/* Center: Dots + Counter */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2.5">
+                {cardsData.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => scrollToCard(i)}
+                    className={`rounded-full transition-all duration-300 ${
+                      i === activeCardIdx
+                        ? "w-8 h-2.5 bg-[#0071e3] shadow-sm shadow-[#0071e3]/30"
+                        : "w-2.5 h-2.5 bg-[#d2d2d7] dark:bg-[#424245] hover:bg-[#86868b]"
+                    }`}
+                    aria-label={`Go to quotation ${i + 1}`}
+                  />
+                ))}
+              </div>
+              <p className="text-[13px] font-bold text-[#1d1d1f] dark:text-white tracking-tight">
+                <span className="text-[#0071e3]">{activeCardIdx + 1}</span>
+                <span className="text-[#86868b] font-medium"> of </span>
+                <span>{cardsData.length} packages</span>
+              </p>
             </div>
 
+            {/* Right Arrow */}
             <button
               onClick={() => scrollToCard(Math.min(cardsData.length - 1, activeCardIdx + 1))}
               disabled={activeCardIdx === cardsData.length - 1}
-              className="w-8 h-8 rounded-full bg-[#f5f5f7] dark:bg-[#2d2d2f] flex items-center justify-center text-[#86868b] disabled:opacity-30 transition-opacity active:scale-90"
+              className="w-10 h-10 rounded-xl bg-[#0071e3]/10 dark:bg-[#0071e3]/20 flex items-center justify-center text-[#0071e3] disabled:opacity-25 transition-all active:scale-90"
               aria-label="Next quotation"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Counter Label */}
-          <p className="text-[11px] font-medium text-[#86868b] tracking-wide">
-            {activeCardIdx + 1} of {cardsData.length} packages
-          </p>
-
           {/* Swipe Hint (first load only) */}
           {showSwipeHint && (
-            <div className="flex items-center gap-1.5 text-[11px] text-[#86868b] animate-pulse">
-              <ChevronLeft className="w-3 h-3" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0071e3] text-white text-[11px] font-bold uppercase tracking-wider animate-bounce shadow-md shadow-[#0071e3]/25">
+              <ChevronLeft className="w-3.5 h-3.5" />
               <span>Swipe to compare</span>
-              <ChevronRight className="w-3 h-3" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </div>
           )}
         </div>
