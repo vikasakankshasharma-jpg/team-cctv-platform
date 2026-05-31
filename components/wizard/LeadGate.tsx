@@ -44,30 +44,8 @@ export function LeadGate({
 
   const [countdown, setCountdown] = useState(0);
 
-  // Initialize Recaptcha safely
-  useEffect(() => {
-    const initRecaptcha = () => {
-      try {
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-            size: "invisible",
-          });
-        }
-      } catch (err) {
-        console.error("Recaptcha Initialization Error:", err);
-      }
-    };
+  // Initialize Recaptcha safely on demand
 
-    // Small timeout ensures the DOM node exists before Firebase binds to it
-    setTimeout(initRecaptcha, 100);
-
-    return () => {
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = undefined;
-      }
-    };
-  }, []);
 
   // Countdown timer for resend
   useEffect(() => {
@@ -103,9 +81,20 @@ export function LeadGate({
         return;
       }
 
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+      // Always start fresh to avoid detached DOM node issues (auth/internal-error)
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = undefined;
       }
+      
+      // Clear container just in case
+      const container = document.getElementById("recaptcha-container");
+      if (container) container.innerHTML = '';
+
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+
+      // Crucial fix: wait for recaptcha to fully render in the DOM before proceeding
+      await window.recaptchaVerifier.render();
 
       const formatPhone = "+91" + mobile;
       const result = await signInWithPhoneNumber(auth, formatPhone, window.recaptchaVerifier);
@@ -239,6 +228,13 @@ export function LeadGate({
   };
 
   const handleOtpChange = (value: string, index: number) => {
+    // Check if the user pasted or auto-filled a 6-digit code
+    if (value.length === 6 && /^\d+$/.test(value)) {
+      setOtp(value.split(""));
+      inputRefs.current[5]?.focus();
+      return;
+    }
+
     if (isNaN(Number(value))) return;
     const newOtp = [...otp];
     newOtp[index] = value.substring(value.length - 1);
@@ -342,9 +338,10 @@ export function LeadGate({
                 <input
                   key={i}
                   ref={(el) => { inputRefs.current[i] = el; }}
-                  type="tel"
+                  type="text"
                   inputMode="numeric"
-                  maxLength={1}
+                  autoComplete="one-time-code"
+                  maxLength={6}
                   value={digit}
                   onChange={(e) => handleOtpChange(e.target.value, i)}
                   onKeyDown={(e) => handleKeyDown(e, i)}

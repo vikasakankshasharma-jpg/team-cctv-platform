@@ -68,6 +68,13 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
   const [isSaving, setIsSaving] = useState(false);
 
+  // Force scroll to top on mount (fixes Next.js router restoring scroll from previous page)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, []);
+
   // Real-Time Inventory Sync
   const { products: liveProducts, addons: liveAddons } = useRealtimeInventory(pricingCache.products, pricingCache.addons);
   const currentProducts = liveProducts.length > 0 ? liveProducts : pricingCache.products;
