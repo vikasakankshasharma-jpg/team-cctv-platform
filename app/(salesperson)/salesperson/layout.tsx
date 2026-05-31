@@ -24,7 +24,7 @@ export default async function SalespersonLayout({
       <Sidebar />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="h-20 border-b border-white/5 bg-black/20 backdrop-blur-3xl flex items-center justify-between px-10 z-20 shrink-0">
+        <header className="hidden md:flex h-20 border-b border-white/5 bg-black/20 backdrop-blur-3xl items-center justify-between px-10 z-20 shrink-0">
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-sm shadow-emerald-900/20">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -53,7 +53,7 @@ export default async function SalespersonLayout({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8 relative">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pt-18 md:pt-4 lg:pt-8 relative">
           <div className="max-w-6xl mx-auto">
             {children}
           </div>

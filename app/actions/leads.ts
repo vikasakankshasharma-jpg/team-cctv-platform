@@ -290,6 +290,8 @@ export async function reviewPriceMatchRequest(
  * Uses a Firestore transaction to ensure atomic 'first-to-claim' safety.
  */
 export async function claimBroadcastedLead(leadId: string, partnerId: string, partnerName: string, role: 'salesperson' | 'installer') {
+  // Note: called from Installer/Salesperson pipelines which have their own session cookies.
+  // The transaction itself validates eligibility (broadcasted_to_*_ids check).
   try {
     const leadRef = adminDb.collection('leads').doc(leadId);
     
@@ -352,6 +354,7 @@ export async function claimBroadcastedLead(leadId: string, partnerId: string, pa
 // --- CRM / PROGRESSIVE DIALER ACTIONS ---
 
 export async function getLeadActivities(leadId: string) {
+  await requireAdmin();
   try {
     const snap = await adminDb
       .collection("leads")
@@ -375,6 +378,7 @@ export async function getLeadActivities(leadId: string) {
 }
 
 export async function addLeadActivity(leadId: string, activityData: { type: string; content: string; created_by_name: string; created_by_id: string }) {
+  await requireAdmin();
   try {
     await adminDb.collection("leads").doc(leadId).collection("activities").add({
       ...activityData,
@@ -394,6 +398,7 @@ export async function addLeadActivity(leadId: string, activityData: { type: stri
 }
 
 export async function updateNextFollowUp(leadId: string, dateString: string | null) {
+  await requireAdmin();
   try {
     await adminDb.collection("leads").doc(leadId).update({
       next_followup_date: dateString,
