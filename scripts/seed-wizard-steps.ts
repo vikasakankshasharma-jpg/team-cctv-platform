@@ -234,7 +234,7 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
       {
         id: "q_surface",
         question_text: "What kind of surface will the cameras be mounted on?",
-        input_type: "single",
+        input_type: "multi",
         is_required: true,
         position: 1,
         options: [
