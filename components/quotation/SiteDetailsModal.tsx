@@ -72,51 +72,33 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
     const { signal } = controller;
 
     const fetchPincode = async () => {
-      setIsFetchingPincode(true);
-      let success = false;
-      try {
-        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`, { signal });
-        const data = await res.json();
-        if (data && data[0] && data[0].Status === "Success") {
-          const offices = data[0].PostOffice;
-          setPostOffices(offices);
-          setAreaInfo(`${offices[0].District}, ${offices[0].State}`);
-          if (offices.length > 0) setSelectedPostOffice(offices[0].Name);
-          success = true;
-        }
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          console.warn("Primary pincode API failed, trying fallback...");
-        }
-      }
-
-      if (!success) {
+        setIsFetchingPincode(true);
+        
         try {
-          const res = await fetch(`https://api.zippopotam.us/IN/${pincode}`, { signal });
-          const data = await res.json();
-          if (data && data.places && data.places.length > 0) {
-            const state = data.places[0].state;
-            const placeName = data.places[0]["place name"];
-            const district = placeName.split(' ')[0];
-            
-            const offices = data.places.map((p: any) => ({ Name: p["place name"] }));
-            setPostOffices(offices);
-            setAreaInfo(`${district}, ${state}`);
-            setSelectedPostOffice(offices[0].Name);
-            success = true;
+          const { verifyPincodeAction } = await import("@/app/actions/pincode");
+          // Server Actions don't support AbortController signals natively across network easily,
+          // but we can just check if aborted after returning.
+          const result = await verifyPincodeAction(pincode);
+          
+          if (signal.aborted) return;
+          
+          if (result.success && result.offices) {
+            setPostOffices(result.offices);
+            setAreaInfo(`${result.district}, ${result.state}`);
+            if (result.offices.length > 0) setSelectedPostOffice(result.offices[0].Name);
+          } else {
+            setPostOffices([]);
+            setAreaInfo("");
+            setSelectedPostOffice("");
           }
         } catch (err: any) {
-          if (err.name !== 'AbortError') {
-            console.error("Fallback pincode API failed too.");
+          if (!signal.aborted) {
+            console.error("Pincode API failed:", err);
+            setPostOffices([]);
+            setAreaInfo("");
+            setSelectedPostOffice("");
           }
         }
-      }
-      
-      if (!success) {
-        setPostOffices([]);
-        setAreaInfo("");
-        setSelectedPostOffice("");
-      }
 
         // Geocode using OpenStreetMap Nominatim (free)
         try {
