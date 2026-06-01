@@ -114,8 +114,8 @@ export function ServiceAreaModal() {
             onClick={closeServiceAreaModal}
           />
           
-          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-[32px] p-8 shadow-2xl border border-zinc-100 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200 overflow-visible">
-            <div className="flex justify-between items-center mb-6">
+          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-[32px] p-8 shadow-2xl border border-zinc-100 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center mb-6 shrink-0">
               <div>
                 <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">
                   Where do you need installation?
@@ -131,15 +131,15 @@ export function ServiceAreaModal() {
             </div>
 
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 text-zinc-400 space-y-4">
+              <div className="flex flex-col items-center justify-center py-12 text-zinc-400 space-y-4 shrink-0">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
                 <p className="text-xs font-bold uppercase tracking-widest">Loading...</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="flex flex-col flex-1 min-h-0 space-y-6">
                 
                 {/* Mode Toggle */}
-                <div className="flex bg-zinc-100 dark:bg-zinc-950 p-1 rounded-xl">
+                <div className="flex bg-zinc-100 dark:bg-zinc-950 p-1 rounded-xl shrink-0">
                   <button 
                     onClick={() => setMode("pincode")}
                     className={`flex-1 text-xs font-bold py-2 rounded-lg transition-all ${mode === "pincode" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
@@ -154,123 +154,126 @@ export function ServiceAreaModal() {
                   </button>
                 </div>
 
-                {mode === "pincode" && (
-                  <div className="space-y-4 animate-in fade-in">
-                    <div className="space-y-1.5 relative">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Pincode</label>
-                      <div className="relative">
-                        <input 
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={6}
-                          value={pincode}
-                          onChange={handlePincodeChange}
-                          placeholder="e.g. 302001"
-                          className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 text-lg font-bold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-zinc-300"
-                        />
-                        {isVerifyingPincode && (
-                          <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-blue-500" />
-                        )}
-                        {pincode.length === 6 && !isVerifyingPincode && !pincodeError && (
-                          <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
-                        )}
-                      </div>
-                      {pincodeError && (
-                        <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          {pincodeError}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {mode === "manual" && (
-                  <div className="space-y-5 animate-in fade-in">
-                    {/* State Selector */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">State</label>
-                      <div className="relative">
-                        <select 
-                          value={selectedState}
-                          onChange={(e) => {
-                            setSelectedState(e.target.value);
-                            setSelectedCity("");
-                            setSearchQuery("");
-                          }}
-                          className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
-                        >
-                          <option value="" disabled>Select your state...</option>
-                          {locations.map(s => (
-                            <option key={s.name} value={s.name}>{s.name}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-                      </div>
-                    </div>
-
-                    {/* City Selector */}
-                    {selectedState && stateData && (
-                      <div className="space-y-1.5 animate-in slide-in-from-top-2 fade-in duration-300 relative">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">City / Town</label>
+                {/* Scrollable Form Content */}
+                <div className="flex-1 overflow-y-auto pr-1 -mr-1 custom-scrollbar py-1 space-y-6">
+                  {mode === "pincode" && (
+                    <div className="space-y-4 animate-in fade-in">
+                      <div className="space-y-1.5 relative">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Pincode</label>
                         <div className="relative">
                           <input 
                             type="text"
-                            value={isDropdownOpen ? searchQuery : selectedCity || ""}
-                            placeholder="Type to search your city..."
-                            onFocus={() => {
-                              setIsDropdownOpen(true);
-                              setSearchQuery("");
-                            }}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-zinc-400 placeholder:font-medium"
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={pincode}
+                            onChange={handlePincodeChange}
+                            placeholder="e.g. 302001"
+                            className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 text-lg font-bold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-zinc-300"
                           />
-                          <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} />
+                          {isVerifyingPincode && (
+                            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-blue-500" />
+                          )}
+                          {pincode.length === 6 && !isVerifyingPincode && !pincodeError && (
+                            <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                          )}
                         </div>
-
-                        {/* Dropdown Menu */}
-                        {isDropdownOpen && (
-                          <>
-                            <div 
-                              className="fixed inset-0 z-[110]" 
-                              onClick={() => setIsDropdownOpen(false)}
-                            />
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-[120] max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2">
-                              {stateData.children?.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
-                                <div className="px-4 py-3 text-sm text-zinc-500 text-center font-medium">No cities found.</div>
-                              ) : (
-                                stateData.children?.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map(c => (
-                                  <button
-                                    key={c.name}
-                                    onClick={() => {
-                                      setSelectedCity(c.name);
-                                      setIsDropdownOpen(false);
-                                      setSearchQuery("");
-                                    }}
-                                    className="w-full text-left px-4 py-2.5 text-sm font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                  >
-                                    {c.name}
-                                  </button>
-                                ))
-                              )}
-                            </div>
-                          </>
+                        {pincodeError && (
+                          <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            {pincodeError}
+                          </p>
                         )}
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {/* Action Button */}
-                    {selectedCity && (
-                      <button
-                        onClick={handleContinue}
-                        className="w-full py-3.5 rounded-xl text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg bg-blue-600 hover:bg-blue-500 shadow-blue-600/20 mt-6"
-                      >
-                        Get Quotation Now
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                )}
+                  {mode === "manual" && (
+                    <div className="space-y-5 animate-in fade-in pb-2">
+                      {/* State Selector */}
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">State</label>
+                        <div className="relative">
+                          <select 
+                            value={selectedState}
+                            onChange={(e) => {
+                              setSelectedState(e.target.value);
+                              setSelectedCity("");
+                              setSearchQuery("");
+                            }}
+                            className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+                          >
+                            <option value="" disabled>Select your state...</option>
+                            {locations.map(s => (
+                              <option key={s.name} value={s.name}>{s.name}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* City Selector */}
+                      {selectedState && stateData && (
+                        <div className="space-y-1.5 animate-in slide-in-from-top-2 fade-in duration-300 relative">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">City / Town</label>
+                          <div className="relative">
+                            <input 
+                              type="text"
+                              value={isDropdownOpen ? searchQuery : selectedCity || ""}
+                              placeholder="Type to search your city..."
+                              onFocus={() => {
+                                setIsDropdownOpen(true);
+                                setSearchQuery("");
+                              }}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-zinc-400 placeholder:font-medium"
+                            />
+                            <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} />
+                          </div>
+
+                          {/* Dropdown Menu */}
+                          {isDropdownOpen && (
+                            <>
+                              <div 
+                                className="fixed inset-0 z-[110]" 
+                                onClick={() => setIsDropdownOpen(false)}
+                              />
+                              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-[120] max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2">
+                                {stateData.children?.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
+                                  <div className="px-4 py-3 text-sm text-zinc-500 text-center font-medium">No cities found.</div>
+                                ) : (
+                                  stateData.children?.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map(c => (
+                                    <button
+                                      key={c.name}
+                                      onClick={() => {
+                                        setSelectedCity(c.name);
+                                        setIsDropdownOpen(false);
+                                        setSearchQuery("");
+                                      }}
+                                      className="w-full text-left px-4 py-2.5 text-sm font-bold text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                    >
+                                      {c.name}
+                                    </button>
+                                  ))
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Action Button */}
+                      {selectedCity && (
+                        <button
+                          onClick={handleContinue}
+                          className="w-full py-3.5 rounded-xl text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg bg-blue-600 hover:bg-blue-500 shadow-blue-600/20 mt-6"
+                        >
+                          Get Quotation Now
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
