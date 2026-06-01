@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { MapPin, X, ChevronDown, CheckCircle2, AlertCircle, ArrowRight, Loader2, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUiStore } from "@/lib/ui-store";
@@ -107,7 +108,7 @@ export function ServiceAreaModal() {
         <span className="hidden min-[400px]:inline">Service Areas</span>
       </button>
 
-      {isServiceAreaModalOpen && (
+      {isServiceAreaModalOpen && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
             className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm transition-opacity"
@@ -292,7 +293,8 @@ export function ServiceAreaModal() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
