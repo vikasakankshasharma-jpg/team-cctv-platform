@@ -73,6 +73,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
 
     const fetchPincode = async () => {
       setIsFetchingPincode(true);
+      let success = false;
       try {
         const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`, { signal });
         const data = await res.json();
@@ -81,11 +82,41 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
           setPostOffices(offices);
           setAreaInfo(`${offices[0].District}, ${offices[0].State}`);
           if (offices.length > 0) setSelectedPostOffice(offices[0].Name);
-        } else {
-          setPostOffices([]);
-          setAreaInfo("");
-          setSelectedPostOffice("");
+          success = true;
         }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.warn("Primary pincode API failed, trying fallback...");
+        }
+      }
+
+      if (!success) {
+        try {
+          const res = await fetch(`https://api.zippopotam.us/IN/${pincode}`, { signal });
+          const data = await res.json();
+          if (data && data.places && data.places.length > 0) {
+            const state = data.places[0].state;
+            const placeName = data.places[0]["place name"];
+            const district = placeName.split(' ')[0];
+            
+            const offices = data.places.map((p: any) => ({ Name: p["place name"] }));
+            setPostOffices(offices);
+            setAreaInfo(`${district}, ${state}`);
+            setSelectedPostOffice(offices[0].Name);
+            success = true;
+          }
+        } catch (err: any) {
+          if (err.name !== 'AbortError') {
+            console.error("Fallback pincode API failed too.");
+          }
+        }
+      }
+      
+      if (!success) {
+        setPostOffices([]);
+        setAreaInfo("");
+        setSelectedPostOffice("");
+      }
 
         // Geocode using OpenStreetMap Nominatim (free)
         try {
