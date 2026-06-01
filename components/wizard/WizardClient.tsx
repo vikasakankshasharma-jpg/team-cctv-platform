@@ -383,9 +383,9 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
             {currentStep.questions?.map((q: WizardQuestion) => {
             if (q.input_type === "number") {
               const mixType = (answers["camera_mix_type"] as string) || "indoor";
-              const currentVal = (answers[q.id!] as string) || "";
-              const indoorCount = (answers["indoor_count"] as string) || "1";
-              const outdoorCount = (answers["outdoor_count"] as string) || "1";
+              const currentVal = answers[q.id!] !== undefined ? (answers[q.id!] as string) : "";
+              const indoorCount = answers["indoor_count"] !== undefined ? (answers["indoor_count"] as string) : "1";
+              const outdoorCount = answers["outdoor_count"] !== undefined ? (answers["outdoor_count"] as string) : "1";
 
               const handleMixTypeChange = (type: "indoor" | "outdoor" | "mix") => {
                 setAnswer("camera_mix_type", type);
