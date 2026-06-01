@@ -382,17 +382,74 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
           >
             {currentStep.questions?.map((q: WizardQuestion) => {
             if (q.input_type === "number") {
+              const mixType = (answers["camera_mix_type"] as string) || "indoor";
               const currentVal = (answers[q.id!] as string) || "";
-              const isMixedMode = answers["use_mixed_mode"] === true;
-              const mixedReqs = (answers["mixed_camera_requirements"] as any[]) || [
-                { type: "Standard Indoor", count: 1 },
-                { type: "Standard Outdoor", count: 0 },
-                { type: "PTZ", count: 0 },
-                { type: "Solar", count: 0 },
-                { type: "4G", count: 0 }
-              ];
+              const indoorCount = (answers["indoor_count"] as string) || "1";
+              const outdoorCount = (answers["outdoor_count"] as string) || "1";
 
-              const totalMixed = mixedReqs.reduce((sum, req) => sum + req.count, 0);
+              const handleMixTypeChange = (type: "indoor" | "outdoor" | "mix") => {
+                setAnswer("camera_mix_type", type);
+                if (type === "indoor") {
+                  setAnswer("mixed_camera_requirements", [{ type: "Standard Indoor", count: parseInt(currentVal || "1") }]);
+                } else if (type === "outdoor") {
+                  setAnswer("mixed_camera_requirements", [{ type: "Standard Outdoor", count: parseInt(currentVal || "1") }]);
+                } else {
+                  const inC = parseInt(indoorCount);
+                  const outC = parseInt(outdoorCount);
+                  setAnswer(q.id!, String(inC + outC));
+                  setAnswer("mixed_camera_requirements", [
+                    { type: "Standard Indoor", count: inC },
+                    { type: "Standard Outdoor", count: outC }
+                  ]);
+                }
+              };
+
+              const handleCountChange = (valStr: string, type: "total" | "indoor" | "outdoor") => {
+                const parsed = parseInt(valStr);
+                const safeVal = isNaN(parsed) ? 1 : Math.max(1, Math.min(16, parsed));
+                
+                if (type === "total") {
+                  setAnswer(q.id!, valStr); // allow typing
+                  if (!isNaN(parsed)) {
+                    if (mixType === "indoor") {
+                      setAnswer("mixed_camera_requirements", [{ type: "Standard Indoor", count: safeVal }]);
+                    } else if (mixType === "outdoor") {
+                      setAnswer("mixed_camera_requirements", [{ type: "Standard Outdoor", count: safeVal }]);
+                    }
+                  }
+                } else if (type === "indoor") {
+                  setAnswer("indoor_count", valStr);
+                  if (!isNaN(parsed)) {
+                    const outC = parseInt(outdoorCount) || 1;
+                    setAnswer(q.id!, String(safeVal + outC));
+                    setAnswer("mixed_camera_requirements", [
+                      { type: "Standard Indoor", count: safeVal },
+                      { type: "Standard Outdoor", count: outC }
+                    ]);
+                  }
+                } else if (type === "outdoor") {
+                  setAnswer("outdoor_count", valStr);
+                  if (!isNaN(parsed)) {
+                    const inC = parseInt(indoorCount) || 1;
+                    setAnswer(q.id!, String(inC + safeVal));
+                    setAnswer("mixed_camera_requirements", [
+                      { type: "Standard Indoor", count: inC },
+                      { type: "Standard Outdoor", count: safeVal }
+                    ]);
+                  }
+                }
+              };
+
+              const handleBlur = (type: "total" | "indoor" | "outdoor") => {
+                let valStr = "";
+                if (type === "total") valStr = currentVal;
+                if (type === "indoor") valStr = indoorCount;
+                if (type === "outdoor") valStr = outdoorCount;
+                
+                const parsed = parseInt(valStr);
+                const safeVal = isNaN(parsed) ? 1 : Math.max(1, Math.min(16, parsed));
+                handleCountChange(String(safeVal), type);
+              };
 
               return (
                 <div key={q.id} id={`question-${q.id}`} className="scroll-mt-24 sm:scroll-mt-32">
@@ -401,41 +458,38 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                      <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h2>
                   </div>
 
-                  <div className="mb-6 flex justify-end">
-                    <button
-                      onClick={() => {
-                        setAnswer("use_mixed_mode", !isMixedMode);
-                        if (!isMixedMode) {
-                          // Initialize mix
-                          setAnswer("mixed_camera_requirements", mixedReqs);
-                          setAnswer(q.id!, String(Math.max(1, totalMixed)));
-                        }
-                      }}
-                      className="text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-100 transition-colors"
-                    >
-                      {isMixedMode ? "Use Simple Count" : "Advanced: Mix & Match Types"}
-                    </button>
+                  {/* Environment Selector */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+                    {[
+                      { id: "indoor", label: "All Indoor" },
+                      { id: "outdoor", label: "All Outdoor" },
+                      { id: "mix", label: "Mix (Indoor & Outdoor)" }
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => handleMixTypeChange(opt.id as any)}
+                        className={`py-4 px-4 rounded-2xl border-[2px] font-black tracking-wide transition-all text-sm sm:text-base ${
+                          mixType === opt.id
+                            ? "bg-blue-50 border-blue-600 text-blue-700 shadow-sm"
+                            : "bg-white border-zinc-200 text-zinc-600 hover:border-blue-300 hover:bg-zinc-50"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
                   </div>
 
-                  {!isMixedMode ? (
+                  {mixType !== "mix" ? (
                     <div className="relative group max-w-sm">
+                      <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
+                        {mixType === "indoor" ? "Number of Indoor Cameras" : "Number of Outdoor Cameras"}
+                      </label>
                       <input
                         type="number"
                         inputMode="numeric"
                         value={currentVal}
-                        onChange={(e) => {
-                          const raw = e.target.value;
-                          setAnswer(q.id!, raw); // Allow raw string during typing
-                        }}
-                        onBlur={(e) => {
-                          const parsed = parseInt(e.target.value);
-                          if (isNaN(parsed)) {
-                            setAnswer(q.id!, "1");
-                          } else {
-                            const val = Math.max(1, Math.min(16, parsed));
-                            setAnswer(q.id!, String(val));
-                          }
-                        }}
+                        onChange={(e) => handleCountChange(e.target.value, "total")}
+                        onBlur={() => handleBlur("total")}
                         className="w-full bg-white border-[2px] border-zinc-200 rounded-[24px] sm:rounded-[28px] px-6 sm:px-8 py-5 sm:py-6 text-2xl font-black text-zinc-900 outline-none focus:ring-[6px] focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]"
                         placeholder="1 – 16"
                         min={1}
@@ -443,43 +497,44 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                       />
                     </div>
                   ) : (
-                    <div className="space-y-4 max-w-md bg-white p-6 rounded-[28px] border-[2px] border-zinc-200 shadow-sm">
-                      <div className="flex justify-between items-end mb-4 border-b border-zinc-100 pb-4">
-                        <span className="font-bold text-zinc-500">Total Cameras</span>
-                        <span className="text-3xl font-black text-zinc-900">{totalMixed}</span>
+                    <div className="flex flex-col sm:flex-row gap-6 max-w-2xl">
+                      <div className="relative group flex-1">
+                        <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
+                          Indoor Cameras
+                        </label>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={indoorCount}
+                          onChange={(e) => handleCountChange(e.target.value, "indoor")}
+                          onBlur={() => handleBlur("indoor")}
+                          className="w-full bg-white border-[2px] border-zinc-200 rounded-[24px] sm:rounded-[28px] px-6 sm:px-8 py-5 sm:py-6 text-2xl font-black text-zinc-900 outline-none focus:ring-[6px] focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]"
+                          placeholder="1 – 16"
+                          min={1}
+                          max={16}
+                        />
                       </div>
-                      {mixedReqs.map((req, idx) => (
-                        <div key={req.type} className="flex items-center justify-between py-2">
-                          <span className="font-bold text-zinc-700">{req.type}</span>
-                          <div className="flex items-center gap-4 bg-zinc-50 rounded-xl p-1 border border-zinc-200">
-                            <button
-                              onClick={() => {
-                                const newReqs = [...mixedReqs];
-                                newReqs[idx].count = Math.max(0, newReqs[idx].count - 1);
-                                setAnswer("mixed_camera_requirements", newReqs);
-                                setAnswer(q.id!, String(newReqs.reduce((s, r) => s + r.count, 0) || 1));
-                              }}
-                              className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm font-bold text-zinc-600 hover:text-red-500 disabled:opacity-50"
-                              disabled={req.count === 0}
-                            >-</button>
-                            <span className="w-4 text-center font-black text-zinc-900">{req.count}</span>
-                            <button
-                              onClick={() => {
-                                const newReqs = [...mixedReqs];
-                                newReqs[idx].count += 1;
-                                setAnswer("mixed_camera_requirements", newReqs);
-                                setAnswer(q.id!, String(newReqs.reduce((s, r) => s + r.count, 0)));
-                              }}
-                              className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm font-bold text-zinc-600 hover:text-blue-600"
-                            >+</button>
-                          </div>
-                        </div>
-                      ))}
+                      <div className="relative group flex-1">
+                        <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
+                          Outdoor Cameras
+                        </label>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={outdoorCount}
+                          onChange={(e) => handleCountChange(e.target.value, "outdoor")}
+                          onBlur={() => handleBlur("outdoor")}
+                          className="w-full bg-white border-[2px] border-zinc-200 rounded-[24px] sm:rounded-[28px] px-6 sm:px-8 py-5 sm:py-6 text-2xl font-black text-zinc-900 outline-none focus:ring-[6px] focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]"
+                          placeholder="1 – 16"
+                          min={1}
+                          max={16}
+                        />
+                      </div>
                     </div>
                   )}
                   
-                  <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mt-4 ml-2">
-                    For <span className="font-black text-zinc-700 dark:text-zinc-300">more than 16 cameras</span>, our team will reach out with a custom corporate quote.
+                  <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mt-6 ml-2">
+                    For <span className="font-black text-zinc-700 dark:text-zinc-300">more than 16 cameras total</span>, our team will reach out with a custom corporate quote.
                   </p>
                 </div>
               );

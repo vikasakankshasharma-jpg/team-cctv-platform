@@ -263,13 +263,26 @@ export function ServiceAreaModal() {
 
                       {/* Action Button */}
                       {selectedCity && (
-                        <button
-                          onClick={handleContinue}
-                          className="w-full py-3.5 rounded-xl text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg bg-blue-600 hover:bg-blue-500 shadow-blue-600/20 mt-6"
-                        >
-                          Get Quotation Now
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
+                        <div className="space-y-3 mt-6">
+                          <button
+                            onClick={handleContinue}
+                            className="w-full py-3.5 rounded-xl text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg bg-blue-600 hover:bg-blue-500 shadow-blue-600/20"
+                          >
+                            Get Quotation Now
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              setMode("pincode");
+                              setSelectedState("");
+                              setSelectedCity("");
+                            }}
+                            className="w-full py-3 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors"
+                          >
+                            Use Pincode Instead
+                          </button>
+                        </div>
                       )}
                     </div>
                   )}
