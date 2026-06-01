@@ -271,19 +271,21 @@ export function ServiceAreaModal() {
                             Get Quotation Now
                             <ArrowRight className="w-4 h-4" />
                           </button>
-                          
-                          <button
-                            onClick={() => {
-                              setMode("pincode");
-                              setSelectedState("");
-                              setSelectedCity("");
-                            }}
-                            className="w-full py-3 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors"
-                          >
-                            Use Pincode Instead
-                          </button>
                         </div>
                       )}
+                      
+                      <div className="mt-4 pb-2">
+                        <button
+                          onClick={() => {
+                            setMode("pincode");
+                            setSelectedState("");
+                            setSelectedCity("");
+                          }}
+                          className="w-full py-3 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                          Use Pincode Instead
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
