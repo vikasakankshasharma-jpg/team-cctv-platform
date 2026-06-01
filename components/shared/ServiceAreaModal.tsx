@@ -67,56 +67,35 @@ export function ServiceAreaModal() {
     setIsVerifyingPincode(true);
     setPincodeError("");
     
-    let state = "";
-    let district = "";
-    let success = false;
-
     try {
-      const res = await fetch(`https://api.postalpincode.in/pincode/${code}`);
-      const data = await res.json();
-      if (data && data[0]?.Status === "Success") {
-        const postOffice = data[0].PostOffice[0];
-        state = postOffice.State;
-        district = postOffice.District;
-        success = true;
+      const { verifyPincodeAction } = await import("@/app/actions/pincode");
+      const result = await verifyPincodeAction(code);
+
+      if (result.success) {
+        const state = result.state!;
+        const district = result.district!;
+        
+        setSelectedState(state);
+        setSelectedCity(district);
+        
+        const foundState = locations.find(s => s.name.toLowerCase() === state.toLowerCase());
+        const foundCity = foundState?.children?.find(c => c.name.toLowerCase() === district.toLowerCase() || c.slug === district.toLowerCase());
+        
+        closeServiceAreaModal();
+        if (foundCity?.slug) {
+          router.push(`/${foundCity.slug}`);
+        } else {
+          router.push(`/wizard?city=${encodeURIComponent(district)}&pincode=${code}`);
+        }
+      } else {
+        setPincodeError("Invalid Pincode or service unavailable. Please try 'Select City'.");
       }
     } catch (err) {
-      console.warn("Primary pincode API failed, trying fallback...");
+      console.error("Pincode verification failed:", err);
+      setPincodeError("An error occurred. Please try 'Select City'.");
+    } finally {
+      setIsVerifyingPincode(false);
     }
-
-    if (!success) {
-      try {
-        const res = await fetch(`https://api.zippopotam.us/IN/${code}`);
-        const data = await res.json();
-        if (data && data.places && data.places.length > 0) {
-          state = data.places[0].state;
-          // Zippopotamus doesn't provide district directly, extract first word of place name
-          district = data.places[0]["place name"].split(' ')[0];
-          success = true;
-        }
-      } catch (err) {
-        console.error("Fallback pincode API failed too.");
-      }
-    }
-
-    if (success) {
-      setSelectedState(state);
-      setSelectedCity(district);
-      
-      const foundState = locations.find(s => s.name.toLowerCase() === state.toLowerCase());
-      const foundCity = foundState?.children?.find(c => c.name.toLowerCase() === district.toLowerCase() || c.slug === district.toLowerCase());
-      
-      closeServiceAreaModal();
-      if (foundCity?.slug) {
-        router.push(`/${foundCity.slug}`);
-      } else {
-        router.push(`/wizard?city=${encodeURIComponent(district)}&pincode=${code}`);
-      }
-    } else {
-      setPincodeError("Invalid Pincode or service unavailable. Please try 'Select City'.");
-    }
-    
-    setIsVerifyingPincode(false);
   };
 
   return (
