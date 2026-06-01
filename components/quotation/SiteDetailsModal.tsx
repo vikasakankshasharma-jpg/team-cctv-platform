@@ -75,48 +75,49 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
         setIsFetchingPincode(true);
         
         try {
-          const { verifyPincodeAction } = await import("@/app/actions/pincode");
-          // Server Actions don't support AbortController signals natively across network easily,
-          // but we can just check if aborted after returning.
-          const result = await verifyPincodeAction(pincode);
-          
-          if (signal.aborted) return;
-          
-          if (result.success && result.offices) {
-            setPostOffices(result.offices);
-            setAreaInfo(`${result.district}, ${result.state}`);
-            if (result.offices.length > 0) setSelectedPostOffice(result.offices[0].Name);
-          } else {
-            setPostOffices([]);
-            setAreaInfo("");
-            setSelectedPostOffice("");
+          try {
+            const { verifyPincodeAction } = await import("@/app/actions/pincode");
+            // Server Actions don't support AbortController signals natively across network easily,
+            // but we can just check if aborted after returning.
+            const result = await verifyPincodeAction(pincode);
+            
+            if (signal.aborted) return;
+            
+            if (result.success && result.offices) {
+              setPostOffices(result.offices);
+              setAreaInfo(`${result.district}, ${result.state}`);
+              if (result.offices.length > 0) setSelectedPostOffice(result.offices[0].Name);
+            } else {
+              setPostOffices([]);
+              setAreaInfo("");
+              setSelectedPostOffice("");
+            }
+          } catch (err: any) {
+            if (!signal.aborted) {
+              console.error("Pincode API failed:", err);
+              setPostOffices([]);
+              setAreaInfo("");
+              setSelectedPostOffice("");
+            }
           }
-        } catch (err: any) {
-          if (!signal.aborted) {
-            console.error("Pincode API failed:", err);
-            setPostOffices([]);
-            setAreaInfo("");
-            setSelectedPostOffice("");
+  
+          // Geocode using OpenStreetMap Nominatim (free)
+          try {
+            const geoRes = await fetch(
+              `https://nominatim.openstreetmap.org/search?format=json&q=${pincode}+India`,
+              { signal }
+            );
+            const geoData = await geoRes.json();
+            if (geoData && geoData.length > 0) {
+              setCoords({ lat: parseFloat(geoData[0].lat), lng: parseFloat(geoData[0].lon) });
+            }
+          } catch (geoErr) {
+            if ((geoErr as Error).name !== "AbortError") console.error("Geocoding failed:", geoErr);
           }
+        } finally {
+          setIsFetchingPincode(false);
         }
-
-        // Geocode using OpenStreetMap Nominatim (free)
-        try {
-          const geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${pincode}+India`,
-            { signal }
-          );
-          const geoData = await geoRes.json();
-          if (geoData && geoData.length > 0) {
-            setCoords({ lat: parseFloat(geoData[0].lat), lng: parseFloat(geoData[0].lon) });
-          }
-        } catch (geoErr) {
-          if ((geoErr as Error).name !== "AbortError") console.error("Geocoding failed:", geoErr);
-        }
-      } finally {
-        setIsFetchingPincode(false);
-      }
-    };
+      };
 
     fetchPincode();
 
