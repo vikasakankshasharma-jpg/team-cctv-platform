@@ -10,12 +10,17 @@ export async function verifyPincodeAction(code: string) {
   });
 
   try {
-    // 1. Try Primary API (PostalPincode)
-    const response = await fetch(`https://api.postalpincode.in/pincode/${code}`, {
-      // @ts-ignore - Node.js fetch extension
-      agent
+    // 1. Try Primary API (PostalPincode) using https.get to properly bypass SSL in Node.js
+    const data: any = await new Promise((resolve, reject) => {
+      https.get(`https://api.postalpincode.in/pincode/${code}`, { agent }, (res) => {
+        let rawData = '';
+        res.on('data', (chunk) => { rawData += chunk; });
+        res.on('end', () => {
+          try { resolve(JSON.parse(rawData)); }
+          catch (e) { reject(e); }
+        });
+      }).on('error', reject);
     });
-    const data = await response.json();
 
     if (data && data[0]?.Status === "Success") {
       const postOffice = data[0].PostOffice[0];
