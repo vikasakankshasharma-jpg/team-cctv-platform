@@ -237,7 +237,7 @@ export function ServiceAreaModal() {
                                 className="fixed inset-0 z-[110]" 
                                 onClick={() => setIsDropdownOpen(false)}
                               />
-                              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-[120] max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2">
+                              <div className="relative mt-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-lg overflow-hidden z-[120] max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2">
                                 {stateData.children?.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
                                   <div className="px-4 py-3 text-sm text-zinc-500 text-center font-medium">No cities found.</div>
                                 ) : (
