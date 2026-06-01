@@ -113,11 +113,6 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
         } catch (geoErr) {
           if ((geoErr as Error).name !== "AbortError") console.error("Geocoding failed:", geoErr);
         }
-      } catch (e) {
-        if ((e as Error).name !== "AbortError") {
-          console.error(e);
-          setPostOffices([]);
-        }
       } finally {
         setIsFetchingPincode(false);
       }
