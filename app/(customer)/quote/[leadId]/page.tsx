@@ -191,19 +191,24 @@ export default async function QuoteResultPage({
   let distanceKm: number | undefined = undefined;
   
   if (leadPincode && leadPincode.length === 6) {
-    // Check hardcoded regions first as fallbacks or exact maps
-    if (leadPincode.startsWith("342")) unservedCityName = "Jodhpur";
-    else if (leadPincode.startsWith("324")) unservedCityName = "Kota";
-    else if (leadPincode.startsWith("305")) unservedCityName = "Ajmer";
-    else unservedCityName = (lead.wizard_answers?.lead_city as string) || "Your Area"; // fallback city
+    // 1. Check if the exact pincode is already covered by an active hub
+    const isServed = hubs.some(hub => hub.pincode_coverage?.includes(leadPincode));
 
-    // Compute exact distance
-    const customerCoords = getPincodeCoordinates(leadPincode);
-    if (customerCoords) {
-      const nearest = findNearestHub(customerCoords, hubs);
-      if (nearest) {
-        nearestHubName = nearest.hub.city_name || nearest.hub.name;
-        distanceKm = nearest.distanceKm;
+    if (!isServed) {
+      // Check hardcoded regions first as fallbacks or exact maps
+      if (leadPincode.startsWith("342")) unservedCityName = "Jodhpur";
+      else if (leadPincode.startsWith("324")) unservedCityName = "Kota";
+      else if (leadPincode.startsWith("305")) unservedCityName = "Ajmer";
+      else unservedCityName = (lead.wizard_answers?.lead_city as string) || "Your Area"; // fallback city
+
+      // Compute exact distance
+      const customerCoords = getPincodeCoordinates(leadPincode);
+      if (customerCoords) {
+        const nearest = findNearestHub(customerCoords, hubs);
+        if (nearest) {
+          nearestHubName = nearest.hub.city_name || nearest.hub.name;
+          distanceKm = nearest.distanceKm;
+        }
       }
     }
   }

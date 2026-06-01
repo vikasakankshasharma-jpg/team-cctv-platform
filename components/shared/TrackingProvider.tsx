@@ -4,8 +4,8 @@ import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
-const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID?.replace(/[\r\n\s]/g, "");
+const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID?.replace(/[\r\n\s]/g, "");
 
 /**
  * Global Tracking Utility

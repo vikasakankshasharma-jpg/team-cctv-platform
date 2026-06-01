@@ -118,8 +118,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     if (mappedBrand === "recommend" || mappedBrand === "unsure") mappedBrand = "all";
     if (mappedBrand === "cpplus") mappedBrand = "CP-Plus";
 
-    const isMixedMode = lead.wizard_answers?.["use_mixed_mode"] === true;
-    const mixedReqs = isMixedMode ? (lead.wizard_answers?.["mixed_camera_requirements"] as any[]) : undefined;
+    const mixedReqs = (lead.wizard_answers?.["mixed_camera_requirements"] as any[]) || undefined;
 
     updateSelection({
       technology: lead.technology_choice || "HD",
