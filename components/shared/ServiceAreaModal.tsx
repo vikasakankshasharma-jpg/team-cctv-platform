@@ -139,9 +139,9 @@ export function ServiceAreaModal() {
               <div className="flex flex-col flex-1 min-h-0 space-y-6">
                 
                 {/* Mode Toggle */}
-                <div className="flex bg-zinc-100 dark:bg-zinc-950 p-1 rounded-xl shrink-0">
+                <div className="relative z-[120] flex bg-zinc-100 dark:bg-zinc-950 p-1 rounded-xl shrink-0">
                   <button 
-                    onClick={() => setMode("pincode")}
+                    onClick={() => { setMode("pincode"); setIsDropdownOpen(false); }}
                     className={`flex-1 text-xs font-bold py-2 rounded-lg transition-all ${mode === "pincode" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
                   >
                     Use Pincode
