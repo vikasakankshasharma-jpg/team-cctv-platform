@@ -12,6 +12,35 @@ export const metadata = {
   title: "Admin Portal | CCTVQuotation"
 };
 
+const adminThemeVars: React.CSSProperties = {
+  backgroundColor: '#0A0E1A',
+  color: '#E8EDF5',
+  '--bg': '#0A0E1A',
+  '--surface': '#111827',
+  '--surface2': '#1A2234',
+  '--surface3': '#212B3F',
+  '--border': '#1E2D45',
+  '--border2': '#263550',
+  '--text': '#E8EDF5',
+  '--muted': '#8A98B4',
+  '--dim': '#4A5670',
+  '--gold': '#D4953A',
+  '--gold-dim': 'rgba(212,149,58,0.12)',
+  '--gold-border': 'rgba(212,149,58,0.25)',
+  '--blue': '#3B82F6',
+  '--blue-dim': 'rgba(59,130,246,0.12)',
+  '--green': '#10B981',
+  '--green-dim': 'rgba(16,185,129,0.12)',
+  '--red': '#EF4444',
+  '--red-dim': 'rgba(239,68,68,0.12)',
+  '--amber': '#F59E0B',
+  '--amber-dim': 'rgba(245,158,11,0.12)',
+  '--purple': '#8B5CF6',
+  '--purple-dim': 'rgba(139,92,246,0.12)',
+  '--r': '8px',
+  '--r2': '12px'
+} as React.CSSProperties;
+
 export default async function AdminLayout({
   children,
 }: {
@@ -21,7 +50,10 @@ export default async function AdminLayout({
   
   if (!session.isAuthenticated) {
     return (
-      <div className={`dark ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-[#0A0E1A] font-sans text-[#E8EDF5]`}>
+      <div 
+        className={`dark ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]`}
+        style={adminThemeVars}
+      >
         {children}
       </div>
     );
@@ -29,34 +61,7 @@ export default async function AdminLayout({
 
   return (
     <div className={`dark ${spaceGrotesk.variable} ${jetbrainsMono.variable} flex h-screen overflow-hidden font-sans`}
-      style={{
-        backgroundColor: '#0A0E1A',
-        color: '#E8EDF5',
-        '--bg': '#0A0E1A',
-        '--surface': '#111827',
-        '--surface2': '#1A2234',
-        '--surface3': '#212B3F',
-        '--border': '#1E2D45',
-        '--border2': '#263550',
-        '--text': '#E8EDF5',
-        '--muted': '#8A98B4',
-        '--dim': '#4A5670',
-        '--gold': '#D4953A',
-        '--gold-dim': 'rgba(212,149,58,0.12)',
-        '--gold-border': 'rgba(212,149,58,0.25)',
-        '--blue': '#3B82F6',
-        '--blue-dim': 'rgba(59,130,246,0.12)',
-        '--green': '#10B981',
-        '--green-dim': 'rgba(16,185,129,0.12)',
-        '--red': '#EF4444',
-        '--red-dim': 'rgba(239,68,68,0.12)',
-        '--amber': '#F59E0B',
-        '--amber-dim': 'rgba(245,158,11,0.12)',
-        '--purple': '#8B5CF6',
-        '--purple-dim': 'rgba(139,92,246,0.12)',
-        '--r': '8px',
-        '--r2': '12px'
-      } as React.CSSProperties}
+      style={adminThemeVars}
     >
       <OmniSearch />
       <Sidebar />
