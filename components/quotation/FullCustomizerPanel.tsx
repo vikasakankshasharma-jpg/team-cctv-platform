@@ -5,7 +5,7 @@ import { useConfiguratorStore } from "@/store/configurator";
 import { calculateSystemScore } from "@/lib/system-score";
 import { 
   Zap, Maximize, Mic, Moon, Camera, Server, HardDrive, Plug, PlusCircle,
-  Search, X, Sparkles, Check, CheckCircle2, ChevronDown, ChevronUp, Unlock, Lock, Wrench, ArrowRight
+  Search, X, Sparkles, Check, CheckCircle2, ChevronDown, ChevronUp, Unlock, Lock, Wrench, ArrowRight, Cable
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Product, Addon } from "@/types";
@@ -18,6 +18,24 @@ export function FullCustomizerPanel() {
   const [search, setSearch] = useState("");
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    setActiveFilters({});
+  }, [activeTab, selection.technology]);
+
+  const isMixedCameraMode = (selection.mixed_camera_requirements || []).length > 0;
+  const defaultMixedType = isMixedCameraMode ? selection.mixed_camera_requirements![0].type : undefined;
+  const [activeMixedType, setActiveMixedType] = useState<string | undefined>(defaultMixedType);
+
+  useEffect(() => {
+    if (isMixedCameraMode) {
+      if (!activeMixedType || !selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)) {
+        setActiveMixedType(selection.mixed_camera_requirements![0].type);
+      }
+    } else {
+      setActiveMixedType(undefined);
+    }
+  }, [isMixedCameraMode, selection.mixed_camera_requirements, activeMixedType]);
+
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     setSearch("");
@@ -29,12 +47,14 @@ export function FullCustomizerPanel() {
   const TAB_LABELS: Record<Tab, string> = { cameras: "Camera", recorders: "Recorder", storage: "Storage", power: "Power", addons: "Accessories" };
 
   const stepCompletion = useMemo(() => ({
-    cameras: !!selection.selected_camera_id,
+    cameras: isMixedCameraMode 
+      ? selection.mixed_camera_requirements!.every(r => !!selection.selected_mixed_camera_ids?.[r.type])
+      : !!selection.selected_camera_id,
     recorders: !!selection.selected_recorder_id,
     storage: !!selection.selected_storage_id,
     power: !!selection.selected_power_id,
     addons: selection.selected_addons.length > 0,
-  }), [selection.selected_camera_id, selection.selected_recorder_id, selection.selected_storage_id, selection.selected_power_id, selection.selected_addons]);
+  }), [selection.selected_camera_id, selection.selected_recorder_id, selection.selected_storage_id, selection.selected_power_id, selection.selected_addons, isMixedCameraMode, selection.mixed_camera_requirements, selection.selected_mixed_camera_ids]);
 
   const completedSteps = TAB_FLOW.filter(t => stepCompletion[t]).length;
   const totalSteps = TAB_FLOW.length;
@@ -62,7 +82,11 @@ export function FullCustomizerPanel() {
       const lenses = new Set<string>();
       const nvs = new Set<string>();
       
-      products.filter(p => p.category === "camera" && p.is_active).forEach(p => {
+      const proxyTech = isMixedCameraMode && activeMixedType 
+        ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.technology || selection.technology
+        : selection.technology;
+
+      products.filter(p => p.category === "camera" && p.is_active && (!proxyTech || p.technologies?.includes(proxyTech as any) || p.technologies?.includes("Common"))).forEach(p => {
         if (p.brand) brands.add(p.brand);
         if (p.resolution_mp) mps.add(`${p.resolution_mp}MP`);
         if (p.form_factor) types.add(p.form_factor.charAt(0).toUpperCase() + p.form_factor.slice(1));
@@ -78,44 +102,46 @@ export function FullCustomizerPanel() {
         { key: "type", label: "Type", options: Array.from(types).sort() },
         { key: "lens", label: "Lens", options: Array.from(lenses).sort() },
         { key: "nv", label: "Night Vision", options: Array.from(nvs).sort() }
-      ].filter(f => f.options.length > 0);
+      ].filter(f => f.options.length > 1);
     } else if (activeTab === "recorders") {
       const brands = new Set<string>();
       const channels = new Set<string>();
       const types = new Set<string>();
-      products.filter(p => p.category === "recorder" && p.is_active).forEach(p => {
+      products.filter(p => p.category === "recorder" && p.is_active && (!selection.technology || p.technologies?.includes(selection.technology as any) || p.technologies?.includes("Common"))).forEach(p => {
         if (p.brand) brands.add(p.brand);
         if (p.channels) channels.add(`${p.channels} Ch`);
-        if (p.technical_name?.toLowerCase().includes("nvr")) types.add("NVR");
-        if (p.technical_name?.toLowerCase().includes("dvr")) types.add("DVR");
+        const name = (p.technical_name || p.display_name || "").toLowerCase();
+        if (name.includes("nvr")) types.add("NVR");
+        if (name.includes("dvr")) types.add("DVR");
+        console.log(`Recorder Filter Debug: tech=${p.technologies?.join(', ')}, name=${name}, nvr=${name.includes("nvr")}, dvr=${name.includes("dvr")}, selectionTech=${selection.technology}`);
       });
       return [
         { key: "brand", label: "Brand", options: Array.from(brands).sort() },
         { key: "channels", label: "Channels", options: Array.from(channels).sort((a,b) => parseInt(a) - parseInt(b)) },
         { key: "type", label: "Type", options: Array.from(types).sort() },
-      ].filter(f => f.options.length > 0);
+      ].filter(f => f.options.length > 1);
     } else if (activeTab === "storage") {
       const capacities = new Set<string>();
       const types = new Set<string>();
-      addons.filter(a => a.category === "storage" && a.is_active).forEach(a => {
+      [...products, ...addons].filter(a => a.category === "storage" && a.is_active).forEach(a => {
         const match = a.display_name.match(/(\d+TB|\d+GB)/i);
         if (match) capacities.add(match[1].toUpperCase());
         
         const name = a.display_name.toLowerCase();
         
-        if (a.storage_type === "Micro SD" || (!a.storage_type && (name.includes("sd card") || name.includes("micro sd") || name.includes("memory card")))) {
+        if ((a as any).storage_type === "Micro SD" || (!(a as any).storage_type && (name.includes("sd card") || name.includes("micro sd") || name.includes("memory card")))) {
           types.add("Micro SD");
-        } else if (a.storage_type === "Hard Disk" || (!a.storage_type && (name.includes("hard disk") || name.includes("hdd") || name.includes("purple") || name.includes("skyhawk")))) {
+        } else if ((a as any).storage_type === "Hard Disk" || (!(a as any).storage_type && (name.includes("hard disk") || name.includes("hdd") || name.includes("purple") || name.includes("skyhawk")))) {
           types.add("Hard Disk");
         }
       });
       return [
         { key: "type", label: "Type", options: Array.from(types).sort() },
         { key: "capacity", label: "Capacity", options: Array.from(capacities).sort() }
-      ].filter(f => f.options.length > 0);
+      ].filter(f => f.options.length > 1);
     }
     return [];
-  }, [activeTab, products, addons]);
+  }, [activeTab, products, addons, selection.technology, isMixedCameraMode, activeMixedType, selection.mixed_camera_requirements]);
 
   const cameraStats = useMemo(() => {
     const stats: Record<string, number> = {};
@@ -129,8 +155,14 @@ export function FullCustomizerPanel() {
 
   const filteredCameras = useMemo(() => {
     let list = products.filter(p => p.category === "camera" && p.is_active);
-    if (selection.technology && selection.technology !== "both" as any) {
-      list = list.filter(p => p.technology === selection.technology);
+    
+    // Evaluate proxy logic if we are configuring a mixed bucket
+    const proxyTech = isMixedCameraMode && activeMixedType 
+      ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.technology || selection.technology
+      : selection.technology;
+
+    if (proxyTech && proxyTech !== "both" as any) {
+      list = list.filter(p => p.technologies?.includes(proxyTech as any));
     }
     
     const appliedBrand = activeFilters.brand !== undefined ? activeFilters.brand : selection.brand_preference;
@@ -138,7 +170,11 @@ export function FullCustomizerPanel() {
       list = list.filter(p => p.brand?.toLowerCase() === appliedBrand.toLowerCase());
     }
     
-    const appliedRes = activeFilters.mp !== undefined ? activeFilters.mp : selection.resolution_preference;
+    const proxyRes = isMixedCameraMode && activeMixedType
+      ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.resolution || selection.resolution_preference
+      : selection.resolution_preference;
+
+    const appliedRes = activeFilters.mp !== undefined ? activeFilters.mp : proxyRes;
     if (appliedRes && appliedRes !== "all") {
       list = list.filter(p => `${p.resolution_mp}MP` === appliedRes.toUpperCase().trim());
     }
@@ -175,11 +211,11 @@ export function FullCustomizerPanel() {
       list = list.filter(p => p.display_name.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q));
     }
     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
-  }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search, activeFilters]);
+  }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search, activeFilters, isMixedCameraMode, activeMixedType, selection.mixed_camera_requirements]);
 
   const filteredRecorders = useMemo(() => {
     let list = products.filter(p => p.category === "recorder" && p.is_active);
-    if (selection.technology && selection.technology !== "both" as any) list = list.filter(p => p.technology === selection.technology);
+    if (selection.technology && selection.technology !== "both" as any) list = list.filter(p => p.technologies?.includes(selection.technology as any));
     list = list.filter(p => (p.max_cameras || p.channels || 0) >= selection.camera_count);
     
     if (activeFilters.brand && activeFilters.brand !== "all") {
@@ -197,22 +233,22 @@ export function FullCustomizerPanel() {
   }, [products, selection.technology, selection.camera_count, search, activeFilters]);
 
   const filteredStorage = useMemo(() => {
-    let list = addons.filter(a => a.category === "storage" && a.is_active);
+    let list = [...products, ...addons].filter(a => a.category === "storage" && a.is_active);
     
-    // Auto-filter for WiFi technology if not explicitly overridden by user filter
-    if (!activeFilters.type && selection.technology === "WiFi") {
+    // Auto-filter for Wireless technology if not explicitly overridden by user filter
+    if (!activeFilters.type && selection.technology === "Wireless") {
       list = list.filter(a => {
         const name = a.display_name.toLowerCase();
-        return a.storage_type === "Micro SD" || (!a.storage_type && (name.includes("sd card") || name.includes("micro sd") || name.includes("memory card")));
+        return (a as any).storage_type === "Micro SD" || (!(a as any).storage_type && (name.includes("sd card") || name.includes("micro sd") || name.includes("memory card")));
       });
     } else if (activeFilters.type && activeFilters.type !== "all") {
       list = list.filter(a => {
         const name = a.display_name.toLowerCase();
         if (activeFilters.type === "Micro SD") {
-          return a.storage_type === "Micro SD" || (!a.storage_type && (name.includes("sd card") || name.includes("micro sd") || name.includes("memory card")));
+          return (a as any).storage_type === "Micro SD" || (!(a as any).storage_type && (name.includes("sd card") || name.includes("micro sd") || name.includes("memory card")));
         }
         if (activeFilters.type === "Hard Disk") {
-          return a.storage_type === "Hard Disk" || (!a.storage_type && (name.includes("hard disk") || name.includes("hdd") || name.includes("purple") || name.includes("skyhawk")));
+          return (a as any).storage_type === "Hard Disk" || (!(a as any).storage_type && (name.includes("hard disk") || name.includes("hdd") || name.includes("purple") || name.includes("skyhawk")));
         }
         return true;
       });
@@ -226,21 +262,21 @@ export function FullCustomizerPanel() {
     }
     
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()) || (a.technical_name || "").toLowerCase().includes(search.toLowerCase()));
-    return list.sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
+    return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
   }, [addons, search, activeFilters, selection.technology]);
 
   const filteredPower = useMemo(() => {
     const keyword = selection.technology === "IP" ? "poe" : "psu";
-    let list = addons.filter(a => a.category === "addon" && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword) && a.is_active);
+    let list = [...products, ...addons].filter(a => a.category === "power_device" && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword) && a.is_active);
     list = list.filter(a => (a.max_cameras || 0) >= selection.camera_count);
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()) || (a.technical_name || "").toLowerCase().includes(search.toLowerCase()));
-    return list.sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
+    return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
   }, [addons, selection.technology, selection.camera_count, search]);
 
   const filteredAddons = useMemo(() => {
-    let list = addons.filter(a => a.is_active);
+    let list = [...products, ...addons].filter(a => a.category === "accessory" && a.is_active);
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()));
-    return list.sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
+    return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
   }, [addons, search]);
 
   // Tab bar scroll tracking
@@ -429,8 +465,103 @@ export function FullCustomizerPanel() {
           </div>
         )}
       </div>
+      
+      <div className="px-6 py-3 border-b border-[#d2d2d7] dark:border-[#424245] bg-[#f5f5f7] dark:bg-[#2d2d2f] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Server className="w-4 h-4 text-[#86868b]" />
+            <span className="text-[12px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Technology</span>
+          </div>
+          <div className="flex bg-[#e8e8ed] dark:bg-[#1d1d1f] rounded-lg p-1">
+            {["IP", "HD", "Wireless"].map(tech => (
+              <button
+                key={tech}
+                onClick={() => {
+                  if (selection.technology === tech) return;
+                  updateSelection({ 
+                    technology: tech as "IP" | "HD" | "Wireless",
+                    selected_camera_id: undefined,
+                    selected_recorder_id: undefined,
+                    selected_mixed_camera_ids: undefined
+                  });
+                  toast.success(`Switched to ${tech}`, { description: "Hardware reset. Please select compatible cameras and recorders." });
+                }}
+                className={`px-3 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                  selection.technology === tech
+                    ? "bg-white dark:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white shadow-sm"
+                    : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"
+                }`}
+              >
+                {tech}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {selection.technology === "HD" && (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Cable className="w-4 h-4 text-[#86868b]" />
+              <span className="text-[12px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">HD Cable Type</span>
+            </div>
+            <div className="flex bg-[#e8e8ed] dark:bg-[#1d1d1f] rounded-lg p-1">
+              <button
+                onClick={() => updateSelection({ cable_type: "coaxial" })}
+                className={`px-3 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                  selection.cable_type !== "cat6"
+                    ? "bg-white dark:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white shadow-sm"
+                    : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"
+                }`}
+              >
+                3+1 Coaxial
+              </button>
+              <button
+                onClick={() => updateSelection({ cable_type: "cat6" })}
+                className={`px-3 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                  selection.cable_type === "cat6"
+                    ? "bg-white dark:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white shadow-sm"
+                    : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"
+                }`}
+              >
+                CAT6
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {renderTabs()}
+
+      {/* Sub-Navigation Toggle for Mixed Requirements */}
+      {activeTab === "cameras" && isMixedCameraMode && (
+        <div className="px-6 py-4 border-b border-[#d2d2d7] dark:border-[#424245] bg-[#f5f5f7] dark:bg-[#2d2d2f] shrink-0">
+          <div className="flex flex-col gap-3">
+            <span className="text-[10px] font-bold text-[#86868b] uppercase tracking-wider flex items-center gap-1.5">
+              <Camera className="w-3.5 h-3.5" /> Mixed Configuration Active
+            </span>
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              {selection.mixed_camera_requirements!.map(req => {
+                const isActive = activeMixedType === req.type;
+                const isPinned = !!selection.selected_mixed_camera_ids?.[req.type];
+                return (
+                  <button
+                    key={req.type}
+                    onClick={() => setActiveMixedType(req.type)}
+                    className={`px-4 py-2 rounded-full text-[13px] font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                      isActive 
+                        ? "bg-[#1d1d1f] dark:bg-[#f5f5f7] text-white dark:text-[#1d1d1f] shadow-sm" 
+                        : "bg-white dark:bg-[#1d1d1f] text-[#1d1d1f] dark:text-[#f5f5f7] border border-[#d2d2d7] dark:border-[#424245] hover:border-[#86868b]"
+                    }`}
+                  >
+                    {req.type} Camera ({req.count})
+                    {isPinned && <CheckCircle2 className={`w-3.5 h-3.5 ${isActive ? "text-[#0071e3]" : "text-emerald-500"}`} />}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {filterCategories.length > 0 && (
         <div className="px-6 py-4 border-b border-[#d2d2d7] dark:border-[#424245] bg-[#fbfbfd] dark:bg-[#1d1d1f] shrink-0">
@@ -476,24 +607,64 @@ export function FullCustomizerPanel() {
       )}
 
       <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 scrollbar-thin content-start bg-white dark:bg-black">
-        {activeTab === "cameras" && filteredCameras.map(cam => renderProductItem(
-          cam, 
-          selection.selected_camera_id === cam.id,
-          () => {
-            const exists = compare_options.find(c => c.technology === cam.technology && c.option === cam.id);
-            if (!exists) {
-              let newOptions = compare_options;
-              if (newOptions.length >= 4) newOptions = [newOptions[0], ...newOptions.slice(2)];
-              setCompareOptions([...newOptions, { technology: cam.technology as any, option: cam.id! }]);
-            }
-            setActiveCheckoutOption({ technology: cam.technology as any, option: cam.id! });
-            updateSelection({ selected_camera_id: cam.id });
-            advanceToNextTab("cameras");
-          },
-          !!selection.selected_camera_id,
-          () => updateSelection({ selected_camera_id: undefined }),
-          selection.camera_count
-        ))}
+        {activeTab === "cameras" && filteredCameras.map(cam => {
+          const isSelected = isMixedCameraMode 
+            ? selection.selected_mixed_camera_ids?.[activeMixedType!] === cam.id
+            : selection.selected_camera_id === cam.id;
+          
+          const isPinned = isMixedCameraMode
+            ? !!selection.selected_mixed_camera_ids?.[activeMixedType!]
+            : !!selection.selected_camera_id;
+            
+          const requiredQty = isMixedCameraMode
+            ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.count || 1
+            : selection.camera_count;
+
+          return renderProductItem(
+            cam, 
+            isSelected,
+            () => {
+              if (isMixedCameraMode) {
+                const currentMixedIds = selection.selected_mixed_camera_ids || {};
+                updateSelection({
+                  selected_mixed_camera_ids: {
+                    ...currentMixedIds,
+                    [activeMixedType!]: cam.id!
+                  }
+                });
+                
+                // Check if ALL mixed requirements are pinned
+                const allPinned = selection.mixed_camera_requirements!.every(r => 
+                  r.type === activeMixedType! ? true : !!currentMixedIds[r.type]
+                );
+                
+                if (allPinned) {
+                  advanceToNextTab("cameras");
+                } else {
+                  toast.success(`${cam.display_name} pinned for ${activeMixedType}!`, { duration: 2000 });
+                  const currentIndex = selection.mixed_camera_requirements!.findIndex(r => r.type === activeMixedType);
+                  if (currentIndex < selection.mixed_camera_requirements!.length - 1) {
+                     setActiveMixedType(selection.mixed_camera_requirements![currentIndex + 1].type);
+                  }
+                }
+              } else {
+                updateSelection({ selected_camera_id: cam.id });
+                advanceToNextTab("cameras");
+              }
+            },
+            isPinned,
+            () => {
+              if (isMixedCameraMode) {
+                const newMixedIds = { ...(selection.selected_mixed_camera_ids || {}) };
+                delete newMixedIds[activeMixedType!];
+                updateSelection({ selected_mixed_camera_ids: newMixedIds });
+              } else {
+                updateSelection({ selected_camera_id: undefined });
+              }
+            },
+            requiredQty
+          );
+        })}
 
         {activeTab === "recorders" && filteredRecorders.map(rec => renderProductItem(
           rec, selection.selected_recorder_id === rec.id, () => { updateSelection({ selected_recorder_id: rec.id }); advanceToNextTab("recorders"); }, !!selection.selected_recorder_id, () => updateSelection({ selected_recorder_id: undefined })
@@ -584,3 +755,5 @@ function FilterPill({ label, active, onClick }: { label: string; active: boolean
     </button>
   );
 }
+
+

@@ -26,7 +26,7 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
     let cameras = pricingCache.products.filter(p => p.category === "camera" && p.is_active);
 
     if (selection.technology && selection.technology !== "both" as any) {
-      cameras = cameras.filter(p => p.technology === selection.technology);
+      cameras = cameras.filter(p => p.technologies?.includes(selection.technology as any));
     }
 
     const bp = selection.brand_preference?.toLowerCase();
@@ -69,7 +69,7 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
     let kits = cameras.map(cam => {
       const kitSelection: ConfiguratorSelection = {
         ...selection,
-        technology: cam.technology as "HD" | "IP",
+        technology: cam.technologies?.[0] as "HD" | "IP",
         selected_camera_id: cam.id,
         plan_type: "recommended",
         selected_addons: [],
@@ -152,7 +152,7 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {allKits.map((kit, idx) => {
-          const isSelected = active_checkout_option?.technology === kit.camera.technology && 
+          const isSelected = active_checkout_option?.technology === kit.camera.technologies?.[0] && 
                              active_checkout_option?.option === kit.camera.id;
 
           const isBestSeller = idx === 0 && selection.focus_point === "price";
@@ -196,7 +196,7 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
                 )}
                 
                 <div className="absolute bottom-4 right-4 flex gap-1">
-                   {kit.camera.technology === "IP" ? (
+                   {kit.camera.technologies?.includes("IP") ? (
                       <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-white" title="Digital IP">
                          <Cpu className="w-3.5 h-3.5" />
                       </div>
@@ -275,21 +275,21 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
                         <>
                           <button 
                             onClick={() => {
-                              const exists = compare_options.find(c => c.technology === kit.camera.technology && c.option === kit.camera.id);
+                              const exists = compare_options.find(c => c.technology === kit.camera.technologies?.[0] && c.option === kit.camera.id);
                               if (exists) {
-                                setCompareOptions(compare_options.filter(c => !(c.technology === kit.camera.technology && c.option === kit.camera.id)));
+                                setCompareOptions(compare_options.filter(c => !(c.technology === kit.camera.technologies?.[0] && c.option === kit.camera.id)));
                               } else {
                                 if (compare_options.length >= 3) {
-                                  setCompareOptions([...compare_options.slice(1), { technology: kit.camera.technology as "HD"|"IP", option: kit.camera.id! }]);
+                                  setCompareOptions([...compare_options.slice(1), { technology: kit.camera.technologies?.[0] as "HD"|"IP", option: kit.camera.id! }]);
                                 } else {
-                                  setCompareOptions([...compare_options, { technology: kit.camera.technology as "HD"|"IP", option: kit.camera.id! }]);
+                                  setCompareOptions([...compare_options, { technology: kit.camera.technologies?.[0] as "HD"|"IP", option: kit.camera.id! }]);
                                 }
                               }
                               // Scroll up to compare zone smoothly
                               window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
                             className={`h-14 px-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 border ${
-                              compare_options.some(c => c.technology === kit.camera.technology && c.option === kit.camera.id)
+                              compare_options.some(c => c.technology === kit.camera.technologies?.[0] && c.option === kit.camera.id)
                                 ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400"
                                 : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800"
                             }`}
@@ -299,7 +299,7 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
 
                           <button 
                             onClick={() => {
-                              setActiveCheckoutOption({ technology: kit.camera.technology as "HD"|"IP", option: kit.camera.id as any });
+                              setActiveCheckoutOption({ technology: kit.camera.technologies?.[0] as "HD"|"IP", option: kit.camera.id as any });
                               updateSelection({ selected_camera_id: kit.camera.id });
                               // Scroll to build your own section
                               const el = document.getElementById('build-your-own');

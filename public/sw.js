@@ -44,8 +44,9 @@ self.addEventListener('fetch', (event) => {
         if (cachedResponse) {
           // Revalidate in background
           fetch(event.request).then((networkResponse) => {
+            const clone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse.clone());
+              cache.put(event.request, clone);
             });
           }).catch(() => {});
           return cachedResponse;
@@ -95,8 +96,9 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request)
       .then((cachedResponse) => {
         const fetchPromise = fetch(event.request).then((networkResponse) => {
+          const clone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, networkResponse.clone());
+            cache.put(event.request, clone);
           });
           return networkResponse;
         }).catch(() => {});

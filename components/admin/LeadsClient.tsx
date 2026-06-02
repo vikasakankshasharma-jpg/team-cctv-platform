@@ -236,7 +236,11 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
     switch (status) {
       case 'partial': return "sp-lost";
       case 'new': return "sp-new";
+      case 'attempted': return "sp-new";
       case 'contacted': return "sp-new";
+      case 'unreachable': return "bg-rose-500/10 text-rose-500 border-rose-500/20";
+      case 'busy': return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+      case 'technical_error': return "bg-red-500/10 text-red-500 border-red-500/20";
       case 'site_visit': return "sp-site";
       case 'quoted': return "sp-quote";
       case 'won': return "sp-won";
@@ -256,15 +260,21 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
           <div className="flex items-center gap-1 p-1 bg-secondary/50 border border-border rounded-lg shadow-sm">
             <button
               onClick={() => setActiveTab("standard")}
-              className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "standard" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "standard" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
             >
               Standard Matrix
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold ${activeTab === "standard" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
+                {localLeads.length}
+              </span>
             </button>
             <button
               onClick={() => setActiveTab("industrial")}
-              className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "industrial" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "industrial" ? "bg-background text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"}`}
             >
               Industrial Inquiries
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] leading-none font-bold ${activeTab === "industrial" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
+                {localIndLeads.length}
+              </span>
             </button>
           </div>
 
@@ -327,9 +337,13 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
               <option value="all">All Statuses</option>
               <option value="partial">Partial / Cart</option>
               <option value="new">New</option>
+              <option value="attempted">Attempted</option>
               <option value="contacted">Contacted</option>
+              <option value="unreachable">Unreachable</option>
+              <option value="busy">Busy</option>
+              <option value="technical_error">Technical Error</option>
               <option value="site_visit">Site Visit</option>
-              <option value="quoted">Quoted</option>
+              <option value="quoted">Re-Quote</option>
               <option value="won">Won</option>
               <option value="lost">Lost</option>
             </select>
@@ -479,8 +493,11 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                               <option value="partial">Partial</option>
                               <option value="new">Incoming</option>
                               <option value="contacted">Contacted</option>
+                              <option value="unreachable">Unreachable</option>
+                              <option value="busy">Busy</option>
+                              <option value="technical_error">Technical Error</option>
                               <option value="site_visit">Site Visit</option>
-                              <option value="quoted">Quoted</option>
+                              <option value="quoted">Re-Quote</option>
                               <option value="won">Won</option>
                               <option value="lost">Lost</option>
                             </select>

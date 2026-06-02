@@ -89,6 +89,9 @@ export default async function LeadsAdminPage({
       ...data,
       status: data.status || "new",
       created_at: (data.created_at as any)?.toDate?.()?.toISOString() || data.created_at || null,
+      updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
+      site_visit_date: (data.site_visit_date as any)?.toDate?.()?.toISOString() || data.site_visit_date || null,
+      sla_breach_at: (data.sla_breach_at as any)?.toDate?.()?.toISOString() || data.sla_breach_at || null,
     };
   }) as any[];
 
@@ -111,7 +114,8 @@ export default async function LeadsAdminPage({
       promoter_business: promoter?.business_name || null,
       created_at: (data.created_at as any)?.toDate?.()?.toISOString() || data.created_at || null,
       updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
-      site_visit_date: (data.site_visit_date as any)?.toDate?.()?.toISOString() || data.site_visit_date || null
+      site_visit_date: (data.site_visit_date as any)?.toDate?.()?.toISOString() || data.site_visit_date || null,
+      sla_breach_at: (data.sla_breach_at as any)?.toDate?.()?.toISOString() || data.sla_breach_at || null
     };
   });
 

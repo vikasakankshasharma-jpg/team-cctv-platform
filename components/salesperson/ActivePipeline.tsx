@@ -13,8 +13,11 @@ const STATUS_OPTIONS = [
   { value: "new",         label: "New",          color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
   { value: "contacted",   label: "Contacted",    color: "bg-sky-500/10 text-sky-500 border-sky-500/20" },
   { value: "site_visit",  label: "Site Visit",   color: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  { value: "unreachable", label: "Unreachable",  color: "bg-rose-500/10 text-rose-500 border-rose-500/20" },
+  { value: "busy",        label: "Busy",         color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
+  { value: "technical_error", label: "Technical Error", color: "bg-red-500/10 text-red-500 border-red-500/20" },
   { value: "negotiation", label: "Negotiation",  color: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
-  { value: "quoted",      label: "Quoted",       color: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
+  { value: "quoted",      label: "Re-Quote",     color: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
   { value: "won",         label: "Won",          color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
   { value: "lost",        label: "Lost",         color: "bg-red-500/10 text-red-500 border-red-500/20" },
 ] as const;

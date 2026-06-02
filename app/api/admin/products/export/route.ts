@@ -10,7 +10,7 @@ const CSV_COLUMNS: (keyof Product)[] = [
   "technical_name",
   "display_name",
   "category",
-  "technology",
+  "technologies",
   "brand",
   "base_cost",
   "margin_percentage",
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     // Build Firestore query with optional filters
     let query: FirebaseFirestore.Query = adminDb.collection("products");
     if (category) query = query.where("category", "==", category);
-    if (technology) query = query.where("technology", "==", technology);
+    if (technology) query = query.where("technologies", "array-contains", technology);
     if (is_active !== null) query = query.where("is_active", "==", is_active === "true");
 
     const snap = await query.get();

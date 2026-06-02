@@ -425,12 +425,40 @@ export async function addLeadActivity(leadId: string, activityData: { type: stri
       created_at: serverTimestamp()
     });
     
-    // Auto-update lead updatedAt
-    await adminDb.collection("leads").doc(leadId).update({
-      updated_at: serverTimestamp()
-    });
+    const leadRef = adminDb.collection("leads").doc(leadId);
+    const leadDoc = await leadRef.get();
     
-    return { success: true };
+    const updatePayload: any = {
+      updated_at: serverTimestamp()
+    };
+
+    let newStatus = "";
+
+    if (leadDoc.exists) {
+      const currentStatus = leadDoc.data()?.status;
+      // Auto-update status to "contacted" if it's new or attempted and we logged a successful call or note
+      if ((activityData.type === "call" || activityData.type === "note") && ["new", "attempted"].includes(currentStatus)) {
+        updatePayload.status = "contacted";
+        newStatus = "contacted";
+      } 
+      // Auto-update status to "attempted" if we logged an attempted call and it's new
+      else if (activityData.type === "call_attempted" && currentStatus === "new") {
+        updatePayload.status = "attempted";
+        newStatus = "attempted";
+      }
+      // Auto-update status to "site_visit" if we logged a site visit and it's in an earlier stage
+      else if (activityData.type === "site_visit" && ["new", "attempted", "contacted"].includes(currentStatus)) {
+        updatePayload.status = "site_visit";
+        newStatus = "site_visit";
+        updatePayload.sla_breach_at = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        updatePayload.is_escalated = false;
+      }
+    }
+    
+    await leadRef.update(updatePayload);
+    
+    revalidatePath("/admin/leads");
+    return { success: true, newStatus };
   } catch (error: any) {
     console.error("Failed to add activity:", error);
     return { success: false, error: error.message };

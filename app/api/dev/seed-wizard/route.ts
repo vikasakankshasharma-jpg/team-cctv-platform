@@ -129,6 +129,13 @@ export async function GET() {
               { id: "opt_wired_yes", label: "Yes – Cabling is already done", value: "true", position: 0 },
               { id: "opt_wired_no", label: "No – Full installation required", value: "false", position: 1 },
             ]
+          },
+          {
+            id: "q_wiring_type", question_text: "Type of wiring required:", input_type: "single", is_required: false, position: 1,
+            options: [
+              { id: "opt_wiring_open", label: "Open Wiring", value: "open", position: 0 },
+              { id: "opt_wiring_conduit", label: "Conduit Flat Pipe", value: "conduit", position: 1 },
+            ]
           }
         ]
       },

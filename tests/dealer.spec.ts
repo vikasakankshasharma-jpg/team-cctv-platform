@@ -25,9 +25,11 @@ test.describe('Intense Dealer Flow E2E', () => {
     const emptyState = page.locator('text=No Leads Found').first();
     
     const tableHeader = page.locator('th').first();
+    const kanbanHeader = page.locator('h3', { hasText: 'Contacted' }).first();
     await Promise.any([
       expect(tableHeader).toBeVisible({ timeout: 15000 }),
-      expect(emptyState).toBeVisible({ timeout: 15000 })
+      expect(emptyState).toBeVisible({ timeout: 15000 }),
+      expect(kanbanHeader).toBeVisible({ timeout: 15000 })
     ]);
   });
 

@@ -17,10 +17,15 @@ export default async function InstallersAdminPage() {
 
   const snapshot = await adminDb.collection("installers").orderBy("created_at", "desc").get();
   
-  const installers: Installer[] = snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  })) as Installer[];
+  const installers: Installer[] = snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      created_at: data.created_at?.toDate?.()?.toISOString() || data.created_at || null,
+      updated_at: data.updated_at?.toDate?.()?.toISOString() || data.updated_at || null,
+    };
+  }) as Installer[];
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">

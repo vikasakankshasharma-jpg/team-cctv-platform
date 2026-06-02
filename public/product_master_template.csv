@@ -1,0 +1,7 @@
+id,technical_name,display_name,category,technology,brand,base_cost,margin_percentage,unit_price,unit_price_budget,unit_price_premium,resolution_mp,channels,max_cameras,min_cameras,catalog_path,is_active,image_url
+,CAM-HD-BULLET-2MP,Hikvision 2MP HD Bullet Camera,camera,HD,Hikvision,1200,15,,,2,,,,,,true,
+,CAM-IP-DOME-4MP,CP Plus 4MP IP Dome,camera,IP,CP Plus,2200,20,,,4,,,,,,true,
+,DVR-HD-4CH,Hikvision 4CH HD DVR,recorder,HD,Hikvision,2500,10,,,,4,,,,,true,
+,NVR-IP-8CH,Dahua 8CH NVR,recorder,IP,Dahua,4500,15,,,,8,,,,,true,
+,CBL-3+1-90M,DLink 3+1 Copper Cable 90m,cable,Common,DLink,1000,25,,,,,,,,,,true,
+,HDD-1TB,Seagate 1TB Surveillance HDD,accessory,Common,Seagate,3000,8,,,,,,,,,,true,

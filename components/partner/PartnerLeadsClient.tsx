@@ -31,6 +31,9 @@ export function PartnerLeadsClient({ initialLeads }: PartnerLeadsClientProps) {
       case 'new': return "bg-blue-500/10 text-blue-500 border-blue-500/20";
       case 'contacted': return "bg-amber-500/10 text-amber-500 border-amber-500/20";
       case 'site_visit': return "bg-purple-500/10 text-purple-400 border-purple-500/20";
+      case 'unreachable': return "bg-rose-500/10 text-rose-500 border-rose-500/20";
+      case 'busy': return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+      case 'technical_error': return "bg-red-500/10 text-red-500 border-red-500/20";
       case 'quoted': return "bg-zinc-800 text-zinc-400 border-zinc-700";
       case 'won': return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]";
       case 'lost': return "bg-red-500/10 text-red-500 border-red-500/20";
@@ -43,7 +46,10 @@ export function PartnerLeadsClient({ initialLeads }: PartnerLeadsClientProps) {
       case 'new': return "Incoming";
       case 'contacted': return "Synthesized";
       case 'site_visit': return "Deployment";
-      case 'quoted': return "Finalizing";
+      case 'unreachable': return "Unreachable";
+      case 'busy': return "Busy";
+      case 'technical_error': return "Technical Error";
+      case 'quoted': return "Re-Quote";
       case 'won': return "Captured";
       case 'lost': return "Terminated";
       default: return status;
@@ -89,7 +95,10 @@ export function PartnerLeadsClient({ initialLeads }: PartnerLeadsClientProps) {
               <option value="new">Incoming</option>
               <option value="contacted">Synthesized</option>
               <option value="site_visit">Deployment</option>
-              <option value="quoted">Finalizing</option>
+              <option value="unreachable">Unreachable</option>
+              <option value="busy">Busy</option>
+              <option value="technical_error">Technical Error</option>
+              <option value="quoted">Re-Quote</option>
               <option value="won">Captured</option>
               <option value="lost">Terminated</option>
             </select>

@@ -30,6 +30,7 @@ export default async function ReportsAdminPage() {
       created_at: (d.created_at as any)?.toDate?.()?.toISOString() || d.created_at || null,
       updated_at: (d.updated_at as any)?.toDate?.()?.toISOString() || d.updated_at || null,
       site_visit_date: (d.site_visit_date as any)?.toDate?.()?.toISOString() || d.site_visit_date || null,
+      sla_breach_at: (d.sla_breach_at as any)?.toDate?.()?.toISOString() || d.sla_breach_at || null,
     } as Lead;
   });
 

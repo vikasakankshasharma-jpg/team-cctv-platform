@@ -21,14 +21,14 @@ export default async function AdminLayout({
   
   if (!session.isAuthenticated) {
     return (
-      <div className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-[#0A0E1A] font-sans text-[#E8EDF5]`}>
+      <div className={`dark ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-[#0A0E1A] font-sans text-[#E8EDF5]`}>
         {children}
       </div>
     );
   }
 
   return (
-    <div className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} flex h-screen overflow-hidden font-sans`}
+    <div className={`dark ${spaceGrotesk.variable} ${jetbrainsMono.variable} flex h-screen overflow-hidden font-sans`}
       style={{
         backgroundColor: '#0A0E1A',
         color: '#E8EDF5',

@@ -9,41 +9,54 @@ test.describe('Quote & Booking End-to-End Flow', () => {
     // ---------------------------------------------------------
     // STEP 1: The Wizard
     // ---------------------------------------------------------
-    await test.step('Fill out the Customer Wizard', async () => {
+    await test.step('Seed and Fill out the Customer Wizard', async () => {
+      // Ensure the DB has exactly the structure this test expects
+      await page.goto('/api/dev/seed-wizard');
+      await page.waitForTimeout(2000); // Give the DB a moment
+      
       await page.goto('/wizard');
 
       // Step 0: Property Type (single -> auto-advances)
       await page.getByText('Home / Residential', { exact: true }).click();
 
-      // Step 1: Setup Type (single -> auto-advances)
-      await page.getByText('New Installation', { exact: true }).click();
-
-      // Step 2: Camera Count (number -> requires Continue)
-      await page.locator('input[type="number"]').fill('4');
+      // Step 1: Mounting Surface (multi -> requires Continue)
+      await page.getByText('Standard (Brick, Concrete walls)', { exact: true }).click();
       await page.getByRole('button', { name: /Continue/i }).click();
 
-      // Step 3: Camera Technology (single -> auto-advances)
-      await page.getByText('IP Network Camera (Smart Digital)', { exact: true }).click();
+      // Step 2: Ceiling Height (single -> auto-advances)
+      await page.getByText('Standard (Up to 10 feet)', { exact: true }).click();
 
-      // Step 4: Recording Storage (single -> auto-advances)
-      await page.getByText('15 Days', { exact: true }).click();
-
-      // Step 5: Special Features (multi -> requires Continue)
-      await page.getByText('Not required (Standard cameras are fine)', { exact: true }).click();
+      // Step 3: Camera Count (single input by default for All Indoor -> requires Continue)
+      await page.locator('input[type="number"]').first().fill('4');
       await page.getByRole('button', { name: /Continue/i }).click();
 
-      // Step 6: Image Resolution (single -> auto-advances)
-      await page.getByText('2MP Standard HD — Good for most homes', { exact: true }).click();
+      // Step 4: Camera Technology (single -> auto-advances)
+      await page.getByText('Smart Digital IP Cameras (Recommended)', { exact: true }).click();
 
-      // Step 7: Accessories (multi -> requires Continue)
-      await page.getByText('No extra accessories needed', { exact: true }).click();
+      // Step 5: Recording Storage (single -> auto-advances)
+      await page.getByText('1 Week (Standard)', { exact: true }).click();
+
+      // Step 5.5: Dynamic Image Resolution (single -> auto-advances)
+      // Since it's dynamic based on DB products, we click the first available resolution option
+      // await page.getByText(/MP /i).first().click();
+
+      // Step 6: Features (multi -> requires Continue)
+      await page.getByText('Microphone', { exact: true }).click();
       await page.getByRole('button', { name: /Continue/i }).click();
 
-      // Step 8: Site Overview (2 single questions)
-      // Click Q1
-      await page.getByText('Standard (Up to 10ft)', { exact: true }).click();
-      // Click Q2 (since it is the last question of the last step, it doesn't auto-advance)
-      await page.getByText('Concrete / Brick Wall', { exact: true }).click();
+      // Step 7: Wiring (multi-question on same step)
+      await page.getByText('No – Full installation required', { exact: true }).click();
+      // Clicking the last single-choice question auto-advances!
+      await page.getByText('Conduit Flat Pipe', { exact: true }).click();
+
+      // Step 8: Timeline (single -> auto-advances)
+      await page.getByText('Within a week', { exact: true }).click();
+
+      // Step 9: Brand (single -> auto-advances)
+      await page.getByText('Unsure, please recommend the best value', { exact: true }).click();
+
+      // Step 10: Maintenance (single -> last step does not auto-advance)
+      await page.getByText("No, I'll manage it myself", { exact: true }).click();
       
       // The last step does NOT auto-advance. Must click Generate Quote.
       await page.getByRole('button', { name: /Generate Quote/i }).click();
@@ -111,8 +124,8 @@ test.describe('Quote & Booking End-to-End Flow', () => {
     await test.step('Review & Submit Booking', async () => {
       // Removed the summary section check as it's no longer present.
 
-      // Click the "Save PDF" button from the SmartContextBar
-      await page.locator('button', { hasText: 'Save PDF' }).click();
+      // Click the "Book Site Visit" button from the SmartContextBar
+      await page.locator('button', { hasText: 'Book Site Visit' }).click();
 
       // Wait for the SiteDetailsModal to appear
       await expect(page.locator('h2', { hasText: 'Pinpoint Your Site' })).toBeVisible();
@@ -134,9 +147,8 @@ test.describe('Quote & Booking End-to-End Flow', () => {
       // Click Confirm Site
       await page.locator('button', { hasText: 'Confirm Site' }).click();
 
-      // Ensure navigation happens and Review page loads
-      await expect(page).toHaveURL(/\/quote\/.+\/review\/.+/, { timeout: 15000 });
-      await expect(page.locator('text=Bill To')).toBeVisible();
+      // Ensure booking toast appears
+      await expect(page.locator('text=Visit Booked!')).toBeVisible({ timeout: 15000 });
     });
   });
 });

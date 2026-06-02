@@ -98,8 +98,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   let effectiveTech = selection.technology;
   if (selection.selected_camera_id) {
     const cam = products.find(p => p.id === selection.selected_camera_id);
-    if (cam && (cam.technology === "HD" || cam.technology === "IP")) {
-      effectiveTech = cam.technology;
+    if (cam && (cam.technologies.includes("HD") || cam.technologies.includes("IP"))) {
+      effectiveTech = cam.technologies[0]; // Or some logic to determine which one it's acting as
     }
   }
 
@@ -124,6 +124,12 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       baseHardwareCost += cabling.totalRetail;
       totalPurchaseCost += cabling.totalCost;
     }
+
+    // 3c. Connectors Cost
+    const connectors = calculateConnectors(selection, settings, effectiveTech);
+    lineItems.push(...connectors.items);
+    baseHardwareCost += connectors.totalRetail;
+    totalPurchaseCost += connectors.totalCost;
 
     // 4. Add-ons & Promotional Calculation
     const addonCalc = calculateAddons({
@@ -205,13 +211,26 @@ function calculateHardware(
       proxySelection.camera_count = req.count;
       if (req.resolution) proxySelection.resolution_preference = req.resolution;
       
+      // Inject specific camera override for this bucket, and clear the global one
+      // so it doesn't accidentally override mixed buckets.
+      if (selection.selected_mixed_camera_ids && selection.selected_mixed_camera_ids[req.type]) {
+        proxySelection.selected_camera_id = selection.selected_mixed_camera_ids[req.type];
+      } else {
+        proxySelection.selected_camera_id = undefined;
+      }
+      
       const extraFeatures = proxySelection.requested_features ? [...proxySelection.requested_features] : [];
+      if (req.features && req.features.length > 0) {
+        extraFeatures.push(...req.features);
+      }
+      
       const typeLower = req.type.toLowerCase();
       if (typeLower.includes("ptz")) extraFeatures.push("ptz");
       if (typeLower.includes("solar")) extraFeatures.push("solar");
       if (typeLower.includes("4g")) extraFeatures.push("4g");
       if (typeLower.includes("audio") || typeLower.includes("speaker") || typeLower.includes("mic")) extraFeatures.push("audio");
       if (typeLower.includes("color")) extraFeatures.push("color");
+      
       proxySelection.requested_features = extraFeatures;
       
       const proxyTech = req.technology || tech;
@@ -221,9 +240,22 @@ function calculateHardware(
         const qty = req.count;
         const unitPrice = resolveUnitPrice(camera, qty);
         const lineTotal = unitPrice * qty;
+        let featureLabel = "";
+        if (req.features && req.features.length > 0) {
+          const names = req.features.map(f => {
+            if (f === "color") return "Color Night Vision";
+            if (f === "audio") return "Audio/Mic";
+            if (f === "ptz") return "PTZ";
+            if (f === "solar") return "Solar";
+            if (f === "4g") return "4G";
+            return f;
+          });
+          featureLabel = ` (${names.join(", ")})`;
+        }
+
         items.push({
           product_id: camera.id!,
-          display_name: `${req.type} - ${camera.display_name}`,
+          display_name: `${req.type}${featureLabel} - ${camera.display_name}`,
           brand: camera.brand,
           qty,
           unit_price: unitPrice,
@@ -268,24 +300,30 @@ function calculateHardware(
     totalCost += (recorder.base_cost || 0);
   }
 
-  // 3. Storage (HDD)
-  const hdd = resolveHDD(selection, addons, tech);
+  // 3. Storage (HDD / SD Card)
+  const hdd = resolveHDD(selection, [...products, ...addons] as any[], tech);
   if (hdd) {
     const unitPrice = hdd.unit_price || hdd.price || 0;
+    
+    // WiFi cameras use 1 SD Card per camera. HDDs are shared (qty 1).
+    const nameStr = hdd.display_name.toLowerCase();
+    const isSdCard = (hdd as any).storage_type === "Micro SD" || nameStr.includes("sd card") || nameStr.includes("micro sd") || nameStr.includes("memory card");
+    const qty = isSdCard ? selection.camera_count : 1;
+
     items.push({
       product_id: hdd.id!,
       display_name: hdd.display_name,
       brand: hdd.brand,
-      qty: 1,
+      qty: qty,
       unit_price: unitPrice,
-      line_total: unitPrice
+      line_total: unitPrice * qty
     });
-    totalRetail += unitPrice;
-    totalCost += (hdd.base_cost || 0);
+    totalRetail += unitPrice * qty;
+    totalCost += (hdd.base_cost || 0) * qty;
   }
 
   // 4. Transmission (PoE/PSU)
-  const transmission = resolveTransmission(selection, addons, tech);
+  const transmission = resolveTransmission(selection, [...products, ...addons] as any[], tech);
   if (transmission) {
     const qty = Math.ceil(selection.camera_count / (transmission.max_cameras || 4));
     const unitPrice = transmission.unit_price || transmission.price || 0;
@@ -341,6 +379,10 @@ function calculateCabling(
 ) {
   const items: QuoteLineItem[] = [];
   
+  if (tech === "WiFi") {
+    return { items, totalRetail: 0, totalCost: 0 };
+  }
+
   // Exclude Wireless/Solar/4G cameras from cabling meter counts
   let wiredCameraCount = selection.camera_count;
   if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
@@ -356,17 +398,44 @@ function calculateCabling(
     return { items, totalRetail: 0, totalCost: 0 };
   }
 
-  // Estimated total cable = meters per wired camera × wired camera count
-  const totalMeters = meters * wiredCameraCount;
-  const baseCostPerMeter = tech === "IP"
-    ? (settings.cable_copper_coated_ip || 12)
-    : (settings.cable_copper_coated_hd || 8);
+  // Use explicitly requested meters per camera, or default to 20m per wired camera
+  const metersPerCamera = selection.cable_length_meters || 20;
+  const totalMeters = metersPerCamera * wiredCameraCount;
+
+  // Base Cable Cost
+  let baseCostPerMeter = 12; // fallback
+  let cableTypeLabel = "Cable";
+
+  if (tech === "IP") {
+    // IP always uses CAT6
+    baseCostPerMeter = settings.cable_copper_coated_ip || 12;
+    cableTypeLabel = "CAT6 Cable";
+  } else {
+    // HD can use CAT6 or 3+1 Coaxial
+    if (selection.cable_type === "cat6") {
+      baseCostPerMeter = settings.cable_copper_coated_ip || 12;
+      cableTypeLabel = "CAT6 Cable";
+    } else {
+      // Default to Coaxial for HD
+      baseCostPerMeter = settings.cable_copper_coated_hd || 8;
+      cableTypeLabel = "3+1 Coaxial Cable";
+    }
+  }
+    
+  // Conduit Cost Addition
+  const isConduit = selection.wiring_type === "conduit";
+  if (isConduit) {
+    const conduitRate = settings.conduit_cost_per_meter || 20;
+    baseCostPerMeter += conduitRate;
+  }
+
   const ratePerMeter = Math.round(baseCostPerMeter * locationMultiplier);
   const lineTotal = ratePerMeter * totalMeters;
+  const typeLabel = isConduit ? `Conduit Pipe + ${cableTypeLabel}` : `${cableTypeLabel} (Open)`;
 
   items.push({
     product_id: "cabling_material",
-    display_name: `${tech} Cabling & Conduit Material (~${totalMeters}m)`,
+    display_name: `${typeLabel} (~${totalMeters}m) @ ₹${ratePerMeter}/m`,
     qty: totalMeters,
     unit_price: ratePerMeter,
     line_total: lineTotal
@@ -375,6 +444,45 @@ function calculateCabling(
   // Purchase cost = ~70% of retail (material has lower margin)
   const totalCost = Math.round(lineTotal * 0.7);
   return { items, totalRetail: lineTotal, totalCost };
+}
+
+function calculateConnectors(
+  selection: ConfiguratorSelection,
+  settings: AppSettings,
+  tech: string
+) {
+  const items: QuoteLineItem[] = [];
+  
+  if (tech === "WiFi") {
+    return { items, totalRetail: 0, totalCost: 0 };
+  }
+  
+  const cameraCount = selection.camera_count || 1;
+  const useRJ45 = tech === "IP" || selection.cable_type === "cat6";
+  
+  if (useRJ45) {
+    const rate = settings.connector_rj45_cost || 25;
+    const lineTotal = rate * cameraCount;
+    items.push({
+      product_id: "connector_rj45",
+      display_name: "RJ45 Connectors (Camera & Switch/Balun ends)",
+      qty: cameraCount,
+      unit_price: rate,
+      line_total: lineTotal
+    });
+    return { items, totalRetail: lineTotal, totalCost: Math.round(lineTotal * 0.5) };
+  } else {
+    const rate = settings.connector_bnc_dc_cost || 70;
+    const lineTotal = rate * cameraCount;
+    items.push({
+      product_id: "connector_bnc_dc",
+      display_name: "BNC & DC Connector Set",
+      qty: cameraCount,
+      unit_price: rate,
+      line_total: lineTotal
+    });
+    return { items, totalRetail: lineTotal, totalCost: Math.round(lineTotal * 0.5) };
+  }
 }
 
 function calculateAddons(params: {
@@ -465,10 +573,10 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
   const recorder = resolveRecorder(selection, products, tech);
   const recTotal = recorder ? recorder.unit_price : 0;
   
-  const hdd = resolveHDD(selection, addons, tech);
+  const hdd = resolveHDD(selection, [...products, ...addons] as any[], tech);
   const hddTotal = hdd ? (hdd.unit_price || hdd.price || 0) : 0;
 
-  const transmission = resolveTransmission(selection, addons, tech);
+  const transmission = resolveTransmission(selection, [...products, ...addons] as any[], tech);
   const transQty = transmission ? Math.ceil(qty / (transmission.max_cameras || 4)) : 0;
   const transTotal = transmission ? (transmission.unit_price || transmission.price || 0) * transQty : 0;
 
@@ -498,7 +606,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     return products.find(p => p.id === selection.selected_camera_id);
   }
 
-  let pool = products.filter(p => p.category === "camera" && p.technology === tech && p.is_active);
+  let pool = products.filter(p => p.category === "camera" && p.technologies.includes(tech as any) && p.is_active);
 
   // ── Specialty Camera Guardrail ──────────────────────────────
   // Prevent Elite/Premium tiers from accidentally picking highly expensive PTZ/Solar/4G/Wireless cameras
@@ -652,12 +760,16 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
 
 function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: string) {
   if (selection.selected_recorder_id) {
+    if (selection.selected_recorder_id === "none") return undefined;
     return products.find(p => p.id === selection.selected_recorder_id);
   }
 
+  if (tech === "WiFi") return undefined; // WiFi cameras generally use SD Cards and no DVR/NVR
+
+
   const recorders = products.filter(p => 
     p.category === "recorder" && 
-    p.technology === tech && 
+    p.technologies.includes(tech as any) && 
     (p.max_cameras || p.channels || 0) >= selection.camera_count
   );
   recorders.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
@@ -688,17 +800,39 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   const recordingDays = selection.recording_days ?? 7;
   if (recordingDays === 0) return undefined;
 
+  const hdds = addons.filter(a => a.category === "storage");
+  if (hdds.length === 0) return undefined;
+
+  if (tech === "WiFi") {
+    const sdCards = hdds.filter(a => {
+      const name = a.display_name.toLowerCase();
+      return (a as any).storage_type === "Micro SD" || name.includes("sd card") || name.includes("micro sd") || name.includes("memory card");
+    });
+    if (sdCards.length > 0) {
+      sdCards.sort((a, b) => resolveHDDCapacity(a) - resolveHDDCapacity(b));
+      const requiredGb = recordingDays > 7 ? 128 : 64;
+      return sdCards.find(s => {
+        const tb = resolveHDDCapacity(s);
+        const gb = tb >= 1 ? tb * 1000 : tb; // Rough heuristic since some are listed as 64GB
+        return gb >= requiredGb || s.display_name.includes(`${requiredGb}GB`);
+      }) || sdCards[sdCards.length - 1];
+    }
+    return undefined;
+  }
+
   // Use product's declared daily_gb_per_camera if available, else sensible defaults
   const gbPerDay = tech === "IP" ? 15 : 10;
   const requiredGB = selection.camera_count * gbPerDay * recordingDays;
   const requiredTB = requiredGB / 1000;
 
-  const hdds = addons.filter(a => a.category === "storage");
-  if (hdds.length === 0) return undefined;
-  
-  hdds.sort((a, b) => resolveHDDCapacity(a) - resolveHDDCapacity(b));
+  const hardDisks = hdds.filter(a => {
+    const name = a.display_name.toLowerCase();
+    return !((a as any).storage_type === "Micro SD" || name.includes("sd card") || name.includes("micro sd") || name.includes("memory card"));
+  });
+  if (hardDisks.length === 0) return undefined;
 
-  return hdds.find(h => resolveHDDCapacity(h) >= requiredTB) || hdds[hdds.length - 1];
+  hardDisks.sort((a, b) => resolveHDDCapacity(a) - resolveHDDCapacity(b));
+  return hardDisks.find(h => resolveHDDCapacity(h) >= requiredTB) || hardDisks[hardDisks.length - 1];
 }
 
 function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], tech: string) {
@@ -707,10 +841,10 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
   }
 
   const keyword = tech === "IP" ? "poe" : "psu";
-  const options = addons.filter(a => a.category === "addon" && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword));
+  const options = addons.filter(a => a.category === "power_device" && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword));
   if (options.length === 0) return undefined;
   
-  options.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
+    options.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
   return options.find(o => (o.max_cameras || 0) >= selection.camera_count) || options[options.length - 1];
 }
 
@@ -720,3 +854,4 @@ function resolveUnitPrice(product: Product, qty: number) {
   }
   return product.unit_price || 0;
 }
+

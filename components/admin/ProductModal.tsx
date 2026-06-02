@@ -11,7 +11,7 @@ const productSchema = z.object({
   display_name: z.string().min(1, "Display name is required"),
   technical_name: z.string().min(1, "Technical name is required"),
   category: z.enum(["camera", "recorder", "accessory", "cable"]),
-  technology: z.enum(["IP", "HD", "Common", "WiFi", "4G", "Solar"]),
+  technologies: z.array(z.enum(["IP", "HD", "Wireless", "Common"])),
   base_cost: z.number().min(0),
   margin_percentage: z.number().min(0).max(99),
   unit_price: z.number().min(0),
@@ -46,7 +46,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
       display_name: "",
       technical_name: "",
       category: "camera",
-      technology: "IP",
+      technologies: ["IP"],
       base_cost: 0,
       margin_percentage: 0,
       unit_price: 0,
@@ -67,7 +67,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         display_name: product.display_name,
         technical_name: product.technical_name,
         category: product.category as any,
-        technology: product.technology as any,
+        technologies: product.technologies || ["IP"],
         base_cost: product.base_cost ?? 0,
         margin_percentage: product.margin_percentage ?? 0,
         unit_price: product.unit_price,
@@ -87,7 +87,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         display_name: "",
         technical_name: "",
         category: "camera",
-        technology: "IP",
+        technologies: ["IP"],
         base_cost: 0,
         margin_percentage: 0,
         unit_price: 0,
@@ -244,15 +244,14 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                 <Cpu className="w-3.5 h-3.5" /> Tech Standard
               </label>
               <select
-                {...register("technology")}
+                value={form.watch("technologies")?.[0] || "IP"}
+                onChange={(e) => form.setValue("technologies", [e.target.value as any])}
                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer shadow-sm"
               >
                 <option value="IP">IP (Network / Wired)</option>
-                <option value="HD">HD (Analog)</option>
-                <option value="WiFi">WiFi (Wireless)</option>
-                <option value="4G">4G (Cellular)</option>
-                <option value="Solar">Solar (Wireless Power)</option>
-                <option value="Common">Common / Universal</option>
+                <option value="HD">Analog HD</option>
+                <option value="Wireless">Wireless (WiFi/4G/Solar)</option>
+                <option value="Common">Common (Fits All)</option>
               </select>
             </div>
           </div>

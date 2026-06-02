@@ -69,8 +69,8 @@ interface BulkImportExportProps {
 
 // ─── Required CSV columns (all others are optional) ──────────────────────────
 const REQUIRED_FIELDS = ["technical_name", "display_name", "category"] as const;
-const VALID_CATEGORIES = ["camera", "recorder", "accessory", "cable", "network"];
-const VALID_TECHNOLOGIES = ["HD", "IP", "Common", "WiFi", "4G"];
+const VALID_CATEGORIES = ["camera", "recorder", "accessory", "cable", "network", "power_device", "storage"];
+const VALID_TECHNOLOGIES = ["HD", "IP", "Common", "WiFi", "4G", "Solar"];
 
 // ─── Validation logic ─────────────────────────────────────────────────────────
 function validateRow(row: ParsedRow, index: number): RowError[] {
@@ -148,42 +148,75 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
 
   // ─── File parsing ──────────────────────────────────────────────────────────
   const parseFile = useCallback((file: File) => {
-    if (!file.name.endsWith(".csv")) {
-      toast.error("Only .csv files are accepted.");
+    if (!file.name.endsWith(".csv") && !file.name.endsWith(".xlsx")) {
+      toast.error("Only .csv and .xlsx files are accepted.");
       return;
     }
     setFileName(file.name);
     setModalState("upload"); // show spinner briefly while parsing
 
-    Papa.parse<ParsedRow>(file, {
-      header: true,
-      skipEmptyLines: true,
-      dynamicTyping: true, // Converts strings like "5" or "true" to proper JS types
-      complete: (results) => {
-        const rows = results.data as ParsedRow[];
-        const toCreate: ParsedRow[] = [];
-        const toUpdate: ParsedRow[] = [];
-        const errors: RowError[] = [];
+    const processRows = (rows: ParsedRow[]) => {
+      const toCreate: ParsedRow[] = [];
+      const toUpdate: ParsedRow[] = [];
+      const errors: RowError[] = [];
 
-        rows.forEach((row, i) => {
-          const rowErrors = validateRow(row, i);
-          if (rowErrors.length > 0) {
-            errors.push(...rowErrors);
-          } else if (!row.id || String(row.id).trim() === "") {
-            toCreate.push(row);
-          } else {
-            toUpdate.push(row);
+      rows.forEach((row, i) => {
+        // Convert any "TRUE"/"FALSE" strings from Excel back to boolean/strings
+        if (typeof row.is_active === 'string') {
+          const val = row.is_active.toUpperCase();
+          if (val === 'TRUE') row.is_active = true;
+          else if (val === 'FALSE') row.is_active = false;
+        }
+
+        const rowErrors = validateRow(row, i);
+        if (rowErrors.length > 0) {
+          errors.push(...rowErrors);
+        } else if (!row.id || String(row.id).trim() === "") {
+          toCreate.push(row);
+        } else {
+          toUpdate.push(row);
+        }
+      });
+
+      setPreview({ toCreate, toUpdate, errors });
+      setModalState("preview");
+    };
+
+    if (file.name.endsWith(".csv")) {
+      Papa.parse<ParsedRow>(file, {
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: true,
+        complete: (results) => {
+          processRows(results.data as ParsedRow[]);
+        },
+        error: (err) => {
+          toast.error("Failed to parse CSV: " + err.message);
+          setModalState("upload");
+        },
+      });
+    } else {
+      import("xlsx").then((XLSX) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array" });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const rows = XLSX.utils.sheet_to_json<ParsedRow>(worksheet, { defval: "" });
+            processRows(rows);
+          } catch (err: any) {
+            toast.error("Failed to parse Excel: " + err.message);
+            setModalState("upload");
           }
-        });
-
-        setPreview({ toCreate, toUpdate, errors });
-        setModalState("preview");
-      },
-      error: (err) => {
-        toast.error("Failed to parse CSV: " + err.message);
+        };
+        reader.readAsArrayBuffer(file);
+      }).catch(() => {
+        toast.error("Failed to load Excel parser.");
         setModalState("upload");
-      },
-    });
+      });
+    }
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,6 +271,15 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
     <>
       {/* ── Action Buttons ────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
+
+        {/* Download Smart Template Button */}
+        <a
+          href="/api/admin/products/export-template"
+          className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+        >
+          <FileText className="w-4 h-4 text-emerald-500" />
+          Download Smart Template
+        </a>
 
         {/* Export Dropdown */}
         <div className="relative">
@@ -321,14 +363,14 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                 </div>
                 <div>
                   <h2 className="text-base font-black text-zinc-900 dark:text-white tracking-tight">
-                    {modalState === "upload" && "Import Products via CSV"}
+                    {modalState === "upload" && "Import Products via CSV or Excel"}
                     {modalState === "preview" && "Review Import Changes"}
                     {modalState === "importing" && "Processing Import…"}
                     {modalState === "done" && "Import Complete"}
                   </h2>
                   <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">
                     {modalState === "preview" && fileName}
-                    {modalState === "upload" && "Upload a .csv file to add or update products in bulk"}
+                    {modalState === "upload" && "Upload a .csv or .xlsx file to add or update products in bulk"}
                     {modalState === "done" && "Firestore has been updated successfully"}
                   </p>
                 </div>
@@ -358,16 +400,16 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                       : "border-zinc-200 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                   }`}
                 >
-                  <input ref={fileRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" id="csv-file-input" />
+                  <input ref={fileRef} type="file" accept=".csv, .xlsx" onChange={handleFileChange} className="hidden" id="csv-file-input" />
                   <div className="flex flex-col items-center gap-4">
                     <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors ${isDragging ? "bg-blue-500" : "bg-zinc-100 dark:bg-zinc-800"}`}>
                       <FileText className={`w-7 h-7 transition-colors ${isDragging ? "text-white" : "text-zinc-400"}`} />
                     </div>
                     <div>
                       <p className="text-sm font-black text-zinc-700 dark:text-zinc-200">
-                        {isDragging ? "Drop it here!" : "Drag & drop your CSV, or click to browse"}
+                        {isDragging ? "Drop it here!" : "Drag & drop your CSV or Excel file, or click to browse"}
                       </p>
-                      <p className="text-xs text-zinc-400 mt-1">Only .csv files are supported</p>
+                      <p className="text-xs text-zinc-400 mt-1">.csv and .xlsx files are supported</p>
                     </div>
                   </div>
                 </div>

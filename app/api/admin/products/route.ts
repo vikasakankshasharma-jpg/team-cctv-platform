@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
         ...data,
         unit_price: data.price || data.unit_price || 0,
         category: data.category || "accessory", // Default to accessory if not set
-        technology: data.technology || "both"
+        technologies: data.technology ? [data.technology] : ["Common"]
       } as any as Product);
     });
 

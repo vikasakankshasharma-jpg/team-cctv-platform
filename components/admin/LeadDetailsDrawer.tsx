@@ -37,14 +37,17 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, lead?.id]);
 
-  const handleAddActivity = async (type: "note" | "call" | "site_visit") => {
+  const handleAddActivity = async (type: "note" | "call" | "call_attempted" | "site_visit") => {
     if (!lead?.id) return;
     if (type === "note" && !noteContent.trim()) {
       toast.error("Please enter a note.");
       return;
     }
     
-    const content = type === "note" ? noteContent : `Logged a ${type}`;
+    const content = type === "note" ? noteContent : 
+                    type === "call" ? "Call Connected successfully" :
+                    type === "call_attempted" ? "Call Attempted (No Answer/Busy)" :
+                    `Logged a ${type}`;
     
     const res = await addLeadActivity(lead.id, {
       type,
@@ -55,6 +58,9 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
     
     if (res.success) {
       toast.success("Activity logged");
+      if (res.newStatus) {
+        toast.success(`Lead automatically advanced to ${res.newStatus.replace('_', ' ').toUpperCase()}`);
+      }
       setNoteContent("");
       loadActivities();
     } else {
@@ -141,7 +147,25 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
                     {Object.entries(lead.wizard_answers).map(([key, val]: [string, any]) => (
                       <div key={key} className="flex justify-between p-3 rounded-lg bg-card border border-border text-sm">
                         <span className="text-muted-foreground font-medium">{key.replace("q_", "").replace(/_/g, " ")}</span>
-                        <span className="font-semibold text-right max-w-[50%]">{String(val)}</span>
+                        <div className="font-semibold text-right max-w-[50%]">
+                          {Array.isArray(val) ? (
+                            val.length > 0 && typeof val[0] === 'object' ? (
+                              <div className="flex flex-col gap-1 text-xs">
+                                {val.map((item, i) => (
+                                  <div key={i} className="bg-secondary/50 p-1.5 rounded-md">
+                                    {Object.entries(item).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              val.join(', ')
+                            )
+                          ) : typeof val === 'object' && val !== null ? (
+                            <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(val, null, 2)}</pre>
+                          ) : (
+                            String(val)
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -178,11 +202,11 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
                 activities.map(act => (
                   <div key={act.id} className="relative pl-6 pb-2 border-l-2 border-border last:border-transparent last:pb-0">
                     <div className={`absolute -left-2 top-0 w-4 h-4 rounded-full border-4 border-background 
-                      ${act.type === 'note' ? 'bg-blue-500' : act.type === 'call' ? 'bg-green-500' : act.type === 'system' ? 'bg-zinc-500' : 'bg-primary'}
+                      ${act.type === 'note' ? 'bg-blue-500' : act.type === 'call' ? 'bg-green-500' : act.type === 'call_attempted' ? 'bg-orange-500' : act.type === 'system' ? 'bg-zinc-500' : 'bg-primary'}
                     `} />
                     <div className="bg-card border border-border rounded-lg p-3 shadow-sm">
                       <div className="flex justify-between items-start mb-1">
-                        <span className="text-xs font-bold capitalize text-muted-foreground">{act.type}</span>
+                        <span className="text-xs font-bold capitalize text-muted-foreground">{act.type.replace('_', ' ')}</span>
                         <span className="text-[10px] text-muted-foreground">{new Date(act.created_at as string).toLocaleString()}</span>
                       </div>
                       <p className="text-sm font-medium">{act.content}</p>
@@ -196,10 +220,13 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
             {/* Input Box */}
             <div className="p-4 border-t border-border bg-card">
               <div className="flex gap-2 mb-2">
-                <Button size="sm" variant="outline" onClick={() => handleAddActivity("call")} className="text-xs font-semibold h-8 border-green-500/30 text-green-600 bg-green-500/5 hover:bg-green-500/10">
-                  <Phone className="w-3 h-3 mr-1.5" /> Log Call
+                <Button size="sm" variant="outline" onClick={() => handleAddActivity("call")} className="text-xs font-semibold h-8 border-green-500/30 text-green-600 bg-green-500/5 hover:bg-green-500/10 px-2">
+                  <Phone className="w-3 h-3 mr-1.5" /> Call Connected
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleAddActivity("site_visit")} className="text-xs font-semibold h-8 border-purple-500/30 text-purple-600 bg-purple-500/5 hover:bg-purple-500/10">
+                <Button size="sm" variant="outline" onClick={() => handleAddActivity("call_attempted")} className="text-xs font-semibold h-8 border-orange-500/30 text-orange-600 bg-orange-500/5 hover:bg-orange-500/10 px-2">
+                  <Phone className="w-3 h-3 mr-1.5 opacity-60" /> Call Attempted
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleAddActivity("site_visit")} className="text-xs font-semibold h-8 border-purple-500/30 text-purple-600 bg-purple-500/5 hover:bg-purple-500/10 px-2">
                   <MapPin className="w-3 h-3 mr-1.5" /> Site Visit
                 </Button>
               </div>

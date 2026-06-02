@@ -231,8 +231,8 @@ export function PlanCard({
               <div className="space-y-2.5 pt-2">
                 {[
                   { label: "Core Hardware", val: pricing.base_hardware_cost },
-                  { label: "Infrastructure", val: pricing.cabling_cost },
-                  { label: "Execution Fee", val: pricing.labor_cost },
+                  ...(pricing.cabling_cost > 0 ? [{ label: "Infrastructure", val: pricing.cabling_cost }] : []),
+                  ...(pricing.labor_cost > 0 ? [{ label: "Execution Fee", val: pricing.labor_cost }] : []),
                   ...(pricing.addons_total > 0 ? [{ label: "Selected Extras", val: pricing.addons_total, color: "text-blue-600" }] : []),
                   ...(pricing.referral_discount > 0 ? [{ label: "Loyalty Credit", val: -pricing.referral_discount, color: "text-emerald-600" }] : []),
                 ].map((row, i) => (

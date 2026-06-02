@@ -1,4 +1,4 @@
-export type Technology = "HD" | "IP" | "WiFi" | "Solar" | "4G";
+export type Technology = "HD" | "IP" | "Wireless" | "Common";
 export type PlanType = "budget" | "recommended" | "premium";
 export type WizardAnswers = Record<string, unknown>;
 
@@ -32,7 +32,7 @@ export interface Job {
 export interface LeadActivity {
   id?: string;
   lead_id: string;
-  type: "note" | "call" | "email" | "site_visit" | "status_change" | "system";
+  type: "note" | "call" | "call_attempted" | "email" | "site_visit" | "status_change" | "system";
   content: string;
   created_by_id: string;
   created_by_name: string;
@@ -69,7 +69,7 @@ export interface Lead {
   mobile_number: string;
   firebase_uid?: string; // Link to authenticated customer
   property_type: "home" | "office" | "warehouse" | "bungalow";
-  technology_choice: "HD" | "IP" | "WiFi" | "Solar" | "4G";
+  technology_choice: Technology;
   cabling_done: boolean;
   address?: Address; // Added for Site Details
   wizard_answers: Record<string, unknown>;
@@ -91,7 +91,7 @@ export interface Lead {
   // CRM Features
   next_followup_date?: string | null; // ISO Date String (YYYY-MM-DD)
   
-  status: "new" | "contacted" | "site_visit" | "quoted" | "won" | "lost";
+  status: "new" | "attempted" | "contacted" | "site_visit" | "quoted" | "won" | "lost" | "unreachable" | "busy" | "technical_error";
   created_at: unknown;
   updated_at?: unknown;
   site_visit_date?: unknown;
@@ -150,8 +150,8 @@ export interface Product {
   id?: string;
   technical_name: string;
   display_name: string;
-  category: "camera" | "recorder" | "accessory" | "cable";
-  technology: "HD" | "IP" | "Common" | "WiFi" | "4G" | "Solar";
+  category: "camera" | "recorder" | "accessory" | "cable" | "network" | "power_device" | "storage";
+  technologies: Technology[];
   base_cost?: number;            // Cost to business
   margin_percentage?: number;    // Expected profit margin
   unit_price: number;            // Computed or manual final selling price
@@ -278,6 +278,7 @@ export interface MixedCameraRequirement {
   count: number;
   resolution?: string; // Optional specific resolution override e.g. "4MP", "8MP"
   technology?: string; // Optional tech override if mixed
+  features?: string[]; // NEW: Specific features required for this bucket
 }
 
 export interface ConfiguratorSelection {
@@ -293,6 +294,7 @@ export interface ConfiguratorSelection {
   selected_storage_id?: string;    // Specific storage/HDD ID override
   selected_power_id?: string;      // Specific power/transmission ID override
   mixed_camera_requirements?: MixedCameraRequirement[]; // NEW: For advanced mixed configuration
+  selected_mixed_camera_ids?: Record<string, string>; // NEW: Maps mixed camera requirement types to pinned camera IDs
   
   // NEW FIELDS FROM WIZARD REDESIGN
   surface_types?: string[];
@@ -306,6 +308,9 @@ export interface ConfiguratorSelection {
   focus_point?: "price" | "quality";
   max_budget?: number | null;
   property_type?: "home" | "office" | "warehouse" | "bungalow"; // Added for smart recommendations
+  cable_length_meters?: number;
+  cable_type?: "cat6" | "coaxial";
+  wiring_type?: "open" | "conduit";
 }
 
 export interface QuoteLineItem {
@@ -386,6 +391,8 @@ export interface AppSettings {
   cable_copper_coated_ip: number;
   cable_copper_coated_hd: number;
   cable_pure_copper: number;
+  connector_rj45_cost: number;
+  connector_bnc_dc_cost: number;
   cable_overage_per_mtr: number;
   visit_charge: number;
   amc_1yr_pct: number;
@@ -401,6 +408,8 @@ export interface AppSettings {
   bank_details?: string | null;
   custom_terms?: string | null;
   pdf_terms?: string | null;
+
+  conduit_cost_per_meter?: number;
 
   updated_at?: unknown;
   updated_by?: string | null;

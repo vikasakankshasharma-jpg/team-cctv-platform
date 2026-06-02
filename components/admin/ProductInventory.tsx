@@ -132,7 +132,7 @@ function SubCategoryGroup({
                         </Badge>
                       )}
                       <Badge variant="secondary" className="text-[9px]">
-                        {p.technology || "HD"}
+                        {p.technologies?.join(', ') || "HD"}
                       </Badge>
                     </div>
                   </td>
@@ -300,7 +300,7 @@ export function ProductInventory({ products, onEdit, onToggle, onFiltersChange }
         p.technical_name?.toLowerCase().includes(q) ||
         (p.brand || "").toLowerCase().includes(q);
       const matchCat    = filterCat === "all"    || (p.category || "addon") === filterCat;
-      const matchTech   = filterTech === "all"   || p.technology === filterTech;
+      const matchTech   = filterTech === "all"   || p.technologies?.includes(filterTech as any);
       const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
       const matchBrand  = filterBrand === "all"  || p.brand === filterBrand;
       return matchSearch && matchCat && matchTech && matchStatus && matchBrand;

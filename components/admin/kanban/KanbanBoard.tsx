@@ -16,10 +16,15 @@ interface KanbanBoardProps {
 
 const COLUMNS = [
   { id: "new", title: "Incoming", color: "bg-blue-500/10 border-blue-200 text-blue-700" },
+  { id: "attempted", title: "Attempted", color: "bg-orange-500/10 border-orange-200 text-orange-700" },
   { id: "contacted", title: "Contacted", color: "bg-amber-500/10 border-amber-200 text-amber-700" },
+  { id: "unreachable", title: "Unreachable", color: "bg-rose-500/10 border-rose-200 text-rose-700" },
+  { id: "busy", title: "Busy", color: "bg-yellow-500/10 border-yellow-200 text-yellow-700" },
+  { id: "technical_error", title: "Technical Error", color: "bg-red-500/10 border-red-200 text-red-700" },
   { id: "site_visit", title: "Site Visit", color: "bg-purple-500/10 border-purple-200 text-purple-700" },
-  { id: "quoted", title: "Quoted", color: "bg-zinc-500/10 border-zinc-200 text-zinc-700" },
+  { id: "quoted", title: "Re-Quote", color: "bg-zinc-500/10 border-zinc-200 text-zinc-700" },
   { id: "won", title: "Won", color: "bg-emerald-500/10 border-emerald-200 text-emerald-700" },
+  { id: "lost", title: "Lost", color: "bg-red-500/10 border-red-200 text-red-700" },
 ];
 
 export function KanbanBoard({ leads, onStatusChange, isAdmin, onLeadClick }: KanbanBoardProps) {

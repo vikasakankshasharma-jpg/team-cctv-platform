@@ -99,7 +99,7 @@ export default function AdminProductsPage() {
       technical_name: "",
       brand: "",
       category: "camera",
-      technology: "HD",
+      technologies: ["HD"],
       is_active: true,
       base_cost: 0,
       margin_percentage: 15,
@@ -343,13 +343,16 @@ export default function AdminProductsPage() {
                           <option value="recorder">Recorder Unit</option>
                           <option value="accessory">Hardware Accessory</option>
                           <option value="cable">Transmission Line</option>
+                          <option value="storage">Storage / HDD</option>
+                          <option value="power_device">Power Supply / UPS</option>
+                          <option value="network">Network & Switches</option>
                         </select>
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Technology</label>
                         <select 
-                          value={editingProduct.technology || "both"}
-                          onChange={e => setEditingProduct({...editingProduct, technology: e.target.value as any})}
+                          value={editingProduct.technologies?.[0] || "Common"}
+                          onChange={e => setEditingProduct({...editingProduct, technologies: [e.target.value as any]})}
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
                         >
                           <option value="HD">Analog HD</option>
@@ -527,6 +530,32 @@ export default function AdminProductsPage() {
                             <input type="checkbox" checked={!!editingProduct.has_sd_slot} onChange={e => setEditingProduct({...editingProduct, has_sd_slot: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
                             <span className="text-xs font-semibold text-foreground">SD Slot</span>
                           </label>
+                        </div>
+
+                        {/* Special Features / Wizard Tags */}
+                        <div className="col-span-1 md:col-span-3 mt-4 p-4 border border-border rounded-xl bg-muted/20">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">Special Features / Wizard Tags</label>
+                          <div className="flex flex-wrap gap-2">
+                            {["color", "audio", "ptz", "solar", "4g"].map(feat => (
+                              <label key={feat} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${editingProduct.features?.includes(feat) ? 'bg-primary/10 border-primary text-primary' : 'bg-background border-border text-foreground hover:bg-muted'}`}>
+                                <input 
+                                  type="checkbox" 
+                                  className="sr-only"
+                                  checked={editingProduct.features?.includes(feat) || false}
+                                  onChange={e => {
+                                    const current = editingProduct.features || [];
+                                    if (e.target.checked) {
+                                      setEditingProduct({ ...editingProduct, features: [...current, feat] });
+                                    } else {
+                                      setEditingProduct({ ...editingProduct, features: current.filter(f => f !== feat) });
+                                    }
+                                  }}
+                                />
+                                <span className="text-xs font-semibold capitalize">{feat === "4g" ? "4G / SIM" : feat}</span>
+                              </label>
+                            ))}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-2">These tags are used by the pricing engine to filter products during the wizard flow.</p>
                         </div>
                       </div>
                     )}

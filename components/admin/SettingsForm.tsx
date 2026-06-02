@@ -185,6 +185,22 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
 
             <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Conduit Pipe Rate</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
+                <input 
+                  required
+                  type="number" 
+                  name="conduit_cost_per_meter"
+                  value={formData.conduit_cost_per_meter || 20}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl pl-8 pr-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px] font-medium uppercase tracking-wider">/ m</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Labor: Fitting Only</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
@@ -383,6 +399,20 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Cable: Pure Copper</label>
               <input 
                 type="number" name="cable_pure_copper" value={formData.cable_pure_copper} onChange={handleChange}
+                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-warning/20 outline-none transition-all font-medium" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Connector: RJ45 (Per Pair)</label>
+              <input 
+                type="number" name="connector_rj45_cost" value={formData.connector_rj45_cost} onChange={handleChange}
+                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-warning/20 outline-none transition-all font-medium" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Connector: BNC/DC (Per Set)</label>
+              <input 
+                type="number" name="connector_bnc_dc_cost" value={formData.connector_bnc_dc_cost} onChange={handleChange}
                 className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-warning/20 outline-none transition-all font-medium" 
               />
             </div>
