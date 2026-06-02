@@ -173,6 +173,9 @@ export default async function QuoteResultPage({
     labor_hd_per_camera: 800,
     cable_copper_coated_ip: 45,
     cable_copper_coated_hd: 35,
+    cable_pure_copper: 65,
+    connector_rj45_cost: 25,
+    connector_bnc_dc_cost: 70,
     visit_charge: 500
   } as AppSettings;
 
@@ -192,24 +195,33 @@ export default async function QuoteResultPage({
   
   if (leadPincode && leadPincode.length === 6) {
     // 1. Check if the exact pincode is already covered by an active hub
-    const isServed = hubs.some(hub => hub.pincode_coverage?.includes(leadPincode));
+    let isServed = hubs.some(hub => hub.pincode_coverage?.includes(leadPincode));
 
-    if (!isServed) {
-      // Check hardcoded regions first as fallbacks or exact maps
-      if (leadPincode.startsWith("342")) unservedCityName = "Jodhpur";
-      else if (leadPincode.startsWith("324")) unservedCityName = "Kota";
-      else if (leadPincode.startsWith("305")) unservedCityName = "Ajmer";
-      else unservedCityName = (lead.wizard_answers?.lead_city as string) || "Your Area"; // fallback city
-
-      // Compute exact distance
-      const customerCoords = getPincodeCoordinates(leadPincode);
-      if (customerCoords) {
-        const nearest = findNearestHub(customerCoords, hubs);
-        if (nearest) {
+    // 2. Check distance to nearest active hub dynamically
+    const customerCoords = getPincodeCoordinates(leadPincode);
+    if (customerCoords) {
+      const nearest = findNearestHub(customerCoords, hubs);
+      if (nearest) {
+        if (nearest.distanceKm <= 40) {
+          isServed = true; // Served if within 40km of any active hub
+        } else {
           nearestHubName = nearest.hub.city_name || nearest.hub.name;
           distanceKm = nearest.distanceKm;
         }
       }
+    }
+
+    // 3. Fallback: If it's a Jaipur pincode (302xxx) but not explicitly covered, still consider it served
+    if (!isServed && leadPincode.startsWith("302")) {
+      isServed = true;
+    }
+
+    if (!isServed) {
+      // It's unserved. Set the unserved city name for the banner.
+      if (leadPincode.startsWith("342")) unservedCityName = "Jodhpur";
+      else if (leadPincode.startsWith("324")) unservedCityName = "Kota";
+      else if (leadPincode.startsWith("305")) unservedCityName = "Ajmer";
+      else unservedCityName = (lead.wizard_answers?.lead_city as string) || "Your Area";
     }
   }
 

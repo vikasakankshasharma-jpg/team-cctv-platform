@@ -23,7 +23,7 @@ test.describe('Intense Admin Flow E2E', () => {
     await expect(page).toHaveURL(/\/admin\/leads/);
     // Wait for leads to populate in either Table view or Kanban view
     const tableHeader = page.locator('th', { hasText: 'Customer' }).first();
-    const emptyState = page.locator('text=No Leads Found').first();
+    const emptyState = page.locator('text=No results found').first();
     const kanbanHeader = page.locator('h3', { hasText: 'Contacted' }).first();
     
     await Promise.any([

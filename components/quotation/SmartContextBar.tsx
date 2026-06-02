@@ -22,6 +22,28 @@ interface SmartContextBarProps {
 export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierName, isCustomized, onAction, isSaving, lead, quote, settings }: SmartContextBarProps) {
   const { selection } = useConfiguratorStore();
 
+  let storageText = selection.recording_days > 0 ? `${selection.recording_days} Days` : "No Storage";
+  let storageTextMobile = selection.recording_days > 0 ? `${selection.recording_days}d` : "None";
+  
+  if (quote?.items) {
+    const storageItem = quote.items.find((i: any) => 
+      i.display_name.toLowerCase().includes('hard disk') || 
+      i.display_name.toLowerCase().includes('hdd') || 
+      i.display_name.toLowerCase().includes('sd card') ||
+      i.display_name.toLowerCase().includes('storage')
+    );
+    if (storageItem) {
+      const match = storageItem.display_name.match(/(\d+(?:\.\d+)?\s*(?:TB|GB))/i);
+      if (match) {
+        storageText = `${match[1].toUpperCase()}`;
+        storageTextMobile = match[1].toUpperCase();
+      } else {
+        storageText = "Custom Storage";
+        storageTextMobile = "Storage";
+      }
+    }
+  }
+
   return (
     <div className="fixed bottom-0 left-0 w-full z-50 bg-[#fbfbfd]/80 dark:bg-[#1d1d1f]/80 backdrop-blur-2xl border-t border-[#d2d2d7]/50 dark:border-[#424245]/50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -40,7 +62,7 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
             <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">Storage</span>
             <div className="flex items-center gap-1.5 mt-0.5">
               <HardDrive className="w-3.5 h-3.5" />
-              <span className="text-sm font-medium">{selection.recording_days} Days</span>
+              <span className="text-sm font-medium">{storageText}</span>
             </div>
           </div>
 
@@ -80,7 +102,7 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
           <div className="w-px h-4 bg-[#d2d2d7] dark:bg-[#424245]" />
           <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#86868b]">
             <HardDrive className="w-3 h-3" />
-            <span>{selection.recording_days}d</span>
+            <span>{storageTextMobile}</span>
           </div>
           {customizationDiff !== 0 && (
             <>

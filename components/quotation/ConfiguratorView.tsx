@@ -460,7 +460,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             </div>
             <div className="flex flex-nowrap md:flex-wrap md:flex-row gap-4 md:gap-8 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 no-scrollbar">
               <div className="w-[90vw] md:w-full lg:w-[35%] shrink-0 snap-center order-1">
-                <BaseQuoteSummary />
+                <BaseQuoteSummary activePricing={activePricing} />
               </div>
               <div className="w-[90vw] md:w-full lg:w-[62%] shrink-0 snap-center order-2">
                 <FullCustomizerPanel />

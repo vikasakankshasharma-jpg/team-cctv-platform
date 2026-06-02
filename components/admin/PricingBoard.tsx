@@ -141,10 +141,10 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
   // ─── Render Helpers ────────────────────────────────────────────────
 
   const categories = [
-    { name: "IP Recorders", filter: (p: Product) => p.category === "recorder" && p.technology === "IP", icon: Monitor },
-    { name: "HD Recorders", filter: (p: Product) => p.category === "recorder" && p.technology === "HD", icon: HardDrive },
-    { name: "IP Cameras", filter: (p: Product) => p.category === "camera" && p.technology === "IP", icon: Camera },
-    { name: "HD Cameras", filter: (p: Product) => p.category === "camera" && p.technology === "HD", icon: Camera },
+    { name: "IP Recorders", filter: (p: Product) => p.category === "recorder" && p.technologies?.includes("IP"), icon: Monitor },
+    { name: "HD Recorders", filter: (p: Product) => p.category === "recorder" && p.technologies?.includes("HD"), icon: HardDrive },
+    { name: "IP Cameras", filter: (p: Product) => p.category === "camera" && p.technologies?.includes("IP"), icon: Camera },
+    { name: "HD Cameras", filter: (p: Product) => p.category === "camera" && p.technologies?.includes("HD"), icon: Camera },
     { name: "Storage (HDD)", filter: (p: Product) => p.category === "accessory" && p.technical_name.toLowerCase().includes("hdd"), icon: HardDrive },
     { name: "Accessories & Cable", filter: (p: Product) => (p.category === "accessory" || p.category === "cable") && !p.technical_name.toLowerCase().includes("hdd"), icon: Cable },
   ];

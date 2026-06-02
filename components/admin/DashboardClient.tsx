@@ -38,13 +38,16 @@ export interface DashboardClientProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  new:        "sp-new",
-  contacted:  "sp-new",
-  site_visit: "sp-site",
-  quoted:     "sp-quote",
-  won:        "sp-won",
-  lost:       "sp-lost",
-  waitlist:   "sp-waitlist",
+  new:             "sp-new",
+  contacted:       "sp-new",
+  unreachable:     "bg-rose-500/10 text-rose-500 border-rose-500/20",
+  busy:            "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  technical_error: "bg-red-500/10 text-red-500 border-red-500/20",
+  site_visit:      "sp-site",
+  quoted:          "sp-quote",
+  won:             "sp-won",
+  lost:            "sp-lost",
+  waitlist:        "sp-waitlist",
 };
 
 // ─── RECHARTS TOOLTIP ─────────────────────────────────────────────────────────────

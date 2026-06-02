@@ -23,6 +23,8 @@ const RATE_FIELDS: { key: keyof AppSettings; label: string; unit: string; descri
   { key: "labor_ip_per_camera",        label: "IP Labor / Camera",         unit: "₹",  description: "Installation cost per IP camera" },
   { key: "cable_copper_coated_hd",     label: "HD Cable / Meter",          unit: "₹",  description: "Copper-coated coax cable cost" },
   { key: "cable_copper_coated_ip",     label: "IP Cable / Meter",          unit: "₹",  description: "CAT6 cable cost per meter" },
+  { key: "connector_rj45_cost",        label: "RJ45 Connectors (Pair)",    unit: "₹",  description: "Cost per pair of RJ45 connectors" },
+  { key: "connector_bnc_dc_cost",      label: "BNC/DC Connectors (Set)",   unit: "₹",  description: "Cost per set of BNC/DC connectors" },
   { key: "high_reach_fee",             label: "High-Reach Fee",            unit: "₹",  description: "Extra fee for ceiling > 12ft" },
   { key: "amc_1yr_pct",                label: "AMC 1-Year %",              unit: "%",  description: "% of hardware cost for annual AMC" },
   { key: "gst_rate",                   label: "GST Rate",                  unit: "%",  description: "GST applied on net taxable amount" },

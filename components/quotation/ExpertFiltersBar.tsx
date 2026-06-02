@@ -18,7 +18,7 @@ export function ExpertFiltersBar() {
     const brands = new Set<string>();
     products.forEach(p => {
       if (p.category === "camera" && p.brand && p.is_active) {
-        if (selection.technology && selection.technology !== "both" && p.technology !== selection.technology) return;
+        if (selection.technology && selection.technology !== "both" && !p.technologies?.includes(selection.technology as any)) return;
         brands.add(p.brand);
       }
     });
@@ -29,7 +29,7 @@ export function ExpertFiltersBar() {
     const res = new Set<string>();
     products.forEach(p => {
       if (p.category === "camera" && p.resolution_mp && p.is_active) {
-        if (selection.technology && selection.technology !== "both" && p.technology !== selection.technology) return;
+        if (selection.technology && selection.technology !== "both" && !p.technologies?.includes(selection.technology as any)) return;
         // Extract standard megapixel formats like "2MP", "4MP", "5MP"
         const cleanRes = String(p.resolution_mp).toUpperCase().trim();
         if (cleanRes) res.add(cleanRes);

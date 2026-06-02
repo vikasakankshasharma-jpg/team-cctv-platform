@@ -110,6 +110,8 @@ export const GenerateQuoteSchema = z.object({
   property_type: z.string().nullable().optional(),
   requested_features: z.array(z.string()).nullable().optional(),
   max_budget: z.number().nullable().optional(),
+  cable_length_meters: z.number().nullable().optional(),
+  wiring_type: z.enum(["open", "conduit"]).nullable().optional(),
 });
 
 export type GenerateQuoteInput = z.infer<typeof GenerateQuoteSchema>;
@@ -400,6 +402,7 @@ export const UpdateSettingsSchema = z.object({
   labor_fitting_only_rate: MoneySchema.optional(),
   labor_full_installation_rate: MoneySchema.optional(),
   wire_cost_per_meter: MoneySchema.optional(),
+  conduit_cost_per_meter: MoneySchema.optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof UpdateSettingsSchema>;

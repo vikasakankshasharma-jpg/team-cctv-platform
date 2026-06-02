@@ -22,9 +22,22 @@ export default async function DispatchPage() {
     adminDb.collection("installers").where("is_active", "==", true).get()
   ]);
 
-  const jobs = jobsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Job[];
-  const hubs = hubsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Hub[];
-  const installers = installersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Installer[];
+  const serializeDoc = (doc: any) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      created_at: data.created_at?.toDate?.()?.toISOString() || data.created_at || null,
+      updated_at: data.updated_at?.toDate?.()?.toISOString() || data.updated_at || null,
+      scheduled_at: data.scheduled_at?.toDate?.()?.toISOString() || data.scheduled_at || null,
+      sla_breach_at: data.sla_breach_at?.toDate?.()?.toISOString() || data.sla_breach_at || null,
+      last_active: data.last_active?.toDate?.()?.toISOString() || data.last_active || null,
+    };
+  };
+
+  const jobs = jobsSnap.docs.map(serializeDoc) as Job[];
+  const hubs = hubsSnap.docs.map(serializeDoc) as Hub[];
+  const installers = installersSnap.docs.map(serializeDoc) as Installer[];
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 h-[calc(100vh-6rem)] flex flex-col">

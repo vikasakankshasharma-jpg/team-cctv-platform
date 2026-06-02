@@ -196,9 +196,10 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
                   className="w-full h-12 px-4 bg-background border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 font-medium capitalize"
                 >
                   <option value="new">New</option>
+                  <option value="attempted">Attempted</option>
                   <option value="contacted">Contacted</option>
                   <option value="site_visit">Site Visit</option>
-                  <option value="quoted">Quoted</option>
+                  <option value="quoted">Re-Quoted</option>
                   <option value="won">Won</option>
                   <option value="lost">Lost</option>
                 </select>

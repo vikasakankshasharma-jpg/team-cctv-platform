@@ -23,12 +23,14 @@ test.describe('Intense Salesperson Flow E2E', () => {
     await expect(page.locator('text=My Leads').first()).toBeVisible({ timeout: 15000 });
     
     // Test that the view doesn't throw permission denied by waiting for the table
-    const tableHeader = page.locator('th', { hasText: 'Status' }).first();
-    const emptyState = page.locator('text=No leads assigned').first();
+    const tableHeader = page.locator('th', { hasText: 'Customer' }).first();
+    const emptyState = page.locator('text=No results found').first();
+    const kanbanHeader = page.locator('h3', { hasText: 'Contacted' }).first();
     
     await Promise.any([
       expect(tableHeader).toBeVisible({ timeout: 15000 }),
-      expect(emptyState).toBeVisible({ timeout: 15000 })
+      expect(emptyState).toBeVisible({ timeout: 15000 }),
+      expect(kanbanHeader).toBeVisible({ timeout: 15000 })
     ]);
   });
 

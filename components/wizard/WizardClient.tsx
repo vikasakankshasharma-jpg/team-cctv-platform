@@ -105,7 +105,28 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
   // Use store steps if loaded, otherwise fall back to SSR initialSteps while the
   // store hydrates — prevents the error flash before the useEffect runs.
-  const effectiveSteps = steps.length > 0 ? steps : (initialSteps || []);
+  let effectiveSteps = steps.length > 0 ? steps : (initialSteps || []);
+
+  // Filter steps and questions dynamically
+  effectiveSteps = effectiveSteps.map(step => {
+    let filteredQuestions = step.questions || [];
+
+    // Hide "q_wiring_type" if cabling is already done
+    if (step.id === "step_wiring" && answers["q_wiring"] === "true") {
+      filteredQuestions = filteredQuestions.filter((q: any) => q.id !== "q_wiring_type");
+    }
+
+    return {
+      ...step,
+      questions: filteredQuestions
+    };
+  }).filter(s => {
+    // Forcefully remove step_features as it's redundant
+    if (s.id === "step_features") return false;
+    // Filter out Wiring step if technology is Wireless
+    if (s.id === "step_wiring" && answers["q_tech"] === "Wireless") return false;
+    return true;
+  });
 
   if (loading) {
     return (
@@ -139,8 +160,9 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     );
   }
 
-  const currentStep = effectiveSteps[current_step_index] || effectiveSteps[0];
-  const isLastStep = current_step_index === effectiveSteps.length - 1;
+  const safe_step_index = Math.min(current_step_index, effectiveSteps.length - 1);
+  const currentStep = effectiveSteps[safe_step_index] || effectiveSteps[0];
+  const isLastStep = safe_step_index === effectiveSteps.length - 1;
 
   // Handle Option Click
   const handleOptionSelect = (questionId: string, optionValue: string, isMulti: boolean) => {
@@ -170,19 +192,26 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       setAnswer(questionId, optionValue);
       
       // UX enhancement: Smart Auto-Navigate
-      const qIndex = currentStep.questions?.findIndex((q: WizardQuestion) => q.id === questionId) ?? -1;
-      const isLastQuestionInStep = qIndex === (currentStep.questions?.length || 0) - 1;
       
-      if (!isLastQuestionInStep) {
+      // Compute what the questions will look like AFTER this answer
+      let futureQuestions = currentStep.questions || [];
+      if (currentStep.id === "step_wiring" && newAnswers["q_wiring"] === "true") {
+        futureQuestions = futureQuestions.filter((q: any) => q.id !== "q_wiring_type");
+      }
+
+      const qIndex = futureQuestions.findIndex((q: WizardQuestion) => q.id === questionId);
+      const isLastQuestionInStep = qIndex === futureQuestions.length - 1;
+      
+      if (!isLastQuestionInStep && qIndex !== -1) {
         // Scroll to the next question on the same page
-        const nextQId = currentStep.questions![qIndex + 1].id;
+        const nextQId = futureQuestions[qIndex + 1].id;
         setTimeout(() => {
           document.getElementById(`question-${nextQId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 300);
-      } else {
+      } else if (isLastQuestionInStep) {
         // Last question in the step: verify all required are answered before auto-advancing to next step
         let isValid = true;
-        currentStep.questions?.forEach((q: WizardQuestion) => {
+        futureQuestions.forEach((q: WizardQuestion) => {
           if (q.is_required) {
             const ans = newAnswers[q.id!];
             if (!ans || (Array.isArray(ans) && ans.length === 0)) {
@@ -194,7 +223,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         if (isValid && !isLastStep) {
           setTimeout(() => {
             trackEvent("wizard_step_complete", {
-              step_index: current_step_index,
+              step_index: safe_step_index,
               step_title: currentStep.title,
             });
             nextStep();
@@ -255,7 +284,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       }
     } else {
       trackEvent("wizard_step_complete", {
-        step_index: current_step_index,
+        step_index: safe_step_index,
         step_title: currentStep.title,
       });
       nextStep();
@@ -291,7 +320,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     if (hypotheticalAnswers["q_tech"]) {
        const tech = hypotheticalAnswers["q_tech"] as string;
        if (tech) {
-         pool = pool.filter(p => p.technology?.toLowerCase() === tech.toLowerCase());
+         pool = pool.filter(p => p.technologies?.some(t => t.toLowerCase() === tech.toLowerCase()));
        }
     }
 
@@ -382,74 +411,43 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
           >
             {currentStep.questions?.map((q: WizardQuestion) => {
             if (q.input_type === "number") {
-              const mixType = (answers["camera_mix_type"] as string) || "indoor";
-              const currentVal = answers[q.id!] !== undefined ? (answers[q.id!] as string) : "";
-              const indoorCount = answers["indoor_count"] !== undefined ? (answers["indoor_count"] as string) : "1";
-              const outdoorCount = answers["outdoor_count"] !== undefined ? (answers["outdoor_count"] as string) : "1";
-
-              const handleMixTypeChange = (type: "indoor" | "outdoor" | "mix") => {
-                setAnswer("camera_mix_type", type);
-                if (type === "indoor") {
-                  setAnswer("mixed_camera_requirements", [{ type: "Standard Indoor", count: parseInt(currentVal || "1") }]);
-                } else if (type === "outdoor") {
-                  setAnswer("mixed_camera_requirements", [{ type: "Standard Outdoor", count: parseInt(currentVal || "1") }]);
-                } else {
-                  const inC = parseInt(indoorCount);
-                  const outC = parseInt(outdoorCount);
-                  setAnswer(q.id!, String(inC + outC));
-                  setAnswer("mixed_camera_requirements", [
-                    { type: "Standard Indoor", count: inC },
-                    { type: "Standard Outdoor", count: outC }
-                  ]);
-                }
+              const buckets = (answers["mixed_camera_requirements"] as any[]) || [{ type: "Standard Indoor", count: 1, features: [] }];
+              
+              const updateBucket = (index: number, field: string, value: any) => {
+                const newBuckets = [...buckets];
+                newBuckets[index] = { ...newBuckets[index], [field]: value };
+                setAnswer("mixed_camera_requirements", newBuckets);
+                setAnswer(q.id!, String(newBuckets.reduce((sum, b) => sum + (parseInt(b.count) || 0), 0)));
               };
 
-              const handleCountChange = (valStr: string, type: "total" | "indoor" | "outdoor") => {
-                const parsed = parseInt(valStr);
-                const safeVal = isNaN(parsed) ? 1 : Math.max(1, Math.min(16, parsed));
-                
-                if (type === "total") {
-                  setAnswer(q.id!, valStr); // allow typing
-                  if (!isNaN(parsed)) {
-                    if (mixType === "indoor") {
-                      setAnswer("mixed_camera_requirements", [{ type: "Standard Indoor", count: safeVal }]);
-                    } else if (mixType === "outdoor") {
-                      setAnswer("mixed_camera_requirements", [{ type: "Standard Outdoor", count: safeVal }]);
-                    }
-                  }
-                } else if (type === "indoor") {
-                  setAnswer("indoor_count", valStr);
-                  if (!isNaN(parsed)) {
-                    const outC = parseInt(outdoorCount) || 1;
-                    setAnswer(q.id!, String(safeVal + outC));
-                    setAnswer("mixed_camera_requirements", [
-                      { type: "Standard Indoor", count: safeVal },
-                      { type: "Standard Outdoor", count: outC }
-                    ]);
-                  }
-                } else if (type === "outdoor") {
-                  setAnswer("outdoor_count", valStr);
-                  if (!isNaN(parsed)) {
-                    const inC = parseInt(indoorCount) || 1;
-                    setAnswer(q.id!, String(inC + safeVal));
-                    setAnswer("mixed_camera_requirements", [
-                      { type: "Standard Indoor", count: inC },
-                      { type: "Standard Outdoor", count: safeVal }
-                    ]);
-                  }
-                }
+              const addBucket = () => {
+                const newBuckets = [...buckets, { type: "Standard Outdoor", count: 1, features: [] }];
+                setAnswer("mixed_camera_requirements", newBuckets);
+                setAnswer(q.id!, String(newBuckets.reduce((sum, b) => sum + (parseInt(b.count) || 0), 0)));
               };
 
-              const handleBlur = (type: "total" | "indoor" | "outdoor") => {
-                let valStr = "";
-                if (type === "total") valStr = currentVal;
-                if (type === "indoor") valStr = indoorCount;
-                if (type === "outdoor") valStr = outdoorCount;
-                
-                const parsed = parseInt(valStr);
-                const safeVal = isNaN(parsed) ? 1 : Math.max(1, Math.min(16, parsed));
-                handleCountChange(String(safeVal), type);
+              const removeBucket = (index: number) => {
+                const newBuckets = buckets.filter((_, i) => i !== index);
+                setAnswer("mixed_camera_requirements", newBuckets);
+                setAnswer(q.id!, String(newBuckets.reduce((sum, b) => sum + (parseInt(b.count) || 0), 0)));
               };
+              
+              const toggleFeature = (bucketIndex: number, feature: string) => {
+                const bucket = buckets[bucketIndex];
+                const features = bucket.features || [];
+                const newFeatures = features.includes(feature) ? features.filter((f: string) => f !== feature) : [...features, feature];
+                updateBucket(bucketIndex, "features", newFeatures);
+              };
+
+              const tech = answers["q_tech"] as string;
+              const allFeatures = [
+                { id: "color", label: "Color Night Vision", techs: ["HD", "IP", "Wireless"] },
+                { id: "audio", label: "Speaker / Two-Way Talk", techs: ["HD", "IP", "Wireless"] },
+                { id: "ptz", label: "PTZ (Pan-Tilt-Zoom)", techs: ["IP", "Wireless"] },
+                { id: "solar", label: "Solar Powered", techs: ["Wireless"] },
+                { id: "4g", label: "4G / SIM Support", techs: ["Wireless"] }
+              ];
+              const availableFeatures = tech ? allFeatures.filter(f => f.techs.includes(tech)) : allFeatures;
 
               return (
                 <div key={q.id} id={`question-${q.id}`} className="scroll-mt-24 sm:scroll-mt-32">
@@ -458,83 +456,84 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                      <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h2>
                   </div>
 
-                  {/* Environment Selector */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-                    {[
-                      { id: "indoor", label: "All Indoor" },
-                      { id: "outdoor", label: "All Outdoor" },
-                      { id: "mix", label: "Mix (Indoor & Outdoor)" }
-                    ].map((opt) => (
-                      <button
-                        key={opt.id}
-                        onClick={() => handleMixTypeChange(opt.id as any)}
-                        className={`py-4 px-4 rounded-2xl border-[2px] font-black tracking-wide transition-all text-sm sm:text-base ${
-                          mixType === opt.id
-                            ? "bg-blue-50 border-blue-600 text-blue-700 shadow-sm"
-                            : "bg-white border-zinc-200 text-zinc-600 hover:border-blue-300 hover:bg-zinc-50"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
+                  <div className="flex flex-col gap-6">
+                    {buckets.map((bucket, idx) => (
+                      <div key={idx} className="bg-white border-[2px] border-zinc-200 rounded-[24px] p-5 sm:p-6 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] relative group">
+                        {buckets.length > 1 && (
+                          <button onClick={() => removeBucket(idx)} className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                          </button>
+                        )}
+                        <div className="flex flex-col sm:flex-row gap-4 mb-5">
+                          <div className="flex-1">
+                            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">Environment</label>
+                            <select
+                              value={bucket.type}
+                              onChange={(e) => updateBucket(idx, "type", e.target.value)}
+                              className="w-full bg-zinc-50 border-[2px] border-zinc-200 rounded-[16px] px-4 py-3.5 text-[15px] font-bold text-zinc-900 outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer appearance-none"
+                            >
+                              <option value="Standard Indoor">Indoor Area</option>
+                              <option value="Standard Outdoor">Outdoor Area</option>
+                            </select>
+                          </div>
+                          <div className="w-full sm:w-32">
+                            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">Quantity</label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={16}
+                              value={bucket.count}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                updateBucket(idx, "count", val === "" ? "" : parseInt(val) || "");
+                              }}
+                              className="w-full bg-zinc-50 border-[2px] border-zinc-200 rounded-[16px] px-4 py-3.5 text-[15px] font-black text-zinc-900 outline-none focus:border-blue-500 focus:bg-white text-center transition-colors"
+                            />
+                          </div>
+                        </div>
+
+                        {availableFeatures.length > 0 && (
+                          <div>
+                            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                              <svg className="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                              Special Features <span className="font-medium text-zinc-400">(Optional)</span>
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {availableFeatures.map(feat => {
+                                const isSelected = (bucket.features || []).includes(feat.id);
+                                return (
+                                  <button
+                                    key={feat.id}
+                                    onClick={() => toggleFeature(idx, feat.id)}
+                                    className={`px-3 sm:px-4 py-2 rounded-full text-[13px] font-bold transition-all border ${
+                                      isSelected 
+                                        ? "bg-blue-50 border-blue-600 text-blue-700 shadow-[0_2px_10px_-4px_rgba(37,99,235,0.4)]" 
+                                        : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
+                                    }`}
+                                  >
+                                    {feat.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
 
-                  {mixType !== "mix" ? (
-                    <div className="relative group max-w-sm">
-                      <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
-                        {mixType === "indoor" ? "Number of Indoor Cameras" : "Number of Outdoor Cameras"}
-                      </label>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={currentVal}
-                        onChange={(e) => handleCountChange(e.target.value, "total")}
-                        onBlur={() => handleBlur("total")}
-                        className="w-full bg-white border-[2px] border-zinc-200 rounded-[24px] sm:rounded-[28px] px-6 sm:px-8 py-5 sm:py-6 text-2xl font-black text-zinc-900 outline-none focus:ring-[6px] focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]"
-                        placeholder="1 – 16"
-                        min={1}
-                        max={16}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex flex-col sm:flex-row gap-6 max-w-2xl">
-                      <div className="relative group flex-1">
-                        <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
-                          Indoor Cameras
-                        </label>
-                        <input
-                          type="number"
-                          inputMode="numeric"
-                          value={indoorCount}
-                          onChange={(e) => handleCountChange(e.target.value, "indoor")}
-                          onBlur={() => handleBlur("indoor")}
-                          className="w-full bg-white border-[2px] border-zinc-200 rounded-[24px] sm:rounded-[28px] px-6 sm:px-8 py-5 sm:py-6 text-2xl font-black text-zinc-900 outline-none focus:ring-[6px] focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]"
-                          placeholder="1 – 16"
-                          min={1}
-                          max={16}
-                        />
-                      </div>
-                      <div className="relative group flex-1">
-                        <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
-                          Outdoor Cameras
-                        </label>
-                        <input
-                          type="number"
-                          inputMode="numeric"
-                          value={outdoorCount}
-                          onChange={(e) => handleCountChange(e.target.value, "outdoor")}
-                          onBlur={() => handleBlur("outdoor")}
-                          className="w-full bg-white border-[2px] border-zinc-200 rounded-[24px] sm:rounded-[28px] px-6 sm:px-8 py-5 sm:py-6 text-2xl font-black text-zinc-900 outline-none focus:ring-[6px] focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]"
-                          placeholder="1 – 16"
-                          min={1}
-                          max={16}
-                        />
-                      </div>
-                    </div>
-                  )}
+                  <div className="mt-6 flex justify-start">
+                    <button
+                      onClick={addBucket}
+                      className="flex items-center gap-2 text-[13px] font-black text-zinc-700 hover:text-blue-700 transition-colors uppercase tracking-widest bg-white border-[2px] border-dashed border-zinc-300 hover:border-blue-500 px-6 py-4 rounded-[20px]"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      Add Another Camera Group
+                    </button>
+                  </div>
                   
-                  <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mt-6 ml-2">
-                    For <span className="font-black text-zinc-700 dark:text-zinc-300">more than 16 cameras total</span>, our team will reach out with a custom corporate quote.
+                  <p className="text-xs font-bold text-zinc-500 mt-8 ml-2">
+                    For <span className="font-black text-zinc-700">more than 16 cameras total</span>, our team will reach out with a custom corporate quote.
                   </p>
                 </div>
               );

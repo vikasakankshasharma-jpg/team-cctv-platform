@@ -149,7 +149,7 @@ export function ReportsClient({ data: allData, products, promoters }: ReportsCli
         "Display Name": p.display_name,
         "SKU": p.technical_name,
         "Category": p.category,
-        "Technology": p.technology,
+        "Technology": p.technologies?.join(', '),
         "Base Cost (Rs)": p.base_cost,
         "Margin (%)": p.margin_percentage,
         "Unit Price (Rs)": p.unit_price,

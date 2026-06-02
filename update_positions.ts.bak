@@ -1,0 +1,57 @@
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import * as dotenv from "dotenv";
+
+dotenv.config({ path: ".env.local" });
+
+const projectId = process.env.FIREBASE_PROJECT_ID;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+if (getApps().length === 0) {
+  initializeApp({
+    credential: cert({
+      projectId,
+      clientEmail,
+      privateKey,
+    }),
+  });
+}
+
+const db = getFirestore();
+
+async function swapPositions() {
+  const stepsSnapshot = await db.collection("wizard_steps").get();
+  
+  let techDoc = null;
+  let countDoc = null;
+  
+  stepsSnapshot.forEach((doc) => {
+    const data = doc.data();
+    if (data.title === "Camera Technology") techDoc = doc;
+    if (data.title === "Camera Count") countDoc = doc;
+  });
+  
+  if (techDoc && countDoc) {
+    const techPos = countDoc.data().position;
+    const countPos = techDoc.data().position;
+    
+    console.log(`Current positions -> Tech: ${techDoc.data().position}, Count: ${countDoc.data().position}`);
+    
+    // We want Tech to be before Count.
+    const newTechPos = Math.min(techDoc.data().position, countDoc.data().position);
+    const newCountPos = Math.max(techDoc.data().position, countDoc.data().position);
+    
+    await techDoc.ref.update({ position: newTechPos });
+    await countDoc.ref.update({ position: newCountPos });
+    
+    console.log(`Updated positions -> Tech: ${newTechPos}, Count: ${newCountPos}`);
+  } else {
+    console.log("Documents not found.");
+    stepsSnapshot.forEach(doc => {
+      console.log(doc.id, doc.data().title);
+    });
+  }
+}
+
+swapPositions().then(() => process.exit(0)).catch(console.error);

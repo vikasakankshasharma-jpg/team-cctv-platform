@@ -273,9 +273,13 @@ export function CompareCards({
               <div className="space-y-3">
                 {[
                   `${selection.camera_count}× ${card.camProduct?.display_name ?? card.technology + " Camera"}`,
-                  `1× ${card.recType} Recorder`,
-                  `${selection.recording_days}-Day Storage`,
-                  `Cables & Accessories`,
+                  `1× ${card.recProduct?.display_name ?? card.recType + " Recorder"}`,
+                  (() => {
+                    const storageItem = card.pricing.items.find((i: any) => addons.find((a: any) => a.id === i.product_id)?.category === 'storage');
+                    if (storageItem) return storageItem.display_name;
+                    return selection.recording_days > 0 ? `${selection.recording_days}-Day Storage` : "No Storage";
+                  })(),
+                  card.pricing.items.find((i: any) => i.product_id === "cabling_material")?.display_name?.split(' @ ')[0] ?? "Cabling & Accessories",
                   `Professional Installation`
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2.5">
