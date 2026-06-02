@@ -19,7 +19,11 @@ export async function GET(req: NextRequest) {
     const items: Product[] = [];
     
     prodSnap.forEach(doc => {
-      items.push({ id: doc.id, ...doc.data() } as Product);
+      const data = doc.data() as any;
+      if (!data.technologies && data.technology) {
+        data.technologies = [data.technology];
+      }
+      items.push({ id: doc.id, ...data } as Product);
     });
 
     addonSnap.forEach(doc => {
