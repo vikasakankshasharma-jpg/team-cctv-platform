@@ -11,7 +11,13 @@ export async function GET() {
       .get();
 
     const products = productsSnap.docs.map((doc) => {
-      const data = doc.data() as Product;
+      const data = doc.data() as any;
+      
+      // Fallback for older database schemas
+      if (!data.technologies && data.technology) {
+        data.technologies = [data.technology];
+      }
+      
       // STRIP SENSITIVE FIELDS: Never expose internal costs/margins to the browser
       const { base_cost, margin_percentage, ...publicData } = data;
       return { id: doc.id, ...publicData } as Product;
