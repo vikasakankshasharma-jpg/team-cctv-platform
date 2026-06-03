@@ -12,7 +12,13 @@ export default async function CatalogHealthPage() {
   await requireAdmin();
 
   const productsSnap = await adminDb.collection("products").where("is_deleted", "==", false).get();
-  const products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+  const products = productsSnap.docs.map(doc => {
+    const data = doc.data() as any;
+    if (!data.technologies && data.technology) {
+      data.technologies = [data.technology];
+    }
+    return { id: doc.id, ...data } as Product;
+  });
 
   // Diagnostic Categories
   const issues = {
