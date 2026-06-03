@@ -16,10 +16,16 @@ export function useRealtimeInventory(initialProducts: Product[], initialAddons: 
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const updatedProducts = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Product[];
+      const updatedProducts = snapshot.docs.map(doc => {
+        const data = doc.data() as any;
+        if (!data.technologies && data.technology) {
+          data.technologies = [data.technology];
+        }
+        return {
+          id: doc.id,
+          ...data
+        } as Product;
+      });
       
       setProducts(updatedProducts);
     }, (error) => {
