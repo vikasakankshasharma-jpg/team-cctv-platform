@@ -105,7 +105,10 @@ export default async function QuoteResultPage({
     }
 
     products = productsSnap.docs.map(doc => {
-      const data = doc.data() as Product;
+      const data = doc.data() as any;
+      if (!data.technologies && data.technology) {
+        data.technologies = [data.technology];
+      }
       const { base_cost, margin_percentage, ...publicData } = data;
       return { id: doc.id, ...publicData } as Product;
     });
