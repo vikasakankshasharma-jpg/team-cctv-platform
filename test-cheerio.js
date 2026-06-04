@@ -1,0 +1,1 @@
+const fs=require('fs'); const cheerio=require('cheerio'); const html=fs.readFileSync('HD Camera _ Mega Compu World.html', 'utf-8'); const $cheerio=cheerio.load(html); console.log($cheerio('.product-thumb img').first().attr('src'));

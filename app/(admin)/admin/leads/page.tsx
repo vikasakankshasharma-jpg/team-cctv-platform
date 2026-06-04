@@ -143,8 +143,8 @@ export default async function LeadsAdminPage({
       
       <div className="pb-20">
         <LeadsClient 
-          initialLeads={leads} 
-          industrialLeads={industrialLeads as any[]} 
+          initialLeads={JSON.parse(JSON.stringify(leads))} 
+          industrialLeads={JSON.parse(JSON.stringify(industrialLeads))} 
           nextCursor={nextCursor}
           salespeople={salespeople}
           isAdmin={isAdmin}

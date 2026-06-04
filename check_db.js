@@ -1,0 +1,1 @@
+const admin = require('firebase-admin'); admin.initializeApp(); admin.firestore().collection('staged_products').get().then(s => { s.forEach(d => { const title = d.data().raw_title; if (title && title.includes('EVM Laptop')) console.log(title, d.data().image_url); if (title && title.includes('Lenovo LED')) console.log(title, d.data().image_url); }); process.exit(0); });

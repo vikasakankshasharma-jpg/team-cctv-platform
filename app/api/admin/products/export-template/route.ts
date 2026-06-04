@@ -2,7 +2,7 @@ import { verifySession } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 
-const VALID_CATEGORIES = ["camera", "recorder", "accessory", "cable", "network", "power_device", "storage"];
+const VALID_CATEGORIES = ["camera", "recorder", "storage", "connector", "cable", "power_device", "installation", "amc", "display", "mount", "rack", "network", "accessory"];
 const VALID_TECHNOLOGIES = ["HD", "IP", "Common", "WiFi", "4G", "Solar"];
 const BOOLEAN_VALUES = ["TRUE", "FALSE"];
 

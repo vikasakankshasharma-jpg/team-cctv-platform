@@ -256,15 +256,26 @@ export function CompareCards({
 
             {/* Price */}
             <div className="text-center mb-6">
-              <div className="flex items-start justify-center">
-                <span className="text-xl font-medium text-[#1d1d1f] dark:text-white mt-1 mr-0.5">₹</span>
-                <span className="text-5xl font-semibold text-[#1d1d1f] dark:text-white tracking-tight">
-                  {card.pricing.total_payable.toLocaleString("en-IN")}
-                </span>
-              </div>
-              <div className="text-[11px] text-[#86868b] mt-1 font-medium">
-                ₹{pricePerCam.toLocaleString("en-IN")} per camera
-              </div>
+              {card.pricing.error ? (
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-xl font-medium text-red-500 mt-1">Unavailable</span>
+                  <span className="text-[11px] text-red-400 mt-1 font-medium px-2 leading-tight">
+                    {card.pricing.error_message || "Required hardware is missing from our catalog."}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-start justify-center">
+                    <span className="text-xl font-medium text-[#1d1d1f] dark:text-white mt-1 mr-0.5">₹</span>
+                    <span className="text-5xl font-semibold text-[#1d1d1f] dark:text-white tracking-tight">
+                      {card.pricing.total_payable.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[#86868b] mt-1 font-medium">
+                    ₹{pricePerCam.toLocaleString("en-IN")} per camera
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Inclusions */}

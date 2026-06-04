@@ -14,8 +14,8 @@ export default async function CatalogHealthPage() {
   const productsSnap = await adminDb.collection("products").where("is_deleted", "==", false).get();
   const products = productsSnap.docs.map(doc => {
     const data = doc.data() as any;
-    if (!data.technologies && data.technology) {
-      data.technologies = [data.technology];
+    if (!Array.isArray(data.technologies)) {
+      data.technologies = data.technology ? [data.technology] : ["Common"];
     }
     return { id: doc.id, ...data } as Product;
   });

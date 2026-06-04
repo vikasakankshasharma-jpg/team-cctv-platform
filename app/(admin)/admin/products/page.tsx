@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Product } from "@/types";
-import { Loader2, Plus, Save, X, Package, IndianRupee, BadgeDollarSign, Camera, Info, Settings, Tag, Target, HardDrive } from "lucide-react";
+import { Loader2, Plus, Save, X, Package, IndianRupee, BadgeDollarSign, Camera, Info, Settings, Tag, Target, HardDrive, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ProductInventory } from "@/components/admin/ProductInventory";
 import { ProductsSkeleton } from "@/components/admin/ProductsSkeleton";
@@ -27,6 +27,9 @@ export default function AdminProductsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"basic" | "specs" | "pricing" | "marketing">("basic");
 
+  // Selection for bulk actions
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -34,8 +37,8 @@ export default function AdminProductsPage() {
   const fetchData = async () => {
     try {
       const [prodRes, tagRes] = await Promise.all([
-        fetch("/api/admin/products"),
-        fetch("/api/admin/features")
+        fetch(`/api/admin/products?_t=${Date.now()}`),
+        fetch(`/api/admin/features?_t=${Date.now()}`)
       ]);
       const prodData = await prodRes.json();
       const tagData = await tagRes.json();
@@ -52,7 +55,7 @@ export default function AdminProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch("/api/admin/products");
+      const res = await fetch(`/api/admin/products?_t=${Date.now()}`);
       const data = await res.json();
       if (data.success) {
         setProducts(data.products);
@@ -62,6 +65,45 @@ export default function AdminProductsPage() {
       toast.error("Failed to load catalog");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedIds(newSet);
+  };
+
+  const handleSelectAllGroup = (ids: string[]) => {
+    const newSet = new Set(selectedIds);
+    ids.forEach(id => newSet.add(id));
+    setSelectedIds(newSet);
+  };
+
+  const handleDeselectAllGroup = (ids: string[]) => {
+    const newSet = new Set(selectedIds);
+    ids.forEach(id => newSet.delete(id));
+    setSelectedIds(newSet);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedIds.size} products?`)) return;
+
+    const ids = Array.from(selectedIds).join(",");
+    try {
+      const res = await fetch(`/api/admin/products?ids=${ids}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Products deleted successfully");
+        setSelectedIds(new Set());
+        fetchProducts();
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err) {
+      toast.error("Failed to delete products");
     }
   };
 
@@ -213,6 +255,16 @@ export default function AdminProductsPage() {
                onImportSuccess={fetchProducts}
              />
 
+             {selectedIds.size > 0 && (
+               <button
+                 onClick={handleDeleteSelected}
+                 className="flex items-center gap-2 px-4 py-2.5 bg-destructive text-destructive-foreground rounded-full text-xs font-semibold hover:bg-destructive/90 transition-all shadow-sm"
+               >
+                 <Trash2 className="w-4 h-4" />
+                 Delete ({selectedIds.size})
+               </button>
+             )}
+
              <div className="w-px h-8 bg-border" />
 
              <button
@@ -237,6 +289,10 @@ export default function AdminProductsPage() {
               onEdit={handleEdit}
               onToggle={handleToggleActive}
               onFiltersChange={setActiveFilters}
+              selectedIds={selectedIds}
+              onToggleSelect={handleToggleSelect}
+              onSelectAllGroup={handleSelectAllGroup}
+              onDeselectAllGroup={handleDeselectAllGroup}
             />
           </div>
         )}

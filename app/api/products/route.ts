@@ -14,8 +14,8 @@ export async function GET() {
       const data = doc.data() as any;
       
       // Fallback for older database schemas
-      if (!data.technologies && data.technology) {
-        data.technologies = [data.technology];
+      if (!Array.isArray(data.technologies)) {
+        data.technologies = data.technology ? [data.technology] : ["Common"];
       }
       
       // STRIP SENSITIVE FIELDS: Never expose internal costs/margins to the browser

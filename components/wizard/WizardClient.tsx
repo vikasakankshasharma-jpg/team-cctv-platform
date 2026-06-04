@@ -292,83 +292,80 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     }
   };
 
-  // FACETED COUNTING ENGINE
-  const getProspectiveCount = (questionId: string, optionValue: string, isMulti: boolean) => {
-    // Only show prospective counts for questions that actually filter the camera catalog
-    const filterableQuestions = ["q_tech", "q_resolution", "q_brand", "q_special_features"];
-    if (!filterableQuestions.includes(questionId)) return null;
-
-    if (!products || products.length === 0) return null; // Loading or failed
-
-    // 1. Create a hypothetical answer state
-    const hypotheticalAnswers = { ...answers };
-    if (isMulti) {
-      const currentAns = (answers[questionId] as string[]) || [];
-      if (currentAns.includes(optionValue)) {
-        hypotheticalAnswers[questionId] = currentAns.filter(v => v !== optionValue);
+    // FACETED COUNTING ENGINE
+    const getProspectiveCount = (questionId: string, optionValue: string, isMulti: boolean) => {
+      // Only show prospective counts for questions that actually filter the camera catalog
+      const filterableQuestions = ["q_tech", "q_resolution", "q_brand", "q_special_features", "q_features", "q_environment", "q_form_factor"];
+      if (!filterableQuestions.includes(questionId)) return null;
+  
+      if (!products || products.length === 0) return null; // Loading or failed
+  
+      // 1. Create a hypothetical answer state
+      const hypotheticalAnswers = { ...answers };
+      if (isMulti) {
+        const currentAns = (answers[questionId] as string[]) || [];
+        if (currentAns.includes(optionValue)) {
+          hypotheticalAnswers[questionId] = currentAns.filter(v => v !== optionValue);
+        } else {
+          hypotheticalAnswers[questionId] = [...currentAns, optionValue];
+        }
       } else {
-        hypotheticalAnswers[questionId] = [...currentAns, optionValue];
+        hypotheticalAnswers[questionId] = optionValue;
       }
-    } else {
-      hypotheticalAnswers[questionId] = optionValue;
-    }
+  
+      // 2. Filter products based on hypothetical answers
+      let pool = products.filter(p => p.category === "camera" && p.is_active);
+  
+      // Apply Technology Filter
+      if (hypotheticalAnswers["q_tech"]) {
+         const tech = hypotheticalAnswers["q_tech"] as string;
+         if (tech) {
+           pool = pool.filter(p => p.technologies?.some(t => t.toLowerCase() === tech.toLowerCase()));
+         }
+      }
+  
+      // Apply Resolution Filter
+      if (hypotheticalAnswers["q_resolution"]) {
+         const resVal = hypotheticalAnswers["q_resolution"] as string;
+         const resNum = parseInt(resVal.toLowerCase().replace("mp", ""));
+         if (!isNaN(resNum)) {
+           pool = pool.filter(p => p.resolution_mp === resNum);
+         }
+      }
+      
+      // Apply Brand Filter
+      if (hypotheticalAnswers["q_brand"]) {
+         const brand = hypotheticalAnswers["q_brand"] as string;
+         if (brand && brand !== "recommend") {
+           pool = pool.filter(p => p.brand?.toLowerCase() === brand.toLowerCase());
+         }
+      }
+  
+      // Combine all feature requirements
+      const specialFeats = (hypotheticalAnswers["q_special_features"] as string[]) || [];
+      const feats = (hypotheticalAnswers["q_features"] as string[]) || [];
+      const envs = (hypotheticalAnswers["q_environment"] as string[]) || [];
+      const forms = (hypotheticalAnswers["q_form_factor"] as string[]) || [];
+      const combinedReqs = [...specialFeats, ...feats, ...envs, ...forms].filter(r => r !== "none" && r !== "");
 
-    // 2. Filter products based on hypothetical answers
-    let pool = products.filter(p => p.category === "camera" && p.is_active);
-
-    // Apply Technology Filter
-    if (hypotheticalAnswers["q_tech"]) {
-       const tech = hypotheticalAnswers["q_tech"] as string;
-       if (tech) {
-         pool = pool.filter(p => p.technologies?.some(t => t.toLowerCase() === tech.toLowerCase()));
-       }
-    }
-
-    // Apply Resolution Filter
-    if (hypotheticalAnswers["q_resolution"]) {
-       const resVal = hypotheticalAnswers["q_resolution"] as string;
-       const resNum = parseInt(resVal.replace("mp", ""));
-       if (!isNaN(resNum)) {
-         pool = pool.filter(p => p.resolution_mp === resNum);
-       }
-    }
-
-    // Apply Night Vision Filter
-    if (hypotheticalAnswers["q_night_vision"]) {
-       const nv = hypotheticalAnswers["q_night_vision"] as string;
-       if (nv === "color") {
-         pool = pool.filter(p => p.night_vision_type === "color" || p.night_vision_type === "dual_light" || (p.features && p.features.some(f => f.toLowerCase().includes("color"))));
-       } else if (nv === "ir") {
-         pool = pool.filter(p => p.night_vision_type === "ir" || !p.night_vision_type);
-       }
-    }
-    
-    // Apply Brand Filter
-    if (hypotheticalAnswers["q_brand"]) {
-       const brand = hypotheticalAnswers["q_brand"] as string;
-       if (brand && brand !== "recommend") {
-         pool = pool.filter(p => p.brand?.toLowerCase() === brand.toLowerCase());
-       }
-    }
-
-    // Apply Features/Priorities Filter (Wizard uses q_special_features now)
-    if (hypotheticalAnswers["q_special_features"]) {
-       const reqFeats = hypotheticalAnswers["q_special_features"] as string[];
-       // If they picked 'none', we don't filter out cameras
-       if (reqFeats.length > 0 && !reqFeats.includes("none")) {
-          pool = pool.filter(cam => {
-            const feats = (cam.features || []).map(f => f.toLowerCase().trim());
-            let matchesAll = true;
-            if (reqFeats.includes("color") && !feats.some(f => f.includes("color") || f.includes("night"))) matchesAll = false;
-            if (reqFeats.includes("audio") && !feats.some(f => f.includes("mic") || f.includes("audio") || f.includes("speaker") || f.includes("talk"))) matchesAll = false;
-            if (reqFeats.includes("ptz") && !feats.some(f => f.includes("ptz") || f.includes("pan") || f.includes("tilt") || f.includes("360"))) matchesAll = false;
-            return matchesAll;
-          });
-       }
-    }
-
-    return pool.length;
-  };
+      if (combinedReqs.length > 0) {
+         pool = pool.filter(cam => {
+           const camFeats = (cam.features || []).map(f => f.toLowerCase().trim());
+           let matchesAll = true;
+           for (const req of combinedReqs) {
+              const r = req.toLowerCase();
+              if ((r.includes("color") || r.includes("night")) && !camFeats.some(f => f.includes("color") || f.includes("night"))) matchesAll = false;
+              if ((r.includes("audio") || r.includes("mic")) && !camFeats.some(f => f.includes("mic") || f.includes("audio") || f.includes("speaker") || f.includes("talk"))) matchesAll = false;
+              if (r.includes("ptz") && !camFeats.some(f => f.includes("ptz") || f.includes("pan") || f.includes("tilt") || f.includes("360"))) matchesAll = false;
+              if ((r.includes("indoor") || r.includes("dome")) && !camFeats.some(f => f.includes("dome"))) matchesAll = false;
+              if ((r.includes("outdoor") || r.includes("bullet")) && !camFeats.some(f => f.includes("bullet"))) matchesAll = false;
+           }
+           return matchesAll;
+         });
+      }
+  
+      return pool.length;
+    };
 
   return (
     <div className="flex-1 relative flex flex-col bg-[#FAFAFA] overflow-x-hidden transition-colors duration-500">
