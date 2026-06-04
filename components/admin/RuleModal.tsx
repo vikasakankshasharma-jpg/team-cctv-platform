@@ -112,7 +112,7 @@ export function RuleModal({ isOpen, onClose, onSave, initialData }: RuleModalPro
               <div className="space-y-3">
                 <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Property Types</label>
                 <div className="flex flex-wrap gap-2">
-                  {["home", "office", "factory"].map(type => (
+                  {["home", "office", "warehouse", "bungalow"].map(type => (
                     <button
                       key={type}
                       type="button"

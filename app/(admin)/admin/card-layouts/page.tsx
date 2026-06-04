@@ -50,8 +50,8 @@ export default async function CardLayoutsPage() {
 
     cameras = productsSnap.docs.map((doc) => {
       const d = doc.data() as any;
-      if (!d.technologies && d.technology) {
-        d.technologies = [d.technology];
+      if (!Array.isArray(d.technologies)) {
+        d.technologies = d.technology ? [d.technology] : ["Common"];
       }
       return {
         id: doc.id,

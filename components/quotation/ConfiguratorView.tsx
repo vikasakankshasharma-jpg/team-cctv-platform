@@ -97,13 +97,23 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     const reqFeaturesRaw = lead.wizard_answers?.["q_special_features"] || lead.wizard_answers?.["q_features"];
     const rawFeaturesArray = Array.isArray(reqFeaturesRaw) ? reqFeaturesRaw : (reqFeaturesRaw ? [reqFeaturesRaw as string] : []);
     
-    const requestedFeatures = Array.from(new Set(rawFeaturesArray.map(f => {
+    const envRaw = lead.wizard_answers?.["q_environment"];
+    const envArray = Array.isArray(envRaw) ? envRaw : (envRaw ? [envRaw as string] : []);
+    
+    const formRaw = lead.wizard_answers?.["q_form_factor"];
+    const formArray = Array.isArray(formRaw) ? formRaw : (formRaw ? [formRaw as string] : []);
+
+    const combinedRaw = [...rawFeaturesArray, ...envArray, ...formArray];
+    
+    const requestedFeatures = Array.from(new Set(combinedRaw.map(f => {
       const fl = f.toLowerCase();
       if (fl.includes("night") || fl.includes("color")) return "color";
       if (fl.includes("audio") || fl.includes("mic") || fl.includes("sound")) return "mic";
       if (fl.includes("ptz") || fl.includes("360") || fl.includes("pan") || fl.includes("tilt")) return "ptz";
       if (fl.includes("ultra") || fl.includes("4mp") || fl.includes("5mp") || fl.includes("8mp") || fl.includes("4k")) return "4mp";
       if (fl.includes("stqc")) return "stqc";
+      if (fl.includes("indoor") || fl.includes("dome")) return "dome";
+      if (fl.includes("outdoor") || fl.includes("bullet")) return "bullet";
       return "";
     }).filter(f => f !== "")));
 

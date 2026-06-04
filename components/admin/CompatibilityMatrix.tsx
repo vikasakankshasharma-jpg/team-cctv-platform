@@ -16,9 +16,10 @@ import { CSS } from "@dnd-kit/utilities";
 function buildTree(products: Product[]) {
   const paths = new Set<string>();
   products.forEach(p => {
-    if (p.catalog_path) {
+    const path = p.catalog_path || "Uncategorized";
+    if (path) {
       // Add the path and all parent paths
-      const parts = p.catalog_path.split("/");
+      const parts = path.split("/");
       let current = "";
       parts.forEach(part => {
         current = current ? `${current}/${part}` : part;
@@ -171,7 +172,7 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
   // Filter products for the selected folder
   const displayedProducts = useMemo(() => {
     if (!selectedPath) return [];
-    return products.filter(p => p.catalog_path && p.catalog_path.startsWith(selectedPath));
+    return products.filter(p => (p.catalog_path || "Uncategorized").startsWith(selectedPath));
   }, [products, selectedPath]);
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -258,7 +259,7 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
                 <p className="text-[11px] text-muted-foreground/70 mt-1 px-4">Edit a product and assign it a Catalog Path (e.g., CCTV/Cameras/IP).</p>
               </div>
             ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <DndContext id="compatibility-matrix-dnd" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={treePaths} strategy={verticalListSortingStrategy}>
                   <div className="flex flex-col">
                     {renderTreeNodes()}

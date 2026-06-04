@@ -1,0 +1,12 @@
+[
+  {
+    "type": "CONSOLE",
+    "msg": "[2026-06-04T01:20:40.931Z]  @firebase/firestore: Firestore (12.12.0): Uncaught Error in snapshot listener: FirebaseError: [code=permission-denied]: Missing or insufficient permissions.",
+    "route": "/admin/leads"
+  },
+  {
+    "type": "CONSOLE",
+    "msg": "[2026-06-04T01:20:40.953Z]  @firebase/firestore: Firestore (12.12.0): Uncaught Error in snapshot listener: FirebaseError: [code=permission-denied]: Missing or insufficient permissions.",
+    "route": "/admin/leads"
+  }
+]

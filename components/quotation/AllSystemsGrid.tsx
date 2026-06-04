@@ -88,10 +88,7 @@ export function AllSystemsGrid({ pricingCache, cablingDone, promoterDiscount, ev
       });
 
       const recorderItem = pricing.items.find(i => pricingCache.products.find(p => p.id === i.product_id)?.category === "recorder");
-      const storageItem = pricing.items.find(i => {
-        const p = pricingCache.products.find(p => p.id === i.product_id);
-        return p?.category === "accessory" && p.technical_name.toLowerCase().includes("hdd");
-      });
+      const storageItem = pricing.items.find(i => pricingCache.products.find(p => p.id === i.product_id)?.category === "storage");
 
       return {
         camera: cam,

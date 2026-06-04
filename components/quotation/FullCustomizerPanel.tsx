@@ -267,14 +267,14 @@ export function FullCustomizerPanel() {
 
   const filteredPower = useMemo(() => {
     const keyword = selection.technology === "IP" ? "poe" : "psu";
-    let list = [...products, ...addons].filter(a => a.category === "power_device" && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword) && a.is_active);
+    let list = [...products, ...addons].filter(a => (a.category === "power_device" || a.category === "power") && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword) && a.is_active);
     list = list.filter(a => (a.max_cameras || 0) >= selection.camera_count);
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()) || (a.technical_name || "").toLowerCase().includes(search.toLowerCase()));
     return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
   }, [addons, selection.technology, selection.camera_count, search]);
 
   const filteredAddons = useMemo(() => {
-    let list = [...products, ...addons].filter(a => a.category === "accessory" && a.is_active);
+    let list = [...products, ...addons].filter(a => !["camera", "recorder", "storage", "power", "power_device"].includes(a.category || "") && a.is_active);
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()));
     return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
   }, [addons, search]);

@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
 
     const products = productsSnap.docs.map(d => {
       const data = d.data() as any;
-      if (!data.technologies && data.technology) {
-        data.technologies = [data.technology];
+      if (!Array.isArray(data.technologies)) {
+        data.technologies = data.technology ? [data.technology] : ["Common"];
       }
       return { id: d.id, ...data };
     }) as Product[];

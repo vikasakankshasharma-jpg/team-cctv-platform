@@ -10,7 +10,7 @@ import type { Product } from "@/types";
 const productSchema = z.object({
   display_name: z.string().min(1, "Display name is required"),
   technical_name: z.string().min(1, "Technical name is required"),
-  category: z.enum(["camera", "recorder", "accessory", "cable"]),
+  category: z.enum(["camera", "recorder", "storage", "connector", "cable", "power_device", "installation", "amc", "display", "mount", "rack", "network", "accessory"]),
   technologies: z.array(z.enum(["IP", "HD", "Wireless", "Common"])),
   base_cost: z.number().min(0),
   margin_percentage: z.number().min(0).max(99),
@@ -234,8 +234,17 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               >
                 <option value="camera">Camera Unit</option>
                 <option value="recorder">Recorder (DVR/NVR)</option>
-                <option value="accessory">Accessory</option>
-                <option value="cable">Cable / Hard Drive</option>
+                <option value="storage">Storage (Hard Drive/SSD)</option>
+                <option value="connector">Connectors (RJ45/BNC/DC)</option>
+                <option value="cable">Cable (CAT6/HDMI)</option>
+                <option value="power_device">Power Device (SMPS/Adapter)</option>
+                <option value="installation">Installation & Services</option>
+                <option value="amc">AMC (Maintenance)</option>
+                <option value="display">Display Screen (LCD/TV)</option>
+                <option value="mount">Camera Mount Box</option>
+                <option value="rack">Racks (Recorder/Switch)</option>
+                <option value="network">Network (Switch/Router)</option>
+                <option value="accessory">Other Accessories</option>
               </select>
             </div>
 

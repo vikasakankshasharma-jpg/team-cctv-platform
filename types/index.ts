@@ -150,7 +150,7 @@ export interface Product {
   id?: string;
   technical_name: string;
   display_name: string;
-  category: "camera" | "recorder" | "accessory" | "cable" | "network" | "power_device" | "storage";
+  category: "camera" | "recorder" | "storage" | "connector" | "cable" | "power_device" | "installation" | "amc" | "display" | "mount" | "rack" | "network" | "accessory";
   technologies: Technology[];
   base_cost?: number;            // Cost to business
   margin_percentage?: number;    // Expected profit margin
@@ -355,6 +355,10 @@ export interface PricingResult {
   gross_profit_value?: number;
   gross_profit_percent?: number;
   margin_warnings?: string[];
+  
+  // Error state for missing essential hardware
+  error?: boolean;
+  error_message?: string;
 }
 
 export type Quote = PricingResult & { id?: string };
@@ -768,4 +772,19 @@ export interface PayoutRequest {
   utr_number?: string;
   created_at: unknown;
   updated_at?: unknown;
+}
+
+export type VendorCategory = "camera" | "recorder" | "storage" | "connector" | "cable" | "power_device" | "installation" | "amc" | "display" | "mount" | "rack" | "network" | "accessory";
+
+export interface StagedProduct {
+  id?: string;
+  raw_title: string;
+  vendor_product_id: string;
+  category: VendorCategory;
+  base_cost: number;
+  technologies: string[];
+  image_url: string;
+  brand?: string;
+  resolution_mp?: number | null;
+  channels?: number | null;
 }

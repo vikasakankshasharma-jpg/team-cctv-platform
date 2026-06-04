@@ -197,6 +197,7 @@ export function WizardBuilderClient({ initialSteps }: WizardBuilderClientProps) 
           </div>
         ) : (
           <DndContext 
+            id="wizard-dnd-context"
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleStepDragEnd}

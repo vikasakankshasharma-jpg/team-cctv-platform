@@ -3,10 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Product } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET: Fetch all products for the admin dashboard.
  */
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest) { console.log('GET /api/admin/products STARTED');
   const session = await verifySession();
   if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
 
@@ -20,8 +22,8 @@ export async function GET(req: NextRequest) {
     
     prodSnap.forEach(doc => {
       const data = doc.data() as any;
-      if (!data.technologies && data.technology) {
-        data.technologies = [data.technology];
+      if (!Array.isArray(data.technologies)) {
+        data.technologies = data.technology ? [data.technology] : ["Common"];
       }
       items.push({ id: doc.id, ...data } as Product);
     });
@@ -159,5 +161,39 @@ export async function PATCH(req: NextRequest) {
   } catch (error) {
     console.error("Error updating product:", error);
     return NextResponse.json({ success: false, error: "Failed to update product" }, { status: 500 });
+  }
+}
+
+console.log('API Hit: /api/admin/products');
+
+/**
+ * DELETE: Delete a product or multiple products.
+ */
+export async function DELETE(req: NextRequest) {
+  const session = await verifySession();
+  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    const ids = searchParams.get("ids");
+    
+    if (id) {
+      await adminDb.collection("products").doc(id).delete();
+      return NextResponse.json({ success: true });
+    } else if (ids) {
+      const idArray = ids.split(",");
+      const batch = adminDb.batch();
+      idArray.forEach(docId => {
+        batch.delete(adminDb.collection("products").doc(docId));
+      });
+      await batch.commit();
+      return NextResponse.json({ success: true });
+    }
+    
+    return NextResponse.json({ success: false, error: "Missing id or ids parameter" }, { status: 400 });
+  } catch (error) {
+    console.error("Error deleting products:", error);
+    return NextResponse.json({ success: false, error: "Failed to delete" }, { status: 500 });
   }
 }

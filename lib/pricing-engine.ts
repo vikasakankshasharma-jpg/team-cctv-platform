@@ -98,8 +98,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   let effectiveTech = selection.technology;
   if (selection.selected_camera_id) {
     const cam = products.find(p => p.id === selection.selected_camera_id);
-    if (cam && (cam.technologies.includes("HD") || cam.technologies.includes("IP"))) {
-      effectiveTech = cam.technologies[0]; // Or some logic to determine which one it's acting as
+    if (cam && ((cam.technologies || []).includes("HD") || (cam.technologies || []).includes("IP"))) {
+      effectiveTech = (cam.technologies || [])[0]; // Or some logic to determine which one it's acting as
     }
   }
 
@@ -164,6 +164,17 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     marginWarnings.push(`Low Margin Alert: ${grossProfitPercent.toFixed(1)}% (Threshold: ${settings.minimum_margin_threshold}%)`);
   }
 
+  // 7. Validation for Missing Hardware
+  let error = false;
+  let errorMessage = undefined;
+  if (selection.camera_count > 0) {
+    const hasCamera = lineItems.some(item => products.some(p => p.id === item.product_id && p.category === "camera"));
+    if (!hasCamera) {
+      error = true;
+      errorMessage = "Missing required camera hardware in catalog.";
+    }
+  }
+
   return {
     plan_type: selection.plan_type,
     technology: effectiveTech,
@@ -183,7 +194,9 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     total_purchase_cost: Math.round(totalPurchaseCost),
     gross_profit_value: Math.round(grossProfitValue),
     gross_profit_percent: Number(grossProfitPercent.toFixed(2)),
-    margin_warnings: marginWarnings
+    margin_warnings: marginWarnings,
+    error,
+    error_message: errorMessage
   };
 }
 
@@ -606,7 +619,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     return products.find(p => p.id === selection.selected_camera_id);
   }
 
-  let pool = products.filter(p => p.category === "camera" && p.technologies.includes(tech as any) && p.is_active);
+  let pool = products.filter(p => p.category === "camera" && (p.technologies || []).includes(tech as any) && p.is_active);
 
   // ── Specialty Camera Guardrail ──────────────────────────────
   // Prevent Elite/Premium tiers from accidentally picking highly expensive PTZ/Solar/4G/Wireless cameras
@@ -769,7 +782,7 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
 
   const recorders = products.filter(p => 
     p.category === "recorder" && 
-    p.technologies.includes(tech as any) && 
+    (p.technologies || []).includes(tech as any) && 
     (p.max_cameras || p.channels || 0) >= selection.camera_count
   );
   recorders.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
@@ -841,7 +854,7 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
   }
 
   const keyword = tech === "IP" ? "poe" : "psu";
-  const options = addons.filter(a => a.category === "power_device" && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword));
+  const options = addons.filter(a => (a.category === "power_device" || a.category === "power") && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword));
   if (options.length === 0) return undefined;
   
     options.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));

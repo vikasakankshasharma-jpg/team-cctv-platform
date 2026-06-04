@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Package, Settings2, ShieldCheck } from "lucide-react";
+import { Package, Settings2, ShieldCheck, Trash2 } from "lucide-react";
 import type { AppSettings, Product } from "@/types";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { SettingsForm } from "@/components/admin/SettingsForm";
@@ -21,6 +21,7 @@ export default function CatalogManagerClient({ initialSettings }: CatalogManager
   // Products state
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Filters for bulk export sync
   const [activeFilters, setActiveFilters] = useState<{ category: string; technology: string }>({
@@ -32,18 +33,67 @@ export default function CatalogManagerClient({ initialSettings }: CatalogManager
     fetchProducts();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async () => { console.log("fetchProducts started");
     try {
-      const res = await fetch("/api/admin/products");
+      console.log("fetching from API..."); const res = await fetch("/api/admin/products", { cache: "no-store", headers: { "Cache-Control": "no-cache" } }); console.log("API response status:", res.status);
       const data = await res.json();
       if (data.success) {
         setProducts(data.products);
       }
-    } catch (error) {
+    } catch (error) { console.error("fetchProducts caught error:", error);
       console.error("Failed to load products:", error);
       toast.error("Failed to load catalog");
-    } finally {
+    } finally { console.log("fetchProducts finally block");
       setIsLoading(false);
+    }
+  };
+
+  
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllGroup = (ids: string[]) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      ids.forEach(id => next.add(id));
+      return next;
+    });
+  };
+
+  const handleDeselectAllGroup = (ids: string[]) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      ids.forEach(id => next.delete(id));
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedIds.size} products? This cannot be undone.`)) return;
+
+    const toastId = toast.loading(`Deleting ${selectedIds.size} products...`);
+    try {
+      const res = await fetch("/api/admin/products/bulk", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds) })
+      });
+      if (res.ok) {
+        toast.success("Products deleted successfully", { id: toastId });
+        setSelectedIds(new Set());
+        fetchProducts();
+      } else {
+        throw new Error("Failed to delete");
+      }
+    } catch (err) {
+      toast.error("Error deleting products", { id: toastId });
     }
   };
 
@@ -134,6 +184,10 @@ export default function CatalogManagerClient({ initialSettings }: CatalogManager
                   onEdit={(p) => window.location.href = '/admin/products'} 
                   onToggle={handleToggleActive} 
                   onFiltersChange={setActiveFilters}
+                  selectedIds={selectedIds}
+                  onToggleSelect={handleToggleSelect}
+                  onSelectAllGroup={handleSelectAllGroup}
+                  onDeselectAllGroup={handleDeselectAllGroup}
                 />
             </div>
           )
@@ -142,6 +196,20 @@ export default function CatalogManagerClient({ initialSettings }: CatalogManager
             <SettingsForm initialSettings={initialSettings} />
           </div>
         )}
+      
+        {selectedIds.size > 0 && activeTab === "hardware" && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-card border border-border shadow-2xl rounded-full px-6 py-3 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
+             <span className="font-semibold text-sm text-foreground">{selectedIds.size} item{selectedIds.size > 1 ? 's' : ''} selected</span>
+             <div className="w-px h-6 bg-border" />
+             <div className="flex items-center gap-3">
+               <button onClick={() => setSelectedIds(new Set())} className="text-sm font-medium text-muted-foreground hover:text-foreground">Cancel</button>
+               <button onClick={handleBulkDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2">
+                 <Trash2 className="w-4 h-4" /> Delete Selected
+               </button>
+             </div>
+          </div>
+        )}
+
       </main>
     </div>
   );

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { 
   Search, ChevronDown, ChevronRight, Edit2, Camera, Monitor, 
   Layers, Zap, Package, HardDrive, Cpu, ShieldCheck,
-  ListFilter, Filter
+  ListFilter, Filter, Wrench, Shield, Tv, Box, Server, Square, CheckSquare
 } from "lucide-react";
 import type { Product } from "@/types";
 
@@ -12,17 +12,26 @@ import { Input } from "@/components/ui/input";
 
 // ─── Config ────────────────────────────────────────────────────────────────
 
-const CATEGORIES: Record<string, { label: string; icon: any }> = {
-  camera:    { label: "Cameras",                icon: Camera    },
-  recorder:  { label: "Recorders (DVR / NVR)",  icon: Monitor   },
-  accessory: { label: "Accessories",            icon: Layers    },
-  cable:     { label: "Cables & Wiring",        icon: Zap       },
-  storage:   { label: "Storage (HDD/SD)",       icon: HardDrive },
-  network:   { label: "Network (PoE/Switch)",   icon: Cpu       },
-  power:     { label: "Power & PSU",            icon: Zap       },
-  display:   { label: "Display / Monitors",     icon: Monitor   },
-  addon:     { label: "Other Add-ons",          icon: Package   },
+const MUST_HAVE_CATEGORIES: Record<string, { label: string; icon: any }> = {
+  camera:       { label: "Cameras (IP/HD)",         icon: Camera },
+  recorder:     { label: "Recorders (NVR/DVR/XVR)", icon: Monitor },
+  storage:      { label: "Storage (HDD/SD)",        icon: HardDrive },
+  connector:    { label: "Connectors (RJ45/BNC/DC)",icon: Zap },
+  cable:        { label: "Cables (CAT6/3+1)",       icon: Layers },
+  power_device: { label: "Power Device (PoE/SMPS)", icon: Cpu },
+  installation: { label: "Installation & Services", icon: Wrench },
 };
+
+const OPTIONAL_CATEGORIES: Record<string, { label: string; icon: any }> = {
+  amc:       { label: "AMC (Maintenance)",          icon: Shield },
+  display:   { label: "Display Screen (LCD/TV)",    icon: Tv },
+  mount:     { label: "Camera Mount Box",           icon: Box },
+  rack:      { label: "Racks (Recorder/Switch)",    icon: Server },
+  network:   { label: "Network Devices (Router)",   icon: Cpu },
+  accessory: { label: "Other Accessories",          icon: Package },
+};
+
+const CATEGORIES = { ...MUST_HAVE_CATEGORIES, ...OPTIONAL_CATEGORIES };
 
 function sellingPrice(p: Product): number {
   if (p.base_cost !== undefined && p.margin_percentage !== undefined) {
@@ -52,13 +61,33 @@ function SubCategoryGroup({
   products,
   onEdit,
   onToggle,
+  selectedIds,
+  onToggleSelect,
+  onSelectAllGroup,
+  onDeselectAllGroup
 }: {
   label: string;
   products: Product[];
   onEdit: (p: Product) => void;
   onToggle: (p: Product) => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onSelectAllGroup?: (ids: string[]) => void;
+  onDeselectAllGroup?: (ids: string[]) => void;
 }) {
   const [open, setOpen] = useState(true);
+  
+  const allSelected = products.every(p => p.id && selectedIds?.has(p.id));
+  const someSelected = products.some(p => p.id && selectedIds?.has(p.id));
+
+  const handleSelectAll = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (allSelected) {
+      onDeselectAllGroup?.(products.map(p => p.id).filter((id): id is string => !!id));
+    } else {
+      onSelectAllGroup?.(products.map(p => p.id).filter((id): id is string => !!id));
+    }
+  };
   
   return (
     <div className="border-t border-border first:border-0">
@@ -67,6 +96,11 @@ function SubCategoryGroup({
         className="w-full flex items-center justify-between px-6 py-4 hover:bg-muted/30 transition-colors group/sub"
       >
         <div className="flex items-center gap-3">
+          {selectedIds && (
+            <div onClick={handleSelectAll} className="mr-2 cursor-pointer hover:opacity-80">
+              {allSelected ? <CheckSquare className="w-4 h-4 text-primary" /> : someSelected ? <Square className="w-4 h-4 text-primary opacity-50 fill-primary/20" /> : <Square className="w-4 h-4 text-muted-foreground" />}
+            </div>
+          )}
           <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
           <span className="text-xs font-semibold text-foreground">
             {label || "General Infrastructure"}
@@ -90,94 +124,102 @@ function SubCategoryGroup({
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-card">
-              {products.map((p) => (
-                <tr
-                  key={p.id}
-                  className={`group/row transition-colors ${!p.is_active ? "opacity-60 bg-muted/10" : "hover:bg-muted/30"}`}
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center border border-border">
-                        <Package className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-semibold text-sm text-foreground truncate">
-                          {p.display_name}
-                        </span>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <code className="text-[10px] font-mono text-muted-foreground">{p.technical_name || "ID_MISSING"}</code>
+              {products.map((p) => {
+                const isSelected = p.id ? selectedIds?.has(p.id) : false;
+                return (
+                  <tr
+                    key={p.id}
+                    className={`group/row transition-colors ${!p.is_active ? "opacity-60 bg-muted/10" : "hover:bg-muted/30"} ${isSelected ? "bg-primary/5" : ""}`}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        {selectedIds && (
+                          <div onClick={() => p.id && onToggleSelect?.(p.id)} className="mr-1 cursor-pointer hover:opacity-80">
+                            {isSelected ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4 text-muted-foreground" />}
+                          </div>
+                        )}
+                        <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center border border-border">
+                          <Package className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-semibold text-sm text-foreground truncate">
+                            {p.display_name}
+                          </span>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <code className="text-[10px] font-mono text-muted-foreground">{p.technical_name || "ID_MISSING"}</code>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-foreground">
-                        {p.brand || "Generic"}
-                      </span>
-                    </div>
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1.5">
-                      {p.resolution_mp && (
-                        <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20">
-                          {p.resolution_mp}MP
-                        </Badge>
-                      )}
-                      {p.channels && (
-                        <Badge variant="outline" className="text-[9px]">
-                          {p.channels}CH
-                        </Badge>
-                      )}
-                      <Badge variant="secondary" className="text-[9px]">
-                        {p.technologies?.join(', ') || "HD"}
-                      </Badge>
-                    </div>
-                  </td>
-
-                  <td className="px-6 py-4 text-center">
-                    <Badge variant={p.stock_quantity === undefined ? "secondary" : p.stock_quantity <= 0 ? "destructive" : p.stock_quantity < 10 ? "secondary" : "default"} className={`text-[10px] ${p.stock_quantity !== undefined && p.stock_quantity > 0 && p.stock_quantity >= 10 ? 'bg-success/10 text-success hover:bg-success/20' : ''}`}>
-                      {p.stock_quantity === undefined ? "N/A" : p.stock_quantity}
-                    </Badge>
-                  </td>
-
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex flex-col items-end">
-                      <span className="text-sm font-semibold text-foreground">
-                        ₹{sellingPrice(p).toLocaleString("en-IN")}
-                      </span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] text-muted-foreground line-through">₹{Number(p.base_cost || 0).toLocaleString()}</span>
-                        <span className="text-[10px] font-medium text-success">+{p.margin_percentage}%</span>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-foreground">
+                          {p.brand || "Generic"}
+                        </span>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td className="px-6 py-4 text-center">
-                    <button
-                      onClick={() => onToggle(p)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                        p.is_active ? "bg-success" : "bg-muted"
-                      }`}
-                    >
-                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${p.is_active ? 'translate-x-4' : 'translate-x-1'}`} />
-                    </button>
-                  </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1.5">
+                        {p.resolution_mp && (
+                          <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20">
+                            {p.resolution_mp}MP
+                          </Badge>
+                        )}
+                        {p.channels && (
+                          <Badge variant="outline" className="text-[9px]">
+                            {p.channels}CH
+                          </Badge>
+                        )}
+                        <Badge variant="secondary" className="text-[9px]">
+                          {p.technologies?.join(', ') || "HD"}
+                        </Badge>
+                      </div>
+                    </td>
 
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
+                    <td className="px-6 py-4 text-center">
+                      <Badge variant={p.stock_quantity === undefined ? "secondary" : p.stock_quantity <= 0 ? "destructive" : p.stock_quantity < 10 ? "secondary" : "default"} className={`text-[10px] ${p.stock_quantity !== undefined && p.stock_quantity > 0 && p.stock_quantity >= 10 ? 'bg-success/10 text-success hover:bg-success/20' : ''}`}>
+                        {p.stock_quantity === undefined ? "N/A" : p.stock_quantity}
+                      </Badge>
+                    </td>
+
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex flex-col items-end">
+                        <span className="text-sm font-semibold text-foreground">
+                          ₹{sellingPrice(p).toLocaleString("en-IN")}
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[10px] text-muted-foreground line-through">₹{Number(p.base_cost || 0).toLocaleString()}</span>
+                          <span className="text-[10px] font-medium text-success">+{p.margin_percentage}%</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 text-center">
                       <button
-                        onClick={() => onEdit(p)}
-                        className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => onToggle(p)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                          p.is_active ? "bg-success" : "bg-muted"
+                        }`}
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${p.is_active ? 'translate-x-4' : 'translate-x-1'}`} />
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => onEdit(p)}
+                          className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -193,11 +235,19 @@ function CategorySection({
   products,
   onEdit,
   onToggle,
+  selectedIds,
+  onToggleSelect,
+  onSelectAllGroup,
+  onDeselectAllGroup
 }: {
   categoryKey: string;
   products: Product[];
   onEdit: (p: Product) => void;
   onToggle: (p: Product) => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onSelectAllGroup?: (ids: string[]) => void;
+  onDeselectAllGroup?: (ids: string[]) => void;
 }) {
   const [open, setOpen] = useState(true);
   const cfg = CATEGORIES[categoryKey] || { label: categoryKey, icon: Package };
@@ -218,7 +268,7 @@ function CategorySection({
   if (products.length === 0) return null;
 
   return (
-    <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+    <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 mb-6">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-6 py-5 bg-card hover:bg-muted/30 transition-colors border-b border-border"
@@ -248,6 +298,10 @@ function CategorySection({
               products={items}
               onEdit={onEdit}
               onToggle={onToggle}
+              selectedIds={selectedIds}
+              onToggleSelect={onToggleSelect}
+              onSelectAllGroup={onSelectAllGroup}
+              onDeselectAllGroup={onDeselectAllGroup}
             />
           ))}
         </div>
@@ -263,9 +317,22 @@ interface ProductInventoryProps {
   onEdit: (p: Product) => void;
   onToggle: (p: Product) => void;
   onFiltersChange?: (filters: { category: string; technology: string }) => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onSelectAllGroup?: (ids: string[]) => void;
+  onDeselectAllGroup?: (ids: string[]) => void;
 }
 
-export function ProductInventory({ products, onEdit, onToggle, onFiltersChange }: ProductInventoryProps) {
+export function ProductInventory({ 
+  products, 
+  onEdit, 
+  onToggle, 
+  onFiltersChange,
+  selectedIds,
+  onToggleSelect,
+  onSelectAllGroup,
+  onDeselectAllGroup
+}: ProductInventoryProps) {
   const [search, setSearch]         = useState("");
   const [filterCat, setFilterCat]   = useState<string>("all");
   const [filterTech, setFilterTech] = useState<string>("all");
@@ -383,10 +450,14 @@ export function ProductInventory({ products, onEdit, onToggle, onFiltersChange }
       </Card>
 
       {/* ── Category groups ── */}
-      <div className="space-y-6">
-        {["camera", "recorder", ...Object.keys(CATEGORIES).filter(k => !["camera", "recorder"].includes(k))].map((cat) => {
+      <div>
+        <div className="pt-4 pb-4">
+          <h2 className="text-xl font-bold tracking-tight text-primary">Must Have for Wired Setup</h2>
+          <p className="text-sm text-muted-foreground">Essential core system and labor components.</p>
+        </div>
+        {Object.keys(MUST_HAVE_CATEGORIES).map((cat) => {
           const items = visibleFiltered.filter((p) => {
-            const pCat = p.category || "addon";
+            const pCat = p.category || "accessory";
             return pCat === cat;
           });
           
@@ -397,6 +468,35 @@ export function ProductInventory({ products, onEdit, onToggle, onFiltersChange }
               products={items}
               onEdit={onEdit}
               onToggle={onToggle}
+              selectedIds={selectedIds}
+              onToggleSelect={onToggleSelect}
+              onSelectAllGroup={onSelectAllGroup}
+              onDeselectAllGroup={onDeselectAllGroup}
+            />
+          );
+        })}
+
+        <div className="pt-8 pb-4">
+          <h2 className="text-xl font-bold tracking-tight text-primary">Optional Upgrades</h2>
+          <p className="text-sm text-muted-foreground">Add-ons, maintenance, and secondary hardware.</p>
+        </div>
+        {Object.keys(OPTIONAL_CATEGORIES).map((cat) => {
+          const items = visibleFiltered.filter((p) => {
+            const pCat = p.category || "accessory";
+            return pCat === cat;
+          });
+          
+          return (
+            <CategorySection
+              key={cat}
+              categoryKey={cat}
+              products={items}
+              onEdit={onEdit}
+              onToggle={onToggle}
+              selectedIds={selectedIds}
+              onToggleSelect={onToggleSelect}
+              onSelectAllGroup={onSelectAllGroup}
+              onDeselectAllGroup={onDeselectAllGroup}
             />
           );
         })}

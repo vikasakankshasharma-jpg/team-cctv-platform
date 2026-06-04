@@ -59,6 +59,7 @@ const NAV_GROUPS = [
     items: [
       { name: "Catalog & Pricing",  href: "/admin/catalog-manager",   icon: Package },
       { name: "Hardware Inventory", href: "/admin/products",          icon: Package },
+      { name: "Vendor Import Engine", href: "/admin/vendor-import",       icon: Package },
       { name: "Data Management",    href: "/admin/products/bulk",     icon: Database },
       { name: "Compatibility",      href: "/admin/compatibility",     icon: Link2 },
       { name: "Catalog Health",     href: "/admin/products/health",   icon: HeartPulse },

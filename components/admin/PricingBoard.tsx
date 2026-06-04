@@ -133,7 +133,9 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
         label: config.label, 
         total: result.total_payable,
         profit_percent: result.gross_profit_percent || 0,
-        warnings: result.margin_warnings || []
+        warnings: result.margin_warnings || [],
+        error: result.error,
+        error_message: result.error_message
       };
     });
   }, [products, settings, addons]);
@@ -146,7 +148,7 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
     { name: "IP Cameras", filter: (p: Product) => p.category === "camera" && p.technologies?.includes("IP"), icon: Camera },
     { name: "HD Cameras", filter: (p: Product) => p.category === "camera" && p.technologies?.includes("HD"), icon: Camera },
     { name: "Storage (HDD)", filter: (p: Product) => p.category === "accessory" && p.technical_name.toLowerCase().includes("hdd"), icon: HardDrive },
-    { name: "Accessories & Cable", filter: (p: Product) => (p.category === "accessory" || p.category === "cable") && !p.technical_name.toLowerCase().includes("hdd"), icon: Cable },
+    { name: "Accessories & Cable", filter: (p: Product) => (p.category === "accessory" || p.category === "cable" || p.category === "power_device") && !p.technical_name.toLowerCase().includes("hdd"), icon: Cable },
   ];
 
   return (
@@ -310,10 +312,16 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
                         <div className="text-[10px] font-medium text-muted-foreground mt-0.5">Total Value</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-base font-semibold text-foreground">₹{prev.total.toLocaleString('en-IN')}</div>
-                        <div className={`text-[10px] font-semibold mt-0.5 ${prev.profit_percent < (settings.minimum_margin_threshold || 15) ? "text-destructive" : "text-success"}`}>
-                          Margin: {prev.profit_percent}%
-                        </div>
+                        {prev.error ? (
+                          <div className="text-[11px] font-bold text-destructive uppercase tracking-wider bg-destructive/10 px-2 py-1 rounded">Invalid Quote</div>
+                        ) : (
+                          <>
+                            <div className="text-base font-semibold text-foreground">₹{prev.total.toLocaleString('en-IN')}</div>
+                            <div className={`text-[10px] font-semibold mt-0.5 ${prev.profit_percent < (settings.minimum_margin_threshold || 15) ? "text-destructive" : "text-success"}`}>
+                              Margin: {prev.profit_percent}%
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                     {prev.warnings.length > 0 && (

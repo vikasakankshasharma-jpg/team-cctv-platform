@@ -1,0 +1,1 @@
+const fs=require('fs'); let c=fs.readFileSync('app/(admin)/admin/vendor-import/VendorImportClient.tsx', 'utf-8'); c=c.replace('))\\n             )}\\n          </div>\\n        )}\\n      </main>', '))\\n             )}\\n          </div>\\n        </div>\\n        )}\\n      </main>'); fs.writeFileSync('app/(admin)/admin/vendor-import/VendorImportClient.tsx', c);

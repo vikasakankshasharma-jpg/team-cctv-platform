@@ -132,7 +132,8 @@ export default function RulesClient({ initialRules }: RulesClientProps) {
               >
                 <option value="home">Home</option>
                 <option value="office">Office</option>
-                <option value="factory">Factory</option>
+                <option value="warehouse">Warehouse</option>
+                <option value="bungalow">Bungalow</option>
               </select>
             </div>
             <div className="space-y-1.5">
