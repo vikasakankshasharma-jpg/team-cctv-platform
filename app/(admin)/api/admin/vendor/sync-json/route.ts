@@ -1,102 +1,12 @@
 import { NextRequest } from "next/server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
 import { ApiResponse } from "@/lib/api-response";
-
-// AI Normalization logic mapping (heuristic)
-function guessCategory(title: string) {
-    const t = title.toLowerCase();
-    if (t.includes('camera') || t.includes('ptz') || t.includes('bullet') || t.includes('dome')) return 'camera';
-    if (t.includes('dvr') || t.includes('nvr') || t.includes('recorder')) return 'recorder';
-    if (t.includes('hard disk') || t.includes('hdd') || t.includes('micro sd') || t.includes('ssd') || t.includes('purple')) return 'storage';
-    if (t.includes('power supply') || t.includes('smps') || t.includes('adapter')) return 'power_device';
-    if (t.includes('cable') || t.includes('wire') || t.includes('cat6') || t.includes('hdmi') || t.includes('vga')) return 'cable';
-    if (t.includes('connector') || t.includes('rj45') || t.includes('bnc') || t.includes('dc pin')) return 'connector';
-    if (t.includes('mount') || t.includes('junction box') || t.includes('bracket')) return 'mount';
-    if (t.includes('rack') || t.includes('cabinet') || t.includes('server rack')) return 'rack';
-    if (t.includes('switch') || t.includes('router') || t.includes('poe switch')) return 'network';
-    if (t.includes('installation') || t.includes('service') || t.includes('labour')) return 'installation';
-    if (t.includes('amc') || t.includes('maintenance')) return 'amc';
-    if (t.includes('display') || t.includes('monitor') || t.includes('tv') || t.includes('lcd')) return 'display';
-    return 'accessory';
-}
-
-function guessTechnologies(title: string) {
-    const t = title.toLowerCase();
-    const techs: string[] = [];
-    if (t.includes('ip ') || t.includes('network')) techs.push('IP');
-    if (t.includes('ahd') || t.includes('cvi') || t.includes('tvi') || t.includes('analog') || t.includes(' hd ') || t.includes('-hd') || t.includes(' hd-')) techs.push('Analog');
-    if (t.includes('colorvu') || t.includes('full color') || t.includes('night color')) techs.push('ColorVu');
-    if (t.includes('two way audio') || t.includes('two-way audio') || t.includes('2-way audio') || t.includes('two way talk') || t.includes('two-way talk') || t.includes('2-way talk')) {
-        techs.push('Two-Way Audio');
-    } else if (t.includes('audio') || t.includes('mic')) {
-        techs.push('Audio');
-    }
-    if (t.includes('poe')) techs.push('PoE');
-    if (t.includes('wifi') || t.includes('wi-fi') || t.includes('wireless')) techs.push('WiFi');
-    if (t.includes('4g')) techs.push('4G');
-    
-    if (t.includes('ptz') || t.includes('pan tilt zoom') || t.includes('pan-tilt-zoom')) {
-        techs.push('PTZ');
-    } else if (t.includes('pan-tilt') || t.includes('pan tilt') || /\bpt\b/.test(t)) {
-        techs.push('PT');
-    }
-
-    // Form Factor & Environment
-    if (t.includes('dome')) techs.push('Dome');
-    if (t.includes('bullet')) techs.push('Bullet');
-    if (t.includes('indoor')) techs.push('Indoor');
-    if (t.includes('outdoor')) techs.push('Outdoor');
-    
-    // Resolution guesses
-    if (t.includes('2mp') || t.includes('2.4mp') || t.includes('1080p')) techs.push('2MP');
-    if (t.includes('3mp')) techs.push('3MP');
-    if (t.includes('4mp') && !t.includes('2.4mp')) techs.push('4MP');
-    if (t.includes('5mp')) techs.push('5MP');
-    if (t.includes('6mp')) techs.push('6MP');
-    if (t.includes('8mp') || t.includes('4k')) techs.push('8MP');
-
-    return Array.from(new Set(techs)); // unique
-}
-
-function guessResolution(title: string) {
-    const t = title.toLowerCase();
-    if (t.includes('2.4mp')) return 2.4;
-    if (t.includes('2mp') || t.includes('1080p')) return 2;
-    if (t.includes('3mp')) return 3;
-    if (t.includes('4mp') && !t.includes('2.4mp')) return 4;
-    if (t.includes('5mp')) return 5;
-    if (t.includes('6mp')) return 6;
-    if (t.includes('8mp') || t.includes('4k')) return 8;
-    return null;
-}
-
-function guessBrand(title: string) {
-    const t = title.toLowerCase();
-    if (t.includes('cp-plus') || t.includes('cp plus') || t.includes('cpplus')) return 'CP-Plus';
-    if (t.includes('hikvision')) return 'Hikvision';
-    if (t.includes('dahua')) return 'Dahua';
-    if (t.includes('prama')) return 'Prama';
-    if (t.includes('godrej')) return 'Godrej';
-    if (t.includes('trueview')) return 'Trueview';
-    if (t.includes('consistent')) return 'Consistent';
-    if (t.includes('seagate')) return 'Seagate';
-    if (t.includes('western digital') || t.includes('wd purple')) return 'WD';
-    if (t.includes('toshiba')) return 'Toshiba';
-    if (t.includes('d-link') || t.includes('dlink')) return 'D-Link';
-    if (t.includes('tp-link') || t.includes('tplink')) return 'TP-Link';
-    return null;
-}
-
-function guessChannels(title: string) {
-    const t = title.toLowerCase();
-    const match = t.match(/(\d+)\s*(?:ch|channel|port)/);
-    if (match) return parseInt(match[1]);
-    return null;
-}
+import { guessCategory, guessBrand, guessTechnologies, guessResolution, guessChannels, guessRackUHeight, guessCableLength, guessVoltage, guessAmperage, guessWattage } from "@/lib/vendor/ai-parser";
+import { parseProductWithGemini } from "@/lib/vendor/gemini-parser";
 
 export async function POST(request: NextRequest) {
   try {
-    const { products, overrideCategory } = await request.json();
+    const { products, overrideCategory, vendorId, vendorPrefix } = await request.json();
 
     if (!products || !Array.isArray(products) || products.length === 0) {
       return ApiResponse.badRequest("No products provided");
@@ -116,6 +26,22 @@ export async function POST(request: NextRequest) {
         if (data.vendor_product_id) {
             liveCatalog.set(data.vendor_product_id, { id: doc.id, ...data });
         }
+        if (data.internal_sku) {
+            liveCatalog.set(data.internal_sku, { id: doc.id, ...data });
+        }
+    });
+
+    // Fetch Specification Knowledge Base
+    const specKnowledgeSnapshot = await adminDb.collection('specification_knowledge').get();
+    const learnedSpecs: { name: string, lowercaseName: string }[] = [];
+    specKnowledgeSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.spec_name) {
+            learnedSpecs.push({
+                name: data.spec_name,
+                lowercaseName: data.spec_name.toLowerCase()
+            });
+        }
     });
 
     const productsToStage: any[] = [];
@@ -123,41 +49,93 @@ export async function POST(request: NextRequest) {
 
     for (const prod of products) {
         if (!prod.title) continue;
-        const vendorProductId = "MJ-" + Buffer.from(prod.title).toString('base64').substring(0, 8).toUpperCase();
-        const existingProduct = liveCatalog.get(vendorProductId);
+        const generatedSku = (vendorPrefix || "VND") + "-" + Buffer.from(prod.title).toString('base64').substring(0, 8).toUpperCase();
+        const internalSku = generatedSku;
+        const vendorProductId = prod.vendorProductId || generatedSku;
         
-        let finalCategory = overrideCategory;
-        if (!finalCategory) {
-            const itemCat = guessCategory(prod.title);
-            const fileCat = prod.category;
-            // Cross-verification: If item title lacks specific keywords, trust the filename.
-            // Otherwise, trust the item title (e.g., catching a "Cable" inside a "Camera" file).
-            if (itemCat === 'accessory' && fileCat && fileCat !== 'accessory') {
-                finalCategory = fileCat;
-            } else {
-                finalCategory = itemCat;
+        const existingProduct = liveCatalog.get(vendorProductId) || liveCatalog.get(internalSku);
+        
+        let finalCategory = "unidentified";
+        
+        // 1. AI Dynamic Learning (Check Live Catalog for similar past items)
+        const titleWords = prod.title.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ').slice(0, 3).join(' ');
+        let learnedCategory = null;
+        if (titleWords.length > 5) {
+            for (const liveProd of Array.from(liveCatalog.values())) {
+                if (liveProd.category && liveProd.display_name) {
+                    const liveTitleWords = liveProd.display_name.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ').slice(0, 3).join(' ');
+                    if (titleWords === liveTitleWords) {
+                        learnedCategory = liveProd.category;
+                        break;
+                    }
+                }
             }
         }
 
         if (existingProduct) {
+            let needsUpdate = false;
+            const updatePayload: any = {};
             if (existingProduct.base_cost !== prod.baseCost) {
+                updatePayload.base_cost = prod.baseCost;
+                needsUpdate = true;
+            }
+            if (prod.inStock !== undefined && existingProduct.is_active !== prod.inStock) {
+                updatePayload.is_active = prod.inStock;
+                needsUpdate = true;
+            }
+            if (vendorId && existingProduct.vendor_id !== vendorId) {
+                updatePayload.vendor_id = vendorId;
+                needsUpdate = true;
+            }
+            if (!existingProduct.internal_sku) {
+                updatePayload.internal_sku = internalSku;
+                needsUpdate = true;
+            }
+            if (!existingProduct.vendor_product_id && prod.vendorProductId) {
+                updatePayload.vendor_product_id = prod.vendorProductId;
+                needsUpdate = true;
+            }
+            
+            if (needsUpdate) {
                 productsToUpdate.push({
                     id: existingProduct.id,
-                    base_cost: prod.baseCost,
+                    ...updatePayload,
                     updated_at: serverTimestamp()
                 });
             }
         } else {
+            // Compile Training Rules
+            let trainingRules = "Past Learned Specs from Admin: " + learnedSpecs.map(s => s.name).join(", ") + ". ";
+            if (learnedCategory) {
+                trainingRules += `\nNote: A highly similar product was previously categorized as '${learnedCategory}'. Strongly consider this category.`;
+            }
+            if (overrideCategory && overrideCategory !== "unidentified") {
+                trainingRules += `\nCRITICAL RULE: The Admin is strictly filtering for the '${overrideCategory}' category. If you are >70% confident this product is a '${overrideCategory}', categorize it as '${overrideCategory}'. If it is ANY other type of product, or if you are unsure, you MUST categorize it as 'unidentified'. Do NOT use any other categories.`;
+            }
+
+            // Call Multimodal Gemini AI
+            const geminiResult = await parseProductWithGemini(prod.title, prod.imgUrl, trainingRules);
+
             productsToStage.push({
                 status: "pending",
                 raw_title: prod.title,
                 vendor_product_id: vendorProductId,
-                category: finalCategory,
-                brand: guessBrand(prod.title),
+                internal_sku: internalSku,
+                vendor_id: vendorId || null,
+                in_stock: prod.inStock !== false,
+                category: geminiResult.category,
+                brand: geminiResult.brand,
                 base_cost: prod.baseCost || 0,
-                technologies: guessTechnologies(prod.title),
-                resolution_mp: guessResolution(prod.title),
-                channels: guessChannels(prod.title),
+                technologies: geminiResult.technologies,
+                resolution_mp: geminiResult.resolution_mp || null,
+                channels: geminiResult.channels || null,
+                rack_u_height: geminiResult.rack_u_height || null,
+                cable_length_m: geminiResult.cable_length_m || null,
+                power_voltage_v: geminiResult.power_voltage_v || null,
+                power_amperage_a: geminiResult.power_amperage_a || null,
+                power_wattage_w: geminiResult.power_wattage_w || null,
+                ai_confidence_score: geminiResult.confidence_score,
+                ai_reasoning: geminiResult.ai_reasoning,
                 image_url: prod.imgUrl || "",
                 created_at: serverTimestamp()
             });
@@ -170,10 +148,8 @@ export async function POST(request: NextRequest) {
         let updateBatch = adminDb.batch();
         let count = 0;
         productsToUpdate.forEach((prod) => {
-            updateBatch.update(adminDb!.collection('products').doc(prod.id), {
-                base_cost: prod.base_cost,
-                updated_at: prod.updated_at
-            });
+            const { id, ...payload } = prod;
+            updateBatch.update(adminDb!.collection('products').doc(id), payload);
             count++;
             if (count === 500) {
                 updateBatches.push(updateBatch.commit());

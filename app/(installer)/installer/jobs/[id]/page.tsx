@@ -45,6 +45,20 @@ export default async function InstallerJobDetailPage({ params }: { params: { id:
      }
   }
 
+  // Fetch Job details
+  let job: any = null;
+  let hub: any = null;
+  const jobsSnap = await adminDb.collection("jobs").where("lead_id", "==", params.id).limit(1).get();
+  if (!jobsSnap.empty) {
+    job = { id: jobsSnap.docs[0].id, ...jobsSnap.docs[0].data() };
+    if (job.hub_id) {
+      const hubDoc = await adminDb.collection("hubs").doc(job.hub_id).get();
+      if (hubDoc.exists) {
+        hub = { id: hubDoc.id, ...hubDoc.data() };
+      }
+    }
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <PageHeader
@@ -58,6 +72,8 @@ export default async function InstallerJobDetailPage({ params }: { params: { id:
         lead={JSON.parse(JSON.stringify(lead))} 
         hardware={JSON.parse(JSON.stringify(hardware))}
         isAssigned={isAssigned}
+        job={job ? JSON.parse(JSON.stringify(job)) : null}
+        hub={hub ? JSON.parse(JSON.stringify(hub)) : null}
       />
     </div>
   );

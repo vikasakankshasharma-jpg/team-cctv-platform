@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { HeartPulse, AlertCircle, CheckCircle2, ShieldAlert, Package, Database } from "lucide-react";
+import { HeartPulse, AlertCircle, CheckCircle2, ShieldAlert, Package, Database, Sparkles, ChevronRight } from "lucide-react";
 import { CatalogRepairButton } from "@/components/admin/CatalogRepairButton";
 import Link from "next/link";
 import type { Product } from "@/types";
@@ -28,6 +28,8 @@ export default async function CatalogHealthPage() {
     zero_unit_price: products.filter(p => !p.unit_price || p.unit_price <= 0),
     missing_mp: products.filter(p => p.category === "camera" && !p.resolution_mp),
     missing_compatibility: products.filter(p => (p.category === "recorder" || p.category === "accessory") && (!p.compatible_paths || p.compatible_paths.length === 0)),
+    uncategorized: products.filter(p => p.category === "unidentified" || !p.category),
+    missing_specifications: products.filter(p => !p.technologies || p.technologies.length === 0 || (p.technologies.length === 1 && p.technologies[0] === 'Common')),
   };
 
   const totalIssues = Object.values(issues).reduce((acc, list) => acc + list.length, 0);
@@ -58,7 +60,7 @@ export default async function CatalogHealthPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white dark:bg-zinc-900 p-6 rounded-[28px] border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
@@ -85,6 +87,21 @@ export default async function CatalogHealthPage() {
             </div>
             <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 group-hover:bg-blue-500 group-hover:text-white transition-all">
               <ShieldAlert className="w-4 h-4" />
+            </div>
+          </Link>
+
+          <Link href="/admin/spec-optimizer" className="bg-white dark:bg-zinc-900 p-6 rounded-[28px] border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight">Spec Optimizer</h4>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">AI Retroactive Fix</p>
+              </div>
+            </div>
+            <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+              <ChevronRight className="w-4 h-4" />
             </div>
           </Link>
         </div>

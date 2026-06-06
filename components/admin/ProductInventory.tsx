@@ -29,6 +29,7 @@ const OPTIONAL_CATEGORIES: Record<string, { label: string; icon: any }> = {
   rack:      { label: "Racks (Recorder/Switch)",    icon: Server },
   network:   { label: "Network Devices (Router)",   icon: Cpu },
   accessory: { label: "Other Accessories",          icon: Package },
+  unidentified: { label: "Uncategorized Imported Hardware", icon: Package },
 };
 
 const CATEGORIES = { ...MUST_HAVE_CATEGORIES, ...OPTIONAL_CATEGORIES };

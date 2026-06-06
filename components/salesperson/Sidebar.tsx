@@ -13,6 +13,7 @@ import {
   FileText,
   Menu,
   X,
+  HandCoins,
 } from "lucide-react";
 
 const NAV_GROUPS = [
@@ -27,6 +28,12 @@ const NAV_GROUPS = [
     items: [
       { name: "My Leads",     href: "/salesperson/leads",        icon: Users },
       { name: "Walk-In Quote",href: "/salesperson/create-quote", icon: FileText },
+    ]
+  },
+  {
+    label: "Financials",
+    items: [
+      { name: "Commissions",  href: "/salesperson/commissions",  icon: HandCoins },
     ]
   },
 ];

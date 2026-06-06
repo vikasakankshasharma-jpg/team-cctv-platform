@@ -11,7 +11,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { lead_id, items, addons, discount_percent, discount_amount, subtotal, total_payable, installation_cost, note } = body;
+    const { 
+      lead_id, items, addons, discount_percent, discount_amount, 
+      subtotal, total_payable, installation_cost, note,
+      total_purchase_cost, gross_profit_value, gross_profit_percent 
+    } = body;
 
     if (!lead_id || !items || items.length === 0) {
       return ApiResponse.badRequest("Missing required fields");
@@ -45,6 +49,12 @@ export async function POST(req: NextRequest) {
       configuration_snapshot: items,
       addons_snapshot: addons || [],
       expected_total_payable: total_payable,
+      
+      // Margin Intelligence
+      total_purchase_cost: total_purchase_cost || 0,
+      gross_profit_value: gross_profit_value || 0,
+      gross_profit_percent: gross_profit_percent || 0,
+
       status: "draft",
       created_at: new Date().toISOString(),
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),

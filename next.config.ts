@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'megajaipur.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.megajaipur.com',
+      },
     ],
   },
   async headers() {

@@ -107,6 +107,8 @@ export interface Lead {
   hub_id?: string | null;
   hub_name?: string | null;
   assigned_installer_name?: string | null;
+  completion_pin?: string;             // 6-digit OTP for installation completion
+  payment_status?: "pending" | "paid" | "partial";
 
   // Follow-Up Engine
   followups_sent?: string[];
@@ -150,7 +152,7 @@ export interface Product {
   id?: string;
   technical_name: string;
   display_name: string;
-  category: "camera" | "recorder" | "storage" | "connector" | "cable" | "power_device" | "installation" | "amc" | "display" | "mount" | "rack" | "network" | "accessory";
+  category: VendorCategory;
   technologies: Technology[];
   base_cost?: number;            // Cost to business
   margin_percentage?: number;    // Expected profit margin
@@ -159,6 +161,8 @@ export interface Product {
   unit_price_premium?: number;   // Manual Premium price override
   option_price_overrides?: Record<string, number>;
   is_active: boolean;
+  vendor_id?: string;
+  internal_sku?: string;
   features?: string[];           // Array of FeatureTag IDs
   
   // Tally-style Grouping
@@ -205,6 +209,17 @@ export interface Product {
   has_audio?: boolean;               // Built-in microphone
   has_sd_slot?: boolean;             // Local SD card storage
   poe?: boolean;                     // Power over Ethernet
+  rack_u_height?: number;            // For racks (e.g. 4, 6, 9, 12)
+  cable_length_m?: number;           // For cables (e.g. 90, 305)
+  cable_type?: string;               // e.g. "Cat6", "3+1 CCTV", "Fiber"
+  power_voltage_v?: number;          // e.g. 12
+  power_amperage_a?: number;         // e.g. 2, 5, 10
+  power_wattage_w?: number;          // e.g. 60, 120
+  storage_type?: string;             // e.g. "HDD", "SSD", "MicroSD"
+  storage_capacity_tb?: number;      // e.g. 1, 2, 4
+  network_ports?: number;            // e.g. 4, 8, 16, 24
+  network_speed?: string;            // e.g. "10/100", "10/100/1000", "1Gbps"
+  custom_attributes?: { key: string; value: string }[];
   ai_features?: string[];            // e.g., ["person_detect", "vehicle_detect", "face_detect", "line_crossing"]
   warranty_years?: number;           // 1, 2, 3, 5
 
@@ -504,7 +519,10 @@ export interface CommissionRecord {
   id?: string;
   lead_id: string;
   quote_id: string;
-  promoter_id: string;
+  promoter_id?: string; // Kept for backward compatibility
+  user_id?: string;
+  user_type?: "promoter" | "salesperson";
+  customer_name?: string;
   ex_tax_amount: number;
   commission_amount: number;
   status: "pending" | "paid";
@@ -631,6 +649,15 @@ export interface Salesperson {
     base_address_text?: string;
   };
   max_discount_approval_percent?: number;  // Admin-configured: max discount % this salesperson can approve
+  
+  // Commission settings (similar to Promoter)
+  use_global_commission?: boolean;
+  commission_slabs?: CommissionSlab[];
+  discount_type?: "flat" | "percent";
+  discount_value?: number;
+  total_won_leads?: number;
+  total_ex_tax_business?: number;
+
   created_at?: unknown;
   updated_at?: unknown;
 }
@@ -774,7 +801,14 @@ export interface PayoutRequest {
   updated_at?: unknown;
 }
 
-export type VendorCategory = "camera" | "recorder" | "storage" | "connector" | "cable" | "power_device" | "installation" | "amc" | "display" | "mount" | "rack" | "network" | "accessory";
+export type VendorCategory = "camera" | "recorder" | "storage" | "connector" | "cable" | "power_device" | "installation" | "amc" | "display" | "mount" | "rack" | "network" | "accessory" | "unidentified";
+
+export interface Vendor {
+  id?: string;
+  name: string;
+  prefix: string;
+  created_at?: unknown;
+}
 
 export interface StagedProduct {
   id?: string;
@@ -787,4 +821,16 @@ export interface StagedProduct {
   brand?: string;
   resolution_mp?: number | null;
   channels?: number | null;
+  vendor_id?: string;
+  internal_sku?: string;
+  in_stock?: boolean;
+  _raw_specs?: string;
+  ai_confidence_score?: number;
+  ai_reasoning?: string;
+  rack_u_height?: number | null;
+  cable_length_m?: number | null;
+  power_voltage_v?: number | null;
+  power_amperage_a?: number | null;
+  power_wattage_w?: number | null;
+  poe?: boolean | null;
 }

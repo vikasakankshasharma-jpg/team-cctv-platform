@@ -78,27 +78,45 @@ export function ImageUploader({ value, onChange, folder = "products", label = "P
       <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1">{label}</label>
       
       {value ? (
-        <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 group">
-          <Image 
-            src={value} 
-            alt={label} 
-            fill 
-            className="object-contain p-4"
-          />
-          <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="px-6 py-2 bg-white hover:bg-white text-white rounded-full text-xs font-black uppercase tracking-widest transition-colors border border-white/20"
+        <div className="space-y-3">
+          <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 group">
+            <Image 
+              src={value} 
+              alt={label} 
+              fill 
+              className="object-contain p-4"
+            />
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-6 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-black uppercase tracking-widest transition-colors border border-white/40 backdrop-blur-sm"
+              >
+                Replace
+              </button>
+              <button
+                type="button"
+                onClick={() => onChange(null)}
+                className="w-10 h-10 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center transition-colors border border-red-500 backdrop-blur-sm"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-3 px-1">
+            <button 
+              type="button" 
+              onClick={() => fileInputRef.current?.click()} 
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
             >
-              Replace
+              Replace Image
             </button>
-            <button
-              type="button"
-              onClick={() => onChange(null)}
-              className="w-10 h-10 bg-red-500/20 hover:bg-red-500 text-white rounded-full flex items-center justify-center transition-colors border border-red-500/50"
+            <button 
+              type="button" 
+              onClick={() => onChange(null)} 
+              className="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline"
             >
-              <X className="w-4 h-4" />
+              Remove Image
             </button>
           </div>
         </div>

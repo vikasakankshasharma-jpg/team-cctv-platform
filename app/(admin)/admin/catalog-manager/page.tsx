@@ -58,11 +58,11 @@ export default async function CatalogManagerPage() {
     if (snapshot.exists) {
       const data = snapshot.data();
       if (data) {
-        settings = {
+        settings = JSON.parse(JSON.stringify({
           ...defaultSettings,
           ...data,
           updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
-        } as AppSettings;
+        })) as AppSettings;
       }
     }
   } catch (err) {
