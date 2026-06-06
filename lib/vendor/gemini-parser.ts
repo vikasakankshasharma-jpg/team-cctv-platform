@@ -129,13 +129,13 @@ IMPORTANT: Please use your Google Search tool to look up the exact model number 
     const parsed = JSON.parse(response.text) as GeminiExtractionResult;
     return parsed;
 
-  } catch (err) {
-    console.error("Gemini Extraction Error:", err);
-    return fallbackRegexParser(title);
-  }
+    } catch (err: any) {
+        console.error("Gemini Extraction Error:", err);
+        return fallbackRegexParser(title, err.message || String(err));
+    }
 }
 
-function fallbackRegexParser(title: string): GeminiExtractionResult {
+function fallbackRegexParser(title: string, errorMsg?: string): GeminiExtractionResult {
     return {
         category: guessCategory(title),
         brand: guessBrand(title) || "",
@@ -148,6 +148,6 @@ function fallbackRegexParser(title: string): GeminiExtractionResult {
         power_amperage_a: guessAmperage(title) || undefined,
         power_wattage_w: guessWattage(title) || undefined,
         confidence_score: 50,
-        ai_reasoning: "Fallback regex parser used. No active Gemini connection or an error occurred."
+        ai_reasoning: errorMsg ? `Gemini connection failed: ${errorMsg}` : "Fallback regex parser used. No active Gemini connection or an error occurred."
     };
 }
