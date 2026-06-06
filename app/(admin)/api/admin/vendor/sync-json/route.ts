@@ -51,11 +51,10 @@ export async function POST(request: NextRequest) {
     for (const prod of products) {
         if (!prod.title) continue;
         const titleHash = crypto.createHash('md5').update(prod.title).digest('hex').substring(0, 8).toUpperCase();
-        const generatedSku = (vendorPrefix || "VND") + "-" + titleHash;
-        const internalSku = generatedSku;
-        const vendorProductId = prod.vendorProductId || generatedSku;
+        const internalSku = (vendorPrefix || "VND") + "-" + titleHash;
+        const vendorProductId = prod.vendorProductId || "";
         
-        const existingProduct = liveCatalog.get(vendorProductId) || liveCatalog.get(internalSku);
+        const existingProduct = (vendorProductId ? liveCatalog.get(vendorProductId) : undefined) || liveCatalog.get(internalSku);
         
         let finalCategory = "unidentified";
         

@@ -746,7 +746,21 @@ export default function VendorImportClient() {
                                   }}
                                  className="font-bold text-lg w-full bg-transparent border-b border-transparent hover:border-border focus:border-indigo-500 focus:outline-none py-0.5 transition-colors"
                               />
-                              <p className="text-sm text-muted-foreground mt-1">Vendor SKU: {product.vendor_product_id}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <p className="text-sm text-muted-foreground whitespace-nowrap">Vendor SKU:</p>
+                                <input
+                                   type="text"
+                                   value={product.vendor_product_id || ""}
+                                   placeholder="Leave blank to auto-generate"
+                                   onChange={e => {
+                                      const newSku = e.target.value;
+                                      setStagedProducts(stagedProducts.map(p => 
+                                          p.id === product.id ? { ...p, vendor_product_id: newSku } : p
+                                      ));
+                                   }}
+                                   className="text-sm bg-transparent border-b border-transparent hover:border-border focus:border-indigo-500 focus:outline-none py-0.5 transition-colors w-full max-w-[200px]"
+                                />
+                              </div>
                               
                               {product.ai_confidence_score !== undefined && (
                                 <div className="mt-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
