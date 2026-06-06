@@ -12,6 +12,7 @@ interface Suggestion {
   existing_technologies: string[];
   suggested_technologies: string[];
   image_url: string;
+  deep_specs?: any;
 }
 
 export default function SpecOptimizerClient() {
@@ -68,7 +69,8 @@ export default function SpecOptimizerClient() {
       .filter(s => selectedIds.has(s.id))
       .map(s => ({
         id: s.id,
-        technologies: [...s.existing_technologies, ...s.suggested_technologies]
+        technologies: [...s.existing_technologies, ...s.suggested_technologies],
+        deep_specs: s.deep_specs
       }));
 
     try {
