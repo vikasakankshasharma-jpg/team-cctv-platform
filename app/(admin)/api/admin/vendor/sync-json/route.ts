@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import crypto from "crypto";
 import { ApiResponse } from "@/lib/api-response";
 import { guessCategory, guessBrand, guessTechnologies, guessResolution, guessChannels, guessRackUHeight, guessCableLength, guessVoltage, guessAmperage, guessWattage } from "@/lib/vendor/ai-parser";
 import { parseProductWithGemini } from "@/lib/vendor/gemini-parser";
@@ -49,7 +50,8 @@ export async function POST(request: NextRequest) {
 
     for (const prod of products) {
         if (!prod.title) continue;
-        const generatedSku = (vendorPrefix || "VND") + "-" + Buffer.from(prod.title).toString('base64').substring(0, 8).toUpperCase();
+        const titleHash = crypto.createHash('md5').update(prod.title).digest('hex').substring(0, 8).toUpperCase();
+        const generatedSku = (vendorPrefix || "VND") + "-" + titleHash;
         const internalSku = generatedSku;
         const vendorProductId = prod.vendorProductId || generatedSku;
         
