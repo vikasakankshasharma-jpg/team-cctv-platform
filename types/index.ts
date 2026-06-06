@@ -833,4 +833,10 @@ export interface StagedProduct {
   power_amperage_a?: number | null;
   power_wattage_w?: number | null;
   poe?: boolean | null;
+  storage_type?: string | null;
+  storage_capacity_tb?: number | null;
+  network_ports?: number | null;
+  network_speed?: string | null;
+  _ai_confidence?: number | null;
+  _ai_reasoning?: string | null;
 }
