@@ -10,17 +10,24 @@ export async function GET() {
       .where("is_deleted", "==", false)
       .get();
 
+    const { verifySession } = await import("@/lib/auth-server");
+    const session = await verifySession();
+    const canSeeWholesale = session.isAuthenticated && (session.role === "sales_staff" || session.role === "super_admin");
+
     const products = productsSnap.docs.map((doc) => {
       const data = doc.data() as any;
       
-      // Fallback for older database schemas
       if (!Array.isArray(data.technologies)) {
         data.technologies = data.technology ? [data.technology] : ["Common"];
       }
       
-      // STRIP SENSITIVE FIELDS: Never expose internal costs/margins to the browser
-      const { base_cost, margin_percentage, ...publicData } = data;
-      return { id: doc.id, ...publicData } as Product;
+      if (!canSeeWholesale) {
+        // STRIP SENSITIVE FIELDS: Never expose internal costs to public
+        delete data.base_cost;
+        delete data.margin_percentage;
+      }
+      
+      return { id: doc.id, ...data } as Product;
     });
 
     return NextResponse.json({ products });

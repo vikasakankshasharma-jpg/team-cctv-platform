@@ -26,12 +26,19 @@ export default async function CommissionAdminPage() {
     };
   }) as any[];
 
-  // Fetch all promoters to build a name map for readability
+  // Fetch all promoters to build a name map
   const promotersSnapshot = await adminDb.collection(COLLECTIONS.PROMOTERS).get();
-  const promoterMap: Record<string, string> = {};
+  const nameMap: Record<string, { name: string, role: string }> = {};
   promotersSnapshot.docs.forEach(doc => {
     const data = doc.data() as Promoter;
-    promoterMap[doc.id] = data.name;
+    nameMap[doc.id] = { name: data.name, role: "Promoter" };
+  });
+
+  // Fetch all salespersons to build a name map
+  const salespersonsSnapshot = await adminDb.collection("salespersons").get();
+  salespersonsSnapshot.docs.forEach(doc => {
+    const data = doc.data();
+    nameMap[doc.id] = { name: data.name, role: "Sales" };
   });
 
   const stats = {
@@ -57,7 +64,7 @@ export default async function CommissionAdminPage() {
 
       <CommissionLedgerClient 
         initialRecords={commissions} 
-        promoterMap={promoterMap}
+        nameMap={nameMap}
         stats={stats}
       />
     </div>

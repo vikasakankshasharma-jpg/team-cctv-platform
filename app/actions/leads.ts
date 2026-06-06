@@ -37,7 +37,7 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
         updatePayload.follow_up_notes = arrayUnion(validated.note);
       }
 
-      if (existingComms.empty && leadData?.promoter_id) {
+      if (existingComms.empty && (leadData?.promoter_id || leadData?.assigned_to_salesperson_id || leadData?.assigned_salesperson_id)) {
         const quotesSnap = await transaction.get(
           leadRef.collection(SUBCOLLECTIONS.QUOTES).orderBy("created_at", "desc").limit(1)
         );
@@ -47,46 +47,62 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
           const netTaxable = quoteData.net_taxable_amount || quoteData.total_payable || 0;
           const quoteId = quotesSnap.docs[0].id;
           
-          const promoterRef = adminDb.collection(COLLECTIONS.PROMOTERS).doc(leadData.promoter_id);
-          const promoterDoc = await transaction.get(promoterRef);
-          
-          if (promoterDoc.exists) {
-            const promoter = promoterDoc.data() as Promoter;
+          // Helper to calculate and generate commission
+          const generateCommission = async (userId: string, userType: "promoter" | "salesperson", collectionName: string) => {
+            const userRef = adminDb.collection(collectionName).doc(userId);
+            const userDoc = await transaction.get(userRef);
             
-            let commissionAmount = 0;
-            if (promoter.use_global_commission && promoter.commission_slabs) {
-              const slab = promoter.commission_slabs.find(s => 
-                netTaxable >= s.from && (s.to === null || netTaxable <= s.to)
-              );
-              if (slab) {
-                commissionAmount = slab.type === "percent" 
-                  ? netTaxable * (slab.value / 100) 
-                  : slab.value;
+            if (userDoc.exists) {
+              const user = userDoc.data() as import("@/types").Promoter | import("@/types").Salesperson;
+              
+              let commissionAmount = 0;
+              if (user.use_global_commission && user.commission_slabs) {
+                const slab = user.commission_slabs.find(s => 
+                  netTaxable >= s.from && (s.to === null || netTaxable <= s.to)
+                );
+                if (slab) {
+                  commissionAmount = slab.type === "percent" 
+                    ? netTaxable * (slab.value / 100) 
+                    : slab.value;
+                }
+              } else if (user.discount_type === "percent") {
+                commissionAmount = netTaxable * ((user.discount_value || 0) / 100);
+              } else if (user.discount_type === "flat") {
+                commissionAmount = user.discount_value || 0;
               }
-            } else if (promoter.discount_type === "percent") {
-              commissionAmount = netTaxable * ((promoter.discount_value || 0) / 100);
-            } else if (promoter.discount_type === "flat") {
-              commissionAmount = promoter.discount_value || 0;
-            }
 
-            if (commissionAmount > 0) {
-              const newCommRef = adminDb.collection(COLLECTIONS.COMMISSION_RECORDS).doc();
-              transaction.set(newCommRef, {
-                lead_id: leadId,
-                quote_id: quoteId,
-                promoter_id: leadData.promoter_id,
-                ex_tax_amount: netTaxable,
-                commission_amount: commissionAmount,
-                status: "pending",
-                created_at: new Date(),
-                updated_at: new Date()
-              });
+              if (commissionAmount > 0) {
+                const newCommRef = adminDb.collection(COLLECTIONS.COMMISSION_RECORDS).doc();
+                transaction.set(newCommRef, {
+                  lead_id: leadId,
+                  quote_id: quoteId,
+                  user_id: userId,
+                  user_type: userType,
+                  promoter_id: userType === "promoter" ? userId : undefined, // Legacy support
+                  ex_tax_amount: netTaxable,
+                  commission_amount: commissionAmount,
+                  status: "pending",
+                  created_at: new Date(),
+                  updated_at: new Date()
+                });
 
-              transaction.update(promoterRef, {
-                total_ex_tax_business: (promoter.total_ex_tax_business || 0) + netTaxable,
-                total_won_leads: (promoter.total_won_leads || 0) + 1
-              });
+                transaction.update(userRef, {
+                  total_ex_tax_business: (user.total_ex_tax_business || 0) + netTaxable,
+                  total_won_leads: (user.total_won_leads || 0) + 1
+                });
+              }
             }
+          };
+
+          // Generate for Promoter if exists
+          if (leadData?.promoter_id) {
+            await generateCommission(leadData.promoter_id, "promoter", COLLECTIONS.PROMOTERS);
+          }
+
+          // Generate for Salesperson if exists
+          const salespersonId = leadData?.assigned_to_salesperson_id || leadData?.assigned_salesperson_id;
+          if (salespersonId) {
+            await generateCommission(salespersonId, "salesperson", "salespersons");
           }
         }
       }
@@ -121,8 +137,9 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
 
 /**
  * Updates the lead status and adds a proof of installation photo (for Installers)
+ * Requires the customer's Completion PIN for verification.
  */
-export async function updateLeadInstallationProof(leadId: string, photoUrl: string, status: string, note?: string) {
+export async function updateLeadInstallationProof(leadId: string, photoUrl: string, status: string, note?: string, pin?: string) {
   const { verifySession } = await import("@/lib/auth-server");
   const { verifyInstallerSession } = await import("@/lib/auth-installer");
   
@@ -137,19 +154,67 @@ export async function updateLeadInstallationProof(leadId: string, photoUrl: stri
     throw new Error("Unauthorized");
   }
 
+  // Verify PIN
+  const leadDoc = await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).get();
+  if (!leadDoc.exists) throw new Error("Lead not found");
+  
+  const leadData = leadDoc.data();
+  if (leadData?.completion_pin && leadData.completion_pin !== pin) {
+    throw new Error("Invalid Completion PIN. Please check with the customer.");
+  }
+
   const updatePayload: any = {
-    status,
     updated_at: new Date(),
     installation_proof_url: photoUrl
   };
   
   if (note) {
-    updatePayload.follow_up_notes = arrayUnion(`Installer attached photo: ${note}`);
+    updatePayload.installation_note = note;
+  }
+  
+  await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update(updatePayload);
+
+  // Trigger commission calculation & status update seamlessly
+  await updateLeadStatus(leadId, "won", note);
+  
+  // Find associated job and mark completed
+  const jobsSnap = await adminDb.collection("jobs").where("lead_id", "==", leadId).get();
+  for (const job of jobsSnap.docs) {
+    await adminDb.collection("jobs").doc(job.id).update({
+      status: "completed",
+      completed_at: new Date()
+    });
+  }
+  
+  revalidatePath("/admin/dispatch");
+  revalidatePath("/installer/jobs");
+  revalidatePath("/installer/ledger");
+  return { success: true };
+}
+
+/**
+ * Resends the Completion PIN to the customer via WhatsApp
+ */
+export async function resendCompletionPin(leadId: string) {
+  const { verifyInstallerSession } = await import("@/lib/auth-installer");
+  const { sendCustomerWhatsApp } = await import("@/lib/notification-service");
+  
+  const session = await verifyInstallerSession();
+  if (!session.isAuthenticated) throw new Error("Unauthorized");
+
+  const leadDoc = await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).get();
+  if (!leadDoc.exists) throw new Error("Lead not found");
+  
+  const leadData = leadDoc.data();
+  if (!leadData?.completion_pin || !leadData?.mobile_number) {
+    throw new Error("No PIN or mobile number found for this customer.");
   }
 
-  await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update(updatePayload);
-  revalidatePath(`/installer/jobs/${leadId}`);
-  revalidatePath("/installer/jobs");
+  await sendCustomerWhatsApp(
+    leadData.mobile_number,
+    `🔔 *Installation Reminder*\n\nHi ${leadData.customer_name || 'Customer'},\nYour installer is currently at your site.\nOnce the installation is fully complete to your satisfaction, please provide them with this secure Completion PIN: *${leadData.completion_pin}* to officially close the job.\n\nThank you for choosing TEAM CCTV! 🛡️`
+  );
+
   return { success: true };
 }
 

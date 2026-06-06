@@ -130,7 +130,37 @@ export default function AdminProductsPage() {
   };
 
   const handleEdit = (product: Product) => {
-    setEditingProduct({ ...product });
+    const p = { ...product };
+    
+    // Auto-fill missing specific specs from title or technologies for backwards compatibility
+    if (p.category === 'rack' && !p.rack_u_height) {
+      const match = p.display_name?.toLowerCase().match(/(\d+)\s*u\b/);
+      if (match) p.rack_u_height = parseInt(match[1]);
+      else if (p.technologies?.some(t => t.toLowerCase().endsWith('u'))) {
+        const uTech = p.technologies.find(t => t.toLowerCase().endsWith('u'));
+        if (uTech) p.rack_u_height = parseInt(uTech);
+      }
+    }
+    if (p.category === 'cable' && !p.cable_length_m) {
+      const match = p.display_name?.toLowerCase().match(/(\d+)\s*(?:m|meter|meters)\b/);
+      if (match) p.cable_length_m = parseInt(match[1]);
+    }
+    if (p.category === 'power_device') {
+      if (!p.power_voltage_v) {
+        const match = p.display_name?.match(/\b(\d+(?:\.\d+)?)\s*v\b/i);
+        if (match) p.power_voltage_v = parseFloat(match[1]);
+      }
+      if (!p.power_amperage_a) {
+        const match = p.display_name?.match(/\b(\d+(?:\.\d+)?)\s*a\b/i);
+        if (match) p.power_amperage_a = parseFloat(match[1]);
+      }
+      if (!p.power_wattage_w) {
+        const match = p.display_name?.match(/\b(\d+(?:\.\d+)?)\s*w\b/i);
+        if (match) p.power_wattage_w = parseFloat(match[1]);
+      }
+    }
+
+    setEditingProduct(p);
     setActiveTab("basic");
     setIsModalOpen(true);
   };
@@ -656,11 +686,220 @@ export default function AdminProductsPage() {
                       </div>
                     )}
                     
-                    {editingProduct.category !== "camera" && editingProduct.category !== "recorder" && (
+                    {editingProduct.category === "rack" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">U Height</label>
+                          <select 
+                            value={editingProduct.rack_u_height || ""}
+                            onChange={e => setEditingProduct({...editingProduct, rack_u_height: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                          >
+                            <option value="">Select U-Height...</option>
+                            {[2, 4, 6, 9, 12, 15, 18, 22, 24, 27, 32, 42].map(u => <option key={u} value={u}>{u}U</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {editingProduct.category === "cable" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Cable Type</label>
+                          <input 
+                            type="text" 
+                            value={editingProduct.cable_type || ""}
+                            onChange={e => setEditingProduct({...editingProduct, cable_type: e.target.value})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            placeholder="e.g. Cat6, 3+1 CCTV, Fiber"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Length (Meters)</label>
+                          <input 
+                            type="number" 
+                            value={editingProduct.cable_length_m || ""}
+                            onChange={e => setEditingProduct({...editingProduct, cable_length_m: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            placeholder="e.g. 90, 305"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {editingProduct.category === "storage" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Storage Type</label>
+                          <select 
+                            value={editingProduct.storage_type || ""}
+                            onChange={e => setEditingProduct({...editingProduct, storage_type: e.target.value})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background appearance-none"
+                          >
+                            <option value="">Select Type...</option>
+                            <option value="Surveillance HDD">Surveillance HDD</option>
+                            <option value="SSD">SSD</option>
+                            <option value="MicroSD">MicroSD</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Capacity (TB)</label>
+                          <input 
+                            type="number" 
+                            step="0.1"
+                            value={editingProduct.storage_capacity_tb || ""}
+                            onChange={e => setEditingProduct({...editingProduct, storage_capacity_tb: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            placeholder="e.g. 1, 2, 4, 8"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {editingProduct.category === "power_device" && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Output Voltage (V)</label>
+                          <input 
+                            type="number" 
+                            step="0.1"
+                            value={editingProduct.power_voltage_v || ""}
+                            onChange={e => setEditingProduct({...editingProduct, power_voltage_v: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            placeholder="e.g. 12, 24"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Amperage (A)</label>
+                          <input 
+                            type="number" 
+                            step="0.1"
+                            value={editingProduct.power_amperage_a || ""}
+                            onChange={e => setEditingProduct({...editingProduct, power_amperage_a: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            placeholder="e.g. 1.7, 5, 10"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Wattage (W)</label>
+                          <input 
+                            type="number" 
+                            step="1"
+                            value={editingProduct.power_wattage_w || ""}
+                            onChange={e => setEditingProduct({...editingProduct, power_wattage_w: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            placeholder="e.g. 60, 120"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {editingProduct.category === "network" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Total Ports</label>
+                          <input 
+                            type="number" 
+                            value={editingProduct.network_ports || ""}
+                            onChange={e => setEditingProduct({...editingProduct, network_ports: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            placeholder="e.g. 4, 8, 16, 24"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Speed</label>
+                          <select 
+                            value={editingProduct.network_speed || ""}
+                            onChange={e => setEditingProduct({...editingProduct, network_speed: e.target.value})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background appearance-none"
+                          >
+                            <option value="">Select Speed...</option>
+                            <option value="10/100 Mbps">10/100 Mbps</option>
+                            <option value="Gigabit">Gigabit (10/100/1000)</option>
+                            <option value="10G">10G</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {!["camera", "recorder", "rack", "cable", "storage", "network"].includes(editingProduct.category || "") && (
                       <div className="p-10 border border-dashed border-border rounded-2xl text-center">
                         <p className="text-muted-foreground text-sm font-medium">No specific technical attributes for this category.</p>
                       </div>
                     )}
+
+                    {/* ── Dynamic Custom Specifications ── */}
+                    <div className="pt-6 mt-6 border-t border-border">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="text-sm font-semibold text-foreground">Custom Specifications</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5">Add arbitrary key-value pairs for this product (e.g. Color, Material, Thread Size).</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const current = editingProduct.custom_attributes || [];
+                            setEditingProduct({
+                              ...editingProduct,
+                              custom_attributes: [...current, { key: "", value: "" }]
+                            });
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg text-xs font-semibold transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Add Field
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {(editingProduct.custom_attributes || []).map((attr, index) => (
+                          <div key={index} className="flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                            <div className="flex-1 space-y-1.5">
+                              <input
+                                type="text"
+                                value={attr.key}
+                                onChange={e => {
+                                  const newAttrs = [...(editingProduct.custom_attributes || [])];
+                                  newAttrs[index] = { ...newAttrs[index], key: e.target.value };
+                                  setEditingProduct({ ...editingProduct, custom_attributes: newAttrs });
+                                }}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background font-medium"
+                                placeholder="Attribute Name (e.g. Color)"
+                              />
+                            </div>
+                            <div className="flex-[2] space-y-1.5">
+                              <input
+                                type="text"
+                                value={attr.value}
+                                onChange={e => {
+                                  const newAttrs = [...(editingProduct.custom_attributes || [])];
+                                  newAttrs[index] = { ...newAttrs[index], value: e.target.value };
+                                  setEditingProduct({ ...editingProduct, custom_attributes: newAttrs });
+                                }}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                placeholder="Value (e.g. Matte Black)"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newAttrs = [...(editingProduct.custom_attributes || [])];
+                                newAttrs.splice(index, 1);
+                                setEditingProduct({ ...editingProduct, custom_attributes: newAttrs });
+                              }}
+                              className="w-10 h-10 shrink-0 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                        {(!editingProduct.custom_attributes || editingProduct.custom_attributes.length === 0) && (
+                          <div className="p-6 border border-dashed border-border rounded-xl text-center bg-muted/20">
+                            <p className="text-muted-foreground text-xs font-medium">No custom specifications added yet.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 

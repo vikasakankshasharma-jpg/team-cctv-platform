@@ -27,12 +27,16 @@ export async function POST(request: NextRequest) {
       if (lead_id) {
         const leadRef = adminDb.collection(COLLECTIONS.LEADS).doc(lead_id);
         
-        // Update Lead status to won
+        // Generate a 6-digit completion PIN
+        const completionPin = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Update Lead status to won and save PIN
         await leadRef.update({
           status: "won",
           payment_status: "paid",
           paid_amount: payment_amount,
           quote_accepted_id: quote_id,
+          completion_pin: completionPin,
           updated_at: serverTimestamp()
         });
 
@@ -72,7 +76,7 @@ export async function POST(request: NextRequest) {
         if (leadData?.mobile_number) {
           await sendCustomerWhatsApp(
             leadData.mobile_number,
-            `🎉 *Payment Successful!*\n\nHi ${leadData.customer_name || 'Customer'},\nWe have received your payment of ₹${payment_amount}.\n\nYour order is confirmed! Our installation team will contact you shortly to schedule your setup.\n\nThank you for choosing TEAM CCTV! 🛡️`
+            `🎉 *Payment Successful!*\n\nHi ${leadData.customer_name || 'Customer'},\nWe have received your payment of ₹${payment_amount}.\n\nYour order is confirmed! Our installation team will contact you shortly to schedule your setup.\n\n*Important:* Once the installer finishes the work to your satisfaction, please provide them with this secure Completion PIN: *${completionPin}* to officially close the job.\n\nThank you for choosing TEAM CCTV! 🛡️`
           );
         }
 

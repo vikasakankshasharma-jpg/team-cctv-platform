@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { ProductGroup } from "@/types";
 import { ChevronDown, Plus, Loader2, FolderTree, X } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +17,16 @@ export function CategoryGroupSelector({ value, onChange, label = "Catalog Group"
   const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const [dropdownRect, setDropdownRect] = useState<DOMRect | null>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      setDropdownRect(triggerRef.current.getBoundingClientRect());
+    }
+  }, [isOpen]);
   
   // Inline Creation State
   const [isCreating, setIsCreating] = useState(false);
@@ -83,6 +94,7 @@ export function CategoryGroupSelector({ value, onChange, label = "Catalog Group"
       
       {/* Trigger Button */}
       <div 
+        ref={triggerRef}
         onClick={() => !isLoading && setIsOpen(!isOpen)}
         className={`w-full flex items-center justify-between bg-zinc-50 dark:bg-zinc-950 border ${isOpen ? 'border-blue-500 ring-4 ring-blue-500/10' : 'border-zinc-200 dark:border-zinc-800'} rounded-2xl px-6 py-4 text-sm font-bold transition-all cursor-pointer dark:text-white`}
       >
@@ -95,9 +107,19 @@ export function CategoryGroupSelector({ value, onChange, label = "Catalog Group"
         {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-zinc-400" /> : <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />}
       </div>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute z-[110] top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-md overflow-hidden flex flex-col max-h-[400px]">
+      {/* Dropdown Menu via Portal */}
+      {isOpen && mounted && createPortal(
+        <>
+          <div className="fixed inset-0 z-[110]" onClick={() => setIsOpen(false)} />
+          <div 
+            className="fixed z-[120] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-md overflow-hidden flex flex-col max-h-[400px]"
+            style={{ 
+              top: dropdownRect ? dropdownRect.bottom + 8 : 0, 
+              left: dropdownRect ? dropdownRect.left : 0, 
+              width: dropdownRect ? dropdownRect.width : 0 
+            }}
+            onClick={e => e.stopPropagation()}
+          >
           
           {!isCreating ? (
             <>
@@ -211,12 +233,9 @@ export function CategoryGroupSelector({ value, onChange, label = "Catalog Group"
             </form>
           )}
           
-        </div>
-      )}
-      
-      {/* Click outside overlay (simple hack since we don't have a useClickOutside hook) */}
-      {isOpen && (
-        <div className="fixed inset-0 z-[100]" onClick={() => setIsOpen(false)} />
+          </div>
+        </>,
+        document.body
       )}
     </div>
   );

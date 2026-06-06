@@ -5,7 +5,7 @@ import { updateLeadInstallationProof } from "@/app/actions/leads";
 import { toast } from "sonner";
 import { storage } from "@/lib/firebase-client";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { MapPin, Phone, User, Package, Camera, CheckCircle2, ArrowLeft, Loader2, UploadCloud } from "lucide-react";
+import { MapPin, Phone, User, Package, Camera, CheckCircle2, ArrowLeft, Loader2, UploadCloud, Store } from "lucide-react";
 import Link from "next/link";
 import type { Lead } from "@/types";
 
@@ -13,18 +13,24 @@ export default function InstallerJobDetailClient({
   leadId, 
   lead, 
   hardware, 
-  isAssigned 
+  isAssigned,
+  job,
+  hub
 }: { 
   leadId: string, 
   lead: Partial<Lead>, 
   hardware: any[], 
-  isAssigned: boolean 
+  isAssigned: boolean,
+  job?: any,
+  hub?: any
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [note, setNote] = useState("");
+  const [pin, setPin] = useState("");
+  const [resending, setResending] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -34,9 +40,26 @@ export default function InstallerJobDetailClient({
     }
   };
 
+  const handleResendPin = async () => {
+    try {
+      setResending(true);
+      const { resendCompletionPin } = await import("@/app/actions/leads");
+      await resendCompletionPin(leadId);
+      toast.success("PIN has been resent to the customer's WhatsApp.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend PIN");
+    } finally {
+      setResending(false);
+    }
+  };
+
   const handleUploadAndComplete = async () => {
     if (!file) {
       toast.error("Please select a photo as proof of installation.");
+      return;
+    }
+    if (pin.length !== 6) {
+      toast.error("Please enter the 6-digit Completion PIN from the customer.");
       return;
     }
     
@@ -44,28 +67,34 @@ export default function InstallerJobDetailClient({
     try {
       const filename = `installations/${leadId}_${Date.now()}_${file.name}`;
       const storageRef = ref(storage, filename);
+      
       const uploadTask = uploadBytesResumable(storageRef, file);
-
+      
       uploadTask.on('state_changed', 
         (snapshot) => {
-          const p = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setProgress(p);
-        },
+        }, 
         (error) => {
-          console.error(error);
-          toast.error("Upload failed");
+          console.error("Upload error", error);
+          toast.error("Failed to upload photo");
           setUploading(false);
-        },
+        }, 
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          await updateLeadInstallationProof(leadId, downloadURL, "won", note);
-          toast.success("Job marked as completed successfully!");
-          setUploading(false);
+          
+          try {
+            const { updateLeadInstallationProof } = await import("@/app/actions/leads");
+            await updateLeadInstallationProof(leadId, downloadURL, "completed", note, pin);
+            toast.success("Job successfully marked as Completed!");
+          } catch (serverError: any) {
+             toast.error(serverError.message || "Failed to update job status. Please check the PIN.");
+             setUploading(false);
+          }
         }
       );
-    } catch (err) {
-      console.error(err);
-      toast.error("An error occurred");
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred");
       setUploading(false);
     }
   };
@@ -98,6 +127,30 @@ export default function InstallerJobDetailClient({
           </span>
         </div>
       </div>
+
+      {/* Hardware Location */}
+      {job && (
+        <div className={`border rounded-3xl p-6 shadow-sm space-y-3 ${job.hub_id ? 'bg-card border-border' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
+          <h3 className={`font-bold flex items-center gap-2 ${job.hub_id ? 'text-foreground' : 'text-emerald-700 dark:text-emerald-400'}`}>
+            <Store className={`w-5 h-5 ${job.hub_id ? 'text-primary' : ''}`} /> 
+            Hardware Location
+          </h3>
+          
+          {job.hub_id && hub ? (
+            <div>
+              <p className="text-sm font-bold text-foreground mb-1">Pick up from: {hub.name}</p>
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {hub.address}</p>
+              {hub.contact_phone && (
+                 <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1"><Phone className="w-3.5 h-3.5" /> {hub.contact_phone}</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+              Hardware is already at the Customer Site. No pickup required.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Hardware Requirements */}
       <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-4">
@@ -157,9 +210,30 @@ export default function InstallerJobDetailClient({
               />
             </div>
 
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4">
+              <div className="flex justify-between items-end mb-2">
+                <label className="block text-xs font-bold text-amber-600 uppercase tracking-widest">Customer Completion PIN</label>
+                <button 
+                  onClick={handleResendPin}
+                  disabled={resending}
+                  className="text-[10px] font-bold text-amber-600 hover:text-amber-700 underline underline-offset-2"
+                >
+                  {resending ? "Sending..." : "Resend PIN via WhatsApp"}
+                </button>
+              </div>
+              <input 
+                type="text" 
+                maxLength={6}
+                value={pin}
+                onChange={e => setPin(e.target.value)}
+                placeholder="Enter 6-digit PIN"
+                className="w-full px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-700 font-bold tracking-widest text-center text-lg focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-amber-500/50"
+              />
+            </div>
+
             <button 
               onClick={handleUploadAndComplete}
-              disabled={!file || uploading}
+              disabled={!file || uploading || pin.length !== 6}
               className="w-full py-4 bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
             >
               {uploading ? (
