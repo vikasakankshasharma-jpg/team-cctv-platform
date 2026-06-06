@@ -115,7 +115,7 @@ IMPORTANT: Please use your Google Search tool to look up the exact model number 
     }
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-pro',
         contents: contents,
         config: {
             responseMimeType: "application/json",
