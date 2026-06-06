@@ -1,7 +1,5 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
+import { VertexAI, SchemaType } from "@google-cloud/vertexai";
 import { guessCategory, guessBrand, guessTechnologies, guessResolution, guessChannels, guessRackUHeight, guessCableLength, guessVoltage, guessAmperage, guessWattage } from "./ai-parser";
-
-const ai = new GoogleGenAI({});
 
 export interface GeminiExtractionResult {
   category: string;
@@ -22,35 +20,35 @@ export interface GeminiExtractionResult {
   ai_reasoning: string;
 }
 
-const ProductSchema: Schema = {
-  type: Type.OBJECT,
+const ProductSchema = {
+  type: SchemaType.OBJECT,
   properties: {
     category: {
-      type: Type.STRING,
+      type: SchemaType.STRING,
       description: "Must be one of: camera, recorder, storage, cable, rack, power_device, network, display, accessory, unidentified",
     },
     brand: {
-      type: Type.STRING,
+      type: SchemaType.STRING,
       description: "The brand of the product (e.g. Dahua, Hikvision, CP Plus). Return empty string if unknown.",
     },
     technologies: {
-      type: Type.ARRAY,
-      items: { type: Type.STRING },
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
       description: "Array of specifications e.g. ['H.265', 'PoE', 'WDR', 'LED', 'IR']",
     },
-    resolution_mp: { type: Type.NUMBER, description: "Megapixel resolution (e.g. 2, 4, 8) if applicable." },
-    channels: { type: Type.NUMBER, description: "Number of channels (e.g. 4, 8, 16) if recorder." },
-    rack_u_height: { type: Type.NUMBER, description: "U-height (e.g. 4, 6, 9) if rack." },
-    cable_length_m: { type: Type.NUMBER, description: "Length in meters (e.g. 90, 305) if cable." },
-    power_voltage_v: { type: Type.NUMBER, description: "Output voltage (e.g. 12, 19, 24) if power device." },
-    power_amperage_a: { type: Type.NUMBER, description: "Amperage (e.g. 1.7, 5, 10) if power device." },
-    power_wattage_w: { type: Type.NUMBER, description: "Wattage (e.g. 60, 120) if power device." },
-    storage_type: { type: Type.STRING, description: "Storage drive type (e.g. HDD, SSD, MicroSD) if storage." },
-    storage_capacity_tb: { type: Type.NUMBER, description: "Storage capacity in TB (e.g. 1, 2, 4) if storage." },
-    network_ports: { type: Type.NUMBER, description: "Number of network ports (e.g. 4, 8, 16, 24) if switch/router." },
-    network_speed: { type: Type.STRING, description: "Speed of network ports (e.g. 10/100 Mbps, Gigabit) if network." },
-    confidence_score: { type: Type.NUMBER, description: "AI confidence score from 0 to 100 based on certainty." },
-    ai_reasoning: { type: Type.STRING, description: "Short explanation (max 2 sentences) of how AI reached this conclusion (e.g. 'Identified as dome camera from image, and 12V power supply inferred from model number using web search')." }
+    resolution_mp: { type: SchemaType.NUMBER, description: "Megapixel resolution (e.g. 2, 4, 8) if applicable." },
+    channels: { type: SchemaType.NUMBER, description: "Number of channels (e.g. 4, 8, 16) if recorder." },
+    rack_u_height: { type: SchemaType.NUMBER, description: "U-height (e.g. 4, 6, 9) if rack." },
+    cable_length_m: { type: SchemaType.NUMBER, description: "Length in meters (e.g. 90, 305) if cable." },
+    power_voltage_v: { type: SchemaType.NUMBER, description: "Output voltage (e.g. 12, 19, 24) if power device." },
+    power_amperage_a: { type: SchemaType.NUMBER, description: "Amperage (e.g. 1.7, 5, 10) if power device." },
+    power_wattage_w: { type: SchemaType.NUMBER, description: "Wattage (e.g. 60, 120) if power device." },
+    storage_type: { type: SchemaType.STRING, description: "Storage drive type (e.g. HDD, SSD, MicroSD) if storage." },
+    storage_capacity_tb: { type: SchemaType.NUMBER, description: "Storage capacity in TB (e.g. 1, 2, 4) if storage." },
+    network_ports: { type: SchemaType.NUMBER, description: "Number of network ports (e.g. 4, 8, 16, 24) if switch/router." },
+    network_speed: { type: SchemaType.STRING, description: "Speed of network ports (e.g. 10/100 Mbps, Gigabit) if network." },
+    confidence_score: { type: SchemaType.NUMBER, description: "AI confidence score from 0 to 100 based on certainty." },
+    ai_reasoning: { type: SchemaType.STRING, description: "Short explanation (max 2 sentences) of how AI reached this conclusion (e.g. 'Identified as dome camera from image, and 12V power supply inferred from model number using web search')." }
   },
   required: ["category", "technologies", "confidence_score", "ai_reasoning"]
 };
@@ -78,8 +76,10 @@ export async function parseProductWithGemini(
   trainingRules: string = "",
   referenceProducts: any[] = []
 ): Promise<GeminiExtractionResult> {
-  // If no API key, fallback to regex parser immediately
-  if (!process.env.GEMINI_API_KEY) {
+
+  // Check for Firebase Vertex Credentials
+  const hasVertexAuth = !!process.env.FIREBASE_PROJECT_ID && !!process.env.FIREBASE_CLIENT_EMAIL && !!process.env.FIREBASE_PRIVATE_KEY;
+  if (!hasVertexAuth && !process.env.GEMINI_API_KEY) {
       return fallbackRegexParser(title);
   }
 
@@ -99,13 +99,13 @@ ${trainingRules ? `Past Feedback / Training Rules (Strictly adhere to these if t
 Extract the specifications accurately. Ensure the category matches one of the required values and formatting is consistent with any reference products provided.
 IMPORTANT: Please use your Google Search tool to look up the exact model number (if present in the title) to find its official datasheet. Your goal is to fetch the MAXIMUM possible exact specifications (Resolution, Channels, Voltage, Amperage, Wattage, Technologies, etc) to make the product catalog entry highly informative and accurate.`;
 
-    const contents: any[] = [promptText];
+    const parts: any[] = [{ text: promptText }];
 
     // Multimodal support
     if (imageUrl) {
         const imgObj = await fetchImageAsBase64(imageUrl);
         if (imgObj) {
-            contents.push({
+            parts.push({
                 inlineData: {
                     mimeType: imgObj.mimeType,
                     data: imgObj.data
@@ -114,18 +114,40 @@ IMPORTANT: Please use your Google Search tool to look up the exact model number 
         }
     }
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: contents,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: ProductSchema
-        }
-    });
+    let responseText = "";
 
-    if (!response.text) throw new Error("Empty response from Gemini");
+    // Prefer Vertex AI over Standard API to utilize Enterprise Credits
+    if (hasVertexAuth) {
+        const vertex_ai = new VertexAI({
+            project: process.env.FIREBASE_PROJECT_ID as string,
+            location: 'us-central1',
+            googleAuthOptions: {
+                credentials: {
+                    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+                    private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+                }
+            }
+        });
+        const model = vertex_ai.preview.getGenerativeModel({
+            model: 'gemini-2.5-flash',
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: ProductSchema
+            }
+        });
+        const response = await model.generateContent({
+            contents: [{ role: 'user', parts: parts }]
+        });
+        responseText = response.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    } else {
+        // Fallback for purely local testing using GEMINI_API_KEY
+        // Note: this assumes the fallback handles schema structure similarly.
+        return fallbackRegexParser(title, "Standard Gemini API Key fallback has been retired. Please configure Vertex AI credentials.");
+    }
+
+    if (!responseText) throw new Error("Empty response from Gemini");
     
-    const parsed = JSON.parse(response.text) as GeminiExtractionResult;
+    const parsed = JSON.parse(responseText) as GeminiExtractionResult;
     return parsed;
 
     } catch (err: any) {
