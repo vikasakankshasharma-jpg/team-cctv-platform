@@ -119,8 +119,7 @@ IMPORTANT: Please use your Google Search tool to look up the exact model number 
         contents: contents,
         config: {
             responseMimeType: "application/json",
-            responseSchema: ProductSchema,
-            tools: [{ googleSearch: {} }],
+            responseSchema: ProductSchema
         }
     });
 
