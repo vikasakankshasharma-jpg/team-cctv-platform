@@ -5,33 +5,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
 import {
-  LayoutDashboard,
-  Users,
-  Package,
-  Settings,
-  LogOut,
-  Blocks,
-  FileBox,
-  BadgeDollarSign,
-  TrendingUp,
-  Workflow,
-  ShieldCheck,
-  ChevronRight,
-  Calendar,
-  IndianRupee,
-  Zap,
-  Link2,
-  Megaphone,
-  Grid3x3,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Database,
-  Building2,
-  HeartPulse,
-  MapPin,
-  Bell,
-  Menu,
-  X,
+  LayoutDashboard, Users, Package, Settings, LogOut, Blocks,
+  FileBox, BadgeDollarSign, TrendingUp, Workflow, ShieldCheck,
+  ChevronRight, Calendar, IndianRupee, Zap, Link2, Megaphone,
+  Grid3x3, PanelLeftClose, PanelLeftOpen, Database, Building2,
+  HeartPulse, MapPin, Bell, Menu, X, Sparkles,
 } from "lucide-react";
 
 // ─── NAVIGATION STRUCTURE ─────────────────────────────────────────────────────
@@ -57,34 +35,35 @@ const NAV_GROUPS = [
   {
     label: "Product Catalog",
     items: [
-      { name: "Catalog & Pricing",  href: "/admin/catalog-manager",   icon: Package },
-      { name: "Hardware Inventory", href: "/admin/products",          icon: Package },
-      { name: "Vendor Import Engine", href: "/admin/vendor-import",       icon: Package },
-      { name: "Data Management",    href: "/admin/products/bulk",     icon: Database },
-      { name: "Compatibility",      href: "/admin/compatibility",     icon: Link2 },
-      { name: "Catalog Health",     href: "/admin/products/health",   icon: HeartPulse },
-      { name: "Live Pricing",       href: "/admin/pricing",          icon: IndianRupee },
-      { name: "Geo-Pricing Rules",  href: "/admin/pricing/geo-rules", icon: MapPin },
-      { name: "Quotation Matrices", href: "/admin/pricing/matrices",  icon: Grid3x3 },
-      { name: "Rules & Add-ons",    href: "/admin/rules",            icon: Zap },
-      { name: "Card Layouts",       href: "/admin/card-layouts",     icon: Workflow },
+      { name: "Catalog & Pricing",   href: "/admin/catalog-manager",   icon: Package },
+      { name: "Hardware Inventory",  href: "/admin/products",           icon: Package },
+      { name: "Vendor Import",       href: "/admin/vendor-import",      icon: Package },
+      { name: "Data Management",     href: "/admin/products/bulk",      icon: Database },
+      { name: "AI Spec Enrichment",  href: "/admin/products/enrich",    icon: Sparkles },
+      { name: "Compatibility",       href: "/admin/compatibility",      icon: Link2 },
+      { name: "Catalog Health",      href: "/admin/products/health",    icon: HeartPulse },
+      { name: "Live Pricing",        href: "/admin/pricing",            icon: IndianRupee },
+      { name: "Geo-Pricing Rules",   href: "/admin/pricing/geo-rules",  icon: MapPin },
+      { name: "Quotation Matrices",  href: "/admin/pricing/matrices",   icon: Grid3x3 },
+      { name: "Rules & Add-ons",     href: "/admin/rules",              icon: Zap },
+      { name: "Card Layouts",        href: "/admin/card-layouts",       icon: Workflow },
     ],
   },
   {
     label: "Operations Network",
     items: [
-      { name: "Dispatch Center",    href: "/admin/dispatch",         icon: Workflow },
-      { name: "City Hubs",          href: "/admin/hubs",             icon: Building2 },
-      { name: "Verified Installers",href: "/admin/installers",       icon: ShieldCheck },
-      { name: "Promoters",         href: "/admin/promoters",   icon: BadgeDollarSign },
-      { name: "Ledger & Payouts",  href: "/admin/commission",  icon: FileBox },
+      { name: "Dispatch Center",     href: "/admin/dispatch",    icon: Workflow },
+      { name: "City Hubs",           href: "/admin/hubs",        icon: Building2 },
+      { name: "Verified Installers", href: "/admin/installers",  icon: ShieldCheck },
+      { name: "Promoters",           href: "/admin/promoters",   icon: BadgeDollarSign },
+      { name: "Ledger & Payouts",    href: "/admin/commission",  icon: FileBox },
     ],
   },
   {
     label: "System",
     items: [
-      { name: "Settings",   href: "/admin/settings",      icon: Settings },
-      { name: "Audit Logs", href: "/admin/reports/logs",  icon: ShieldCheck },
+      { name: "Settings",   href: "/admin/settings",     icon: Settings },
+      { name: "Audit Logs", href: "/admin/reports/logs", icon: ShieldCheck },
     ],
   },
 ];
@@ -191,8 +170,8 @@ export function Sidebar() {
                   >
                     <Icon className={`w-[15px] h-[15px] transition-transform duration-200 ${active ? "scale-105" : ""}`} />
                     {!isCollapsed && <span className="truncate flex-1">{item.name}</span>}
-                    {!isCollapsed && item.badge && (
-                       <span className={`sb-badge ${item.badgeNew ? 'new' : ''}`}>{item.badge}</span>
+                    {!isCollapsed && (item as any).badge && (
+                       <span className={`sb-badge ${(item as any).badgeNew ? 'new' : ''}`}>{(item as any).badge}</span>
                     )}
                   </Link>
                 );

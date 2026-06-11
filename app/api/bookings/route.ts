@@ -23,10 +23,6 @@ export async function POST(request: NextRequest) {
       return ApiResponse.badRequest("Missing lead_id or address");
     }
 
-    // Mock bypass for E2E visual/logic testing
-    if (lead_id === "mock-e2e-lead" || lead_id === "mock-lead") {
-      return ApiResponse.success({ id: "mock-booking-id", message: "Booking confirmed (Mock)" }, 201);
-    }
 
     if (!adminDb) {
        return ApiResponse.error("Database not initialized", "INTERNAL_ERROR", 500);

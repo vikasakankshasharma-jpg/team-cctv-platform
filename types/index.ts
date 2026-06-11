@@ -118,10 +118,17 @@ export interface Lead {
     campaign_id: string;
   };
 
+
   // Price Match
   price_match_request_id?: string | null;
   price_match_status?: "pending" | "under_review" | "approved" | "rejected" | "counter_offered" | null;
+
+  // B2B / Corporate Lead Tagging
+  is_b2b?: boolean;              // true when camera_count > 16
+  company_name?: string | null;  // Collected in wizard for B2B leads
+  gst_number?: string | null;    // GST number for B2B invoice
 }
+
 
 export interface FollowUpCampaign {
   id?: string;
@@ -209,6 +216,17 @@ export interface Product {
   has_audio?: boolean;               // Built-in microphone
   has_sd_slot?: boolean;             // Local SD card storage
   poe?: boolean;                     // Power over Ethernet
+
+  // ── AI Enrichment fields ─────────────────────────────────────────────
+  // Populated automatically by the AI Spec Enrichment tool (/admin/products/enrich)
+  camera_model?: string;             // Model number e.g. "CP-E28Q", "DS-2CD2143G2-I"
+  recorder_model?: string;           // Model number e.g. "NR2A08-Q1"
+  recorder_type?: "DVR" | "NVR" | "XVR" | "HVR"; // Recorder technology type
+  hdd_slots?: number;                // Number of SATA HDD slots (1, 2, 4)
+  max_resolution_rec?: string;       // Max recording resolution e.g. "4K", "5MP", "1080p"
+  enriched_by_ai?: boolean;          // Set to true when AI enrichment has been applied
+  enriched_at?: string;              // ISO timestamp of last AI enrichment
+
   rack_u_height?: number;            // For racks (e.g. 4, 6, 9, 12)
   cable_length_m?: number;           // For cables (e.g. 90, 305)
   cable_type?: string;               // e.g. "Cat6", "3+1 CCTV", "Fiber"
@@ -233,6 +251,7 @@ export interface Product {
 
   // ── Inventory Tracking ───────────────────────────────────────────────────────
   stock_quantity?: number;           // Real-time stock for configurator syncing
+  stock_status?: "in_stock" | "out_of_stock" | "on_order" | "discontinued"; // Vendor availability status
 
   created_at?: unknown;
   updated_at?: unknown;
@@ -801,7 +820,7 @@ export interface PayoutRequest {
   updated_at?: unknown;
 }
 
-export type VendorCategory = "camera" | "recorder" | "storage" | "connector" | "cable" | "power_device" | "installation" | "amc" | "display" | "mount" | "rack" | "network" | "accessory" | "unidentified";
+export type VendorCategory = "cctv_camera" | "recorder" | "storage" | "connector" | "cable" | "power_device" | "display" | "camera_mount" | "rack" | "network" | "hdmi_cable" | "accessories" | "others" | "unidentified";
 
 export interface Vendor {
   id?: string;

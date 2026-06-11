@@ -8,6 +8,24 @@ import { calculateSystemScore } from "@/lib/system-score";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 import { useConfiguratorStore } from "@/store/configurator";
 
+const BRAND_DISPLAY: Record<string, string> = {
+  "cpplus": "CP Plus", "cp-plus": "CP Plus", "cp plus": "CP Plus",
+  "wd": "WD",
+  "seagate": "Seagate",
+  "prama": "Prama",
+  "hikvision": "Hikvision",
+  "dahua": "Dahua",
+  "trueview": "Trueview",
+  "d-link": "D-Link",
+  "tp-link": "TP-Link",
+};
+
+function normalizeBrand(brand?: string | null): string {
+  if (!brand) return "Premium";
+  return BRAND_DISPLAY[brand.toLowerCase()] || brand;
+}
+
+
 interface CompareCardsProps {
   compareOptions: Array<{ technology: string; option: number | string }>;
   activeCheckoutOption: { technology: string; option: number | string } | null;
@@ -83,7 +101,7 @@ export function CompareCards({
           evaluatedAddonRules, activeOffer,
         });
 
-        const selectedCamId = pricing.items.find(i => products.find(prod => prod.id === i.product_id)?.category === 'camera')?.product_id;
+        const selectedCamId = pricing.items.find(i => products.find(prod => prod.id === i.product_id)?.category === 'cctv_camera')?.product_id;
         const camProduct = products.find(p => p.id === selectedCamId);
         const isRecommended = recommendation?.camera_option === co.option && co.technology === (customerTechnology ?? "IP");
 
@@ -114,16 +132,7 @@ export function CompareCards({
       .sort((a, b) => a.pricing.total_payable - b.pricing.total_payable);
   }, [compareOptions, selection, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, recommendation, customerTechnology, activeOffer]);
 
-  if (cardsData.length === 0) {
-    return (
-      <div className="w-full p-12 rounded-3xl border border-[#d2d2d7] dark:border-[#424245] flex flex-col items-center text-center">
-        <Camera className="w-8 h-8 text-[#86868b] mb-4" />
-        <p className="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">No Packages Selected</p>
-        <p className="text-[#86868b] mt-1">Please select an option to compare.</p>
-      </div>
-    );
-  }
-
+  // --- ALL HOOKS MUST BE DECLARED BEFORE ANY EARLY RETURNS ---
   // Mobile scroll tracking
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeCardIdx, setActiveCardIdx] = useState(0);
@@ -176,6 +185,17 @@ export function CompareCards({
     }
   }, []);
 
+  // Early return AFTER all hooks have been declared
+  if (cardsData.length === 0) {
+    return (
+      <div className="w-full p-12 rounded-3xl border border-[#d2d2d7] dark:border-[#424245] flex flex-col items-center text-center">
+        <Camera className="w-8 h-8 text-[#86868b] mb-4" />
+        <p className="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">No Packages Selected</p>
+        <p className="text-[#86868b] mt-1">Please select an option to compare.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
       <div ref={scrollRef} className={`flex sm:grid sm:grid-cols-1 ${cardsData.length < 4 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible`}>
@@ -194,7 +214,7 @@ export function CompareCards({
         else if (card.isRecommended) tierName = "Recommended";
         
         const pricePerCam = selection.camera_count > 0 ? Math.round(card.pricing.total_payable / selection.camera_count) : 0;
-        const brandName = card.camProduct?.brand || card.recProduct?.brand || "Premium";
+        const brandName = normalizeBrand(card.camProduct?.brand || card.recProduct?.brand);
 
         const baseBg = isCustom 
           ? "bg-gradient-to-b from-[#f0f7ff] to-white dark:from-[#1a2332] dark:to-[#1d1d1f]" 
@@ -254,6 +274,38 @@ export function CompareCards({
               </p>
             </div>
 
+            {/* Key Spec Badges — show real extracted specs */}
+            {!card.pricing.error && (
+              <div className="flex flex-wrap justify-center gap-1.5 mb-5">
+                {/* Resolution */}
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-[#f0f7ff] dark:bg-[#1a2332] text-[#0071e3] px-2.5 py-1 rounded-full">
+                  {card.is5MP ? "5MP" : card.is4MP ? "4MP" : "2MP"}
+                </span>
+                {/* Night Vision */}
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-[#f5f5f7] px-2.5 py-1 rounded-full">
+                  {card.isColorNight ? "🌈 Color Night" : "🔴 IR Night"}
+                </span>
+                {/* Form Factor */}
+                {card.camProduct?.form_factor && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-[#f5f5f7] px-2.5 py-1 rounded-full capitalize">
+                    {card.camProduct.form_factor}
+                  </span>
+                )}
+                {/* IP Rating */}
+                {card.camProduct?.ip_rating && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#86868b] px-2.5 py-1 rounded-full">
+                    {card.camProduct.ip_rating}
+                  </span>
+                )}
+                {/* Audio */}
+                {card.hasAudio && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full">
+                    🎙 Audio
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Price */}
             <div className="text-center mb-6">
               {card.pricing.error ? (
@@ -283,8 +335,18 @@ export function CompareCards({
               <p className="text-[11px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] uppercase tracking-wide mb-3">Includes</p>
               <div className="space-y-3">
                 {[
-                  `${selection.camera_count}× ${card.camProduct?.display_name ?? card.technology + " Camera"}`,
-                  `1× ${card.recProduct?.display_name ?? card.recType + " Recorder"}`,
+                  // Camera line: prefer model number, fallback to display_name
+                  (() => {
+                    const cam = card.camProduct;
+                    const modelLabel = cam?.camera_model || cam?.technical_name || cam?.display_name || (card.technology + " Camera");
+                    return `${selection.camera_count}× ${modelLabel}`;
+                  })(),
+                  // Recorder line: prefer model number
+                  (() => {
+                    const rec = card.recProduct;
+                    const modelLabel = rec?.recorder_model || rec?.technical_name || rec?.display_name || (card.recType + " Recorder");
+                    return `1× ${modelLabel}`;
+                  })(),
                   (() => {
                     const storageItem = card.pricing.items.find((i: any) => addons.find((a: any) => a.id === i.product_id)?.category === 'storage');
                     if (storageItem) return storageItem.display_name;

@@ -1,15 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/store/wizard";
 import { ProgressBar } from "@/components/wizard/ProgressBar";
 import { OptionCard } from "@/components/wizard/OptionCard";
 import { LeadGate } from "@/components/wizard/LeadGate";
+import { B2BInfoStep } from "@/components/wizard/B2BInfoStep";
 import { ArrowLeft, ArrowRight, ShieldAlert, Loader2, ShieldCheck, Lock, CheckCircle2, Home } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 import type { WizardQuestion, WizardOption } from "@/types";
+import type { CatalogCapacity } from "@/lib/catalog-capacity";
+import { B2B_THRESHOLD } from "@/lib/catalog-capacity";
 import { motion, AnimatePresence } from "framer-motion";
+
+const ALL_CAMERA_FEATURES = [
+  { id: "color", label: "Color Night Vision", techs: ["HD", "IP", "Wireless"] },
+  { id: "audio", label: "Speaker / Two-Way Talk", techs: ["HD", "IP", "Wireless"] },
+  { id: "ptz", label: "PTZ (Pan-Tilt-Zoom)", techs: ["IP", "Wireless"] },
+  { id: "solar", label: "Solar Powered", techs: ["Wireless"] },
+  { id: "4g", label: "4G / SIM Support", techs: ["Wireless"] }
+];
 
 export function WizardClient({ initialSteps, initialSettings }: { initialSteps?: any[], initialSettings?: any }) {
   const router = useRouter();
@@ -21,8 +32,10 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showGate, setShowGate] = useState(false);
+  const [showB2BStep, setShowB2BStep] = useState(false);
   const [settings, setSettings] = useState<any>(initialSettings || null);
   const [toast, setToast] = useState<string | null>(null);
+  const [catalogCapacity, setCatalogCapacity] = useState<CatalogCapacity>({ HD: 16, IP: 64, Wireless: 16 });
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = (msg: string) => {
@@ -31,17 +44,15 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     toastTimer.current = setTimeout(() => setToast(null), 2500);
   };
 
-  // Initialize from SSR props — runs after first paint, sets store then clears loading
+  // Initialize from SSR props â€” runs after first paint, sets store then clears loading
   useEffect(() => {
-    if (is_loaded) {
-      // Already hydrated from sessionStorage (returning visitor mid-wizard)
-      setLoading(false);
-    } else if (initialSteps && initialSteps.length > 0) {
-      // Fresh visit: load the server-rendered steps into the store
+    if (initialSteps && initialSteps.length > 0) {
+      // Force update the store with fresh SSR steps (fixes sticky cache bugs)
       setSteps(initialSteps);
+    }
+    if (is_loaded || (initialSteps && initialSteps.length > 0)) {
       setLoading(false);
     }
-    // If neither, the fallback fetch effect below will handle it
   }, [is_loaded, initialSteps, setSteps]);
 
   // Fallback to fetch if props aren't available (e.g. client-side navigation)
@@ -70,7 +81,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     loadWizard();
   }, [is_loaded, initialSteps, setSteps]);
 
-  // Fetch products for live filtering
+  // Fetch products for live filtering + dynamic capacity
   useEffect(() => {
     async function loadProducts() {
       if (products.length > 0) return;
@@ -78,6 +89,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         const res = await fetch("/api/products");
         const data = await res.json();
         if (data.products) setProducts(data.products);
+        if (data.catalog_capacity) setCatalogCapacity(data.catalog_capacity);
       } catch (err) {
         console.error("Failed to fetch products for live counting", err);
       }
@@ -91,42 +103,44 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     if (!state.partial_lead_id || current_step_index <= 1) return;
 
     const timer = setTimeout(() => {
-      fetch(`/api/leads/${state.partial_lead_id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wizard_answers: answers
-        })
-      }).catch(console.error);
+      if (state.partial_lead_id) {
+        fetch(`/api/submissions/${state.partial_lead_id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wizard_answers: answers
+          })
+        }).catch(console.error);
+      }
     }, 1000);
 
     return () => clearTimeout(timer);
   }, [answers, current_step_index]);
 
   // Use store steps if loaded, otherwise fall back to SSR initialSteps while the
-  // store hydrates — prevents the error flash before the useEffect runs.
-  let effectiveSteps = steps.length > 0 ? steps : (initialSteps || []);
+  // store hydrates â€” prevents the error flash before the useEffect runs.
+  const effectiveSteps = useMemo(() => {
+    const baseSteps = (initialSteps && initialSteps.length > 0) ? initialSteps : steps;
 
-  // Filter steps and questions dynamically
-  effectiveSteps = effectiveSteps.map(step => {
-    let filteredQuestions = step.questions || [];
+    // Filter steps and questions dynamically
+    return baseSteps.map(step => {
+      let filteredQuestions = step.questions || [];
 
-    // Hide "q_wiring_type" if cabling is already done
-    if (step.id === "step_wiring" && answers["q_wiring"] === "true") {
-      filteredQuestions = filteredQuestions.filter((q: any) => q.id !== "q_wiring_type");
-    }
+      // Hide "q_wiring_type" if cabling is already done
+      if (step.id === "step_wiring" && (answers["q_wiring"] === "true" || answers["q_install_type"] === "upgrade")) {
+        filteredQuestions = filteredQuestions.filter((q: any) => q.id !== "q_wiring_type");
+      }
 
-    return {
-      ...step,
-      questions: filteredQuestions
-    };
-  }).filter(s => {
-    // Forcefully remove step_features as it's redundant
-    if (s.id === "step_features") return false;
-    // Filter out Wiring step if technology is Wireless
-    if (s.id === "step_wiring" && answers["q_tech"] === "Wireless") return false;
-    return true;
-  });
+      return {
+        ...step,
+        questions: filteredQuestions
+      };
+    }).filter(s => {
+      // Filter out Wiring step if technology is Wireless
+      if (s.id === "step_wiring" && answers["q_tech"] === "Wireless") return false;
+      return true;
+    });
+  }, [steps, initialSteps, answers]);
 
   if (loading) {
     return (
@@ -195,7 +209,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       
       // Compute what the questions will look like AFTER this answer
       let futureQuestions = currentStep.questions || [];
-      if (currentStep.id === "step_wiring" && newAnswers["q_wiring"] === "true") {
+      if (currentStep.id === "step_wiring" && (newAnswers["q_wiring"] === "true" || newAnswers["q_install_type"] === "upgrade")) {
         futureQuestions = futureQuestions.filter((q: any) => q.id !== "q_wiring_type");
       }
 
@@ -238,7 +252,8 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
   const completePartialLead = async (leadId: string, finalAnswers: any) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/leads/${leadId}`, {
+      const camCount = parseInt(finalAnswers["q_cam_count"] || "0");
+      const res = await fetch(`/api/submissions/${leadId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -247,7 +262,11 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
           property_type: finalAnswers["q_prop_type"] || "home",
           technology_choice: finalAnswers["q_tech"] || "HD",
           cabling_done: finalAnswers["q_wiring"] === "true",
-          camera_count: parseInt(finalAnswers["q_cam_count"] || "0")
+          camera_count: camCount,
+          // B2B tagging
+          is_b2b: camCount > B2B_THRESHOLD,
+          company_name: finalAnswers["b2b_company_name"] || null,
+          gst_number: finalAnswers["b2b_gst_number"] || null,
         })
       });
       if (!res.ok) throw new Error("Failed to complete quote");
@@ -275,6 +294,26 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       return;
     }
 
+    if (currentStep.id === "step_cam_count") {
+      const totalCameras = parseInt((answers["q_cam_count"] as string) || "0");
+      if (totalCameras < 1) {
+        showToast("Please select at least 1 camera to continue.");
+        return;
+      }
+      // B2B check: >16 cameras shows B2B info step before proceeding
+      const selectedTech = (answers["q_tech"] as string) || "HD";
+      const techMax = catalogCapacity[selectedTech as keyof typeof catalogCapacity] ?? 16;
+      if (totalCameras > techMax) {
+        // True industrial — beyond recorder catalog capacity
+        showToast(`Max ${techMax} cameras available for ${selectedTech}. Please contact us for larger installations.`);
+        return;
+      }
+      if (totalCameras > B2B_THRESHOLD && !answers["b2b_confirmed"]) {
+        setShowB2BStep(true);
+        return;
+      }
+    }
+
     const state = useWizardStore.getState();
     if (isLastStep) {
       if (state.partial_lead_id) {
@@ -287,6 +326,42 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         step_index: safe_step_index,
         step_title: currentStep.title,
       });
+      nextStep();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // B2B step handlers
+  const handleB2BConfirm = ({ company_name, gst_number }: { company_name: string; gst_number: string }) => {
+    setAnswer("b2b_company_name", company_name);
+    setAnswer("b2b_gst_number", gst_number);
+    setAnswer("b2b_confirmed", "true");
+    setShowB2BStep(false);
+    // Continue the wizard flow
+    const state = useWizardStore.getState();
+    if (isLastStep) {
+      if (state.partial_lead_id) {
+        completePartialLead(state.partial_lead_id, { ...state.answers, b2b_company_name: company_name, b2b_gst_number: gst_number, b2b_confirmed: "true" });
+      } else {
+        setShowGate(true);
+      }
+    } else {
+      nextStep();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleB2BSkip = () => {
+    setAnswer("b2b_confirmed", "true");
+    setShowB2BStep(false);
+    const state = useWizardStore.getState();
+    if (isLastStep) {
+      if (state.partial_lead_id) {
+        completePartialLead(state.partial_lead_id, { ...state.answers, b2b_confirmed: "true" });
+      } else {
+        setShowGate(true);
+      }
+    } else {
       nextStep();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -314,7 +389,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       }
   
       // 2. Filter products based on hypothetical answers
-      let pool = products.filter(p => p.category === "camera" && p.is_active);
+      let pool = products.filter(p => p.category === "cctv_camera" && p.is_active);
   
       // Apply Technology Filter
       if (hypotheticalAnswers["q_tech"]) {
@@ -341,26 +416,33 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
          }
       }
   
-      // Combine all feature requirements
       const specialFeats = (hypotheticalAnswers["q_special_features"] as string[]) || [];
       const feats = (hypotheticalAnswers["q_features"] as string[]) || [];
-      const envs = (hypotheticalAnswers["q_environment"] as string[]) || [];
-      const forms = (hypotheticalAnswers["q_form_factor"] as string[]) || [];
-      const combinedReqs = [...specialFeats, ...feats, ...envs, ...forms].filter(r => r !== "none" && r !== "");
+      const combinedReqs = [...specialFeats, ...feats].filter(r => r !== "none" && r !== "");
 
       if (combinedReqs.length > 0) {
+         const reqChecks = combinedReqs.map(req => {
+           const r = req.toLowerCase();
+           return {
+             r,
+             isColor: r.includes("color") || r.includes("night"),
+             isAudio: r.includes("audio") || r.includes("mic"),
+             isPtz: r.includes("ptz")
+           };
+         });
+
          pool = pool.filter(cam => {
-           const camFeats = (cam.features || []).map(f => f.toLowerCase().trim());
-           let matchesAll = true;
-           for (const req of combinedReqs) {
-              const r = req.toLowerCase();
-              if ((r.includes("color") || r.includes("night")) && !camFeats.some(f => f.includes("color") || f.includes("night"))) matchesAll = false;
-              if ((r.includes("audio") || r.includes("mic")) && !camFeats.some(f => f.includes("mic") || f.includes("audio") || f.includes("speaker") || f.includes("talk"))) matchesAll = false;
-              if (r.includes("ptz") && !camFeats.some(f => f.includes("ptz") || f.includes("pan") || f.includes("tilt") || f.includes("360"))) matchesAll = false;
-              if ((r.includes("indoor") || r.includes("dome")) && !camFeats.some(f => f.includes("dome"))) matchesAll = false;
-              if ((r.includes("outdoor") || r.includes("bullet")) && !camFeats.some(f => f.includes("bullet"))) matchesAll = false;
+           const camFeats = (cam.features || []).map((f: string) => f.toLowerCase().trim());
+           const hasColor = camFeats.some((f: string) => f.includes("color") || f.includes("night"));
+           const hasAudio = camFeats.some((f: string) => f.includes("mic") || f.includes("audio") || f.includes("speaker") || f.includes("talk"));
+           const hasPtz = camFeats.some((f: string) => f.includes("ptz") || f.includes("pan") || f.includes("tilt") || f.includes("360"));
+
+           for (const check of reqChecks) {
+              if (check.isColor && !hasColor) return false;
+              if (check.isAudio && !hasAudio) return false;
+              if (check.isPtz && !hasPtz) return false;
            }
-           return matchesAll;
+           return true;
          });
       }
   
@@ -387,12 +469,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         
         <ProgressBar currentStepIndex={current_step_index} totalSteps={effectiveSteps.length} />
 
-        <div className="mt-6 sm:mt-16 mb-6 sm:mb-12">
-          <span className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em] bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-full">
-              Question {current_step_index + 1} of {effectiveSteps.length}
-          </span>
-        </div>
-        <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-tight mt-4 sm:mt-6 mb-2">{currentStep.title}</h1>
+        <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-tight mt-8 sm:mt-12 mb-2">{currentStep.title}</h1>
         {currentStep.description && (
           <p className="text-zinc-500 dark:text-zinc-400 text-base sm:text-xl mt-3 sm:mt-4 font-medium max-w-2xl">{currentStep.description}</p>
         )}
@@ -407,26 +484,28 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
             className="space-y-16 mb-12"
           >
             {currentStep.questions?.map((q: WizardQuestion) => {
+            const isSingleQuestion = currentStep.questions.length === 1;
+
             if (q.input_type === "number") {
               const buckets = (answers["mixed_camera_requirements"] as any[]) || [{ type: "Standard Indoor", count: 1, features: [] }];
               
+              const updateBucketsState = (newBuckets: any[]) => {
+                setAnswer("mixed_camera_requirements", newBuckets);
+                setAnswer(q.id!, String(newBuckets.reduce((sum: number, b: any) => sum + (parseInt(b.count) || 0), 0)));
+              };
+
               const updateBucket = (index: number, field: string, value: any) => {
                 const newBuckets = [...buckets];
                 newBuckets[index] = { ...newBuckets[index], [field]: value };
-                setAnswer("mixed_camera_requirements", newBuckets);
-                setAnswer(q.id!, String(newBuckets.reduce((sum, b) => sum + (parseInt(b.count) || 0), 0)));
+                updateBucketsState(newBuckets);
               };
 
               const addBucket = () => {
-                const newBuckets = [...buckets, { type: "Standard Outdoor", count: 1, features: [] }];
-                setAnswer("mixed_camera_requirements", newBuckets);
-                setAnswer(q.id!, String(newBuckets.reduce((sum, b) => sum + (parseInt(b.count) || 0), 0)));
+                updateBucketsState([...buckets, { type: "Standard Outdoor", count: 1, features: [] }]);
               };
 
               const removeBucket = (index: number) => {
-                const newBuckets = buckets.filter((_, i) => i !== index);
-                setAnswer("mixed_camera_requirements", newBuckets);
-                setAnswer(q.id!, String(newBuckets.reduce((sum, b) => sum + (parseInt(b.count) || 0), 0)));
+                updateBucketsState(buckets.filter((_, i) => i !== index));
               };
               
               const toggleFeature = (bucketIndex: number, feature: string) => {
@@ -437,21 +516,16 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
               };
 
               const tech = answers["q_tech"] as string;
-              const allFeatures = [
-                { id: "color", label: "Color Night Vision", techs: ["HD", "IP", "Wireless"] },
-                { id: "audio", label: "Speaker / Two-Way Talk", techs: ["HD", "IP", "Wireless"] },
-                { id: "ptz", label: "PTZ (Pan-Tilt-Zoom)", techs: ["IP", "Wireless"] },
-                { id: "solar", label: "Solar Powered", techs: ["Wireless"] },
-                { id: "4g", label: "4G / SIM Support", techs: ["Wireless"] }
-              ];
-              const availableFeatures = tech ? allFeatures.filter(f => f.techs.includes(tech)) : allFeatures;
+              const availableFeatures = tech ? ALL_CAMERA_FEATURES.filter(f => f.techs.includes(tech)) : ALL_CAMERA_FEATURES;
 
               return (
                 <div key={q.id} id={`question-${q.id}`} className="scroll-mt-24 sm:scroll-mt-32">
-                  <div className="flex items-center gap-3 mb-6 sm:mb-8">
-                     <div className="w-10 h-10 rounded-[14px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center text-blue-600 font-black text-sm shrink-0">#</div>
-                     <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h2>
-                  </div>
+                  {!isSingleQuestion && (
+                    <div className="flex items-center gap-3 mb-6 sm:mb-8">
+                       <div className="w-10 h-10 rounded-[14px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center text-blue-600 font-black text-sm shrink-0">#</div>
+                       <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h2>
+                    </div>
+                  )}
 
                   <div className="flex flex-col gap-6">
                     {buckets.map((bucket, idx) => (
@@ -478,7 +552,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                             <input
                               type="number"
                               min={1}
-                              max={16}
+                              max={catalogCapacity[(answers["q_tech"] as string) as keyof typeof catalogCapacity] ?? 16}
                               value={bucket.count}
                               onChange={(e) => {
                                 const val = e.target.value;
@@ -530,7 +604,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                   </div>
                   
                   <p className="text-xs font-bold text-zinc-500 mt-8 ml-2">
-                    For <span className="font-black text-zinc-700">more than 16 cameras total</span>, our team will reach out with a custom corporate quote.
+                     {`For more than ${catalogCapacity[(answers["q_tech"] as keyof CatalogCapacity) ?? "HD"] ?? 16} cameras`} ({(answers["q_tech"] as string) || "HD"} technology limit), our team will reach out for a custom industrial quote. Above 16 cameras, a corporate quote is generated automatically.
                   </p>
                 </div>
               );
@@ -541,14 +615,16 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
             return (
               <div key={q.id} id={`question-${q.id}`} className="scroll-mt-24 sm:scroll-mt-32">
-                <div className="flex items-center gap-3 mb-6 sm:mb-8">
-                   <div className="w-10 h-10 rounded-[14px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center text-blue-600 font-black text-sm shrink-0">?</div>
-                   <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h2>
-                </div>
+                {!isSingleQuestion && (
+                  <div className="flex items-center gap-3 mb-6 sm:mb-8">
+                     <div className="w-10 h-10 rounded-[14px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center text-blue-600 font-black text-sm shrink-0">?</div>
+                     <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h2>
+                  </div>
+                )}
 
                 {/* Multi-select indicator badge */}
                 {isMulti && (
-                  <div className="flex items-center gap-3 mb-6">
+                  <div className={`flex items-center gap-3 ${!isSingleQuestion ? 'mb-6' : 'mb-6 mt-2'}`}>
                     <div className="flex items-center gap-2 bg-white border border-blue-200 text-blue-700 px-4 py-2.5 rounded-xl shadow-sm">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -566,7 +642,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                   </div>
                 )}
 
-                {/* Hint ABOVE options — visible on mobile before scrolling */}
+                {/* Hint ABOVE options â€” visible on mobile before scrolling */}
                 {isMulti && (
                   <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 mb-5 flex items-center gap-2">
                     <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -605,9 +681,28 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         </AnimatePresence>
       </div>
 
+      {/* B2B Info Step overlay */}
+      {showB2BStep && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-sm px-4">
+          <div className="w-full max-w-xl">
+            <B2BInfoStep
+              cameraCount={parseInt((answers["q_cam_count"] as string) || "0")}
+              technology={(answers["q_tech"] as string) || "HD"}
+              onConfirm={handleB2BConfirm}
+              onSkip={handleB2BSkip}
+            />
+          </div>
+        </div>
+      )}
+
       {showGate && (
         <LeadGate 
-          isIndustrial={parseInt(answers["q_cam_count"] as string) > (settings?.max_supported_cameras || 16)} 
+          isIndustrial={(() => {
+            const count = parseInt((answers["q_cam_count"] as string) || "0") || 0;
+            const tech = (answers["q_tech"] as string) || "HD";
+            const max = catalogCapacity[tech as keyof typeof catalogCapacity] ?? 16;
+            return count > max;
+          })()}
           mode={isLastStep ? "final" : "partial"}
           onSuccess={(leadId) => {
             setShowGate(false);

@@ -20,30 +20,7 @@ export async function verifySession(): Promise<SessionResult> {
     return { isAuthenticated: false, user: null, role: null };
   }
 
-  // E2E Mock Session bypass for automated visual scans (development only)
-  if (sessionCookie === "mock-admin-session" && process.env.NODE_ENV === "development") {
-    return {
-      isAuthenticated: true,
-      user: {
-        uid: "mock-admin-uid",
-        email: "admin@example.com",
-        role: "super_admin",
-      } as any,
-      role: "super_admin"
-    };
-  }
-  
-  if (sessionCookie === "mock-salesperson-session" && process.env.NODE_ENV === "development") {
-    return {
-      isAuthenticated: true,
-      user: {
-        uid: "mock-salesperson-uid",
-        email: "sales@example.com",
-        role: "sales_staff",
-      } as any,
-      role: "sales_staff"
-    };
-  }
+
 
   try {
     // Verify the session cookie and obtain the decoded claims

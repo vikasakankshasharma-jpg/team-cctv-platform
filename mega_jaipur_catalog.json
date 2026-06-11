@@ -1,0 +1,5232 @@
+[
+  {
+    "display_name": "A+ Products 3+1 Video Copper 90Y White (020 Copper + 7/36 CCA)",
+    "technical_name": "A+ Products 3+1 Video Copper 90Y White (020 Copper + 7/36 CCA)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 915,
+    "base_cost": 732,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8506",
+    "catalog_path": "3+1 CCTV Cables"
+  },
+  {
+    "display_name": "A+ Products 3+1 CCTV Cable Copper 90Y Black (022+14/42)",
+    "technical_name": "A+ Products 3+1 CCTV Cable Copper 90Y Black (022+14/42)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1182,
+    "base_cost": 946,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5605",
+    "catalog_path": "3+1 CCTV Cables"
+  },
+  {
+    "display_name": "Prama 3+1 CCTV Cable Copper Indoor 90m",
+    "technical_name": "Prama 3+1 CCTV Cable Copper Indoor 90m",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7792",
+    "catalog_path": "3+1 CCTV Cables"
+  },
+  {
+    "display_name": "A+ Products 3+1 Gold Copper 90Y White (020 + 14/43)",
+    "technical_name": "A+ Products 3+1 Gold Copper 90Y White (020 + 14/43)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1341,
+    "base_cost": 1073,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3242",
+    "catalog_path": "3+1 CCTV Cables"
+  },
+  {
+    "display_name": "CP-Plus 3+1 CCTV Cable Copper 90m ECO-Series",
+    "technical_name": "CP-Plus 3+1 CCTV Cable Copper 90m ECO-Series",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4770",
+    "catalog_path": "3+1 CCTV Cables"
+  },
+  {
+    "display_name": "CP-Plus 3+1 CCTV Cable Copper 90m",
+    "technical_name": "CP-Plus 3+1 CCTV Cable Copper 90m",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2325",
+    "catalog_path": "3+1 CCTV Cables"
+  },
+  {
+    "display_name": "CP-Plus 3+1 CCTV Cable Copper Indoor 180m",
+    "technical_name": "CP-Plus 3+1 CCTV Cable Copper Indoor 180m",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2326",
+    "catalog_path": "3+1 CCTV Cables"
+  },
+  {
+    "display_name": "Prama 3+1 CCTV Cable Copper Indoor 180m",
+    "technical_name": "Prama 3+1 CCTV Cable Copper Indoor 180m",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1747",
+    "catalog_path": "3+1 CCTV Cables"
+  },
+  {
+    "display_name": "A+ Products BNC Connector Copper Wire Male (23/38)",
+    "technical_name": "A+ Products BNC Connector Copper Wire Male (23/38)",
+    "brand": "Unknown",
+    "category": "accessories",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 24,
+    "base_cost": 19,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5322",
+    "catalog_path": "Accessories CCTV & Networking"
+  },
+  {
+    "display_name": "A+ Products Pvc Junction Box 3.75x3.75x1.5 Inch For HD CCTV Camera",
+    "technical_name": "A+ Products Pvc Junction Box 3.75x3.75x1.5 Inch For HD CCTV Camera",
+    "brand": "Unknown",
+    "category": "accessories",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 31,
+    "base_cost": 25,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0388",
+    "catalog_path": "Accessories CCTV & Networking"
+  },
+  {
+    "display_name": "A+ Products Pvc Junction Box 4.5x4.5x1.5 Inch For IP CCTV Camera",
+    "technical_name": "A+ Products Pvc Junction Box 4.5x4.5x1.5 Inch For IP CCTV Camera",
+    "brand": "Unknown",
+    "category": "accessories",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 40,
+    "base_cost": 32,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0386",
+    "catalog_path": "Accessories CCTV & Networking"
+  },
+  {
+    "display_name": "A+ Products Pvc Junction Box Diamond 4.5 x 4.5 x 1.5 Inch For IP CCTV Camera",
+    "technical_name": "A+ Products Pvc Junction Box Diamond 4.5 x 4.5 x 1.5 Inch For IP CCTV Camera",
+    "brand": "Unknown",
+    "category": "accessories",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 47,
+    "base_cost": 38,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3243",
+    "catalog_path": "Accessories CCTV & Networking"
+  },
+  {
+    "display_name": "A+ Products RJ45 Connector Pass Through (Pack Of 100)",
+    "technical_name": "A+ Products RJ45 Connector Pass Through (Pack Of 100)",
+    "brand": "Unknown",
+    "category": "accessories",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 336,
+    "base_cost": 269,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2748",
+    "catalog_path": "Accessories CCTV & Networking"
+  },
+  {
+    "display_name": "D-Link RJ45 Connector",
+    "technical_name": "D-Link RJ45 Connector",
+    "brand": "D-Link",
+    "category": "accessories",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 420,
+    "base_cost": 336,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1335",
+    "catalog_path": "Accessories CCTV & Networking"
+  },
+  {
+    "display_name": "CP-Plus 2.4MP Eco HD Dome Camera 3.6mm (DC24PL3)",
+    "technical_name": "CP-Plus 2.4MP Eco HD Dome Camera 3.6mm (DC24PL3)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0199",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Prama 2MP HD Bullet Camera 3.6mm (HTD112E-ITPF)",
+    "technical_name": "Prama 2MP HD Bullet Camera 3.6mm (HTD112E-ITPF)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4735",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus 2.4MP Eco HD Dome Camera 3.6mm With Audio (DC24PL2C-V3)",
+    "technical_name": "CP-Plus 2.4MP Eco HD Dome Camera 3.6mm With Audio (DC24PL2C-V3)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3042",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "A+ Products 2.4MP HD ColorVu Bullet Camera 3.6mm With Audio (AD-B03)",
+    "technical_name": "A+ Products 2.4MP HD ColorVu Bullet Camera 3.6mm With Audio (AD-B03)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 858,
+    "base_cost": 686,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8756",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 2MP Eco HD Dome Camera 2.8mm (2CE5AD0T-ITP\\ECO)",
+    "technical_name": "Hikvision 2MP Eco HD Dome Camera 2.8mm (2CE5AD0T-ITP\\ECO)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 879,
+    "base_cost": 703,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7788",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision Eco HD Dome Camera 2MP 3.6mm (2CE5AD0T-ITP\\ECO)",
+    "technical_name": "Hikvision Eco HD Dome Camera 2MP 3.6mm (2CE5AD0T-ITP\\ECO)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 879,
+    "base_cost": 703,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2654",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "A+ Products 2.4MP HD ColorVu Dome Camera 3.6mm With Audio(AD-D03)",
+    "technical_name": "A+ Products 2.4MP HD ColorVu Dome Camera 3.6mm With Audio(AD-D03)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 892,
+    "base_cost": 714,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8762",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus 2.4MP Eco HD Bullet Camera 3.6mm (TC24PL3)",
+    "technical_name": "CP-Plus 2.4MP Eco HD Bullet Camera 3.6mm (TC24PL3)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 928,
+    "base_cost": 742,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5026",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus 2.4MP ECO HD Bullet Camera 3.6mm With Audio (TC24PL2C-V3)",
+    "technical_name": "CP-Plus 2.4MP ECO HD Bullet Camera 3.6mm With Audio (TC24PL2C-V3)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8052",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 2MP Eco HD Bullet Camera 3.6mm (2CE1AD0T-ITP\\ECO)",
+    "technical_name": "Hikvision 2MP Eco HD Bullet Camera 3.6mm (2CE1AD0T-ITP\\ECO)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 969,
+    "base_cost": 775,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7879",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Secureye 5MP Falcon HD Regular Dome Camera 3.6mm (S-A-D5-L)",
+    "technical_name": "Secureye 5MP Falcon HD Regular Dome Camera 3.6mm (S-A-D5-L)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1020,
+    "base_cost": 816,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3590",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus 2.4MP Eco HD Dome Camera 3.6mm With Built-in Mic (DC24PL3C)",
+    "technical_name": "CP-Plus 2.4MP Eco HD Dome Camera 3.6mm With Built-in Mic (DC24PL3C)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1043,
+    "base_cost": 834,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1046",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus 2.4MP ECO HD Bullet Camera 3.6mm With Audio (TC24PL3C)",
+    "technical_name": "CP-Plus 2.4MP ECO HD Bullet Camera 3.6mm With Audio (TC24PL3C)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0721",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Secureye HD Dome Camera 2MP Phoenix 2.8mm Hybrid with Mic",
+    "technical_name": "Secureye HD Dome Camera 2MP Phoenix 2.8mm Hybrid with Mic",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1086,
+    "base_cost": 869,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2809",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 2MP HD Dome Camera 3.6mm With Audio (2CE76D0T-ITPFS)",
+    "technical_name": "Hikvision 2MP HD Dome Camera 3.6mm With Audio (2CE76D0T-ITPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7715",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Secureye HD Bullet Camera 2MP Phoenix 2.8mm Hybrid with Mic",
+    "technical_name": "Secureye HD Bullet Camera 2MP Phoenix 2.8mm Hybrid with Mic",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1141,
+    "base_cost": 913,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2810",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 2MP Regular HD Dome Camera 2.8mm With Audio (2CE76D0T-ITPFS)",
+    "technical_name": "Hikvision 2MP Regular HD Dome Camera 2.8mm With Audio (2CE76D0T-ITPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5834",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Prama 2MP Hybrid HD Dome Camera 2.8mm With Audio (HTD70F0E-LPFS)",
+    "technical_name": "Prama 2MP Hybrid HD Dome Camera 2.8mm With Audio (HTD70F0E-LPFS)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8873",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "A+ Products HD Dome Camera 5MP 3.6mm Star Light With Audio(FM-5MP-D02)",
+    "technical_name": "A+ Products HD Dome Camera 5MP 3.6mm Star Light With Audio(FM-5MP-D02)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1222,
+    "base_cost": 978,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0389",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "A+ Products HD Bullet Camera 5MP 3.6mm Star Light With Audio (5MP-STAR-B01)",
+    "technical_name": "A+ Products HD Bullet Camera 5MP 3.6mm Star Light With Audio (5MP-STAR-B01)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1255,
+    "base_cost": 1004,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0390",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 2MP Regular HD Bullet Camera 3.6mm With Audio (2CE16D0T-ITPFS)",
+    "technical_name": "Hikvision 2MP Regular HD Bullet Camera 3.6mm With Audio (2CE16D0T-ITPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1272,
+    "base_cost": 1018,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P143",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus 2.4MP Regular Hybrid HD Dome 3.6mm With Audio (DC24PL3C-L-V2)",
+    "technical_name": "CP-Plus 2.4MP Regular Hybrid HD Dome 3.6mm With Audio (DC24PL3C-L-V2)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1300,
+    "base_cost": 1040,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0138",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus 2.4MP Regular Hybrid HD Bullet 3.6mm With Audio Camera  (TC24PL3C-L-V2)",
+    "technical_name": "CP-Plus 2.4MP Regular Hybrid HD Bullet 3.6mm With Audio Camera  (TC24PL3C-L-V2)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1395,
+    "base_cost": 1116,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0139",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Prama 2MP HD Dome Night Color Camera with Mic 2.8mm (HTD70F0E-WPF)",
+    "technical_name": "Prama 2MP HD Dome Night Color Camera with Mic 2.8mm (HTD70F0E-WPF)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1424,
+    "base_cost": 1139,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1959",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Prama 2MP HD Bullet Night Color Camera with Mic 3.6MM (HTD11F0E-WPF)",
+    "technical_name": "Prama 2MP HD Bullet Night Color Camera with Mic 3.6MM (HTD11F0E-WPF)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1500,
+    "base_cost": 1200,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1960",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Trueview 2mp HD Mini Pan-Tilt Camera Night Color With Two Way Audio T18300",
+    "technical_name": "Trueview 2mp HD Mini Pan-Tilt Camera Night Color With Two Way Audio T18300",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1534,
+    "base_cost": 1227,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3549",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Secureye HD Dome Camera 5MP Phoenix 2.8mm Hybrid with Mic",
+    "technical_name": "Secureye HD Dome Camera 5MP Phoenix 2.8mm Hybrid with Mic",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1556,
+    "base_cost": 1245,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2812",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 5MP Regular HD Bullet Camera 3.6mm With Audio (2CE16H0T-ITPFS)",
+    "technical_name": "Hikvision 5MP Regular HD Bullet Camera 3.6mm With Audio (2CE16H0T-ITPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8063",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 2MP Hybrid HD Dome Camera 2.8mm With Audio (2CE76D0T-LPFS)",
+    "technical_name": "Hikvision 2MP Hybrid HD Dome Camera 2.8mm With Audio (2CE76D0T-LPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1596,
+    "base_cost": 1277,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8139",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus 2.4MP ColorVu HD Bullet Camera 3.6mm With Audio (TA24PL2C-SE)",
+    "technical_name": "CP-Plus 2.4MP ColorVu HD Bullet Camera 3.6mm With Audio (TA24PL2C-SE)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7825",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Secureye HD Bullet Camera 5MP Phoenix 2.8mm Hybrid with Mic",
+    "technical_name": "Secureye HD Bullet Camera 5MP Phoenix 2.8mm Hybrid with Mic",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1624,
+    "base_cost": 1299,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2811",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 5MP HD Dome Camera 3.6mm With Audio (2CE76H0T-ITPFS)",
+    "technical_name": "Hikvision 5MP HD Dome Camera 3.6mm With Audio (2CE76H0T-ITPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5075",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 2MP Hybrid HD Bullet Camera 3.6mm With Audio (2CE16D0T-LPFS)",
+    "technical_name": "Hikvision 2MP Hybrid HD Bullet Camera 3.6mm With Audio (2CE16D0T-LPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1668,
+    "base_cost": 1334,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2856",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus 2.4MP ColorVu HD Dome Camera 3.6mm With Audio (DA24PL2C-SE)",
+    "technical_name": "CP-Plus 2.4MP ColorVu HD Dome Camera 3.6mm With Audio (DA24PL2C-SE)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7826",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 5MP Regular HD Dome Camera 2.8mm With Audio (2CE76H0T-ITPFS)",
+    "technical_name": "Hikvision 5MP Regular HD Dome Camera 2.8mm With Audio (2CE76H0T-ITPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1716,
+    "base_cost": 1373,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7675",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 5MP Regular HD Bullet Camera 3.6mm With Audio (2CE16H0T-ITPFS)",
+    "technical_name": "Hikvision 5MP Regular HD Bullet Camera 3.6mm With Audio (2CE16H0T-ITPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4967",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Secureye 5MP Falcon ColorVu HD Dome 3.6mm With Audio(S-A-D5-C-A)",
+    "technical_name": "Secureye 5MP Falcon ColorVu HD Dome 3.6mm With Audio(S-A-D5-C-A)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1740,
+    "base_cost": 1392,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8271",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus HD Dome Camera 5MP Illumax Hybrid 3.6mm With Audio (DC51PL3C-L)",
+    "technical_name": "CP-Plus HD Dome Camera 5MP Illumax Hybrid 3.6mm With Audio (DC51PL3C-L)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1785,
+    "base_cost": 1428,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1334",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 5MP Hybrid HD 3K Dome Camera 3.6mm With Audio (2CE76K0T-LPFS)",
+    "technical_name": "Hikvision 5MP Hybrid HD 3K Dome Camera 3.6mm With Audio (2CE76K0T-LPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8437",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "CP-Plus HD Bullet Camera 5MP Illumax Hybrid 3.6mm With Audio (TC51PL3C-L)",
+    "technical_name": "CP-Plus HD Bullet Camera 5MP Illumax Hybrid 3.6mm With Audio (TC51PL3C-L)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1846,
+    "base_cost": 1477,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1335",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 5MP Hybrid HD 3K Dome Camera 2.8mm With Audio (2CE76K0T-LPFS)",
+    "technical_name": "Hikvision 5MP Hybrid HD 3K Dome Camera 2.8mm With Audio (2CE76K0T-LPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 2028,
+    "base_cost": 1622,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8288",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 2MP ColorVu HD Dome Camera 2.8mm With Audio (2CE70DF0T-PFS)",
+    "technical_name": "Hikvision 2MP ColorVu HD Dome Camera 2.8mm With Audio (2CE70DF0T-PFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8213",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 2MP ColorVu HD Dome Camera 3.6MM With Audio(2CE70DF0T-PFS)",
+    "technical_name": "Hikvision 2MP ColorVu HD Dome Camera 3.6MM With Audio(2CE70DF0T-PFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 2106,
+    "base_cost": 1685,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8256",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 5MP Hybrid HD 3K Bullet Camera 3.6mm With Audio (2CE16K0T-LPFS)",
+    "technical_name": "Hikvision 5MP Hybrid HD 3K Bullet Camera 3.6mm With Audio (2CE16K0T-LPFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 2130,
+    "base_cost": 1704,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3477",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 2MP ColorVu HD Bullet Camera 3.6mm With Audio (2CE10DF0T-PFS)",
+    "technical_name": "Hikvision 2MP ColorVu HD Bullet Camera 3.6mm With Audio (2CE10DF0T-PFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 2286,
+    "base_cost": 1829,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8174",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 5MP ColorVu HD 3K Dome Camera 3.6mm With Audio (2CE70KF0T-PFS)",
+    "technical_name": "Hikvision 5MP ColorVu HD 3K Dome Camera 3.6mm With Audio (2CE70KF0T-PFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 2880,
+    "base_cost": 2304,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2922",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "Hikvision 5MP ColorVu HD 3K Bullet Camera 3.6mm With Audio (2CE10KF0T-PFS)",
+    "technical_name": "Hikvision 5MP ColorVu HD 3K Bullet Camera 3.6mm With Audio (2CE10KF0T-PFS)",
+    "brand": "Hikvision",
+    "category": "cctv_camera",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 3000,
+    "base_cost": 2400,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2119",
+    "catalog_path": "HD Camera"
+  },
+  {
+    "display_name": "PRAMA DVR MINI 4CH 2MP (DR1A04G-K1) (ECO)",
+    "technical_name": "PRAMA DVR MINI 4CH 2MP (DR1A04G-K1) (ECO)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6092",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Secureye DVR 4Ch 1 SATA H.265 (SR-XVR-104)",
+    "technical_name": "Secureye DVR 4Ch 1 SATA H.265 (SR-XVR-104)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 2538,
+    "base_cost": 2030,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2814",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "CP-PLUS 4ch 2MP 1 SATA H.265 DVR (0401E1-IC2)",
+    "technical_name": "CP-PLUS 4ch 2MP 1 SATA H.265 DVR (0401E1-IC2)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2892",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision Eco 4ch 1 SATA H.265+ HD DVR (7104HGHI-M1/T)",
+    "technical_name": "Hikvision Eco 4ch 1 SATA H.265+ HD DVR (7104HGHI-M1/T)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 2944,
+    "base_cost": 2355,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1394",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "CP-PLUS 4ch 2MP 1 SATA H.265 DVR (0401E1V-I)",
+    "technical_name": "CP-PLUS 4ch 2MP 1 SATA H.265 DVR (0401E1V-I)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 3157,
+    "base_cost": 2526,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5685",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Secureye DVR 8Ch 1 SATA H.265 (SR-XVR-108)",
+    "technical_name": "Secureye DVR 8Ch 1 SATA H.265 (SR-XVR-108)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 3203,
+    "base_cost": 2562,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2813",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "A+ Products 4ch XVR upto 5MP Support",
+    "technical_name": "A+ Products 4ch XVR upto 5MP Support",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 3212,
+    "base_cost": 2570,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0391",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Prama 8CH 1 SATA H.265 DVR (DR1A08G-K1)",
+    "technical_name": "Prama 8CH 1 SATA H.265 DVR (DR1A08G-K1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 3300,
+    "base_cost": 2640,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6093",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "PRAMA MINI DVR 4CH 4MP (DR1A04Q K1)",
+    "technical_name": "PRAMA MINI DVR 4CH 4MP (DR1A04Q K1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2757",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "CP-Plus 4ch 5MP 1 SATA H.265+ DVR (0401F1-IC)",
+    "technical_name": "CP-Plus 4ch 5MP 1 SATA H.265+ DVR (0401F1-IC)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7650",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "A+ Products 8ch XVR upto 5MP Support",
+    "technical_name": "A+ Products 8ch XVR upto 5MP Support",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 3799,
+    "base_cost": 3039,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0392",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "CP-Plus 8ch 2MP 1 SATA H.265 DVR (0801E1-IC2)",
+    "technical_name": "CP-Plus 8ch 2MP 1 SATA H.265 DVR (0801E1-IC2)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 4070,
+    "base_cost": 3256,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7006",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "PRAMA DVR MINI 4CH 5MP (DR1A04U K1)",
+    "technical_name": "PRAMA DVR MINI 4CH 5MP (DR1A04U K1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 4165,
+    "base_cost": 3332,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2906",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision Regular AcuSense 4ch 1 SATA H.265+ Pro DVR (7104HQHI-M1/S)",
+    "technical_name": "Hikvision Regular AcuSense 4ch 1 SATA H.265+ Pro DVR (7104HQHI-M1/S)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2669",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "CP-Plus 8ch 2MP 1 SATA H.265 DVR (0801E1V-I)",
+    "technical_name": "CP-Plus 8ch 2MP 1 SATA H.265 DVR (0801E1V-I)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 4248,
+    "base_cost": 3398,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3612",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision Eco 8ch 1 SATA H.265+ HD DVR (7108HGHI-M1/T)",
+    "technical_name": "Hikvision Eco 8ch 1 SATA H.265+ HD DVR (7108HGHI-M1/T)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 4278,
+    "base_cost": 3422,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1788",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision DVR Hybrid 4ch 1 SATA H.265 Pro+ (7104HQHI-M1/T)",
+    "technical_name": "Hikvision DVR Hybrid 4ch 1 SATA H.265 Pro+ (7104HQHI-M1/T)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 4290,
+    "base_cost": 3432,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3027",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "PRAMA MINI DVR 8CH 4MP (DR1A08Q K1)",
+    "technical_name": "PRAMA MINI DVR 8CH 4MP (DR1A08Q K1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 5235,
+    "base_cost": 4188,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2763",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "PRAMA DVR MINI 16CH 2MP (DR1A16G-K1) (ECO)",
+    "technical_name": "PRAMA DVR MINI 16CH 2MP (DR1A16G-K1) (ECO)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6094",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision Hybrid AcuSense 4ch 1 SATA H.265+ DVR (7204HUHI-M1/T)",
+    "technical_name": "Hikvision Hybrid AcuSense 4ch 1 SATA H.265+ DVR (7204HUHI-M1/T)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2382",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision Regular 8ch 1 SATA H.265+ Pro DVR (7108HQHI-M1/S)",
+    "technical_name": "Hikvision Regular 8ch 1 SATA H.265+ Pro DVR (7108HQHI-M1/S)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 6045,
+    "base_cost": 4836,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2670",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "CP-Plus 8ch 5MP 1 SATA H.265+ DVR (0801F1-IC2)",
+    "technical_name": "CP-Plus 8ch 5MP 1 SATA H.265+ DVR (0801F1-IC2)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3958",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision DVR Hybrid 8ch 1 SATA H.265 Pro+ (7108HQHI-M1/T)",
+    "technical_name": "Hikvision DVR Hybrid 8ch 1 SATA H.265 Pro+ (7108HQHI-M1/T)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 6105,
+    "base_cost": 4884,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2655",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision Regular AcuSense 4ch 1 SATA H.265+ Pro DVR (7204HUHI-M1/X)",
+    "technical_name": "Hikvision Regular AcuSense 4ch 1 SATA H.265+ Pro DVR (7204HUHI-M1/X)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 6284,
+    "base_cost": 5027,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0754",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "CP-Plus 16ch 2MP 1 SATA H.265 DVR (1601E1-IC2)",
+    "technical_name": "CP-Plus 16ch 2MP 1 SATA H.265 DVR (1601E1-IC2)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 7034,
+    "base_cost": 5627,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7830",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "HIKVISION HD DVR ECO 16ch 1 SATA H.265+  (7116HGHI-M1/T)",
+    "technical_name": "HIKVISION HD DVR ECO 16ch 1 SATA H.265+  (7116HGHI-M1/T)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 7060,
+    "base_cost": 5648,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2049",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "A+ Products 16ch XVR upto 5MP Support",
+    "technical_name": "A+ Products 16ch XVR upto 5MP Support",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 7311,
+    "base_cost": 5849,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0393",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Prama 16CH 1 SATA H.265 DVR (DRAS1A16Q-K1)",
+    "technical_name": "Prama 16CH 1 SATA H.265 DVR (DRAS1A16Q-K1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1181",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision DVR Hybrid AcuSense 8ch 1 SATA H.265+ (7208HUHI-M1/T)",
+    "technical_name": "Hikvision DVR Hybrid AcuSense 8ch 1 SATA H.265+ (7208HUHI-M1/T)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2650",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision Regular AcuSense Face Recognition 8ch 1 SATA H.265 DVR (7208HUHI-M1/X)",
+    "technical_name": "Hikvision Regular AcuSense Face Recognition 8ch 1 SATA H.265 DVR (7208HUHI-M1/X)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 9625,
+    "base_cost": 7700,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1271",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision Regular 16ch 1 SATA H.265+ Pro DVR (7116HQHI-M1/S)",
+    "technical_name": "Hikvision Regular 16ch 1 SATA H.265+ Pro DVR (7116HQHI-M1/S)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 10392,
+    "base_cost": 8314,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7850",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "CP-Plus 16ch 5MP 1 SATA H.265 DVR (1601F1-IC  )",
+    "technical_name": "CP-Plus 16ch 5MP 1 SATA H.265 DVR (1601F1-IC  )",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 10560,
+    "base_cost": 8448,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3045",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Prama DVR 16CH 2 SATA H.265 (DRAS2A16U-K2)",
+    "technical_name": "Prama DVR 16CH 2 SATA H.265 (DRAS2A16U-K2)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1965",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision DVR Hybrid AcuSense 16ch 1 SATA H.265 (7216HUHI-M1/T)",
+    "technical_name": "Hikvision DVR Hybrid AcuSense 16ch 1 SATA H.265 (7216HUHI-M1/T)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2253",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "Hikvision Regular AcuSense 16ch 2 SATA H.265+ Pro DVR (7216HUHI-M2/X)",
+    "technical_name": "Hikvision Regular AcuSense 16ch 2 SATA H.265+ Pro DVR (7216HUHI-M2/X)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1493",
+    "catalog_path": "HD DVR"
+  },
+  {
+    "display_name": "EVM HDMI Cable 1.5m",
+    "technical_name": "EVM HDMI Cable 1.5m",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 94,
+    "base_cost": 75,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3280",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "EVM HDMI Cable 3m",
+    "technical_name": "EVM HDMI Cable 3m",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1593",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "EVM HDMI Cable 3m 4K Heavy (EVM-4KHDMI-01)",
+    "technical_name": "EVM HDMI Cable 3m 4K Heavy (EVM-4KHDMI-01)",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1822",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "EVM HDMI Cable 5m",
+    "technical_name": "EVM HDMI Cable 5m",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 266,
+    "base_cost": 213,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3276",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "EVM HDMI Cable 10m",
+    "technical_name": "EVM HDMI Cable 10m",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1594",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "EVM HDMI Cable 3m 8K Heavy (8KHDMI-01)",
+    "technical_name": "EVM HDMI Cable 3m 8K Heavy (8KHDMI-01)",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 332,
+    "base_cost": 266,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3504",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees HDMI Cable 1.5m 4K",
+    "technical_name": "Bungees HDMI Cable 1.5m 4K",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 350,
+    "base_cost": 280,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3301",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees HDMI Cable 3m 4K",
+    "technical_name": "Bungees HDMI Cable 3m 4K",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 458,
+    "base_cost": 366,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P859",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees HDMI Cable 2m 8K 60Hz 2160P With Ethernet 48 Gbps Speed",
+    "technical_name": "Bungees HDMI Cable 2m 8K 60Hz 2160P With Ethernet 48 Gbps Speed",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 570,
+    "base_cost": 456,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4791",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees HDMI Cable 5m 4K (BN-HD4K105)",
+    "technical_name": "Bungees HDMI Cable 5m 4K (BN-HD4K105)",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 624,
+    "base_cost": 499,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2840",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees HDMI Cable 3m 8K 60Hz 2160P With Ethernet 48 Gbps Speed",
+    "technical_name": "Bungees HDMI Cable 3m 8K 60Hz 2160P With Ethernet 48 Gbps Speed",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 641,
+    "base_cost": 513,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4767",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "EVM TYPE C TO HDMI CABLE 2M (EVM-CHD-01)",
+    "technical_name": "EVM TYPE C TO HDMI CABLE 2M (EVM-CHD-01)",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 686,
+    "base_cost": 549,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1821",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees HDMI Cable 5m 8K 60Hz 2160P With Ethernet 48 Gbps Speed",
+    "technical_name": "Bungees HDMI Cable 5m 8K 60Hz 2160P With Ethernet 48 Gbps Speed",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 713,
+    "base_cost": 570,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4763",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees HDMI Cable 10m 4K 60Hz 1080P With Ethernet 18 Gbps Speed",
+    "technical_name": "Bungees HDMI Cable 10m 4K 60Hz 1080P With Ethernet 18 Gbps Speed",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 888,
+    "base_cost": 710,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2837",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees HDMI Cable 15m 4K 60Hz 1080P With Ethernet 18 Gbps Speed",
+    "technical_name": "Bungees HDMI Cable 15m 4K 60Hz 1080P With Ethernet 18 Gbps Speed",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 1580,
+    "base_cost": 1264,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2838",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees Optical Fiber HDMI Cable 4K 60Hz 10m (BN-HDAOC4K110)",
+    "technical_name": "Bungees Optical Fiber HDMI Cable 4K 60Hz 10m (BN-HDAOC4K110)",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 2088,
+    "base_cost": 1670,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2841",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees Optical Fiber HDMI Cable 4K 60Hz 15m (BN-HDAOC4K115)",
+    "technical_name": "Bungees Optical Fiber HDMI Cable 4K 60Hz 15m (BN-HDAOC4K115)",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 2480,
+    "base_cost": 1984,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2869",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees HDMI Cable 20m 4K 60Hz 1080P With Ethernet 18 Gbps Speed",
+    "technical_name": "Bungees HDMI Cable 20m 4K 60Hz 1080P With Ethernet 18 Gbps Speed",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 2656,
+    "base_cost": 2125,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2839",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees Optical Fiber HDMI Cable 4K 60Hz 20m (BN-HDAOC4K120)",
+    "technical_name": "Bungees Optical Fiber HDMI Cable 4K 60Hz 20m (BN-HDAOC4K120)",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 3242,
+    "base_cost": 2594,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2842",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "Bungees Optical Fiber HDMI Cable 8K 60Hz with Ethernet 35m (BN-HD8K135)",
+    "technical_name": "Bungees Optical Fiber HDMI Cable 8K 60Hz with Ethernet 35m (BN-HD8K135)",
+    "brand": "Unknown",
+    "category": "hdmi_cable",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 4082,
+    "base_cost": 3266,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4438",
+    "catalog_path": "HDMI Cables"
+  },
+  {
+    "display_name": "PRAMA IP BULLET CAMERA 2MP 4MM (120D3-N)",
+    "technical_name": "PRAMA IP BULLET CAMERA 2MP 4MM (120D3-N)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 2852,
+    "base_cost": 2282,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8956",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "Cp-Plus 2MP IP Bullet Camera 3.6mm With Audio (TA21L3C-Q)",
+    "technical_name": "Cp-Plus 2MP IP Bullet Camera 3.6mm With Audio (TA21L3C-Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 2860,
+    "base_cost": 2288,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1453",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 2MP IP Dome Camera 3.6mm With Audio (DA21L3C-Q)",
+    "technical_name": "CP-Plus 2MP IP Dome Camera 3.6mm With Audio (DA21L3C-Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 2888,
+    "base_cost": 2310,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1451",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 2MP IP Dome Camera 2.8mm With Audio (DA21L3C-Q)",
+    "technical_name": "CP-Plus 2MP IP Dome Camera 2.8mm With Audio (DA21L3C-Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3456",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP DOME CAMERA 2MP 2.8MM (123D3-N)",
+    "technical_name": "PRAMA IP DOME CAMERA 2MP 2.8MM (123D3-N)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 2940,
+    "base_cost": 2352,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2305",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP DOME CAMERA 2MP HYBRID WITH MIC 2.8MM (123D3-WNM)",
+    "technical_name": "PRAMA IP DOME CAMERA 2MP HYBRID WITH MIC 2.8MM (123D3-WNM)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3019,
+    "base_cost": 2415,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2196",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP BULLET CAMERA 2MP HYBRID WITH MIC 4MM (120D3-WNM)",
+    "technical_name": "PRAMA IP BULLET CAMERA 2MP HYBRID WITH MIC 4MM (120D3-WNM)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3077,
+    "base_cost": 2462,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2235",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 2MP IP illumax Hybrid Dome Camera 3.6mm With Audio (DA21L3C-LQ)",
+    "technical_name": "CP-Plus 2MP IP illumax Hybrid Dome Camera 3.6mm With Audio (DA21L3C-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3157,
+    "base_cost": 2526,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1452",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 2MP IP illumax Hybrid Bullet Camera 3.6mm With Audio (TA21L3C-LQ)",
+    "technical_name": "CP-Plus 2MP IP illumax Hybrid Bullet Camera 3.6mm With Audio (TA21L3C-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3212,
+    "base_cost": 2570,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1454",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 2MP IP illumax Hybrid Bullet Camera 3.6mm With Two Way Audio (TA21L3B-LQ)",
+    "technical_name": "CP-Plus 2MP IP illumax Hybrid Bullet Camera 3.6mm With Two Way Audio (TA21L3B-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3419,
+    "base_cost": 2735,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2319",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 2MP IP illumax Hybrid Dome Camera 3.6mm With Two Way Audio (DA21L3B-LQ)",
+    "technical_name": "CP-Plus 2MP IP illumax Hybrid Dome Camera 3.6mm With Two Way Audio (DA21L3B-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3474,
+    "base_cost": 2779,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2320",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP IP Dome Camera 3.6mm With Audio (DA41L3C-Q)",
+    "technical_name": "CP-Plus 4MP IP Dome Camera 3.6mm With Audio (DA41L3C-Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3545,
+    "base_cost": 2836,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4219",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP IP Dome Camera 3.6mm With Audio (DA41L3C-D-Q)",
+    "technical_name": "CP-Plus 4MP IP Dome Camera 3.6mm With Audio (DA41L3C-D-Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3704,
+    "base_cost": 2963,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1540",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP DOME CAMERA 4MP 2.8MM (143D3-N)",
+    "technical_name": "PRAMA IP DOME CAMERA 4MP 2.8MM (143D3-N)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3709,
+    "base_cost": 2967,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2477",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP BULLET CAMERA 4MP 4MM (140D3-N)",
+    "technical_name": "PRAMA IP BULLET CAMERA 4MP 4MM (140D3-N)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3768,
+    "base_cost": 3014,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2424",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP IP Bullet Camera 3.6mm With Audio (TA41L3C-D-Q)",
+    "technical_name": "CP-Plus 4MP IP Bullet Camera 3.6mm With Audio (TA41L3C-D-Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3770,
+    "base_cost": 3016,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1541",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP IP illumax Hybrid Dome Camera 3.6mm With Audio (DA41L3C-LQ)",
+    "technical_name": "CP-Plus 4MP IP illumax Hybrid Dome Camera 3.6mm With Audio (DA41L3C-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3905,
+    "base_cost": 3124,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3532",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP IP illumax Hybrid Bullet Camera 3.6mm With Audio (TA41L3C-LQ)",
+    "technical_name": "CP-Plus 4MP IP illumax Hybrid Bullet Camera 3.6mm With Audio (TA41L3C-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3960,
+    "base_cost": 3168,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3485",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP IP illumax Hybrid Dome Camera 3.6mm With Audio (DA41L3C-D-LQ)",
+    "technical_name": "CP-Plus 4MP IP illumax Hybrid Dome Camera 3.6mm With Audio (DA41L3C-D-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4032,
+    "base_cost": 3226,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1539",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP IP illumax Hybrid Bullet Camera 3.6mm With Audio (TA41L3C-D-LQ)",
+    "technical_name": "CP-Plus 4MP IP illumax Hybrid Bullet Camera 3.6mm With Audio (TA41L3C-D-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4098,
+    "base_cost": 3278,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1538",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP DOME CAMERA 4MP HYBRID WITH MIC 2.8MM (143D3-WNM)",
+    "technical_name": "PRAMA IP DOME CAMERA 4MP HYBRID WITH MIC 2.8MM (143D3-WNM)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4112,
+    "base_cost": 3290,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2036",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP DOME CAMERA 2MP HYBRID | SD Card Slot | Two Way Audio | 2.8mm (123D7-WNMS)",
+    "technical_name": "PRAMA IP DOME CAMERA 2MP HYBRID | SD Card Slot | Two Way Audio | 2.8mm (123D7-WNMS)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4158,
+    "base_cost": 3326,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6590",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP BULLET CAMERA 4MP HYBRID WITH MIC 4MM (140D3-WNM)",
+    "technical_name": "PRAMA IP BULLET CAMERA 4MP HYBRID WITH MIC 4MM (140D3-WNM)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4169,
+    "base_cost": 3335,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2038",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 2MP IP Bullet Camera 6mm With Audio (TA21L6C-Q)",
+    "technical_name": "CP-Plus 2MP IP Bullet Camera 6mm With Audio (TA21L6C-Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4263,
+    "base_cost": 3410,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2720",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP IP illumax Hybrid Dome Camera WDR 3.6mm With Two Way Audio (DA41L3B-D-LQ)",
+    "technical_name": "CP-Plus 4MP IP illumax Hybrid Dome Camera WDR 3.6mm With Two Way Audio (DA41L3B-D-LQ)",
+    "brand": "WD",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4758,
+    "base_cost": 3806,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2389",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP IP illumax Hybrid Bullet Camera WDR 3.6mm With Two Way Audio (TA41L3B-D-LQ)",
+    "technical_name": "CP-Plus 4MP IP illumax Hybrid Bullet Camera WDR 3.6mm With Two Way Audio (TA41L3B-D-LQ)",
+    "brand": "WD",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2318",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP DOME CAMERA 6MP HYBRID WITH MIC 2.8MM (163D3-WNM)",
+    "technical_name": "PRAMA IP DOME CAMERA 6MP HYBRID WITH MIC 2.8MM (163D3-WNM)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2039",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP IP Bullet Camera 6mm With Audio (TA41L6C-D-Q)",
+    "technical_name": "CP-Plus 4MP IP Bullet Camera 6mm With Audio (TA41L6C-D-Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 5247,
+    "base_cost": 4198,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2719",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP BULLET CAMERA 6MP HYBRID WITH MIC 4MM (160D3-WNM)",
+    "technical_name": "PRAMA IP BULLET CAMERA 6MP HYBRID WITH MIC 4MM (160D3-WNM)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 5287,
+    "base_cost": 4230,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2724",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 6MP IP illumax Hybrid Dome Camera 3.6mm With Audio (DA61L3C-LQ)",
+    "technical_name": "CP-Plus 6MP IP illumax Hybrid Dome Camera 3.6mm With Audio (DA61L3C-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 5354,
+    "base_cost": 4283,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2864",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP DOME CAMERA 4MP HYBRID | SD  Card Slot | Two Way Audio | 2.8mm (143D7-WNMS)",
+    "technical_name": "PRAMA IP DOME CAMERA 4MP HYBRID | SD  Card Slot | Two Way Audio | 2.8mm (143D7-WNMS)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 5482,
+    "base_cost": 4386,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6599",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP BULLET CAMERA 4MP HYBRID | SD Card Slot | |Two Way Audio | 4mm (140D7-WNMS)",
+    "technical_name": "PRAMA IP BULLET CAMERA 4MP HYBRID | SD Card Slot | |Two Way Audio | 4mm (140D7-WNMS)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 5540,
+    "base_cost": 4432,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6566",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP DOME CAMERA 6MP HYBRID | SD Card Slot | Two Way Audio | 2.8mm (163D3-WNMS)",
+    "technical_name": "PRAMA IP DOME CAMERA 6MP HYBRID | SD Card Slot | Two Way Audio | 2.8mm (163D3-WNMS)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 6069,
+    "base_cost": 4855,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6558",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP BULLET CAMERA 6MP HYBRID | SD Card Slot | Two Way Audio | 4mm (160D3-WNMS)",
+    "technical_name": "PRAMA IP BULLET CAMERA 6MP HYBRID | SD Card Slot | Two Way Audio | 4mm (160D3-WNMS)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 6202,
+    "base_cost": 4962,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6555",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 6MP IP illumax Hybrid Bullet Camera 3.6mm with Audio (TA61L3C-LQ)",
+    "technical_name": "CP-Plus 6MP IP illumax Hybrid Bullet Camera 3.6mm with Audio (TA61L3C-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 6478,
+    "base_cost": 5182,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3422",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP BULLET CAMERA 2MP HYBRID WITH MIC Varifocal (NC126D3-WNRAM(D2))",
+    "technical_name": "PRAMA IP BULLET CAMERA 2MP HYBRID WITH MIC Varifocal (NC126D3-WNRAM(D2))",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3541",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 8MP IP illumax Hybrid Dome Camera 3.6mm With Mic (DA81L3C-LQ)",
+    "technical_name": "CP-Plus 8MP IP illumax Hybrid Dome Camera 3.6mm With Mic (DA81L3C-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2938",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus 8MP IP illumax Hybrid Bullet Camera 3.6mm With Audio (TA81L3C-LQ)",
+    "technical_name": "CP-Plus 8MP IP illumax Hybrid Bullet Camera 3.6mm With Audio (TA81L3C-LQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 7924,
+    "base_cost": 6339,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2867",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "PRAMA IP BULLET CAMERA 4MP HYBRID WITH MIC Varifocal (NC146D3-WNRAM(D2))",
+    "technical_name": "PRAMA IP BULLET CAMERA 4MP HYBRID WITH MIC Varifocal (NC146D3-WNRAM(D2))",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3061",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus IP PTZ Camera 2MP 16x (D2521L10-DAQ)",
+    "technical_name": "CP-Plus IP PTZ Camera 2MP 16x (D2521L10-DAQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 31245,
+    "base_cost": 24996,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5494",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus IP PTZ Camera 4MP 16x (F4541L30-DPQ)",
+    "technical_name": "CP-Plus IP PTZ Camera 4MP 16x (F4541L30-DPQ)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 70200,
+    "base_cost": 56160,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6089",
+    "catalog_path": "IP Camera"
+  },
+  {
+    "display_name": "CP-Plus IP NVR 4K 32CH 4 Sata (4K5324-FI)",
+    "technical_name": "CP-Plus IP NVR 4K 32CH 4 Sata (4K5324-FI)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4550",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Secureye 04Ch 1 SATA  H.265+ NVR",
+    "technical_name": "Secureye 04Ch 1 SATA  H.265+ NVR",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3329",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama 04CH 1 SATA H.265+ NVR (NR1A04-Q1)",
+    "technical_name": "Prama 04CH 1 SATA H.265+ NVR (NR1A04-Q1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3410,
+    "base_cost": 2728,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1583",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "A+ Products 4K 10ch 1 SATA H.265+ NVR ONVIF 2.4 Upto 8MP & 2 way Audio Support (NVR-6110E)",
+    "technical_name": "A+ Products 4K 10ch 1 SATA H.265+ NVR ONVIF 2.4 Upto 8MP & 2 way Audio Support (NVR-6110E)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3503,
+    "base_cost": 2802,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2902",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Secureye SPR105 5CH 6MP IP NVR (1 SATA)",
+    "technical_name": "Secureye SPR105 5CH 6MP IP NVR (1 SATA)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3608,
+    "base_cost": 2886,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8742",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama 08CH 1 SATA H.265+ NVR (NR1A08-Q1)",
+    "technical_name": "Prama 08CH 1 SATA H.265+ NVR (NR1A08-Q1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3960,
+    "base_cost": 3168,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7760",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Secureye NVR 8Ch 1 SATA H.265 (SR-NVR-108)",
+    "technical_name": "Secureye NVR 8Ch 1 SATA H.265 (SR-NVR-108)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4079,
+    "base_cost": 3263,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2232",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Secureye SPR110 10ch 6mp IP NVR (1 Sata)",
+    "technical_name": "Secureye SPR110 10ch 6mp IP NVR (1 Sata)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4079,
+    "base_cost": 3263,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8852",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 4ch 1 SATA H.265+ NVR (7104NI-Q1/M)",
+    "technical_name": "Hikvision 4ch 1 SATA H.265+ NVR (7104NI-Q1/M)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7229",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus 04ch 1 SATA H.265 NVR (104F1)",
+    "technical_name": "CP-Plus 04ch 1 SATA H.265 NVR (104F1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4249,
+    "base_cost": 3399,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7008",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "A+ Products 16ch NVR With 2 Way Audio",
+    "technical_name": "A+ Products 16ch NVR With 2 Way Audio",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4324,
+    "base_cost": 3459,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0401",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama NVR 4CH 1 SATA H.265+ (NR2A04-Q1)",
+    "technical_name": "Prama NVR 4CH 1 SATA H.265+ (NR2A04-Q1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4730,
+    "base_cost": 3784,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6643",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus 08ch 1 SATA H.265 NVR (108F1)",
+    "technical_name": "CP-Plus 08ch 1 SATA H.265 NVR (108F1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4913,
+    "base_cost": 3930,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7009",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 8ch 1 SATA H.265+ NVR (7108NI-Q1/M)",
+    "technical_name": "Hikvision 8ch 1 SATA H.265+ NVR (7108NI-Q1/M)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P7227",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama 08CH 1 SATA H.265+ NVR (NR2A08-Q1)",
+    "technical_name": "Prama 08CH 1 SATA H.265+ NVR (NR2A08-Q1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 5610,
+    "base_cost": 4488,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6651",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama NVR 08CH 2 SATA H.265+ (NR2A08-Q2)",
+    "technical_name": "Prama NVR 08CH 2 SATA H.265+ (NR2A08-Q2)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 5809,
+    "base_cost": 4647,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3415",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 4ch 1 SATA H.265+ NVR (7604NI-Q1)",
+    "technical_name": "Hikvision 4ch 1 SATA H.265+ NVR (7604NI-Q1)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 6036,
+    "base_cost": 4829,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2847",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama 16CH 1 SATA H.265+ NVR 4K (NR2A16Q1)",
+    "technical_name": "Prama 16CH 1 SATA H.265+ NVR 4K (NR2A16Q1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 6160,
+    "base_cost": 4928,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6652",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama NVR 4K 4 CH 1 SATA AiSense (NRAS2A04-K1)",
+    "technical_name": "Prama NVR 4K 4 CH 1 SATA AiSense (NRAS2A04-K1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 6202,
+    "base_cost": 4962,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3355",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Secureye 20Ch 1 SATA S+265 NVR (SP-R120)",
+    "technical_name": "Secureye 20Ch 1 SATA S+265 NVR (SP-R120)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 6501,
+    "base_cost": 5201,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8741",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 8ch 1 SATA H.265+ NVR (7608NI-Q1)",
+    "technical_name": "Hikvision 8ch 1 SATA H.265+ NVR (7608NI-Q1)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6364",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 16ch 1 SATA H.265+ NVR (7116NI-Q1/M)",
+    "technical_name": "Hikvision 16ch 1 SATA H.265+ NVR (7116NI-Q1/M)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 7127,
+    "base_cost": 5702,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8947",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus IP NVR 4K 16CH (4K2161-V4)",
+    "technical_name": "CP-Plus IP NVR 4K 16CH (4K2161-V4)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 7509,
+    "base_cost": 6007,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1318",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama NVR 4K 8 CH 1 SATA AiSense (NRAS2A08-K1)",
+    "technical_name": "Prama NVR 4K 8 CH 1 SATA AiSense (NRAS2A08-K1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 7594,
+    "base_cost": 6075,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2972",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 4ch 1 SATA AcuSense H.265+ 4K NVR (7604NXI-K1)",
+    "technical_name": "Hikvision 4ch 1 SATA AcuSense H.265+ 4K NVR (7604NXI-K1)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 7754,
+    "base_cost": 6203,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3761",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama 16CH 2 SATA H.265+ NVR 4k (NR2A16Q2)",
+    "technical_name": "Prama 16CH 2 SATA H.265+ NVR 4k (NR2A16Q2)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 7859,
+    "base_cost": 6287,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8610",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 16ch 1 SATA H.265+ NVR (7616NI-Q1)",
+    "technical_name": "Hikvision 16ch 1 SATA H.265+ NVR (7616NI-Q1)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 8092,
+    "base_cost": 6474,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2136",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama 16CH 1 SATA H.265+ NVR 4K (NRAS2A16-K1)",
+    "technical_name": "Prama 16CH 1 SATA H.265+ NVR 4K (NRAS2A16-K1)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 8348,
+    "base_cost": 6678,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3122",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 8ch 1 SATA AcuSense H.265+ 4K NVR (7608NXI-K1)",
+    "technical_name": "Hikvision 8ch 1 SATA AcuSense H.265+ 4K NVR (7608NXI-K1)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3057",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus 16ch 2 SATA H.265 4K NVR (4K2162-V3)",
+    "technical_name": "CP-Plus 16ch 2 SATA H.265 4K NVR (4K2162-V3)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8902",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus 8ch 2 SATA H.265 4K NVR (4K4082-V4)",
+    "technical_name": "CP-Plus 8ch 2 SATA H.265 4K NVR (4K4082-V4)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3521",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama NVR 4K 8 CH 2 SATA (NRAS2A08-K2)",
+    "technical_name": "Prama NVR 4K 8 CH 2 SATA (NRAS2A08-K2)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 9502,
+    "base_cost": 7602,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1961",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "A+ Products 32ch NVR With 2 Way Audio",
+    "technical_name": "A+ Products 32ch NVR With 2 Way Audio",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 9504,
+    "base_cost": 7603,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0403",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 16ch 2 SATA H.265+ NVR (7616NI-Q2)",
+    "technical_name": "Hikvision 16ch 2 SATA H.265+ NVR (7616NI-Q2)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6819",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 16ch 1 SATA AcuSense H.265+ 4K NVR (7616NXI-K1)",
+    "technical_name": "Hikvision 16ch 1 SATA AcuSense H.265+ 4K NVR (7616NXI-K1)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8132",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama 16CH 2 SATA H.265+ NVR 4K (NRAS2A16-K2)",
+    "technical_name": "Prama 16CH 2 SATA H.265+ NVR 4K (NRAS2A16-K2)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 10450,
+    "base_cost": 8360,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2683",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus 16ch 2 SATA H.265 4K NVR (4K4162-V4)",
+    "technical_name": "CP-Plus 16ch 2 SATA H.265 4K NVR (4K4162-V4)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 10978,
+    "base_cost": 8782,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2945",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama 32CH 2 SATA H.265+ NVR (NRAS2A32-K2)",
+    "technical_name": "Prama 32CH 2 SATA H.265+ NVR (NRAS2A32-K2)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 12540,
+    "base_cost": 10032,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2686",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 16ch 2 SATA AcuSense H.265+ 4K NVR (7616NXI-K2)",
+    "technical_name": "Hikvision 16ch 2 SATA AcuSense H.265+ 4K NVR (7616NXI-K2)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2885",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Secureye 32Ch 2 SATA S+265 NVR(SP-R232)",
+    "technical_name": "Secureye 32Ch 2 SATA S+265 NVR(SP-R232)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 14656,
+    "base_cost": 11725,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8946",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 32ch 2 SATA AcuSense H.265+ 4K NVR (7632NXI-K2)",
+    "technical_name": "Hikvision 32ch 2 SATA AcuSense H.265+ 4K NVR (7632NXI-K2)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8126",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus 32ch 2 SATA H.265 NVR (4K4322-V4)",
+    "technical_name": "CP-Plus 32ch 2 SATA H.265 NVR (4K4322-V4)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0325",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus 8ch 2 SATA H.265 4K NVR (4K5082-FI)",
+    "technical_name": "CP-Plus 8ch 2 SATA H.265 4K NVR (4K5082-FI)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3544",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus 16ch 4 SATA H.265 NVR (4K4164-FI)",
+    "technical_name": "CP-Plus 16ch 4 SATA H.265 NVR (4K4164-FI)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3338",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama 32CH 4 SATA Ai Sense H.265+ NVR (NRAS2B32-K4)",
+    "technical_name": "Prama 32CH 4 SATA Ai Sense H.265+ NVR (NRAS2B32-K4)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 22680,
+    "base_cost": 18144,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1895",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus 32ch 4 SATA H.265 NVR (4K4324-FI)",
+    "technical_name": "CP-Plus 32ch 4 SATA H.265 NVR (4K4324-FI)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 29597,
+    "base_cost": 23678,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2857",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "AEYI Edge NVR 8CH",
+    "technical_name": "AEYI Edge NVR 8CH",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 29695,
+    "base_cost": 23756,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3613",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Prama 64CH 4 SATA H.265+ NVR 4k (NR2B64K4)",
+    "technical_name": "Prama 64CH 4 SATA H.265+ NVR 4k (NR2B64K4)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 35110,
+    "base_cost": 28088,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3255",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus IP NVR 4K 64CH (4K5644-FI)",
+    "technical_name": "CP-Plus IP NVR 4K 64CH (4K5644-FI)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 38882,
+    "base_cost": 31106,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1324",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "Hikvision 64ch 4 SATA H.265+ 8K NVR (7764NI-M4)",
+    "technical_name": "Hikvision 64ch 4 SATA H.265+ 8K NVR (7764NI-M4)",
+    "brand": "Hikvision",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3610",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "CP-Plus IP NVR 4K 64CH 8 Sata (4K564R8-FI)",
+    "technical_name": "CP-Plus IP NVR 4K 64CH 8 Sata (4K564R8-FI)",
+    "brand": "Unknown",
+    "category": "recorder",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 53078,
+    "base_cost": 42462,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3598",
+    "catalog_path": "IP NVR"
+  },
+  {
+    "display_name": "A+ Products CAT6 CCA Lan Cable Indoor 90y Gray (0.51mm)",
+    "technical_name": "A+ Products CAT6 CCA Lan Cable Indoor 90y Gray (0.51mm)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 855,
+    "base_cost": 684,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1322",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "A+ Products CAT6 CCA Lan Cable Outdoor 90y LD Black (0.51mm)",
+    "technical_name": "A+ Products CAT6 CCA Lan Cable Outdoor 90y LD Black (0.51mm)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 854,
+    "base_cost": 683,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3767",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "A+ Products CAT6 Copper Lan Cable 305y LD Black (0.45mm)",
+    "technical_name": "A+ Products CAT6 Copper Lan Cable 305y LD Black (0.45mm)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 8120,
+    "base_cost": 6496,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4387",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "A+ Products CAT6 Copper Lan Cable Indoor 305y Gray (0.45mm)",
+    "technical_name": "A+ Products CAT6 Copper Lan Cable Indoor 305y Gray (0.45mm)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 8378,
+    "base_cost": 6702,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1323",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "A+ Products CAT6 Lan Cable CCA 305y Black (0.51mm)",
+    "technical_name": "A+ Products CAT6 Lan Cable CCA 305y Black (0.51mm)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 2933,
+    "base_cost": 2346,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3750",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "A+ Products CAT6 Lan Cable CCA 305y Grey (0.51mm)",
+    "technical_name": "A+ Products CAT6 Lan Cable CCA 305y Grey (0.51mm)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3129,
+    "base_cost": 2503,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2234",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "A+ Products CAT6 Lan Cable Copper Indoor 90y Gray (0.45mm)",
+    "technical_name": "A+ Products CAT6 Lan Cable Copper Indoor 90y Gray (0.45mm)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 2229,
+    "base_cost": 1783,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1321",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "A+ Products CAT6 Lan Cable Copper Outdoor 90y LD Black (0.45mm)",
+    "technical_name": "A+ Products CAT6 Lan Cable Copper Outdoor 90y LD Black (0.45mm)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 2466,
+    "base_cost": 1973,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4389",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "Finolex CAT6 Lan Cable 100m Grey 23AWG",
+    "technical_name": "Finolex CAT6 Lan Cable 100m Grey 23AWG",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4075,
+    "base_cost": 3260,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3103",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "Finolex CAT6 Lan Cable 100m Yellow 23AWG",
+    "technical_name": "Finolex CAT6 Lan Cable 100m Yellow 23AWG",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 4075,
+    "base_cost": 3260,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3222",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "Finolex CAT6 Lan Cable 305m (Blue) 23AWG",
+    "technical_name": "Finolex CAT6 Lan Cable 305m (Blue) 23AWG",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 12064,
+    "base_cost": 9651,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2164",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "Finolex CAT6 Lan Cable 305m (Green) 23AWG",
+    "technical_name": "Finolex CAT6 Lan Cable 305m (Green) 23AWG",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 12064,
+    "base_cost": 9651,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2165",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "Finolex CAT6 Lan Cable 305m (Grey) 23AWG",
+    "technical_name": "Finolex CAT6 Lan Cable 305m (Grey) 23AWG",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 12064,
+    "base_cost": 9651,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8538",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "Finolex CAT6 Lan Cable 305m (Yellow) 23AWG",
+    "technical_name": "Finolex CAT6 Lan Cable 305m (Yellow) 23AWG",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 12064,
+    "base_cost": 9651,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1658",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "CP Plus CAT6 Lan Cable 100m Grey",
+    "technical_name": "CP Plus CAT6 Lan Cable 100m Grey",
+    "brand": "CP Plus",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2306",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "Cp-plus CAT6 Lan Cable 305m (Grey)",
+    "technical_name": "Cp-plus CAT6 Lan Cable 305m (Grey)",
+    "brand": "Unknown",
+    "category": "cable",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8634",
+    "catalog_path": "LAN Cables (CAT6)"
+  },
+  {
+    "display_name": "Intex LED Monitor 19\" with HDMI | VGA (IT-1902)",
+    "technical_name": "Intex LED Monitor 19\" with HDMI | VGA (IT-1902)",
+    "brand": "Unknown",
+    "category": "display",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 1998,
+    "base_cost": 1598,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2884",
+    "catalog_path": "Led _ Monitor"
+  },
+  {
+    "display_name": "Consistent LED Monitor 19\" VA with HDMI | VGA (CTM2001)",
+    "technical_name": "Consistent LED Monitor 19\" VA with HDMI | VGA (CTM2001)",
+    "brand": "Unknown",
+    "category": "display",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0775",
+    "catalog_path": "Led _ Monitor"
+  },
+  {
+    "display_name": "EVM LED Monitor 19\" HD with HDMI | VGA (Grand 190)",
+    "technical_name": "EVM LED Monitor 19\" HD with HDMI | VGA (Grand 190)",
+    "brand": "Unknown",
+    "category": "display",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 2152,
+    "base_cost": 1722,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1545",
+    "catalog_path": "Led _ Monitor"
+  },
+  {
+    "display_name": "LG LED Monitor 19\" FHD TN with HDMI | VGA (19M38LB)",
+    "technical_name": "LG LED Monitor 19\" FHD TN with HDMI | VGA (19M38LB)",
+    "brand": "Unknown",
+    "category": "display",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 4935,
+    "base_cost": 3948,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1501",
+    "catalog_path": "Led _ Monitor"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 4 Port (4 FE + 2 FE Port) CP-SAVW-HPU4H2-65",
+    "technical_name": "CP-Plus Poe Switch 4 Port (4 FE + 2 FE Port) CP-SAVW-HPU4H2-65",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0143",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 4 Port (4 FE + 2 FE Port) CP-UNW-HPU4H2-48",
+    "technical_name": "CP-Plus Poe Switch 4 Port (4 FE + 2 FE Port) CP-UNW-HPU4H2-48",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2792",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 4 Port (4 FE + 2 FE Port)",
+    "technical_name": "CP-Plus Poe Switch 4 Port (4 FE + 2 FE Port)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 1166,
+    "base_cost": 933,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6636",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "A+ Products Poe Switch 4 Port (4 FE + 2 FE Port) Normal",
+    "technical_name": "A+ Products Poe Switch 4 Port (4 FE + 2 FE Port) Normal",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 1223,
+    "base_cost": 978,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4743",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 8 Port (8 FE+ 2 FE Port) CP-DNW-HPU8H2-96-V2",
+    "technical_name": "CP-Plus Poe Switch 8 Port (8 FE+ 2 FE Port) CP-DNW-HPU8H2-96-V2",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0206",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 8 Port (8 FE + 2 FE Port)",
+    "technical_name": "CP-Plus Poe Switch 8 Port (8 FE + 2 FE Port)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4736",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 8 Port Outdoor (8 FE+ 2 FE Port)",
+    "technical_name": "CP-Plus Poe Switch 8 Port Outdoor (8 FE+ 2 FE Port)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0687",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "A+ Products Poe Switch 8 Port (8 FE+ 2 FE Port) Normal",
+    "technical_name": "A+ Products Poe Switch 8 Port (8 FE+ 2 FE Port) Normal",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 1582,
+    "base_cost": 1266,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4832",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 8 Port (8 FE + 2 FE Port) CP-UNW-HPU8H2-96",
+    "technical_name": "CP-Plus Poe Switch 8 Port (8 FE + 2 FE Port) CP-UNW-HPU8H2-96",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 1643,
+    "base_cost": 1314,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2793",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "A+ Products Poe Switch 8 Port (8 FE+ 2 GE  Port)",
+    "technical_name": "A+ Products Poe Switch 8 Port (8 FE+ 2 GE  Port)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 2070,
+    "base_cost": 1656,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4881",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 8 Port (8 FE + 2 GE Port)",
+    "technical_name": "CP-Plus Poe Switch 8 Port (8 FE + 2 GE Port)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 2476,
+    "base_cost": 1981,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3250",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 4 Port (4 GE + 2 GE Port) CP-DNW-GPU4G2-48C",
+    "technical_name": "CP-Plus Poe Switch 4 Port (4 GE + 2 GE Port) CP-DNW-GPU4G2-48C",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 2522,
+    "base_cost": 2018,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3253",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 8 Port (8 GE  + 2 GE Port) GPU8G2-96-V4",
+    "technical_name": "CP-Plus Poe Switch 8 Port (8 GE  + 2 GE Port) GPU8G2-96-V4",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8396",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 8 Port (8 GE + 2 GE + 2 SFP Port)",
+    "technical_name": "CP-Plus Poe Switch 8 Port (8 GE + 2 GE + 2 SFP Port)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 3693,
+    "base_cost": 2954,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8596",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "A+ Products Poe Switch 16 Port (16 FE + 2 GE + 1 SFP Port)",
+    "technical_name": "A+ Products Poe Switch 16 Port (16 FE + 2 GE + 1 SFP Port)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 6300,
+    "base_cost": 5040,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0404",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "Cp-Plus Poe Switch 16 Port (16 FE+ 2 GE + 1 SFP Port)",
+    "technical_name": "Cp-Plus Poe Switch 16 Port (16 FE+ 2 GE + 1 SFP Port)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1106",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 24 Port (24 FE + 2 GE Port) ANW HP24G2",
+    "technical_name": "CP-Plus Poe Switch 24 Port (24 FE + 2 GE Port) ANW HP24G2",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8599",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 24 Port (24 FE + 2 GE + 1 SFP Port) CP-DNW-HPU24G2F1-30",
+    "technical_name": "CP-Plus Poe Switch 24 Port (24 FE + 2 GE + 1 SFP Port) CP-DNW-HPU24G2F1-30",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8109",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 20 Port (16 GE + 2 GE + 2 SFP Port) CP-DNW-GPU16G2F2-20",
+    "technical_name": "CP-Plus Poe Switch 20 Port (16 GE + 2 GE + 2 SFP Port) CP-DNW-GPU16G2F2-20",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3239",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "CP-Plus Poe Switch 24 Port (24 GE + 2 GE + 2 SFP Port) CP-DNW-GPU24G2F2-30",
+    "technical_name": "CP-Plus Poe Switch 24 Port (24 GE + 2 GE + 2 SFP Port) CP-DNW-GPU24G2F2-30",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6134",
+    "catalog_path": "Poe Switch"
+  },
+  {
+    "display_name": "Hi-Focus Outdoor Access Point to Point P2P 500M (HF-CPE01)",
+    "technical_name": "Hi-Focus Outdoor Access Point to Point P2P 500M (HF-CPE01)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 2039,
+    "base_cost": 1631,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8774",
+    "catalog_path": "Point To Point (P2P)"
+  },
+  {
+    "display_name": "TP-Link CPE210 2.4GHz 300Mbps 9dBi Outdoor Access Point to Point (P2P)",
+    "technical_name": "TP-Link CPE210 2.4GHz 300Mbps 9dBi Outdoor Access Point to Point (P2P)",
+    "brand": "TP-Link",
+    "category": "network",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0037",
+    "catalog_path": "Point To Point (P2P)"
+  },
+  {
+    "display_name": "TP-Link CPE510 5GHz 300Mbps 13dBi Outdoor Access Point to Point (P2P)",
+    "technical_name": "TP-Link CPE510 5GHz 300Mbps 13dBi Outdoor Access Point to Point (P2P)",
+    "brand": "TP-Link",
+    "category": "network",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 3806,
+    "base_cost": 3045,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0137",
+    "catalog_path": "Point To Point (P2P)"
+  },
+  {
+    "display_name": "TP-Link CPE610 5GHz 300Mbps 23dBi Outdoor Access Point to Point (P2P)",
+    "technical_name": "TP-Link CPE610 5GHz 300Mbps 23dBi Outdoor Access Point to Point (P2P)",
+    "brand": "TP-Link",
+    "category": "network",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 4673,
+    "base_cost": 3738,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0039",
+    "catalog_path": "Point To Point (P2P)"
+  },
+  {
+    "display_name": "Tenda O9 5GHz 11ac 23dBi Gigabit Outdoor Access Point to Point (P2P)",
+    "technical_name": "Tenda O9 5GHz 11ac 23dBi Gigabit Outdoor Access Point to Point (P2P)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 4992,
+    "base_cost": 3994,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0526",
+    "catalog_path": "Point To Point (P2P)"
+  },
+  {
+    "display_name": "UBIQUITI OUTDOOR ACCESS POINT TO POINT LBE-M5-23 (5GHz)",
+    "technical_name": "UBIQUITI OUTDOOR ACCESS POINT TO POINT LBE-M5-23 (5GHz)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 5617,
+    "base_cost": 4494,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6757",
+    "catalog_path": "Point To Point (P2P)"
+  },
+  {
+    "display_name": "TP-Link CPE710 5GHz AC 867Mbps 23dBi Outdoor Access Point to Point (P2P)",
+    "technical_name": "TP-Link CPE710 5GHz AC 867Mbps 23dBi Outdoor Access Point to Point (P2P)",
+    "brand": "TP-Link",
+    "category": "network",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 5828,
+    "base_cost": 4662,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0041",
+    "catalog_path": "Point To Point (P2P)"
+  },
+  {
+    "display_name": "D-Link Access Point to Point (P2P) DAP-X2810",
+    "technical_name": "D-Link Access Point to Point (P2P) DAP-X2810",
+    "brand": "D-Link",
+    "category": "network",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2079",
+    "catalog_path": "Point To Point (P2P)"
+  },
+  {
+    "display_name": "Ubiquiti P2P Power Beam AC Gen2 High-Performance air MAX AC Bridge (PBE-5AC-Gen2) Pair",
+    "technical_name": "Ubiquiti P2P Power Beam AC Gen2 High-Performance air MAX AC Bridge (PBE-5AC-Gen2) Pair",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 26783,
+    "base_cost": 21426,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1923",
+    "catalog_path": "Point To Point (P2P)"
+  },
+  {
+    "display_name": "A+ Products Power Adapter 12V-1AMP DC Pin",
+    "technical_name": "A+ Products Power Adapter 12V-1AMP DC Pin",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 93,
+    "base_cost": 74,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3245",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "A+ Products Power Adapter 12V-2AMP DC Pin",
+    "technical_name": "A+ Products Power Adapter 12V-2AMP DC Pin",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 143,
+    "base_cost": 114,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3246",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Power Adapter 5v/1a DC Pin (PS049)",
+    "technical_name": "ERD Power Adapter 5v/1a DC Pin (PS049)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 153,
+    "base_cost": 122,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3827",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Power Supply 12v/1a DC Output 1ch (PS10T)",
+    "technical_name": "ERD Power Supply 12v/1a DC Output 1ch (PS10T)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 159,
+    "base_cost": 127,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1751",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Power Adapter 12v/1a DC Pin (PS10)",
+    "technical_name": "ERD Power Adapter 12v/1a DC Pin (PS10)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 180,
+    "base_cost": 144,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2703",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Power Adapter 5v/2a DC Pin (PS026/PS050)",
+    "technical_name": "ERD Power Adapter 5v/2a DC Pin (PS026/PS050)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 180,
+    "base_cost": 144,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3829",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Power Adapter 9v/1a DC Pin (PS022)",
+    "technical_name": "ERD Power Adapter 9v/1a DC Pin (PS022)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 180,
+    "base_cost": 144,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P3831",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Power Supply 12v/2a DC Output 1ch (DC-20T)",
+    "technical_name": "ERD Power Supply 12v/2a DC Output 1ch (DC-20T)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 241,
+    "base_cost": 193,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1106",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "A+ Products Power Adapter 12V-3AMP DC Pin (5.5X2.5MM) With Main Lead",
+    "technical_name": "A+ Products Power Adapter 12V-3AMP DC Pin (5.5X2.5MM) With Main Lead",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 257,
+    "base_cost": 206,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3247",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Power Adapter 12v/2a DC Pin (PS027)",
+    "technical_name": "ERD Power Adapter 12v/2a DC Pin (PS027)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 262,
+    "base_cost": 210,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2236",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Power Supply 12v/2a DC Output 1ch (PS20T)",
+    "technical_name": "ERD Power Supply 12v/2a DC Output 1ch (PS20T)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 272,
+    "base_cost": 218,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1752",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "A+ Products CCTV Power Supply 4ch Metal 12v/4a (Single Output)",
+    "technical_name": "A+ Products CCTV Power Supply 4ch Metal 12v/4a (Single Output)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 311,
+    "base_cost": 249,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1369",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "A+ Products Power Adapter 12V-5AMP DC Pin (5.5X2.5MM) With Main Lead",
+    "technical_name": "A+ Products Power Adapter 12V-5AMP DC Pin (5.5X2.5MM) With Main Lead",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 318,
+    "base_cost": 254,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3248",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "A+ Products CCTV Power Supply 8ch Metal 12v/8a (Single Output)",
+    "technical_name": "A+ Products CCTV Power Supply 8ch Metal 12v/8a (Single Output)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 351,
+    "base_cost": 281,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1370",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Smps Power Adapter 12v/2a For 4ch DVR (PS046)",
+    "technical_name": "ERD Smps Power Adapter 12v/2a For 4ch DVR (PS046)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 397,
+    "base_cost": 318,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2234",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "CP-Plus CCTV Power Supply Eco 8ch 12v/10a (PD08V2)",
+    "technical_name": "CP-Plus CCTV Power Supply Eco 8ch 12v/10a (PD08V2)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2323",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "CP-Plus CCTV Power Supply 4ch 12v/3a (PD04V3-12D)",
+    "technical_name": "CP-Plus CCTV Power Supply 4ch 12v/3a (PD04V3-12D)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 446,
+    "base_cost": 357,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5517",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD CCTV Power Supply 12v/4a Slim For 4ch (PS11)",
+    "technical_name": "ERD CCTV Power Supply 12v/4a Slim For 4ch (PS11)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 452,
+    "base_cost": 362,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5466",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD CCTV Power Supply 12v/8a Slim For 8ch (PS22)",
+    "technical_name": "ERD CCTV Power Supply 12v/8a Slim For 8ch (PS22)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 456,
+    "base_cost": 365,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5467",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Smps Power Adapter 12v/3a For 8ch DVR (PS068)",
+    "technical_name": "ERD Smps Power Adapter 12v/3a For 8ch DVR (PS068)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2237",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "CP-Plus CCTV Power Supply Premium 4ch Metal 12v/5a (MD50P)",
+    "technical_name": "CP-Plus CCTV Power Supply Premium 4ch Metal 12v/5a (MD50P)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 489,
+    "base_cost": 391,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1856",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD CCTV Power Supply 12v/5a Slim For 4ch (PS30T)",
+    "technical_name": "ERD CCTV Power Supply 12v/5a Slim For 4ch (PS30T)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 489,
+    "base_cost": 391,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2699",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Smps Power Adapter 12v/5a For 16ch DVR (PS043)",
+    "technical_name": "ERD Smps Power Adapter 12v/5a For 16ch DVR (PS043)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1515",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Smps Power Adapter 24v/2.5a For Lock and PTZ Camera DC PIN (PS083)",
+    "technical_name": "ERD Smps Power Adapter 24v/2.5a For Lock and PTZ Camera DC PIN (PS083)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 503,
+    "base_cost": 402,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2828",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Smps Power Adapter 12v/5a 4Pin For DVR (PS085)",
+    "technical_name": "ERD Smps Power Adapter 12v/5a 4Pin For DVR (PS085)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 537,
+    "base_cost": 430,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2238",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Power Adapter 48v/1.25a for Poe Switch (PS067)",
+    "technical_name": "ERD Power Adapter 48v/1.25a for Poe Switch (PS067)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 540,
+    "base_cost": 432,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4226",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD CCTV Power Supply 12v/4a Multi For 4ch (AD11)",
+    "technical_name": "ERD CCTV Power Supply 12v/4a Multi For 4ch (AD11)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 568,
+    "base_cost": 454,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2232",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD CCTV Power Supply 12v/8a Multi For 8ch (AD22)",
+    "technical_name": "ERD CCTV Power Supply 12v/8a Multi For 8ch (AD22)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 626,
+    "base_cost": 501,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1571",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "CP-Plus CCTV Power Supply Premium 8ch Metal 12v/10a (MD100P)",
+    "technical_name": "CP-Plus CCTV Power Supply Premium 8ch Metal 12v/10a (MD100P)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 674,
+    "base_cost": 539,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2097",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "A+ Products CCTV Power Supply 16ch 12v/20a",
+    "technical_name": "A+ Products CCTV Power Supply 16ch 12v/20a",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 699,
+    "base_cost": 559,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0409",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Smps Power Supply 24v/3a For Lock and PTZ Camera (PS018)",
+    "technical_name": "ERD Smps Power Supply 24v/3a For Lock and PTZ Camera (PS018)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 818,
+    "base_cost": 654,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1930",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD CCTV Power Supply 12v/16a Slim For 16ch (PS33)",
+    "technical_name": "ERD CCTV Power Supply 12v/16a Slim For 16ch (PS33)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 859,
+    "base_cost": 687,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6079",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD Smps Power Adapter 52v/2.5a For POE Switch (PS089)",
+    "technical_name": "ERD Smps Power Adapter 52v/2.5a For POE Switch (PS089)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 885,
+    "base_cost": 708,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2025",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD CCTV Power Supply 12v/10a Slim For 8ch (PS40T)",
+    "technical_name": "ERD CCTV Power Supply 12v/10a Slim For 8ch (PS40T)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1034,
+    "base_cost": 827,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2700",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD CCTV Power Supply 12v/16a Multi For 16ch (AD33)",
+    "technical_name": "ERD CCTV Power Supply 12v/16a Multi For 16ch (AD33)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1076,
+    "base_cost": 861,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2233",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "CP-Plus CCTV Power Supply Eco 16ch 12v/20a (PD16V2)",
+    "technical_name": "CP-Plus CCTV Power Supply Eco 16ch 12v/20a (PD16V2)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1077,
+    "base_cost": 862,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2324",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "CP-Plus CCTV Power Supply Premium 16ch Metal 12v/20a (MD200P)",
+    "technical_name": "CP-Plus CCTV Power Supply Premium 16ch Metal 12v/20a (MD200P)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 1235,
+    "base_cost": 988,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8344",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "ERD CCTV Power Supply 12v/20a Slim For 16ch (PS50T)",
+    "technical_name": "ERD CCTV Power Supply 12v/20a Slim For 16ch (PS50T)",
+    "brand": "Unknown",
+    "category": "power_device",
+    "technologies": [
+      "HD"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2701",
+    "catalog_path": "Power Supply _ Adapter"
+  },
+  {
+    "display_name": "CP-Plus WiFi PT Camera 2MP with Two Way Talk (CP-E24Q)",
+    "technical_name": "CP-Plus WiFi PT Camera 2MP with Two Way Talk (CP-E24Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P6101",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "Trueview Robot 3MP WiFi PT Dome Camera Support Two Way Audio T18161S",
+    "technical_name": "Trueview Robot 3MP WiFi PT Dome Camera Support Two Way Audio T18161S",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3041",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-Plus WiFi PT Camera 2MP with Two Way Talk (CP-E28Q)",
+    "technical_name": "CP-Plus WiFi PT Camera 2MP with Two Way Talk (CP-E28Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 1946,
+    "base_cost": 1557,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2081",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "Trueview Robot 3MP Wi-Fi PT Camera Two Way Audio (T18296S)",
+    "technical_name": "Trueview Robot 3MP Wi-Fi PT Camera Two Way Audio (T18296S)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 2047,
+    "base_cost": 1638,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P5515",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-Plus Wifi PT Camera 3MP Night Color with Two Way Talk (EZ-P34Q)",
+    "technical_name": "CP-Plus Wifi PT Camera 3MP Night Color with Two Way Talk (EZ-P34Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 2090,
+    "base_cost": 1672,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2935",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-Plus WiFi PT Camera 3MP WiFi With Two Way Audio (CP-E38Q)",
+    "technical_name": "CP-Plus WiFi PT Camera 3MP WiFi With Two Way Audio (CP-E38Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 2441,
+    "base_cost": 1953,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2858",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "Trueview 3MP WiFi Dome Camera Night Colour with Two Way Audio T18237S",
+    "technical_name": "Trueview 3MP WiFi Dome Camera Night Colour with Two Way Audio T18237S",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 2441,
+    "base_cost": 1953,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3102",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-PLUS 3mp 4G Smart Full Colour Dome Camera with 2 Way Audio (EZ-M32T)",
+    "technical_name": "CP-PLUS 3mp 4G Smart Full Colour Dome Camera with 2 Way Audio (EZ-M32T)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 2475,
+    "base_cost": 1980,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3213",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-PLUS 3mp 4G Smart Full Colour Bullet Camera with 2 Way Audio (EZ-R33T)",
+    "technical_name": "CP-PLUS 3mp 4G Smart Full Colour Bullet Camera with 2 Way Audio (EZ-R33T)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 2475,
+    "base_cost": 1980,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3214",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-Plus WiFi PT Camera 3MP with Two Way Talk (CP-E31Q)",
+    "technical_name": "CP-Plus WiFi PT Camera 3MP with Two Way Talk (CP-E31Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 2503,
+    "base_cost": 2002,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2082",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-Plus WiFi PT Camera 4MP with Two Way Talk (CP-E48Q)",
+    "technical_name": "CP-Plus WiFi PT Camera 4MP with Two Way Talk (CP-E48Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2370",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "Trueview 3MP WiFi Bullet Camera Night Colour with Two Way Audio T18238S",
+    "technical_name": "Trueview 3MP WiFi Bullet Camera Night Colour with Two Way Audio T18238S",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 2671,
+    "base_cost": 2137,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3040",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-Plus WiFi PT Camera 4MP with Two Way Talk (CP-E41Q)",
+    "technical_name": "CP-Plus WiFi PT Camera 4MP with Two Way Talk (CP-E41Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8219",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "Trueview 3MP 4G Dome Color Camera With Two Way Audio T18185SF (10X Zoom)",
+    "technical_name": "Trueview 3MP 4G Dome Color Camera With Two Way Audio T18185SF (10X Zoom)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 2990,
+    "base_cost": 2392,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3039",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "Trueview 3MP 4G Bullet Color Camera With Two Way Audio T18175SF (10X Zoom)",
+    "technical_name": "Trueview 3MP 4G Bullet Color Camera With Two Way Audio T18175SF (10X Zoom)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 3105,
+    "base_cost": 2484,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3038",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-Plus 4MP WiFi PT Camera Night Color with Two Way Talk (CP-Z43Q)",
+    "technical_name": "CP-Plus 4MP WiFi PT Camera Night Color with Two Way Talk (CP-Z43Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1997",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "Trueview 3mp Wi-Fi PT Mini Pan-Tilt Camera Two Way Audio T18135S (10X Zoom)",
+    "technical_name": "Trueview 3mp Wi-Fi PT Mini Pan-Tilt Camera Two Way Audio T18135S (10X Zoom)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3043",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "Trueview Wi-Fi Mini PT Camera 3mp Two Way Audio T18290S (10X Zoom)",
+    "technical_name": "Trueview Wi-Fi Mini PT Camera 3mp Two Way Audio T18290S (10X Zoom)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 3450,
+    "base_cost": 2760,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4726",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-Plus 4G PT Camera 3MP Night Color with Two Way Talk (EZ-S35T)",
+    "technical_name": "CP-Plus 4G PT Camera 3MP Night Color with Two Way Talk (EZ-S35T)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 3465,
+    "base_cost": 2772,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2445",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "CP-Plus Wi-Fi PT Camera 4MP Quad HD Night Color | Built-in Siren | Two Way Talk (CP-Z45Q)",
+    "technical_name": "CP-Plus Wi-Fi PT Camera 4MP Quad HD Night Color | Built-in Siren | Two Way Talk (CP-Z45Q)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 3840,
+    "base_cost": 3072,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3107",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "Trueview 3mp 4G Mini Pan-Tilt Camera Two Way Audio T18120SF (10X Zoom)",
+    "technical_name": "Trueview 3mp 4G Mini Pan-Tilt Camera Two Way Audio T18120SF (10X Zoom)",
+    "brand": "Unknown",
+    "category": "cctv_camera",
+    "technologies": [
+      "Wireless"
+    ],
+    "unit_price": 3885,
+    "base_cost": 3108,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3042",
+    "catalog_path": "PTZ _ PT _ 4G _ WIFI Camera"
+  },
+  {
+    "display_name": "Pull Out Internal Laptop Hard Disk Sata 1TB",
+    "technical_name": "Pull Out Internal Laptop Hard Disk Sata 1TB",
+    "brand": "Unknown",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 3465,
+    "base_cost": 2772,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2947",
+    "catalog_path": "Pull Out Hard Disk"
+  },
+  {
+    "display_name": "Pull Out Internal Laptop Hard Disk Sata 500GB",
+    "technical_name": "Pull Out Internal Laptop Hard Disk Sata 500GB",
+    "brand": "Unknown",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 3060,
+    "base_cost": 2448,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2547",
+    "catalog_path": "Pull Out Hard Disk"
+  },
+  {
+    "display_name": "Pullout Internal Desktop Hard Disk Sata 1TB",
+    "technical_name": "Pullout Internal Desktop Hard Disk Sata 1TB",
+    "brand": "Unknown",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 5500,
+    "base_cost": 4400,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A2020",
+    "catalog_path": "Pull Out Hard Disk"
+  },
+  {
+    "display_name": "Cofe Sim Router 4G | 5G With Lan (NO WiFi) CF-707SE",
+    "technical_name": "Cofe Sim Router 4G | 5G With Lan (NO WiFi) CF-707SE",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "Wireless",
+      "IP"
+    ],
+    "unit_price": 1012,
+    "base_cost": 810,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A3481",
+    "catalog_path": "Router _ Access Point _ Range Extender _ Mega Compu.html"
+  },
+  {
+    "display_name": "Cofe Sim Router CF-707 WiFi6 4G|5G 300 Mbps",
+    "technical_name": "Cofe Sim Router CF-707 WiFi6 4G|5G 300 Mbps",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "Wireless",
+      "IP"
+    ],
+    "unit_price": 1276,
+    "base_cost": 1021,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P1435",
+    "catalog_path": "Router _ Access Point _ Range Extender _ Mega Compu.html"
+  },
+  {
+    "display_name": "Cofe Sim Router CF903 WIFI 6 4G 300 Mbps 3 Antenna",
+    "technical_name": "Cofe Sim Router CF903 WIFI 6 4G 300 Mbps 3 Antenna",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "Wireless",
+      "IP"
+    ],
+    "unit_price": 1358,
+    "base_cost": 1086,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4979",
+    "catalog_path": "Router _ Access Point _ Range Extender _ Mega Compu.html"
+  },
+  {
+    "display_name": "Cofe Sim Router 4G 4 Antenna 300 Mbps Wi-Fi 6 Poe Support (CF-903 Pro)",
+    "technical_name": "Cofe Sim Router 4G 4 Antenna 300 Mbps Wi-Fi 6 Poe Support (CF-903 Pro)",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "Wireless",
+      "IP"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P857",
+    "catalog_path": "Router _ Access Point _ Range Extender _ Mega Compu.html"
+  },
+  {
+    "display_name": "Cofe Sim Router CF05 CT4 WiFi6 4G | 5G 4 Antenna With TYPE-C | WAN | LAN Port",
+    "technical_name": "Cofe Sim Router CF05 CT4 WiFi6 4G | 5G 4 Antenna With TYPE-C | WAN | LAN Port",
+    "brand": "Unknown",
+    "category": "network",
+    "technologies": [
+      "Wireless",
+      "IP"
+    ],
+    "unit_price": 1423,
+    "base_cost": 1138,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8668",
+    "catalog_path": "Router _ Access Point _ Range Extender _ Mega Compu.html"
+  },
+  {
+    "display_name": "TP-Link WiFi Range Extender 300mbps (WA850RE)",
+    "technical_name": "TP-Link WiFi Range Extender 300mbps (WA850RE)",
+    "brand": "TP-Link",
+    "category": "network",
+    "technologies": [
+      "Wireless",
+      "IP"
+    ],
+    "unit_price": 1558,
+    "base_cost": 1246,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0050",
+    "catalog_path": "Router _ Access Point _ Range Extender _ Mega Compu.html"
+  },
+  {
+    "display_name": "TP-Link AC750 Wi-Fi Range Extender (RE205)",
+    "technical_name": "TP-Link AC750 Wi-Fi Range Extender (RE205)",
+    "brand": "TP-Link",
+    "category": "network",
+    "technologies": [
+      "Wireless",
+      "IP"
+    ],
+    "unit_price": 2145,
+    "base_cost": 1716,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P8936",
+    "catalog_path": "Router _ Access Point _ Range Extender _ Mega Compu.html"
+  },
+  {
+    "display_name": "TP-Link AC1200 Mesh Wi-Fi Range Extender (RE305)",
+    "technical_name": "TP-Link AC1200 Mesh Wi-Fi Range Extender (RE305)",
+    "brand": "TP-Link",
+    "category": "network",
+    "technologies": [
+      "Wireless",
+      "IP"
+    ],
+    "unit_price": 2481,
+    "base_cost": 1985,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0047",
+    "catalog_path": "Router _ Access Point _ Range Extender _ Mega Compu.html"
+  },
+  {
+    "display_name": "TP-Link Sim Router Wireless N 4G LTE 300 Mbps TL-MR100",
+    "technical_name": "TP-Link Sim Router Wireless N 4G LTE 300 Mbps TL-MR100",
+    "brand": "TP-Link",
+    "category": "network",
+    "technologies": [
+      "Wireless",
+      "IP"
+    ],
+    "unit_price": 3360,
+    "base_cost": 2688,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0048",
+    "catalog_path": "Router _ Access Point _ Range Extender _ Mega Compu.html"
+  },
+  {
+    "display_name": "TP-Link AC1750 Wi-Fi Range Extender (RE450)",
+    "technical_name": "TP-Link AC1750 Wi-Fi Range Extender (RE450)",
+    "brand": "TP-Link",
+    "category": "network",
+    "technologies": [
+      "Wireless",
+      "IP"
+    ],
+    "unit_price": 4209,
+    "base_cost": 3367,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0174",
+    "catalog_path": "Router _ Access Point _ Range Extender _ Mega Compu.html"
+  },
+  {
+    "display_name": "Seagate Surveillance Hard Disk Skyhawk 1TB SATA 3.5 Inch",
+    "technical_name": "Seagate Surveillance Hard Disk Skyhawk 1TB SATA 3.5 Inch",
+    "brand": "Seagate",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4186",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "WD  Surveillance Hard Disk  1TB Purple SATA 3.5 Inch",
+    "technical_name": "WD  Surveillance Hard Disk  1TB Purple SATA 3.5 Inch",
+    "brand": "WD",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 10195,
+    "base_cost": 8156,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P103",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Toshiba Surveillance Hard Disk 2TB SATA 3.5 Inch",
+    "technical_name": "Toshiba Surveillance Hard Disk 2TB SATA 3.5 Inch",
+    "brand": "Toshiba",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 11336,
+    "base_cost": 9069,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P101",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Seagate Surveillance Hard Disk Skyhawk 2TB SATA 3.5 Inch",
+    "technical_name": "Seagate Surveillance Hard Disk Skyhawk 2TB SATA 3.5 Inch",
+    "brand": "Seagate",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 11771,
+    "base_cost": 9417,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4190",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "WD Surveillance Hard Disk 2TB PURPLE SATA 3.5 Inch",
+    "technical_name": "WD Surveillance Hard Disk 2TB PURPLE SATA 3.5 Inch",
+    "brand": "WD",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 11883,
+    "base_cost": 9506,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P104",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Toshiba  Surveillance Hard Disk 4TB SATA 3.5 Inch",
+    "technical_name": "Toshiba  Surveillance Hard Disk 4TB SATA 3.5 Inch",
+    "brand": "Toshiba",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 15900,
+    "base_cost": 12720,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P102",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Seagate Surveillance Hard Disk Skyhawk 4TB SATA 3.5 Inch",
+    "technical_name": "Seagate Surveillance Hard Disk Skyhawk 4TB SATA 3.5 Inch",
+    "brand": "Seagate",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 16727,
+    "base_cost": 13382,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4192",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "WD Surveillance Hard Disk 4TB Purple SATA 3.5 Inch",
+    "technical_name": "WD Surveillance Hard Disk 4TB Purple SATA 3.5 Inch",
+    "brand": "WD",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 16727,
+    "base_cost": 13382,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P105",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Toshiba Surveillance Hard Disk 6TB SATA 3.5 Inch",
+    "technical_name": "Toshiba Surveillance Hard Disk 6TB SATA 3.5 Inch",
+    "brand": "Toshiba",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P2911",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "WD Surveillance Hard Disk 6TB PURPLE SATA 3.5 Inch",
+    "technical_name": "WD Surveillance Hard Disk 6TB PURPLE SATA 3.5 Inch",
+    "brand": "WD",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 23541,
+    "base_cost": 18833,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P106",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Seagate Surveillance Hard Disk Skyhawk 6TB SATA 3.5 Inch",
+    "technical_name": "Seagate Surveillance Hard Disk Skyhawk 6TB SATA 3.5 Inch",
+    "brand": "Seagate",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 23789,
+    "base_cost": 19031,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4194",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Toshiba Surveillance Hard Disk 8TB SATA 3.5 Inch",
+    "technical_name": "Toshiba Surveillance Hard Disk 8TB SATA 3.5 Inch",
+    "brand": "Toshiba",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0225",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Seagate Surveillance Hard Disk Skyhawk 8TB SATA 3.5 Inch",
+    "technical_name": "Seagate Surveillance Hard Disk Skyhawk 8TB SATA 3.5 Inch",
+    "brand": "Seagate",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 38409,
+    "base_cost": 30727,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4198",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "WD Surveillance Hard Disk 8TB PURPLE PRO SATA 3.5 Inch",
+    "technical_name": "WD Surveillance Hard Disk 8TB PURPLE PRO SATA 3.5 Inch",
+    "brand": "WD",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 39029,
+    "base_cost": 31223,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P107",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Toshiba Surveillance Hard Disk 10TB SATA 3.5 Inch",
+    "technical_name": "Toshiba Surveillance Hard Disk 10TB SATA 3.5 Inch",
+    "brand": "Toshiba",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 47248,
+    "base_cost": 37798,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1469",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "WD Surveillance Hard Disk 10TB PURPLE PRO SATA 3.5 Inch",
+    "technical_name": "WD Surveillance Hard Disk 10TB PURPLE PRO SATA 3.5 Inch",
+    "brand": "WD",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 49245,
+    "base_cost": 39396,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1414",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "WD Surveillance Hard Disk 12TB Purple Pro SATA 3.5 Inch",
+    "technical_name": "WD Surveillance Hard Disk 12TB Purple Pro SATA 3.5 Inch",
+    "brand": "WD",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A1376",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Seagate Surveillance Hard Disk Skyhawk 10TB SATA 3.5 Inch",
+    "technical_name": "Seagate Surveillance Hard Disk Skyhawk 10TB SATA 3.5 Inch",
+    "brand": "Seagate",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 50180,
+    "base_cost": 40144,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "P4200",
+    "catalog_path": "Surveillance Hard Disk"
+  },
+  {
+    "display_name": "Seagate Surveillance Hard Disk SkyHawk AI 16TB",
+    "technical_name": "Seagate Surveillance Hard Disk SkyHawk AI 16TB",
+    "brand": "Seagate",
+    "category": "storage",
+    "technologies": [
+      "Common"
+    ],
+    "unit_price": 0,
+    "base_cost": 0,
+    "margin_percentage": 20,
+    "is_active": true,
+    "internal_sku": "A0031",
+    "catalog_path": "Surveillance Hard Disk"
+  }
+]

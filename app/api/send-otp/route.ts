@@ -18,18 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid 10-digit mobile number" }, { status: 400 });
     }
 
-    // ── Test numbers (bypass) ───────────────────────────────────────────────
-    if (mobile === "9999999999" || mobile === "9876543210") {
-      await adminDb.collection("temp_otps").doc(mobile).set({
-        code: "123456",
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-        attempts: 0,
-        mobile,
-      });
-      return NextResponse.json({ success: true, message: "OTP sent (test mode)" }, {
-        headers: { "Cache-Control": "no-store" }
-      });
-    }
+
 
     // ── Generate and store OTP ──────────────────────────────────────────────
     const code = await generateOtp(mobile);

@@ -59,7 +59,7 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
   const [changedIds, setChangedIds] = useState<Set<string>>(new Set());
   const [isPublishing, setIsPublishing] = useState(false);
 
-  // ─── Inline Editing Logic ──────────────────────────────────────────
+  // â”€â”€â”€ Inline Editing Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const handleInlineChange = (id: string, field: "unit_price" | "base_cost" | "margin_percentage", value: number) => {
     setProducts(prev => prev.map(p => {
@@ -116,7 +116,7 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
     }
   };
 
-  // ─── Live Quote Preview Logic ──────────────────────────────────────
+  // â”€â”€â”€ Live Quote Preview Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
   const previews = useMemo(() => {
@@ -140,21 +140,21 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
     });
   }, [products, settings, addons]);
 
-  // ─── Render Helpers ────────────────────────────────────────────────
+  // â”€â”€â”€ Render Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const categories = [
     { name: "IP Recorders", filter: (p: Product) => p.category === "recorder" && p.technologies?.includes("IP"), icon: Monitor },
     { name: "HD Recorders", filter: (p: Product) => p.category === "recorder" && p.technologies?.includes("HD"), icon: HardDrive },
-    { name: "IP Cameras", filter: (p: Product) => p.category === "camera" && p.technologies?.includes("IP"), icon: Camera },
-    { name: "HD Cameras", filter: (p: Product) => p.category === "camera" && p.technologies?.includes("HD"), icon: Camera },
-    { name: "Storage (HDD)", filter: (p: Product) => p.category === "accessory" && p.technical_name.toLowerCase().includes("hdd"), icon: HardDrive },
-    { name: "Accessories & Cable", filter: (p: Product) => (p.category === "accessory" || p.category === "cable" || p.category === "power_device") && !p.technical_name.toLowerCase().includes("hdd"), icon: Cable },
+    { name: "IP Cameras", filter: (p: Product) => p.category === "cctv_camera" && p.technologies?.includes("IP"), icon: Camera },
+    { name: "HD Cameras", filter: (p: Product) => p.category === "cctv_camera" && p.technologies?.includes("HD"), icon: Camera },
+    { name: "Storage (HDD)", filter: (p: Product) => p.category === "accessories" && p.technical_name.toLowerCase().includes("hdd"), icon: HardDrive },
+    { name: "Accessories & Cable", filter: (p: Product) => (p.category === "accessories" || p.category === "cable" || p.category === "power_device") && !p.technical_name.toLowerCase().includes("hdd"), icon: Cable },
   ];
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
       
-      {/* ─── LEFT: Product Catalog Editor (8 Cols) ──────────────────── */}
+      {/* â”€â”€â”€ LEFT: Product Catalog Editor (8 Cols) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="xl:col-span-8 space-y-6">
         <div className="flex items-center justify-between bg-card p-6 rounded-2xl border border-border shadow-sm">
           <div className="flex items-center gap-4">
@@ -279,7 +279,7 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
         ))}
       </div>
 
-      {/* ─── RIGHT: Live Quote Preview (4 Cols) ──────────────────── */}
+      {/* â”€â”€â”€ RIGHT: Live Quote Preview (4 Cols) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="xl:col-span-4 space-y-6">
         <div className="sticky top-24">
           <div className="bg-card rounded-2xl border border-border p-6 shadow-sm relative overflow-hidden group">

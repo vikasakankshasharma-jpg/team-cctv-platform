@@ -44,7 +44,7 @@ export function FullCustomizerPanel() {
 
   // Step completion tracking
   const TAB_FLOW: Tab[] = ["cameras", "recorders", "storage", "power"];
-  const TAB_LABELS: Record<Tab, string> = { cameras: "Camera", recorders: "Recorder", storage: "Storage", power: "Power", addons: "Accessories" };
+  const TAB_LABELS: Record<Tab, string> = { cameras: "CCTV Camera", recorders: "Recorder", storage: "Storage", power: "Power", addons: "Accessories" };
 
   const stepCompletion = useMemo(() => ({
     cameras: isMixedCameraMode 
@@ -66,7 +66,7 @@ export function FullCustomizerPanel() {
     const nextTab = TAB_FLOW[currentIdx + 1];
     const nextLabel = TAB_LABELS[nextTab];
     toast.success(`${TAB_LABELS[currentTab]} pinned!`, {
-      description: `Now choose a ${nextLabel} →`,
+      description: `Now choose a ${nextLabel} â†’`,
       duration: 2500,
     });
     setTimeout(() => {
@@ -86,7 +86,7 @@ export function FullCustomizerPanel() {
         ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.technology || selection.technology
         : selection.technology;
 
-      products.filter(p => p.category === "camera" && p.is_active && (!proxyTech || p.technologies?.includes(proxyTech as any) || p.technologies?.includes("Common"))).forEach(p => {
+      products.filter(p => p.category === "cctv_camera" && p.is_active && (!proxyTech || p.technologies?.includes(proxyTech as any) || p.technologies?.includes("Common"))).forEach(p => {
         if (p.brand) brands.add(p.brand);
         if (p.resolution_mp) mps.add(`${p.resolution_mp}MP`);
         if (p.form_factor) types.add(p.form_factor.charAt(0).toUpperCase() + p.form_factor.slice(1));
@@ -146,7 +146,7 @@ export function FullCustomizerPanel() {
   const cameraStats = useMemo(() => {
     const stats: Record<string, number> = {};
     products.forEach(p => {
-      if (p.category === "camera" && p.brand && p.is_active) {
+      if (p.category === "cctv_camera" && p.brand && p.is_active) {
         stats[p.brand] = (stats[p.brand] || 0) + 1;
       }
     });
@@ -154,7 +154,7 @@ export function FullCustomizerPanel() {
   }, [products]);
 
   const filteredCameras = useMemo(() => {
-    let list = products.filter(p => p.category === "camera" && p.is_active);
+    let list = products.filter(p => p.category === "cctv_camera" && p.is_active);
     
     // Evaluate proxy logic if we are configuring a mixed bucket
     const proxyTech = isMixedCameraMode && activeMixedType 
@@ -274,7 +274,7 @@ export function FullCustomizerPanel() {
   }, [addons, selection.technology, selection.camera_count, search]);
 
   const filteredAddons = useMemo(() => {
-    let list = [...products, ...addons].filter(a => !["camera", "recorder", "storage", "power", "power_device"].includes(a.category || "") && a.is_active);
+    let list = [...products, ...addons].filter(a => !["cctv_camera", "recorder", "storage", "power", "power_device"].includes(a.category || "") && a.is_active);
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()));
     return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
   }, [addons, search]);
@@ -344,7 +344,7 @@ export function FullCustomizerPanel() {
         <div className="flex flex-col gap-4 flex-1">
           <div className="flex items-start justify-between">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isSelected ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#86868b]"}`}>
-              {item.category === "camera" ? <Camera className="w-5 h-5" /> : <Server className="w-5 h-5" />}
+              {item.category === "cctv_camera" ? <Camera className="w-5 h-5" /> : <Server className="w-5 h-5" />}
             </div>
             {isCustomOverride && isSelected && (
               <span className="text-[10px] font-medium text-[#1d1d1f] bg-[#f5f5f7] border border-[#d2d2d7] px-2 py-0.5 rounded-full flex items-center gap-1">

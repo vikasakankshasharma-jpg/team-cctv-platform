@@ -2,7 +2,7 @@ import { verifySession } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 
-const VALID_CATEGORIES = ["camera", "recorder", "storage", "connector", "cable", "power_device", "installation", "amc", "display", "mount", "rack", "network", "accessory"];
+const VALID_CATEGORIES = ["cctv_camera", "recorder", "storage", "connector", "cable", "power_device", "display", "camera_mount", "rack", "network", "hdmi_cable", "accessories", "others", "unidentified"];
 const VALID_TECHNOLOGIES = ["HD", "IP", "Common", "WiFi", "4G", "Solar"];
 const BOOLEAN_VALUES = ["TRUE", "FALSE"];
 
@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
       { header: "technical_name", key: "technical_name", width: 30 },
       { header: "display_name", key: "display_name", width: 40 },
       { header: "category", key: "category", width: 20 },
+      { header: "internal_sku", key: "internal_sku", width: 20 },
       { header: "technology", key: "technology", width: 15 },
       { header: "brand", key: "brand", width: 15 },
       { header: "base_cost", key: "base_cost", width: 15 },
@@ -84,7 +85,8 @@ export async function GET(req: NextRequest) {
       id: "",
       technical_name: "CAM-EX-123",
       display_name: "Example 2MP Camera",
-      category: "camera",
+      category: "cctv_camera",
+      internal_sku: "HIK-12345",
       technology: "HD",
       brand: "Hikvision",
       base_cost: 1500,

@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Papa from "papaparse";
 import { toast } from "sonner";
 import {
@@ -69,7 +70,7 @@ interface BulkImportExportProps {
 
 // ─── Required CSV columns (all others are optional) ──────────────────────────
 const REQUIRED_FIELDS = ["technical_name", "display_name", "category"] as const;
-const VALID_CATEGORIES = ["camera", "recorder", "storage", "connector", "cable", "power_device", "installation", "amc", "display", "mount", "rack", "network", "accessory"];
+const VALID_CATEGORIES = ["cctv_camera", "recorder", "storage", "connector", "cable", "power_device", "display", "camera_mount", "rack", "network", "hdmi_cable", "accessories", "others", "unidentified"];
 const VALID_TECHNOLOGIES = ["HD", "IP", "Common", "WiFi", "4G", "Solar"];
 
 // ─── Validation logic ─────────────────────────────────────────────────────────
@@ -116,6 +117,8 @@ function validateRow(row: ParsedRow, index: number): RowError[] {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportExportProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [modalState, setModalState] = useState<ModalState>("idle");
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -171,10 +174,20 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
         const rowErrors = validateRow(row, i);
         if (rowErrors.length > 0) {
           errors.push(...rowErrors);
-        } else if (!row.id || String(row.id).trim() === "") {
-          toCreate.push(row);
         } else {
-          toUpdate.push(row);
+          const processedRow = {
+            ...row,
+            unit_price: parseFloat(row.unit_price as string) || 0,
+            is_active: row.is_active === "true" || row.is_active === "TRUE" || row.is_active === true,
+            internal_sku: row.internal_sku || undefined,
+            catalog_path: row.catalog_path || undefined
+          };
+
+          if (!row.id || String(row.id).trim() === "") {
+            toCreate.push(processedRow);
+          } else {
+            toUpdate.push(processedRow);
+          }
         }
       });
 
@@ -326,9 +339,9 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
       </div>
 
       {/* ── Modal ─────────────────────────────────────────────────────────── */}
-      {modalState !== "idle" && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900 dark:bg-black animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-[0_40px_80px_rgba(0,0,0,0.12)] dark:shadow-black/60 w-full max-w-2xl border border-zinc-200/50 dark:border-zinc-800 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+      {mounted && modalState !== "idle" && createPortal(
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 flex items-center justify-center p-4 sm:p-6">
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-[0_40px_80px_rgba(0,0,0,0.12)] dark:shadow-black/60 w-full max-w-2xl max-h-[90vh] border border-zinc-200/50 dark:border-zinc-800 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
 
             {/* Modal Header */}
             <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-100 dark:border-zinc-800">
@@ -362,9 +375,8 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
               )}
             </div>
 
-            {/* ── State: Upload ─────────────────────────────────────────────── */}
             {modalState === "upload" && (
-              <div className="p-8 space-y-6">
+              <div className="p-8 space-y-6 overflow-y-auto min-h-0 flex-1 scrollbar-none">
                 {/* Drag & Drop zone */}
                 <div
                   onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -601,7 +613,8 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

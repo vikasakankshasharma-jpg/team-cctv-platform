@@ -130,8 +130,15 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
     const mixedReqs = (lead.wizard_answers?.["mixed_camera_requirements"] as any[]) || undefined;
 
+    // Normalize "Analog" to "HD" — the pricing engine uses "HD" as the canonical value
+    const rawTech = (lead.wizard_answers?.["q_tech"] as string) || lead.technology_choice || "IP";
+    const normalizedTech: "HD" | "IP" | "Wireless" = 
+      (rawTech === "Analog" || rawTech === "analog" || rawTech === "HD" || rawTech === "hd") ? "HD"
+      : (rawTech === "WiFi" || rawTech === "wifi" || rawTech === "Wireless" || rawTech === "wireless") ? "Wireless"
+      : "IP";
+
     updateSelection({
-      technology: lead.technology_choice || "HD",
+      technology: normalizedTech,
       camera_count: initialCamCount,
       mixed_camera_requirements: mixedReqs,
       recording_days: initialDays,
@@ -355,12 +362,35 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       {/* 3-CARD COMPARISON & SPEC TABLE - APPLE AESTHETIC */}
       <div className="w-full max-w-7xl mx-auto px-4">
         
+        {/* B2B / Corporate Quote Banner */}
+        {lead.is_b2b && (
+          <div className="mb-8 flex items-start gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-[20px] px-6 py-4">
+            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-black text-blue-700 uppercase tracking-widest bg-blue-100 px-2.5 py-1 rounded-full">Corporate Quote</span>
+                {lead.company_name && <span className="text-[13px] font-semibold text-zinc-700">{lead.company_name}</span>}
+                {lead.gst_number && <span className="text-[12px] font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded">GST: {lead.gst_number}</span>}
+              </div>
+              <p className="text-[13px] text-zinc-600 mt-1 font-medium">
+                This is a business-grade installation quote for {selection.camera_count} cameras.
+                {lead.gst_number ? " GST invoice will be generated upon booking." : " Add your GST number when booking for a GST invoice."}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Curated Packages Segment */}
         <div className="mb-16">
           <div className="text-center mb-10">
              <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Curated Packages</h2>
              <p className="text-[15px] text-[#86868b] mt-2">Select a foundation that fits your needs. You can fully customize it later.</p>
           </div>
+
           
           <CompareCards
             compareOptions={compare_options}

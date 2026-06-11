@@ -10,25 +10,25 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
-// ─── Config ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const MUST_HAVE_CATEGORIES: Record<string, { label: string; icon: any }> = {
-  camera:       { label: "Cameras (IP/HD)",         icon: Camera },
+  cctv_camera:  { label: "Cameras (IP/HD)",         icon: Camera },
   recorder:     { label: "Recorders (NVR/DVR/XVR)", icon: Monitor },
   storage:      { label: "Storage (HDD/SD)",        icon: HardDrive },
   connector:    { label: "Connectors (RJ45/BNC/DC)",icon: Zap },
   cable:        { label: "Cables (CAT6/3+1)",       icon: Layers },
   power_device: { label: "Power Device (PoE/SMPS)", icon: Cpu },
-  installation: { label: "Installation & Services", icon: Wrench },
 };
 
 const OPTIONAL_CATEGORIES: Record<string, { label: string; icon: any }> = {
-  amc:       { label: "AMC (Maintenance)",          icon: Shield },
-  display:   { label: "Display Screen (LCD/TV)",    icon: Tv },
-  mount:     { label: "Camera Mount Box",           icon: Box },
-  rack:      { label: "Racks (Recorder/Switch)",    icon: Server },
-  network:   { label: "Network Devices (Router)",   icon: Cpu },
-  accessory: { label: "Other Accessories",          icon: Package },
+  display:      { label: "Display Screen (LCD/TV)",    icon: Tv },
+  camera_mount: { label: "Camera Mount Box",           icon: Box },
+  rack:         { label: "Racks (Recorder/Switch)",    icon: Server },
+  network:      { label: "Network Devices (Router)",   icon: Cpu },
+  hdmi_cable:   { label: "HDMI Cables",                icon: Layers },
+  accessories:  { label: "Other Accessories",          icon: Package },
+  others:       { label: "Installation / Others",      icon: Wrench },
   unidentified: { label: "Uncategorized Imported Hardware", icon: Package },
 };
 
@@ -41,7 +41,7 @@ function sellingPrice(p: Product): number {
   return p.unit_price ?? 0;
 }
 
-// ─── Stat Chip ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Stat Chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Chip({ label, value, dot }: { label: string; value: number; dot: string }) {
   return (
@@ -55,7 +55,7 @@ function Chip({ label, value, dot }: { label: string; value: number; dot: string
   );
 }
 
-// ─── SubCategory Group ─────────────────────────────────────────────────────
+// â”€â”€â”€ SubCategory Group â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SubCategoryGroup({
   label,
@@ -147,6 +147,9 @@ function SubCategoryGroup({
                             {p.display_name}
                           </span>
                           <div className="flex items-center gap-2 mt-0.5">
+                            <code className="text-[10px] font-mono text-muted-foreground bg-secondary px-1.5 py-0.5 rounded border border-border">
+                              {p.internal_sku ? `SKU: ${p.internal_sku}` : "NO SKU"}
+                            </code>
                             <code className="text-[10px] font-mono text-muted-foreground">{p.technical_name || "ID_MISSING"}</code>
                           </div>
                         </div>
@@ -198,14 +201,26 @@ function SubCategoryGroup({
                     </td>
 
                     <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => onToggle(p)}
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                          p.is_active ? "bg-success" : "bg-muted"
-                        }`}
-                      >
-                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${p.is_active ? 'translate-x-4' : 'translate-x-1'}`} />
-                      </button>
+                      <div className="flex flex-col items-center gap-1">
+                        <button
+                          onClick={() => onToggle(p)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                            p.is_active ? "bg-success" : "bg-muted"
+                          }`}
+                        >
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${p.is_active ? 'translate-x-4' : 'translate-x-1'}`} />
+                        </button>
+                        {/* Stock status badge */}
+                        {(p.stock_status === "out_of_stock" || p.stock_status === "on_order" || p.stock_status === "discontinued") && (
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${
+                            p.stock_status === "out_of_stock" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
+                            p.stock_status === "on_order" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                            "bg-gray-100 text-gray-500 dark:bg-gray-900/30 dark:text-gray-400"
+                          }`}>
+                            {p.stock_status === "out_of_stock" ? "Out of Stock" : p.stock_status === "on_order" ? "On Order" : "Discontinued"}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     <td className="px-6 py-4 text-center">
@@ -229,7 +244,7 @@ function SubCategoryGroup({
   );
 }
 
-// ─── Category Section ──────────────────────────────────────────────────────
+// â”€â”€â”€ Category Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CategorySection({
   categoryKey,
@@ -259,7 +274,7 @@ function CategorySection({
     const groups: Record<string, Product[]> = {};
     products.forEach(p => {
       const pathParts = (p.catalog_path || "General").split('/');
-      const subName = pathParts.length > 2 ? pathParts.slice(2).join(' › ') : (pathParts[pathParts.length-1] || "General");
+      const subName = pathParts.length > 2 ? pathParts.slice(2).join(' â€º ') : (pathParts[pathParts.length-1] || "General");
       if (!groups[subName]) groups[subName] = [];
       groups[subName].push(p);
     });
@@ -311,7 +326,7 @@ function CategorySection({
   );
 }
 
-// ─── Main Export ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface ProductInventoryProps {
   products: Product[];
@@ -366,6 +381,7 @@ export function ProductInventory({
         !q ||
         p.display_name.toLowerCase().includes(q) ||
         p.technical_name?.toLowerCase().includes(q) ||
+        p.internal_sku?.toLowerCase().includes(q) ||
         (p.brand || "").toLowerCase().includes(q);
       const matchCat    = filterCat === "all"    || (p.category || "addon") === filterCat;
       const matchTech   = filterTech === "all"   || p.technologies?.includes(filterTech as any);
@@ -376,9 +392,9 @@ export function ProductInventory({
   }, [products, search, filterCat, filterTech, filterStatus, filterBrand]);
 
   const counts = useMemo(() => ({
-    camera:    filtered.filter((p) => p.category === "camera").length,
+    camera:    filtered.filter((p) => p.category === "cctv_camera").length,
     recorder:  filtered.filter((p) => p.category === "recorder").length,
-    addons:    filtered.filter((p) => !["camera", "recorder"].includes(p.category || "")).length,
+    addons:    filtered.filter((p) => !["cctv_camera", "recorder"].includes(p.category || "")).length,
     active:    products.filter((p) => p.is_active).length,
     total:     products.length,
   }), [filtered, products]);
@@ -388,7 +404,7 @@ export function ProductInventory({
   return (
     <div className="space-y-8">
 
-      {/* ── Stats bar ── */}
+      {/* â”€â”€ Stats bar â”€â”€ */}
       <div className="flex flex-wrap gap-4 px-1">
         <Chip label="Total Master Catalog"  value={counts.total}     dot="bg-muted-foreground" />
         <Chip label="Vision Sensors"        value={counts.camera}    dot="bg-primary" />
@@ -397,7 +413,7 @@ export function ProductInventory({
         <Chip label="Active Deployment"     value={counts.active}    dot="bg-success" />
       </div>
 
-      {/* ── Filter bar ── */}
+      {/* â”€â”€ Filter bar â”€â”€ */}
       <Card className="p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-lg bg-secondary text-foreground">
@@ -450,7 +466,7 @@ export function ProductInventory({
         </div>
       </Card>
 
-      {/* ── Category groups ── */}
+      {/* â”€â”€ Category groups â”€â”€ */}
       <div>
         <div className="pt-4 pb-4">
           <h2 className="text-xl font-bold tracking-tight text-primary">Must Have for Wired Setup</h2>
@@ -458,7 +474,7 @@ export function ProductInventory({
         </div>
         {Object.keys(MUST_HAVE_CATEGORIES).map((cat) => {
           const items = visibleFiltered.filter((p) => {
-            const pCat = p.category || "accessory";
+            const pCat = p.category || "accessories";
             return pCat === cat;
           });
           
@@ -483,7 +499,7 @@ export function ProductInventory({
         </div>
         {Object.keys(OPTIONAL_CATEGORIES).map((cat) => {
           const items = visibleFiltered.filter((p) => {
-            const pCat = p.category || "accessory";
+            const pCat = p.category || "accessories";
             return pCat === cat;
           });
           
@@ -515,7 +531,7 @@ export function ProductInventory({
         </div>
       )}
 
-      {/* ── Empty state ── */}
+      {/* â”€â”€ Empty state â”€â”€ */}
       {filtered.length === 0 && (
         <Card className="flex flex-col items-center justify-center p-16 text-center border-dashed">
           <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-6">

@@ -43,7 +43,7 @@ const SECTIONS: SpecSection[] = [
   {
     title: "1. Camera Specifications",
     rows: [
-      { label: "Camera Model", key: "cam_model", getValue: ({ cam }) => cam?.display_name },
+      { label: "Camera Model", key: "cam_model", getValue: ({ cam }) => cam?.camera_model || cam?.technical_name || cam?.display_name },
       { label: "Brand", key: "cam_brand", getValue: ({ cam }) => cam?.brand || "Premium" },
       { label: "Technology", key: "cam_tech", getValue: ({ cam }) => cam?.technologies?.join(', ') },
       {
@@ -82,14 +82,20 @@ const SECTIONS: SpecSection[] = [
         getValue: ({ cam }) => cam ? cam.ip_rating ?? (cam.technical_name?.toLowerCase().includes("bullet") ? "IP67" : "IP66") : undefined,
         formatValue: (v) => v || "-",
       },
+      {
+        label: "Lens",
+        key: "cam_lens",
+        getValue: ({ cam }) => cam?.lens_mm ?? undefined,
+        formatValue: (v) => v ? `${v}mm` : "-",
+      },
     ],
   },
   {
     title: "2. Recorder Specifications",
     rows: [
-      { label: "Recorder Model", key: "rec_model", getValue: ({ rec, quote }) => rec?.display_name || quote.items.find(i => i.product_id.includes("recorder") || i.display_name.includes("Recorder"))?.display_name },
+      { label: "Recorder Model", key: "rec_model", getValue: ({ rec, quote }) => rec?.recorder_model || rec?.technical_name || rec?.display_name || quote.items.find(i => i.product_id.includes("recorder") || i.display_name.includes("Recorder"))?.display_name },
       { label: "Brand", key: "rec_brand", getValue: ({ rec }) => rec?.brand || "Premium" },
-      { label: "Type", key: "rec_type", getValue: ({ rec, cam }) => rec?.technologies?.join(', ') || (cam?.technologies?.includes("IP") ? "NVR" : "DVR") },
+      { label: "Type", key: "rec_type", getValue: ({ rec, cam }) => rec?.recorder_type || rec?.technologies?.join(', ') || (cam?.technologies?.includes("IP") ? "NVR" : "DVR") },
       {
         label: "Compression",
         key: "rec_compression",
@@ -166,7 +172,7 @@ export function SpecCompareTable({
 
   const columnData = useMemo(() => {
     return compareOptions.slice(0, 4).map((opt) => {
-      const dummySelection: ConfiguratorSelection = {
+      const baseSelection: ConfiguratorSelection = {
         ...selection,
         technology: opt.technology,
         selected_camera_option: typeof opt.option === "number" ? opt.option : undefined,
@@ -174,8 +180,8 @@ export function SpecCompareTable({
         selected_camera_id: undefined,
       };
 
-      const quote = calculatePricing({ selection: dummySelection, products, addons: [], settings, cablingDone });
-      const cameraItem = quote.items.find((item) => products.some((p) => p.id === item.product_id && p.category === "camera"));
+      const quote = calculatePricing({ selection: baseSelection, products, addons: [], settings, cablingDone });
+      const cameraItem = quote.items.find((item) => products.some((p) => p.id === item.product_id && p.category === "cctv_camera"));
       const cameraProduct = cameraItem ? products.find((p) => p.id === cameraItem.product_id) : undefined;
       const recorderItem = quote.items.find((item) => products.some((p) => p.id === item.product_id && p.category === "recorder"));
       const recorderProduct = recorderItem ? products.find((p) => p.id === recorderItem.product_id) : undefined;
@@ -186,7 +192,7 @@ export function SpecCompareTable({
         cameraProduct, 
         recorderProduct,
         quote,
-        selection: dummySelection,
+        selection: baseSelection,
         scoreResult 
       };
     });
@@ -367,7 +373,7 @@ export function SpecCompareTable({
               </div>
               <p className="text-[13px] font-bold text-[#1d1d1f] dark:text-white tracking-tight">
                 <span className="text-[#0071e3]">{columnHeaders[activeSpecCol]}</span>
-                <span className="text-[#86868b] font-medium"> — {activeSpecCol + 1} of {totalSpecCols}</span>
+                <span className="text-[#86868b] font-medium"> â€” {activeSpecCol + 1} of {totalSpecCols}</span>
               </p>
             </div>
 

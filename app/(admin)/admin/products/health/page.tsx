@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth-server";
+﻿import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { HeartPulse, AlertCircle, CheckCircle2, ShieldAlert, Package, Database, Sparkles, ChevronRight } from "lucide-react";
@@ -26,8 +26,8 @@ export default async function CatalogHealthPage() {
     missing_cost: products.filter(p => !p.base_cost || p.base_cost <= 0),
     missing_margin: products.filter(p => !p.margin_percentage || p.margin_percentage <= 0),
     zero_unit_price: products.filter(p => !p.unit_price || p.unit_price <= 0),
-    missing_mp: products.filter(p => p.category === "camera" && !p.resolution_mp),
-    missing_compatibility: products.filter(p => (p.category === "recorder" || p.category === "accessory") && (!p.compatible_paths || p.compatible_paths.length === 0)),
+    missing_mp: products.filter(p => p.category === "cctv_camera" && !p.resolution_mp),
+    missing_compatibility: products.filter(p => (p.category === "recorder" || p.category === "accessories") && (!p.compatible_paths || p.compatible_paths.length === 0)),
     uncategorized: products.filter(p => p.category === "unidentified" || !p.category),
     missing_specifications: products.filter(p => !p.technologies || p.technologies.length === 0 || (p.technologies.length === 1 && p.technologies[0] === 'Common')),
   };

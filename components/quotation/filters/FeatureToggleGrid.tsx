@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
@@ -19,7 +19,7 @@ export function FeatureToggleGrid() {
   const dynamicFeatures = useMemo(() => {
     const featureSet = new Set<string>();
     products.forEach(p => {
-      if (p.category === "camera" && Array.isArray(p.features)) {
+      if (p.category === "cctv_camera" && Array.isArray(p.features)) {
         p.features.forEach(f => {
           if (f.trim() !== "") featureSet.add(f.trim().toLowerCase());
         });

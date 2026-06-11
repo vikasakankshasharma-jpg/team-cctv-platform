@@ -10,7 +10,8 @@ import type { Product } from "@/types";
 const productSchema = z.object({
   display_name: z.string().min(1, "Display name is required"),
   technical_name: z.string().min(1, "Technical name is required"),
-  category: z.enum(["camera", "recorder", "storage", "connector", "cable", "power_device", "installation", "amc", "display", "mount", "rack", "network", "accessory"]),
+  internal_sku: z.string().optional().nullable(),
+  category: z.enum(["cctv_camera", "recorder", "storage", "connector", "cable", "power_device", "display", "camera_mount", "rack", "network", "hdmi_cable", "accessories", "others", "unidentified"]),
   technologies: z.array(z.enum(["IP", "HD", "Wireless", "Common"])),
   base_cost: z.number().min(0),
   margin_percentage: z.number().min(0).max(99),
@@ -18,6 +19,7 @@ const productSchema = z.object({
   unit_price_budget: z.number().optional().nullable(),
   unit_price_premium: z.number().optional().nullable(),
   is_active: z.boolean(),
+  stock_status: z.enum(["in_stock", "out_of_stock", "on_order", "discontinued"]).optional(),
   resolution_tier: z.enum(["good", "very_clear", "crystal_clear"]).optional(),
   channels: z.number().optional(),
   catalog_path: z.string().optional(),
@@ -45,12 +47,13 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
     defaultValues: {
       display_name: "",
       technical_name: "",
-      category: "camera",
+      category: "cctv_camera",
       technologies: ["IP"],
       base_cost: 0,
       margin_percentage: 0,
       unit_price: 0,
       is_active: true,
+      stock_status: "in_stock" as const,
       catalog_path: "",
       compatible_paths: [],
     },
@@ -66,6 +69,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
       form.reset({
         display_name: product.display_name,
         technical_name: product.technical_name,
+        internal_sku: product.internal_sku || "",
         category: product.category as any,
         technologies: product.technologies || ["IP"],
         base_cost: product.base_cost ?? 0,
@@ -74,6 +78,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         unit_price_budget: product.unit_price_budget,
         unit_price_premium: product.unit_price_premium,
         is_active: product.is_active ?? true,
+        stock_status: (product.stock_status as any) ?? "in_stock",
         resolution_tier: product.resolution_tier as any,
         channels: product.channels,
         catalog_path: product.catalog_path ?? "",
@@ -86,12 +91,14 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
       form.reset({
         display_name: "",
         technical_name: "",
-        category: "camera",
+        internal_sku: "",
+        category: "cctv_camera",
         technologies: ["IP"],
         base_cost: 0,
         margin_percentage: 0,
         unit_price: 0,
         is_active: true,
+        stock_status: "in_stock" as const,
         catalog_path: "",
         compatible_paths: [],
       });
@@ -106,7 +113,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
     
     // Clean up conditional fields before save
     const dataToSave: any = { ...data };
-    if (dataToSave.category !== "camera") {
+    if (dataToSave.category !== "cctv_camera") {
       delete dataToSave.resolution_tier;
     }
     if (dataToSave.category !== "recorder") {
@@ -214,7 +221,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               {errors.display_name && <span className="text-[10px] text-destructive">{errors.display_name.message}</span>}
             </div>
 
-            <div className="space-y-2 col-span-2">
+            <div className="space-y-2 col-span-1 md:col-span-1">
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-2">
                 <Layers className="w-3.5 h-3.5" /> Technical SKU / Model
               </label>
@@ -226,25 +233,36 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               {errors.technical_name && <span className="text-[10px] text-destructive">{errors.technical_name.message}</span>}
             </div>
 
+            <div className="space-y-2 col-span-1 md:col-span-1">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-2">
+                <Tag className="w-3.5 h-3.5" /> Vendor Product ID
+              </label>
+              <input
+                {...register("internal_sku")}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm uppercase tracking-wider"
+                placeholder="e.g. A0199 or HOBHPG"
+              />
+            </div>
+
             <div className="space-y-2">
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Type Category</label>
               <select
                 {...register("category")}
                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer shadow-sm"
               >
-                <option value="camera">Camera Unit</option>
-                <option value="recorder">Recorder (DVR/NVR)</option>
-                <option value="storage">Storage (Hard Drive/SSD)</option>
-                <option value="connector">Connectors (RJ45/BNC/DC)</option>
-                <option value="cable">Cable (CAT6/HDMI)</option>
-                <option value="power_device">Power Device (SMPS/Adapter)</option>
-                <option value="installation">Installation & Services</option>
-                <option value="amc">AMC (Maintenance)</option>
-                <option value="display">Display Screen (LCD/TV)</option>
-                <option value="mount">Camera Mount Box</option>
-                <option value="rack">Racks (Recorder/Switch)</option>
-                <option value="network">Network (Switch/Router)</option>
-                <option value="accessory">Other Accessories</option>
+                <option value="cctv_camera">CCTV Camera (HD/IP/Wireless-4G,WiFi,Solar)</option>
+                <option value="recorder">Recorder (DVR/NVR/XVR)</option>
+                <option value="storage">Storage (Hard Disk/SSD/SD-Micro SD Card)</option>
+                <option value="connector">Connector (BNC/DC/RJ45)</option>
+                <option value="cable">Cable (3+1 Coaxial/CAT6)</option>
+                <option value="hdmi_cable">HDMI Cable (for Display Screen)</option>
+                <option value="power_device">Power Device (SMPS/Power Supply/PoE Switch/Adapter)</option>
+                <option value="display">Display Screen (LCD/LED/TV)</option>
+                <option value="camera_mount">Camera Mount (PVC Box/CCTV Stand)</option>
+                <option value="rack">Rack (for Recorders/PoE Switch)</option>
+                <option value="network">Network (Switch/P2P/Range Extender/Access Point/Router)</option>
+                <option value="accessories">Accessories</option>
+                <option value="others">Others</option>
               </select>
             </div>
 
@@ -357,7 +375,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                 </div>
               </div>
 
-              {category === "camera" && (
+              {category === "cctv_camera" && (
                 <div className="space-y-2">
                   <label className="text-[11px] font-semibold text-success uppercase tracking-wider ml-1">Resolution Payload</label>
                   <select
@@ -387,6 +405,33 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
               )}
             </div>
 
+            {/* Stock Status */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-2">
+                Stock / Availability Status
+              </label>
+              <select
+                {...register("stock_status")}
+                onChange={(e) => {
+                  const val = e.target.value as "in_stock" | "out_of_stock" | "on_order" | "discontinued";
+                  form.setValue("stock_status", val);
+                  // Auto-deactivate when not in stock
+                  if (val === "out_of_stock" || val === "on_order" || val === "discontinued") {
+                    form.setValue("is_active", false);
+                  } else {
+                    form.setValue("is_active", true);
+                  }
+                }}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer shadow-sm"
+              >
+                <option value="in_stock">✅ In Stock — Available for quotes</option>
+                <option value="out_of_stock">❌ Out of Stock — Deactivated from quotes</option>
+                <option value="on_order">⏳ On Order — Deactivated until received</option>
+                <option value="discontinued">🚫 Discontinued — Permanently removed</option>
+              </select>
+              <p className="text-[10px] text-muted-foreground ml-1">Changing to Out of Stock / On Order automatically deactivates this product from all quotes.</p>
+            </div>
+
             <div className="flex items-center justify-between pt-4 mt-2">
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground tracking-tight">Active Catalogue State</p>
@@ -403,8 +448,8 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
             </div>
           </div>
 
-          {/* ── Compatibility Section ─────────────────────────────────────── */}
-          {(category === "camera" || category === "recorder" || category === "accessory") && (
+          {/* â”€â”€ Compatibility Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {(category === "cctv_camera" || category === "recorder" || category === "accessories") && (
             <div className="bg-secondary/20 p-6 rounded-2xl border border-border space-y-6">
               <h3 className="text-[11px] font-semibold text-primary uppercase tracking-wider flex items-center gap-2">
                 <Link2 className="w-3.5 h-3.5" /> Compatibility Engine
@@ -423,7 +468,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                   />
                 </div>
 
-                {(category === "recorder" || category === "accessory") && (
+                {(category === "recorder" || category === "accessories") && (
                   <>
                     <div className="space-y-2">
                       <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 block">
@@ -472,7 +517,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                       <select 
                         {...register("max_cameras", { valueAsNumber: true })}
                         className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none shadow-sm">
-                        <option value={0}>— Not Set —</option>
+                        <option value={0}>â€” Not Set â€”</option>
                         <option value={1}>1 Camera</option>
                         <option value={4}>4 Cameras</option>
                         <option value={8}>8 Cameras</option>
@@ -485,7 +530,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                       <select 
                         {...register("min_cameras", { valueAsNumber: true })}
                         className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none shadow-sm">
-                        <option value={0}>— Not Set —</option>
+                        <option value={0}>â€” Not Set â€”</option>
                         <option value={1}>1 Camera</option>
                         <option value={5}>5 Cameras</option>
                         <option value={9}>9 Cameras</option>

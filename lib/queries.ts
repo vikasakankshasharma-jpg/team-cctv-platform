@@ -38,7 +38,19 @@ export async function getWizardConfig() {
       return { steps: getDefaultFallbackWizard() };
     }
 
-    const sortedDocs = [...stepsSnapshot.docs].sort((a, b) => 
+    // Deduplicate steps by title to prevent rendering duplicates if DB is messy
+    const uniqueStepsMap = new Map();
+    stepsSnapshot.docs.forEach((doc: any) => {
+      const data = doc.data();
+      const title = (data.title || "").trim().toLowerCase();
+      if (title && !uniqueStepsMap.has(title)) {
+        uniqueStepsMap.set(title, doc);
+      } else if (!title) {
+        uniqueStepsMap.set(doc.id, doc);
+      }
+    });
+
+    const sortedDocs = Array.from(uniqueStepsMap.values()).sort((a, b) => 
       (a.data().position || 0) - (b.data().position || 0)
     );
 
@@ -50,7 +62,19 @@ export async function getWizardConfig() {
         .orderBy("position", "asc")
         .get();
 
-      const questionsPromises = questionsSnapshot.docs.map(async (qDoc) => {
+      // Deduplicate questions by text
+      const uniqueQMap = new Map();
+      questionsSnapshot.docs.forEach((doc: any) => {
+        const qData = doc.data();
+        const qText = (qData.question_text || "").trim().toLowerCase();
+        if (qText && !uniqueQMap.has(qText)) {
+          uniqueQMap.set(qText, doc);
+        } else if (!qText) {
+          uniqueQMap.set(doc.id, doc);
+        }
+      });
+
+      const questionsPromises = Array.from(uniqueQMap.values()).map(async (qDoc) => {
         const qData = qDoc.data();
         
         const optionsSnapshot = await qDoc.ref
@@ -58,7 +82,28 @@ export async function getWizardConfig() {
           .orderBy("position", "asc")
           .get();
 
-        const options = optionsSnapshot.docs.map(optDoc => ({
+        // Deduplicate options by value (semantic meaning) instead of just label text
+        const uniqueOptMap = new Map();
+        optionsSnapshot.docs.forEach((doc: any) => {
+          const oData = doc.data();
+          let oValue = (oData.value || "").trim().toLowerCase();
+          
+          // Normalize overlapping tech values to ensure they merge
+          if (oValue === "hd") oValue = "analog";
+          if (oValue === "wireless") oValue = "wifi";
+
+          const oLabel = (oData.label || "").trim().toLowerCase();
+          
+          const dedupKey = oValue || oLabel;
+          
+          if (dedupKey && !uniqueOptMap.has(dedupKey)) {
+            uniqueOptMap.set(dedupKey, doc);
+          } else if (!dedupKey) {
+            uniqueOptMap.set(doc.id, doc);
+          }
+        });
+
+        const options = Array.from(uniqueOptMap.values()).map(optDoc => ({
           id: optDoc.id,
           ...optDoc.data()
         })) as WizardOption[];
@@ -109,7 +154,7 @@ export async function getWizardConfig() {
       s.questions?.some(q => q.id === "q_resolution")
     );
 
-    if (sortedResolutions.length > 0 && !hasResolutionStep) {
+    if (!hasResolutionStep) {
       const resOptions: WizardOption[] = [];
       const resLabels: Record<number, string> = {
         2: "2MP Standard HD",
@@ -119,7 +164,9 @@ export async function getWizardConfig() {
         8: "8MP Professional Grade"
       };
       
-      sortedResolutions.forEach((mp, index) => {
+      const targetResolutions = sortedResolutions.length > 0 ? sortedResolutions : [2, 4, 6];
+
+      targetResolutions.forEach((mp, index) => {
         resOptions.push({
           id: `opt_res_${mp}mp`,
           label: resLabels[mp] || `${mp}MP Camera`,
@@ -128,11 +175,15 @@ export async function getWizardConfig() {
         });
       });
 
+      // Insert resolution step immediately after technology step
+      const techStep = wizardSteps.find(s => s.id === "step_technology");
+      const techPos = techStep?.position ?? 2;
+
       const resolutionStep: WizardStep = {
         id: "dynamic_step_resolution",
         title: "Image Resolution",
         description: "What image quality do you need?",
-        position: 5,
+        position: techPos + 0.5, // Will be normalized by sorting below
         is_active: true,
         created_at: new Date().toISOString(),
         questions: [
@@ -148,8 +199,13 @@ export async function getWizardConfig() {
       };
 
       wizardSteps.push(resolutionStep);
-      wizardSteps.sort((a, b) => (a.position || 0) - (b.position || 0));
     }
+    
+    // Sort and normalize positions so they are clean sequential integers
+    wizardSteps.sort((a, b) => (a.position || 0) - (b.position || 0));
+    wizardSteps.forEach((step, idx) => {
+      step.position = idx;
+    });
 
     return { steps: wizardSteps };
   } catch (error) {
@@ -209,7 +265,7 @@ export function getDefaultFallbackWizard(): WizardStep[] {
       id: "step_cam_count",
       title: "Camera Count",
       description: "How many cameras do you need?",
-      position: 3,
+      position: 4,
       is_active: true,
       created_at: null,
       questions: [
@@ -250,7 +306,7 @@ export function getDefaultFallbackWizard(): WizardStep[] {
       id: "step_storage",
       title: "Recording Storage",
       description: "How far back do you need to watch old recordings?",
-      position: 4,
+      position: 5,
       is_active: true,
       created_at: null,
       questions: [
@@ -272,7 +328,7 @@ export function getDefaultFallbackWizard(): WizardStep[] {
       id: "step_general_addons",
       title: "Accessories",
       description: "Would you like to include any extra accessories?",
-      position: 7,
+      position: 8,
       is_active: true,
       created_at: null,
       questions: [
@@ -291,43 +347,12 @@ export function getDefaultFallbackWizard(): WizardStep[] {
         },
       ],
     },
-    {
-      id: "step_environment_style",
-      title: "Camera Style & Environment",
-      description: "Where will the cameras be placed, and what style do you prefer?",
-      position: 5,
-      is_active: true,
-      created_at: null,
-      questions: [
-        {
-          id: "q_environment",
-          question_text: "Where will the cameras be installed? (Select all that apply)",
-          input_type: "multi",
-          is_required: true,
-          position: 0,
-          options: [
-            { id: "eopt_indoor",  label: "Indoor (Inside building)", value: "Indoor", position: 0 },
-            { id: "eopt_outdoor", label: "Outdoor (Exposed to weather/rain)", value: "Outdoor", position: 1 },
-          ],
-        },
-        {
-          id: "q_form_factor",
-          question_text: "Preferred camera body style (Optional):",
-          input_type: "multi",
-          is_required: false,
-          position: 1,
-          options: [
-            { id: "ffopt_dome",   label: "Dome (Looks like a small bubble, hard to damage, best for indoor ceilings)", value: "Dome", position: 0 },
-            { id: "ffopt_bullet", label: "Bullet (Clearly visible to scare off intruders, best for outdoor walls)", value: "Bullet", position: 1 },
-          ],
-        },
-      ],
-    },
+
     {
       id: "step_features",
       title: "Special Features",
       description: "Any special camera capabilities required?",
-      position: 6,
+      position: 7,
       is_active: true,
       created_at: null,
       questions: [
@@ -338,15 +363,16 @@ export function getDefaultFallbackWizard(): WizardStep[] {
           is_required: false,
           position: 0,
           options: [
-            { id: "opt_feat_wdr",   label: "WDR (Clear faces against bright doors/windows)", value: "WDR", position: 0 },
-            { id: "opt_feat_audio", label: "Built-in Mic (Audio Recording)", value: "Audio", position: 1 },
-            { id: "opt_feat_2way",  label: "Two-Way Audio (Mic + Speaker)", value: "Two-Way Audio", position: 2 },
-            { id: "opt_feat_colorvu",label: "Color Night Vision (ColorVu)", value: "ColorVu", position: 3 },
-            { id: "opt_feat_duallight",label: "Smart Dual Light (Switches to color on motion)", value: "Dual Light", position: 4 },
-            { id: "opt_feat_starlight",label: "Starlight Sensor (Excellent in very low light)", value: "Starlight", position: 5 },
-            { id: "opt_feat_sdcard", label: "SD Card Storage (Backup recording)", value: "SD Card Slot", position: 6 },
-            { id: "opt_feat_ptz",   label: "Pan-Tilt-Zoom (Optical Zoom & Motorized)", value: "PTZ", position: 7 },
-            { id: "opt_feat_pt",    label: "Pan-Tilt (Motorized Rotation, No Optical Zoom)", value: "PT", position: 8 },
+            { id: "opt_feat_none",  label: "None (Standard Features Only)", value: "none", position: 0 },
+            { id: "opt_feat_wdr",   label: "WDR (Clear faces against bright doors/windows)", value: "WDR", position: 1 },
+            { id: "opt_feat_audio", label: "Built-in Mic (Audio Recording)", value: "Audio", position: 2 },
+            { id: "opt_feat_2way",  label: "Two-Way Audio (Mic + Speaker)", value: "Two-Way Audio", position: 3 },
+            { id: "opt_feat_colorvu",label: "Color Night Vision (ColorVu)", value: "ColorVu", position: 4 },
+            { id: "opt_feat_duallight",label: "Smart Dual Light (Switches to color on motion)", value: "Dual Light", position: 5 },
+            { id: "opt_feat_starlight",label: "Starlight Sensor (Excellent in very low light)", value: "Starlight", position: 6 },
+            { id: "opt_feat_sdcard", label: "SD Card Storage (Backup recording)", value: "SD Card Slot", position: 7 },
+            { id: "opt_feat_ptz",   label: "Pan-Tilt-Zoom (Optical Zoom & Motorized)", value: "PTZ", position: 8 },
+            { id: "opt_feat_pt",    label: "Pan-Tilt (Motorized Rotation, No Optical Zoom)", value: "PT", position: 9 },
           ],
         },
       ],
@@ -355,7 +381,7 @@ export function getDefaultFallbackWizard(): WizardStep[] {
       id: "step_site_overview",
       title: "Site Overview",
       description: "Help our installers prepare for your site.",
-      position: 8,
+      position: 9,
       is_active: true,
       created_at: null,
       questions: [

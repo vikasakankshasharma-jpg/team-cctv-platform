@@ -15,6 +15,7 @@ import type {
   AddonRuleResult,
   GeoPricingRule
 } from "@/types";
+import { getCatalogCapacity } from "@/lib/catalog-capacity";
 
 export interface PricingEngineParams {
   selection: ConfiguratorSelection;
@@ -83,8 +84,11 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     }
   }
 
-  // 0. Industrial Threshold Check
-  const isIndustrial = selection.camera_count > (settings.max_supported_cameras || 16);
+  // 0. Industrial Threshold Check — dynamic based on recorder catalog capacity
+  const catalogCapacity = getCatalogCapacity(products);
+  const techKey = (selection.technology || "HD") as "HD" | "IP" | "Wireless";
+  const maxQuotableForTech = catalogCapacity[techKey] ?? (settings.max_supported_cameras || 16);
+  const isIndustrial = selection.camera_count > maxQuotableForTech;
 
   // Initialize accumulators
   let baseHardwareCost = 0;
@@ -168,7 +172,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   let error = false;
   let errorMessage = undefined;
   if (selection.camera_count > 0) {
-    const hasCamera = lineItems.some(item => products.some(p => p.id === item.product_id && p.category === "camera"));
+    const hasCamera = lineItems.some(item => products.some(p => p.id === item.product_id && p.category === "cctv_camera"));
     if (!hasCamera) {
       error = true;
       errorMessage = "Missing required camera hardware in catalog.";
@@ -619,7 +623,9 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     return products.find(p => p.id === selection.selected_camera_id);
   }
 
-  let pool = products.filter(p => p.category === "camera" && (p.technologies || []).includes(tech as any) && p.is_active);
+  // Exclude products that are out of stock or on order — they are deactivated from quoting
+  const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued";
+  let pool = products.filter(p => p.category === "cctv_camera" && (p.technologies || []).includes(tech as any) && isAvailable(p));
 
   // ── Specialty Camera Guardrail ──────────────────────────────
   // Prevent Elite/Premium tiers from accidentally picking highly expensive PTZ/Solar/4G/Wireless cameras
@@ -782,6 +788,10 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
 
   const recorders = products.filter(p => 
     p.category === "recorder" && 
+    p.is_active &&
+    p.stock_status !== "out_of_stock" &&
+    p.stock_status !== "on_order" &&
+    p.stock_status !== "discontinued" &&
     (p.technologies || []).includes(tech as any) && 
     (p.max_cameras || p.channels || 0) >= selection.camera_count
   );

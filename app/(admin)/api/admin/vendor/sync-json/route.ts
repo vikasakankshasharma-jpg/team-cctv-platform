@@ -3,11 +3,11 @@ import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
 import crypto from "crypto";
 import { ApiResponse } from "@/lib/api-response";
 import { guessCategory, guessBrand, guessTechnologies, guessResolution, guessChannels, guessRackUHeight, guessCableLength, guessVoltage, guessAmperage, guessWattage } from "@/lib/vendor/ai-parser";
-import { parseProductWithGemini } from "@/lib/vendor/gemini-parser";
+
 
 export async function POST(request: NextRequest) {
   try {
-    const { products, overrideCategory, vendorId, vendorPrefix } = await request.json();
+    const { products, overrideCategory, vendorId, vendorPrefix, syncMode = "all", matchBy = "auto" } = await request.json();
 
     if (!products || !Array.isArray(products) || products.length === 0) {
       return ApiResponse.badRequest("No products provided");
@@ -22,13 +22,34 @@ export async function POST(request: NextRequest) {
     // Fetch Live Catalog
     const liveProductsSnapshot = await adminDb.collection('products').get();
     const liveCatalog = new Map();
+    const liveCatalogBySku = new Map();
+    const liveCatalogByTitle = new Map();
     liveProductsSnapshot.forEach(doc => {
         const data = doc.data();
-        if (data.vendor_product_id) {
-            liveCatalog.set(data.vendor_product_id, { id: doc.id, ...data });
-        }
+        if (data.vendor_product_id) liveCatalog.set(data.vendor_product_id, { id: doc.id, ...data });
         if (data.internal_sku) {
             liveCatalog.set(data.internal_sku, { id: doc.id, ...data });
+            liveCatalogBySku.set(data.internal_sku, { id: doc.id, ...data });
+        }
+        if (data.display_name) {
+            liveCatalogByTitle.set(data.display_name.trim().toLowerCase(), { id: doc.id, ...data });
+        }
+    });
+
+    // Fetch Staged Catalog for Deduplication
+    const stagedProductsSnapshot = await adminDb.collection('staged_products').get();
+    const stagedCatalog = new Set();
+    const stagedCatalogBySku = new Set();
+    const stagedCatalogByTitle = new Set();
+    stagedProductsSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.vendor_product_id) stagedCatalog.add(data.vendor_product_id);
+        if (data.internal_sku) {
+            stagedCatalog.add(data.internal_sku);
+            stagedCatalogBySku.add(data.internal_sku);
+        }
+        if (data.raw_title) {
+            stagedCatalogByTitle.add(data.raw_title.trim().toLowerCase());
         }
     });
 
@@ -54,26 +75,28 @@ export async function POST(request: NextRequest) {
         const internalSku = (vendorPrefix || "VND") + "-" + titleHash;
         const vendorProductId = prod.vendorProductId || "";
         
-        const existingProduct = (vendorProductId ? liveCatalog.get(vendorProductId) : undefined) || liveCatalog.get(internalSku);
+        let existingProduct;
+        let isAlreadyStaged = false;
         
-        let finalCategory = "unidentified";
-        
-        // 1. AI Dynamic Learning (Check Live Catalog for similar past items)
-        const titleWords = prod.title.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ').slice(0, 3).join(' ');
-        let learnedCategory = null;
-        if (titleWords.length > 5) {
-            for (const liveProd of Array.from(liveCatalog.values())) {
-                if (liveProd.category && liveProd.display_name) {
-                    const liveTitleWords = liveProd.display_name.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ').slice(0, 3).join(' ');
-                    if (titleWords === liveTitleWords) {
-                        learnedCategory = liveProd.category;
-                        break;
-                    }
-                }
-            }
+        if (matchBy === "vendor_id") {
+            existingProduct = vendorProductId ? liveCatalog.get(vendorProductId) : undefined;
+            isAlreadyStaged = vendorProductId ? stagedCatalog.has(vendorProductId) : false;
+        } else if (matchBy === "internal_sku") {
+            existingProduct = liveCatalogBySku.get(internalSku);
+            isAlreadyStaged = stagedCatalogBySku.has(internalSku);
+        } else if (matchBy === "title") {
+            const titleKey = prod.title.trim().toLowerCase();
+            existingProduct = liveCatalogByTitle.get(titleKey);
+            isAlreadyStaged = stagedCatalogByTitle.has(titleKey);
+        } else {
+            // "auto" mode
+            existingProduct = (vendorProductId ? liveCatalog.get(vendorProductId) : undefined) || liveCatalogBySku.get(internalSku);
+            isAlreadyStaged = (vendorProductId ? stagedCatalog.has(vendorProductId) : false) || stagedCatalogBySku.has(internalSku);
         }
-
+        
         if (existingProduct) {
+            if (syncMode === 'new_only') continue;
+
             let needsUpdate = false;
             const updatePayload: any = {};
             if (existingProduct.base_cost !== prod.baseCost) {
@@ -105,43 +128,61 @@ export async function POST(request: NextRequest) {
                 });
             }
         } else {
-            // Compile Training Rules
-            let trainingRules = "Past Learned Specs from Admin: " + learnedSpecs.map(s => s.name).join(", ") + ". ";
-            if (learnedCategory) {
-                trainingRules += `\nNote: A highly similar product was previously categorized as '${learnedCategory}'. Strongly consider this category.`;
-            }
-            if (overrideCategory && overrideCategory !== "unidentified") {
-                trainingRules += `\nCRITICAL RULE: The Admin is strictly filtering for the '${overrideCategory}' category. If you are >70% confident this product is a '${overrideCategory}', categorize it as '${overrideCategory}'. If it is ANY other type of product, or if you are unsure, you MUST categorize it as 'unidentified'. Do NOT use any other categories.`;
-            }
+            if (syncMode === 'updates_only') continue;
+            if (isAlreadyStaged) continue;
 
-            // Call Multimodal Gemini AI
-            const geminiResult = await parseProductWithGemini(prod.title, prod.imgUrl, trainingRules);
+            let finalCategory = "unidentified";
+            
+            // 1. AI Dynamic Learning (Check Live Catalog for similar past items)
+            const titleWords = prod.title.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ').slice(0, 3).join(' ');
+            let learnedCategory = null;
+            if (titleWords.length > 5) {
+                for (const liveProd of Array.from(liveCatalog.values())) {
+                    if (liveProd.category && liveProd.display_name) {
+                        const liveTitleWords = liveProd.display_name.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ').slice(0, 3).join(' ');
+                        if (titleWords === liveTitleWords) {
+                            learnedCategory = liveProd.category;
+                            break;
+                        }
+                    }
+                }
+            }
 
             productsToStage.push({
-                status: "pending",
-                raw_title: prod.title,
-                vendor_product_id: vendorProductId,
-                internal_sku: internalSku,
-                vendor_id: vendorId || null,
-                in_stock: prod.inStock !== false,
-                category: geminiResult.category,
-                brand: geminiResult.brand,
-                base_cost: prod.baseCost || 0,
-                technologies: geminiResult.technologies,
-                resolution_mp: geminiResult.resolution_mp || null,
-                channels: geminiResult.channels || null,
-                rack_u_height: geminiResult.rack_u_height || null,
-                cable_length_m: geminiResult.cable_length_m || null,
-                power_voltage_v: geminiResult.power_voltage_v || null,
-                power_amperage_a: geminiResult.power_amperage_a || null,
-                power_wattage_w: geminiResult.power_wattage_w || null,
-                ai_confidence_score: geminiResult.confidence_score,
-                ai_reasoning: geminiResult.ai_reasoning,
-                image_url: prod.imgUrl || "",
-                created_at: serverTimestamp()
+                prod,
+                internalSku,
+                vendorProductId,
+                learnedCategory
             });
         }
     }
+
+    // Fast synchronous parsing using local regex logic and the live catalog guess.
+    const stagedResults = productsToStage.map((item) => {
+        return {
+            status: "pending",
+            raw_title: item.prod.title,
+            vendor_product_id: item.vendorProductId,
+            internal_sku: item.internalSku,
+            vendor_id: vendorId || null,
+            in_stock: item.prod.inStock !== false,
+            category: overrideCategory || item.learnedCategory || guessCategory(item.prod.title) || "unidentified",
+            brand: guessBrand(item.prod.title) || null,
+            base_cost: item.prod.baseCost || 0,
+            technologies: guessTechnologies(item.prod.title) || [],
+            resolution_mp: guessResolution(item.prod.title) || null,
+            channels: guessChannels(item.prod.title) || null,
+            rack_u_height: guessRackUHeight(item.prod.title) || null,
+            cable_length_m: guessCableLength(item.prod.title) || null,
+            power_voltage_v: guessVoltage(item.prod.title) || null,
+            power_amperage_a: guessAmperage(item.prod.title) || null,
+            power_wattage_w: guessWattage(item.prod.title) || null,
+            ai_confidence_score: null,
+            ai_reasoning: null,
+            image_url: item.prod.imgUrl || "",
+            created_at: serverTimestamp()
+        };
+    });
 
     // Process Updates in Batches
     if (productsToUpdate.length > 0) {
@@ -162,22 +203,7 @@ export async function POST(request: NextRequest) {
         await Promise.all(updateBatches);
     }
 
-    // Always clear old staging area before processing a new upload batch
-    const oldStaged = await adminDb.collection('staged_products').get();
-    const deleteBatches = [];
-    let deleteBatch = adminDb.batch();
-    let deleteCount = 0;
-    oldStaged.docs.forEach((doc) => {
-        deleteBatch.delete(doc.ref);
-        deleteCount++;
-        if (deleteCount === 500) {
-            deleteBatches.push(deleteBatch.commit());
-            deleteBatch = adminDb!.batch();
-            deleteCount = 0;
-        }
-    });
-    if (deleteCount > 0) deleteBatches.push(deleteBatch.commit());
-    await Promise.all(deleteBatches);
+    // Staging clear should happen client side before chunking, removed here to prevent wiping out chunks
 
     // Process Staging in Batches
     if (productsToStage.length > 0) {
@@ -185,7 +211,9 @@ export async function POST(request: NextRequest) {
         const writeBatches = [];
         let writeBatch = adminDb.batch();
         let writeCount = 0;
-        productsToStage.forEach((product) => {
+        productsToStage.forEach(() => {}); // Removed, processing stagedResults instead
+
+        stagedResults.forEach((product) => {
             const ref = adminDb!.collection('staged_products').doc();
             writeBatch.set(ref, product);
             writeCount++;

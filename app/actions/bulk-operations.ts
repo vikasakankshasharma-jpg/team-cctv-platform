@@ -33,6 +33,7 @@ export async function bulkUpdateProducts(products: Partial<Product>[]) {
         dataToSave.updated_at = new Date().toISOString();
         if (!prod.id) {
             dataToSave.created_at = new Date().toISOString();
+            (dataToSave as any).is_deleted = false;
         }
 
         batch.set(docRef, dataToSave, { merge: true });

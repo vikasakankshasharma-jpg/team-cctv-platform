@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import Papa from "papaparse";
 import { bulkUpdateProducts } from "@/app/actions/bulk-operations";
 import { useRouter } from "next/navigation";
+import { ReviewImportModal, ReviewRow } from "@/components/admin/ReviewImportModal";
 
 interface BulkOperationsClientProps {
   products: Product[];
@@ -19,6 +20,8 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [parsedData, setParsedData] = useState<Partial<Product>[] | null>(null);
+  const [reviewRows, setReviewRows] = useState<ReviewRow[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [importStats, setImportStats] = useState({ updated: 0, new: 0, total: 0 });
 
   const handleExport = () => {
@@ -96,8 +99,43 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
         const newCount = structuredData.filter(p => !p.id).length;
         const updatedCount = structuredData.length - newCount;
 
+        const newReviewRows: ReviewRow[] = structuredData.map(prod => {
+          const isMissingName = !prod.display_name?.trim();
+          const isInvalidCost = typeof prod.base_cost !== "number" || isNaN(prod.base_cost) || prod.base_cost < 0;
+          
+          const errors: string[] = [];
+          if (isMissingName) errors.push("Missing Display Name");
+          if (isInvalidCost) errors.push("Invalid or missing Base Cost");
+
+          if (errors.length > 0) {
+            return { action: "ERROR", parsed: prod, errors };
+          }
+
+          if (!prod.id) {
+            return { action: "NEW", parsed: prod };
+          }
+
+          const existing = products.find(p => p.id === prod.id);
+          if (!existing) {
+            errors.push(`Product ID ${prod.id} not found in database for update.`);
+            return { action: "ERROR", parsed: prod, errors };
+          }
+
+          // Calculate changed fields
+          const changedFields: string[] = [];
+          if (existing.base_cost !== prod.base_cost) changedFields.push("Base Cost");
+          if (existing.display_name !== prod.display_name) changedFields.push("Display Name");
+          if (existing.category !== prod.category) changedFields.push("Category");
+          if (existing.unit_price !== prod.unit_price) changedFields.push("Unit Price");
+          if (existing.is_active !== prod.is_active) changedFields.push("Active Status");
+
+          return { action: "UPDATE", parsed: prod, oldProduct: existing, changedFields };
+        });
+
+        setReviewRows(newReviewRows);
         setImportStats({ updated: updatedCount, new: newCount, total: structuredData.length });
         setParsedData(structuredData);
+        setIsModalOpen(true);
       },
       error: (error) => {
         console.error("CSV Parse Error:", error);
@@ -107,13 +145,32 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
   };
 
   const executeImport = async () => {
-    if (!parsedData) return;
+    if (!parsedData || reviewRows.length === 0) return;
     setIsImporting(true);
     
     try {
-      const result = await bulkUpdateProducts(parsedData);
-      toast.success(`Successfully processed ${result.count} products!`);
+      // Only import valid rows (NEW and UPDATE)
+      const validRows = reviewRows.filter(r => r.action !== "ERROR").map(r => r.parsed);
+      
+      if (validRows.length === 0) {
+        toast.error("No valid rows to import.");
+        setIsImporting(false);
+        setIsModalOpen(false);
+        return;
+      }
+
+      const result = await bulkUpdateProducts(validRows);
+      
+      const errorCount = reviewRows.filter(r => r.action === "ERROR").length;
+      if (errorCount > 0) {
+        toast.success(`Successfully processed ${result.count} products! Skipped ${errorCount} rows with errors.`);
+      } else {
+        toast.success(`Successfully processed ${result.count} products!`);
+      }
+
       setParsedData(null); // Reset UI
+      setReviewRows([]);
+      setIsModalOpen(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
       router.refresh();
     } catch (error: any) {
@@ -207,23 +264,32 @@ export function BulkOperationsClient({ products }: BulkOperationsClientProps) {
 
             <div className="flex gap-3">
               <button
-                onClick={() => { setParsedData(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                onClick={() => { setParsedData(null); setReviewRows([]); if (fileInputRef.current) fileInputRef.current.value = ""; }}
                 disabled={isImporting}
                 className="flex-1 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-zinc-400 bg-zinc-800 hover:bg-zinc-700 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
-                onClick={executeImport}
+                onClick={() => setIsModalOpen(true)}
                 disabled={isImporting}
-                className="flex-[2] flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-600/20 active:scale-95 disabled:opacity-50"
+                className="flex-[2] flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-indigo-600/20 active:scale-95 disabled:opacity-50"
               >
-                {isImporting ? <RefreshCw className="w-5 h-5 animate-spin" /> : "Confirm Import"}
+                {isImporting ? <RefreshCw className="w-5 h-5 animate-spin" /> : "Review Changes"}
               </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* REVIEW MODAL */}
+      <ReviewImportModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={executeImport}
+        isImporting={isImporting}
+        rows={reviewRows}
+      />
 
     </div>
   );

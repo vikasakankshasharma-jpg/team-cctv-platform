@@ -51,7 +51,7 @@ export default function CityLandingPage({
   const derivedCtaText = ctaText || (
     intent === "quotation" 
       ? `Get ${brandPrefix}CCTV Quote` 
-      : `Book ${brandPrefix}Installation`
+      : `Get Instant Quotation`
   );
   
   const mainTitle = intent === "quotation"
