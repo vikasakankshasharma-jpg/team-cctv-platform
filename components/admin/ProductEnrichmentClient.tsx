@@ -68,6 +68,7 @@ export function ProductEnrichmentClient({ products }: ProductEnrichmentClientPro
   const [totalAnalyzed, setTotalAnalyzed] = useState(0);
   const [analyzedCount, setAnalyzedCount] = useState(0);
   const [appliedCount, setAppliedCount] = useState(0);
+  const [waitingMsg, setWaitingMsg] = useState("");
 
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -138,18 +139,38 @@ export function ProductEnrichmentClient({ products }: ProductEnrichmentClientPro
 
       for (let i = 0; i < productIds.length; i += BATCH_SIZE) {
         const batch = productIds.slice(i, i + BATCH_SIZE);
+        let success = false;
+        let retries = 0;
         
-        const res = await fetch("/api/admin/enrich-products", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ product_ids: batch, category }),
-        });
+        while (!success && retries < 3) {
+          const res = await fetch("/api/admin/enrich-products", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ product_ids: batch, category }),
+          });
+          
+          const data = await res.json();
+          
+          if (!res.ok) {
+            if (data.error && data.error.includes("429")) {
+              retries++;
+              setWaitingMsg(`Rate limited by AI provider. Pausing for 35 seconds before resuming... (Retry ${retries}/3)`);
+              await delay(35000);
+              setWaitingMsg("");
+              continue;
+            } else {
+              throw new Error(data.error || "Analysis failed");
+            }
+          }
+          
+          if (data.rows) {
+            allRows = [...allRows, ...data.rows];
+          }
+          success = true;
+        }
         
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Analysis failed");
-        
-        if (data.rows) {
-          allRows = [...allRows, ...data.rows];
+        if (!success) {
+          throw new Error("Failed after 3 retries due to quota limits.");
         }
         
         totalProcessed += batch.length;
@@ -349,12 +370,18 @@ export function ProductEnrichmentClient({ products }: ProductEnrichmentClientPro
           
           <div className="flex justify-between items-center mt-2">
             <p className="text-xs text-muted-foreground font-medium">
-              Processing in batches to prevent rate limits
+              Processing 1 product at a time
             </p>
             <p className="text-xs font-bold text-primary">
               {analyzedCount} / {activeProducts.length}
             </p>
           </div>
+          
+          {waitingMsg && (
+            <div className="mt-4 bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-xl text-xs font-semibold animate-pulse">
+              {waitingMsg}
+            </div>
+          )}
         </div>
       </div>
     );
