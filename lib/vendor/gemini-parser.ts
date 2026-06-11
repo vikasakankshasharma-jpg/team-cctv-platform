@@ -25,7 +25,7 @@ const ProductSchema = {
   properties: {
     category: {
       type: SchemaType.STRING,
-      description: "Must be one of: camera, recorder, storage, cable, rack, power_device, network, display, accessory, unidentified",
+      description: "Must be one of: cctv_camera, recorder, storage, connector, cable, power_device, display, camera_mount, rack, network, hdmi_cable, accessories, others, unidentified",
     },
     brand: {
       type: SchemaType.STRING,

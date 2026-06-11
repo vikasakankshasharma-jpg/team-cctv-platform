@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Product } from "@/types";
-import { Loader2, Plus, Save, X, Package, IndianRupee, BadgeDollarSign, Camera, Info, Settings, Tag, Target, HardDrive, Trash2 } from "lucide-react";
+import { Loader2, Plus, Save, X, Package, IndianRupee, BadgeDollarSign, Camera, Info, Settings, Tag, Target, HardDrive, Trash2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { ProductInventory } from "@/components/admin/ProductInventory";
 import { ProductsSkeleton } from "@/components/admin/ProductsSkeleton";
@@ -16,7 +16,7 @@ export default function AdminProductsPage() {
   const [featureTags, setFeatureTags] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Active filters — kept in sync with ProductInventory for intelligent export
+  // Active filters â€” kept in sync with ProductInventory for intelligent export
   const [activeFilters, setActiveFilters] = useState<{ category: string; technology: string }>({
     category: "",
     technology: "",
@@ -170,7 +170,7 @@ export default function AdminProductsPage() {
       display_name: "",
       technical_name: "",
       brand: "",
-      category: "camera",
+      category: "cctv_camera",
       technologies: ["HD"],
       is_active: true,
       base_cost: 0,
@@ -185,7 +185,7 @@ export default function AdminProductsPage() {
   // Auto-calculate daily GB per camera based on resolution and compression
   const calculateDailyStorage = (resMp?: number, compression?: string) => {
     if (!resMp) return undefined;
-    // Base heuristic: 2MP H.264 ≈ 25GB/day. H.265 saves ~50%.
+    // Base heuristic: 2MP H.264 â‰ˆ 25GB/day. H.265 saves ~50%.
     const baseGB = resMp * 10; // rough baseline
     if (compression === "H.265" || compression === "H.265+") {
       return Math.round(baseGB * 0.5);
@@ -195,7 +195,7 @@ export default function AdminProductsPage() {
 
   // Update storage whenever relevant fields change
   useEffect(() => {
-    if (editingProduct && editingProduct.category === "camera" && editingProduct.resolution_mp) {
+    if (editingProduct && editingProduct.category === "cctv_camera" && editingProduct.resolution_mp) {
       const estimated = calculateDailyStorage(editingProduct.resolution_mp, editingProduct.compression);
       if (estimated && estimated !== editingProduct.daily_gb_per_camera) {
         setEditingProduct(prev => ({ ...prev, daily_gb_per_camera: estimated }));
@@ -257,7 +257,7 @@ export default function AdminProductsPage() {
 
   return (
     <div className="bg-background min-h-screen pb-24 transition-colors duration-500">
-      {/* ── Page Header ─────────────────────────────────────────────────── */}
+      {/* â”€â”€ Page Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border shadow-sm">
         <div className="max-w-[1600px] mx-auto px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
@@ -297,6 +297,14 @@ export default function AdminProductsPage() {
 
              <div className="w-px h-8 bg-border" />
 
+             <a
+               href="/admin/products/enrich"
+               className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-xs font-semibold transition-all shadow-sm active:scale-95"
+             >
+               <Sparkles className="w-4 h-4" />
+               AI Enrich
+             </a>
+
              <button
                onClick={handleAdd}
                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95"
@@ -308,7 +316,7 @@ export default function AdminProductsPage() {
         </div>
       </header>
 
-      {/* ── Main Content Area ───────────────────────────────────────────── */}
+      {/* â”€â”€ Main Content Area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <main className="max-w-[1600px] mx-auto px-6 py-8">
         {isLoading ? (
           <ProductsSkeleton />
@@ -328,7 +336,7 @@ export default function AdminProductsPage() {
         )}
       </main>
 
-      {/* ── Premium Modal Interface (Tabbed) ────────────────────────────── */}
+      {/* â”€â”€ Premium Modal Interface (Tabbed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {isModalOpen && editingProduct && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-card rounded-2xl shadow-lg w-full max-w-5xl max-h-[90vh] flex flex-col border border-border overflow-hidden">
@@ -338,7 +346,7 @@ export default function AdminProductsPage() {
               <div className="flex items-center justify-between px-6 py-5">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">
-                    {editingProduct.category === "camera" ? <Camera className="w-5 h-5" /> : 
+                    {editingProduct.category === "cctv_camera" ? <Camera className="w-5 h-5" /> : 
                      editingProduct.category === "recorder" ? <HardDrive className="w-5 h-5" /> :
                      <Package className="w-5 h-5" />}
                   </div>
@@ -383,7 +391,7 @@ export default function AdminProductsPage() {
             <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-card">
               <form id="product-form" onSubmit={handleSave} className="max-w-3xl">
                 
-                {/* ── TAB 1: BASIC IDENTITY ── */}
+                {/* â”€â”€ TAB 1: BASIC IDENTITY â”€â”€ */}
                 {activeTab === "basic" && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                     
@@ -421,13 +429,13 @@ export default function AdminProductsPage() {
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Category</label>
                         <select 
-                          value={editingProduct.category || "camera"}
+                          value={editingProduct.category || "cctv_camera"}
                           onChange={e => setEditingProduct({...editingProduct, category: e.target.value as any})}
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
                         >
-                          <option value="camera">Camera</option>
+                          <option value="cctv_camera">Camera</option>
                           <option value="recorder">Recorder Unit</option>
-                          <option value="accessory">Hardware Accessory</option>
+                          <option value="accessories">Hardware Accessory</option>
                           <option value="cable">Transmission Line</option>
                           <option value="storage">Storage / HDD</option>
                           <option value="power_device">Power Supply / UPS</option>
@@ -479,11 +487,11 @@ export default function AdminProductsPage() {
                   </div>
                 )}
 
-                {/* ── TAB 2: TECHNICAL SPECS ── */}
+                {/* â”€â”€ TAB 2: TECHNICAL SPECS â”€â”€ */}
                 {activeTab === "specs" && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                     
-                    {editingProduct.category === "camera" && (
+                    {editingProduct.category === "cctv_camera" && (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Resolution (MP)</label>
@@ -565,7 +573,7 @@ export default function AdminProductsPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Viewing Angle (°)</label>
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Viewing Angle (Â°)</label>
                           <input 
                             type="number" 
                             value={editingProduct.viewing_angle_deg || ""}
@@ -822,13 +830,13 @@ export default function AdminProductsPage() {
                       </div>
                     )}
 
-                    {!["camera", "recorder", "rack", "cable", "storage", "network"].includes(editingProduct.category || "") && (
+                    {!["cctv_camera", "recorder", "rack", "cable", "storage", "network"].includes(editingProduct.category || "") && (
                       <div className="p-10 border border-dashed border-border rounded-2xl text-center">
                         <p className="text-muted-foreground text-sm font-medium">No specific technical attributes for this category.</p>
                       </div>
                     )}
 
-                    {/* ── Dynamic Custom Specifications ── */}
+                    {/* â”€â”€ Dynamic Custom Specifications â”€â”€ */}
                     <div className="pt-6 mt-6 border-t border-border">
                       <div className="flex items-center justify-between mb-4">
                         <div>
@@ -903,7 +911,7 @@ export default function AdminProductsPage() {
                   </div>
                 )}
 
-                {/* ── TAB 3: PRICING ENGINE ── */}
+                {/* â”€â”€ TAB 3: PRICING ENGINE â”€â”€ */}
                 {activeTab === "pricing" && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="bg-secondary/50 rounded-2xl p-6 border border-border">
@@ -978,7 +986,7 @@ export default function AdminProductsPage() {
                   </div>
                 )}
 
-                {/* ── TAB 4: MARKETING ── */}
+                {/* â”€â”€ TAB 4: MARKETING â”€â”€ */}
                 {activeTab === "marketing" && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-2xl">

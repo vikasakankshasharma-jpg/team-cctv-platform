@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useWizardStore } from "@/store/wizard";
 import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, MapPin } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
+import { createLeadAction } from "@/app/actions/lead";
 
 // Define recaptcha on window
 declare global {
@@ -43,6 +44,24 @@ export function LeadGate({
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   const [countdown, setCountdown] = useState(0);
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+
+  // Fetch City and State based on pincode
+  useEffect(() => {
+    if (pincode.length === 6) {
+      fetch(`https://api.postalpincode.in/pincode/${pincode}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data[0] && data[0].Status === "Success") {
+            const postOffice = data[0].PostOffice[0];
+            setCity(postOffice.District || postOffice.Block);
+            setState(postOffice.State);
+          }
+        })
+        .catch(() => {}); // Fail silently
+    }
+  }, [pincode]);
 
   // Initialize Recaptcha safely on demand
 
@@ -169,16 +188,18 @@ export function LeadGate({
         mobile_number: mobile,
         email: email || undefined,
         firebase_uid: firebaseUid,
-        wizard_answers: { ...answers, lead_pincode: pincode },
-        property_type: extractAns("q_prop_type") || "home",
-        technology_choice: extractAns("q_tech") || "HD",
-        cabling_done: extractAns("q_wiring") === "true",
-        camera_count: parseInt(extractAns("q_cam_count") || "0"),
-        status: mode === "partial" ? "partial" : undefined
+        wizard_answers: { ...answers, lead_pincode: pincode, q_city: city, q_state: state },
+        property_type: (extractAns("q_prop_type") || "home") as "home" | "shop" | "office" | "factory" | "other",
+        technology_choice: (["HD", "IP", "WiFi", "4G", "Analog", "Wireless"].includes(extractAns("q_tech")) ? extractAns("q_tech") : "HD") as "HD" | "IP" | "WiFi" | "4G" | "Analog" | "Wireless",
+        cabling_done: extractAns("q_install_type") === "upgrade" || extractAns("q_wiring") === "true",
+        camera_count: parseInt(extractAns("q_cam_count") || "0") || 0,
+        status: (mode === "partial" ? "partial" : "new") as "partial" | "new",
+        detected_city: city || undefined,
+        source: "wizard",
       };
 
       if (isIndustrial) {
-        const indRes = await fetch("/api/leads/industrial", {
+        const indRes = await fetch("/api/submissions/industrial", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -194,20 +215,14 @@ export function LeadGate({
         return;
       }
 
-      const createRes = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      // Use Server Action — completely bypasses browser network blocking
+      const result = await createLeadAction(payload);
 
-      const resData = await createRes.json();
-      if (!createRes.ok) {
-        const errorDetails = resData.error;
-        const msg = typeof errorDetails === "object" && errorDetails !== null
-          ? (errorDetails.message || JSON.stringify(errorDetails))
-          : (errorDetails || "Failed to save data.");
-        throw new Error(msg);
+      if (result.error) {
+        throw new Error(result.error);
       }
+
+      const leadId = result.id!;
 
       trackEvent("generate_lead", {
         customer_name: name,
@@ -216,10 +231,10 @@ export function LeadGate({
       });
 
       if (mode === "partial") {
-        setPartialLeadId(resData.data.id);
-        if (onSuccess) onSuccess(resData.data.id);
+        setPartialLeadId(leadId);
+        if (onSuccess) onSuccess(leadId);
       } else {
-        router.push(`/quote/${resData.data.id}`);
+        router.push(`/quote/${leadId}`);
       }
     } catch (error: any) {
       setError(`Error saving lead: ${error.message}`);

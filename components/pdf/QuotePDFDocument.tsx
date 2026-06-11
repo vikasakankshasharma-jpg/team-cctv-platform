@@ -1,17 +1,18 @@
 import React from 'react';
 import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import type { Lead, PricingResult, AppSettings } from '@/types';
+import { FONT_REGULAR, FONT_SEMIBOLD, FONT_BOLD } from '@/lib/pdf-fonts';
 
 const formatCurrency = (amount: number) => 
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
-// Register fonts (using standard available fonts or standard Roboto)
+// Register fonts using embedded base64 data URIs — zero network requests, works everywhere
 Font.register({
   family: 'Inter',
   fonts: [
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff' },
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hjp-Ek-_EeA.woff', fontWeight: 600 },
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hjp-Ek-_EeA.woff', fontWeight: 700 }
+    { src: FONT_REGULAR },
+    { src: FONT_SEMIBOLD, fontWeight: 600 },
+    { src: FONT_BOLD, fontWeight: 700 }
   ]
 });
 

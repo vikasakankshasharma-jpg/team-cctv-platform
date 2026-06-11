@@ -1,19 +1,30 @@
 export function guessCategory(title: string): string {
     const t = title.toLowerCase();
-    if (t.includes('camera') || t.includes('bullet') || t.includes('dome') || t.includes('ptz')) return 'camera';
+    // CCTV Camera — HD, IP, Wireless (4G, WiFi, Solar)
+    if (t.includes('camera') || t.includes('bullet') || t.includes('dome') || t.includes('ptz') || t.includes('turret') || t.includes('fisheye')) return 'cctv_camera';
+    // Recorder — DVR, NVR, XVR
     if (t.includes('dvr') || t.includes('nvr') || t.includes('xvr') || t.includes('recorder')) return 'recorder';
-    if (t.includes('hdd') || t.includes('hard drive') || t.includes('ssd') || t.includes('tb ') || t.includes('seagate') || t.includes('wd')) return 'storage';
-    if (t.includes('cable') || t.includes('cat6') || t.includes('cat5') || t.includes('wire') || t.includes('bundle') || t.includes('roll') || t.includes('vga') || t.includes('hdmi')) return 'cable';
-    if (t.includes('bnc') || t.includes('dc ') || t.includes('rj45') || t.includes('connector') || t.includes('jack') || t.includes('dc pin')) return 'connector';
-    if (t.includes('smps') || t.includes('power supply') || t.includes('adapter') || t.includes('poe switch')) return 'power_device';
+    // Storage — Hard Disk, SSD, SD/Micro SD Card
+    if (t.includes('hdd') || t.includes('hard d') || t.includes('ssd') || t.includes('tb ') || t.includes('seagate') || t.includes('wd ') || t.includes('micro sd') || t.includes('sd card') || t.includes('memory card')) return 'storage';
+    // Connector — BNC, DC, RJ45
+    if (t.includes('bnc') || t.includes('dc ') || t.includes('rj45') || t.includes('connector') || t.includes('jack') || t.includes('dc pin') || t.includes('dc female') || t.includes('dc male')) return 'connector';
+    // HDMI Cable — must check before generic cable
+    if (t.includes('hdmi')) return 'hdmi_cable';
+    // Cable — 3+1 Coaxial, CAT6
+    if (t.includes('cable') || t.includes('cat6') || t.includes('cat5') || t.includes('wire') || t.includes('coaxial') || t.includes('3+1') || t.includes('bundle') || t.includes('roll')) return 'cable';
+    // Power Device — CCTV SMPS, Power Supply, PoE Switch, Adapter
+    if (t.includes('smps') || t.includes('power supply') || t.includes('adapter') || t.includes('adaptor') || t.includes('poe switch') || t.includes('poe injector')) return 'power_device';
+    // Rack — for Recorders, PoE Switch
     if (t.includes('rack') || t.includes('cabinet') || t.includes(' u ') || t.includes('server rack')) return 'rack';
-    if (t.includes('monitor') || t.includes('display') || t.includes('screen') || t.includes('tv ') || t.includes('led') || t.includes('lcd')) return 'display';
-    if (t.includes('switch') || t.includes('router') || t.includes('media converter') || t.includes('wifi')) return 'network';
-    if (t.includes('mount') || t.includes('bracket') || t.includes('box') || t.includes('stand') || t.includes('junction box')) return 'mount';
-    if (t.includes('installation') || t.includes('service') || t.includes('labor') || t.includes('fitting') || t.includes('labour')) return 'installation';
-    if (t.includes('amc') || t.includes('maintenance')) return 'amc';
-    if (t.includes('accessory') || t.includes('mouse') || t.includes('keyboard') || t.includes('mousepad')) return 'accessory';
-    return 'unidentified';
+    // Display Screen — LCD, LED, TV
+    if (t.includes('monitor') || t.includes('display') || t.includes('screen') || t.includes('tv ') || t.includes('led tv') || t.includes('lcd')) return 'display';
+    // Network — Switch, P2P, Range Extender, Access Point, Router
+    if (t.includes('switch') || t.includes('router') || t.includes('media converter') || t.includes('wifi') || t.includes('access point') || t.includes('range extender') || t.includes('p2p')) return 'network';
+    // Camera Mount — PVC Box, CCTV Stand
+    if (t.includes('mount') || t.includes('bracket') || t.includes('pvc box') || t.includes('junction box') || t.includes('stand') || t.includes('cctv stand')) return 'camera_mount';
+    // Accessories
+    if (t.includes('accessory') || t.includes('accessories') || t.includes('mouse') || t.includes('keyboard') || t.includes('mousepad') || t.includes('screw') || t.includes('tape')) return 'accessories';
+    return 'others';
 }
 
 export function guessBrand(title: string): string | null {
@@ -38,7 +49,7 @@ export function guessTechnologies(title: string): string[] {
     const t = title.toLowerCase();
     const tech = [];
     if (/ip|network/i.test(t)) tech.push('IP');
-    if (/hd|analog|tvi|cvi|ahd/i.test(t)) tech.push('Analog');
+    if (/hd|analog|tvi|cvi|ahd/i.test(t)) tech.push('HD');
     if (/colorvu|full color|color|night color/i.test(t)) tech.push('ColorVu');
     if (/two-way|2-way|two way/i.test(t)) {
         tech.push('Two-Way Audio');

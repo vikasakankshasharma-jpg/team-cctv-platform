@@ -39,15 +39,6 @@ export async function verifyInstallerSession(): Promise<InstallerSession> {
       .get();
 
     if (installerSnap.empty) {
-      if (decoded.uid === "mock-installer-uid") {
-        return {
-          isAuthenticated: true,
-          installerId: "test-installer-id",
-          installerName: "Test Installer",
-          uid: decoded.uid,
-          role: "installer",
-        };
-      }
       return { isAuthenticated: false, installerId: null, installerName: null, uid: null, role: null };
     }
 

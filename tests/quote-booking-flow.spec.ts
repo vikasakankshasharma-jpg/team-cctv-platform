@@ -19,14 +19,13 @@ test.describe('Quote & Booking End-to-End Flow', () => {
       // Step 0: Property Type (single -> auto-advances)
       await page.getByText('Home / Residential', { exact: true }).click();
 
-      // Step 1: Mounting Surface (multi -> requires Continue)
-      await page.getByText('Standard (Brick, Concrete walls)', { exact: true }).click();
-      await page.getByRole('button', { name: /Continue/i }).click();
+      // Step 1: Setup Type (single -> auto-advances)
+      await page.getByText('New Installation', { exact: true }).click();
 
-      // Step 2: Ceiling Height (single -> auto-advances)
-      await page.getByText('Standard (Up to 10 feet)', { exact: true }).click();
+      // Step 2: Camera Technology (single -> auto-advances)
+      await page.getByText('IP Network Camera (Smart Digital)', { exact: true }).click();
 
-      // Step 3: Camera Count (single input by default for All Indoor -> requires Continue)
+      // Step 3: Camera Count (number -> requires Continue)
       await page.locator('input[type="number"]').first().fill('4');
       await page.getByRole('button', { name: /Continue/i }).click();
 

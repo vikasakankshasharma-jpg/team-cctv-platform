@@ -667,7 +667,6 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               className="bg-secondary border border-border text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium h-[38px] appearance-none cursor-pointer pr-8 text-sm"
             >
               <option value="firebase_phone">Firebase Phone Auth</option>
-              <option value="other">Mock Provider</option>
             </select>
           </div>
         </div>

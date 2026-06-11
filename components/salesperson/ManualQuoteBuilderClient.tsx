@@ -9,25 +9,25 @@ interface CartItem extends Product {
 }
 
 const CATEGORY_LABELS: Record<VendorCategory, string> = {
-  camera: "Cameras",
+  cctv_camera: "Cameras",
   recorder: "Recorders",
   storage: "Storage",
   cable: "Cables",
   connector: "Connectors",
   power_device: "Power",
   display: "Displays",
-  mount: "Mounts",
+  camera_mount: "Mounts",
   rack: "Racks",
   network: "Network",
-  accessory: "Accessories",
-  installation: "Services",
-  amc: "AMC",
+  hdmi_cable: "HDMI Cables",
+  accessories: "Accessories",
+  others: "Others",
   unidentified: "Other"
 };
 
 const CATEGORIES_TO_SHOW: VendorCategory[] = [
-  "camera", "recorder", "storage", "cable", "connector", "power_device", 
-  "display", "mount", "rack", "network", "accessory"
+  "cctv_camera", "recorder", "storage", "cable", "connector", "power_device", 
+  "display", "camera_mount", "rack", "network", "accessories"
 ];
 
 export default function ManualQuoteBuilderClient() {
@@ -41,10 +41,11 @@ export default function ManualQuoteBuilderClient() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<VendorCategory>("camera");
+  const [activeCategory, setActiveCategory] = useState<VendorCategory>("cctv_camera");
   const [discountPercent, setDiscountPercent] = useState(0);
   const [installationCost, setInstallationCost] = useState(0);
   const [salespersonMaxDiscount, setSalespersonMaxDiscount] = useState(0);
+  const [minMargin, setMinMargin] = useState(15);
   const [note, setNote] = useState("");
   
   // Result
@@ -54,13 +55,15 @@ export default function ManualQuoteBuilderClient() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch Products and Salesperson profile
+    // Fetch Products, Salesperson profile, and Settings
     Promise.all([
       fetch("/api/products").then(res => res.json()),
-      fetch("/api/admin/salespersons/me").then(res => res.ok ? res.json() : null).catch(() => null)
-    ]).then(([prodRes, spRes]) => {
+      fetch("/api/admin/salespersons/me").then(res => res.ok ? res.json() : null).catch(() => null),
+      fetch("/api/admin/settings").then(res => res.ok ? res.json() : null).catch(() => null)
+    ]).then(([prodRes, spRes, settingsRes]) => {
       if (Array.isArray(prodRes.products)) setProducts(prodRes.products);
       if (spRes?.max_discount_approval_percent) setSalespersonMaxDiscount(spRes.max_discount_approval_percent);
+      if (settingsRes?.settings?.minimum_margin_threshold) setMinMargin(settingsRes.settings.minimum_margin_threshold);
     });
   }, []);
 
@@ -69,7 +72,7 @@ export default function ManualQuoteBuilderClient() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/leads", {
+      const res = await fetch("/api/submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -129,8 +132,7 @@ export default function ManualQuoteBuilderClient() {
   const grossProfitPercent = totalPayable > 0 ? (grossProfitValue / totalPayable) * 100 : 0;
   
   // Warning triggers
-  const MIN_MARGIN_THRESHOLD = 15; // Set via settings usually, hardcoded default to 15%
-  const isMarginTooLow = grossProfitPercent < MIN_MARGIN_THRESHOLD && cart.length > 0;
+  const isMarginTooLow = grossProfitPercent < minMargin && cart.length > 0;
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {

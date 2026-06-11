@@ -91,8 +91,8 @@ export default async function QuoteResultPage({
       hubsSnap
     ] = await Promise.all([
       lead ? Promise.resolve(null) : adminDb.collection("leads").doc(leadId).get(),
-      adminDb.collection("products").where("is_active", "==", true).where("is_deleted", "==", false).get(),
-      adminDb.collection("addons").where("is_active", "==", true).where("is_deleted", "==", false).get(),
+      adminDb.collection("products").where("is_active", "==", true).get(),
+      adminDb.collection("addons").where("is_active", "==", true).get(),
       adminDb.collection("addon_rules").get(),
       adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
       adminDb.collection("recommendation_rules").orderBy("priority", "asc").get(),
@@ -106,18 +106,20 @@ export default async function QuoteResultPage({
 
     products = productsSnap.docs.map(doc => {
       const data = doc.data() as any;
+      if (data.is_deleted === true) return null;
       if (!Array.isArray(data.technologies)) {
         data.technologies = data.technology ? [data.technology] : ["Common"];
       }
       const { base_cost, margin_percentage, ...publicData } = data;
       return { id: doc.id, ...publicData } as Product;
-    });
+    }).filter(Boolean) as Product[];
 
     addons = addonsSnap.docs.map(doc => {
       const data = doc.data() as Addon;
+      if ((data as any).is_deleted === true) return null;
       const { base_cost, ...publicData } = data;
       return { id: doc.id, ...publicData } as Addon;
-    });
+    }).filter(Boolean) as Addon[];
     
     addon_rules = rulesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as AddonRule));
     

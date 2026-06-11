@@ -47,15 +47,6 @@ export async function verifyPartnerSession(): Promise<PartnerSession> {
       .get();
 
     if (promoterSnap.empty) {
-      if (decoded.uid === "mock-dealer-uid") {
-        return {
-          isAuthenticated: true,
-          promoterId: "mock-promoter-doc-id",
-          promoterName: "Mock Dealer E2E",
-          uid: decoded.uid,
-          role: "partner",
-        };
-      }
       fs.writeFileSync('debug-partner-auth.txt', 'No promoter found for UID: ' + decoded.uid);
       return { isAuthenticated: false, promoterId: null, promoterName: null, uid: decoded.uid, role: null };
     }

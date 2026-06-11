@@ -66,9 +66,13 @@ export const CreateLeadSchema = z.object({
   referral_code: ReferralCodeSchema,
   wizard_answers: WizardAnswersSchema,
   property_type: z.enum(["home", "shop", "office", "factory", "other"]),
-  technology_choice: z.enum(["HD", "IP"]),
+  technology_choice: z.enum(["HD", "IP", "WiFi", "4G", "Analog", "Wireless"]),
   cabling_done: z.boolean(),
+  camera_count: z.number().int().nonnegative().optional(),
   status: z.enum(["partial", "new", "contacted", "site_visit", "won", "lost"]).optional(),
+  email: z.string().email().optional(),
+  detected_city: z.string().optional(),
+  source: z.string().optional(),
 });
 
 export type CreateLeadInput = z.infer<typeof CreateLeadSchema>;

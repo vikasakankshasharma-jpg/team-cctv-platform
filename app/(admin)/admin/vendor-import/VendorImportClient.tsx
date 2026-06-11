@@ -13,7 +13,7 @@ export default function VendorImportClient() {
   const [categories, setCategories] = useState<VendorCategory[]>([]);
   const [stagedProducts, setStagedProducts] = useState<StagedProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [progress, setProgress] = useState({ status: 'idle', current: 0, total: 0 });
+  const [progress, setProgress] = useState({ status: 'idle', current: 0, total: 0, staged: 0, updated: 0 });
   const [overrideCategory, setOverrideCategory] = useState<VendorCategory | "">("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedVendorId, setSelectedVendorId] = useState<string>("");
@@ -23,6 +23,10 @@ export default function VendorImportClient() {
   const [newVendorPrefix, setNewVendorPrefix] = useState("");
   const [stagingCategoryFilter, setStagingCategoryFilter] = useState<VendorCategory | "all">("all");
   const [stagingSearchQuery, setStagingSearchQuery] = useState("");
+  const [syncMode, setSyncMode] = useState<"all" | "new_only" | "updates_only">("all");
+  const [matchBy, setMatchBy] = useState<"auto" | "vendor_id" | "internal_sku" | "title">("auto");
+  const stopSyncRef = useRef(false);
+  const [isRescanning, setIsRescanning] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
@@ -132,7 +136,8 @@ export default function VendorImportClient() {
         return;
     }
 
-    setProgress({ status: 'parsing', current: 0, total: 0 });
+    stopSyncRef.current = false;
+    setProgress({ status: 'parsing', current: 0, total: 0, staged: 0, updated: 0 });
     
     try {
       const extractedProducts: any[] = [];
@@ -147,7 +152,7 @@ export default function VendorImportClient() {
         totalToParse += doc.querySelectorAll('.product-thumb').length;
       }
 
-      setProgress({ status: 'parsing', current: 0, total: totalToParse });
+      setProgress({ status: 'parsing', current: 0, total: totalToParse, staged: 0, updated: 0 });
 
       let currentCount = 0;
       for (const { doc } of htmlDocs) {
@@ -228,16 +233,16 @@ export default function VendorImportClient() {
           currentCount++;
 
           if (currentCount % 25 === 0) {
-              setProgress({ status: 'parsing', current: currentCount, total: totalToParse });
+              setProgress({ status: 'parsing', current: currentCount, total: totalToParse, staged: 0, updated: 0 });
               await new Promise(r => setTimeout(r, 15)); 
           }
         }
       }
 
-      setProgress({ status: 'parsing', current: totalToParse, total: totalToParse });
+      setProgress({ status: 'parsing', current: totalToParse, total: totalToParse, staged: 0, updated: 0 });
       await new Promise(r => setTimeout(r, 100)); 
 
-      setProgress({ status: 'syncing', current: 0, total: extractedProducts.length });
+      setProgress({ status: 'syncing', current: 0, total: extractedProducts.length, staged: 0, updated: 0 });
 
       let stagedCount = 0;
       let updatedCount = 0;
@@ -245,8 +250,13 @@ export default function VendorImportClient() {
       let syncFailed = false;
       let errorMessage = "";
 
-      const CHUNK_SIZE = 50;
+      const CHUNK_SIZE = 1; // Extremely safe chunk size; 100% guarantees no timeouts or rate limits
       for (let i = 0; i < extractedProducts.length; i += CHUNK_SIZE) {
+         if (stopSyncRef.current) {
+             toast.info("Sync cancelled by user.");
+             break;
+         }
+         
          const chunk = extractedProducts.slice(i, i + CHUNK_SIZE);
          const res = await fetch("/api/admin/vendor/sync-json", {
            method: "POST",
@@ -255,7 +265,9 @@ export default function VendorImportClient() {
               products: chunk, 
               overrideCategory: overrideCategory || undefined,
               vendorId: vendor.id,
-              vendorPrefix: vendor.prefix
+              vendorPrefix: vendor.prefix,
+              syncMode,
+              matchBy
            })
          });
          
@@ -269,7 +281,7 @@ export default function VendorImportClient() {
            break;
          }
          
-         setProgress({ status: 'syncing', current: Math.min(i + CHUNK_SIZE, extractedProducts.length), total: extractedProducts.length });
+         setProgress({ status: 'syncing', current: Math.min(i + CHUNK_SIZE, extractedProducts.length), total: extractedProducts.length, staged: stagedCount, updated: updatedCount });
       }
       
       if (!syncFailed) {
@@ -283,7 +295,7 @@ export default function VendorImportClient() {
       toast.error("An error occurred during upload.");
       console.error(err);
     } finally {
-      setProgress({ status: 'idle', current: 0, total: 0 });
+      setProgress({ status: 'idle', current: 0, total: 0, staged: 0, updated: 0 });
     }
   };
 
@@ -318,7 +330,7 @@ export default function VendorImportClient() {
         toast.success("Product approved and added to live catalog!");
         setStagedProducts(stagedProducts.filter(p => p.id !== product.id));
       } else if (data.isDuplicateWarning) {
-        if (window.confirm("⚠️ " + data.error + "\n\nAre you sure you want to import it anyway as a duplicate?")) {
+        if (window.confirm("âš ï¸ " + data.error + "\n\nAre you sure you want to import it anyway as a duplicate?")) {
             handleApprove(product, true);
         }
       } else {
@@ -412,6 +424,65 @@ export default function VendorImportClient() {
     }
   };
 
+  const handleRescan = async (type: "internal_match" | "deep_ai") => {
+    const selectedProducts = stagedProducts.filter(p => selectedIds.has(p.id!));
+    if (selectedProducts.length === 0) return;
+    
+    const isDeepAI = type === "deep_ai";
+    if (isDeepAI && !window.confirm(`This will use Gemini AI API credits to deeply scan ${selectedProducts.length} products. Proceed?`)) return;
+    
+    setIsRescanning(true);
+    toast.info(`Running ${isDeepAI ? "Deep AI Scan" : "Fast Internal Match"} on ${selectedProducts.length} items...`);
+    
+    let successCount = 0;
+    let newStaged = [...stagedProducts];
+    
+    for (const prod of selectedProducts) {
+        try {
+            const res = await fetch("/api/admin/vendor/rescan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    raw_title: prod.raw_title,
+                    image_url: prod.image_url,
+                    action: type
+                })
+            });
+            const data = await res.json();
+            if (data.success && data.data) {
+                const updatedData = data.data;
+                newStaged = newStaged.map(p => {
+                    if (p.id === prod.id) {
+                        return {
+                            ...p,
+                            category: updatedData.category && updatedData.category !== "unidentified" && updatedData.category !== "others" ? updatedData.category : p.category,
+                            brand: updatedData.brand || p.brand,
+                            technologies: updatedData.technologies?.length ? updatedData.technologies : p.technologies,
+                            resolution_mp: updatedData.resolution_mp || p.resolution_mp,
+                            channels: updatedData.channels || p.channels,
+                            rack_u_height: updatedData.rack_u_height || p.rack_u_height,
+                            cable_length_m: updatedData.cable_length_m || p.cable_length_m,
+                            power_voltage_v: updatedData.power_voltage_v || p.power_voltage_v,
+                            power_amperage_a: updatedData.power_amperage_a || p.power_amperage_a,
+                            power_wattage_w: updatedData.power_wattage_w || p.power_wattage_w,
+                            ai_confidence_score: updatedData.confidence_score,
+                            ai_reasoning: updatedData.ai_reasoning
+                        };
+                    }
+                    return p;
+                });
+                successCount++;
+            }
+        } catch (e) {
+            console.error("Rescan failed for product", prod.id, e);
+        }
+    }
+    
+    setStagedProducts(newStaged);
+    setIsRescanning(false);
+    toast.success(`Completed! Successfully found missing info for ${successCount} out of ${selectedProducts.length} items.`);
+  };
+
   return (
     <div className="bg-background min-h-screen pb-24">
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border shadow-sm">
@@ -480,31 +551,63 @@ export default function VendorImportClient() {
                  <div className="bg-muted/30 p-4 rounded-lg border">
                    <label className="text-sm font-medium block mb-2">Target Category Extraction (Optional)</label>
                  <select 
-                   value={overrideCategory}
-                   onChange={(e) => setOverrideCategory(e.target.value as VendorCategory | "")}
-                   className="w-full md:w-1/3 bg-background border rounded-lg px-3 py-2 text-sm"
-                 >
-                   <option value="">-- Let AI Decide Automatically --</option>
-                   <option value="camera">Camera Unit</option>
-                   <option value="recorder">Recorder (DVR/NVR)</option>
-                   <option value="storage">Storage (Hard Drive/SSD)</option>
-                   <option value="connector">Connectors (RJ45/BNC/DC)</option>
-                   <option value="cable">Cable (CAT6/HDMI)</option>
-                   <option value="power_device">Power Device (SMPS/Adapter)</option>
-                   <option value="installation">Installation & Services</option>
-                   <option value="amc">AMC (Maintenance)</option>
-                   <option value="display">Display Screen (LCD/TV)</option>
-                   <option value="mount">Camera Mount Box</option>
-                   <option value="rack">Racks (Recorder/Switch)</option>
-                   <option value="network">Network (Switch/Router)</option>
-                   <option value="accessory">Other Accessories</option>
-                   <option value="unidentified">Unidentified Product</option>
-                 </select>
-                 <p className="text-xs text-muted-foreground mt-2">
-                   Select a target category. The AI will strictly filter the upload, only extracting products it is &gt;70% confident belong to this category. All ambiguous items or mismatched products will be dumped into "Unidentified".
-                 </p>
-                </div>
-              </div>
+                    value={overrideCategory}
+                    onChange={(e) => setOverrideCategory(e.target.value as VendorCategory | "")}
+                    className="w-full md:w-1/3 bg-background border rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="">-- Let AI Decide Automatically --</option>
+                    <option value="cctv_camera">CCTV Camera (HD / IP / Wireless)</option>
+                    <option value="recorder">Recorder (DVR / NVR / XVR)</option>
+                    <option value="storage">Storage (Hard Disk / SSD / SD Card)</option>
+                    <option value="connector">Connector (BNC / DC / RJ45)</option>
+                    <option value="cable">Cable (3+1 Coaxial / CAT6)</option>
+                    <option value="hdmi_cable">HDMI Cable (for Display Screen)</option>
+                    <option value="power_device">Power Device (SMPS / PoE Switch / Adapter)</option>
+                    <option value="display">Display Screen (LCD / LED / TV)</option>
+                    <option value="camera_mount">Camera Mount (PVC Box / CCTV Stand)</option>
+                    <option value="rack">Rack (for Recorders / PoE Switch)</option>
+                    <option value="network">Network (Switch / P2P / Router)</option>
+                    <option value="accessories">Accessories</option>
+                    <option value="others">Others</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Select a target category. The AI will strictly filter the upload, only extracting products it is &gt;70% confident belong to this category. All ambiguous items or mismatched products will be dumped into "Unidentified".
+                  </p>
+                 </div>
+                 
+                 <div className="bg-muted/30 p-4 rounded-lg border">
+                   <label className="text-sm font-medium block mb-2">Sync Mode</label>
+                   <select 
+                     value={syncMode}
+                     onChange={(e) => setSyncMode(e.target.value as "all" | "new_only" | "updates_only")}
+                     className="w-full bg-background border rounded-lg px-3 py-2 text-sm"
+                   >
+                     <option value="all">Add New & Update Existing (Default)</option>
+                     <option value="new_only">Only Add New Products (Skip Existing)</option>
+                     <option value="updates_only">Only Update Existing (Skip New)</option>
+                   </select>
+                   <p className="text-xs text-muted-foreground mt-2">
+                     Control whether the system should look for new products to stage, update prices for products already in your live catalog, or both.
+                   </p>
+                 </div>
+                 
+                 <div className="bg-muted/30 p-4 rounded-lg border">
+                   <label className="text-sm font-medium block mb-2">Match Products By (Unique ID)</label>
+                   <select 
+                     value={matchBy}
+                     onChange={(e) => setMatchBy(e.target.value as any)}
+                     className="w-full bg-background border rounded-lg px-3 py-2 text-sm"
+                   >
+                     <option value="auto">Auto (Vendor ID &rarr; Internal SKU)</option>
+                     <option value="vendor_id">Vendor Product ID Only</option>
+                     <option value="internal_sku">Internal System SKU</option>
+                     <option value="title">Exact Product Title / Model</option>
+                   </select>
+                   <p className="text-xs text-muted-foreground mt-2">
+                     Choose the unique detail the system should use to identify if a product already exists in your live catalog.
+                   </p>
+                 </div>
+               </div>
                <div 
                  className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${
                    progress.status !== 'idle' ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10" : "border-border hover:border-indigo-500/50 hover:bg-muted/30"
@@ -564,16 +667,24 @@ export default function VendorImportClient() {
                  
                  {progress.status !== 'idle' ? (
                    <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
-                     <div className="flex items-center gap-3">
-                       <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" />
-                       <div className="text-left">
-                         <p className="text-sm font-semibold text-indigo-500">
-                           {progress.status === 'parsing' ? "Scraping items from files..." : "Syncing with cloud database..."}
-                         </p>
-                         <p className="text-xs text-muted-foreground mt-0.5">
-                           {progress.status === 'parsing' ? `${progress.current} of ${progress.total} products extracted` : `${progress.current} of ${progress.total} synced to cloud (${Math.round((progress.current / progress.total) * 100)}%)`}
-                         </p>
+                     <div className="flex items-center justify-between w-full">
+                       <div className="flex items-center gap-3">
+                         <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" />
+                         <div className="text-left">
+                           <p className="text-sm font-semibold text-indigo-500">
+                             {progress.status === 'parsing' ? "Scraping items from files..." : "Syncing with cloud database..."}
+                           </p>
+                           <p className="text-xs text-muted-foreground mt-0.5">
+                             {progress.status === 'parsing' ? `${progress.current} of ${progress.total} products extracted` : `${progress.current} of ${progress.total} processed (${Math.round((progress.current / progress.total) * 100)}%) â€” ${progress.staged} New, ${progress.updated} Updated`}
+                           </p>
+                         </div>
                        </div>
+                       <button 
+                         onClick={() => { stopSyncRef.current = true; }} 
+                         className="px-3 py-1.5 bg-destructive/10 text-destructive text-xs font-semibold rounded hover:bg-destructive/20 transition-colors"
+                       >
+                         Cancel
+                       </button>
                      </div>
                      
                      {/* Progress Bar */}
@@ -632,20 +743,20 @@ export default function VendorImportClient() {
                                className="bg-background border rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500"
                              >
                                 <option value="all">All Categories ({stagedProducts.length})</option>
-                                <option value="unidentified">Unidentified ({stagedProducts.filter(p => p.category === 'unidentified').length})</option>
-                                <option value="camera">Camera ({stagedProducts.filter(p => p.category === 'camera').length})</option>
+                                <option value="cctv_camera">CCTV Camera ({stagedProducts.filter(p => p.category === 'cctv_camera').length})</option>
                                 <option value="recorder">Recorder ({stagedProducts.filter(p => p.category === 'recorder').length})</option>
-                                <option value="cable">Cable ({stagedProducts.filter(p => p.category === 'cable').length})</option>
-                                <option value="network">Network ({stagedProducts.filter(p => p.category === 'network').length})</option>
                                 <option value="storage">Storage ({stagedProducts.filter(p => p.category === 'storage').length})</option>
                                 <option value="connector">Connector ({stagedProducts.filter(p => p.category === 'connector').length})</option>
+                                <option value="cable">Cable ({stagedProducts.filter(p => p.category === 'cable').length})</option>
+                                <option value="hdmi_cable">HDMI Cable ({stagedProducts.filter(p => p.category === 'hdmi_cable').length})</option>
                                 <option value="power_device">Power Device ({stagedProducts.filter(p => p.category === 'power_device').length})</option>
-                                <option value="display">Display ({stagedProducts.filter(p => p.category === 'display').length})</option>
-                                <option value="mount">Mount ({stagedProducts.filter(p => p.category === 'mount').length})</option>
+                                <option value="display">Display Screen ({stagedProducts.filter(p => p.category === 'display').length})</option>
+                                <option value="camera_mount">Camera Mount ({stagedProducts.filter(p => p.category === 'camera_mount').length})</option>
                                 <option value="rack">Rack ({stagedProducts.filter(p => p.category === 'rack').length})</option>
-                                <option value="accessory">Accessories ({stagedProducts.filter(p => p.category === 'accessory').length})</option>
-                                <option value="installation">Installation ({stagedProducts.filter(p => p.category === 'installation').length})</option>
-                                <option value="amc">AMC ({stagedProducts.filter(p => p.category === 'amc').length})</option>
+                                <option value="network">Network ({stagedProducts.filter(p => p.category === 'network').length})</option>
+                                <option value="accessories">Accessories ({stagedProducts.filter(p => p.category === 'accessories').length})</option>
+                                <option value="others">Others ({stagedProducts.filter(p => p.category === 'others').length})</option>
+                                <option value="unidentified">Unidentified ({stagedProducts.filter(p => p.category === 'unidentified').length})</option>
                              </select>
                          </div>
                          {selectedIds.size > 0 && (
@@ -654,29 +765,24 @@ export default function VendorImportClient() {
                              </button>
                          )}
                          {selectedIds.size > 0 && (
-                              <button onClick={() => {
-                                  setStagedProducts(stagedProducts.map(p => {
-                                      if (selectedIds.has(p.id!)) {
-                                          return {
-                                              ...p,
-                                              category: (guessCategory(p.raw_title) as VendorCategory) || p.category,
-                                              brand: guessBrand(p.raw_title) || p.brand,
-                                              technologies: guessTechnologies(p.raw_title),
-                                              resolution_mp: guessResolution(p.raw_title) || p.resolution_mp,
-                                              channels: guessChannels(p.raw_title) || p.channels,
-                                              rack_u_height: guessRackUHeight(p.raw_title) || p.rack_u_height,
-                                              cable_length_m: guessCableLength(p.raw_title) || p.cable_length_m,
-                                              power_voltage_v: guessVoltage(p.raw_title) || p.power_voltage_v,
-                                              power_amperage_a: guessAmperage(p.raw_title) || p.power_amperage_a,
-                                              power_wattage_w: guessWattage(p.raw_title) || p.power_wattage_w
-                                          };
-                                      }
-                                      return p;
-                                  }));
-                                  toast.success("Rescanned selected items using AI!");
-                              }} className="flex items-center gap-2 px-4 py-2 border border-indigo-500/30 text-indigo-400 rounded-lg text-sm font-medium hover:bg-indigo-500/10 transition-colors">
-                                  <RefreshCw className="w-4 h-4" /> Rescan Selected AI
-                              </button>
+                             <div className="flex gap-2">
+                               <button 
+                                 onClick={() => handleRescan("internal_match")} 
+                                 disabled={isRescanning}
+                                 className="flex items-center gap-2 px-4 py-2 border border-emerald-500/30 text-emerald-500 rounded-lg text-sm font-medium hover:bg-emerald-500/10 transition-colors disabled:opacity-50"
+                               >
+                                   <RefreshCw className={`w-4 h-4 ${isRescanning ? 'animate-spin' : ''}`} /> 
+                                   Fast Match (Internal)
+                               </button>
+                               <button 
+                                 onClick={() => handleRescan("deep_ai")} 
+                                 disabled={isRescanning}
+                                 className="flex items-center gap-2 px-4 py-2 border border-indigo-500/30 text-indigo-400 rounded-lg text-sm font-medium hover:bg-indigo-500/10 transition-colors disabled:opacity-50"
+                               >
+                                   <Play className="w-4 h-4" /> 
+                                   Deep AI Scan (Internet)
+                               </button>
+                             </div>
                           )}
                      </div>
                      <button onClick={handleClearAll} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-destructive/50 text-destructive hover:bg-destructive/10 text-sm font-medium transition-colors">
@@ -783,19 +889,19 @@ export default function VendorImportClient() {
                                    onChange={(e) => setStagedProducts(stagedProducts.map(p => p.id === product.id ? {...p, category: e.target.value as any} : p))}
                                    className="w-full bg-background border rounded px-2 py-1 text-sm"
                                  >
-                                    <option value="camera">Camera Unit</option>
-                                    <option value="recorder">Recorder (DVR/NVR)</option>
-                                    <option value="storage">Storage (Hard Drive/SSD)</option>
-                                    <option value="connector">Connectors (RJ45/BNC/DC)</option>
-                                    <option value="cable">Cable (CAT6/HDMI)</option>
-                                    <option value="power_device">Power Device (SMPS/Adapter)</option>
-                                    <option value="installation">Installation & Services</option>
-                                    <option value="amc">AMC (Maintenance)</option>
-                                    <option value="display">Display Screen (LCD/TV)</option>
-                                    <option value="mount">Camera Mount Box</option>
-                                    <option value="rack">Racks (Recorder/Switch)</option>
-                                    <option value="network">Network (Switch/Router)</option>
-                                    <option value="accessory">Other Accessories</option>
+                                    <option value="cctv_camera">CCTV Camera (HD / IP / Wireless)</option>
+                                    <option value="recorder">Recorder (DVR / NVR / XVR)</option>
+                                    <option value="storage">Storage (Hard Disk / SSD / SD Card)</option>
+                                    <option value="connector">Connector (BNC / DC / RJ45)</option>
+                                    <option value="cable">Cable (3+1 Coaxial / CAT6)</option>
+                                    <option value="hdmi_cable">HDMI Cable (for Display Screen)</option>
+                                    <option value="power_device">Power Device (SMPS / PoE Switch / Adapter)</option>
+                                    <option value="display">Display Screen (LCD / LED / TV)</option>
+                                    <option value="camera_mount">Camera Mount (PVC Box / CCTV Stand)</option>
+                                    <option value="rack">Rack (for Recorders / PoE Switch)</option>
+                                    <option value="network">Network (Switch / P2P / Router)</option>
+                                    <option value="accessories">Accessories</option>
+                                    <option value="others">Others</option>
                                  </select>
                               </div>
                               <div>
@@ -826,7 +932,7 @@ export default function VendorImportClient() {
                                    onClick={() => setStagedProducts(stagedProducts.map(p => p.id === product.id ? {...p, in_stock: p.in_stock === false ? true : false} : p))}
                                    className={`w-full text-left px-2 py-1 rounded border text-sm font-medium transition-colors ${product.in_stock !== false ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' : 'bg-destructive/10 text-destructive border-destructive/30'}`}
                                  >
-                                   {product.in_stock !== false ? '✅ In Stock' : '❌ Out of Stock'}
+                                   {product.in_stock !== false ? 'âœ… In Stock' : 'âŒ Out of Stock'}
                                  </button>
                               </div>
                               <div className="col-span-2">
@@ -849,11 +955,11 @@ export default function VendorImportClient() {
                            <div className="flex justify-end gap-3 pt-2">
                               <button onClick={async () => {
                                   try {
-                                      const toastId = toast.loading("Rescanning using AI...");
+                                      const toastId = toast.loading("Running Fast Internal Match...");
                                       const res = await fetch("/api/admin/vendor/rescan", {
                                           method: "POST",
                                           headers: { "Content-Type": "application/json" },
-                                          body: JSON.stringify({ raw_title: product.raw_title, image_url: product.image_url })
+                                          body: JSON.stringify({ raw_title: product.raw_title, image_url: product.image_url, action: "internal_match" })
                                       });
                                       const data = await res.json();
                                       
@@ -862,9 +968,9 @@ export default function VendorImportClient() {
                                               if (p.id === product.id) {
                                                   return {
                                                       ...p,
-                                                      category: data.data.category || p.category,
+                                                      category: data.data.category && data.data.category !== "unidentified" ? data.data.category : p.category,
                                                       brand: data.data.brand || p.brand,
-                                                      technologies: data.data.technologies,
+                                                      technologies: data.data.technologies?.length ? data.data.technologies : p.technologies,
                                                       resolution_mp: data.data.resolution_mp || p.resolution_mp,
                                                       channels: data.data.channels || p.channels,
                                                       rack_u_height: data.data.rack_u_height || p.rack_u_height,
@@ -872,25 +978,64 @@ export default function VendorImportClient() {
                                                       power_voltage_v: data.data.power_voltage_v || p.power_voltage_v,
                                                       power_amperage_a: data.data.power_amperage_a || p.power_amperage_a,
                                                       power_wattage_w: data.data.power_wattage_w || p.power_wattage_w,
-                                                      storage_type: data.data.storage_type || p.storage_type,
-                                                      storage_capacity_tb: data.data.storage_capacity_tb || p.storage_capacity_tb,
-                                                      network_ports: data.data.network_ports || p.network_ports,
-                                                      network_speed: data.data.network_speed || p.network_speed,
-                                                      _ai_confidence: data.data.confidence_score,
-                                                      _ai_reasoning: data.data.ai_reasoning
+                                                      ai_confidence_score: data.data.confidence_score,
+                                                      ai_reasoning: data.data.ai_reasoning
                                                   };
                                               }
                                               return p;
                                           }));
-                                          toast.success("Rescanned using AI!", { id: toastId });
+                                          toast.success("Internal Match Successful!", { id: toastId });
                                       } else {
-                                          toast.error(data.error || "Rescan failed", { id: toastId });
+                                          toast.error(data.error || "Match failed", { id: toastId });
+                                      }
+                                  } catch (err) {
+                                      toast.error("Failed to rescan");
+                                  }
+                              }} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 text-sm font-medium transition-colors">
+                                  <RefreshCw className="w-4 h-4" /> Fast Match
+                              </button>
+
+                              <button onClick={async () => {
+                                  if (!window.confirm("This will use Gemini AI API credits to deeply scan this product. Proceed?")) return;
+                                  try {
+                                      const toastId = toast.loading("Running Deep AI Scan...");
+                                      const res = await fetch("/api/admin/vendor/rescan", {
+                                          method: "POST",
+                                          headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ raw_title: product.raw_title, image_url: product.image_url, action: "deep_ai" })
+                                      });
+                                      const data = await res.json();
+                                      
+                                      if (res.ok && data.success) {
+                                          setStagedProducts(stagedProducts.map(p => {
+                                              if (p.id === product.id) {
+                                                  return {
+                                                      ...p,
+                                                      category: data.data.category && data.data.category !== "unidentified" ? data.data.category : p.category,
+                                                      brand: data.data.brand || p.brand,
+                                                      technologies: data.data.technologies?.length ? data.data.technologies : p.technologies,
+                                                      resolution_mp: data.data.resolution_mp || p.resolution_mp,
+                                                      channels: data.data.channels || p.channels,
+                                                      rack_u_height: data.data.rack_u_height || p.rack_u_height,
+                                                      cable_length_m: data.data.cable_length_m || p.cable_length_m,
+                                                      power_voltage_v: data.data.power_voltage_v || p.power_voltage_v,
+                                                      power_amperage_a: data.data.power_amperage_a || p.power_amperage_a,
+                                                      power_wattage_w: data.data.power_wattage_w || p.power_wattage_w,
+                                                      ai_confidence_score: data.data.confidence_score,
+                                                      ai_reasoning: data.data.ai_reasoning
+                                                  };
+                                              }
+                                              return p;
+                                          }));
+                                          toast.success("Deep AI Scan Successful!", { id: toastId });
+                                      } else {
+                                          toast.error(data.error || "Scan failed", { id: toastId });
                                       }
                                   } catch (err) {
                                       toast.error("Failed to rescan");
                                   }
                               }} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 text-sm font-medium transition-colors">
-                                  <RefreshCw className="w-4 h-4" /> Rescan AI
+                                  <Play className="w-4 h-4" /> Deep AI Scan
                               </button>
                               <button onClick={() => handleReject(product.id!)} className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-destructive/10 hover:text-destructive text-sm font-medium transition-colors">
                                   <XCircle className="w-4 h-4" /> Reject

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useEffect } from "react";
 import type { ReactNode } from "react";
@@ -10,7 +10,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { SortableContext, verticalListSortingStrategy, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Build a distinct list of paths from the catalog
 function buildTree(products: Product[]) {
@@ -95,7 +95,7 @@ function getLeafName(path: string) {
   return parts[parts.length - 1];
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function CompatibilityMatrix({ initialProducts }: { initialProducts: Product[] }) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -301,7 +301,7 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center">
-                        {product.category === 'camera' ? <Package className="w-4 h-4 text-primary" /> : <Cpu className="w-4 h-4 text-success" />}
+                        {product.category === 'cctv_camera' ? <Package className="w-4 h-4 text-primary" /> : <Cpu className="w-4 h-4 text-success" />}
                       </div>
                       <div>
                         <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{product.display_name}</h3>
@@ -333,7 +333,7 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
                   </div>
 
                   {/* Compatibility Rules Display */}
-                  {(product.category === "recorder" || product.category === "accessory") && (
+                  {(product.category === "recorder" || product.category === "accessories") && (
                     <div className="sm:text-right space-y-2 max-w-xs">
                       <p className="text-[11px] font-semibold text-success flex items-center sm:justify-end gap-1.5">
                         <Link2 className="w-3 h-3" /> Compatible With:

@@ -28,25 +28,24 @@ import {
 } from "@react-pdf/renderer";
 
 import path from "path";
+import { FONT_REGULAR, FONT_SEMIBOLD, FONT_BOLD } from "@/lib/pdf-fonts";
 
 // ─── Font Registration ────────────────────────────────────────────────────────
-// Use process.cwd() to resolve the public directory safely in Next.js Server environments
-const publicDir = typeof process !== "undefined" && process.cwd ? path.join(process.cwd(), "public") : "";
-
+// Fonts embedded as base64 data URIs — zero network requests, works client-side and server-side
 Font.register({
   family: "DM Sans",
   fonts: [
-    { src: `${publicDir}/fonts/dm-sans.woff2`, fontWeight: 400 },
-    { src: `${publicDir}/fonts/dm-sans.woff2`, fontWeight: 500 },
-    { src: `${publicDir}/fonts/dm-sans.woff2`, fontWeight: 700 },
+    { src: FONT_REGULAR, fontWeight: 400 },
+    { src: FONT_SEMIBOLD, fontWeight: 500 },
+    { src: FONT_BOLD, fontWeight: 700 },
   ],
 });
 
 Font.register({
   family: "Playfair Display",
   fonts: [
-    { src: `${publicDir}/fonts/playfair-display.woff2`, fontWeight: 600 },
-    { src: `${publicDir}/fonts/playfair-display.woff2`, fontWeight: 700 },
+    { src: FONT_SEMIBOLD, fontWeight: 600 },
+    { src: FONT_BOLD, fontWeight: 700 },
   ],
 });
 
