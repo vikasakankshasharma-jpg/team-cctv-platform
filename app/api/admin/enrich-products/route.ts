@@ -3,13 +3,12 @@ import { adminDb } from "@/lib/firebase-admin";
 import { GoogleGenAI } from "@google/genai";
 import { requireAdmin } from "@/lib/auth-server";
 
-const ai = new GoogleGenAI({});
-
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface EnrichRequest {
   product_ids: string[];
   category: "cctv_camera" | "recorder";
+  api_key?: string;
 }
 
 export interface EnrichedField {
@@ -29,7 +28,7 @@ export interface EnrichmentRow {
 
 // ─── Gemini AI Extractor ─────────────────────────────────────────────────────
 
-async function extractCameraSpecs(products: any[]): Promise<Record<string, any>> {
+async function extractCameraSpecs(products: any[], ai: GoogleGenAI): Promise<Record<string, any>> {
   const productList = products.map(p => ({
     id: p.id,
     display_name: p.display_name || "",
@@ -87,7 +86,7 @@ Return ONLY valid JSON. No explanation text.`;
   }
 }
 
-async function extractRecorderSpecs(products: any[]): Promise<Record<string, any>> {
+async function extractRecorderSpecs(products: any[], ai: GoogleGenAI): Promise<Record<string, any>> {
   const productList = products.map(p => ({
     id: p.id,
     display_name: p.display_name || "",
@@ -269,7 +268,9 @@ export async function POST(req: NextRequest) {
   try {
     await requireAdmin();
     const body: EnrichRequest = await req.json();
-    const { product_ids, category } = body;
+    const { product_ids, category, api_key } = body;
+    
+    const ai = api_key ? new GoogleGenAI({ apiKey: api_key }) : new GoogleGenAI({});
 
     if (!product_ids?.length || !category) {
       return NextResponse.json({ error: "product_ids and category are required" }, { status: 400 });
@@ -297,8 +298,8 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < allProducts.length; i += BATCH_SIZE) {
       const batchProducts = allProducts.slice(i, i + BATCH_SIZE);
       const results = category === "cctv_camera"
-        ? await extractCameraSpecs(batchProducts)
-        : await extractRecorderSpecs(batchProducts);
+        ? await extractCameraSpecs(batchProducts, ai)
+        : await extractRecorderSpecs(batchProducts, ai);
       allAiResults = { ...allAiResults, ...results };
     }
 
@@ -309,6 +310,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ rows, total_analyzed: allProducts.length });
   } catch (error: any) {
     console.error("Enrich products error:", error);
+    try {
+      require('fs').appendFileSync('ai-error.log', new Date().toISOString() + ': ' + (error.message || 'Unknown error') + '\\n');
+    } catch(e) {}
     return NextResponse.json({ error: error.message || "Failed to analyze products" }, { status: 500 });
   }
 }

@@ -84,9 +84,15 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     }
   }
 
+  // Normalize technology to match product database (Wizard might pass "Analog", "WiFi", or "4G")
+  const rawTech = (selection.technology || "HD").toLowerCase();
+  if (rawTech === "analog" || rawTech === "hd") selection.technology = "HD";
+  else if (rawTech === "wifi" || rawTech === "4g" || rawTech === "wireless") selection.technology = "Wireless";
+  else selection.technology = "IP";
+
   // 0. Industrial Threshold Check — dynamic based on recorder catalog capacity
   const catalogCapacity = getCatalogCapacity(products);
-  const techKey = (selection.technology || "HD") as "HD" | "IP" | "Wireless";
+  const techKey = selection.technology as "HD" | "IP" | "Wireless";
   const maxQuotableForTech = catalogCapacity[techKey] ?? (settings.max_supported_cameras || 16);
   const isIndustrial = selection.camera_count > maxQuotableForTech;
 

@@ -37,7 +37,7 @@ test.describe('E2E Visual Screen-by-Screen Scanner', () => {
     // ---- 3. VISIT CONFIGURATOR PAGE ----
     console.log('Navigating to Configurator...');
     await page.goto('/quote/mock-lead?name=E2E+Visual+Client&mobile=9988776655');
-    await page.waitForSelector('text=Compare Featured Systems', { timeout: 15000 });
+    await page.waitForSelector('text=Curated Packages', { timeout: 15000 });
     await page.waitForTimeout(3000); // Allow data fetch and pricing rendering
     
     // Screenshot 3a: Landing & Comparison Cards

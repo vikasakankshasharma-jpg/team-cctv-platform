@@ -20,6 +20,9 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       days_off: [0] // Sunday
     }
   });
+  const [apiKeysText, setApiKeysText] = useState<string>(
+    initialSettings.gemini_api_keys ? initialSettings.gemini_api_keys.join("\n") : ""
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -29,7 +32,15 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     setShowSuccess(false);
     
     try {
-      await updateSettings(formData);
+      const payload = { ...formData };
+      
+      // Parse the local text state into the array before saving
+      payload.gemini_api_keys = apiKeysText
+        .split("\n")
+        .map(k => k.trim())
+        .filter(k => k.length > 0);
+        
+      await updateSettings(payload);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
@@ -636,6 +647,34 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section: AI & Enrichment */}
+      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all mt-6">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+            <Zap className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold text-foreground tracking-tight">AI & Enrichment Settings</h2>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Gemini API Keys & AI Limits</p>
+          </div>
+        </div>
+
+        <div className="space-y-4 p-5 rounded-xl bg-secondary/30 border border-border">
+          <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Gemini API Keys (For Auto-Rotation)</h3>
+          <div className="space-y-2">
+            <textarea 
+              name="gemini_api_keys"
+              value={apiKeysText}
+              onChange={(e) => setApiKeysText(e.target.value)}
+              placeholder="Paste one API key per line..."
+              rows={4}
+              className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none font-mono text-xs leading-relaxed whitespace-pre-wrap transition-all shadow-sm"
+            />
+            <p className="text-[10px] font-medium text-muted-foreground italic">If the AI enricher hits a rate limit, it will automatically switch to the next key. Add 3-4 free tier keys from Google AI Studio.</p>
           </div>
         </div>
       </div>

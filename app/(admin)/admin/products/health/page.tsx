@@ -1,4 +1,4 @@
-﻿import { requireAdmin } from "@/lib/auth-server";
+import { requireAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { HeartPulse, AlertCircle, CheckCircle2, ShieldAlert, Package, Database, Sparkles, ChevronRight } from "lucide-react";
@@ -30,6 +30,19 @@ export default async function CatalogHealthPage() {
     missing_compatibility: products.filter(p => (p.category === "recorder" || p.category === "accessories") && (!p.compatible_paths || p.compatible_paths.length === 0)),
     uncategorized: products.filter(p => p.category === "unidentified" || !p.category),
     missing_specifications: products.filter(p => !p.technologies || p.technologies.length === 0 || (p.technologies.length === 1 && p.technologies[0] === 'Common')),
+    missing_image: products.filter(p => !p.image_url),
+  };
+
+  const attributeMap: Record<string, string> = {
+    missing_catalog_path: "catalog_path",
+    missing_cost: "base_cost",
+    missing_margin: "margin_percentage",
+    zero_unit_price: "unit_price",
+    missing_mp: "resolution_mp",
+    missing_compatibility: "compatible_paths",
+    uncategorized: "category",
+    missing_specifications: "technologies",
+    missing_image: "image_url"
   };
 
   const totalIssues = Object.values(issues).reduce((acc, list) => acc + list.length, 0);
@@ -130,12 +143,19 @@ export default async function CatalogHealthPage() {
                 </div>
               ) : (
                 list.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 group">
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-black text-zinc-900 dark:text-white truncate">{p.display_name}</p>
+                  <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 group hover:border-amber-500/30 transition-colors">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-[11px] font-black text-zinc-900 dark:text-white truncate">{p.display_name}</p>
+                      </div>
                       <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest truncate">{p.technical_name}</p>
+                      <div className="mt-2">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-[4px] bg-red-500/10 text-red-500 text-[8.5px] font-bold uppercase tracking-wider">
+                          Missing: {attributeMap[key] || "unknown_attribute"}
+                        </span>
+                      </div>
                     </div>
-                    <Link href={`/admin/products?edit=${p.id}`} className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Link href={`/admin/products?edit=${p.id}`} className="shrink-0 p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
                       <ShieldAlert className="w-3 h-3 text-blue-500" />
                     </Link>
                   </div>

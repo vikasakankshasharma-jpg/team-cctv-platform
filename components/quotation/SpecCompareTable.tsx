@@ -170,27 +170,35 @@ export function SpecCompareTable({
     setCollapsedSections((prev) => ({ ...prev, [title]: !prev[title] }));
   };
 
-  const columnData = useMemo(() => {
+  const tableColumns = useMemo(() => {
     return compareOptions.slice(0, 4).map((opt) => {
+      let plan_type: "budget" | "recommended" | "premium" = "recommended";
+      if (typeof opt.option === "number") {
+        if (opt.option === 1) plan_type = "budget";
+        else if (opt.option === 3) plan_type = "premium";
+      } else if (typeof opt.option === "string") {
+        plan_type = opt.option as any;
+      }
+
       const baseSelection: ConfiguratorSelection = {
         ...selection,
         technology: opt.technology,
         selected_camera_option: typeof opt.option === "number" ? opt.option : undefined,
-        plan_type: typeof opt.option === "string" ? (opt.option as any) : "recommended",
-        selected_camera_id: undefined,
+        plan_type,
+        selected_camera_id: typeof opt.option === "string" ? opt.option : undefined,
       };
 
       const quote = calculatePricing({ selection: baseSelection, products, addons: [], settings, cablingDone });
       const cameraItem = quote.items.find((item) => products.some((p) => p.id === item.product_id && p.category === "cctv_camera"));
-      const cameraProduct = cameraItem ? products.find((p) => p.id === cameraItem.product_id) : undefined;
+      const cam = cameraItem ? products.find((p) => p.id === cameraItem.product_id) : undefined;
       const recorderItem = quote.items.find((item) => products.some((p) => p.id === item.product_id && p.category === "recorder"));
-      const recorderProduct = recorderItem ? products.find((p) => p.id === recorderItem.product_id) : undefined;
-      const scoreResult = cameraProduct ? calculateSystemScore(cameraProduct, { recordingDays: selection.recording_days }) : null;
+      const rec = recorderItem ? products.find((p) => p.id === recorderItem.product_id) : undefined;
+      const scoreResult = cam ? calculateSystemScore(cam, { recordingDays: selection.recording_days }) : null;
 
       return { 
         opt, 
-        cameraProduct, 
-        recorderProduct,
+        cam, 
+        rec,
         quote,
         selection: baseSelection,
         scoreResult 
@@ -198,14 +206,14 @@ export function SpecCompareTable({
     });
   }, [compareOptions, selection, products, settings, cablingDone]);
 
-  const columnHeaders = columnData.map((col, idx) => {
+  const columnHeaders = tableColumns.map((col, idx) => {
     if (idx === 0) return "Standard";
     if (idx === 1) return "Professional";
     if (idx === 2) return "Elite";
     return "Custom";
   });
 
-  const gridColsClass = columnData.length === 1 ? "grid-cols-2" : columnData.length === 2 ? "grid-cols-3" : columnData.length === 3 ? "grid-cols-4" : "grid-cols-5";
+  const gridColsClass = tableColumns.length === 1 ? "grid-cols-2" : tableColumns.length === 2 ? "grid-cols-3" : tableColumns.length === 3 ? "grid-cols-4" : "grid-cols-5";
 
   const isSameValue = (values: any[]) => {
     if (values.length === 0) return true;
@@ -216,7 +224,7 @@ export function SpecCompareTable({
   // Mobile scroll tracking for spec table
   const specScrollRef = useRef<HTMLDivElement>(null);
   const [activeSpecCol, setActiveSpecCol] = useState(0);
-  const totalSpecCols = columnData.length;
+  const totalSpecCols = tableColumns.length;
 
   useEffect(() => {
     const container = specScrollRef.current;
@@ -267,7 +275,7 @@ export function SpecCompareTable({
           <div className="p-5 flex items-center font-medium text-[#86868b] text-sm uppercase tracking-wider">
             Features
           </div>
-          {columnData.map((col, idx) => (
+          {tableColumns.map((col, idx) => (
             <div key={idx} className="p-5 border-l border-[#d2d2d7] dark:border-[#424245] flex flex-col items-center justify-between text-center">
               <h3 className="font-semibold text-lg text-[#1d1d1f] dark:text-[#f5f5f7]">
                 {columnHeaders[idx]}
@@ -292,7 +300,7 @@ export function SpecCompareTable({
           {SECTIONS.map((section) => {
             const visibleRows = section.rows.filter((row) => {
               if (!showDiffOnly) return true;
-              const values = columnData.map((col) => row.getValue(col));
+              const values = tableColumns.map((col) => row.getValue(col));
               return !isSameValue(values);
             });
 
@@ -314,14 +322,14 @@ export function SpecCompareTable({
                 {!isCollapsed && (
                   <div className="flex flex-col">
                     {visibleRows.map((row, rowIdx) => {
-                      const values = columnData.map((col) => row.getValue(col));
+                      const values = tableColumns.map((col) => row.getValue(col));
                       
                       return (
                         <div key={row.key} className={`grid ${gridColsClass} border-b border-[#d2d2d7] dark:border-[#424245] last:border-0 transition-colors bg-white dark:bg-[#1d1d1f] hover:bg-[#fbfbfd] dark:hover:bg-[#2d2d2f]`}>
                           <div className="p-4 flex items-center text-[13px] font-medium text-[#86868b]">
                             {row.label}
                           </div>
-                          {columnData.map((col, colIdx) => {
+                          {tableColumns.map((col, colIdx) => {
                             const val = values[colIdx];
                             return (
                               <div key={colIdx} className="p-4 border-l border-[#d2d2d7] dark:border-[#424245] flex flex-col items-center justify-center text-center">
@@ -358,7 +366,7 @@ export function SpecCompareTable({
 
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-2.5">
-                {columnData.map((_, i) => (
+                {tableColumns.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => scrollSpecToCol(i)}
