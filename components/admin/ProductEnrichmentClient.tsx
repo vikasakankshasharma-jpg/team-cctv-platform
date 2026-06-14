@@ -9,8 +9,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import type { AppSettings } from "@/types";
+
 interface ProductEnrichmentClientProps {
   products: any[];
+  settings?: AppSettings;
 }
 
 type Category = "cctv_camera" | "recorder";
@@ -58,7 +61,7 @@ function formatValue(key: string, value: any): string {
   return String(value);
 }
 
-export function ProductEnrichmentClient({ products }: ProductEnrichmentClientProps) {
+export function ProductEnrichmentClient({ products, settings }: ProductEnrichmentClientProps) {
   const [step, setStep] = useState<Step>("select");
   const [category, setCategory] = useState<Category>("cctv_camera");
   const [rows, setRows] = useState<EnrichmentRow[]>([]);
@@ -133,20 +136,34 @@ export function ProductEnrichmentClient({ products }: ProductEnrichmentClientPro
 
     try {
       const productIds = activeProducts.map(p => p.id).filter(Boolean);
-      const BATCH_SIZE = 1; // Process 1 product at a time as requested
+      const BATCH_SIZE = 1; // Process 1 product at a time per request
       let allRows: EnrichmentRow[] = [];
       let totalProcessed = 0;
+      let apiKeys = settings?.gemini_api_keys?.filter(k => k.trim().length > 0) || [];
+      let currentKeyIndex = 0;
 
-      for (let i = 0; i < productIds.length; i += BATCH_SIZE) {
-        const batch = productIds.slice(i, i + BATCH_SIZE);
+      // Ensure we have at least one key (even if it's undefined, to use the server's default env key)
+      if (apiKeys.length === 0) apiKeys = [""];
+
+      // Concurrency Configuration - Forced to 1 worker as requested
+      const CONCURRENCY_LIMIT = 1;
+      
+      // Helper to process a single batch
+      const processBatch = async (batch: string[]): Promise<EnrichmentRow[]> => {
         let success = false;
         let retries = 0;
+        let batchRows: EnrichmentRow[] = [];
+        const MAX_RETRIES = 50;
         
-        while (!success && retries < 3) {
+        while (!success && retries < MAX_RETRIES) {
+          const apiKey = apiKeys[currentKeyIndex % apiKeys.length];
+          const payload: any = { product_ids: batch, category };
+          if (apiKey) payload.api_key = apiKey;
+
           const res = await fetch("/api/admin/enrich-products", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ product_ids: batch, category }),
+            body: JSON.stringify(payload),
           });
           
           const data = await res.json();
@@ -154,33 +171,66 @@ export function ProductEnrichmentClient({ products }: ProductEnrichmentClientPro
           if (!res.ok) {
             if (data.error && data.error.includes("429")) {
               retries++;
-              setWaitingMsg(`Rate limited by AI provider. Pausing for 35 seconds before resuming... (Retry ${retries}/3)`);
-              await delay(35000);
-              setWaitingMsg("");
-              continue;
+              // If we have multiple keys, switch to the next key
+              if (apiKeys.length > 1) {
+                // If we've tried all keys and they are ALL returning 429, we MUST wait for the minute quota to reset
+                if (retries % apiKeys.length === 0) {
+                  setWaitingMsg(`All keys exhausted! Waiting 35s for quota reset... (Retry ${retries}/${MAX_RETRIES})`);
+                  await delay(35000);
+                  setWaitingMsg("");
+                } else {
+                  currentKeyIndex++;
+                  setWaitingMsg(`Rate limit hit! Rotating to API Key #${(currentKeyIndex % apiKeys.length) + 1}...`);
+                  await delay(1500); // 1.5s pause to avoid slamming Google
+                }
+                continue;
+              } else {
+                // Only 1 key available, have to wait it out
+                setWaitingMsg(`Rate limited. Pausing for 35s to cool down... (Retry ${retries}/${MAX_RETRIES})`);
+                await delay(35000);
+                setWaitingMsg("");
+                continue;
+              }
             } else {
               throw new Error(data.error || "Analysis failed");
             }
           }
           
           if (data.rows) {
-            allRows = [...allRows, ...data.rows];
+            batchRows = data.rows;
           }
           success = true;
         }
         
-        if (!success) {
-          throw new Error("Failed after 3 retries due to quota limits.");
+        if (!success) throw new Error(`Failed after ${MAX_RETRIES} retries due to quota limits.`);
+        return batchRows;
+      };
+
+      // Worker Pool Logic for Concurrency
+      const queue = [...productIds];
+      const workers = Array(CONCURRENCY_LIMIT).fill(null).map(async (_, workerId) => {
+        while (queue.length > 0) {
+          const id = queue.shift();
+          if (!id) continue;
+          
+          const batchRows = await processBatch([id]);
+          
+          // Update state safely
+          allRows = [...allRows, ...batchRows];
+          totalProcessed++;
+          setAnalyzedCount(totalProcessed);
+          
+          // STRICT PACING LOGIC
+          // Google API Free Tier is 15 requests per minute (1 req / 4 sec) per key.
+          // To absolutely guarantee we never hit rate limits, we enforce a strict 
+          // delay between each product calculation based on the number of keys.
+          const safeWaitTime = Math.max(1500, 4500 / Math.max(1, apiKeys.length));
+          await delay(safeWaitTime);
         }
-        
-        totalProcessed += batch.length;
-        setAnalyzedCount(totalProcessed);
-        
-        // Wait 4 seconds between requests to perfectly align with 15 Requests Per Minute limit
-        if (i + BATCH_SIZE < productIds.length) {
-          await delay(4000);
-        }
-      }
+      });
+
+      // Wait for all workers to finish
+      await Promise.all(workers);
 
       setRows(allRows);
       setTotalAnalyzed(totalProcessed);

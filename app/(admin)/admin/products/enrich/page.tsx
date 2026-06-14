@@ -3,7 +3,8 @@ import { adminDb } from "@/lib/firebase-admin";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Sparkles } from "lucide-react";
 import { ProductEnrichmentClient } from "@/components/admin/ProductEnrichmentClient";
-import type { Product } from "@/types";
+import type { Product, AppSettings } from "@/types";
+import { getSettingsConfig } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,8 @@ export default async function ProductEnrichPage() {
       updated_at: (d.updated_at as any)?.toDate?.()?.toISOString() || d.updated_at || null,
     };
   }) as Product[];
+
+  const settings = (await getSettingsConfig()) as unknown as AppSettings;
 
   return (
     <div className="space-y-6">
@@ -63,7 +66,7 @@ export default async function ProductEnrichPage() {
         ))}
       </div>
 
-      <ProductEnrichmentClient products={products} />
+      <ProductEnrichmentClient products={products} settings={settings || undefined} />
     </div>
   );
 }

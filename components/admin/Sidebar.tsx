@@ -9,7 +9,7 @@ import {
   FileBox, BadgeDollarSign, TrendingUp, Workflow, ShieldCheck,
   ChevronRight, Calendar, IndianRupee, Zap, Link2, Megaphone,
   Grid3x3, PanelLeftClose, PanelLeftOpen, Database, Building2,
-  HeartPulse, MapPin, Bell, Menu, X, Sparkles,
+  HeartPulse, MapPin, Bell, Menu, X, Sparkles, FileEdit,
 } from "lucide-react";
 
 // ─── NAVIGATION STRUCTURE ─────────────────────────────────────────────────────
@@ -40,6 +40,7 @@ const NAV_GROUPS = [
       { name: "Vendor Import",       href: "/admin/vendor-import",      icon: Package },
       { name: "Data Management",     href: "/admin/products/bulk",      icon: Database },
       { name: "AI Spec Enrichment",  href: "/admin/products/enrich",    icon: Sparkles },
+      { name: "Manual Spec Editor",  href: "/admin/products/manual-enrich", icon: FileEdit },
       { name: "Compatibility",       href: "/admin/compatibility",      icon: Link2 },
       { name: "Catalog Health",      href: "/admin/products/health",    icon: HeartPulse },
       { name: "Live Pricing",        href: "/admin/pricing",            icon: IndianRupee },

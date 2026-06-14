@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { load } from "@cashfreepayments/cashfree-js";
 import type { Cashfree } from "@cashfreepayments/cashfree-js";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase-client";
+import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -67,87 +68,41 @@ function formatDate(dateStr: string) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatusPill({ status }: { status: QuoteData["status"] }) {
+function StatusBadge({ status }: { status: QuoteData["status"] }) {
   const map = {
-    pending:  { label: "Awaiting Approval", bg: "#FFF4E0", color: "#A05F00", border: "#F5D080", dot: "#C8922A" },
-    accepted: { label: "Accepted",          bg: "#E8F5F0", color: "#0A7A5A", border: "#A3D9C6", dot: "#0A7A5A" },
-    expired:  { label: "Expired",           bg: "#FDF0EE", color: "#C0392B", border: "#F0B8B3", dot: "#C0392B" },
-    rejected: { label: "Rejected",          bg: "#F5F5F5", color: "#6B7380", border: "#D4D4D0", dot: "#6B7380" },
+    pending:  { label: "Awaiting Approval", classes: "bg-amber-100/50 text-amber-800 border-amber-200/50" },
+    accepted: { label: "Accepted",          classes: "bg-emerald-100/50 text-emerald-800 border-emerald-200/50" },
+    expired:  { label: "Expired",           classes: "bg-rose-100/50 text-rose-800 border-rose-200/50" },
+    rejected: { label: "Rejected",          classes: "bg-zinc-100/50 text-zinc-600 border-zinc-200/50" },
   };
   const s = map[status] || map.pending;
+  
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "5px 14px",
-        borderRadius: 100,
-        fontSize: 12.5,
-        fontWeight: 600,
-        letterSpacing: ".03em",
-        background: s.bg,
-        color: s.color,
-        border: `1px solid ${s.border}`,
-      }}
-    >
-      <span
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: "50%",
-          background: s.dot,
-          flexShrink: 0,
-        }}
-      />
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide border backdrop-blur-sm ${s.classes}`}>
+      {status === 'accepted' && <CheckCircle2 className="w-3.5 h-3.5" />}
+      {status === 'pending' && <Clock className="w-3.5 h-3.5" />}
       {s.label}
     </span>
   );
 }
 
-function TermCard({
-  icon,
-  iconBg,
-  title,
-  body,
-}: {
-  icon: React.ReactNode;
-  iconBg: string;
-  title: string;
-  body: string;
-}) {
+function TermCard({ icon, title, body, delay }: { icon: React.ReactNode; title: string; body: string; delay: number }) {
   return (
-    <div
-      style={{
-        background: "#F7F7F3",
-        border: "1px solid #E4E4DC",
-        borderRadius: 8,
-        padding: "14px 14px 12px",
-        display: "flex",
-        gap: 10,
-        alignItems: "flex-start",
-      }}
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay }}
+      whileHover={{ scale: 1.02, y: -2 }}
+      className="bg-white/60 backdrop-blur-xl border border-zinc-200/60 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow"
     >
-      <div
-        style={{
-          width: 30,
-          height: 30,
-          borderRadius: 7,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          marginTop: 1,
-          background: iconBg,
-        }}
-      >
+      <div className="w-10 h-10 rounded-full bg-zinc-100 text-zinc-800 flex items-center justify-center">
         {icon}
       </div>
       <div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "#1C1C28", marginBottom: 2 }}>{title}</div>
-        <div style={{ fontSize: 11.5, color: "#6B7380", lineHeight: 1.5 }}>{body}</div>
+        <h4 className="text-sm font-semibold text-zinc-900 mb-1">{title}</h4>
+        <p className="text-xs text-zinc-500 leading-relaxed">{body}</p>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -155,15 +110,11 @@ function TermCard({
 
 export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const [accepted, setAccepted] = useState(quote.status === "accepted");
-  const [isAccepting, setIsAccepting] = useState(false);
   const [isPayingEMI, setIsPayingEMI] = useState(false);
   const [isPayingFull, setIsPayingFull] = useState(false);
   const [isPayingAdvance, setIsPayingAdvance] = useState(false);
   const [cashfree, setCashfree] = useState<Cashfree | null>(null);
 
-  const NAVY = "#0F1F3D";
-  const GOLD = "#C8922A";
-  
   const subtotal = quote.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
   const total = subtotal + (subtotal * quote.gstPercent / 100);
   const halfGst = (subtotal * quote.gstPercent / 100) / 2;
@@ -173,7 +124,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   useEffect(() => {
     const initCashfree = async () => {
       try {
-        const cf = await load({ mode: "sandbox" }); // Change to "production" when live
+        const cf = await load({ mode: "sandbox" }); 
         setCashfree(cf);
       } catch (err) {
         console.error("Failed to load Cashfree SDK", err);
@@ -217,8 +168,6 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     }
   };
 
-  const handlePayEMI = () => handlePayment("full", "emi");
-
   const handleDownloadPDF = async () => {
     try {
       toast.info("Generating your PDF...");
@@ -250,620 +199,260 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     }
   };
 
+  // Animation variants
+  const fadeIn: any = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } };
+  const staggerContainer: any = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#FAFAF7",
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-      }}
-      className="px-3 sm:px-4 py-6 pb-20"
-    >
-      <div style={{ maxWidth: 860, margin: "0 auto" }}>
+    <div className="min-h-screen bg-[#F5F5F7] text-zinc-900 font-sans pb-24 selection:bg-zinc-200">
+      <div className="max-w-[800px] mx-auto px-4 sm:px-6 pt-12 sm:pt-20">
 
-        {/* ← Back to configurator */}
-        {!accepted && (
-          <a
-            href={`/quote/${quote.leadId}`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13,
-              fontWeight: 500,
-              color: "#6B7380",
-              textDecoration: "none",
-              marginBottom: 16,
-              transition: "color .15s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#1C1C28")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#6B7380")}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Modify Quote
-          </a>
-        )}
-
-        {/* ── Status bar ─────────────────────────────────────────────── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 8 }}>
-          <StatusPill status={accepted ? "accepted" : quote.status} />
-          {!accepted && (
-            <span
-              style={{
-                fontSize: 12,
-                color: "#6B7380",
-                background: "white",
-                border: "1px solid #E4E4DC",
-                padding: "5px 12px",
-                borderRadius: 100,
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              ⏱ Valid until {formatDate(quote.validUntil)}
-              {daysLeft > 0 && (
-                <strong style={{ color: daysLeft <= 3 ? "#C0392B" : "#A05F00" }}>
-                  &nbsp;· {daysLeft}d left
-                </strong>
+        {/* Top Actions & Status */}
+        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            {!accepted && (
+              <a href={`/quote/${quote.leadId}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors mb-4">
+                <ChevronLeft className="w-4 h-4" /> Modify Configuration
+              </a>
+            )}
+            <div className="flex items-center gap-3">
+              <StatusBadge status={accepted ? "accepted" : quote.status} />
+              {!accepted && daysLeft > 0 && (
+                <span className="text-xs font-medium text-zinc-500 tracking-wide">
+                  Valid until {formatDate(quote.validUntil)} ({daysLeft}d left)
+                </span>
               )}
-              {daysLeft === 0 && <strong style={{ color: "#C0392B" }}>&nbsp;· Expires today</strong>}
-            </span>
-          )}
-        </div>
-
-        {/* ── Main card ─────────────────────────────────────────────── */}
-        <div
-          style={{
-            background: "white",
-            borderRadius: 10,
-            boxShadow: "0 12px 40px rgba(15,31,61,.13)",
-            overflow: "hidden",
-            border: "1px solid rgba(228,228,220,.6)",
-          }}
-        >
-
-          {/* ── Header ──────────────────────────────────────────────── */}
-          <div
-            style={{
-              background: NAVY,
-              position: "relative",
-              overflow: "hidden",
-            }}
-            className="px-5 py-6 sm:px-9 sm:py-8"
-          >
-            {/* decorative circles */}
-            <div style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "rgba(200,146,42,.07)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", bottom: -40, left: -30, width: 160, height: 160, borderRadius: "50%", background: "rgba(255,255,255,.03)", pointerEvents: "none" }} />
-
-            {/* brand + quote number */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, position: "relative", zIndex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 42, height: 42, background: GOLD, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M23 7 16 12l7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                  </svg>
-                </div>
-                <div>
-                  <div style={{ color: "white", fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, lineHeight: 1.1 }}>TEAM CCTV</div>
-                  <div style={{ color: "rgba(255,255,255,.45)", fontSize: 11, fontWeight: 400, marginTop: 2, letterSpacing: ".04em", textTransform: "uppercase" }}>Smart Security Solutions · Jaipur</div>
-                </div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ color: "rgba(255,255,255,.4)", fontSize: 10.5, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase" }}>Quotation</div>
-                <div style={{ color: GOLD, fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, letterSpacing: ".02em", marginTop: 3 }}>
-                  #{quote.quoteNumber}
-                </div>
-              </div>
-            </div>
-
-            <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,.08)", margin: "22px 0", position: "relative" }} />
-
-            {/* meta row */}
-            <div style={{ position: "relative", zIndex: 1 }} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
-              {[
-                ["Date Issued", formatDate(quote.issuedAt)],
-                ["Prepared For", quote.customer.name],
-                ["Lead Reference", quote.leadId.substring(0, 12) + "…"],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <div style={{ color: "rgba(255,255,255,.38)", fontSize: 10, fontWeight: 600, letterSpacing: ".09em", textTransform: "uppercase", marginBottom: 5 }}>{label}</div>
-                  <div style={{ color: "rgba(255,255,255,.9)", fontSize: 13.5, fontWeight: 500 }}>{value}</div>
-                </div>
-              ))}
             </div>
           </div>
+          
+          <button 
+            onClick={handleDownloadPDF}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-full shadow-sm hover:bg-zinc-50 hover:shadow transition-all"
+          >
+            <FileText className="w-4 h-4" /> Download PDF
+          </button>
+        </motion.div>
 
-          {/* ── Body ──────────────────────────────────────────────────── */}
-          <div className="px-5 py-6 sm:px-9 sm:py-8">
-
-            {/* Bill to / install site */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-7">
-              {[
-                {
-                  label: "Bill To",
-                  name: quote.customer.name,
-                  detail: <>{quote.customer.phone}<br/>{quote.customer.email}</>,
-                  address: quote.installationAddress,
-                  addressExtra: null,
-                },
-                {
-                  label: "Installation Site",
-                  name: quote.propertyType,
-                  detail: <>{quote.propertyDetail}</>,
-                  address: "Same as billing address",
-                  addressExtra: quote.siteVisitDate ? `Site visit confirmed — ${formatDate(quote.siteVisitDate)}` : null,
-                },
-              ].map((b) => (
-                <div key={b.label}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase", color: "#6B7380", display: "block", marginBottom: 8 }}>{b.label}</div>
-                  <div style={{ fontSize: 15.5, fontWeight: 600, color: "#1C1C28", lineHeight: 1.3, marginBottom: 3 }}>{b.name}</div>
-                  <div style={{ fontSize: 13, color: "#6B7380", lineHeight: 1.6 }}>{b.detail}</div>
-                  <div style={{ display: "flex", gap: 6, alignItems: "flex-start", marginTop: 10, padding: "10px 12px", background: "#F6F6F3", borderRadius: 7, border: "1px solid #E4E4DC" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}>
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                    </svg>
-                    <div style={{ fontSize: 12.5, color: "#6B7380", lineHeight: 1.55 }}>
-                      {b.address}
-                      {b.addressExtra && <><br/>{b.addressExtra}</>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Section label */}
-            {/* What Happens Next Section */}
-            <div style={{ marginBottom: 32 }}>
-               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2C5F8A" strokeWidth="2.5" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase", color: "#1C1C28" }}>What Happens Next?</div>
-               </div>
-               
-               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                 {[
-                   { title: "Site Survey", desc: "Book a visit for a precise wiring measurement." },
-                   { title: "Installation", desc: "Professional setup by our certified team." },
-                   { title: "Go Live", desc: "System handover with mobile app setup." }
-                 ].map((step, i) => (
-                   <div key={i} style={{ padding: 12, borderRadius: 10, background: "#F7F7F3", border: "1px solid #E4E4DC" }}>
-                     <div style={{ fontSize: 9, fontWeight: 800, color: "#2C5F8A", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 4 }}>STEP 0{i+1}</div>
-                     <div style={{ fontSize: 12.5, fontWeight: 700, color: "#1C1C28", marginBottom: 2 }}>{step.title}</div>
-                     <div style={{ fontSize: 10.5, color: "#6B7380", lineHeight: 1.4 }}>{step.desc}</div>
-                   </div>
-                 ))}
-               </div>
-            </div>
-
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase", color: "#6B7380", marginBottom: 12 }}>
-              Detailed Bill of Materials
-            </div>
-
-            {/* Line items table */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 4 }}>
-              <thead>
-                <tr style={{ borderBottom: `1.5px solid ${NAVY}` }}>
-                  {[["Item / Description", "46%", "left"], ["Qty", "10%", "center"], ["Unit Price", "18%", "right"], ["Amount", "18%", "right"]].map(([h, w, align]) => (
-                    <th
-                      key={h as string}
-                      style={{ width: w as string, textAlign: align as "left"|"center"|"right", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: NAVY, padding: "0 0 10px" }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {quote.lineItems.map((item) => {
-                  const amount = item.quantity * item.unitPrice;
-                  return (
-                    <tr key={item.id} style={{ borderBottom: "1px solid #E4E4DC" }}>
-                      <td style={{ padding: "13px 0", verticalAlign: "top", fontSize: 13.5 }}>
-                        <div style={{ fontWeight: 600, color: "#1C1C28", marginBottom: 2 }}>{item.name}</div>
-                        <div style={{ fontSize: 11.5, color: "#6B7380", fontWeight: 400 }}>{item.description}</div>
-                        {item.badge && (
-                          <span style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                            fontSize: 10,
-                            fontWeight: 600,
-                            background: item.badge.color ?? NAVY,
-                            color: "white",
-                            padding: "2px 7px",
-                            borderRadius: 4,
-                            marginTop: 4,
-                            letterSpacing: ".03em",
-                          }}>
-                            {item.badge.label}
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: "13px 0", textAlign: "center", verticalAlign: "top" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 24, background: "#F0F0EA", borderRadius: 5, fontSize: 13, fontWeight: 600, color: "#1C1C28" }}>
-                          {item.quantity}
-                        </span>
-                      </td>
-                      <td style={{ padding: "13px 0", textAlign: "right", verticalAlign: "top", fontSize: 13.5 }}>{formatINR(item.unitPrice)}</td>
-                      <td style={{ padding: "13px 0", textAlign: "right", verticalAlign: "top", fontSize: 13.5 }}>
-                        <strong>{formatINR(amount)}</strong>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            {/* Totals */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8, marginBottom: 28 }}>
-              <div style={{ width: 260 }}>
-                {[
-                  { label: "Subtotal", value: formatINR(subtotal), muted: true },
-                  { label: `CGST @ ${quote.gstPercent / 2}%`, value: formatINR(halfGst), muted: true, small: true },
-                  { label: `SGST @ ${quote.gstPercent / 2}%`, value: formatINR(halfGst), muted: true, small: true },
-                ].map((row) => (
-                  <div
-                    key={row.label}
-                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #E4E4DC", fontSize: row.small ? 12.5 : 13.5 }}
-                  >
-                    <span style={{ color: "#6B7380" }}>{row.label}</span>
-                    <span style={{ color: row.muted ? "#6B7380" : "#1C1C28", fontWeight: row.muted ? 400 : 600 }}>{row.value}</span>
-                  </div>
-                ))}
-                <div
-                  style={{ background: NAVY, borderRadius: 8, padding: "13px 14px", marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                >
-                  <span style={{ color: "rgba(255,255,255,.6)", fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>Total Payable</span>
-                  <span style={{ color: GOLD, fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700 }}>{formatINR(total)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Cashfree EMI Financing Section ────────────────────────── */}
-            <div
-              style={{
-                background: "linear-gradient(135deg, #0F1F3D 0%, #1a3260 100%)",
-                borderRadius: 12,
-                padding: "24px 28px",
-                marginBottom: 28,
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              {/* Decorative bg shape */}
-              <div style={{ position: "absolute", top: -30, right: -30, width: 180, height: 180, borderRadius: "50%", background: "rgba(200,146,42,.08)", pointerEvents: "none" }} />
-
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
+          
+          {/* Main Quote Document */}
+          <motion.div variants={fadeIn} className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 overflow-hidden">
+            
+            {/* Header */}
+            <div className="px-6 py-8 sm:px-10 sm:py-10 bg-white border-b border-zinc-100">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                    <div style={{ background: GOLD, borderRadius: 6, padding: "4px 8px", fontSize: 9, fontWeight: 800, color: "white", letterSpacing: ".08em", textTransform: "uppercase" }}>
-                      💳 Easy EMI
-                    </div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", fontWeight: 500 }}>Powered by Cashfree Payments</div>
-                  </div>
-                  <div style={{ color: "white", fontSize: 18, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>
-                    Split your payment into easy instalments
-                  </div>
-                  <div style={{ color: "rgba(255,255,255,.55)", fontSize: 12.5, lineHeight: 1.5 }}>
-                    No-cost EMI on all major bank cards. Instant approval. Zero foreclosure charges.
-                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 mb-1">Quotation</h1>
+                  <p className="text-zinc-400 font-medium tracking-wide text-sm">#{quote.quoteNumber}</p>
+                </div>
+                <div className="text-left sm:text-right">
+                  <div className="font-semibold text-zinc-900">TEAM CCTV</div>
+                  <div className="text-zinc-500 text-sm mt-1">Smart Security Solutions</div>
+                  <div className="text-zinc-400 text-xs mt-0.5">Jaipur, Rajasthan</div>
                 </div>
               </div>
 
-              {/* EMI Option Chips */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-2.5 mt-5">
-                {[
-                  { months: 3,  label: "3 Months",  emoji: "⚡" },
-                  { months: 6,  label: "6 Months",  emoji: "✨" },
-                  { months: 12, label: "12 Months", emoji: "🏆" },
-                ].map(({ months, label, emoji }) => {
-                  const emi = Math.ceil(total / months);
-                  const isBest = months === 6;
-                  return (
-                    <div
-                      key={months}
-                      style={{
-                        background: isBest ? GOLD : "rgba(255,255,255,.07)",
-                        border: isBest ? `1.5px solid ${GOLD}` : "1.5px solid rgba(255,255,255,.12)",
-                        borderRadius: 10,
-                        padding: "14px 12px",
-                        textAlign: "center",
-                        position: "relative",
-                      }}
-                    >
-                      {isBest && (
-                        <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", background: "#fff", color: GOLD, fontSize: 8, fontWeight: 800, padding: "2px 8px", borderRadius: 20, letterSpacing: ".06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                          Most Popular
-                        </div>
-                      )}
-                      <div style={{ fontSize: 14, marginBottom: 4 }}>{emoji}</div>
-                      <div style={{ color: isBest ? "white" : "rgba(255,255,255,.5)", fontSize: 10, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
-                      <div style={{ color: "white", fontSize: 20, fontWeight: 800, lineHeight: 1 }}>
-                        {formatINR(emi)}
-                      </div>
-                      <div style={{ color: isBest ? "rgba(255,255,255,.75)" : "rgba(255,255,255,.4)", fontSize: 10, marginTop: 3 }}>/ month</div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* CTA */}
-              <button
-                onClick={handlePayEMI}
-                disabled={isPayingEMI}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  marginTop: 18,
-                  width: "100%",
-                  padding: "13px 22px",
-                  background: GOLD,
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: 14,
-                  fontWeight: 800,
-                  cursor: isPayingEMI ? "not-allowed" : "pointer",
-                  letterSpacing: ".02em",
-                  textTransform: "uppercase",
-                  transition: "all .18s",
-                }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
-                </svg>
-                {isPayingEMI ? "Processing..." : "Apply for EMI — Instant Approval"}
-              </button>
-              <div style={{ color: "rgba(255,255,255,.3)", fontSize: 10.5, marginTop: 10 }}>
-                * EMI is subject to bank approval. Interest rates vary by bank and tenure. TEAM CCTV does not add any processing fees.
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-10">
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 mb-1.5">Date</p>
+                  <p className="text-sm font-medium text-zinc-900">{formatDate(quote.issuedAt)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 mb-1.5">Prepared For</p>
+                  <p className="text-sm font-medium text-zinc-900">{quote.customer.name}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 mb-1.5">Site Location</p>
+                  <p className="text-sm font-medium text-zinc-900 truncate">{quote.installationAddress}</p>
+                </div>
               </div>
             </div>
 
-            {/* Trust term cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
+            {/* Bill of Materials */}
+            <div className="px-6 py-8 sm:px-10">
+              <h3 className="text-sm font-semibold text-zinc-900 mb-6">Bill of Materials</h3>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-100">
+                      <th className="pb-4 text-xs font-medium text-zinc-400 w-3/5">Description</th>
+                      <th className="pb-4 text-xs font-medium text-zinc-400 text-center w-1/12">Qty</th>
+                      <th className="pb-4 text-xs font-medium text-zinc-400 text-right w-1/6">Rate</th>
+                      <th className="pb-4 text-xs font-medium text-zinc-400 text-right w-1/6">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-50">
+                    {quote.lineItems.map((item) => (
+                      <tr key={item.id} className="group hover:bg-zinc-50/50 transition-colors">
+                        <td className="py-5 pr-4">
+                          <p className="text-sm font-medium text-zinc-900">{item.name}</p>
+                          <p className="text-xs text-zinc-500 mt-1 leading-relaxed">{item.description}</p>
+                          {item.badge && (
+                            <span className="inline-flex mt-2 items-center px-2 py-0.5 rounded text-[10px] font-medium tracking-wide border"
+                                  style={{ backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5', color: item.badge.color || '#52525b', borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7' }}>
+                              {item.badge.label}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-5 text-center text-sm text-zinc-700">{item.quantity}</td>
+                        <td className="py-5 text-right text-sm text-zinc-500">{formatINR(item.unitPrice)}</td>
+                        <td className="py-5 text-right text-sm font-medium text-zinc-900">{formatINR(item.quantity * item.unitPrice)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-              <TermCard
-                iconBg="#F5E6C8"
-                icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2.2" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
-                title="1-Year Warranty"
-                body="All equipment + labour covered. Free replacement if defective."
-              />
-              <TermCard
-                iconBg="#E8F5F0"
-                icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0A7A5A" strokeWidth="2.2" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
-                title={`${quote.advancePercent}% Advance`}
-                body={`${formatINR(advance)} advance to confirm. Balance on completion.`}
-              />
-              <TermCard
-                iconBg="#E8EDF5"
-                icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="2.2" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.37 19a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>}
-                title="Support Included"
-                body="Free remote support for 12 months. On-site within 24 hours."
-              />
+              {/* Totals Section */}
+              <div className="flex justify-end mt-8">
+                <div className="w-full sm:w-64 space-y-3">
+                  <div className="flex justify-between text-sm text-zinc-500">
+                    <span>Subtotal</span>
+                    <span>{formatINR(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-zinc-400">
+                    <span>CGST ({quote.gstPercent / 2}%)</span>
+                    <span>{formatINR(halfGst)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-zinc-400 pb-4 border-b border-zinc-100">
+                    <span>SGST ({quote.gstPercent / 2}%)</span>
+                    <span>{formatINR(halfGst)}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-base font-semibold text-zinc-900">Total</span>
+                    <span className="text-xl font-semibold tracking-tight text-zinc-900">{formatINR(total)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-
-            {/* Notes */}
+            
+            {/* Footer Notes */}
             {quote.notes && (
-              <div
-                style={{
-                  background: "#F5F9FF",
-                  border: "1px solid #D0E3F8",
-                  borderLeft: `3px solid ${NAVY}`,
-                  borderRadius: "0 8px 8px 0",
-                  padding: "14px 16px",
-                  marginBottom: 28,
-                  fontSize: 13,
-                  color: "#2C3E6B",
-                  lineHeight: 1.6,
-                }}
-              >
-                <strong style={{ fontWeight: 600, display: "block", marginBottom: 3, fontSize: 12, textTransform: "uppercase", letterSpacing: ".05em", color: NAVY }}>
-                  Important Note
-                </strong>
-                {quote.notes} GSTIN: {quote.companyGstin}
+              <div className="px-6 py-6 sm:px-10 bg-zinc-50/80 border-t border-zinc-100">
+                <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 mb-1">Notes</p>
+                <p className="text-xs text-zinc-600 leading-relaxed">{quote.notes} {quote.companyGstin && `| GSTIN: ${quote.companyGstin}`}</p>
               </div>
             )}
+          </motion.div>
 
-            <hr style={{ border: "none", borderTop: "1px solid #E4E4DC", margin: "0 0 28px" }} />
+          {/* Visual Comparison */}
+          <motion.div variants={fadeIn} className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 p-6 sm:p-10">
+             <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-800"><ImageIcon className="w-4 h-4" /></div>
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-900">Resolution Clarity Comparison</h3>
+                  <p className="text-xs text-zinc-500">Visualizing the difference in detail capture.</p>
+                </div>
+             </div>
 
-            {/* ── Visual Intelligence Comparison ────────────────────────── */}
-            <div style={{ marginBottom: 40 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase", color: "#6B7380", marginBottom: 16 }}>
-                Visual Intelligence: Resolution Comparison
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid #E4E4DC" }}>
-                  <Image 
-                    src="/comparisons/2mp.png" 
-                    alt="2MP View" 
-                    width={800}
-                    height={450}
-                    className="w-full h-auto object-cover aspect-video"
-                    style={{ width: "100%", display: "block", aspectRatio: "16/9", objectFit: "cover" }} 
-                  />
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 12px", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", color: "white" }}>
-                    <div style={{ fontSize: 11, fontWeight: 700 }}>2MP Full HD (1080p)</div>
-                    <div style={{ fontSize: 9, opacity: 0.8 }}>Standard identification range: 10-15ft</div>
-                  </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="relative rounded-2xl overflow-hidden border border-zinc-200 aspect-video group">
+                 <Image src="/comparisons/2mp.png" alt="2MP View" width={800} height={450} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                 <div className="absolute bottom-0 left-0 p-4">
+                   <p className="text-white text-sm font-semibold">2MP Full HD</p>
+                   <p className="text-white/70 text-xs mt-0.5">Standard identification (10-15ft)</p>
+                 </div>
+               </div>
+               
+               <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/30 aspect-video group shadow-lg shadow-emerald-500/10">
+                 <Image src="/comparisons/5mp.png" alt="5MP View" width={800} height={450} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                 <div className="absolute top-3 right-3 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">Recommended</div>
+                 <div className="absolute bottom-0 left-0 p-4">
+                   <p className="text-white text-sm font-semibold">5MP Ultra 3K HD</p>
+                   <p className="text-white/80 text-xs mt-0.5">Advanced identification (25-30ft)</p>
+                 </div>
+               </div>
+             </div>
+          </motion.div>
+
+          {/* Value Propositions */}
+          <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <TermCard icon={<ShieldCheck className="w-5 h-5" />} title="1-Year Warranty" body="Complete equipment and labour coverage. Free replacement for any defective parts." delay={0.1} />
+            <TermCard icon={<CreditCard className="w-5 h-5" />} title={`${quote.advancePercent}% Advance`} body={`${formatINR(advance)} required to initiate the project. Balance upon successful handover.`} delay={0.2} />
+            <TermCard icon={<Clock className="w-5 h-5" />} title="Priority Support" body="Free remote assistance for 12 months. Next-business-day on-site support." delay={0.3} />
+          </motion.div>
+
+          {/* Action Area */}
+          <motion.div variants={fadeIn} className="pt-8">
+            {!accepted ? (
+              <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-zinc-100">
+                <h3 className="text-xl font-semibold text-zinc-900 mb-2">Complete Your Order</h3>
+                <p className="text-sm text-zinc-500 mb-8">Choose your preferred payment method to schedule your installation.</p>
+
+                {/* Cashfree EMI Banner */}
+                <div className="relative bg-zinc-900 rounded-2xl p-6 sm:p-8 overflow-hidden mb-8 group">
+                   <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 transition-transform duration-1000 group-hover:scale-110" />
+                   
+                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                     <div className="max-w-md">
+                       <div className="flex items-center gap-2 mb-3">
+                         <span className="bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Easy EMI</span>
+                         <span className="text-xs text-zinc-400 font-medium">Powered by Cashfree Payments</span>
+                       </div>
+                       <h4 className="text-lg font-semibold text-white mb-2">Split into manageable instalments</h4>
+                       <p className="text-sm text-zinc-400">No-cost EMI available on major credit cards. Zero foreclosure charges. Instant digital approval.</p>
+                     </div>
+                     
+                     <motion.button
+                       whileTap={{ scale: 0.98 }}
+                       onClick={() => handlePayment("full", "emi")}
+                       disabled={isPayingEMI}
+                       className="shrink-0 w-full md:w-auto px-6 py-3.5 bg-white text-zinc-900 text-sm font-semibold rounded-xl shadow-lg hover:bg-zinc-50 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                     >
+                       {isPayingEMI ? "Processing..." : "Apply for EMI"}
+                     </motion.button>
+                   </div>
                 </div>
 
-                <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid #C8922A" }}>
-                  <Image 
-                    src="/comparisons/5mp.png" 
-                    alt="5MP View" 
-                    width={800}
-                    height={450}
-                    className="w-full h-auto object-cover aspect-video"
-                    style={{ width: "100%", display: "block", aspectRatio: "16/9", objectFit: "cover" }} 
-                  />
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 12px", background: "rgba(200,146,42,0.9)", color: "white" }}>
-                    <div style={{ fontSize: 11, fontWeight: 700 }}>5MP Ultra 3K HD</div>
-                    <div style={{ fontSize: 9, opacity: 0.9 }}>Advanced identification range: 25-30ft</div>
-                  </div>
-                  <div style={{ position: "absolute", top: 8, right: 8, background: "#C8922A", color: "white", fontSize: 8, fontWeight: 900, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" }}>Recommended</div>
+                <div className="flex items-center gap-4 py-4">
+                  <div className="h-px bg-zinc-200 flex-1" />
+                  <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Or Pay Directly</span>
+                  <div className="h-px bg-zinc-200 flex-1" />
                 </div>
-              </div>
-              
-              <p style={{ fontSize: 11.5, color: "#6B7380", marginTop: 12, lineHeight: 1.5, fontStyle: "italic" }}>
-                * Images are simulated for comparative purposes. 5MP resolution provides 2.5x more detail than standard 2MP cameras, crucial for facial recognition and license plate capture at longer distances.
-              </p>
-            </div>
 
-            <hr style={{ border: "none", borderTop: "1px solid #E4E4DC", margin: "0 0 24px" }} />
-
-            {/* Action buttons */}
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {!accepted ? (
-                <>
-                  <button
+                <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handlePayment("advance", "all")}
                     disabled={isPayingAdvance || isPayingFull}
-                    style={{
-                      flex: 1,
-                      minWidth: 160,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      padding: "13px 24px",
-                      borderRadius: 8,
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: (isPayingAdvance || isPayingFull) ? "not-allowed" : "pointer",
-                      border: "none",
-                      background: NAVY,
-                      color: "white",
-                      transition: "all .18s",
-                      opacity: (isPayingAdvance || isPayingFull) ? 0.7 : 1,
-                    }}
+                    className="flex-1 py-4 px-6 bg-zinc-900 text-white rounded-xl text-sm font-semibold shadow-md hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                     {isPayingAdvance ? "Processing..." : `Pay Advance (${formatINR(advance)})`}
-                  </button>
-                  <button
+                  </motion.button>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handlePayment("full", "all")}
                     disabled={isPayingAdvance || isPayingFull}
-                    style={{
-                      flex: 1,
-                      minWidth: 160,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      padding: "13px 24px",
-                      borderRadius: 8,
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: (isPayingAdvance || isPayingFull) ? "not-allowed" : "pointer",
-                      border: `1.5px solid ${NAVY}`,
-                      background: "transparent",
-                      color: NAVY,
-                      transition: "all .18s",
-                      opacity: (isPayingAdvance || isPayingFull) ? 0.7 : 1,
-                    }}
+                    className="flex-1 py-4 px-6 bg-white text-zinc-900 border border-zinc-200 rounded-xl text-sm font-semibold shadow-sm hover:bg-zinc-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
                   >
                     {isPayingFull ? "Processing..." : `Pay Full Amount (${formatINR(total)})`}
-                  </button>
-                </>
-              ) : (
-                <div
-                  style={{
-                    flex: 1,
-                    minWidth: 160,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    padding: "13px 24px",
-                    borderRadius: 8,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    background: "#0A7A5A",
-                    color: "white",
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Quote Accepted & Paid!
+                  </motion.button>
                 </div>
-              )}
-
-              <button
-                onClick={handleDownloadPDF}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "13px 24px",
-                  borderRadius: 8,
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  border: "none",
-                  background: GOLD,
-                  color: "white",
-                  transition: "all .18s",
-                }}
+              </div>
+            ) : (
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} 
+                animate={{ scale: 1, opacity: 1 }} 
+                className="bg-emerald-500 text-white rounded-3xl p-8 sm:p-10 text-center shadow-xl shadow-emerald-500/20"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Download PDF
-              </button>
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
+                  <Check className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-semibold mb-2">Quote Accepted & Paid!</h3>
+                <p className="text-emerald-50 font-medium">Thank you for choosing TEAM CCTV. Our dispatch team will contact you shortly to schedule your installation.</p>
+              </motion.div>
+            )}
+          </motion.div>
 
-              <button
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "13px 24px",
-                  borderRadius: 8,
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  background: "white",
-                  color: "#1C1C28",
-                  border: "1.5px solid #E4E4DC",
-                  transition: "all .18s",
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                Book Site Visit
-              </button>
-            </div>
-
-          </div>{/* /body */}
-
-          {/* Footer */}
-          <div
-            style={{
-              background: "#F5F5F0",
-              borderTop: "1px solid #E4E4DC",
-            }}
-            className="px-5 py-4 sm:px-9 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-          >
-            <div style={{ fontSize: 12, color: "#6B7380" }}>
-              <strong style={{ color: "#1C1C28", fontWeight: 600 }}>TEAM CCTV</strong>
-              {" "}· GSTIN: {quote.companyGstin}
-            </div>
-            <div style={{ display: "flex", gap: 16 }}>
-              {[
-                { icon: "📞", label: "+91 98290 00000" },
-                { icon: "✉", label: "support@cctvquotation.com" },
-              ].map((c) => (
-                <span key={c.label} style={{ fontSize: 12, color: "#6B7380", display: "flex", alignItems: "center", gap: 5 }}>
-                  {c.icon} {c.label}
-                </span>
-              ))}
-            </div>
-          </div>
-
-        </div>{/* /card */}
+        </motion.div>
       </div>
     </div>
   );
 }
+

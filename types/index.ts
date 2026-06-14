@@ -424,6 +424,7 @@ export interface AppSettings {
 
   // NEW: High-Fidelity Logic (Real PDF Alignment)
   max_supported_cameras: number;
+  gemini_api_keys?: string[];
   labor_ip_per_camera: number;
   labor_hd_per_camera: number;
   cable_copper_coated_ip: number;

@@ -393,9 +393,12 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
   
       // Apply Technology Filter
       if (hypotheticalAnswers["q_tech"]) {
-         const tech = hypotheticalAnswers["q_tech"] as string;
+         let tech = (hypotheticalAnswers["q_tech"] as string).toLowerCase();
+         if (tech === "analog") tech = "hd";
+         if (tech === "wifi" || tech === "4g") tech = "wireless";
+
          if (tech) {
-           pool = pool.filter(p => p.technologies?.some(t => t.toLowerCase() === tech.toLowerCase()));
+           pool = pool.filter(p => p.technologies?.some(t => t.toLowerCase() === tech));
          }
       }
   
