@@ -26,18 +26,23 @@ export async function executeQuotationWizardStatus(userId: string, securityRole:
     const db = getFirestore();
     const leadSnapshot = await db.collection("leads")
       .where("firebase_uid", "==", userId)
-      .orderBy("created_at", "desc")
-      .limit(1)
       .get();
 
     if (leadSnapshot.empty) {
       return { status: "NO_ACTIVE_QUOTE", message: "The user has not started a quotation wizard session yet." };
     }
 
-    const quoteData = leadSnapshot.docs[0].data();
+    // Sort in memory to avoid Firestore composite index requirement
+    const docs = leadSnapshot.docs.sort((a, b) => {
+      const timeA = a.data().created_at?.toMillis?.() || 0;
+      const timeB = b.data().created_at?.toMillis?.() || 0;
+      return timeB - timeA; // Descending
+    });
+
+    const quoteData = docs[0].data();
 
     return {
-      quoteId: leadSnapshot.docs[0].id,
+      quoteId: docs[0].id,
       status: quoteData.status || "DRAFT",
       totalCameras: quoteData.wizard_answers?.q_camera_count || quoteData.camera_count || 4,
       propertyType: quoteData.property_type || quoteData.wizard_answers?.q_property_type || "Unknown",
@@ -84,15 +89,19 @@ export async function executeUpdateQuotationWizard(userId: string, addCameras: n
     const db = getFirestore();
     const leadSnapshot = await db.collection("leads")
       .where("firebase_uid", "==", userId)
-      .orderBy("created_at", "desc")
-      .limit(1)
       .get();
 
     if (leadSnapshot.empty) {
       return { status: "NO_ACTIVE_QUOTE", message: "No active quote found to update. The user needs to start a quote first." };
     }
 
-    const leadDoc = leadSnapshot.docs[0];
+    const docs = leadSnapshot.docs.sort((a, b) => {
+      const timeA = a.data().created_at?.toMillis?.() || 0;
+      const timeB = b.data().created_at?.toMillis?.() || 0;
+      return timeB - timeA;
+    });
+
+    const leadDoc = docs[0];
     const currentData = leadDoc.data();
     
     // Calculate new camera count safely
