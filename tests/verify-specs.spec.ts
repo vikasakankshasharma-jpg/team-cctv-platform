@@ -11,20 +11,20 @@ test('Verify Spec Table shows specs', async ({ page }) => {
   await page.waitForTimeout(3000);
 
   // Assert that the spec table Resolution column is NOT empty dashes
-  const resCell = page.locator('text=Resolution', { exact: true }).locator('xpath=following-sibling::div[1]');
+  const resCell = page.locator('text="Resolution"').locator('xpath=following-sibling::div[1]');
   const resText = await resCell.innerText();
   console.log("Resolution in Standard Column:", resText);
   expect(resText).not.toBe("-");
   expect(resText).toContain("MP");
 
   // Check Night Vision
-  const nvCell = page.locator('text=Night Vision', { exact: true }).locator('xpath=following-sibling::div[1]');
+  const nvCell = page.locator('text="Night Vision"').locator('xpath=following-sibling::div[1]');
   const nvText = await nvCell.innerText();
   console.log("Night Vision in Standard Column:", nvText);
   expect(nvText).not.toBe("-");
   
   // Check Form Factor
-  const formCell = page.locator('text=Form Factor', { exact: true }).locator('xpath=following-sibling::div[1]');
+  const formCell = page.locator('text="Form Factor"').locator('xpath=following-sibling::div[1]');
   const formText = await formCell.innerText();
   console.log("Form Factor in Standard Column:", formText);
   expect(formText).not.toBe("-");

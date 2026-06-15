@@ -205,7 +205,23 @@ export type TranslationKey =
   | "track_step_4_desc"
   | "track_service_address"
   | "track_address_not_provided"
-  | "track_need_help";
+  | "track_need_help"
+  | "step_timeline"
+  | "q_timeline"
+  | "fopt_t_asap"
+  | "fopt_t_week"
+  | "fopt_t_month"
+  | "fopt_t_research"
+  | "step_brand"
+  | "q_brand"
+  | "fopt_b_rec"
+  | "fopt_b_cp"
+  | "fopt_b_hik"
+  | "fopt_b_dah"
+  | "step_amc"
+  | "q_amc"
+  | "fopt_amc_yes"
+  | "fopt_amc_no";
 
 export const translations: Record<
   LocaleCode,
@@ -379,6 +395,23 @@ export const translations: Record<
     track_service_address: "Service Address",
     track_address_not_provided: "Address not provided",
     track_need_help: "Need help? Contact support at"
+,
+    step_timeline: "Timeline",
+    q_timeline: "Select urgency:",
+    fopt_t_asap: "ASAP (Today/Tomorrow)",
+    fopt_t_week: "Within a week",
+    fopt_t_month: "Next Month",
+    fopt_t_research: "Just researching",
+    step_brand: "Brand",
+    q_brand: "Select brand preference:",
+    fopt_b_rec: "Unsure, please recommend",
+    fopt_b_cp: "CP Plus",
+    fopt_b_hik: "Hikvision",
+    fopt_b_dah: "Dahua",
+    step_amc: "Maintenance",
+    q_amc: "Select AMC option:",
+    fopt_amc_yes: "Yes, protect my system",
+    fopt_amc_no: "No, I will manage it myself"
   },
   hi: {
     welcome: "CCTV Quotation में आपका स्वागत है",
@@ -548,6 +581,23 @@ export const translations: Record<
     track_service_address: "सेवा का पता",
     track_address_not_provided: "पता नहीं दिया गया",
     track_need_help: "मदद चाहिए? सपोर्ट से संपर्क करें"
+,
+    step_timeline: "समयरेखा",
+    q_timeline: "तात्कालिकता चुनें:",
+    fopt_t_asap: "जल्द से जल्द (आज/कल)",
+    fopt_t_week: "एक सप्ताह के भीतर",
+    fopt_t_month: "अगले महीने",
+    fopt_t_research: "बस रिसर्च कर रहे हैं",
+    step_brand: "ब्रांड",
+    q_brand: "ब्रांड वरीयता चुनें:",
+    fopt_b_rec: "निश्चित नहीं, कृपया सुझाव दें",
+    fopt_b_cp: "CP Plus",
+    fopt_b_hik: "Hikvision",
+    fopt_b_dah: "Dahua",
+    step_amc: "रखरखाव",
+    q_amc: "AMC विकल्प चुनें:",
+    fopt_amc_yes: "हाँ, मेरे सिस्टम की सुरक्षा करें",
+    fopt_amc_no: "नहीं, मैं खुद संभाल लूंगा"
   },
   mr: {
     welcome: "CCTV Quotation मध्ये आपले स्वागत आहे",
@@ -716,6 +766,23 @@ export const translations: Record<
     track_service_address: "सेवा पत्ता",
     track_address_not_provided: "पत्ता दिलेला नाही",
     track_need_help: "मदत हवी आहे? सपोर्टशी संपर्क साधा"
+,
+    step_timeline: "वेळ",
+    q_timeline: "तात्कालिकता निवडा:",
+    fopt_t_asap: "लवकरात लवकर (आज/उद्या)",
+    fopt_t_week: "एका आठवड्यात",
+    fopt_t_month: "पुढच्या महिन्यात",
+    fopt_t_research: "फक्त माहिती घेत आहे",
+    step_brand: "ब्रँड",
+    q_brand: "ब्रँड प्राधान्य निवडा:",
+    fopt_b_rec: "निश्चित नाही, कृपया सुचवा",
+    fopt_b_cp: "CP Plus",
+    fopt_b_hik: "Hikvision",
+    fopt_b_dah: "Dahua",
+    step_amc: "देखभाल",
+    q_amc: "AMC पर्याय निवडा:",
+    fopt_amc_yes: "होय, माझ्या सिस्टमचे रक्षण करा",
+    fopt_amc_no: "नाही, मी स्वतः व्यवस्थापित करेन"
   },
   gu: {
     welcome: "CCTV Quotation માં તમારું સ્વાગત છે",
