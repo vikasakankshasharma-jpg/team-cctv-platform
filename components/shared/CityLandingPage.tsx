@@ -13,7 +13,6 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { useEffect } from "react";
-import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useI18nStore } from "@/lib/i18n/store";
 
@@ -109,9 +108,6 @@ export default function CityLandingPage({
             </Link>
             <ChevronRight className="w-3.5 h-3.5" />
             <span className="text-zinc-800 dark:text-zinc-200">{localizedCityName}</span>
-          </div>
-          <div>
-            <LanguageSwitcher />
           </div>
         </div>
       </div>
