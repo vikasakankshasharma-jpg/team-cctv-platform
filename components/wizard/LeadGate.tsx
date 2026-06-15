@@ -69,19 +69,29 @@ export function LeadGate({
     }
   }, [pincode]);
 
+  // Local reference for recaptcha verifier
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+
   // Initialize Recaptcha safely on mount
   useEffect(() => {
-    if (typeof window !== "undefined" && !window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+    const container = document.getElementById("recaptcha-container");
+    if (container) container.innerHTML = ''; // Ensure clean slate
+    
+    try {
+      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
         size: "invisible",
       });
+    } catch (e) {
+      console.error("Recaptcha Init Error:", e);
     }
     
     return () => {
-      // Cleanup recaptcha on unmount
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = undefined;
+      // Cleanup recaptcha on unmount so it doesn't hold onto dead DOM nodes
+      if (recaptchaVerifierRef.current) {
+        try {
+           recaptchaVerifierRef.current.clear();
+        } catch (_) {}
+        recaptchaVerifierRef.current = null;
       }
     };
   }, []);
@@ -122,12 +132,14 @@ export function LeadGate({
 
       const formatPhone = "+91" + mobile.replace(/\s/g, "");
       
-      // We must pass the already initialized recaptcha verifier
-      if (!window.recaptchaVerifier) {
-         window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+      // Safety fallback: if ref is null, re-initialize
+      if (!recaptchaVerifierRef.current) {
+         const container = document.getElementById("recaptcha-container");
+         if (container) container.innerHTML = '';
+         recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
       }
 
-      const result = await signInWithPhoneNumber(auth, formatPhone, window.recaptchaVerifier);
+      const result = await signInWithPhoneNumber(auth, formatPhone, recaptchaVerifierRef.current);
       
       setConfirmationResult(result);
       setOtpSent(true);
@@ -154,9 +166,9 @@ export function LeadGate({
     } catch (err: any) {
       console.error("OTP Send Error:", err);
       // Clean up recaptcha so they can try again
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = undefined;
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch (_) {}
+        recaptchaVerifierRef.current = null;
       }
       
       // Output the exact Firebase error message so we know exactly what is wrong
