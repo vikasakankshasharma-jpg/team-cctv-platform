@@ -25,7 +25,7 @@ export async function generateMetadata({
 
   return {
     title: `Quotation for ${data?.customer_name || "Client"} - TEAM CCTV`,
-    description: `Personalized security system quotation for your property. Compare tailored packages and configure your ideal setup.`,
+    description: `Your customized security system quote. Compare simple packages and build your perfect setup.`,
   };
 }
 
@@ -154,6 +154,13 @@ export default async function QuoteResultPage({
     recommendation_rules = serializeDoc(recommendation_rules);
     card_layouts = serializeDoc(card_layouts);
 
+    try {
+      const fs = require('fs');
+      if (leadId === "QZ2c408TMC7xlNRp2ovi") {
+        fs.writeFileSync('debug_quote_data.json', JSON.stringify({ lead, products }, null, 2));
+      }
+    } catch (e) {}
+
   } catch (err) {
     console.error("Error fetching quote data:", err);
   }
@@ -254,11 +261,11 @@ export default async function QuoteResultPage({
            
            <h1 className="text-4xl sm:text-5xl md:text-7xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight leading-tight mb-4">
               Your security,<br />
-              <span className="text-[#0066cc] dark:text-[#2997ff]">configured for you.</span>
+              <span className="text-[#0066cc] dark:text-[#2997ff]">made simple.</span>
            </h1>
            
            <p className="text-lg sm:text-xl text-[#86868b] dark:text-[#a1a1a6] font-normal leading-relaxed max-w-2xl mx-auto">
-              Prepared exclusively for <span className="text-[#1d1d1f] dark:text-white font-medium">{lead.customer_name}</span>. Review your recommended {(lead.property_type || "").toLowerCase()} packages below or build a custom solution.
+              Prepared just for <span className="text-[#1d1d1f] dark:text-white font-medium">{lead.customer_name}</span>. Look at our recommended {(lead.property_type || "").toLowerCase()} packages below or build your own.
            </p>
          </div>
       
@@ -268,7 +275,7 @@ export default async function QuoteResultPage({
            <div className="max-w-2xl mx-auto bg-white dark:bg-[#1d1d1f] rounded-3xl p-8 sm:p-12 text-center shadow-sm">
              <h2 className="text-2xl sm:text-4xl font-semibold text-[#1d1d1f] dark:text-white tracking-tight mb-4">Quotation Expired</h2>
              <p className="text-[#86868b] font-normal mb-8">
-               This quotation was generated over 7 days ago. Prices for electronic components fluctuate, so a new assessment is required for accuracy.
+               This quote is over 7 days old. Prices for camera parts change, so we need to make a new one for you.
              </p>
              <a 
                href={`/wizard?requote=${lead.id}`}

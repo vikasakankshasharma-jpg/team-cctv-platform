@@ -197,7 +197,7 @@ export function PartnerLoginClient() {
         </div>
 
         <div className="relative z-10">
-          <h1 className="text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-[0.88] mb-8">
+          <h1 className="text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-[1.2] md:leading-[1.1] mb-8">
             Referral<br/>
             <span className="text-amber-500 dark:text-amber-400 border-b-8 border-amber-500/10">Growth</span><br/>
             Portal.

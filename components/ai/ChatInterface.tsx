@@ -1,7 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
-import { Send, Bot, User, BrainCircuit, ThumbsUp, ThumbsDown, ImagePlus, X, Mic, MicOff } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Send, Bot, User, BrainCircuit, ThumbsUp, ThumbsDown, ImagePlus, X, Mic, MicOff, ShieldCheck, Loader2 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
+import { auth } from "@/lib/firebase-client";
+
+declare global {
+  interface Window {
+    recaptchaVerifier: RecaptchaVerifier | undefined;
+  }
+}
 
 interface Message {
   role: "user" | "assistant";
@@ -13,14 +22,35 @@ interface Message {
 }
 
 export function ChatInterface({ pageContext, initialMessage }: { pageContext?: string, initialMessage?: string }) {
+  const { t, locale } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: initialMessage || "Hello! I am the website AI. How can I help you today?" }
+    { role: "assistant", content: initialMessage || t("welcome", "Hello! I am the website AI. How can I help you today?") }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // OTP Gating State
+  const [showOtpGate, setShowOtpGate] = useState(false);
+  const [mobile, setMobile] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [lastUserMessage, setLastUserMessage] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = undefined;
+      }
+    };
+  }, []);
 
   const toggleListening = () => {
     if (isListening) {
@@ -64,24 +94,33 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
     }
   };
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() && !selectedImage) return;
+  const sendMessage = async (e?: React.FormEvent, retryMessage?: string) => {
+    if (e) e.preventDefault();
+    const messageText = retryMessage || input;
+    if (!messageText.trim() && !selectedImage) return;
     if (isLoading) return;
 
-    const userMessage: Message = { role: "user", content: input, image: selectedImage || undefined };
-    setMessages(prev => [...prev, userMessage]);
-    setInput("");
-    setSelectedImage(null);
+    if (!retryMessage) {
+      setLastUserMessage(messageText);
+      const userMessage: Message = { role: "user", content: messageText, image: selectedImage || undefined };
+      setMessages(prev => [...prev, userMessage]);
+      setInput("");
+      setSelectedImage(null);
+    }
     setIsLoading(true);
 
     try {
+      const msgsToSend = retryMessage 
+        ? [...messages, { role: "user", content: messageText }] 
+        : [...messages, { role: "user", content: messageText, image: selectedImage || undefined }];
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          messages: [...messages, userMessage],
-          pageContext: pageContext || "unknown"
+          messages: msgsToSend,
+          pageContext: pageContext || "unknown",
+          locale: locale
         })
       });
 
@@ -90,18 +129,99 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
       }
 
       const data = await response.json();
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: data.content,
-        isFromStudent: data.isFromStudent,
-        brainId: data.brainId
-      }]);
+
+      if (data.content.includes("<REQUIRE_OTP>")) {
+        setShowOtpGate(true);
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: t("chat_require_otp", "To provide accurate pricing and custom quotes, please verify your mobile number first."),
+          isFromStudent: false
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: data.content,
+          isFromStudent: data.isFromStudent,
+          brainId: data.brainId
+        }]);
+      }
     } catch (error) {
       console.error(error);
       setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I encountered an error. Please try again." }]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerificationError("");
+    if (!/^[6-9]\d{9}$/.test(mobile.replace(/\s/g, ""))) {
+      return setVerificationError(t("err_invalid_mobile", "Enter a valid 10-digit mobile number."));
+    }
+    setIsVerifying(true);
+    try {
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = undefined;
+      }
+      const container = document.getElementById("chat-recaptcha");
+      if (container) container.innerHTML = '';
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, "chat-recaptcha", { size: "invisible" });
+      await window.recaptchaVerifier.render();
+
+      const formatPhone = "+91" + mobile.replace(/\s/g, "");
+      const result = await signInWithPhoneNumber(auth, formatPhone, window.recaptchaVerifier);
+      setConfirmationResult(result);
+      setOtpSent(true);
+    } catch (err: any) {
+      console.error(err);
+      setVerificationError(err.message || "Failed to send OTP.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerificationError("");
+    const fullOtp = otp.join("");
+    if (fullOtp.length < 6) return setVerificationError("Incomplete OTP.");
+    if (!confirmationResult) return;
+    setIsVerifying(true);
+    try {
+      const result = await confirmationResult.confirm(fullOtp);
+      const idToken = await result.user.getIdToken();
+      await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken })
+      });
+      setShowOtpGate(false);
+      setOtpSent(false);
+      // Re-trigger the user's last message now that they are verified
+      sendMessage(undefined, lastUserMessage);
+    } catch (err: any) {
+      console.error(err);
+      setVerificationError(err.message || "Invalid OTP.");
+      setOtp(["", "", "", "", "", ""]);
+      otpInputRefs.current[0]?.focus();
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleOtpChange = (value: string, index: number) => {
+    if (value.length === 6 && /^\d+$/.test(value)) {
+      setOtp(value.split(""));
+      otpInputRefs.current[5]?.focus();
+      return;
+    }
+    if (isNaN(Number(value))) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.substring(value.length - 1);
+    setOtp(newOtp);
+    if (value && index < 5) otpInputRefs.current[index + 1]?.focus();
   };
 
   const handleFeedback = async (msgIndex: number, rating: 1 | -1) => {
@@ -127,7 +247,7 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
   };
 
   return (
-    <div className="flex flex-col h-[500px] max-w-md w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden font-sans">
+    <div className="flex flex-col h-[500px] max-h-[calc(100dvh-120px)] max-w-md w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden font-sans">
       <div className="bg-blue-600 text-white p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5" />
@@ -211,45 +331,98 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
         </div>
       )}
 
-      <form onSubmit={sendMessage} className="p-3 bg-white border-t border-gray-100 flex gap-2 items-center">
-        <input 
-          type="file" 
-          accept="image/*" 
-          className="hidden" 
-          ref={fileInputRef}
-          onChange={handleImageUpload}
-        />
-        <button 
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-          title="Upload Image"
-        >
-          <ImagePlus className="w-5 h-5" />
-        </button>
-        <button 
-          type="button"
-          onClick={toggleListening}
-          className={`p-2 rounded-full transition-colors shrink-0 ${isListening ? 'text-red-600 bg-red-50' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'}`}
-          title="Voice Input"
-        >
-          {isListening ? <MicOff className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5" />}
-        </button>
-        <input 
-          type="text" 
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask a question..."
-          className="flex-1 px-4 py-2 bg-gray-100 border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-black"
-        />
-        <button 
-          type="submit" 
-          disabled={(!input.trim() && !selectedImage) || isLoading}
-          className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors shrink-0"
-        >
-          <Send className="w-4 h-4" />
-        </button>
-      </form>
+      <div id="chat-recaptcha"></div>
+
+      {showOtpGate ? (
+        <div className="p-4 bg-blue-50 border-t border-blue-100 animate-in slide-in-from-bottom-4">
+          <div className="flex items-center gap-2 text-blue-800 font-bold mb-3">
+            <ShieldCheck className="w-5 h-5" />
+            {otpSent ? "Verify Number" : "Secure Verification"}
+          </div>
+          {verificationError && <p className="text-red-500 text-xs mb-3 font-medium bg-red-50 p-2 rounded">{verificationError}</p>}
+          
+          {!otpSent ? (
+            <form onSubmit={handleSendOtp} className="space-y-3">
+              <input
+                type="tel"
+                maxLength={10}
+                required
+                value={mobile}
+                onChange={e => setMobile(e.target.value.replace(/\D/g, ""))}
+                placeholder="Mobile Number"
+                className="w-full p-2.5 rounded-lg border border-blue-200 outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+              />
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setShowOtpGate(false)} className="flex-1 p-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-medium transition">Cancel</button>
+                <button type="submit" disabled={isVerifying} className="flex-1 p-2 bg-blue-600 text-white rounded-lg text-sm font-medium flex items-center justify-center transition disabled:opacity-50">
+                  {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Code"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-3">
+              <div className="flex gap-1 justify-between">
+                {otp.map((d, i) => (
+                  <input
+                    key={i}
+                    ref={el => { otpInputRefs.current[i] = el; }}
+                    type="text"
+                    maxLength={1}
+                    value={d}
+                    onChange={e => handleOtpChange(e.target.value, i)}
+                    onKeyDown={e => e.key === "Backspace" && !otp[i] && i > 0 && otpInputRefs.current[i-1]?.focus()}
+                    className="w-10 h-10 text-center font-bold text-lg border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                ))}
+              </div>
+              <button type="submit" disabled={isVerifying || otp.join("").length !== 6} className="w-full p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center justify-center transition disabled:opacity-50">
+                {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify & Continue"}
+              </button>
+              <button type="button" onClick={() => setOtpSent(false)} className="w-full text-xs text-blue-600 hover:underline text-center font-medium">Change Number</button>
+            </form>
+          )}
+        </div>
+      ) : (
+        <form onSubmit={sendMessage} className="p-3 bg-white border-t border-gray-100 flex gap-2 items-center">
+          <input 
+            type="file" 
+            accept="image/*" 
+            className="hidden" 
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+          />
+          <button 
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+            title="Upload Image"
+          >
+            <ImagePlus className="w-5 h-5" />
+          </button>
+          <button 
+            type="button"
+            onClick={toggleListening}
+            className={`p-2 rounded-full transition-colors shrink-0 ${isListening ? 'text-red-600 bg-red-50' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'}`}
+            title="Voice Input"
+          >
+            {isListening ? <MicOff className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5" />}
+          </button>
+          <input 
+            type="text" 
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask a question..."
+            className="flex-1 px-4 py-2 bg-gray-100 border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-black"
+          />
+          <button 
+            type="submit" 
+            disabled={(!input.trim() && !selectedImage) || isLoading}
+            className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors shrink-0"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </form>
+      )}
     </div>
   );
 }

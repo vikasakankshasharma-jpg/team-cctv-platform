@@ -1,0 +1,579 @@
+{
+  "steps": [
+    {
+      "id": "step_prop_type",
+      "is_active": true,
+      "description": "What type of property are you securing?",
+      "position": 0,
+      "title": "Property Type",
+      "created_at": "2026-06-04T16:54:53.222Z",
+      "updated_at": null,
+      "questions": [
+        {
+          "id": "q_prop_type",
+          "question_text": "Select property type:",
+          "is_required": true,
+          "input_type": "single",
+          "position": 0,
+          "options": [
+            {
+              "id": "opt_home",
+              "icon": "🏠",
+              "label": "Home / Residential",
+              "position": 0,
+              "value": "home"
+            },
+            {
+              "id": "opt_office",
+              "icon": "🏢",
+              "label": "Office / Commercial",
+              "position": 1,
+              "value": "office"
+            },
+            {
+              "id": "opt_shop",
+              "icon": "🏪",
+              "label": "Shop / Retail",
+              "position": 2,
+              "value": "shop"
+            },
+            {
+              "id": "opt_factory",
+              "icon": "🏭",
+              "label": "Factory / Warehouse",
+              "position": 3,
+              "value": "factory"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_install_type",
+      "is_active": true,
+      "description": "Is this a brand new installation or an upgrade?",
+      "position": 1,
+      "title": "Setup Type",
+      "created_at": "2026-06-04T16:54:53.899Z",
+      "updated_at": null,
+      "questions": [
+        {
+          "id": "q_install_type",
+          "question_text": "Select setup type:",
+          "is_required": true,
+          "input_type": "single",
+          "position": 0,
+          "options": [
+            {
+              "id": "opt_ins_new",
+              "icon": "✨",
+              "label": "New Installation",
+              "position": 0,
+              "value": "new"
+            },
+            {
+              "id": "opt_ins_upg",
+              "icon": "⬆️",
+              "label": "Upgrade Existing System",
+              "position": 1,
+              "value": "upgrade"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_technology",
+      "title": "Camera Technology",
+      "is_active": true,
+      "updated_at": "2026-06-02T06:10:38.472Z",
+      "description": "What level of quality and features do you expect?",
+      "position": 2,
+      "created_at": "2026-06-04T16:54:54.416Z",
+      "questions": [
+        {
+          "id": "q_tech",
+          "input_type": "single",
+          "is_required": true,
+          "position": 0,
+          "question_text": "Select security level:",
+          "options": [
+            {
+              "id": "fopt_ip",
+              "label": "IP Network Camera (Smart Digital)",
+              "position": 0,
+              "value": "IP"
+            },
+            {
+              "id": "fopt_hd",
+              "label": "HD Analog Camera (Basic Budget)",
+              "position": 1,
+              "value": "Analog"
+            },
+            {
+              "id": "opt_wifi",
+              "label": "Wireless Camera (WiFi/Solar)",
+              "position": 2,
+              "value": "WiFi"
+            },
+            {
+              "id": "opt_4g",
+              "label": "4G Cellular Camera (Requires SIM)",
+              "position": 3,
+              "value": "4G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dynamic_step_resolution",
+      "title": "Image Resolution",
+      "description": "What image quality do you need?",
+      "position": 3,
+      "is_active": true,
+      "created_at": "2026-06-15T10:01:25.310Z",
+      "questions": [
+        {
+          "id": "q_resolution",
+          "question_text": "Select resolution:",
+          "input_type": "single",
+          "is_required": true,
+          "position": 0,
+          "options": [
+            {
+              "id": "opt_res_2mp",
+              "label": "2MP Standard HD",
+              "value": "2mp",
+              "position": 0
+            },
+            {
+              "id": "opt_res_4mp",
+              "label": "4MP Pro HD",
+              "value": "4mp",
+              "position": 1
+            },
+            {
+              "id": "opt_res_6mp",
+              "label": "6MP Premium",
+              "value": "6mp",
+              "position": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_cam_count",
+      "is_active": true,
+      "description": "How many cameras do you need?",
+      "position": 4,
+      "title": "Camera Count",
+      "created_at": "2026-06-04T16:54:54.298Z",
+      "updated_at": null,
+      "questions": [
+        {
+          "id": "q_cam_count",
+          "question_text": "Enter number of cameras:",
+          "is_required": true,
+          "input_type": "number",
+          "position": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "step_storage",
+      "is_active": true,
+      "updated_at": "2026-06-02T06:10:38.695Z",
+      "description": "How far back do you need to watch old recordings?",
+      "position": 5,
+      "title": "Recording Storage",
+      "created_at": "2026-06-04T16:54:54.764Z",
+      "questions": [
+        {
+          "id": "q_storage",
+          "question_text": "Select recording duration:",
+          "input_type": "single",
+          "is_required": true,
+          "position": 0,
+          "options": [
+            {
+              "id": "fopt_s_0",
+              "label": "No Storage Required",
+              "value": "0",
+              "position": 0
+            },
+            {
+              "id": "fopt_s_7",
+              "label": "1 Week (Standard)",
+              "value": "7",
+              "position": 0
+            },
+            {
+              "id": "fopt_s_15",
+              "label": "15 Days",
+              "value": "15",
+              "position": 1
+            },
+            {
+              "id": "fopt_s_30",
+              "label": "1 Month",
+              "value": "30",
+              "position": 2
+            },
+            {
+              "id": "fopt_s_90",
+              "label": "3 Months",
+              "value": "90",
+              "position": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_features",
+      "is_active": true,
+      "description": "Any special camera capabilities required?",
+      "title": "Special Features",
+      "created_at": "2026-06-04T16:54:55.718Z",
+      "position": 6,
+      "updated_at": null,
+      "questions": [
+        {
+          "id": "q_features",
+          "question_text": "Select features (Optional):",
+          "is_required": false,
+          "input_type": "multi",
+          "position": 0,
+          "options": [
+            {
+              "id": "opt_feat_none",
+              "label": "None (Standard Features Only)",
+              "value": "none",
+              "position": -1
+            },
+            {
+              "id": "opt_feat_audio",
+              "label": "Built-in Mic (Audio Recording)",
+              "position": 0,
+              "value": "Audio"
+            },
+            {
+              "id": "opt_feat_2way",
+              "label": "Two-Way Audio (Mic + Speaker)",
+              "position": 1,
+              "value": "Two-Way Audio"
+            },
+            {
+              "id": "opt_feat_colorvu",
+              "label": "Color Night Vision (ColorVu)",
+              "position": 2,
+              "value": "ColorVu"
+            },
+            {
+              "id": "opt_feat_ptz",
+              "label": "Pan-Tilt-Zoom (Optical Zoom & Motorized)",
+              "position": 3,
+              "value": "PTZ"
+            },
+            {
+              "id": "opt_feat_pt",
+              "label": "Pan-Tilt (Motorized Rotation, No Optical Zoom)",
+              "position": 4,
+              "value": "PT"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_general_addons",
+      "is_active": true,
+      "description": "Would you like to include any extra accessories?",
+      "title": "Accessories",
+      "created_at": "2026-06-04T16:54:55.077Z",
+      "position": 7,
+      "updated_at": null,
+      "questions": [
+        {
+          "id": "q_general_addons",
+          "question_text": "Select additional hardware (Optional):",
+          "is_required": false,
+          "input_type": "multi",
+          "position": 0,
+          "options": [
+            {
+              "id": "aopt_none",
+              "label": "No extra accessories needed",
+              "position": 0,
+              "value": "none"
+            },
+            {
+              "id": "aopt_monitor",
+              "label": "Monitor Display (32-inch)",
+              "position": 1,
+              "value": "monitor"
+            },
+            {
+              "id": "aopt_ups",
+              "label": "Power Backup (UPS)",
+              "position": 2,
+              "value": "ups"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_wiring",
+      "title": "Wiring",
+      "description": "Is your property already wired for CCTV?",
+      "position": 8,
+      "is_active": true,
+      "created_at": "2026-06-02T06:10:39.450Z",
+      "updated_at": "2026-06-02T06:10:39.450Z",
+      "questions": [
+        {
+          "id": "q_wiring",
+          "question_text": "Select cabling status:",
+          "input_type": "single",
+          "is_required": true,
+          "position": 0,
+          "options": [
+            {
+              "id": "opt_wired_yes",
+              "label": "Yes – Cabling is already done",
+              "value": "true",
+              "position": 0
+            },
+            {
+              "id": "opt_wired_no",
+              "label": "No – Full installation required",
+              "value": "false",
+              "position": 1
+            }
+          ]
+        },
+        {
+          "id": "q_wiring_type",
+          "question_text": "Type of wiring required:",
+          "input_type": "single",
+          "is_required": false,
+          "position": 1,
+          "options": [
+            {
+              "id": "opt_wiring_open",
+              "label": "Open Wiring",
+              "value": "open",
+              "position": 0
+            },
+            {
+              "id": "opt_wiring_conduit",
+              "label": "Conduit Flat Pipe",
+              "value": "conduit",
+              "position": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_site_overview",
+      "is_active": true,
+      "description": "Help our installers prepare for your site.",
+      "title": "Site Overview",
+      "created_at": "2026-06-04T16:54:56.060Z",
+      "position": 9,
+      "updated_at": null,
+      "questions": [
+        {
+          "id": "q_height",
+          "question_text": "What is the approximate mounting height?",
+          "is_required": true,
+          "input_type": "single",
+          "position": 0,
+          "options": [
+            {
+              "id": "hopt_std",
+              "label": "Standard (Up to 10ft)",
+              "position": 0,
+              "value": "standard"
+            },
+            {
+              "id": "hopt_high",
+              "label": "High (10ft - 15ft)",
+              "position": 1,
+              "value": "high"
+            },
+            {
+              "id": "hopt_vhigh",
+              "label": "Very High (15ft+)",
+              "position": 2,
+              "value": "very_high"
+            }
+          ]
+        },
+        {
+          "id": "q_surface",
+          "question_text": "What kind of surface will the cameras be mounted on?",
+          "is_required": true,
+          "input_type": "multi",
+          "position": 1,
+          "options": [
+            {
+              "id": "sopt_brick",
+              "label": "Concrete / Brick Wall",
+              "position": 0,
+              "value": "brick"
+            },
+            {
+              "id": "sopt_false",
+              "label": "False Ceiling",
+              "position": 1,
+              "value": "false"
+            },
+            {
+              "id": "sopt_marble",
+              "label": "Marble / Stone",
+              "position": 2,
+              "value": "marble"
+            },
+            {
+              "id": "sopt_metal",
+              "label": "Metal / Pole",
+              "position": 3,
+              "value": "metal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_timeline",
+      "title": "Timeline",
+      "description": "How soon do you need this system installed?",
+      "position": 10,
+      "is_active": true,
+      "created_at": "2026-06-02T06:10:39.851Z",
+      "updated_at": "2026-06-02T06:10:39.851Z",
+      "questions": [
+        {
+          "id": "q_timeline",
+          "question_text": "Select urgency:",
+          "input_type": "single",
+          "is_required": true,
+          "position": 0,
+          "options": [
+            {
+              "id": "fopt_t_asap",
+              "label": "ASAP (Today/Tomorrow)",
+              "value": "asap",
+              "position": 0
+            },
+            {
+              "id": "fopt_t_week",
+              "label": "Within a week",
+              "value": "week",
+              "position": 1
+            },
+            {
+              "id": "fopt_t_month",
+              "label": "Next Month",
+              "value": "month",
+              "position": 2
+            },
+            {
+              "id": "fopt_t_research",
+              "label": "Just researching",
+              "value": "research",
+              "position": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_brand",
+      "title": "Brand",
+      "description": "Do you have a specific brand in mind?",
+      "position": 11,
+      "is_active": true,
+      "created_at": "2026-06-02T06:10:40.162Z",
+      "updated_at": "2026-06-02T06:10:40.162Z",
+      "questions": [
+        {
+          "id": "q_brand",
+          "question_text": "Select brand preference:",
+          "input_type": "single",
+          "is_required": true,
+          "position": 0,
+          "options": [
+            {
+              "id": "fopt_b_rec",
+              "label": "Unsure, please recommend the best value",
+              "value": "recommend",
+              "position": 0
+            },
+            {
+              "id": "fopt_b_cp",
+              "label": "CP Plus",
+              "value": "cpplus",
+              "position": 1
+            },
+            {
+              "id": "fopt_b_hik",
+              "label": "Hikvision",
+              "value": "hikvision",
+              "position": 2
+            },
+            {
+              "id": "fopt_b_dah",
+              "label": "Dahua",
+              "value": "dahua",
+              "position": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_amc",
+      "title": "Maintenance",
+      "description": "Would you like an Annual Maintenance Contract (AMC)?",
+      "position": 12,
+      "is_active": true,
+      "created_at": "2026-06-02T06:10:40.470Z",
+      "updated_at": "2026-06-02T06:10:40.470Z",
+      "questions": [
+        {
+          "id": "q_amc",
+          "question_text": "Select AMC option:",
+          "input_type": "single",
+          "is_required": true,
+          "position": 0,
+          "options": [
+            {
+              "id": "fopt_amc_yes",
+              "label": "Yes, protect my system",
+              "value": "true",
+              "position": 0
+            },
+            {
+              "id": "fopt_amc_no",
+              "label": "No, I'll manage it myself",
+              "value": "false",
+              "position": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "source": "firestore",
+    "timestamp": "2026-06-15T10:01:25.310Z",
+    "count": 13
+  }
+}

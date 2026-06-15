@@ -15,6 +15,7 @@ import {
 import FaqJsonLd from "@/components/landing/FaqJsonLd";
 import { PincodeWidget } from "@/components/landing/PincodeWidget";
 import { FaqAccordion } from "@/components/landing/FaqAccordion";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import type { Metadata } from "next";
 
 export const dynamic = 'force-dynamic';
@@ -115,20 +116,20 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col items-center lg:items-start text-center lg:text-left relative z-10">
           <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-blue-500/20 text-slate-800 dark:text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_0_20px_rgba(59,130,246,0.15)] backdrop-blur-md">
             <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)] dark:drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-            <span>Enterprise Smart City Security</span>
+            <span><TranslatedText tKey="landing_hero_highlight" defaultText="Simple & Reliable CCTV Security" /></span>
             <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-blue-500/50 hidden sm:block" />
-            <span className="text-emerald-700 dark:text-emerald-400 hidden sm:inline">100% Free Quotes</span>
+            <span className="text-emerald-700 dark:text-emerald-400 hidden sm:inline"><TranslatedText tKey="landing_free_quotes" defaultText="100% Free Quotes" /></span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.05] transition-colors">
-            Secure Your Property. <br />
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.3] md:leading-[1.2] transition-colors">
+            <TranslatedText tKey="protect_home" defaultText="Protect Your Home." /> <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:via-cyan-300 dark:to-emerald-400 drop-shadow-sm">
-              Empower Your City.
+              <TranslatedText tKey="keep_family_safe" defaultText="Keep Your Family Safe." />
             </span>
           </h1>
 
           <p className="text-base sm:text-lg md:text-2xl text-slate-600 dark:text-blue-100/70 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed transition-colors">
-            Get an exact price for your CCTV setup in under 2 minutes. Tap into the intelligence of modern security networks.
+            <TranslatedText tKey="landing_subtitle" defaultText="Find out the exact cost for your CCTV setup in just 2 minutes. Simple, reliable, and tailored for your needs." />
           </p>
 
           <div className="w-full mb-8 sm:mb-10 md:mb-16 relative group">
@@ -139,9 +140,9 @@ export default function LandingPage() {
           </div>
 
           <div className="flex sm:hidden items-center gap-4 mt-8 text-[10px] font-black text-blue-300/50 uppercase tracking-widest">
-            <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> 18% GST Bill</span>
+            <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> <TranslatedText tKey="landing_gst_bill" defaultText="18% GST Bill" /></span>
             <span>·</span>
-            <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> 500+ Installs</span>
+            <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> <TranslatedText tKey="landing_installs" defaultText="500+ Installs" /></span>
           </div>
         </div>
       </section>
@@ -152,22 +153,22 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="space-y-12 sm:space-y-16">
             <div className="text-center max-w-2xl mx-auto">
-              <h2 className="text-blue-600 dark:text-blue-500 font-black text-xs uppercase tracking-[0.4em] mb-4 sm:mb-6">How It Works</h2>
-              <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none transition-colors">Smart Security <br /> Made for You.</h3>
+              <h2 className="text-blue-600 dark:text-blue-500 font-black text-xs uppercase tracking-[0.4em] mb-4 sm:mb-6"><TranslatedText tKey="how_it_works" defaultText="How It Works" /></h2>
+              <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-[1.2] md:leading-tight transition-colors"><TranslatedText tKey="easy_security" defaultText="Easy Security For Everyone." /></h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
               {[
-                { icon: Target, title: "Perfect Coverage", desc: "We make sure every corner of your property is covered, leaving no blind spots for complete peace of mind." },
-                { icon: Cpu, title: "Right Cameras", desc: "We'll suggest the best camera technology for your specific needs, whether it's a small home or a large warehouse." },
-                { icon: Layers, title: "Clear Pricing", desc: "Get three easy-to-understand price options (Value, Professional, and Elite) so you can choose what fits your budget." },
+                { icon: Target, title: "perfect_coverage", defaultTitle: "Perfect Coverage", desc: "perfect_coverage_desc", defaultDesc: "We make sure every corner of your property is covered, leaving no blind spots for complete peace of mind." },
+                { icon: Cpu, title: "right_cameras", defaultTitle: "Right Cameras", desc: "right_cameras_desc", defaultDesc: "We'll suggest the best camera technology for your specific needs, whether it's a small home or a large warehouse." },
+                { icon: Layers, title: "clear_pricing", defaultTitle: "Clear Pricing", desc: "clear_pricing_desc", defaultDesc: "Get three easy-to-understand price options (Value, Professional, and Elite) so you can choose what fits your budget." },
               ].map((item, i) => (
                 <div key={i} className="flex flex-col items-center text-center p-8 rounded-[32px] bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 shadow-sm hover:-translate-y-1.5 transition-all duration-300 group hover:shadow-lg dark:hover:shadow-none hover:border-blue-500/30">
                   <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 flex items-center justify-center text-blue-600 dark:text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-md shrink-0 mb-6">
                     <item.icon className="w-6 h-6" />
                   </div>
-                  <h4 className="text-xl font-black text-slate-900 dark:text-white mb-3 transition-colors">{item.title}</h4>
-                  <p className="text-slate-600 dark:text-zinc-400 font-medium leading-relaxed text-sm transition-colors">{item.desc}</p>
+                  <h4 className="text-xl font-black text-slate-900 dark:text-white mb-3 transition-colors"><TranslatedText tKey={item.title as any} defaultText={item.defaultTitle} /></h4>
+                  <p className="text-slate-600 dark:text-zinc-400 font-medium leading-relaxed text-sm transition-colors"><TranslatedText tKey={item.desc as any} defaultText={item.defaultDesc} /></p>
                 </div>
               ))}
             </div>
@@ -181,11 +182,11 @@ export default function LandingPage() {
           <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 dark:bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-500 mb-8 sm:mb-12 animate-bounce shadow-[0_0_20px_rgba(59,130,246,0.3)]">
             <Zap className="w-7 h-7 sm:w-10 sm:h-10 fill-current" />
           </div>
-          <h2 className="text-4xl sm:text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter mb-5 sm:mb-8 leading-[0.9] sm:leading-[0.85] transition-colors">
-            Secure your space <br className="hidden sm:block" /> today.
+          <h2 className="text-4xl sm:text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter mb-5 sm:mb-8 leading-[1.2] md:leading-[1.1] transition-colors">
+            <TranslatedText tKey="landing_secure_space" defaultText="Secure your space" /> <br className="hidden sm:block" /> <TranslatedText tKey="landing_today" defaultText="today." />
           </h2>
           <p className="text-slate-600 dark:text-blue-100/70 text-base sm:text-xl md:text-2xl mb-12 sm:mb-16 font-medium max-w-2xl text-center transition-colors">
-            2-minute setup. No hidden costs. 18% GST included in all plans.
+            <TranslatedText tKey="landing_setup_subtitle" defaultText="2-minute setup. No hidden costs. 18% GST included in all plans." />
           </p>
 
           <FaqAccordion />
@@ -193,7 +194,7 @@ export default function LandingPage() {
 
           {/* Partner Trust Strip */}
           <div className="mt-16 sm:mt-20 flex flex-col items-center gap-6 sm:gap-8 w-full">
-            <div className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Trusted Hardware Partners &amp; Verified Installs</div>
+            <div className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]"><TranslatedText tKey="trusted_partners" defaultText="Trusted Hardware Partners & Verified Installs" /></div>
             <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-12 md:gap-16 lg:gap-20">
               <Image src="/partners/cpplus.png" alt="CP PLUS" width={120} height={40} unoptimized className="h-6 md:h-8 w-auto object-contain" />
               <Image src="/partners/dahua.png" alt="Dahua" width={120} height={40} unoptimized className="h-6 md:h-8 w-auto object-contain" />
@@ -206,7 +207,7 @@ export default function LandingPage() {
             </div>
             <div className="px-5 py-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
               <Star className="w-4 h-4 fill-emerald-500/50" />
-              <span>India&apos;s Preferred CCTV Platform | 500+ Properties Secured</span>
+              <span><TranslatedText tKey="preferred_platform" defaultText="India's Preferred CCTV Platform | 500+ Properties Secured" /></span>
             </div>
           </div>
           <div className="h-20 md:hidden" aria-hidden="true" />

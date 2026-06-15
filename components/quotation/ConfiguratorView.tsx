@@ -387,8 +387,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         {/* Curated Packages Segment */}
         <div className="mb-16">
           <div className="text-center mb-10">
-             <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Curated Packages</h2>
-             <p className="text-[15px] text-[#86868b] mt-2">Select a foundation that fits your needs. You can fully customize it later.</p>
+             <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Ready-Made Packages</h2>
+             <p className="text-[15px] text-[#86868b] mt-2">Choose a starting package that fits your needs. You can change it later.</p>
           </div>
 
           
@@ -412,7 +412,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         {/* Spec Table Segment */}
         <div className="mb-16">
           <div className="text-center mb-8">
-             <h3 className="text-2xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Compare technical specifications.</h3>
+             <h3 className="text-2xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Compare camera details.</h3>
           </div>
           
           <SpecCompareTable
@@ -488,7 +488,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       <div id="build-your-own" className="w-full max-w-7xl mx-auto px-4 scroll-mt-24">
         <div className="text-center mb-10">
            <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Build your own system.</h2>
-           <p className="text-[15px] text-[#86868b] mt-2">Fine-tune every aspect of your security configuration.</p>
+           <p className="text-[15px] text-[#86868b] mt-2">Adjust every detail of your security setup.</p>
         </div>
         
         {is_compare_mode ? (

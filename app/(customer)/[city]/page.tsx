@@ -87,6 +87,7 @@ export default async function DynamicCityLandingPage({ params }: PageProps) {
   return (
     <CityLandingPage 
       cityName={data.name}
+      citySlug={citySlug}
       heroHighlight={data.heroHighlight}
       neighborhoods={data.neighborhoods}
       commercialAreas={data.commercialAreas}

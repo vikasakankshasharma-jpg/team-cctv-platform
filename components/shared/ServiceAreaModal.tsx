@@ -5,12 +5,16 @@ import { createPortal } from "react-dom";
 import { MapPin, X, ChevronDown, CheckCircle2, AlertCircle, ArrowRight, Loader2, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUiStore } from "@/lib/ui-store";
+import { useI18nStore } from "@/lib/i18n/store";
+import { getStateLanguage } from "@/lib/i18n/mapping";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type City = { name: string; slug: string; served: boolean };
 type State = { name: string; slug: string; children: City[] };
 
 export function ServiceAreaModal() {
   const { isServiceAreaModalOpen, closeServiceAreaModal, openServiceAreaModal } = useUiStore();
+  const { t } = useTranslation();
   const [locations, setLocations] = useState<State[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -78,6 +82,9 @@ export function ServiceAreaModal() {
         setSelectedState(state);
         setSelectedCity(district);
         
+        const lang = getStateLanguage(state);
+        useI18nStore.getState().setLocaleFromPincode(lang);
+        
         const foundState = locations.find(s => s.name.toLowerCase() === state.toLowerCase());
         const foundCity = foundState?.children?.find(c => c.name.toLowerCase() === district.toLowerCase() || c.slug === district.toLowerCase());
         
@@ -102,10 +109,10 @@ export function ServiceAreaModal() {
     <>
       <button 
         onClick={openServiceAreaModal}
-        className="flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100/50 dark:border-zinc-800/50 text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-sm cursor-pointer shrink-0"
+        className="flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100/50 dark:border-zinc-800/50 text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-sm cursor-pointer shrink-0"
       >
         <MapPin className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-        <span className="hidden min-[400px]:inline">Service Areas</span>
+        <span className="hidden min-[400px]:inline">{t('service_areas', 'Service Areas')}</span>
       </button>
 
       {isServiceAreaModalOpen && typeof document !== 'undefined' && createPortal(
@@ -134,7 +141,7 @@ export function ServiceAreaModal() {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12 text-zinc-400 space-y-4 shrink-0">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                <p className="text-xs font-bold uppercase tracking-widest">Loading...</p>
+                <p className="text-sm font-bold uppercase tracking-widest">Loading...</p>
               </div>
             ) : (
               <div className="flex flex-col flex-1 min-h-0 space-y-6">
@@ -160,7 +167,7 @@ export function ServiceAreaModal() {
                   {mode === "pincode" && (
                     <div className="space-y-4 animate-in fade-in">
                       <div className="space-y-1.5 relative">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Pincode</label>
+                        <label className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-400 ml-1">Pincode</label>
                         <div className="relative">
                           <input 
                             type="text"
@@ -192,7 +199,7 @@ export function ServiceAreaModal() {
                     <div className="space-y-5 animate-in fade-in pb-2">
                       {/* State Selector */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">State</label>
+                        <label className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-400 ml-1">State</label>
                         <div className="relative">
                           <select 
                             value={selectedState}
@@ -215,7 +222,7 @@ export function ServiceAreaModal() {
                       {/* City Selector */}
                       {selectedState && stateData && (
                         <div className="space-y-1.5 animate-in slide-in-from-top-2 fade-in duration-300 relative">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">City / Town</label>
+                          <label className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-400 ml-1">City / Town</label>
                           <div className="relative">
                             <input 
                               type="text"
@@ -267,7 +274,7 @@ export function ServiceAreaModal() {
                         <div className="space-y-3 mt-6">
                           <button
                             onClick={handleContinue}
-                            className="w-full py-3.5 rounded-xl text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg bg-blue-600 hover:bg-blue-500 shadow-blue-600/20"
+                            className="w-full py-3.5 rounded-xl text-white font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg bg-blue-600 hover:bg-blue-500 shadow-blue-600/20"
                           >
                             Get Quotation Now
                             <ArrowRight className="w-4 h-4" />
@@ -282,7 +289,7 @@ export function ServiceAreaModal() {
                             setSelectedState("");
                             setSelectedCity("");
                           }}
-                          className="w-full py-3 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors"
+                          className="w-full py-3 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors"
                         >
                           Use Pincode Instead
                         </button>

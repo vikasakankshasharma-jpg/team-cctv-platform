@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Loader2, MapPin, ShieldAlert } from "lucide-react";
+import { ArrowRight, Loader2, MapPin, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { PhoneCaptureModal } from "@/components/shared/PhoneCaptureModal";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer" }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [pincode, setPincode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<React.ReactNode>("");
@@ -18,7 +20,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
     setError("");
 
     if (!/^\d{6}$/.test(pincode)) {
-      return setError("Please enter a valid 6-digit pincode.");
+      return setError(t("invalid_pincode_err", "Please enter a valid 6-digit pincode."));
     }
 
     setLoading(true);
@@ -48,21 +50,21 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
         // City not found — show friendly inline WhatsApp waitlist option
         setError(
           <span className="flex items-center gap-1.5 flex-wrap">
-            <span>We don't serve your area yet.</span>
+            <span>{t("area_not_served", "We don't serve your area yet.")}</span>
             <a
               href={`https://wa.me/919772699395?text=Hi,%20I'm%20interested%20in%20CCTV%20installation%20for%20pincode%20${pincode}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 dark:text-blue-400 font-bold underline hover:text-blue-500"
             >
-              WhatsApp us
+              {t("whatsapp_us", "WhatsApp us")}
             </a>
-            <span>to check expansion options!</span>
+            <span>{t("check_expansion", "to check expansion options!")}</span>
           </span>
         );
       }
     } catch (err: any) {
-      setError(err.message || "Failed to check service availability.");
+      setError(err.message || t("failed_check_availability", "Failed to check service availability."));
     } finally {
       setLoading(false);
     }
@@ -86,14 +88,26 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
             maxLength={6}
             value={pincode}
             onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            placeholder="Enter Pincode (e.g., 302017)"
-            className={`w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-2xl pl-12 pr-4 outline-none transition-all font-bold tracking-wider text-zinc-950 dark:text-white ${
+            placeholder={t("enter_pincode_placeholder", "Enter Pincode (e.g., 302017)")}
+            className={`w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-2xl pl-12 pr-12 outline-none transition-all font-bold tracking-wider text-zinc-950 dark:text-white ${
               isHero 
-                ? "py-4 sm:py-5.5 text-base sm:text-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white dark:focus:bg-zinc-900" 
-                : "py-3.5 text-sm focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900"
+                ? `py-4 sm:py-5.5 text-base sm:text-lg focus:bg-white dark:focus:bg-zinc-900 ${pincode.length === 6 ? 'ring-4 ring-emerald-500/20 border-emerald-500' : 'focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500'}`
+                : `py-3.5 text-sm focus:bg-white dark:focus:bg-zinc-900 ${pincode.length === 6 ? 'ring-4 ring-emerald-500/20 border-emerald-500' : 'focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500'}`
             }`}
             required
           />
+          <AnimatePresence>
+            {pincode.length === 6 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500"
+              >
+                <CheckCircle2 className="w-5 h-5" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -110,7 +124,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <>
-              Check Area <ArrowRight className="w-4 h-4" />
+              {t("check_area", "Check Area")} <ArrowRight className="w-4 h-4" />
             </>
           )}
         </motion.button>

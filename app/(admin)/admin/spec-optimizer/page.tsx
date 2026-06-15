@@ -1,7 +1,7 @@
 import SpecOptimizerClient from "./SpecOptimizerClient";
 
 export const metadata = {
-  title: "Spec Optimizer | Secure Easy Admin",
+  title: "Spec Optimizer | CCTV Quotation Admin",
   description: "Retroactively apply learned specifications to existing products.",
 };
 

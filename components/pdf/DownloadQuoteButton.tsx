@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Download, Loader2 } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { Lead, PricingResult, AppSettings } from '@/types';
 
 interface DownloadQuoteButtonProps {
@@ -13,6 +14,7 @@ interface DownloadQuoteButtonProps {
 
 export function DownloadQuoteButton({ lead, quote, settings, className = "" }: DownloadQuoteButtonProps) {
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   const handleDownload = async () => {
     try {
@@ -53,7 +55,7 @@ export function DownloadQuoteButton({ lead, quote, settings, className = "" }: D
       ) : (
         <>
           <Download className="w-4 h-4 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
-          Download PDF
+          {t('quote_download_pdf', 'Download PDF')}
         </>
       )}
     </button>

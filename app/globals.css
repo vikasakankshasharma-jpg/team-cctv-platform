@@ -550,3 +550,19 @@ body::before {
 .metric-bar-wrap { flex: 1; height: 5px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
 .metric-bar-fill { height: 100%; border-radius: 3px; }
 .metric-bar-pct { font-size: 11px; font-weight: 600; color: var(--text); min-width: 32px; text-align: right; font-family: var(--font-mono), monospace; }
+/* Automatically normalize typography for Indic languages to prevent broken ligatures and unreadable text */
+html[data-locale]:not([data-locale="en"]) .tracking-widest,
+html[data-locale]:not([data-locale="en"]) .tracking-wider,
+html[data-locale]:not([data-locale="en"]) .tracking-\[0\.2em\],
+html[data-locale]:not([data-locale="en"]) .tracking-\[0\.25em\] {
+  letter-spacing: normal !important;
+}
+
+html[data-locale]:not([data-locale="en"]) .uppercase {
+  text-transform: none !important;
+}
+
+/* For Indic languages, font-black can cause characters to bleed into each other at small sizes */
+html[data-locale]:not([data-locale="en"]) .font-black {
+  font-weight: 700 !important; /* Downgrade black to bold for legibility */
+}

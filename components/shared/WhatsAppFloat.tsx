@@ -52,7 +52,7 @@ export function WhatsAppFloat() {
         .whatsapp-float {
           position: fixed;
           bottom: 88px; /* above mobile sticky bar */
-          right: 20px;
+          left: 16px;
           z-index: 49;
           display: flex;
           align-items: center;
@@ -68,7 +68,7 @@ export function WhatsAppFloat() {
         @media (min-width: 768px) {
           .whatsapp-float {
             bottom: 28px;
-            right: 28px;
+            left: 28px;
             width: 60px;
             height: 60px;
           }
@@ -79,7 +79,7 @@ export function WhatsAppFloat() {
         }
         .whatsapp-float:hover .whatsapp-float__label {
           opacity: 1; visibility: visible;
-          transform: translateX(-8px);
+          transform: translateX(8px);
           pointer-events: auto;
         }
 
@@ -111,7 +111,7 @@ export function WhatsAppFloat() {
         /* Tooltip */
         .whatsapp-float__label {
           position: absolute;
-          right: calc(100% + 12px);
+          left: calc(100% + 12px);
           white-space: nowrap;
           background: #1a1a1a;
           color: #fff;

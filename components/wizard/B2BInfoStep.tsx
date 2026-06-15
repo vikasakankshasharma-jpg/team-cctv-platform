@@ -70,7 +70,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
         {/* Fields */}
         <div className="space-y-4 mb-6">
           <div>
-            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">
+            <label className="block text-xs sm:text-sm font-black text-zinc-500 uppercase tracking-widest mb-2">
               Company / Firm Name <span className="text-zinc-400 font-medium normal-case tracking-normal">(optional)</span>
             </label>
             <input
@@ -83,7 +83,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
           </div>
 
           <div>
-            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+            <label className="block text-xs sm:text-sm font-black text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-blue-500" />
               GST Number <span className="text-zinc-400 font-medium normal-case tracking-normal">(optional — for GST invoice)</span>
             </label>
@@ -115,7 +115,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
         <div className="flex flex-col gap-3">
           <button
             onClick={handleConfirm}
-            className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[11px] tracking-[0.2em] rounded-[18px] shadow-[0_8px_20px_-8px_rgba(37,99,235,0.5)] hover:shadow-blue-600/40 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+            className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs sm:text-sm tracking-[0.2em] rounded-[18px] shadow-[0_8px_20px_-8px_rgba(37,99,235,0.5)] hover:shadow-blue-600/40 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
           >
             Generate Corporate Quote
             <ChevronRight className="w-4 h-4" />

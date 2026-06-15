@@ -8,6 +8,7 @@ import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,11 +70,12 @@ function formatDate(dateStr: string) {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: QuoteData["status"] }) {
+  const { t } = useTranslation();
   const map = {
-    pending:  { label: "Awaiting Approval", classes: "bg-amber-100/50 text-amber-800 border-amber-200/50" },
-    accepted: { label: "Accepted",          classes: "bg-emerald-100/50 text-emerald-800 border-emerald-200/50" },
-    expired:  { label: "Expired",           classes: "bg-rose-100/50 text-rose-800 border-rose-200/50" },
-    rejected: { label: "Rejected",          classes: "bg-zinc-100/50 text-zinc-600 border-zinc-200/50" },
+    pending:  { label: t("quote_awaiting", "Awaiting Approval"), classes: "bg-amber-100/50 text-amber-800 border-amber-200/50" },
+    accepted: { label: t("quote_accepted", "Accepted"),          classes: "bg-emerald-100/50 text-emerald-800 border-emerald-200/50" },
+    expired:  { label: t("quote_expired", "Expired"),           classes: "bg-rose-100/50 text-rose-800 border-rose-200/50" },
+    rejected: { label: t("quote_rejected", "Rejected"),          classes: "bg-zinc-100/50 text-zinc-600 border-zinc-200/50" },
   };
   const s = map[status] || map.pending;
   
@@ -109,6 +111,7 @@ function TermCard({ icon, title, body, delay }: { icon: React.ReactNode; title: 
 // ─── Main Client Component ───────────────────────────────────────────────────
 
 export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
+  const { t } = useTranslation();
   const [accepted, setAccepted] = useState(quote.status === "accepted");
   const [isPayingEMI, setIsPayingEMI] = useState(false);
   const [isPayingFull, setIsPayingFull] = useState(false);
@@ -229,7 +232,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             onClick={handleDownloadPDF}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-full shadow-sm hover:bg-zinc-50 hover:shadow transition-all"
           >
-            <FileText className="w-4 h-4" /> Download PDF
+            <FileText className="w-4 h-4" /> {t("download_pdf", "Download PDF")}
           </button>
         </motion.div>
 
@@ -242,7 +245,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             <div className="px-6 py-8 sm:px-10 sm:py-10 bg-white border-b border-zinc-100">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 mb-1">Quotation</h1>
+                  <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 mb-1">{t("quotation", "Quotation")}</h1>
                   <p className="text-zinc-400 font-medium tracking-wide text-sm">#{quote.quoteNumber}</p>
                 </div>
                 <div className="text-left sm:text-right">
@@ -270,7 +273,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
             {/* Bill of Materials */}
             <div className="px-6 py-8 sm:px-10">
-              <h3 className="text-sm font-semibold text-zinc-900 mb-6">Bill of Materials</h3>
+              <h3 className="text-sm font-semibold text-zinc-900 mb-6">{t("bill_of_materials", "Bill of Materials")}</h3>
               
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -320,7 +323,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                     <span>{formatINR(halfGst)}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2">
-                    <span className="text-base font-semibold text-zinc-900">Total</span>
+                    <span className="text-base font-semibold text-zinc-900">{t("total", "Total")}</span>
                     <span className="text-xl font-semibold tracking-tight text-zinc-900">{formatINR(total)}</span>
                   </div>
                 </div>
@@ -376,11 +379,11 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           </motion.div>
 
           {/* Action Area */}
-          <motion.div variants={fadeIn} className="pt-8">
+          <motion.div variants={fadeIn} className="pt-8 pb-40 sm:pb-0">
             {!accepted ? (
-              <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-zinc-100">
-                <h3 className="text-xl font-semibold text-zinc-900 mb-2">Complete Your Order</h3>
-                <p className="text-sm text-zinc-500 mb-8">Choose your preferred payment method to schedule your installation.</p>
+              <div className="bg-white rounded-t-3xl sm:rounded-3xl p-6 sm:p-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] sm:shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-t sm:border border-zinc-100 fixed bottom-0 left-0 right-0 z-50 sm:relative overflow-y-auto max-h-[80vh] sm:max-h-none sm:overflow-visible">
+                <h3 className="text-xl font-semibold text-zinc-900 mb-2">{t("complete_your_order", "Complete Your Order")}</h3>
+                <p className="text-sm text-zinc-500 mb-8">{t("complete_your_order_desc", "Choose your preferred payment method to schedule your installation.")}</p>
 
                 {/* Cashfree EMI Banner */}
                 <div className="relative bg-zinc-900 rounded-2xl p-6 sm:p-8 overflow-hidden mb-8 group">
@@ -431,7 +434,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                     disabled={isPayingAdvance || isPayingFull}
                     className="flex-1 py-4 px-6 bg-white text-zinc-900 border border-zinc-200 rounded-xl text-sm font-semibold shadow-sm hover:bg-zinc-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
                   >
-                    {isPayingFull ? "Processing..." : `Pay Full Amount (${formatINR(total)})`}
+                    {isPayingFull ? t("processing", "Processing...") : `${t("pay_full_amount", "Pay Full Amount")} (${formatINR(total)})`}
                   </motion.button>
                 </div>
               </div>
