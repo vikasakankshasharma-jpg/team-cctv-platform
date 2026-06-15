@@ -69,8 +69,22 @@ export function LeadGate({
     }
   }, [pincode]);
 
-  // Initialize Recaptcha safely on demand
-
+  // Initialize Recaptcha safely on mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && !window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+      });
+    }
+    
+    return () => {
+      // Cleanup recaptcha on unmount
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = undefined;
+      }
+    };
+  }, []);
 
   // Countdown timer for resend
   useEffect(() => {
@@ -106,22 +120,13 @@ export function LeadGate({
         return;
       }
 
-      // Always start fresh to avoid detached DOM node issues (auth/internal-error)
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = undefined;
-      }
-      
-      // Clear container just in case
-      const container = document.getElementById("recaptcha-container");
-      if (container) container.innerHTML = '';
-
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
-
-      // Crucial fix: wait for recaptcha to fully render in the DOM before proceeding
-      await window.recaptchaVerifier.render();
-
       const formatPhone = "+91" + mobile.replace(/\s/g, "");
+      
+      // We must pass the already initialized recaptcha verifier
+      if (!window.recaptchaVerifier) {
+         window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+      }
+
       const result = await signInWithPhoneNumber(auth, formatPhone, window.recaptchaVerifier);
       
       setConfirmationResult(result);
