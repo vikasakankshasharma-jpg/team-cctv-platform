@@ -24,26 +24,24 @@ export async function executeQuotationWizardStatus(userId: string, securityRole:
 
   try {
     const db = getFirestore();
-    // Assuming the user's active wizard session is stored in a 'quotes' collection
-    const quoteSnapshot = await db.collection("quotes")
-      .where("userId", "==", userId)
-      .orderBy("updatedAt", "desc")
+    const leadSnapshot = await db.collection("leads")
+      .where("firebase_uid", "==", userId)
+      .orderBy("created_at", "desc")
       .limit(1)
       .get();
 
-    if (quoteSnapshot.empty) {
+    if (leadSnapshot.empty) {
       return { status: "NO_ACTIVE_QUOTE", message: "The user has not started a quotation wizard session yet." };
     }
 
-    const quoteData = quoteSnapshot.docs[0].data();
+    const quoteData = leadSnapshot.docs[0].data();
 
     return {
-      quoteId: quoteSnapshot.docs[0].id,
+      quoteId: leadSnapshot.docs[0].id,
       status: quoteData.status || "DRAFT",
-      totalCameras: quoteData.cameras?.length || 0,
-      estimatedCostINR: quoteData.estimatedCost || 0,
-      propertyType: quoteData.propertyType || "Unknown",
-      lastUpdated: quoteData.updatedAt?.toDate?.() || new Date().toISOString()
+      totalCameras: quoteData.wizard_answers?.q_camera_count || quoteData.camera_count || 4,
+      propertyType: quoteData.property_type || quoteData.wizard_answers?.q_property_type || "Unknown",
+      lastUpdated: quoteData.updated_at?.toDate?.() || quoteData.created_at?.toDate?.() || new Date().toISOString()
     };
   } catch (error: any) {
     console.error("[Wizard Tool Error]", error);
@@ -84,39 +82,33 @@ export async function executeUpdateQuotationWizard(userId: string, addCameras: n
 
   try {
     const db = getFirestore();
-    const quoteSnapshot = await db.collection("quotes")
-      .where("userId", "==", userId)
-      .orderBy("updatedAt", "desc")
+    const leadSnapshot = await db.collection("leads")
+      .where("firebase_uid", "==", userId)
+      .orderBy("created_at", "desc")
       .limit(1)
       .get();
 
-    if (quoteSnapshot.empty) {
+    if (leadSnapshot.empty) {
       return { status: "NO_ACTIVE_QUOTE", message: "No active quote found to update. The user needs to start a quote first." };
     }
 
-    const quoteDoc = quoteSnapshot.docs[0];
-    const currentData = quoteDoc.data();
+    const leadDoc = leadSnapshot.docs[0];
+    const currentData = leadDoc.data();
     
     // Calculate new camera count safely
-    let currentCameras = currentData.cameras?.length || 0;
-    // For demonstration, we just increment a counter, but in reality we'd append camera objects to an array
-    const newCameraCount = Math.max(0, currentCameras + addCameras);
-    
-    // Simulate estimated cost update (approx 3500 INR per camera)
-    const newEstimatedCost = (currentData.estimatedCost || 0) + (addCameras * 3500);
+    let currentCameras = currentData.camera_count || currentData.wizard_answers?.q_camera_count || 4;
+    const newCameraCount = Math.max(1, currentCameras + addCameras);
 
     // Update in Firestore
-    await quoteDoc.ref.update({
-      cameraCountForSimulation: newCameraCount, 
-      estimatedCost: newEstimatedCost,
-      updatedAt: new Date()
+    await leadDoc.ref.update({
+      camera_count: newCameraCount, 
+      updated_at: new Date()
     });
 
     return {
       success: true,
-      message: `Successfully added ${addCameras} camera(s).`,
+      message: `Successfully added ${addCameras} camera(s). Total is now ${newCameraCount}.`,
       newTotalCameras: newCameraCount,
-      newEstimatedCostINR: newEstimatedCost
     };
   } catch (error: any) {
     console.error("[Wizard Update Tool Error]", error);
