@@ -69,33 +69,6 @@ export function LeadGate({
     }
   }, [pincode]);
 
-  // Local reference for recaptcha verifier
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-
-  // Initialize Recaptcha safely on mount
-  useEffect(() => {
-    const container = document.getElementById("recaptcha-container");
-    if (container) container.innerHTML = ''; // Ensure clean slate
-    
-    try {
-      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
-      });
-    } catch (e) {
-      console.error("Recaptcha Init Error:", e);
-    }
-    
-    return () => {
-      // Cleanup recaptcha on unmount so it doesn't hold onto dead DOM nodes
-      if (recaptchaVerifierRef.current) {
-        try {
-           recaptchaVerifierRef.current.clear();
-        } catch (_) {}
-        recaptchaVerifierRef.current = null;
-      }
-    };
-  }, []);
-
   // Countdown timer for resend
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -132,14 +105,23 @@ export function LeadGate({
 
       const formatPhone = "+91" + mobile.replace(/\s/g, "");
       
-      // Safety fallback: if ref is null, re-initialize
-      if (!recaptchaVerifierRef.current) {
-         const container = document.getElementById("recaptcha-container");
-         if (container) container.innerHTML = '';
-         recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+      // Escape React's lifecycle teardown by injecting the container directly into the body
+      let recaptchaContainer = document.getElementById("recaptcha-container-leadgate");
+      if (!recaptchaContainer) {
+        recaptchaContainer = document.createElement("div");
+        recaptchaContainer.id = "recaptcha-container-leadgate";
+        document.body.appendChild(recaptchaContainer);
       }
 
-      const result = await signInWithPhoneNumber(auth, formatPhone, recaptchaVerifierRef.current);
+      // Initialize the global verifier specifically for LeadGate once
+      if (!(window as any).recaptchaVerifierLeadGate) {
+        (window as any).recaptchaVerifierLeadGate = new RecaptchaVerifier(auth, "recaptcha-container-leadgate", { 
+          size: "invisible" 
+        });
+      }
+
+      const appVerifier = (window as any).recaptchaVerifierLeadGate;
+      const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
       
       setConfirmationResult(result);
       setOtpSent(true);
@@ -165,12 +147,6 @@ export function LeadGate({
       }
     } catch (err: any) {
       console.error("OTP Send Error:", err);
-      // Clean up recaptcha so they can try again
-      if (recaptchaVerifierRef.current) {
-        try { recaptchaVerifierRef.current.clear(); } catch (_) {}
-        recaptchaVerifierRef.current = null;
-      }
-      
       // Output the exact Firebase error message so we know exactly what is wrong
       setError(`Error: ${err.message || "Failed to send code."}`);
     } finally {
@@ -288,8 +264,6 @@ export function LeadGate({
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div id="recaptcha-container"></div>
-
       <div className="bg-white dark:bg-zinc-900 shadow-2xl rounded-3xl w-full max-w-md p-6 sm:p-8 relative">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold px-4 py-1.5 rounded-full text-sm uppercase tracking-wider mb-4">
