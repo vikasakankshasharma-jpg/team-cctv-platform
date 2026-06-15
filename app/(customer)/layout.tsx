@@ -29,6 +29,7 @@ import { MobileStickyCtaBar } from "@/components/shared/MobileStickyCtaBar";
 import { ServiceAreaModal } from "@/components/shared/ServiceAreaModal";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import { LanguageWelcomeModal } from "@/components/shared/LanguageWelcomeModal";
+import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 
 export default function CustomerLayout({
   children,
@@ -86,6 +87,7 @@ export default function CustomerLayout({
                 <span className="text-sm font-black">+91 97726 99395</span>
               </div>
             </a>
+            <LanguageSwitcher />
             <ThemeToggle />
             <Link
               href="/admin/login"
