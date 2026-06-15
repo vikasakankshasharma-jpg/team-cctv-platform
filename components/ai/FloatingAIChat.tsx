@@ -8,27 +8,12 @@ import { usePathname } from "next/navigation";
 
 export function FloatingAIChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const [windowDimensions, setWindowDimensions] = useState({ width: 1000, height: 1000 });
   const pathname = usePathname() || "unknown";
 
   const [proactiveMessage, setProactiveMessage] = useState<string | undefined>(undefined);
   const [hasTriggeredProactive, setHasTriggeredProactive] = useState(false);
 
   useEffect(() => {
-    // Only access window on the client side
-    setWindowDimensions({
-      width: window.innerWidth,
-      height: window.innerHeight
-    });
-    
-    const handleResize = () => {
-      setWindowDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    };
-    window.addEventListener("resize", handleResize);
-
     // Idle Detection Logic
     let idleTimer: NodeJS.Timeout;
     
@@ -56,7 +41,6 @@ export function FloatingAIChat() {
     resetIdleTimer();
 
     return () => {
-      window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", resetIdleTimer);
       window.removeEventListener("keypress", resetIdleTimer);
       window.removeEventListener("scroll", resetIdleTimer);
@@ -66,28 +50,18 @@ export function FloatingAIChat() {
 
   return (
     <motion.div 
-      className="fixed bottom-6 right-6 z-50 flex flex-col items-end"
-      drag
-      dragMomentum={false}
-      // Keep the widget somewhat within the screen bounds so it doesn't get lost forever
-      dragConstraints={{
-        top: -windowDimensions.height + 150,
-        left: -windowDimensions.width + 100,
-        right: 0,
-        bottom: 0,
-      }}
+      className="fixed bottom-[110px] lg:bottom-8 right-4 md:right-8 z-[100] flex flex-col items-end"
     >
       {/* The Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-80 md:w-96 shadow-2xl rounded-xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
+        <div className="mb-4 w-[calc(100vw-2rem)] sm:w-80 md:w-96 shadow-2xl rounded-xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
           <ChatInterface pageContext={pathname} initialMessage={proactiveMessage} />
         </div>
       )}
 
-      {/* The Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg transition-colors cursor-grab active:cursor-grabbing"
+        className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
         aria-label="Toggle AI Assistant"
       >
         {isOpen ? (

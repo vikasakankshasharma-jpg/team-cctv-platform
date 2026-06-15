@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { Camera, Calendar, HardDrive, Edit2, Cpu, Monitor, Download, Calendar as CalendarIcon, Check, Loader2, PlusCircle, Settings2 } from "lucide-react";
 import { DownloadQuoteButton } from "@/components/pdf/DownloadQuoteButton";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import type { Lead, PricingResult, AppSettings } from "@/types";
 
@@ -21,6 +22,7 @@ interface SmartContextBarProps {
 
 export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierName, isCustomized, onAction, isSaving, lead, quote, settings }: SmartContextBarProps) {
   const { selection } = useConfiguratorStore();
+  const { t } = useTranslation();
 
   let storageText = selection.recording_days > 0 ? `${selection.recording_days} Days` : "No Storage";
   let storageTextMobile = selection.recording_days > 0 ? `${selection.recording_days}d` : "None";
@@ -117,7 +119,7 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
         {/* Live Total & Checkout Buttons */}
         <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
           <div className="flex flex-col sm:items-end shrink-0">
-            <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">Total Estimation</span>
+            <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">{t('quote_total', 'Total Estimation')}</span>
             <div className="flex items-center gap-1 text-[#1d1d1f] dark:text-white">
               <span className="text-sm font-medium">₹</span>
               <span className="text-2xl font-semibold tracking-tight">{totalPrice.toLocaleString("en-IN")}</span>
@@ -139,7 +141,7 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
                 className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#2d2d2f] hover:bg-[#f5f5f7] dark:hover:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white border border-[#d2d2d7] dark:border-[#424245] rounded-full text-xs font-medium transition-colors"
               >
                 <Download className="w-3.5 h-3.5" />
-                Save PDF
+                {t('quote_download_pdf', 'Save PDF')}
               </button>
             )}
             <button 
@@ -147,7 +149,7 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
               disabled={isSaving}
               className="flex items-center gap-2 px-6 py-2.5 bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
             >
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Book Site Visit</>}
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t('quote_schedule_visit', 'Book Site Visit')}</>}
             </button>
           </div>
         </div>

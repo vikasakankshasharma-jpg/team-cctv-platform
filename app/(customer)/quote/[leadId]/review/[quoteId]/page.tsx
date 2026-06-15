@@ -2,6 +2,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { notFound } from "next/navigation";
 import { QuoteReviewClient, QuoteData } from "./QuoteReviewClient";
 import type { Metadata } from "next";
+import { serializeDoc } from "@/lib/serialize";
 
 export const dynamic = "force-dynamic";
 
@@ -152,7 +153,6 @@ export default async function QuoteReviewPage({
     if (!quoteData) return notFound();
 
     // Essential for passing Server component data to Client Component
-    const { serializeDoc } = await import("@/lib/serialize");
     quoteData = serializeDoc(quoteData);
 
   } catch (err) {

@@ -262,7 +262,7 @@ export default function AdminLoginForm() {
 
           {/* Main Headline */}
           <div className="relative z-10">
-            <h1 className="text-6xl font-black text-white tracking-tighter leading-[0.88] mb-6">
+            <h1 className="text-6xl font-black text-white tracking-tighter leading-[1.2] md:leading-[1.1] mb-6">
               Intelligence<br />
               <span className="text-[var(--gold)] relative">Command
                 <span className="absolute -bottom-1 left-0 right-0 h-[3px] bg-gradient-to-r from-[var(--gold)] to-[#b0792e] rounded-full" />

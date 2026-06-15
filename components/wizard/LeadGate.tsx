@@ -9,6 +9,9 @@ import { useWizardStore } from "@/store/wizard";
 import { ShieldCheck, Phone, User, CheckCircle2, Loader2, ArrowRight, MapPin } from "lucide-react";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 import { createLeadAction } from "@/app/actions/lead";
+import { useI18nStore } from "@/lib/i18n/store";
+import { getStateLanguage } from "@/lib/i18n/mapping";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Define recaptcha on window
 declare global {
@@ -29,6 +32,7 @@ export function LeadGate({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { answers, setPartialLeadId } = useWizardStore();
+  const { t } = useTranslation();
 
   const [mobile, setMobile] = useState("");
   const [name, setName] = useState("");
@@ -57,6 +61,8 @@ export function LeadGate({
             const postOffice = data[0].PostOffice[0];
             setCity(postOffice.District || postOffice.Block);
             setState(postOffice.State);
+            const lang = getStateLanguage(postOffice.State);
+            useI18nStore.getState().setLocaleFromPincode(lang);
           }
         })
         .catch(() => {}); // Fail silently
@@ -79,11 +85,11 @@ export function LeadGate({
     e.preventDefault();
     setError("");
 
-    if (!/^[6-9]\d{9}$/.test(mobile)) {
-      return setError("Enter a valid 10-digit Indian mobile number.");
+    if (!/^[6-9]\d{9}$/.test(mobile.replace(/\s/g, ""))) {
+      return setError(t("err_invalid_mobile", "Enter a valid 10-digit Indian mobile number."));
     }
-    if (name.length < 2) return setError("Please enter your full name.");
-    if (!/^\d{6}$/.test(pincode)) return setError("Enter a valid 6-digit area pincode.");
+    if (name.length < 2) return setError(t("err_enter_name", "Please enter your full name."));
+    if (!/^\d{6}$/.test(pincode)) return setError(t("err_invalid_pincode", "Enter a valid 6-digit area pincode."));
 
     setLoading(true);
 
@@ -115,7 +121,7 @@ export function LeadGate({
       // Crucial fix: wait for recaptcha to fully render in the DOM before proceeding
       await window.recaptchaVerifier.render();
 
-      const formatPhone = "+91" + mobile;
+      const formatPhone = "+91" + mobile.replace(/\s/g, "");
       const result = await signInWithPhoneNumber(auth, formatPhone, window.recaptchaVerifier);
       
       setConfirmationResult(result);
@@ -185,7 +191,7 @@ export function LeadGate({
 
       const payload = {
         customer_name: name,
-        mobile_number: mobile,
+        mobile_number: mobile.replace(/\s/g, ""),
         email: email || undefined,
         firebase_uid: firebaseUid,
         wizard_answers: { ...answers, lead_pincode: pincode, q_city: city, q_state: state },
@@ -203,7 +209,7 @@ export function LeadGate({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            phone: mobile,
+            phone: mobile.replace(/\s/g, ""),
             requested_camera_count: payload.camera_count,
             property_type: payload.property_type,
             technology: payload.technology_choice,
@@ -269,17 +275,17 @@ export function LeadGate({
 
       <div className="bg-white dark:bg-zinc-900 shadow-2xl rounded-3xl w-full max-w-md p-6 sm:p-8 relative">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold px-4 py-1.5 rounded-full text-xs uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold px-4 py-1.5 rounded-full text-sm uppercase tracking-wider mb-4">
             <ShieldCheck className="w-4 h-4" />
-            Secure Verification
+            {t('secure_verification', 'Secure Verification')}
           </div>
           <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">
-            {otpSent ? "Verify Your Number" : "Unlock Your Proposal"}
+            {otpSent ? t('leadgate_title_verify', 'Verify Your Number') : t('leadgate_title', 'Unlock Your Proposal')}
           </h2>
           <p className="text-zinc-500 text-sm">
             {otpSent 
-              ? `We sent a 6-digit code to +91 ${mobile}` 
-              : "Verify your phone number to view your itemized quote."}
+              ? `${t('leadgate_desc_sent', 'We sent a 6-digit code to +91')} ${mobile}` 
+              : t('leadgate_desc', 'Verify your phone number to view your itemized quote.')}
           </p>
         </div>
 
@@ -292,23 +298,34 @@ export function LeadGate({
         {!otpSent ? (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Contact Number *</label>
+              <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider ml-1">{t('contact_number', 'Contact Number *')}</label>
               <div className="relative mt-1">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold border-r pr-3">+91</span>
                 <input
                   type="tel"
                   required
-                  maxLength={10}
+                  maxLength={11}
                   value={mobile}
-                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-16 pr-4 py-3.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-zinc-900 dark:text-white transition-all"
-                  placeholder="Enter mobile number"
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/\D/g, "");
+                    if (val.length > 5) val = val.slice(0, 5) + " " + val.slice(5, 10);
+                    setMobile(val);
+                  }}
+                  className={`w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-16 pr-12 py-3.5 outline-none font-bold text-zinc-900 dark:text-white transition-all ${
+                    mobile.replace(/\s/g, '').length === 10 
+                      ? "ring-2 ring-emerald-500/20 border-emerald-500" 
+                      : "focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  }`}
+                  placeholder={t("placeholder_mobile", "Enter mobile number")}
                 />
+                {mobile.replace(/\s/g, '').length === 10 && (
+                  <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                )}
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Full Name *</label>
+              <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider ml-1">{t('full_name', 'Full Name *')}</label>
               <div className="relative mt-1">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
@@ -317,13 +334,13 @@ export function LeadGate({
                   value={name}
                   onChange={(e) => setName(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
                   className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-zinc-900 dark:text-white transition-all"
-                  placeholder="Enter full name"
+                  placeholder={t("placeholder_name", "Enter full name")}
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Area Pincode *</label>
+              <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider ml-1">{t('area_pincode', 'Area Pincode *')}</label>
               <div className="relative mt-1">
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
@@ -333,7 +350,7 @@ export function LeadGate({
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
                   className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-zinc-900 dark:text-white transition-all tracking-widest"
-                  placeholder="6-digit pincode"
+                  placeholder={t("placeholder_pincode", "6-digit pincode")}
                 />
               </div>
             </div>
@@ -343,7 +360,7 @@ export function LeadGate({
               disabled={loading}
               className="w-full h-14 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white font-bold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 mt-6 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Send Verification Code <ArrowRight className="w-4 h-4" /></>}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{t('send_verification_code', 'Send Verification Code')} <ArrowRight className="w-4 h-4" /></>}
             </button>
           </form>
         ) : (
@@ -360,7 +377,7 @@ export function LeadGate({
                   value={digit}
                   onChange={(e) => handleOtpChange(e.target.value, i)}
                   onKeyDown={(e) => handleKeyDown(e, i)}
-                  className="w-12 h-14 text-center text-xl font-bold bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-zinc-900 dark:text-white transition-all"
+                  className="w-12 h-14 text-center text-xl font-bold bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-zinc-900 dark:text-white transition-all"
                 />
               ))}
             </div>
@@ -370,7 +387,7 @@ export function LeadGate({
               disabled={loading || otp.join("").length !== 6}
               className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & View Quote"}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('verify_view_quote', 'Verify & View Quote')}
             </button>
 
             <div className="flex flex-col items-center gap-3 pt-2">
@@ -380,14 +397,14 @@ export function LeadGate({
                 onClick={handleSendOtp}
                 className={`text-sm font-bold transition-all ${countdown > 0 ? "text-zinc-400" : "text-blue-600 hover:underline"}`}
               >
-                {countdown > 0 ? `Resend Code in ${countdown}s` : "Resend Code"}
+                {countdown > 0 ? `${t('resend_code', 'Resend Code')} (${countdown}s)` : t('resend_code', 'Resend Code')}
               </button>
               <button
                 type="button"
                 onClick={() => { setOtpSent(false); setOtp(["","","","","",""]); setCountdown(0); }}
-                className="text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 hover:underline"
+                className="text-sm font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 hover:underline"
               >
-                Change Phone Number
+                {t('change_phone_number', 'Change Phone Number')}
               </button>
             </div>
           </form>

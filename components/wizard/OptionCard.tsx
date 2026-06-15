@@ -80,17 +80,17 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
           {label}
         </span>
         {isDisabled && (
-          <span className="block text-[10px] font-bold text-zinc-500 mt-1">
+          <span className="block text-xs sm:text-sm font-bold text-zinc-500 mt-1">
             Not available with current selection
           </span>
         )}
         {isMulti && !isSelected && !isDisabled && (
-          <span className="block text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mt-1">
+          <span className="block text-xs sm:text-sm font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mt-1">
             Tap to select
           </span>
         )}
         {isMulti && isSelected && !isDisabled && (
-          <span className="block text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">
+          <span className="block text-xs sm:text-sm font-black text-blue-600 uppercase tracking-widest mt-1">
             ✓ Added
           </span>
         )}
@@ -99,7 +99,7 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
       {/* Prospective Count Badge */}
       {prospectiveCount !== undefined && prospectiveCount !== null && (
         <div className={[
-          "shrink-0 ml-2 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all duration-300 shadow-sm",
+          "shrink-0 ml-2 px-3 py-1.5 rounded-full text-xs sm:text-sm font-black tracking-widest uppercase transition-all duration-300 shadow-sm",
           prospectiveCount === 0 
             ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700" 
             : isSelected 

@@ -13,6 +13,8 @@ import type { WizardQuestion, WizardOption } from "@/types";
 import type { CatalogCapacity } from "@/lib/catalog-capacity";
 import { B2B_THRESHOLD } from "@/lib/catalog-capacity";
 import { motion, AnimatePresence } from "framer-motion";
+import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const ALL_CAMERA_FEATURES = [
   { id: "color", label: "Color Night Vision", techs: ["HD", "IP", "Wireless"] },
@@ -24,6 +26,7 @@ const ALL_CAMERA_FEATURES = [
 
 export function WizardClient({ initialSteps, initialSettings }: { initialSteps?: any[], initialSettings?: any }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const { steps, is_loaded, current_step_index, answers, products, setSteps, setProducts, setAnswer, nextStep, previousStep } = useWizardStore();
   const isFirstStep = current_step_index === 0;
 
@@ -152,7 +155,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
           </div>
         </div>
         <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">Preparing your plan...</h2>
-        <p className="text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest text-[10px]">Just a few more seconds</p>
+        <p className="text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest text-xs sm:text-sm">Just a few more seconds</p>
       </div>
     );
   }
@@ -470,11 +473,18 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       {/* Blurred overlay if Gate is active */}
       <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 pt-6 pb-48 sm:pb-56 sm:pt-12 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
         
-        <ProgressBar currentStepIndex={current_step_index} totalSteps={effectiveSteps.length} />
+        <div className="flex justify-between items-center mb-4 sm:mb-8">
+          <div className="flex-1">
+            <ProgressBar currentStepIndex={current_step_index} totalSteps={effectiveSteps.length} />
+          </div>
+          <div className="ml-4 flex-shrink-0">
+            <LanguageSwitcher />
+          </div>
+        </div>
 
-        <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-tight mt-8 sm:mt-12 mb-2">{currentStep.title}</h1>
+        <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-tight mt-8 sm:mt-12 mb-2">{t(currentStep.id as any, currentStep.title)}</h1>
         {currentStep.description && (
-          <p className="text-zinc-500 dark:text-zinc-400 text-base sm:text-xl mt-3 sm:mt-4 font-medium max-w-2xl">{currentStep.description}</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-base sm:text-xl mt-3 sm:mt-4 font-medium max-w-2xl">{t((currentStep.id + '_desc') as any, currentStep.description)}</p>
         )}
 
         <AnimatePresence mode="wait">
@@ -526,7 +536,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                   {!isSingleQuestion && (
                     <div className="flex items-center gap-3 mb-6 sm:mb-8">
                        <div className="w-10 h-10 rounded-[14px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center text-blue-600 font-black text-sm shrink-0">#</div>
-                       <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h2>
+                       <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{t(q.id as any, q.question_text)}</h2>
                     </div>
                   )}
 
@@ -540,18 +550,18 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                         )}
                         <div className="flex flex-col sm:flex-row gap-4 mb-5">
                           <div className="flex-1">
-                            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">Environment</label>
+                            <label className="block text-xs sm:text-sm font-black text-zinc-500 uppercase tracking-widest mb-2">{t('wizard_lbl_environment', 'Environment')}</label>
                             <select
                               value={bucket.type}
                               onChange={(e) => updateBucket(idx, "type", e.target.value)}
                               className="w-full bg-zinc-50 border-[2px] border-zinc-200 rounded-[16px] px-4 py-3.5 text-[15px] font-bold text-zinc-900 outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer appearance-none"
                             >
-                              <option value="Standard Indoor">Indoor Area</option>
-                              <option value="Standard Outdoor">Outdoor Area</option>
+                              <option value="Standard Indoor">{t('wizard_opt_indoor', 'Indoor Area')}</option>
+                              <option value="Standard Outdoor">{t('wizard_opt_outdoor', 'Outdoor Area')}</option>
                             </select>
                           </div>
                           <div className="w-full sm:w-32">
-                            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">Quantity</label>
+                            <label className="block text-xs sm:text-sm font-black text-zinc-500 uppercase tracking-widest mb-2">{t('wizard_lbl_quantity', 'Quantity')}</label>
                             <input
                               type="number"
                               min={1}
@@ -568,9 +578,9 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
 
                         {availableFeatures.length > 0 && (
                           <div>
-                            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                            <label className="block text-xs sm:text-sm font-black text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                               <svg className="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                              Special Features <span className="font-medium text-zinc-400">(Optional)</span>
+                              {t('wizard_lbl_special_features', 'Special Features')} <span className="font-medium text-zinc-400">{t('wizard_lbl_optional', '(Optional)')}</span>
                             </label>
                             <div className="flex flex-wrap gap-2">
                               {availableFeatures.map(feat => {
@@ -585,7 +595,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                                         : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
                                     }`}
                                   >
-                                    {feat.label}
+                                    {t(`feat_${feat.id}` as any, feat.label)}
                                   </button>
                                 );
                               })}
@@ -606,7 +616,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                     </button>
                   </div>
                   
-                  <p className="text-xs font-bold text-zinc-500 mt-8 ml-2">
+                  <p className="text-sm font-bold text-zinc-500 mt-8 ml-2">
                      {`For more than ${catalogCapacity[(answers["q_tech"] as keyof CatalogCapacity) ?? "HD"] ?? 16} cameras`} ({(answers["q_tech"] as string) || "HD"} technology limit), our team will reach out for a custom industrial quote. Above 16 cameras, a corporate quote is generated automatically.
                   </p>
                 </div>
@@ -621,7 +631,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                 {!isSingleQuestion && (
                   <div className="flex items-center gap-3 mb-6 sm:mb-8">
                      <div className="w-10 h-10 rounded-[14px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center text-blue-600 font-black text-sm shrink-0">?</div>
-                     <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{q.question_text}</h2>
+                     <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">{t((q.id === 'q_features' ? 'q_features_q' : q.id) as any, q.question_text)}</h2>
                   </div>
                 )}
 
@@ -632,14 +642,14 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
-                      <span className="text-[11px] font-black uppercase tracking-widest">Select all that apply</span>
+                      <span className="text-xs sm:text-sm font-black uppercase tracking-widest">Select all that apply</span>
                     </div>
                     {(currentAns as string[]).length > 0 && (
                       <div className="flex items-center gap-1.5 bg-emerald-500 text-white px-3 py-2.5 rounded-xl shadow-sm shadow-emerald-500/20">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-[11px] font-black uppercase tracking-widest">{(currentAns as string[]).length} Selected</span>
+                        <span className="text-xs sm:text-sm font-black uppercase tracking-widest">{(currentAns as string[]).length} Selected</span>
                       </div>
                     )}
                   </div>
@@ -666,7 +676,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                     return (
                       <OptionCard
                         key={opt.id}
-                        label={opt.label}
+                        label={t(opt.id as any, opt.label)}
                         isSelected={isSelected}
                         isMulti={isMulti}
                         onClick={() => handleOptionSelect(q.id!, opt.value, isMulti)}
@@ -723,30 +733,30 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
           <div className="w-full max-w-4xl bg-white border border-zinc-200 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] rounded-[28px] flex items-center justify-between p-3 md:p-4 transition-all" style={{paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))'}} >
             <button
               onClick={isFirstStep ? () => router.push('/') : previousStep}
-              className="group h-12 md:h-14 px-8 md:px-6 text-zinc-500 hover:text-zinc-900 font-black uppercase text-[10px] tracking-widest transition-colors flex items-center gap-2 cursor-pointer touch-manipulation"
+              className="group h-12 md:h-14 px-8 md:px-6 text-zinc-500 hover:text-zinc-900 font-black uppercase text-xs sm:text-sm tracking-widest transition-colors flex items-center gap-2 cursor-pointer touch-manipulation"
               aria-label={isFirstStep ? "Back to homepage" : "Previous question"}
             >
               {isFirstStep
-                ? <><Home className="w-4 h-4 group-hover:scale-110 transition-transform" /> Home</>
-                : <><ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back</>}
+                ? <><Home className="w-4 h-4 group-hover:scale-110 transition-transform" /> {t('home', 'Home')}</>
+                : <><ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> {t('back', 'Back')}</>}
             </button>
 
             <div className="hidden lg:flex items-center gap-6 px-8 border-x border-zinc-100">
               <div className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-zinc-300" />
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tight">Your Data is Safe</span>
+                <span className="text-xs sm:text-sm font-bold text-zinc-500 uppercase tracking-tight">Your Data is Safe</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tight">Smart System Design</span>
+                <span className="text-xs sm:text-sm font-bold text-zinc-500 uppercase tracking-tight">Smart System Design</span>
               </div>
             </div>
 
             <button
               onClick={handleContinue}
-              className="h-12 md:h-14 px-8 md:px-12 bg-blue-600 hover:bg-blue-700 hover:shadow-blue-600/40 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-[18px] shadow-[0_8px_20px_-8px_rgba(37,99,235,0.5)] transition-all flex items-center gap-3 active:scale-95 cursor-pointer touch-manipulation"
+              className="h-12 md:h-14 px-8 md:px-12 bg-blue-600 hover:bg-blue-700 hover:shadow-blue-600/40 text-white font-black uppercase text-xs sm:text-sm tracking-[0.2em] rounded-[18px] shadow-[0_8px_20px_-8px_rgba(37,99,235,0.5)] transition-all flex items-center gap-3 active:scale-95 cursor-pointer touch-manipulation"
             >
-              {isLastStep ? "Generate Quote" : "Continue"}
+              {isLastStep ? t('get_quote', 'Generate Quote') : t('next', 'Continue')}
               {isLastStep ? <ShieldCheck className="w-4 h-4" /> : <ArrowRight className="w-4 h-4 translate-y-[1px]" />}
             </button>
           </div>

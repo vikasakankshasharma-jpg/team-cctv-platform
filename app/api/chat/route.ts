@@ -15,17 +15,21 @@ export async function POST(req: NextRequest) {
     const securityContext = await getAISecurityContext();
     
     const body = await req.json();
-    const { messages, pageContext } = body;
+    const { messages, pageContext, locale } = body;
     const latestMessage = messages[messages.length - 1].content || "";
 
     // 2. Generate Embedding for Semantic Search (only if there is text)
     let embedding: number[] = [];
     if (latestMessage.trim().length > 0) {
       const embeddingResponse = await ai.models.embedContent({
-        model: "text-embedding-004",
+        model: "gemini-embedding-001",
         contents: latestMessage,
       });
       embedding = embeddingResponse.embeddings?.[0]?.values || [];
+      if (embedding.length > 2048) {
+        console.warn(`Embedding length ${embedding.length} exceeds Firestore 2048 limit. Truncating to 2048 for storage.`);
+        embedding = embedding.slice(0, 2048);
+      }
     }
 
     if (embedding.length > 0) {
@@ -46,7 +50,13 @@ export async function POST(req: NextRequest) {
     // 4. If no cached answer, Route to Master AI (Gemini Pro)
     const systemPrompt = `You are the AI assistant for this website.
 The user is currently viewing the following page/URL: ${pageContext || 'unknown'}. Use this context to provide highly relevant answers.
+The user's preferred language locale code is: ${locale || 'en'}. You MUST reply in this language. If the locale is 'hi', reply in Hindi. If 'mr', reply in Marathi. If 'gu', reply in Gujarati, etc. Keep the language natural and colloquial to the region.
 Your current security context is: ${securityContext.role}.
+${securityContext.userId ? `The user's unique ID is: ${securityContext.userId}. Whenever a tool requires a 'userId', use this ID automatically without asking the user for it.` : ''}
+
+CRITICAL INSTRUCTION FOR PRICING & QUOTES:
+If the user asks for pricing, cost, discounts, or a custom quote, and your security context is 'UNAUTHENTICATED', you MUST NOT ask them for any details like user ID or email. You MUST IMMEDIATELY reply with exactly this keyword: <REQUIRE_OTP>. Do NOT add any other words. Just <REQUIRE_OTP>.
+
 You are allowed to perform: ${securityContext.allowedActions.join(", ")}.
 If the user asks for something outside these actions, refuse gracefully.
 Do not leak internal database structures or admin secrets unless the role is ADMIN.`;
@@ -78,11 +88,16 @@ Do not leak internal database structures or admin secrets unless the role is ADM
       })
     ];
 
+    let availableTools: any[] = [];
+    if (securityContext.role === "ADMIN" || securityContext.role === "USER") {
+      availableTools = [cashfreeToolDefinition as any, wizardToolDefinition as any, updateQuotationWizardToolDefinition as any];
+    }
+
     let chatResponse = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
+      model: "gemini-2.5-flash",
       contents,
       config: {
-        tools: [{ functionDeclarations: [cashfreeToolDefinition as any, wizardToolDefinition as any, updateQuotationWizardToolDefinition as any] }]
+        tools: availableTools.length > 0 ? [{ functionDeclarations: availableTools }] : []
       }
     });
 
@@ -104,10 +119,14 @@ Do not leak internal database structures or admin secrets unless the role is ADM
       }
 
       // Append the function call and response to the conversation history
-      contents.push({
-        role: "model",
-        parts: [{ functionCall: call }]
-      });
+      if (chatResponse.candidates && chatResponse.candidates.length > 0 && chatResponse.candidates[0].content) {
+        contents.push(chatResponse.candidates[0].content as Content);
+      } else {
+        contents.push({
+          role: "model",
+          parts: [{ functionCall: call }]
+        });
+      }
       
       contents.push({
         role: "user", 
@@ -120,10 +139,10 @@ Do not leak internal database structures or admin secrets unless the role is ADM
       });
 
       chatResponse = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: "gemini-2.5-flash",
         contents,
         config: {
-          tools: [{ functionDeclarations: [cashfreeToolDefinition as any, wizardToolDefinition as any, updateQuotationWizardToolDefinition as any] }]
+          tools: availableTools.length > 0 ? [{ functionDeclarations: availableTools }] : []
         }
       });
     }

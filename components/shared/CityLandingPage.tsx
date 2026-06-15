@@ -12,9 +12,14 @@ import {
   PhoneCall,
   CheckCircle2
 } from "lucide-react";
+import { useEffect } from "react";
+import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useI18nStore } from "@/lib/i18n/store";
 
 interface CityLandingPageProps {
   cityName: string;
+  citySlug?: string;
   tagline?: string;
   heroHighlight?: string;
   description?: string;
@@ -26,11 +31,12 @@ interface CityLandingPageProps {
 }
 
 export default function CityLandingPage({
-  cityName,
+  cityName: defaultCityName,
+  citySlug,
   tagline,
-  heroHighlight = `Across ${cityName}.`,
+  heroHighlight = `Across ${defaultCityName}.`,
   description,
-  neighborhoods,
+  neighborhoods: defaultNeighborhoods,
   commercialAreas = "local businesses",
   ctaText,
   brand = "",
@@ -39,36 +45,74 @@ export default function CityLandingPage({
   const currentMonthYear = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
   const searchParams = useSearchParams();
   const pincodeParam = searchParams.get("pincode");
-  const wizardUrl = `/wizard?city=${cityName}${pincodeParam ? `&pincode=${pincodeParam}` : ''}${brand ? `&brand=${brand}` : ''}`;
+  
+  const { t, locale } = useTranslation();
+  const { isManuallySet, setLocaleFromPincode } = useI18nStore();
+  
+  // Dynamically derive translated variables on render based on current locale.
+  
+  // Wait, I should not use useState inside an inline hack.
+  // Better approach:
+  let localizedCityName = defaultCityName;
+  let localizedNeighborhoods = defaultNeighborhoods;
+  
+  if (citySlug && typeof window !== "undefined") {
+    // get localized data synchronously
+    const { getCityData } = require("@/lib/city-data");
+    const localizedData = getCityData(citySlug, locale);
+    localizedCityName = localizedData.name;
+    localizedNeighborhoods = localizedData.neighborhoods;
+  }
+
+  const wizardUrl = `/wizard?city=${localizedCityName}${pincodeParam ? `&pincode=${pincodeParam}` : ''}${brand ? `&brand=${brand}` : ''}`;
+
+  useEffect(() => {
+    if (pincodeParam && !isManuallySet) {
+      import("@/app/actions/pincode").then(({ verifyPincodeAction }) => {
+        verifyPincodeAction(pincodeParam).then((result: any) => {
+          if (result.success && result.state) {
+            import("@/lib/i18n/mapping").then(({ getStateLanguage }) => {
+              setLocaleFromPincode(getStateLanguage(result.state));
+            });
+          }
+        }).catch(console.error);
+      });
+    }
+  }, [pincodeParam, isManuallySet, setLocaleFromPincode]);
 
   const brandPrefix = brand ? `${brand} ` : "";
-  const derivedTagline = tagline || `Serving All of ${cityName} with ${brand || "Premium"} Security`;
+  const derivedTagline = tagline || t('landing_hero_highlight', `Serving All of {city} with {brand} Security`).replace('{city}', localizedCityName).replace('{brand}', brand || "Premium");
   const derivedDescription = description || (
     intent === "quotation"
-      ? `Compare exact ${brandPrefix}CCTV camera pricing and installation setup costs online in under 2 minutes for your ${cityName} property.`
-      : `Protect your home or business in ${cityName} with certified ${brandPrefix}CCTV systems. Get an exact, transparent quote online in under 2 minutes.`
+      ? t('protect_home', `Compare exact {brand} CCTV camera pricing and installation setup costs online in under 2 minutes for your {city} property.`).replace('{city}', localizedCityName).replace('{brand}', brandPrefix)
+      : t('protect_home', `Protect your home or business in {city} with certified {brand} CCTV systems. Get an exact, transparent quote online in under 2 minutes.`).replace('{city}', localizedCityName).replace('{brand}', brandPrefix)
   );
   const derivedCtaText = ctaText || (
     intent === "quotation" 
-      ? `Get ${brandPrefix}CCTV Quote` 
-      : `Get Instant Quotation`
+      ? t('landing_exact_quote', `Get {brand} CCTV Quote`).replace('{brand}', brandPrefix)
+      : t('get_instant_quote', `Get Instant Quotation`)
   );
   
   const mainTitle = intent === "quotation"
     ? `Get Instant ${brandPrefix}CCTV Quotation`
-    : `Professional ${brandPrefix}CCTV Installation`;
+    : t('prof_installation', `Professional ${brandPrefix}CCTV Installation`);
 
   return (
     <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
       
       {/* Premium Breadcrumb for SEO & Navigation */}
       <div className="bg-zinc-50/50 dark:bg-zinc-900/10 border-b border-zinc-100/50 dark:border-zinc-800/30 px-4 sm:px-6 py-3">
-        <div className="max-w-7xl mx-auto flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-          <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-            Home
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-zinc-800 dark:text-zinc-200">{cityName}</span>
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+            <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              {t('home', 'Home')}
+            </Link>
+            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="text-zinc-800 dark:text-zinc-200">{localizedCityName}</span>
+          </div>
+          <div>
+            <LanguageSwitcher />
+          </div>
         </div>
       </div>
 
@@ -87,9 +131,11 @@ export default function CityLandingPage({
             <span className="text-blue-600 dark:text-emerald-500">Same-Day Survey</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 leading-[0.9] animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 leading-[1.2] md:leading-[1.15] animate-in fade-in slide-in-from-bottom-8 duration-1000">
             {mainTitle} <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic">{heroHighlight}</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic mt-2 inline-block">
+              {t('landing_hero_highlight', 'Across {city}.').replace('{city}', localizedCityName)}
+            </span>
           </h1>
 
           <p className="text-base sm:text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-3xl mb-8 sm:mb-12 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
@@ -114,37 +160,45 @@ export default function CityLandingPage({
               <PhoneCall className="w-5 h-5 text-blue-600" />
               <span>+91 97726 99395</span>
             </a>
-            <a
-              href="tel:+919772699395"
-              className="hidden sm:flex items-center gap-4 px-8 py-5 rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-all text-left group"
-            >
-              <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
-                <PhoneCall className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Call Local Support</div>
-                <div className="text-lg font-bold text-zinc-900 dark:text-white">+91 97726 99395</div>
-              </div>
-            </a>
+              <a
+                href="tel:+919772699395"
+                className="hidden sm:flex items-center gap-4 px-8 py-5 rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-all text-left group"
+              >
+                <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                  <PhoneCall className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{t('landing_call_support', 'Call Local Support')}</div>
+                  <div className="text-lg font-bold text-zinc-900 dark:text-white">+91 97726 99395</div>
+                </div>
+              </a>
           </div>
         </div>
       </section>
 
       {/* Pricing Context Section */}
       <section className="py-14 sm:py-20 md:py-32 px-4 sm:px-6 bg-zinc-50 dark:bg-zinc-900/30">
-         <div className="max-w-5xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             {/* Aligned residential pricing to platform base 18k-28k */}
             <div className="text-center mb-16">
-               <h2 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4">{brandPrefix}CCTV Installation Cost in {cityName}</h2>
-               <p className="text-zinc-500 dark:text-zinc-400 font-medium">Updated transparent pricing for {currentMonthYear}</p>
+               <h2 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4">
+                 {t('landing_pricing_title', '{brand} CCTV Installation Cost in {city}').replace('{city}', localizedCityName).replace('{brand}', brandPrefix)}
+               </h2>
+               <p className="text-zinc-500 dark:text-zinc-400 font-medium">
+                 {t('landing_pricing_subtitle', 'Updated transparent pricing for {date}').replace('{date}', currentMonthYear)}
+               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
                 <div className="bg-white dark:bg-zinc-900 p-6 sm:p-10 rounded-[28px] sm:rounded-[40px] shadow-xl border border-zinc-100 dark:border-zinc-800">
-                  <div className="inline-block px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-6">Residential</div>
-                  <h3 className="text-2xl font-black mb-2">Standard 4-Camera Setup</h3>
+                  <div className="inline-block px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-6">
+                    {t('landing_residential_tag', 'Residential')}
+                  </div>
+                  <h3 className="text-2xl font-black mb-2">{t('landing_residential_title', 'Standard 4-Camera Setup')}</h3>
                   <div className="text-4xl font-black text-zinc-900 dark:text-white mb-6">₹18,000 <span className="text-xl text-zinc-400 font-medium">- ₹28,000</span></div>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">Perfect for independent houses and small shops. Includes {brand || "CP Plus"} cameras, DVR, wiring, and professional installation.</p>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8 leading-relaxed">
+                    {t('landing_residential_desc', 'Perfect for independent houses and small shops. Includes {brand} cameras, DVR, wiring, and professional installation.').replace('{brand}', brand || "CP Plus")}
+                  </p>
                   <ul className="space-y-4 mb-8">
                      {[`4x 2MP/5MP HD ${brand || "CP Plus"} Cameras`, "4-Channel DVR + HDD", "Power Supply & Connectors", "Complete Installation Labor"].map((item, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -153,19 +207,23 @@ export default function CityLandingPage({
                      ))}
                   </ul>
                   <Link
-                    href={`/wizard?segment=residential&city=${encodeURIComponent(cityName)}${brand ? `&brand=${brand}` : ''}`}
+                    href={`/wizard?segment=residential&city=${encodeURIComponent(localizedCityName)}${brand ? `&brand=${brand}` : ''}`}
                     className="block w-full py-4 text-center rounded-2xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold transition-colors"
                   >
-                    Get Exact Quote →
+                    {t('landing_exact_quote', 'Get Exact Quote →')}
                   </Link>
                </div>
 
                 <div className="bg-zinc-900 dark:bg-blue-600 text-white p-6 sm:p-10 rounded-[28px] sm:rounded-[40px] shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
-                  <div className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-bold mb-6 backdrop-blur-md border border-white/10">Commercial</div>
-                  <h3 className="text-2xl font-black mb-2">8 to 16-Camera Networks</h3>
+                  <div className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-bold mb-6 backdrop-blur-md border border-white/10">
+                    {t('landing_commercial_tag', 'Commercial')}
+                  </div>
+                  <h3 className="text-2xl font-black mb-2">{t('landing_commercial_title', '8 to 16-Camera Networks')}</h3>
                   <div className="text-4xl font-black text-white mb-6">₹30k <span className="text-xl text-zinc-400 font-medium">- ₹80k+</span></div>
-                  <p className="text-zinc-300 text-sm mb-8 leading-relaxed">Ideal for offices, warehouses, and factories in {commercialAreas}. High-definition IP cameras with extended storage.</p>
+                  <p className="text-zinc-300 text-sm mb-8 leading-relaxed">
+                    {t('landing_commercial_desc', 'Ideal for offices, warehouses, and factories in {commercialAreas}. High-definition IP cameras with extended storage.').replace('{commercialAreas}', commercialAreas)}
+                  </p>
                   <ul className="space-y-4 mb-8">
                      {[`Network/IP ${brand || "Hikvision"} Cameras`, "High-Capacity NVR System", "Structured Cabling", "Advanced Remote Viewing Setup"].map((item, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-medium text-white">
@@ -174,10 +232,10 @@ export default function CityLandingPage({
                      ))}
                   </ul>
                   <Link
-                    href={`/wizard?segment=commercial&city=${encodeURIComponent(cityName)}${brand ? `&brand=${brand}` : ''}`}
+                    href={`/wizard?segment=commercial&city=${encodeURIComponent(localizedCityName)}${brand ? `&brand=${brand}` : ''}`}
                     className="block w-full py-4 text-center rounded-2xl bg-white text-zinc-900 hover:bg-zinc-100 font-bold transition-colors"
                   >
-                    Build Custom Setup →
+                    {t('landing_custom_setup', 'Build Custom Setup →')}
                   </Link>
                </div>
             </div>
@@ -189,18 +247,22 @@ export default function CityLandingPage({
          <div className="max-w-6xl mx-auto">
             <div className="flex flex-col items-center text-center mb-16">
                <MapPin className="w-12 h-12 text-blue-500 mb-6 opacity-80" />
-               <h2 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4">Areas We Serve in {cityName}</h2>
-               <p className="text-zinc-500 dark:text-zinc-400 font-medium max-w-2xl">Our installation teams are dispatched daily across the entire city. We provide rapid service and maintenance to all major residential and commercial hubs.</p>
+               <h2 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4">
+                 {t('landing_areas_title', 'Areas We Serve in {city}').replace('{city}', localizedCityName)}
+               </h2>
+               <p className="text-zinc-500 dark:text-zinc-400 font-medium max-w-2xl">
+                 {t('landing_areas_desc', 'Our installation teams are dispatched daily across the entire city. We provide rapid service and maintenance to all major residential and commercial hubs.')}
+               </p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-               {neighborhoods.map((area, i) => (
+               {localizedNeighborhoods.map((area, i) => (
                   <div key={i} className="px-6 py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 text-center font-bold text-sm text-zinc-700 dark:text-zinc-300 hover:border-blue-500/30 transition-colors">
                      {area}
                   </div>
                ))}
                <div className="px-6 py-4 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 text-center font-bold text-sm text-blue-600 dark:text-blue-400">
-                  + All Surrounding Areas
+                  {t('landing_areas_all', '+ All Surrounding Areas')}
                </div>
             </div>
          </div>
@@ -209,14 +271,16 @@ export default function CityLandingPage({
       {/* Final Deployment CTA */}
       <section className="py-14 sm:py-24 px-4 sm:px-6 relative overflow-hidden text-center bg-zinc-950 transition-colors">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
-            <h2 className="text-4xl sm:text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 sm:mb-8 leading-[0.9]">Secure your {cityName} <br/> property today.</h2>
-            <p className="text-zinc-400 text-xl mb-12 font-medium max-w-2xl text-center">Get your exact quote in 2 minutes. 18% GST included. No hidden charges.</p>
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 sm:mb-8 leading-[1.2] md:leading-[1.1]" dangerouslySetInnerHTML={{ __html: t('landing_final_cta_title', 'Secure your {city} property today.').replace('{city}', localizedCityName) }} />
+            <p className="text-zinc-400 text-xl mb-12 font-medium max-w-2xl text-center">
+              {t('landing_final_cta_desc', 'Get your exact quote in 2 minutes. 18% GST included. No hidden charges.')}
+            </p>
             
             <Link
               href="/wizard"
               className="group relative flex items-center gap-4 sm:gap-6 bg-blue-600 hover:bg-blue-500 text-white px-8 sm:px-14 py-5 sm:py-8 rounded-[28px] sm:rounded-[36px] font-black text-lg sm:text-2xl transition-all shadow-[0_32px_64px_rgba(0,0,0,0.15)] shadow-blue-500/30 hover:-translate-y-1 sm:hover:-translate-y-2 touch-manipulation"
             >
-              Get Free Quote
+              {t('get_quote', 'Get Free Quote')}
               <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 group-hover:translate-x-2 transition-transform duration-300" />
             </Link>
 

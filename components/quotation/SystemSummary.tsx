@@ -1,6 +1,7 @@
 "use client";
 
 import { ShieldCheck, Wrench } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { QuoteLineItem, QuoteAddon } from "@/types";
 
 interface SystemSummaryProps {
@@ -10,12 +11,13 @@ interface SystemSummaryProps {
 }
 
 export function SystemSummary({ items, addons, isCustomOverride }: SystemSummaryProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-5 h-5 text-emerald-500" />
-          <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">System Summary</h3>
+          <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">{t('quote_summary', 'System Summary')}</h3>
         </div>
         {isCustomOverride && (
           <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50 px-2.5 py-1 rounded-full">

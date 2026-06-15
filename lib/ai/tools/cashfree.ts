@@ -34,7 +34,7 @@ export async function executeCashfreePayoutStatus(transferId: string, securityRo
     status: "SUCCESS",
     amount: 15000,
     currency: "INR",
-    beneficiaryName: "Secure Easy Installer",
+    beneficiaryName: "CCTV Quotation Installer",
     processedAt: new Date().toISOString(),
     utr: `UTR${Math.floor(Math.random() * 1000000000)}`,
     message: "Transfer completed successfully."

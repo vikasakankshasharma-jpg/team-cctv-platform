@@ -13,7 +13,7 @@ export function ProgressBar({ currentStepIndex, totalSteps }: ProgressBarProps) 
       {/* Labels row */}
       <div className="flex justify-between items-baseline">
         <div>
-          <span className="block text-[10px] font-bold uppercase tracking-[0.25em] text-blue-600 dark:text-blue-500 mb-1">
+          <span className="block text-xs sm:text-sm font-bold uppercase tracking-[0.25em] text-blue-600 dark:text-blue-500 mb-1">
             Your Progress
           </span>
           <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">

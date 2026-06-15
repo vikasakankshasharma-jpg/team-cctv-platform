@@ -12,6 +12,7 @@ import { headers } from "next/headers";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
 import { FloatingAIChat } from "@/components/ai/FloatingAIChat";
+import { LanguageSync } from "@/components/shared/LanguageSync";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -94,6 +95,7 @@ export default async function RootLayout({
         >
           <Suspense fallback={null}>
             <TrackingProvider nonce={nonce} />
+            <LanguageSync />
           </Suspense>
           <PwaRegistry />
           <WebVitalsReporter />

@@ -27,6 +27,8 @@ export const metadata: Metadata = {
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { MobileStickyCtaBar } from "@/components/shared/MobileStickyCtaBar";
 import { ServiceAreaModal } from "@/components/shared/ServiceAreaModal";
+import { TranslatedText } from "@/components/shared/TranslatedText";
+import { LanguageWelcomeModal } from "@/components/shared/LanguageWelcomeModal";
 
 export default function CustomerLayout({
   children,
@@ -49,7 +51,7 @@ export default function CustomerLayout({
                 <span className="font-black text-lg sm:text-2xl tracking-tighter text-zinc-900 dark:text-white group-hover:text-blue-600 transition-colors">
                   CCTV<span className="text-zinc-500 dark:text-zinc-400 font-medium tracking-tight">Quotation</span>
                 </span>
-                <span className="hidden sm:block text-[8px] font-black uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400 mt-1">by TEAM</span>
+                <span className="hidden sm:block text-xs sm:text-sm sm:text-xs font-black uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400 mt-1">by TEAM</span>
               </div>
             </Link>
 
@@ -80,16 +82,16 @@ export default function CustomerLayout({
             >
               <PhoneCall className="w-4 h-4 text-zinc-400 group-hover:text-blue-600 transition-colors" />
               <div className="flex flex-col text-left">
-                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 leading-none mb-1">Support</span>
+                <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-500 leading-none mb-1"><TranslatedText tKey="support" defaultText="Support" /></span>
                 <span className="text-sm font-black">+91 97726 99395</span>
               </div>
             </a>
             <ThemeToggle />
             <Link
               href="/admin/login"
-              className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-blue-500 transition-colors hidden sm:block"
+              className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-500 hover:text-blue-500 transition-colors hidden sm:block"
             >
-              Staff Portal
+              <TranslatedText tKey="staff_portal" defaultText="Staff Portal" />
             </Link>
           </div>
         </div>
@@ -107,6 +109,9 @@ export default function CustomerLayout({
 
       {/* WhatsApp floating button — auto-hides on wizard/admin pages */}
       <WhatsAppFloat />
+
+      {/* Welcome Language Modal */}
+      <LanguageWelcomeModal />
     </div>
   );
 }

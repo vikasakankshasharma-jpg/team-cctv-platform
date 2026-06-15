@@ -23,10 +23,18 @@ export async function getAISecurityContext(): Promise<AISecurityContext> {
     };
   }
 
-  // Add logic here if regular users have authenticated accounts,
-  // currently we treat non-admins as regular users.
+  // If the user has a valid session cookie, they have completed the LeadGate/Chat OTP verification.
+  if (session.isAuthenticated && session.user?.uid) {
+    return {
+      role: "USER", 
+      userId: session.user.uid,
+      allowedActions: ["read_public_data", "ask_general_questions", "access_pricing", "create_quote"],
+    };
+  }
+
+  // Otherwise, they are an unauthenticated visitor
   return {
-    role: "UNAUTHENTICATED", // or "USER" if you have a normal user auth scheme
+    role: "UNAUTHENTICATED",
     allowedActions: ["read_public_data", "ask_general_questions"],
   };
 }

@@ -4,13 +4,13 @@ import { getWizardConfig, getSettingsConfig, getDefaultFallbackWizard } from "@/
 
 export const metadata: Metadata = {
   title: "Get Free CCTV Quote | CCTVQuotation by TEAM",
-  description: "Design your perfect security system in minutes. Answer a few questions to get an instant, industrial-grade quotation tailored to your property.",
+  description: "Design your perfect security system in minutes. Answer a few questions to get an instant, professional-quality quotation tailored to your property.",
   alternates: {
     canonical: "https://cctvquotation.com/wizard",
   },
   openGraph: {
     title: "Get Free CCTV Quote | CCTVQuotation by TEAM",
-    description: "Design your perfect security system in minutes. Get an instant industrial-grade quotation.",
+    description: "Design your perfect security system in minutes. Get an instant professional-quality quotation.",
     images: ["/og-wizard.png"], // Placeholder for future OG image
     siteName: "CCTVQuotation",
     locale: "en_IN",
