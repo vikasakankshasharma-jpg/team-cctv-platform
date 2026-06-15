@@ -13,7 +13,6 @@ import type { WizardQuestion, WizardOption } from "@/types";
 import type { CatalogCapacity } from "@/lib/catalog-capacity";
 import { B2B_THRESHOLD } from "@/lib/catalog-capacity";
 import { motion, AnimatePresence } from "framer-motion";
-import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 import { useTranslation } from "@/hooks/useTranslation";
 
 const ALL_CAMERA_FEATURES = [
@@ -473,13 +472,8 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       {/* Blurred overlay if Gate is active */}
       <div className={`flex-1 transition-all duration-700 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 pt-6 pb-48 sm:pb-56 sm:pt-12 ${showGate ? "blur-3xl scale-[0.95] opacity-0 select-none pointer-events-none" : "opacity-100"}`}>
         
-        <div className="flex justify-between items-center mb-4 sm:mb-8">
-          <div className="flex-1">
-            <ProgressBar currentStepIndex={current_step_index} totalSteps={effectiveSteps.length} />
-          </div>
-          <div className="ml-4 flex-shrink-0">
-            <LanguageSwitcher />
-          </div>
+        <div className="mb-4 sm:mb-8">
+          <ProgressBar currentStepIndex={current_step_index} totalSteps={effectiveSteps.length} />
         </div>
 
         <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-zinc-900 dark:text-white tracking-tighter leading-tight mt-8 sm:mt-12 mb-2">{t(currentStep.id as any, currentStep.title)}</h1>
