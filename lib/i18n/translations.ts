@@ -221,7 +221,31 @@ export type TranslationKey =
   | "step_amc"
   | "q_amc"
   | "fopt_amc_yes"
-  | "fopt_amc_no";
+  | "fopt_amc_no"
+  | "faq_title"
+  | "faq_subtitle"
+  | "faq_1_q"
+  | "faq_1_a"
+  | "faq_2_q"
+  | "faq_2_a"
+  | "faq_3_q"
+  | "faq_3_a"
+  | "faq_4_q"
+  | "faq_4_a"
+  | "footer_desc"
+  | "footer_secure"
+  | "footer_serving"
+  | "footer_privacy"
+  | "footer_terms"
+  | "footer_partner"
+  | "step_timeline_desc"
+  | "step_brand_desc"
+  | "step_amc_desc"
+  | "progress_your"
+  | "progress_question"
+  | "progress_of"
+  | "wizard_safe"
+  | "wizard_smart";
 
 export const translations: Record<
   LocaleCode,

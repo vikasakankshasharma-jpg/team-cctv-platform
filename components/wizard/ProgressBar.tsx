@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "@/hooks/useTranslation";
+
 interface ProgressBarProps {
   currentStepIndex: number;
   totalSteps: number;
@@ -7,6 +9,7 @@ interface ProgressBarProps {
 
 export function ProgressBar({ currentStepIndex, totalSteps }: ProgressBarProps) {
   const progress = ((currentStepIndex + 1) / totalSteps) * 100;
+  const { t } = useTranslation();
 
   return (
     <div className="w-full space-y-3">
@@ -14,14 +17,14 @@ export function ProgressBar({ currentStepIndex, totalSteps }: ProgressBarProps) 
       <div className="flex justify-between items-baseline">
         <div>
           <span className="block text-xs sm:text-sm font-bold uppercase tracking-[0.25em] text-blue-600 dark:text-blue-500 mb-1">
-            Your Progress
+            {t("progress_your", "Your Progress")}
           </span>
           <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
-            Question{" "}
+            {t("progress_question", "Question")}{" "}
             <span className="text-zinc-900 dark:text-white font-bold">
               {currentStepIndex + 1}
             </span>{" "}
-            of {totalSteps}
+            {t("progress_of", "of")} {totalSteps}
           </p>
         </div>
         <span

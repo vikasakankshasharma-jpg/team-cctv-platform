@@ -738,11 +738,11 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
             <div className="hidden lg:flex items-center gap-6 px-8 border-x border-zinc-100">
               <div className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-zinc-300" />
-                <span className="text-xs sm:text-sm font-bold text-zinc-500 uppercase tracking-tight">Your Data is Safe</span>
+                <span className="text-xs sm:text-sm font-bold text-zinc-500 uppercase tracking-tight">{t("wizard_safe", "Your Data is Safe")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs sm:text-sm font-bold text-zinc-500 uppercase tracking-tight">Smart System Design</span>
+                <span className="text-xs sm:text-sm font-bold text-zinc-500 uppercase tracking-tight">{t("wizard_smart", "Smart System Design")}</span>
               </div>
             </div>
 
