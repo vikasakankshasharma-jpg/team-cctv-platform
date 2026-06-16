@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, Lock } from "lucide-react";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 
 export function SiteFooter() {
   const pathname = usePathname();
@@ -19,24 +20,24 @@ export function SiteFooter() {
             CCTVQuotation
           </div>
           <p className="text-zinc-500 dark:text-zinc-500 text-sm font-medium max-w-sm leading-relaxed">
-            India&apos;s leading intelligent security planning ecosystem. We combine advanced hardware logic with certified human expertise.
+            <TranslatedText tKey="footer_desc" defaultText="India's leading intelligent security planning ecosystem. We combine advanced hardware logic with certified human expertise." />
           </p>
         </div>
 
         <div className="flex flex-col md:items-end gap-6">
           <div className="flex items-center gap-2 px-4 py-2 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
             <Lock className="w-4 h-4 text-emerald-500" />
-            <span className="text-xs sm:text-sm font-black text-zinc-500 dark:text-zinc-500 uppercase tracking-widest">Secure & Verified Platform</span>
+            <span className="text-xs sm:text-sm font-black text-zinc-500 dark:text-zinc-500 uppercase tracking-widest"><TranslatedText tKey="footer_secure" defaultText="Secure & Verified Platform" /></span>
           </div>
           <div className="flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 items-center md:justify-end">
              <span className="text-xs sm:text-sm font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-               🇮🇳 Serving all of India
+               🇮🇳 <TranslatedText tKey="footer_serving" defaultText="Serving all of India" />
              </span>
           </div>
           <div className="flex flex-wrap gap-4 sm:gap-8">
-             <Link href="/privacy-policy" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
-             <Link href="/terms-of-service" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Terms of Service</Link>
-             <Link href="/partner/login" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">Partner Login</Link>
+             <Link href="/privacy-policy" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"><TranslatedText tKey="footer_privacy" defaultText="Privacy Policy" /></Link>
+             <Link href="/terms-of-service" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"><TranslatedText tKey="footer_terms" defaultText="Terms of Service" /></Link>
+             <Link href="/partner/login" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"><TranslatedText tKey="footer_partner" defaultText="Partner Login" /></Link>
           </div>
           <p className="text-xs sm:text-sm font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-[0.2em] mt-4">
             © {new Date().getFullYear()} CCTVQuotation — A TEAM Platform
