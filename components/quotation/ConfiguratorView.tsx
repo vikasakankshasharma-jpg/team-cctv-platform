@@ -72,12 +72,23 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   // Force scroll to top on mount (fixes Next.js router restoring scroll from previous page)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      // Next.js router might restore scroll position slightly after mount. Override it.
-      const timer = setTimeout(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      }, 100);
-      return () => clearTimeout(timer);
+      window.history.scrollRestoration = 'manual';
+      const forceScroll = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      
+      forceScroll();
+      
+      // Force it multiple times during initial render to combat Next.js router & async layout shifts
+      let ticks = 0;
+      const interval = setInterval(() => {
+        forceScroll();
+        ticks++;
+        if (ticks > 15) {
+          clearInterval(interval);
+          window.history.scrollRestoration = 'auto';
+        }
+      }, 50);
+
+      return () => clearInterval(interval);
     }
   }, []);
 

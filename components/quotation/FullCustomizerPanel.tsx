@@ -292,7 +292,14 @@ export function FullCustomizerPanel() {
     if (!container) return;
     const activeButton = container.querySelector('[data-active="true"]') as HTMLElement;
     if (activeButton) {
-      activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      const containerRect = container.getBoundingClientRect();
+      const buttonRect = activeButton.getBoundingClientRect();
+      const scrollLeft = activeButton.offsetLeft - (containerRect.width / 2) + (buttonRect.width / 2);
+      
+      container.scrollTo({
+        left: Math.max(0, scrollLeft),
+        behavior: 'smooth'
+      });
     }
   }, [activeTab]);
 

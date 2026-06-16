@@ -181,7 +181,12 @@ export function CompareCards({
     if (!container) return;
     const cards = Array.from(container.children) as HTMLElement[];
     if (cards[index]) {
-      cards[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      const targetCard = cards[index];
+      const scrollLeft = targetCard.offsetLeft - (container.clientWidth / 2) + (targetCard.clientWidth / 2);
+      container.scrollTo({
+        left: Math.max(0, scrollLeft),
+        behavior: 'smooth'
+      });
     }
   }, []);
 
