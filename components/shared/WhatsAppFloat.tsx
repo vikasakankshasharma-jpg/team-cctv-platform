@@ -1,12 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const WA_NUMBER = "919772699395";
-const WA_MESSAGE = encodeURIComponent(
-  "Hi CCTVQuotation Team! 👋 I'd like a free quotation for CCTV installation at my property. Please help me."
-);
-const WA_HREF = `https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`;
 
 /**
  * WhatsAppFloat — sticky bottom-right WhatsApp button.
@@ -14,6 +11,10 @@ const WA_HREF = `https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`;
  */
 export function WhatsAppFloat() {
   const pathname = usePathname();
+  const { t } = useTranslation();
+
+  const waMessage = t('wa_message', "Hi CCTVQuotation Team! 👋 I'd like a free quotation for CCTV installation at my property. Please help me.");
+  const waHref = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waMessage)}`;
 
   // Hide during wizard and on admin/partner/salesperson portals
   const hideOn = ["/wizard", "/admin", "/partner", "/salesperson", "/onboarding", "/platform", "/quote", "/installer", "/for-installers"];
@@ -22,7 +23,7 @@ export function WhatsAppFloat() {
   return (
     <aside aria-label="WhatsApp Support">
       <a
-        href={WA_HREF}
+        href={waHref}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with us on WhatsApp"
@@ -45,7 +46,7 @@ export function WhatsAppFloat() {
         </svg>
 
         {/* Tooltip label */}
-        <span className="whatsapp-float__label" aria-hidden="true">Chat with us</span>
+        <span className="whatsapp-float__label" aria-hidden="true">{t('wa_chat', 'Chat with us')}</span>
 
 
       <style jsx>{`

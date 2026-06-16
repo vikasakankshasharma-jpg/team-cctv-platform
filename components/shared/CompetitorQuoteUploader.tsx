@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CompetitorQuoteUploaderProps {
   leadId: string;
@@ -57,6 +58,7 @@ export function CompetitorQuoteUploader({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const { t } = useTranslation();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -181,10 +183,10 @@ export function CompetitorQuoteUploader({
           <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
         </div>
         <h4 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">
-          Quote Received
+          {t('up_quote_rcvd', 'Quote Received')}
         </h4>
         <p className="text-[15px] text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-          We&apos;ve received your quote. Our team will review it and get back to you within 24 hours with a guaranteed best price.
+          {t('up_quote_msg', "We've received your quote. Our team will review it and get back to you within 24 hours with a guaranteed best price.")}
         </p>
       </div>
     );
@@ -198,7 +200,7 @@ export function CompetitorQuoteUploader({
       {/* ─── File Upload Zone ───────────────────────────────────── */}
       <div className="mb-6">
         <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-3 block">
-          Competitor Quotation
+          {t('up_comp_quote', 'Competitor Quotation')}
         </label>
 
         {uploadedUrl ? (
@@ -278,10 +280,10 @@ export function CompetitorQuoteUploader({
                 </div>
                 <div className="text-center px-4">
                   <p className="text-xs font-black text-zinc-600 dark:text-zinc-300">
-                    Drop your quote here or click to browse
+                    {t('up_drop', 'Drop your quote here or click to browse')}
                   </p>
                   <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
-                    PDF, JPG, PNG up to 10MB
+                    {t('up_pdf_max', 'PDF, JPG, PNG up to 10MB')}
                   </p>
                 </div>
               </>
@@ -307,14 +309,14 @@ export function CompetitorQuoteUploader({
         {/* Your Name (Required) */}
         <div>
           <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-1.5 block">
-            Your Name <span className="text-red-500">*</span>
+            {t('up_name', 'Your Name')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={yourName}
             onChange={(e) => setYourName(e.target.value)}
             required
-            placeholder="Enter your full name"
+            placeholder={t('up_name_ph', 'Enter your full name')}
             className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
           />
         </div>
@@ -322,13 +324,13 @@ export function CompetitorQuoteUploader({
         {/* Competitor Name */}
         <div>
           <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-1.5 block">
-            Competitor Name
+            {t('up_comp_name', 'Competitor Name')}
           </label>
           <input
             type="text"
             value={competitorName}
             onChange={(e) => setCompetitorName(e.target.value)}
-            placeholder="e.g., CP Plus Dealer, Local CCTV Shop"
+            placeholder={t('up_comp_ph', 'e.g., CP Plus Dealer, Local CCTV Shop')}
             className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
           />
         </div>
@@ -336,7 +338,7 @@ export function CompetitorQuoteUploader({
         {/* Competitor Total */}
         <div>
           <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-1.5 block">
-            Their Quoted Total (₹)
+            {t('up_total', 'Their Quoted Total (₹)')}
           </label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-zinc-400">₹</span>
@@ -355,12 +357,12 @@ export function CompetitorQuoteUploader({
         {/* Notes */}
         <div>
           <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-1.5 block">
-            Additional Notes
+            {t('up_notes', 'Additional Notes')}
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Anything else you'd like us to know..."
+            placeholder={t('up_notes_ph', "Anything else you'd like us to know...")}
             rows={3}
             className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all resize-none"
           />
@@ -375,7 +377,7 @@ export function CompetitorQuoteUploader({
             onClick={onCancel}
             className="px-5 py-2.5 rounded-full text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
-            Cancel
+            {t('up_cancel', 'Cancel')}
           </button>
         )}
         <button
@@ -390,7 +392,7 @@ export function CompetitorQuoteUploader({
             </>
           ) : (
             <>
-              Submit for Price Match
+              {t('up_submit', 'Submit for Price Match')}
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </>
           )}

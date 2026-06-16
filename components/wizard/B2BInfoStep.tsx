@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Building2, FileText, ChevronRight, UserCheck } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface B2BInfoStepProps {
   cameraCount: number;
@@ -14,6 +15,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
   const [companyName, setCompanyName] = useState("");
   const [gstNumber, setGstNumber] = useState("");
   const [gstError, setGstError] = useState("");
+  const { t } = useTranslation();
 
   const validateGST = (value: string) => {
     if (!value) return true; // optional field
@@ -51,10 +53,10 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
           </div>
           <div>
             <h3 className="text-[18px] font-black text-zinc-900 tracking-tight leading-tight">
-              Corporate Installation Detected
+              {t('b2b_title', 'Corporate Installation Detected')}
             </h3>
             <p className="text-[13px] text-zinc-500 mt-1 font-medium">
-              {cameraCount} {technology} cameras — business-grade setup
+              {cameraCount} {technology} {t('b2b_subtitle_suffix', 'cameras — business-grade setup')}
             </p>
           </div>
         </div>
@@ -62,8 +64,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
         {/* Info */}
         <div className="bg-white/70 rounded-[18px] p-4 mb-6 border border-blue-100">
           <p className="text-[13px] text-zinc-600 font-medium leading-relaxed">
-            We'll generate your <span className="font-black text-zinc-900">full corporate quote</span> instantly.
-            Optionally add your company details for a <span className="font-black text-zinc-900">GST invoice</span> — you can always add these later.
+            {t('b2b_desc1', "We'll generate your")} <span className="font-black text-zinc-900">{t('b2b_desc2', 'full corporate quote')}</span> {t('b2b_desc3', 'instantly. Optionally add your company details for a')} <span className="font-black text-zinc-900">{t('b2b_desc4', 'GST invoice')}</span> {t('b2b_desc5', '— you can always add these later.')}
           </p>
         </div>
 
@@ -71,7 +72,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
         <div className="space-y-4 mb-6">
           <div>
             <label className="block text-xs sm:text-sm font-black text-zinc-500 uppercase tracking-widest mb-2">
-              Company / Firm Name <span className="text-zinc-400 font-medium normal-case tracking-normal">(optional)</span>
+              {t('b2b_company', 'Company / Firm Name')} <span className="text-zinc-400 font-medium normal-case tracking-normal">{t('b2b_opt', '(optional)')}</span>
             </label>
             <input
               type="text"
@@ -85,7 +86,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
           <div>
             <label className="block text-xs sm:text-sm font-black text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-blue-500" />
-              GST Number <span className="text-zinc-400 font-medium normal-case tracking-normal">(optional — for GST invoice)</span>
+              {t('b2b_gst', 'GST Number')} <span className="text-zinc-400 font-medium normal-case tracking-normal">{t('b2b_gst_opt', '(optional — for GST invoice)')}</span>
             </label>
             <input
               type="text"
@@ -117,7 +118,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
             onClick={handleConfirm}
             className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs sm:text-sm tracking-[0.2em] rounded-[18px] shadow-[0_8px_20px_-8px_rgba(37,99,235,0.5)] hover:shadow-blue-600/40 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
           >
-            Generate Corporate Quote
+            {t('b2b_btn', 'Generate Corporate Quote')}
             <ChevronRight className="w-4 h-4" />
           </button>
           <button
@@ -125,7 +126,7 @@ export function B2BInfoStep({ cameraCount, technology, onConfirm, onSkip }: B2BI
             className="w-full h-11 text-zinc-500 hover:text-zinc-800 font-bold text-[12px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
           >
             <UserCheck className="w-4 h-4" />
-            Skip — I'm an individual
+            {t('b2b_skip', "Skip — I'm an individual")}
           </button>
         </div>
       </div>

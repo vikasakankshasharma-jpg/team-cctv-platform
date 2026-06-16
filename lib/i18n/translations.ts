@@ -1,251 +1,256 @@
 import { LocaleCode } from "./mapping";
 
 export type TranslationKey =
+  | "step_storage_desc"
+  | "step_features_desc"
+  | "step_general_addons_desc"
+  | "No Storage Required"
+  | "3 Months"
   | "chat_require_otp"
-  | "err_invalid_mobile"
-  | "welcome"
-  | "get_quote"
-  | "next"
-  | "back"
-  | "submit"
-  | "pincode_label"
-  | "city_label"
-  | "verify_pincode"
-  | "select_language"
-  | "wizard_title"
-  | "wizard_subtitle"
-  | "fetching_pincode"
-  | "invalid_pincode"
-  | "loading"
-  | "property_type"
-  | "bedrooms"
-  | "continue_whatsapp"
-  | "view_quotation"
-  | "home"
-  | "service_areas"
-  | "support"
-  | "staff_portal"
-  | "prof_installation"
-  | "protect_home"
-  | "get_instant_quote"
-  | "landing_pricing_title"
-  | "landing_pricing_subtitle"
-  | "landing_residential_tag"
-  | "landing_commercial_tag"
-  | "landing_residential_title"
-  | "landing_commercial_title"
-  | "landing_residential_desc"
-  | "landing_commercial_desc"
-  | "landing_areas_title"
-  | "landing_areas_desc"
-  | "landing_areas_all"
-  | "landing_final_cta_title"
-  | "landing_final_cta_desc"
-  | "landing_hero_highlight"
-  | "landing_exact_quote"
-  | "landing_custom_setup"
-  | "landing_call_support"
-  | "step_prop_type"
-  | "step_install_type"
-  | "step_cam_count"
-  | "step_technology"
-  | "step_storage"
-  | "step_general_addons"
-  | "step_features"
-  | "step_site_overview"
-  | "q_prop_type"
-  | "q_install_type"
-  | "q_cam_count"
-  | "q_tech"
-  | "q_storage"
-  | "q_general_addons"
-  | "q_features_q"
-  | "q_height"
-  | "q_surface"
-  | "opt_home"
-  | "opt_office"
-  | "opt_shop"
-  | "opt_factory"
-  | "opt_ins_new"
-  | "opt_ins_upg"
-  | "fopt_ip"
-  | "fopt_hd"
-  | "opt_wifi"
-  | "opt_4g"
-  | "fopt_s_7"
-  | "fopt_s_15"
-  | "fopt_s_30"
-  | "aopt_none"
-  | "aopt_monitor"
-  | "aopt_ups"
-  | "aopt_rack"
-  | "opt_feat_none"
-  | "opt_feat_wdr"
-  | "opt_feat_audio"
-  | "opt_feat_2way"
-  | "opt_feat_colorvu"
-  | "opt_feat_duallight"
-  | "opt_feat_starlight"
-  | "opt_feat_sdcard"
-  | "opt_feat_ptz"
-  | "opt_feat_pt"
-  | "hopt_std"
-  | "hopt_high"
-  | "hopt_vhigh"
-  | "sopt_brick"
-  | "sopt_false"
-  | "sopt_marble"
-  | "sopt_metal"
-  | "leadgate_title"
-  | "leadgate_title_verify"
-  | "leadgate_desc"
-  | "leadgate_desc_sent"
-  | "contact_number"
-  | "full_name"
-  | "area_pincode"
-  | "send_verification_code"
-  | "verify_view_quote"
-  | "resend_code"
-  | "change_phone_number"
-  | "secure_verification"
-  | "quote_summary"
-  | "quote_total"
-  | "quote_gst_included"
-  | "quote_download_pdf"
-  | "quote_book_installation"
-  | "quote_validity"
-  | "quote_camera_system"
-  | "quote_accessories"
-  | "quote_installation"
-  | "quote_wiring"
-  | "quote_schedule_visit"
-  | "wizard_lbl_environment"
-  | "wizard_opt_indoor"
-  | "wizard_opt_outdoor"
-  | "wizard_lbl_quantity"
-  | "wizard_lbl_special_features"
-  | "wizard_lbl_optional"
-  | "feat_color"
-  | "feat_audio"
-  | "feat_ptz"
-  | "feat_solar"
-  | "feat_4g"
-  | "step_wiring"
-  | "q_wiring"
-  | "opt_wired_yes"
-  | "opt_wired_no"
-  | "q_wiring_type"
-  | "opt_wiring_open"
-  | "opt_wiring_conduit"
-  | "dynamic_step_resolution"
-  | "q_resolution"
-  | "opt_res_2mp"
-  | "opt_res_4mp"
-  | "opt_res_5mp"
-  | "opt_res_6mp"
-  | "opt_res_8mp"
-  | "landing_hero_highlight"
-  | "landing_free_quotes"
-  | "protect_home"
-  | "keep_family_safe"
-  | "landing_exact_quote"
-  | "landing_subtitle"
-  | "landing_gst_bill"
-  | "landing_installs"
-  | "how_it_works"
-  | "easy_security"
-  | "perfect_coverage"
-  | "perfect_coverage_desc"
-  | "right_cameras"
-  | "right_cameras_desc"
-  | "clear_pricing"
-  | "clear_pricing_desc"
-  | "landing_secure_space"
-  | "landing_today"
-  | "landing_setup_subtitle"
-  | "trusted_partners"
-  | "preferred_platform"
-  | "invalid_pincode_err"
-  | "area_not_served"
-  | "whatsapp_us"
-  | "check_expansion"
-  | "failed_check_availability"
-  | "enter_pincode_placeholder"
-  | "check_area"
-  | "err_invalid_mobile"
-  | "err_enter_name"
-  | "err_invalid_pincode"
-  | "placeholder_mobile"
-  | "placeholder_name"
-  | "placeholder_pincode"
-  | "quote_awaiting"
-  | "quote_accepted"
-  | "quote_expired"
-  | "quote_rejected"
-  | "download_pdf"
-  | "quotation"
-  | "bill_of_materials"
-  | "total"
-  | "complete_your_order"
-  | "complete_your_order_desc"
-  | "pay_full_amount"
-  | "processing"
-  | "track_installation"
-  | "track_order_num"
-  | "track_secret_pin"
-  | "track_pin_desc"
-  | "track_installer_assigned"
-  | "track_step_1"
-  | "track_step_1_desc"
-  | "track_step_2"
-  | "track_step_2_desc"
-  | "track_step_3"
-  | "track_step_3_desc"
-  | "track_step_4"
-  | "track_step_4_desc"
-  | "track_service_address"
-  | "track_address_not_provided"
-  | "track_need_help"
-  | "step_timeline"
-  | "q_timeline"
-  | "fopt_t_asap"
-  | "fopt_t_week"
-  | "fopt_t_month"
-  | "fopt_t_research"
-  | "step_brand"
-  | "q_brand"
-  | "fopt_b_rec"
-  | "fopt_b_cp"
-  | "fopt_b_hik"
-  | "fopt_b_dah"
-  | "step_amc"
-  | "q_amc"
-  | "fopt_amc_yes"
-  | "fopt_amc_no"
-  | "faq_title"
-  | "faq_subtitle"
-  | "faq_1_q"
-  | "faq_1_a"
-  | "faq_2_q"
-  | "faq_2_a"
-  | "faq_3_q"
-  | "faq_3_a"
-  | "faq_4_q"
-  | "faq_4_a"
-  | "footer_desc"
-  | "footer_secure"
-  | "footer_serving"
-  | "footer_privacy"
-  | "footer_terms"
-  | "footer_partner"
-  | "step_timeline_desc"
-  | "step_brand_desc"
-  | "step_amc_desc"
-  | "progress_your"
-  | "progress_question"
-  | "progress_of"
-  | "wizard_safe"
-  | "wizard_smart";
+              | "err_invalid_mobile"
+              | "welcome"
+              | "get_quote"
+              | "next"
+              | "back"
+              | "submit"
+              | "pincode_label"
+              | "city_label"
+              | "verify_pincode"
+              | "select_language"
+              | "wizard_title"
+              | "wizard_subtitle"
+              | "fetching_pincode"
+              | "invalid_pincode"
+              | "loading"
+              | "property_type"
+              | "bedrooms"
+              | "continue_whatsapp"
+              | "view_quotation"
+              | "home"
+              | "service_areas"
+              | "support"
+              | "staff_portal"
+              | "prof_installation"
+              | "protect_home"
+              | "get_instant_quote"
+              | "landing_pricing_title"
+              | "landing_pricing_subtitle"
+              | "landing_residential_tag"
+              | "landing_commercial_tag"
+              | "landing_residential_title"
+              | "landing_commercial_title"
+              | "landing_residential_desc"
+              | "landing_commercial_desc"
+              | "landing_areas_title"
+              | "landing_areas_desc"
+              | "landing_areas_all"
+              | "landing_final_cta_title"
+              | "landing_final_cta_desc"
+              | "landing_hero_highlight"
+              | "landing_exact_quote"
+              | "landing_custom_setup"
+              | "landing_call_support"
+              | "step_prop_type"
+              | "step_install_type"
+              | "step_cam_count"
+              | "step_technology"
+              | "step_storage"
+              | "step_general_addons"
+              | "step_features"
+              | "step_site_overview"
+              | "q_prop_type"
+              | "q_install_type"
+              | "q_cam_count"
+              | "q_tech"
+              | "q_storage"
+              | "q_general_addons"
+              | "q_features_q"
+              | "q_height"
+              | "q_surface"
+              | "opt_home"
+              | "opt_office"
+              | "opt_shop"
+              | "opt_factory"
+              | "opt_ins_new"
+              | "opt_ins_upg"
+              | "fopt_ip"
+              | "fopt_hd"
+              | "opt_wifi"
+              | "opt_4g"
+              | "fopt_s_7"
+              | "fopt_s_15"
+              | "fopt_s_30"
+              | "aopt_none"
+              | "aopt_monitor"
+              | "aopt_ups"
+              | "aopt_rack"
+              | "opt_feat_none"
+              | "opt_feat_wdr"
+              | "opt_feat_audio"
+              | "opt_feat_2way"
+              | "opt_feat_colorvu"
+              | "opt_feat_duallight"
+              | "opt_feat_starlight"
+              | "opt_feat_sdcard"
+              | "opt_feat_ptz"
+              | "opt_feat_pt"
+              | "hopt_std"
+              | "hopt_high"
+              | "hopt_vhigh"
+              | "sopt_brick"
+              | "sopt_false"
+              | "sopt_marble"
+              | "sopt_metal"
+              | "leadgate_title"
+              | "leadgate_title_verify"
+              | "leadgate_desc"
+              | "leadgate_desc_sent"
+              | "contact_number"
+              | "full_name"
+              | "area_pincode"
+              | "send_verification_code"
+              | "verify_view_quote"
+              | "resend_code"
+              | "change_phone_number"
+              | "secure_verification"
+              | "quote_summary"
+              | "quote_total"
+              | "quote_gst_included"
+              | "quote_download_pdf"
+              | "quote_book_installation"
+              | "quote_validity"
+              | "quote_camera_system"
+              | "quote_accessories"
+              | "quote_installation"
+              | "quote_wiring"
+              | "quote_schedule_visit"
+              | "wizard_lbl_environment"
+              | "wizard_opt_indoor"
+              | "wizard_opt_outdoor"
+              | "wizard_lbl_quantity"
+              | "wizard_lbl_special_features"
+              | "wizard_lbl_optional"
+              | "feat_color"
+              | "feat_audio"
+              | "feat_ptz"
+              | "feat_solar"
+              | "feat_4g"
+              | "step_wiring"
+              | "q_wiring"
+              | "opt_wired_yes"
+              | "opt_wired_no"
+              | "q_wiring_type"
+              | "opt_wiring_open"
+              | "opt_wiring_conduit"
+              | "dynamic_step_resolution"
+              | "q_resolution"
+              | "opt_res_2mp"
+              | "opt_res_4mp"
+              | "opt_res_5mp"
+              | "opt_res_6mp"
+              | "opt_res_8mp"
+              | "landing_hero_highlight"
+              | "landing_free_quotes"
+              | "protect_home"
+              | "keep_family_safe"
+              | "landing_exact_quote"
+              | "landing_subtitle"
+              | "landing_gst_bill"
+              | "landing_installs"
+              | "how_it_works"
+              | "easy_security"
+              | "perfect_coverage"
+              | "perfect_coverage_desc"
+              | "right_cameras"
+              | "right_cameras_desc"
+              | "clear_pricing"
+              | "clear_pricing_desc"
+              | "landing_secure_space"
+              | "landing_today"
+              | "landing_setup_subtitle"
+              | "trusted_partners"
+              | "preferred_platform"
+              | "invalid_pincode_err"
+              | "area_not_served"
+              | "whatsapp_us"
+              | "check_expansion"
+              | "failed_check_availability"
+              | "enter_pincode_placeholder"
+              | "check_area"
+              | "err_invalid_mobile"
+              | "err_enter_name"
+              | "err_invalid_pincode"
+              | "placeholder_mobile"
+              | "placeholder_name"
+              | "placeholder_pincode"
+              | "quote_awaiting"
+              | "quote_accepted"
+              | "quote_expired"
+              | "quote_rejected"
+              | "download_pdf"
+              | "quotation"
+              | "bill_of_materials"
+              | "total"
+              | "complete_your_order"
+              | "complete_your_order_desc"
+              | "pay_full_amount"
+              | "processing"
+              | "track_installation"
+              | "track_order_num"
+              | "track_secret_pin"
+              | "track_pin_desc"
+              | "track_installer_assigned"
+              | "track_step_1"
+              | "track_step_1_desc"
+              | "track_step_2"
+              | "track_step_2_desc"
+              | "track_step_3"
+              | "track_step_3_desc"
+              | "track_step_4"
+              | "track_step_4_desc"
+              | "track_service_address"
+              | "track_address_not_provided"
+              | "track_need_help"
+              | "step_timeline"
+              | "q_timeline"
+              | "fopt_t_asap"
+              | "fopt_t_week"
+              | "fopt_t_month"
+              | "fopt_t_research"
+              | "step_brand"
+              | "q_brand"
+              | "fopt_b_rec"
+              | "fopt_b_cp"
+              | "fopt_b_hik"
+              | "fopt_b_dah"
+              | "step_amc"
+              | "q_amc"
+              | "fopt_amc_yes"
+              | "fopt_amc_no"
+              | "faq_title"
+              | "faq_subtitle"
+              | "faq_1_q"
+              | "faq_1_a"
+              | "faq_2_q"
+              | "faq_2_a"
+              | "faq_3_q"
+              | "faq_3_a"
+              | "faq_4_q"
+              | "faq_4_a"
+              | "footer_desc"
+              | "footer_secure"
+              | "footer_serving"
+              | "footer_privacy"
+              | "footer_terms"
+              | "footer_partner"
+              | "step_timeline_desc"
+              | "step_brand_desc"
+              | "step_amc_desc"
+              | "progress_your"
+              | "progress_question"
+              | "progress_of"
+              | "wizard_safe"
+              | "wizard_smart" | "sam_where" | "sam_enter" | "sam_tab_pin" | "sam_tab_city" | "sam_lbl_pin" | "sam_lbl_state" | "sam_lbl_city" | "sam_btn" | "sam_btn_pin" | "sam_loading" | "sam_no_city" | "sam_inv_pin" | "sam_sel_state" | "pcm_exp" | "pcm_unlock" | "pcm_mob" | "pcm_v_pin" | "pcm_v_otp" | "pcm_conf" | "lwm_title" | "lwm_desc" | "mcta_btn" | "wa_chat" | "wiz_prep" | "wiz_wait" | "wiz_err" | "wiz_err_desc" | "wiz_try" | "wiz_sel_all" | "wiz_sel" | "wiz_multi" | "wiz_add_cam" | "wiz_b2b_hint" | "b2b_comp" | "b2b_gst" | "b2b_type" | "cqu_title" | "cqu_drop" | "cqu_fmt" | "clp_survey" | "clp_item1" | "qp_hero" | 'quote_h1' | 'quote_h1_span' | 'quote_prep' | 'quote_rec' | 'quote_pkg' | 'quote_exp' | 'quote_exp_desc' | 'quote_req_new' | 'landing_same_day' | 'feat_res_1' | 'feat_res_2' | 'feat_res_3' | 'feat_res_4' | 'feat_com_1' | 'feat_com_2' | 'feat_com_3' | 'feat_com_4' | 'up_quote_rcvd' | 'up_quote_msg' | 'up_comp_quote' | 'up_drop' | 'up_pdf_max' | 'up_name' | 'up_name_ph' | 'up_comp_name' | 'up_comp_ph' | 'up_total' | 'up_notes' | 'up_notes_ph' | 'up_cancel' | 'up_submit' | 'lwm_subtitle' | 'pcm_desc_1' | 'pcm_otp_desc' | 'pcm_allow' | 'pcm_resend' | 'pcm_change' | 'pcm_wait_desc' | 'wa_message' | 'b2b_title' | 'b2b_subtitle_suffix' | 'b2b_desc1' | 'b2b_desc2' | 'b2b_desc3' | 'b2b_desc4' | 'b2b_desc5' | 'b2b_company' | 'b2b_opt' | 'b2b_gst_opt' | 'b2b_btn' | 'b2b_skip' | 'wiz_err_quote' | 'wiz_err_sel' | 'wiz_err_cam_min' | 'wiz_err_cam_max' | 'wiz_b2b_hint_1' | 'full' | 'advance';
 
 export const translations: Record<
   LocaleCode,
@@ -435,11 +440,180 @@ export const translations: Record<
     step_amc: "Maintenance",
     q_amc: "Select AMC option:",
     fopt_amc_yes: "Yes, protect my system",
-    fopt_amc_no: "No, I will manage it myself"
-  },
+    fopt_amc_no: "No, I will manage it myself",
+      sam_where: "Where do you need installation?",
+      sam_enter: "Enter your Pincode or select City.",
+      sam_tab_pin: "Use Pincode",
+      sam_tab_city: "Select City",
+      sam_lbl_pin: "Pincode",
+      sam_lbl_state: "State",
+      sam_lbl_city: "City / Town",
+      sam_btn: "Get Quotation Now",
+      sam_btn_pin: "Use Pincode Instead",
+      sam_loading: "Loading...",
+      sam_no_city: "No cities found.",
+      sam_inv_pin: "Invalid Pincode or service unavailable...",
+      sam_sel_state: "Select your state...",
+      pcm_exp: "Service Expansion",
+      pcm_unlock: "Unlock Installation",
+      pcm_mob: "Mobile Number",
+      pcm_v_pin: "Verify Pincode",
+      pcm_v_otp: "Verify OTP",
+      pcm_conf: "Waitlist Confirmed!",
+      lwm_title: "Choose your language",
+      lwm_desc: "You can change this anytime from the top menu",
+      mcta_btn: "Get Free CCTV Quote",
+      wa_chat: "Chat with us",
+      wiz_prep: "Preparing your plan...",
+      wiz_wait: "Just a few more seconds",
+      wiz_err: "Something went wrong",
+      wiz_err_desc: "Could not load the configuration...",
+      wiz_try: "Try Again",
+      wiz_sel: "Selected",
+      wiz_add_cam: "Add Another Camera Group",
+      wiz_b2b_hint: "For more than 16 cameras, we offer custom B2B pricing.",
+      b2b_comp: "Company Name",
+      b2b_gst: "GST Number",
+      b2b_type: "Business Type",
+      cqu_title: "Upload Competitor Quote",
+      cqu_drop: "Drop file here",
+      cqu_fmt: "Supported formats: PDF, JPG, PNG",
+      clp_survey: "Same-Day Survey",
+      clp_item1: "4x 2MP/5MP HD CP Plus Cameras",
+      qp_hero: "Your security, made simple.",
+      step_timeline_desc: "How soon do you need the system installed?",
+      step_brand_desc: "Do you have a specific brand in mind?",
+      step_amc_desc: "Would you like an Annual Maintenance Contract (AMC)?",
+      progress_your: "Your Progress",
+      progress_question: "Question",
+      progress_of: "of",
+      wizard_safe: "Your Data is Safe",
+      wizard_smart: "Smart System Design",
+      'quote_h1': "Your security,",
+      'quote_h1_span': "made simple.",
+      'quote_prep': "Prepared just for ",
+      'quote_rec': "Look at our recommended",
+      'quote_pkg': "packages below or build your own.",
+      'quote_exp': "Quotation Expired",
+      'quote_exp_desc': "This quote is over 7 days old. Prices for camera parts change, so we need to make a new one for you.",
+      'quote_req_new': "Request Re-quote",
+      'landing_same_day': "Same-Day Survey",
+      'feat_res_1': "4x 2MP/5MP HD {brand} Cameras",
+      'feat_res_2': "4-Channel DVR + HDD",
+      'feat_res_3': "Power Supply & Connectors",
+      'feat_res_4': "Complete Installation Labor",
+      'feat_com_1': "Network/IP {brand} Cameras",
+      'feat_com_2': "High-Capacity NVR System",
+      'feat_com_3': "Structured Cabling",
+      'feat_com_4': "Advanced Remote Viewing Setup",
+      'up_quote_rcvd': "Quote Received",
+      'up_quote_msg': "We've received your quote. Our team will review it and get back to you within 24 hours with a guaranteed best price.",
+      'up_comp_quote': "Competitor Quotation",
+      'up_drop': "Drop your quote here or click to browse",
+      'up_pdf_max': "PDF, JPG, PNG up to 10MB",
+      'up_name': "Your Name",
+      'up_name_ph': "Enter your full name",
+      'up_comp_name': "Competitor Name",
+      'up_comp_ph': "e.g., CP Plus Dealer, Local CCTV Shop",
+      'up_total': "Their Quoted Total (₹)",
+      'up_notes': "Additional Notes",
+      'up_notes_ph': "Anything else you'd like us to know...",
+      'up_cancel': "Cancel",
+      'up_submit': "Submit for Price Match",
+      'lwm_subtitle': "अपनी पसंदीदा भाषा चुनें | तुमची आवडती भाषा निवडा",
+      'pcm_desc_1': "Enter your mobile number to authorize the lookup for PIN-code",
+      'pcm_otp_desc': "Enter verification code sent to",
+      'pcm_allow': "Tap 'Allow' on pop-up to auto-fill",
+      'pcm_resend': "Resend Security Code",
+      'pcm_change': "Change Contact Details",
+      'pcm_wait_desc': "We are not actively serving PIN-code",
+      'wa_message': "Hi CCTVQuotation Team! 👋 I'd like a free quotation for CCTV installation at my property. Please help me.",
+      'b2b_title': "Corporate Installation Detected",
+      'b2b_subtitle_suffix': "cameras — business-grade setup",
+      'b2b_desc1': "We'll generate your",
+      'b2b_desc2': "full corporate quote",
+      'b2b_desc3': "instantly. Optionally add your company details for a",
+      'b2b_desc4': "GST invoice",
+      'b2b_desc5': "— you can always add these later.",
+      'b2b_company': "Company / Firm Name",
+      'b2b_opt': "(optional)",
+      'b2b_gst_opt': "(optional — for GST invoice)",
+      'b2b_btn': "Generate Corporate Quote",
+      'b2b_skip': "Skip — I'm an individual",
+      'err_enter_name': "Please enter your full name.",
+      'err_invalid_pincode': "Enter a valid 6-digit area pincode.",
+      'wiz_err_quote': "Error generating quote. Please try again.",
+      'wiz_err_sel': "Please select an option to continue.",
+      'wiz_err_cam_min': "Please select at least 1 camera to continue.",
+      'wiz_err_cam_max': "Max cameras available for this tech. Please contact us for larger installations.",
+      'wiz_b2b_hint_1': "For more than 16 cameras (limit), our team will reach out for a custom industrial quote. Above 16 cameras, a corporate quote is generated automatically.",
+      'landing_free_quotes': "100% Free Quotes",
+      'landing_gst_bill': "18% GST Bill",
+      'landing_installs': "500+ Installs",
+      'how_it_works': "How It Works",
+      'easy_security': "Easy Security For Everyone.",
+      'landing_secure_space': "Secure your space",
+      'landing_today': "today.",
+      'landing_setup_subtitle': "2-minute setup. No hidden costs. 18% GST included in all plans.",
+      'trusted_partners': "Trusted Hardware Partners & Verified Installs",
+      'preferred_platform': "India",
+      'quote_awaiting': "Awaiting Approval",
+      'quote_accepted': "Accepted",
+      'quote_expired': "Expired",
+      'quote_rejected': "Rejected",
+      'download_pdf': "Download PDF",
+      'quotation': "Quotation",
+      'bill_of_materials': "Bill of Materials",
+      'total': "Total",
+      'complete_your_order': "Complete Your Order",
+      'complete_your_order_desc': "Choose your preferred payment method to schedule your installation.",
+      'full': "all",
+      'advance': "all",
+      'processing': "Processing...",
+      'pay_full_amount': "Pay Full Amount",
+      'faq_subtitle': "Support & Clarification",
+      'faq_title': "Frequently Asked Questions",
+      'invalid_pincode_err': "Please enter a valid 6-digit pincode.",
+      'area_not_served': "We don't serve your area yet.",
+      'whatsapp_us': "WhatsApp us",
+      'check_expansion': "to check expansion options!",
+      'failed_check_availability': "Failed to check service availability.",
+      'enter_pincode_placeholder': "Enter Pincode (e.g., 302017)",
+      'check_area': "Check Area",
+      'footer_desc': "India",
+      'footer_secure': "Secure & Verified Platform",
+      'footer_serving': "Serving all of India",
+      'footer_privacy': "Privacy Policy",
+      'footer_terms': "Terms of Service",
+      'footer_partner': "Partner Login",
+      'placeholder_mobile': "Enter mobile number",
+      'placeholder_name': "Enter full name",
+      'placeholder_pincode': "6-digit pincode",
+      'perfect_coverage': "Perfect Coverage",
+      'perfect_coverage_desc': "We make sure every corner of your property is covered, leaving no blind spots for complete peace of mind.",
+      'right_cameras': "Right Cameras",
+      'right_cameras_desc': "We'll suggest the best camera technology for your specific needs, whether it's a small home or a large warehouse.",
+      'clear_pricing': "Clear Pricing",
+      'clear_pricing_desc': "Get three easy-to-understand price options (Value, Professional, and Elite) so you can choose what fits your budget.",
+      'faq_1_q': "Is GST included in the quote price?",
+      'faq_1_a': "Yes. All CCTVQuotation quotations include 18% GST with no hidden charges. The price covers cameras, DVR/NVR, HDD, cabling, and professional installation — everything.",
+      'faq_2_q': "Does the price include installation?",
+      'faq_2_a': "Yes. Every quotation includes full professional installation — camera mounting, cable routing, DVR/NVR setup, mobile app configuration on your phone, and a complete system demonstration.",
+      'faq_3_q': "How much does a 4-camera CCTV system cost in Jaipur?",
+      'faq_3_a': "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation.",
+      'faq_4_q': "Are your cameras BIS-ER compliant?",
+      'faq_4_a': "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification — suitable for government tenders, housing societies, and commercial projects.",
+      'step_storage_desc': "How far back do you need to watch old recordings?",
+      'step_features_desc': "Any special camera capabilities required?",
+      'step_general_addons_desc': "Would you like to include any extra accessories?",
+      'wiz_sel_all': "Select all that apply",
+      'wiz_multi': "You can pick more than one option. Click Continue when done.",
+      'No Storage Required': "No Storage Required",
+      '3 Months': "3 Months",
+},
   hi: {
-    welcome: "CCTV Quotation में आपका स्वागत है",
-    get_quote: "मुफ़्त कोटेशन प्राप्त करें",
+    welcome: "CCTV कोटेशन में आपका स्वागत है",
+    get_quote: "मुफ्त कोटेशन प्राप्त करें",
     next: "अगला",
     back: "पीछे",
     submit: "सबमिट करें",
@@ -462,7 +636,7 @@ export const translations: Record<
     support: "सपोर्ट",
     staff_portal: "स्टाफ पोर्टल",
     prof_installation: "प्रोफेशनल CCTV इंस्टॉलेशन",
-    protect_home: "अपने घर को सुरक्षित करें।",
+    protect_home: "अपने घर की सुरक्षा करें।",
     keep_family_safe: "अपने परिवार को सुरक्षित रखें।",
     get_instant_quote: "तुरंत कोटेशन प्राप्त करें",
     landing_pricing_title: "{city} में {brand} CCTV इंस्टॉलेशन की लागत",
@@ -494,7 +668,7 @@ export const translations: Record<
     landing_final_cta_desc:
       "2 मिनट में सटीक कोट प्राप्त करें। 18% GST शामिल। कोई छिपे हुए शुल्क नहीं।",
     landing_hero_highlight: "सरल और विश्वसनीय CCTV सुरक्षा",
-    landing_subtitle: "सिर्फ 2 मिनट में अपने CCTV सेटअप की सटीक लागत जानें। सरल, विश्वसनीय और आपकी आवश्यकताओं के अनुसार।",
+    landing_subtitle: "बस 2 मिनट में अपने CCTV सेटअप की सही लागत जानें। आसान, भरोसेमंद और आपकी जरूरतों के अनुसार।",
     landing_exact_quote: "सटीक कोटेशन प्राप्त करें →",
     landing_custom_setup: "कस्टम सेटअप बनाएं →",
     landing_call_support: "लोकल सपोर्ट को कॉल करें",
@@ -621,10 +795,181 @@ export const translations: Record<
     step_amc: "रखरखाव",
     q_amc: "AMC विकल्प चुनें:",
     fopt_amc_yes: "हाँ, मेरे सिस्टम की सुरक्षा करें",
-    fopt_amc_no: "नहीं, मैं खुद संभाल लूंगा"
-  },
+    fopt_amc_no: "नहीं, मैं खुद संभाल लूंगा",
+      sam_where: "आपको इंस्टॉलेशन कहाँ चाहिए?",
+      sam_enter: "अपना पिनकोड दर्ज करें या शहर चुनें।",
+      sam_tab_pin: "पिनकोड का उपयोग करें",
+      sam_tab_city: "शहर चुनें",
+      sam_lbl_pin: "पिनकोड",
+      sam_lbl_state: "राज्य",
+      sam_lbl_city: "शहर / कस्बा",
+      sam_btn: "अभी कोटेशन प्राप्त करें",
+      sam_btn_pin: "इसके बजाय पिनकोड का उपयोग करें",
+      sam_loading: "लोड हो रहा है...",
+      sam_no_city: "कोई शहर नहीं मिला।",
+      sam_inv_pin: "अमान्य पिनकोड या सेवा अनुपलब्ध...",
+      sam_sel_state: "अपना राज्य चुनें...",
+      pcm_exp: "सेवा विस्तार",
+      pcm_unlock: "इंस्टॉलेशन अनलॉक करें",
+      pcm_mob: "मोबाइल नंबर",
+      pcm_v_pin: "पिनकोड सत्यापित करें",
+      pcm_v_otp: "OTP सत्यापित करें",
+      pcm_conf: "प्रतीक्षा सूची की पुष्टि हो गई!",
+      lwm_title: "अपनी भाषा चुनें",
+      lwm_desc: "आप इसे टॉप मेनू से कभी भी बदल सकते हैं",
+      mcta_btn: "मुफ़्त CCTV कोट प्राप्त करें",
+      wa_chat: "हमसे चैट करें",
+      wiz_prep: "आपका प्लान तैयार किया जा रहा है...",
+      wiz_wait: "बस कुछ सेकंड और",
+      wiz_err: "कुछ गलत हो गया",
+      wiz_err_desc: "कॉन्फ़िगरेशन लोड नहीं हो सका...",
+      wiz_try: "पुनः प्रयास करें",
+      wiz_sel: "चयनित",
+      wiz_add_cam: "एक और कैमरा समूह जोड़ें",
+      wiz_b2b_hint: "16 से अधिक कैमरों के लिए, हम कस्टम B2B मूल्य निर्धारण प्रदान करते हैं।",
+      b2b_comp: "कंपनी का नाम",
+      b2b_gst: "GST नंबर",
+      b2b_type: "व्यवसाय का प्रकार",
+      cqu_title: "प्रतिस्पर्धी कोटेशन अपलोड करें",
+      cqu_drop: "फ़ाइल यहाँ छोड़ें",
+      cqu_fmt: "समर्थित प्रारूप: PDF, JPG, PNG",
+      clp_survey: "उसी दिन सर्वेक्षण",
+      clp_item1: "4x 2MP/5MP HD CP Plus कैमरे",
+      qp_hero: "आपकी सुरक्षा, सरल बनाई गई।",
+      step_timeline_desc: "आपको यह सिस्टम कितनी जल्दी इंस्टॉल करवाना है?",
+      step_brand_desc: "क्या आपके दिमाग में कोई विशिष्ट ब्रांड है?",
+      step_amc_desc: "क्या आप वार्षिक रखरखाव अनुबंध (AMC) चाहेंगे?",
+      progress_your: "आपकी प्रगति",
+      progress_question: "प्रश्न",
+      progress_of: "में से",
+      wizard_safe: "आपका डेटा सुरक्षित है",
+      wizard_smart: "स्मार्ट सिस्टम डिज़ाइन",
+      'quote_h1': "[hi] Your security,",
+      'quote_h1_span': "[hi] made simple.",
+      'quote_prep': "[hi] Prepared just for ",
+      'quote_rec': "[hi] Look at our recommended",
+      'quote_pkg': "[hi] packages below or build your own.",
+      'quote_exp': "[hi] Quotation Expired",
+      'quote_exp_desc': "[hi] This quote is over 7 days old. Prices for camera parts change, so we need to make a new one for you.",
+      'quote_req_new': "[hi] Request Re-quote",
+      'landing_same_day': "[hi] Same-Day Survey",
+      'feat_res_1': "[hi] 4x 2MP/5MP HD {brand} Cameras",
+      'feat_res_2': "[hi] 4-Channel DVR + HDD",
+      'feat_res_3': "[hi] Power Supply & Connectors",
+      'feat_res_4': "[hi] Complete Installation Labor",
+      'feat_com_1': "[hi] Network/IP {brand} Cameras",
+      'feat_com_2': "[hi] High-Capacity NVR System",
+      'feat_com_3': "[hi] Structured Cabling",
+      'feat_com_4': "[hi] Advanced Remote Viewing Setup",
+      'up_quote_rcvd': "[hi] Quote Received",
+      'up_quote_msg': "[hi] We've received your quote. Our team will review it and get back to you within 24 hours with a guaranteed best price.",
+      'up_comp_quote': "[hi] Competitor Quotation",
+      'up_drop': "[hi] Drop your quote here or click to browse",
+      'up_pdf_max': "[hi] PDF, JPG, PNG up to 10MB",
+      'up_name': "[hi] Your Name",
+      'up_name_ph': "[hi] Enter your full name",
+      'up_comp_name': "[hi] Competitor Name",
+      'up_comp_ph': "[hi] e.g., CP Plus Dealer, Local CCTV Shop",
+      'up_total': "[hi] Their Quoted Total (₹)",
+      'up_notes': "[hi] Additional Notes",
+      'up_notes_ph': "[hi] Anything else you'd like us to know...",
+      'up_cancel': "[hi] Cancel",
+      'up_submit': "[hi] Submit for Price Match",
+      'lwm_subtitle': "[hi] अपनी पसंदीदा भाषा चुनें | तुमची आवडती भाषा निवडा",
+      'pcm_desc_1': "[hi] Enter your mobile number to authorize the lookup for PIN-code",
+      'pcm_otp_desc': "[hi] Enter verification code sent to",
+      'pcm_allow': "[hi] Tap 'Allow' on pop-up to auto-fill",
+      'pcm_resend': "[hi] Resend Security Code",
+      'pcm_change': "[hi] Change Contact Details",
+      'pcm_wait_desc': "[hi] We are not actively serving PIN-code",
+      'wa_message': "[hi] Hi CCTVQuotation Team! 👋 I'd like a free quotation for CCTV installation at my property. Please help me.",
+      'b2b_title': "[hi] Corporate Installation Detected",
+      'b2b_subtitle_suffix': "[hi] cameras — business-grade setup",
+      'b2b_desc1': "[hi] We'll generate your",
+      'b2b_desc2': "[hi] full corporate quote",
+      'b2b_desc3': "[hi] instantly. Optionally add your company details for a",
+      'b2b_desc4': "[hi] GST invoice",
+      'b2b_desc5': "[hi] — you can always add these later.",
+      'b2b_company': "[hi] Company / Firm Name",
+      'b2b_opt': "[hi] (optional)",
+      'b2b_gst_opt': "[hi] (optional — for GST invoice)",
+      'b2b_btn': "[hi] Generate Corporate Quote",
+      'b2b_skip': "[hi] Skip — I'm an individual",
+      'err_enter_name': "[hi] Please enter your full name.",
+      'err_invalid_pincode': "[hi] Enter a valid 6-digit area pincode.",
+      'wiz_err_quote': "[hi] Error generating quote. Please try again.",
+      'wiz_err_sel': "[hi] Please select an option to continue.",
+      'wiz_err_cam_min': "[hi] Please select at least 1 camera to continue.",
+      'wiz_err_cam_max': "[hi] Max cameras available for this tech. Please contact us for larger installations.",
+      'wiz_b2b_hint_1': "[hi] For more than 16 cameras (limit), our team will reach out for a custom industrial quote. Above 16 cameras, a corporate quote is generated automatically.",
+      'landing_free_quotes': "100% मुफ्त कोटेशन",
+      'landing_gst_bill': "[hi] 18% GST Bill",
+      'landing_installs': "[hi] 500+ Installs",
+      'how_it_works': "यह कैसे काम करता है",
+      'easy_security': "सबके लिए आसान सुरक्षा।",
+      'landing_secure_space': "अपने स्थान को सुरक्षित करें",
+      'landing_today': "आज ही।",
+      'landing_setup_subtitle': "2 मिनट में सेटअप। कोई छिपी हुई लागत नहीं। सभी प्लान में 18% GST शामिल।",
+      'trusted_partners': "[hi] Trusted Hardware Partners & Verified Installs",
+      'preferred_platform': "भारत",
+      'quote_awaiting': "[hi] Awaiting Approval",
+      'quote_accepted': "[hi] Accepted",
+      'quote_expired': "[hi] Expired",
+      'quote_rejected': "[hi] Rejected",
+      'download_pdf': "[hi] Download PDF",
+      'quotation': "[hi] Quotation",
+      'bill_of_materials': "[hi] Bill of Materials",
+      'total': "[hi] Total",
+      'complete_your_order': "[hi] Complete Your Order",
+      'complete_your_order_desc': "[hi] Choose your preferred payment method to schedule your installation.",
+      'full': "[hi] all",
+      'advance': "[hi] all",
+      'processing': "[hi] Processing...",
+      'pay_full_amount': "[hi] Pay Full Amount",
+      'chat_require_otp': "[hi] To provide accurate pricing and custom quotes, please verify your mobile number first.",
+      'err_invalid_mobile': "[hi] Enter a valid 10-digit Indian mobile number.",
+      'faq_subtitle': "सहायता और स्पष्टीकरण",
+      'faq_title': "अक्सर पूछे जाने वाले प्रश्न",
+      'invalid_pincode_err': "कृपया एक वैध 6-अंकीय पिनकोड दर्ज करें।",
+      'area_not_served': "[hi] We don't serve your area yet.",
+      'whatsapp_us': "[hi] WhatsApp us",
+      'check_expansion': "[hi] to check expansion options!",
+      'failed_check_availability': "[hi] Failed to check service availability.",
+      'enter_pincode_placeholder': "पिनकोड दर्ज करें",
+      'check_area': "क्षेत्र जांचें",
+      'footer_desc': "भारत की सर्वश्रेष्ठ CCTV इंस्टॉलेशन सर्विस",
+      'footer_secure': "सुरक्षित और सत्यापित प्लेटफ़ॉर्म",
+      'footer_serving': "संपूर्ण भारत में सेवाएँ",
+      'footer_privacy': "गोपनीयता नीति",
+      'footer_terms': "सेवा की शर्तें",
+      'footer_partner': "पार्टनर लॉगिन",
+      'placeholder_mobile': "मोबाइल नंबर दर्ज करें",
+      'placeholder_name': "पूरा नाम दर्ज करें",
+      'placeholder_pincode': "6-अंकों का पिनकोड",
+      'perfect_coverage': "पूरा कवरेज",
+      'perfect_coverage_desc': "हम सुनिश्चित करते हैं कि आपकी संपत्ति का हर कोना सुरक्षित रहे और कोई भी हिस्सा नज़र से न बचे।",
+      'right_cameras': "सही कैमरा",
+      'right_cameras_desc': "हम आपकी आवश्यकता के अनुसार बेहतरीन कैमरा तकनीक का सुझाव देते हैं, चाहे वह छोटा घर हो या बड़ा गोदाम।",
+      'clear_pricing': "पारदर्शी मूल्य निर्धारण",
+      'clear_pricing_desc': "तीन आसान विकल्प (Value, Professional, Elite) ताकि आप अपने बजट के अनुसार चुन सकें।",
+      'faq_1_q': "क्या कोटेशन मूल्य में GST शामिल है?",
+      'faq_1_a': "हाँ। सभी CCTVQuotation कोटेशन में 18% GST शामिल है, कोई छिपा हुआ शुल्क नहीं है। कीमत में कैमरे, DVR/NVR, HDD, केबलिंग और पेशेवर स्थापना शामिल है — सब कुछ।",
+      'faq_2_q': "क्या कीमत में स्थापना (installation) शामिल है?",
+      'faq_2_a': "हाँ। हर कोटेशन में पूर्ण पेशेवर स्थापना शामिल है — कैमरा माउंटिंग, केबल रूटिंग, DVR/NVR सेटअप, आपके फोन पर मोबाइल ऐप कॉन्फ़िगरेशन, और एक पूर्ण सिस्टम प्रदर्शन।",
+      'faq_3_q': "जयपुर में 4-कैमरा CCTV सिस्टम की कीमत कितनी है?",
+      'faq_3_a': "CP Plus HD 4-कैमरा सिस्टम ₹18,000–₹28,000 से शुरू होता है। IP (NVR) सिस्टम ₹35,000–₹55,000 से शुरू होता है। 4K सिस्टम ₹55,000–₹85,000 से शुरू होता है। सभी कीमतों में GST और स्थापना शामिल है।",
+      'faq_4_q': "क्या आपके कैमरे BIS-ER प्रमाणित हैं?",
+      'faq_4_a': "हाँ। हम CP Plus और Prama कैमरे स्थापित करते हैं जिनके पास BIS-ER प्रमाणन है — जो सरकारी निविदाओं, हाउसिंग सोसायटियों और व्यावसायिक परियोजनाओं के लिए उपयुक्त हैं।",
+      'step_storage_desc': "आप पुरानी रिकॉर्डिंग कितने समय तक की देखना चाहते हैं?",
+      'step_features_desc': "क्या कोई विशेष कैमरा सुविधाओं की आवश्यकता है?",
+      'step_general_addons_desc': "क्या आप कोई अतिरिक्त सहायक उपकरण शामिल करना चाहेंगे?",
+      'wiz_sel_all': "लागू होने वाले सभी चुनें",
+      'wiz_multi': "आप एक से अधिक विकल्प चुन सकते हैं। हो जाने पर 'जारी रखें' पर क्लिक करें।",
+      'No Storage Required': "कोई स्टोरेज आवश्यक नहीं",
+      '3 Months': "3 महीने",
+},
   mr: {
-    welcome: "CCTV Quotation मध्ये आपले स्वागत आहे",
+    welcome: "CCTV कोटेशन मध्ये आपले स्वागत आहे",
     get_quote: "मोफत कोटेशन मिळवा",
     next: "पुढे",
     back: "मागे",
@@ -648,7 +993,7 @@ export const translations: Record<
     support: "सपोर्ट",
     staff_portal: "स्टाफ पोर्टल",
     prof_installation: "व्यावसायिक CCTV इन्स्टॉलेशन",
-    protect_home: "तुमचे घर सुरक्षित करा.",
+    protect_home: "तुमच्या घराचे रक्षण करा.",
     keep_family_safe: "तुमच्या कुटुंबाला सुरक्षित ठेवा.",
     get_instant_quote: "त्वरित कोटेशन मिळवा",
     landing_pricing_title: "{city} मध्ये {brand} CCTV इन्स्टॉलेशनचा खर्च",
@@ -679,8 +1024,8 @@ export const translations: Record<
     landing_final_cta_title: "आजच तुमची {city} मधील मालमत्ता सुरक्षित करा.",
     landing_final_cta_desc:
       "2 मिनिटांत अचूक कोट मिळवा. 18% GST समाविष्ट. कोणतेही छुपे शुल्क नाही.",
-    landing_hero_highlight: "सोपी आणि विश्वासार्હ CCTV सुरक्षा",
-    landing_subtitle: "केवळ २ मिनिटांत तुमच्या CCTV सेटअपचा अचूक खर्च जाणून घ्या. सोपे, विश्वासार्ह आणि तुमच्या गरजेनुसार.",
+    landing_hero_highlight: "सोपी आणि विश्वसनीय CCTV सुरक्षा",
+    landing_subtitle: "फक्त २ मिनिटांत तुमच्या CCTV सेटअपची अचूक किंमत जाणून घ्या. सोपे, विश्वासार्ह आणि तुमच्या गरजेनुसार.",
     landing_exact_quote: "अचूक कोटेशन मिळवा →",
     landing_custom_setup: "कस्टम सेटअप तयार करा →",
     landing_call_support: "लोकल सपोर्टला कॉल करा",
@@ -806,10 +1151,181 @@ export const translations: Record<
     step_amc: "देखभाल",
     q_amc: "AMC पर्याय निवडा:",
     fopt_amc_yes: "होय, माझ्या सिस्टमचे रक्षण करा",
-    fopt_amc_no: "नाही, मी स्वतः व्यवस्थापित करेन"
-  },
+    fopt_amc_no: "नाही, मी स्वतः व्यवस्थापित करेन",
+      sam_where: "तुम्हाला इंस्टॉलेशन कुठे हवे आहे?",
+      sam_enter: "तुमचा पिनकोड प्रविष्ट करा किंवा शहर निवडा.",
+      sam_tab_pin: "पिनकोड वापरा",
+      sam_tab_city: "शहर निवडा",
+      sam_lbl_pin: "पिनकोड",
+      sam_lbl_state: "राज्य",
+      sam_lbl_city: "शहर / गाव",
+      sam_btn: "आता कोटेशन मिळवा",
+      sam_btn_pin: "याऐवजी पिनकोड वापरा",
+      sam_loading: "लोड होत आहे...",
+      sam_no_city: "कोणतीही शहरे आढळली नाहीत.",
+      sam_inv_pin: "अवैध पिनकोड किंवा सेवा अनुपलब्ध...",
+      sam_sel_state: "तुमचे राज्य निवडा...",
+      pcm_exp: "सेवा विस्तार",
+      pcm_unlock: "इंस्टॉलेशन अनलॉक करा",
+      pcm_mob: "मोबाईल नंबर",
+      pcm_v_pin: "पिनकोड सत्यापित करा",
+      pcm_v_otp: "OTP सत्यापित करा",
+      pcm_conf: "प्रतीक्षा यादी निश्चित केली!",
+      lwm_title: "तुमची भाषा निवडा",
+      lwm_desc: "तुम्ही हे वरच्या मेनूमधून कधीही बदलू शकता",
+      mcta_btn: "मोफत CCTV कोट मिळवा",
+      wa_chat: "आमच्याशी चॅट करा",
+      wiz_prep: "तुमचा प्लान तयार करत आहे...",
+      wiz_wait: "फक्त काही सेकंद",
+      wiz_err: "काहीतरी चूक झाली",
+      wiz_err_desc: "कॉन्फिगरेशन लोड होऊ शकले नाही...",
+      wiz_try: "पुन्हा प्रयत्न करा",
+      wiz_sel: "निवडलेले",
+      wiz_add_cam: "आणखी एक कॅमेरा गट जोडा",
+      wiz_b2b_hint: "१६ पेक्षा जास्त कॅमेऱ्यांसाठी, आम्ही कस्टम B2B किंमत ऑफर करतो.",
+      b2b_comp: "कंपनीचे नाव",
+      b2b_gst: "GST क्रमांक",
+      b2b_type: "व्यवसायाचा प्रकार",
+      cqu_title: "स्पर्धकांचे कोटेशन अपलोड करा",
+      cqu_drop: "फाईल येथे सोडा",
+      cqu_fmt: "समर्थित फॉरमॅट्स: PDF, JPG, PNG",
+      clp_survey: "त्याच दिवशी सर्वेक्षण",
+      clp_item1: "4x 2MP/5MP HD CP Plus कॅमेरे",
+      qp_hero: "तुमची सुरक्षा, सोपी केली.",
+      step_timeline_desc: "तुम्हाला ही सिस्टम किती लवकर इन्स्टॉल करायची आहे?",
+      step_brand_desc: "तुमच्या मनात एखादा विशिष्ट ब्रँड आहे का?",
+      step_amc_desc: "तुम्हाला वार्षिक देखभाल करार (AMC) हवा आहे का?",
+      progress_your: "तुमची प्रगती",
+      progress_question: "प्रश्न",
+      progress_of: "पैकी",
+      wizard_safe: "तुमचा डेटा सुरक्षित आहे",
+      wizard_smart: "स्मार्ट सिस्टम डिझाइन",
+      'quote_h1': "[mr] Your security,",
+      'quote_h1_span': "[mr] made simple.",
+      'quote_prep': "[mr] Prepared just for ",
+      'quote_rec': "[mr] Look at our recommended",
+      'quote_pkg': "[mr] packages below or build your own.",
+      'quote_exp': "[mr] Quotation Expired",
+      'quote_exp_desc': "[mr] This quote is over 7 days old. Prices for camera parts change, so we need to make a new one for you.",
+      'quote_req_new': "[mr] Request Re-quote",
+      'landing_same_day': "[mr] Same-Day Survey",
+      'feat_res_1': "[mr] 4x 2MP/5MP HD {brand} Cameras",
+      'feat_res_2': "[mr] 4-Channel DVR + HDD",
+      'feat_res_3': "[mr] Power Supply & Connectors",
+      'feat_res_4': "[mr] Complete Installation Labor",
+      'feat_com_1': "[mr] Network/IP {brand} Cameras",
+      'feat_com_2': "[mr] High-Capacity NVR System",
+      'feat_com_3': "[mr] Structured Cabling",
+      'feat_com_4': "[mr] Advanced Remote Viewing Setup",
+      'up_quote_rcvd': "[mr] Quote Received",
+      'up_quote_msg': "[mr] We've received your quote. Our team will review it and get back to you within 24 hours with a guaranteed best price.",
+      'up_comp_quote': "[mr] Competitor Quotation",
+      'up_drop': "[mr] Drop your quote here or click to browse",
+      'up_pdf_max': "[mr] PDF, JPG, PNG up to 10MB",
+      'up_name': "[mr] Your Name",
+      'up_name_ph': "[mr] Enter your full name",
+      'up_comp_name': "[mr] Competitor Name",
+      'up_comp_ph': "[mr] e.g., CP Plus Dealer, Local CCTV Shop",
+      'up_total': "[mr] Their Quoted Total (₹)",
+      'up_notes': "[mr] Additional Notes",
+      'up_notes_ph': "[mr] Anything else you'd like us to know...",
+      'up_cancel': "[mr] Cancel",
+      'up_submit': "[mr] Submit for Price Match",
+      'lwm_subtitle': "[mr] अपनी पसंदीदा भाषा चुनें | तुमची आवडती भाषा निवडा",
+      'pcm_desc_1': "[mr] Enter your mobile number to authorize the lookup for PIN-code",
+      'pcm_otp_desc': "[mr] Enter verification code sent to",
+      'pcm_allow': "[mr] Tap 'Allow' on pop-up to auto-fill",
+      'pcm_resend': "[mr] Resend Security Code",
+      'pcm_change': "[mr] Change Contact Details",
+      'pcm_wait_desc': "[mr] We are not actively serving PIN-code",
+      'wa_message': "[mr] Hi CCTVQuotation Team! 👋 I'd like a free quotation for CCTV installation at my property. Please help me.",
+      'b2b_title': "[mr] Corporate Installation Detected",
+      'b2b_subtitle_suffix': "[mr] cameras — business-grade setup",
+      'b2b_desc1': "[mr] We'll generate your",
+      'b2b_desc2': "[mr] full corporate quote",
+      'b2b_desc3': "[mr] instantly. Optionally add your company details for a",
+      'b2b_desc4': "[mr] GST invoice",
+      'b2b_desc5': "[mr] — you can always add these later.",
+      'b2b_company': "[mr] Company / Firm Name",
+      'b2b_opt': "[mr] (optional)",
+      'b2b_gst_opt': "[mr] (optional — for GST invoice)",
+      'b2b_btn': "[mr] Generate Corporate Quote",
+      'b2b_skip': "[mr] Skip — I'm an individual",
+      'err_enter_name': "[mr] Please enter your full name.",
+      'err_invalid_pincode': "[mr] Enter a valid 6-digit area pincode.",
+      'wiz_err_quote': "[mr] Error generating quote. Please try again.",
+      'wiz_err_sel': "[mr] Please select an option to continue.",
+      'wiz_err_cam_min': "[mr] Please select at least 1 camera to continue.",
+      'wiz_err_cam_max': "[mr] Max cameras available for this tech. Please contact us for larger installations.",
+      'wiz_b2b_hint_1': "[mr] For more than 16 cameras (limit), our team will reach out for a custom industrial quote. Above 16 cameras, a corporate quote is generated automatically.",
+      'landing_free_quotes': "100% मोफत कोटेशन",
+      'landing_gst_bill': "[mr] 18% GST Bill",
+      'landing_installs': "[mr] 500+ Installs",
+      'how_it_works': "हे कसे कार्य करते",
+      'easy_security': "सर्वांसाठी सोपी सुरक्षा.",
+      'landing_secure_space': "तुमची जागा सुरक्षित करा",
+      'landing_today': "आजच.",
+      'landing_setup_subtitle': "२ मिनिटांत सेटअप. कोणताही लपलेला खर्च नाही. सर्व प्लॅनमध्ये १८% GST समाविष्ट.",
+      'trusted_partners': "[mr] Trusted Hardware Partners & Verified Installs",
+      'preferred_platform': "भारत",
+      'quote_awaiting': "[mr] Awaiting Approval",
+      'quote_accepted': "[mr] Accepted",
+      'quote_expired': "[mr] Expired",
+      'quote_rejected': "[mr] Rejected",
+      'download_pdf': "[mr] Download PDF",
+      'quotation': "[mr] Quotation",
+      'bill_of_materials': "[mr] Bill of Materials",
+      'total': "[mr] Total",
+      'complete_your_order': "[mr] Complete Your Order",
+      'complete_your_order_desc': "[mr] Choose your preferred payment method to schedule your installation.",
+      'full': "[mr] all",
+      'advance': "[mr] all",
+      'processing': "[mr] Processing...",
+      'pay_full_amount': "[mr] Pay Full Amount",
+      'chat_require_otp': "[mr] To provide accurate pricing and custom quotes, please verify your mobile number first.",
+      'err_invalid_mobile': "[mr] Enter a valid 10-digit Indian mobile number.",
+      'faq_subtitle': "मदत आणि स्पष्टीकरण",
+      'faq_title': "वारंवार विचारले जाणारे प्रश्न",
+      'invalid_pincode_err': "कृपया योग्य ६-अंकी पिनकोड टाका.",
+      'area_not_served': "[mr] We don't serve your area yet.",
+      'whatsapp_us': "[mr] WhatsApp us",
+      'check_expansion': "[mr] to check expansion options!",
+      'failed_check_availability': "[mr] Failed to check service availability.",
+      'enter_pincode_placeholder': "पिनकोड प्रविष्ट करा",
+      'check_area': "क्षेत्र तपासा",
+      'footer_desc': "भारताची सर्वोत्तम CCTV इन्स्टॉलेशन सर्व्हिस",
+      'footer_secure': "सुरक्षित आणि सत्यापित प्लॅटफॉर्म",
+      'footer_serving': "संपूर्ण भारतात सेवा",
+      'footer_privacy': "गोपनीयता धोरण",
+      'footer_terms': "सेवा अटी",
+      'footer_partner': "पार्टनर लॉगिन",
+      'placeholder_mobile': "मोबाईल नंबर टाका",
+      'placeholder_name': "पूर्ण नाव टाका",
+      'placeholder_pincode': "६ अंकी पिनकोड",
+      'perfect_coverage': "संपूर्ण कव्हरेज",
+      'perfect_coverage_desc': "तुमच्या मालमत्तेचा प्रत्येक कोपरा सुरक्षित राहील आणि कोणताही भाग नजरेतून सुटणार नाही याची आम्ही खात्री करतो.",
+      'right_cameras': "योग्य कॅमेरे",
+      'right_cameras_desc': "आम्ही तुमच्या गरजेनुसार सर्वोत्तम कॅमेरा तंत्रज्ञान सुचवतो, मग ते लहान घर असो वा मोठे गोदाम.",
+      'clear_pricing': "पारदर्शक किंमत",
+      'clear_pricing_desc': "तीन सोपे पर्याय (Value, Professional, Elite) जेणेकरून तुम्ही तुमच्या बजेटनुसार निवडू शकता.",
+      'faq_1_q': "कोटेशन किमतीत GST समाविष्ट आहे का?",
+      'faq_1_a': "होय. सर्व CCTVQuotation कोटेशनमध्ये 18% GST समाविष्ट आहे आणि कोणतेही छुपे शुल्क नाही. या किमतीत कॅमेरे, DVR/NVR, HDD, केबलिंग आणि व्यावसायिक इन्स्टॉलेशन समाविष्ट आहे — सर्व काही.",
+      'faq_2_q': "किमतीत इन्स्टॉलेशनचा समावेश आहे का?",
+      'faq_2_a': "होय. प्रत्येक कोटेशनमध्ये संपूर्ण व्यावसायिक इन्स्टॉलेशन समाविष्ट आहे — कॅमेरा माउंटिंग, केबल राउटिंग, DVR/NVR सेटअप, तुमच्या फोनवर मोबाईल ॲप कॉन्फिगरेशन आणि संपूर्ण सिस्टम डेमो.",
+      'faq_3_q': "जयपूरमध्ये 4-कॅमेरा CCTV सिस्टमची किंमत किती आहे?",
+      'faq_3_a': "CP Plus HD 4-कॅमेरा सिस्टम ₹18,000–₹28,000 पासून सुरू होते. IP (NVR) सिस्टम ₹35,000–₹55,000 पासून सुरू होते. 4K सिस्टम ₹55,000–₹85,000 पासून सुरू होते. सर्व किमतींमध्ये GST आणि इन्स्टॉलेशन समाविष्ट आहे.",
+      'faq_4_q': "तुमचे कॅमेरे BIS-ER प्रमाणित आहेत का?",
+      'faq_4_a': "होय. आम्ही CP Plus आणि Prama कॅमेरे इन्स्टॉल करतो ज्यांना BIS-ER प्रमाणपत्र आहे — जे सरकारी टेंडर, गृहनिर्माण संस्था आणि व्यावसायिक प्रकल्पांसाठी योग्य आहेत.",
+      'step_storage_desc': "तुम्हाला किती जुने रेकॉर्डिंग पाहायचे आहे?",
+      'step_features_desc': "काही विशेष कॅमेरा वैशिष्ट्ये आवश्यक आहेत का?",
+      'step_general_addons_desc': "तुम्हाला कोणतेही अतिरिक्त ॲक्सेसरीज समाविष्ट करायला आवडेल का?",
+      'wiz_sel_all': "लागू होणारे सर्व निवडा",
+      'wiz_multi': "तुम्ही एकापेक्षा जास्त पर्याय निवडू शकता. पूर्ण झाल्यावर 'पुढे जा' वर क्लिक करा.",
+      'No Storage Required': "स्टोरेजची आवश्यकता नाही",
+      '3 Months': "3 महिने",
+},
   gu: {
-    welcome: "CCTV Quotation માં તમારું સ્વાગત છે",
+    welcome: "CCTV ક્વોટેશનમાં તમારું સ્વાગત છે",
     get_quote: "મફત ક્વોટેશન મેળવો",
     next: "આગળ",
     back: "પાછળ",
@@ -864,7 +1380,7 @@ export const translations: Record<
     landing_final_cta_title: "આજે જ તમારી {city} ની મિલકત સુરક્ષિત કરો.",
     landing_final_cta_desc: "2 મિનિટમાં ચોક્કસ ક્વોટ મેળવો. 18% GST શામેલ છે.",
     landing_hero_highlight: "સરળ અને વિશ્વસનીય CCTV સુરક્ષા",
-    landing_subtitle: "માત્ર 2 મિનિટમાં તમારા CCTV સેટઅપનો ચોક્કસ ખર્ચ જાણો. સરળ, વિશ્વસનીય અને તમારી જરૂરિયાતો અનુસાર.",
+    landing_subtitle: "માત્ર 2 મિનિટમાં તમારા CCTV સેટઅપની ચોક્કસ કિંમત જાણો. સરળ, વિશ્વસનીય અને તમારી જરૂરિયાત મુજબ.",
     landing_exact_quote: "ચોક્કસ ક્વોટેશન મેળવો →",
     landing_custom_setup: "કસ્ટમ સેટઅપ બનાવો →",
     landing_call_support: "લોકલ સપોર્ટને કૉલ કરો",
@@ -957,6 +1473,202 @@ export const translations: Record<
     opt_res_5mp: "5MP અલ્ટ્રા HD",
     opt_res_6mp: "6MP પ્રીમિયમ",
     opt_res_8mp: "8MP વ્યાવસાયિક ગ્રેડ",
+      sam_where: "તમારે ઇન્સ્ટોલેશન ક્યાં જોઈએ છે?",
+      sam_enter: "તમારો પિનકોડ દાખલ કરો અથવા શહેર પસંદ કરો.",
+      sam_tab_pin: "પિનકોડનો ઉપયોગ કરો",
+      sam_tab_city: "શહેર પસંદ કરો",
+      sam_lbl_pin: "પિનકોડ",
+      sam_lbl_state: "રાજ્ય",
+      sam_lbl_city: "શહેર / નગર",
+      sam_btn: "હમણાં ક્વોટેશન મેળવો",
+      sam_btn_pin: "તેના બદલે પિનકોડનો ઉપયોગ કરો",
+      sam_loading: "લોડ થઈ રહ્યું છે...",
+      sam_no_city: "કોઈ શહેરો મળ્યાં નથી.",
+      sam_inv_pin: "અમાન્ય પિનકોડ અથવા સેવા ઉપલબ્ધ નથી...",
+      sam_sel_state: "તમારું રાજ્ય પસંદ કરો...",
+      pcm_exp: "સેવા વિસ્તરણ",
+      pcm_unlock: "ઇન્સ્ટોલેશન અનલૉક કરો",
+      pcm_mob: "મોબાઇલ નંબર",
+      pcm_v_pin: "પિનકોડ ચકાસો",
+      pcm_v_otp: "OTP ચકાસો",
+      pcm_conf: "વેઇટલિસ્ટ કન્ફર્મ થઈ!",
+      lwm_title: "તમારી ભાષા પસંદ કરો",
+      lwm_desc: "તમે આને ઉપરના મેનૂમાંથી કોઈપણ સમયે બદલી શકો છો",
+      mcta_btn: "મફત CCTV ક્વોટ મેળવો",
+      wa_chat: "અમારી સાથે ચેટ કરો",
+      wiz_prep: "તમારો પ્લાન તૈયાર થઈ રહ્યો છે...",
+      wiz_wait: "ફક્ત થોડીક સેકંડ",
+      wiz_err: "કંઈક ખોટું થયું",
+      wiz_err_desc: "રૂપરેખાંકન લોડ થઈ શક્યું નથી...",
+      wiz_try: "ફરીથી પ્રયાસ કરો",
+      wiz_sel: "પસંદ કરેલ",
+      wiz_add_cam: "બીજું કૅમેરા જૂથ ઉમેરો",
+      wiz_b2b_hint: "16 કરતાં વધુ કૅમેરા માટે, અમે કસ્ટમ B2B કિંમતો ઑફર કરીએ છીએ.",
+      b2b_comp: "કંપનીનું નામ",
+      b2b_gst: "GST નંબર",
+      b2b_type: "વ્યાપાર પ્રકાર",
+      cqu_title: "સ્પર્ધક ક્વોટેશન અપલોડ કરો",
+      cqu_drop: "અહીં ફાઇલ મૂકો",
+      cqu_fmt: "સપોર્ટેડ ફોર્મેટ્સ: PDF, JPG, PNG",
+      clp_survey: "તે જ દિવસે સર્વેક્ષણ",
+      clp_item1: "4x 2MP/5MP HD CP Plus કેમેરા",
+      qp_hero: "તમારી સુરક્ષા, સરળ બની.",
+      step_timeline_desc: "તમારે સિસ્ટમ કેટલી જલ્દી ઇન્સ્ટોલ કરવાની જરૂર છે?",
+      step_brand_desc: "શું તમારા મનમાં કોઈ ચોક્કસ બ્રાન્ડ છે?",
+      step_amc_desc: "શું તમે વાર્ષિક જાળવણી કરાર (AMC) ઈચ્છો છો?",
+      progress_your: "તમારી પ્રગતિ",
+      progress_question: "પ્રશ્ન",
+      progress_of: "માંથી",
+      wizard_safe: "તમારો ડેટા સુરક્ષિત છે",
+      wizard_smart: "સ્માર્ટ સિસ્ટમ ડિઝાઇન",
+      'quote_h1': "[gu] Your security,",
+      'quote_h1_span': "[gu] made simple.",
+      'quote_prep': "[gu] Prepared just for ",
+      'quote_rec': "[gu] Look at our recommended",
+      'quote_pkg': "[gu] packages below or build your own.",
+      'quote_exp': "[gu] Quotation Expired",
+      'quote_exp_desc': "[gu] This quote is over 7 days old. Prices for camera parts change, so we need to make a new one for you.",
+      'quote_req_new': "[gu] Request Re-quote",
+      'landing_same_day': "[gu] Same-Day Survey",
+      'feat_res_1': "[gu] 4x 2MP/5MP HD {brand} Cameras",
+      'feat_res_2': "[gu] 4-Channel DVR + HDD",
+      'feat_res_3': "[gu] Power Supply & Connectors",
+      'feat_res_4': "[gu] Complete Installation Labor",
+      'feat_com_1': "[gu] Network/IP {brand} Cameras",
+      'feat_com_2': "[gu] High-Capacity NVR System",
+      'feat_com_3': "[gu] Structured Cabling",
+      'feat_com_4': "[gu] Advanced Remote Viewing Setup",
+      'up_quote_rcvd': "[gu] Quote Received",
+      'up_quote_msg': "[gu] We've received your quote. Our team will review it and get back to you within 24 hours with a guaranteed best price.",
+      'up_comp_quote': "[gu] Competitor Quotation",
+      'up_drop': "[gu] Drop your quote here or click to browse",
+      'up_pdf_max': "[gu] PDF, JPG, PNG up to 10MB",
+      'up_name': "[gu] Your Name",
+      'up_name_ph': "[gu] Enter your full name",
+      'up_comp_name': "[gu] Competitor Name",
+      'up_comp_ph': "[gu] e.g., CP Plus Dealer, Local CCTV Shop",
+      'up_total': "[gu] Their Quoted Total (₹)",
+      'up_notes': "[gu] Additional Notes",
+      'up_notes_ph': "[gu] Anything else you'd like us to know...",
+      'up_cancel': "[gu] Cancel",
+      'up_submit': "[gu] Submit for Price Match",
+      'lwm_subtitle': "[gu] अपनी पसंदीदा भाषा चुनें | तुमची आवडती भाषा निवडा",
+      'pcm_desc_1': "[gu] Enter your mobile number to authorize the lookup for PIN-code",
+      'pcm_otp_desc': "[gu] Enter verification code sent to",
+      'pcm_allow': "[gu] Tap 'Allow' on pop-up to auto-fill",
+      'pcm_resend': "[gu] Resend Security Code",
+      'pcm_change': "[gu] Change Contact Details",
+      'pcm_wait_desc': "[gu] We are not actively serving PIN-code",
+      'wa_message': "[gu] Hi CCTVQuotation Team! 👋 I'd like a free quotation for CCTV installation at my property. Please help me.",
+      'b2b_title': "[gu] Corporate Installation Detected",
+      'b2b_subtitle_suffix': "[gu] cameras — business-grade setup",
+      'b2b_desc1': "[gu] We'll generate your",
+      'b2b_desc2': "[gu] full corporate quote",
+      'b2b_desc3': "[gu] instantly. Optionally add your company details for a",
+      'b2b_desc4': "[gu] GST invoice",
+      'b2b_desc5': "[gu] — you can always add these later.",
+      'b2b_company': "[gu] Company / Firm Name",
+      'b2b_opt': "[gu] (optional)",
+      'b2b_gst_opt': "[gu] (optional — for GST invoice)",
+      'b2b_btn': "[gu] Generate Corporate Quote",
+      'b2b_skip': "[gu] Skip — I'm an individual",
+      'err_enter_name': "[gu] Please enter your full name.",
+      'err_invalid_pincode': "[gu] Enter a valid 6-digit area pincode.",
+      'wiz_err_quote': "[gu] Error generating quote. Please try again.",
+      'wiz_err_sel': "[gu] Please select an option to continue.",
+      'wiz_err_cam_min': "[gu] Please select at least 1 camera to continue.",
+      'wiz_err_cam_max': "[gu] Max cameras available for this tech. Please contact us for larger installations.",
+      'wiz_b2b_hint_1': "[gu] For more than 16 cameras (limit), our team will reach out for a custom industrial quote. Above 16 cameras, a corporate quote is generated automatically.",
+      'landing_free_quotes': "100% મફત ક્વોટેશન",
+      'landing_gst_bill': "[gu] 18% GST Bill",
+      'landing_installs': "[gu] 500+ Installs",
+      'how_it_works': "આ કેવી રીતે કામ કરે છે",
+      'easy_security': "દરેક માટે સરળ સુરક્ષા.",
+      'landing_secure_space': "તમારી જગ્યા સુરક્ષિત કરો",
+      'landing_today': "આજે જ.",
+      'landing_setup_subtitle': "2 મિનિટમાં સેટઅપ. કોઈ છુપાયેલ ખર્ચ નથી. તમામ પ્લાનમાં 18% GST શામેલ છે.",
+      'trusted_partners': "[gu] Trusted Hardware Partners & Verified Installs",
+      'preferred_platform': "ભારત",
+      'quote_awaiting': "[gu] Awaiting Approval",
+      'quote_accepted': "[gu] Accepted",
+      'quote_expired': "[gu] Expired",
+      'quote_rejected': "[gu] Rejected",
+      'download_pdf': "[gu] Download PDF",
+      'quotation': "[gu] Quotation",
+      'bill_of_materials': "[gu] Bill of Materials",
+      'total': "[gu] Total",
+      'complete_your_order': "[gu] Complete Your Order",
+      'complete_your_order_desc': "[gu] Choose your preferred payment method to schedule your installation.",
+      'full': "[gu] all",
+      'advance': "[gu] all",
+      'processing': "[gu] Processing...",
+      'pay_full_amount': "[gu] Pay Full Amount",
+      'track_step_1': "[gu] Order Confirmed",
+      'track_step_1_desc': "[gu] Payment received & verified.",
+      'track_step_2': "[gu] Equipment Ready",
+      'track_step_2_desc': "[gu] Your cameras are ready to be sent.",
+      'track_step_3': "[gu] Installer on the Way",
+      'track_step_3_desc': "[gu] An installer is assigned to you.",
+      'track_step_4': "[gu] Installation Complete",
+      'track_step_4_desc': "[gu] Your installation is done.",
+      'track_installation': "[gu] Track Your Installation",
+      'track_order_num': "[gu] Order",
+      'track_secret_pin': "[gu] Secret Completion PIN",
+      'track_pin_desc': "[gu] Please give this 6-digit PIN to your installer only after the installation is fully completed and you are happy with it.",
+      'track_installer_assigned': "[gu] Installer Assigned:",
+      'track_service_address': "[gu] Service Address",
+      'track_address_not_provided': "[gu] Address not provided",
+      'track_need_help': "[gu] Need help? Contact support at",
+      'chat_require_otp': "[gu] To provide accurate pricing and custom quotes, please verify your mobile number first.",
+      'err_invalid_mobile': "[gu] Enter a valid 10-digit Indian mobile number.",
+      'faq_subtitle': "સહાય અને સ્પષ્ટીકરણ",
+      'faq_title': "વારંવાર પૂછાતા પ્રશ્નો",
+      'invalid_pincode_err': "કૃપા કરીને માન્ય 6-અંકનો પિનકોડ દાખલ કરો.",
+      'area_not_served': "[gu] We don't serve your area yet.",
+      'whatsapp_us': "[gu] WhatsApp us",
+      'check_expansion': "[gu] to check expansion options!",
+      'failed_check_availability': "[gu] Failed to check service availability.",
+      'enter_pincode_placeholder': "પિનકોડ દાખલ કરો",
+      'check_area': "વિસ્તાર ચકાસો",
+      'footer_desc': "ભારતની શ્રેષ્ઠ CCTV ઇન્સ્ટોલેશન સર્વિસ",
+      'footer_secure': "સુરક્ષિત અને ચકાસાયેલ પ્લેટફોર્મ",
+      'footer_serving': "સમગ્ર ભારતમાં સેવાઓ",
+      'footer_privacy': "ગોપનીયતા નીતિ",
+      'footer_terms': "સેવાની શરતો",
+      'footer_partner': "પાર્ટનર લોગિન",
+      'placeholder_mobile': "મોબાઇલ નંબર દાખલ કરો",
+      'placeholder_name': "પૂરું નામ દાખલ કરો",
+      'placeholder_pincode': "6-અંકનો પિનકોડ",
+      'step_timeline': "[gu] Timeline",
+      'q_timeline': "[gu] Select urgency:",
+      'fopt_t_asap': "[gu] ASAP (Today/Tomorrow)",
+      'fopt_t_week': "[gu] Within a week",
+      'fopt_t_month': "[gu] Next Month",
+      'fopt_t_research': "[gu] Just researching",
+      'step_brand': "[gu] Brand",
+      'q_brand': "[gu] Select brand preference:",
+      'fopt_b_rec': "[gu] Unsure, please recommend",
+      'fopt_b_cp': "[gu] CP Plus",
+      'fopt_b_hik': "[gu] Hikvision",
+      'fopt_b_dah': "[gu] Dahua",
+      'step_amc': "[gu] Maintenance",
+      'q_amc': "[gu] Select AMC option:",
+      'fopt_amc_yes': "[gu] Yes, protect my system",
+      'fopt_amc_no': "[gu] No, I will manage it myself",
+      'perfect_coverage': "સંપૂર્ણ કવરેજ",
+      'perfect_coverage_desc': "અમે ખાતરી કરીએ છીએ કે તમારી મિલકતનો દરેક ખૂણો સુરક્ષિત રહે અને કોઈ પણ ભાગ નજરથી બચે નહીં.",
+      'right_cameras': "યોગ્ય કેમેરા",
+      'right_cameras_desc': "અમે તમારી જરૂરિયાત મુજબ શ્રેષ્ઠ કેમેરા ટેકનોલોજી સૂચવીએ છીએ, ભલે તે નાનું ઘર હોય કે મોટું ગોડાઉન.",
+      'clear_pricing': "સ્પષ્ટ કિંમત",
+      'clear_pricing_desc': "ત્રણ સરળ વિકલ્પો (Value, Professional, Elite) જેથી તમે તમારા બજેટ મુજબ પસંદ કરી શકો.",
+      'faq_1_q': "શું ક્વોટેશન કિંમતમાં GST શામેલ છે?",
+      'faq_1_a': "હા. તમામ CCTVQuotation ક્વોટેશનમાં 18% GST શામેલ છે, કોઈ છુપાયેલ ખર્ચ નથી. કિંમતમાં કેમેરા, DVR/NVR, HDD, કેબલિંગ અને વ્યાવસાયિક ઇન્સ્ટોલેશન શામેલ છે — બધું જ.",
+      'faq_2_q': "શું કિંમતમાં ઇન્સ્ટોલેશન શામેલ છે?",
+      'faq_2_a': "હા. દરેક ક્વોટેશનમાં સંપૂર્ણ વ્યાવસાયિક ઇન્સ્ટોલેશન શામેલ છે — કેમેરા માઉન્ટિંગ, કેબલ રૂટિંગ, DVR/NVR સેટઅપ, તમારા ફોન પર મોબાઇલ એપ્લિકેશન રૂપરેખાંકન, અને સંપૂર્ણ સિસ્ટમ પ્રદર્શન.",
+      'faq_3_q': "જયપુરમાં 4-કેમેરા CCTV સિસ્ટમની કિંમત કેટલી છે?",
+      'faq_3_a': "CP Plus HD 4-કેમેરા સિસ્ટમ ₹18,000–₹28,000 થી શરૂ થાય છે. IP (NVR) સિસ્ટમ ₹35,000–₹55,000 થી શરૂ થાય છે. 4K સિસ્ટમ ₹55,000–₹85,000 થી શરૂ થાય છે. તમામ કિંમતોમાં GST અને ઇન્સ્ટોલેશન શામેલ છે.",
+      'faq_4_q': "શું તમારા કેમેરા BIS-ER પ્રમાણિત છે?",
+      'faq_4_a': "હા. અમે CP Plus અને Prama કેમેરા ઇન્સ્ટોલ કરીએ છીએ જે BIS-ER પ્રમાણપત્ર ધરાવે છે — જે સરકારી ટેન્ડર, હાઉસિંગ સોસાયટીઓ અને વ્યાવસાયિક પ્રોજેક્ટ્સ માટે યોગ્ય છે.",
 },
   ta: {
     welcome: "CCTV Quotation க்கு வரவேற்கிறோம்",
@@ -1114,6 +1826,54 @@ export const translations: Record<
     opt_res_5mp: "5MP அல்ட்ரா HD",
     opt_res_6mp: "6MP பிரீமியம்",
     opt_res_8mp: "8MP தொழில்முறை தரம்",
+      sam_where: "Where do you need installation?",
+      sam_enter: "Enter your Pincode or select City.",
+      sam_tab_pin: "Use Pincode",
+      sam_tab_city: "Select City",
+      sam_lbl_pin: "Pincode",
+      sam_lbl_state: "State",
+      sam_lbl_city: "City / Town",
+      sam_btn: "Get Quotation Now",
+      sam_btn_pin: "Use Pincode Instead",
+      sam_loading: "Loading...",
+      sam_no_city: "No cities found.",
+      sam_inv_pin: "Invalid Pincode or service unavailable...",
+      sam_sel_state: "Select your state...",
+      pcm_exp: "Service Expansion",
+      pcm_unlock: "Unlock Installation",
+      pcm_mob: "Mobile Number",
+      pcm_v_pin: "Verify Pincode",
+      pcm_v_otp: "Verify OTP",
+      pcm_conf: "Waitlist Confirmed!",
+      lwm_title: "Choose your language",
+      lwm_desc: "You can change this anytime from the top menu",
+      mcta_btn: "Get Free CCTV Quote",
+      wa_chat: "Chat with us",
+      wiz_prep: "Preparing your plan...",
+      wiz_wait: "Just a few more seconds",
+      wiz_err: "Something went wrong",
+      wiz_err_desc: "Could not load the configuration...",
+      wiz_try: "Try Again",
+      wiz_sel: "Selected",
+      wiz_add_cam: "Add Another Camera Group",
+      wiz_b2b_hint: "For more than 16 cameras, we offer custom B2B pricing.",
+      b2b_comp: "Company Name",
+      b2b_gst: "GST Number",
+      b2b_type: "Business Type",
+      cqu_title: "Upload Competitor Quote",
+      cqu_drop: "Drop file here",
+      cqu_fmt: "Supported formats: PDF, JPG, PNG",
+      clp_survey: "Same-Day Survey",
+      clp_item1: "4x 2MP/5MP HD CP Plus Cameras",
+      qp_hero: "Your security, made simple.",
+      step_timeline_desc: "How soon do you need the system installed?",
+      step_brand_desc: "Do you have a specific brand in mind?",
+      step_amc_desc: "Would you like an Annual Maintenance Contract (AMC)?",
+      progress_your: "Your Progress",
+      progress_question: "Question",
+      progress_of: "of",
+      wizard_safe: "Your Data is Safe",
+      wizard_smart: "Smart System Design"
 },
   te: {
     welcome: "CCTV Quotation కు స్వాగతం",
@@ -1270,6 +2030,54 @@ export const translations: Record<
     opt_res_5mp: "5MP అల్ట్రా HD",
     opt_res_6mp: "6MP ప్రీమియం",
     opt_res_8mp: "8MP ప్రొఫెషనల్ గ్రేడ్",
+      sam_where: "Where do you need installation?",
+      sam_enter: "Enter your Pincode or select City.",
+      sam_tab_pin: "Use Pincode",
+      sam_tab_city: "Select City",
+      sam_lbl_pin: "Pincode",
+      sam_lbl_state: "State",
+      sam_lbl_city: "City / Town",
+      sam_btn: "Get Quotation Now",
+      sam_btn_pin: "Use Pincode Instead",
+      sam_loading: "Loading...",
+      sam_no_city: "No cities found.",
+      sam_inv_pin: "Invalid Pincode or service unavailable...",
+      sam_sel_state: "Select your state...",
+      pcm_exp: "Service Expansion",
+      pcm_unlock: "Unlock Installation",
+      pcm_mob: "Mobile Number",
+      pcm_v_pin: "Verify Pincode",
+      pcm_v_otp: "Verify OTP",
+      pcm_conf: "Waitlist Confirmed!",
+      lwm_title: "Choose your language",
+      lwm_desc: "You can change this anytime from the top menu",
+      mcta_btn: "Get Free CCTV Quote",
+      wa_chat: "Chat with us",
+      wiz_prep: "Preparing your plan...",
+      wiz_wait: "Just a few more seconds",
+      wiz_err: "Something went wrong",
+      wiz_err_desc: "Could not load the configuration...",
+      wiz_try: "Try Again",
+      wiz_sel: "Selected",
+      wiz_add_cam: "Add Another Camera Group",
+      wiz_b2b_hint: "For more than 16 cameras, we offer custom B2B pricing.",
+      b2b_comp: "Company Name",
+      b2b_gst: "GST Number",
+      b2b_type: "Business Type",
+      cqu_title: "Upload Competitor Quote",
+      cqu_drop: "Drop file here",
+      cqu_fmt: "Supported formats: PDF, JPG, PNG",
+      clp_survey: "Same-Day Survey",
+      clp_item1: "4x 2MP/5MP HD CP Plus Cameras",
+      qp_hero: "Your security, made simple.",
+      step_timeline_desc: "How soon do you need the system installed?",
+      step_brand_desc: "Do you have a specific brand in mind?",
+      step_amc_desc: "Would you like an Annual Maintenance Contract (AMC)?",
+      progress_your: "Your Progress",
+      progress_question: "Question",
+      progress_of: "of",
+      wizard_safe: "Your Data is Safe",
+      wizard_smart: "Smart System Design"
 },
   kn: {
     welcome: "CCTV Quotation ಗೆ ಸುಸ್ವಾಗತ",
@@ -1426,6 +2234,54 @@ export const translations: Record<
     opt_res_5mp: "5MP ಅಲ್ಟ್ರಾ HD",
     opt_res_6mp: "6MP ಪ್ರೀಮಿಯಂ",
     opt_res_8mp: "8MP ವೃತ್ತಿಪರ ದರ್ಜೆ",
+      sam_where: "Where do you need installation?",
+      sam_enter: "Enter your Pincode or select City.",
+      sam_tab_pin: "Use Pincode",
+      sam_tab_city: "Select City",
+      sam_lbl_pin: "Pincode",
+      sam_lbl_state: "State",
+      sam_lbl_city: "City / Town",
+      sam_btn: "Get Quotation Now",
+      sam_btn_pin: "Use Pincode Instead",
+      sam_loading: "Loading...",
+      sam_no_city: "No cities found.",
+      sam_inv_pin: "Invalid Pincode or service unavailable...",
+      sam_sel_state: "Select your state...",
+      pcm_exp: "Service Expansion",
+      pcm_unlock: "Unlock Installation",
+      pcm_mob: "Mobile Number",
+      pcm_v_pin: "Verify Pincode",
+      pcm_v_otp: "Verify OTP",
+      pcm_conf: "Waitlist Confirmed!",
+      lwm_title: "Choose your language",
+      lwm_desc: "You can change this anytime from the top menu",
+      mcta_btn: "Get Free CCTV Quote",
+      wa_chat: "Chat with us",
+      wiz_prep: "Preparing your plan...",
+      wiz_wait: "Just a few more seconds",
+      wiz_err: "Something went wrong",
+      wiz_err_desc: "Could not load the configuration...",
+      wiz_try: "Try Again",
+      wiz_sel: "Selected",
+      wiz_add_cam: "Add Another Camera Group",
+      wiz_b2b_hint: "For more than 16 cameras, we offer custom B2B pricing.",
+      b2b_comp: "Company Name",
+      b2b_gst: "GST Number",
+      b2b_type: "Business Type",
+      cqu_title: "Upload Competitor Quote",
+      cqu_drop: "Drop file here",
+      cqu_fmt: "Supported formats: PDF, JPG, PNG",
+      clp_survey: "Same-Day Survey",
+      clp_item1: "4x 2MP/5MP HD CP Plus Cameras",
+      qp_hero: "Your security, made simple.",
+      step_timeline_desc: "How soon do you need the system installed?",
+      step_brand_desc: "Do you have a specific brand in mind?",
+      step_amc_desc: "Would you like an Annual Maintenance Contract (AMC)?",
+      progress_your: "Your Progress",
+      progress_question: "Question",
+      progress_of: "of",
+      wizard_safe: "Your Data is Safe",
+      wizard_smart: "Smart System Design"
 },
   bn: {
     welcome: "CCTV Quotation-এ স্বাগতম",
@@ -1574,6 +2430,54 @@ export const translations: Record<
     opt_res_5mp: "5MP আল্ট্রা HD",
     opt_res_6mp: "6MP প্রিমিয়াম",
     opt_res_8mp: "8MP পেশাদার গ্রেড",
+      sam_where: "Where do you need installation?",
+      sam_enter: "Enter your Pincode or select City.",
+      sam_tab_pin: "Use Pincode",
+      sam_tab_city: "Select City",
+      sam_lbl_pin: "Pincode",
+      sam_lbl_state: "State",
+      sam_lbl_city: "City / Town",
+      sam_btn: "Get Quotation Now",
+      sam_btn_pin: "Use Pincode Instead",
+      sam_loading: "Loading...",
+      sam_no_city: "No cities found.",
+      sam_inv_pin: "Invalid Pincode or service unavailable...",
+      sam_sel_state: "Select your state...",
+      pcm_exp: "Service Expansion",
+      pcm_unlock: "Unlock Installation",
+      pcm_mob: "Mobile Number",
+      pcm_v_pin: "Verify Pincode",
+      pcm_v_otp: "Verify OTP",
+      pcm_conf: "Waitlist Confirmed!",
+      lwm_title: "Choose your language",
+      lwm_desc: "You can change this anytime from the top menu",
+      mcta_btn: "Get Free CCTV Quote",
+      wa_chat: "Chat with us",
+      wiz_prep: "Preparing your plan...",
+      wiz_wait: "Just a few more seconds",
+      wiz_err: "Something went wrong",
+      wiz_err_desc: "Could not load the configuration...",
+      wiz_try: "Try Again",
+      wiz_sel: "Selected",
+      wiz_add_cam: "Add Another Camera Group",
+      wiz_b2b_hint: "For more than 16 cameras, we offer custom B2B pricing.",
+      b2b_comp: "Company Name",
+      b2b_gst: "GST Number",
+      b2b_type: "Business Type",
+      cqu_title: "Upload Competitor Quote",
+      cqu_drop: "Drop file here",
+      cqu_fmt: "Supported formats: PDF, JPG, PNG",
+      clp_survey: "Same-Day Survey",
+      clp_item1: "4x 2MP/5MP HD CP Plus Cameras",
+      qp_hero: "Your security, made simple.",
+      step_timeline_desc: "How soon do you need the system installed?",
+      step_brand_desc: "Do you have a specific brand in mind?",
+      step_amc_desc: "Would you like an Annual Maintenance Contract (AMC)?",
+      progress_your: "Your Progress",
+      progress_question: "Question",
+      progress_of: "of",
+      wizard_safe: "Your Data is Safe",
+      wizard_smart: "Smart System Design"
 },
   ml: {
     welcome: "CCTV Quotation-ലേക്ക് സ്വാഗതം",
@@ -1729,6 +2633,54 @@ export const translations: Record<
     opt_res_5mp: "5MP അൾട്രാ HD",
     opt_res_6mp: "6MP പ്രീമിയം",
     opt_res_8mp: "8MP പ്രൊഫഷണൽ ഗ്രേഡ്",
+      sam_where: "Where do you need installation?",
+      sam_enter: "Enter your Pincode or select City.",
+      sam_tab_pin: "Use Pincode",
+      sam_tab_city: "Select City",
+      sam_lbl_pin: "Pincode",
+      sam_lbl_state: "State",
+      sam_lbl_city: "City / Town",
+      sam_btn: "Get Quotation Now",
+      sam_btn_pin: "Use Pincode Instead",
+      sam_loading: "Loading...",
+      sam_no_city: "No cities found.",
+      sam_inv_pin: "Invalid Pincode or service unavailable...",
+      sam_sel_state: "Select your state...",
+      pcm_exp: "Service Expansion",
+      pcm_unlock: "Unlock Installation",
+      pcm_mob: "Mobile Number",
+      pcm_v_pin: "Verify Pincode",
+      pcm_v_otp: "Verify OTP",
+      pcm_conf: "Waitlist Confirmed!",
+      lwm_title: "Choose your language",
+      lwm_desc: "You can change this anytime from the top menu",
+      mcta_btn: "Get Free CCTV Quote",
+      wa_chat: "Chat with us",
+      wiz_prep: "Preparing your plan...",
+      wiz_wait: "Just a few more seconds",
+      wiz_err: "Something went wrong",
+      wiz_err_desc: "Could not load the configuration...",
+      wiz_try: "Try Again",
+      wiz_sel: "Selected",
+      wiz_add_cam: "Add Another Camera Group",
+      wiz_b2b_hint: "For more than 16 cameras, we offer custom B2B pricing.",
+      b2b_comp: "Company Name",
+      b2b_gst: "GST Number",
+      b2b_type: "Business Type",
+      cqu_title: "Upload Competitor Quote",
+      cqu_drop: "Drop file here",
+      cqu_fmt: "Supported formats: PDF, JPG, PNG",
+      clp_survey: "Same-Day Survey",
+      clp_item1: "4x 2MP/5MP HD CP Plus Cameras",
+      qp_hero: "Your security, made simple.",
+      step_timeline_desc: "How soon do you need the system installed?",
+      step_brand_desc: "Do you have a specific brand in mind?",
+      step_amc_desc: "Would you like an Annual Maintenance Contract (AMC)?",
+      progress_your: "Your Progress",
+      progress_question: "Question",
+      progress_of: "of",
+      wizard_safe: "Your Data is Safe",
+      wizard_smart: "Smart System Design"
 },
   pa: {
     welcome: "CCTV Quotation ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ",
@@ -1877,6 +2829,54 @@ export const translations: Record<
     opt_res_5mp: "5MP ਅਲਟਰਾ HD",
     opt_res_6mp: "6MP ਪ੍ਰੀਮੀਅਮ",
     opt_res_8mp: "8MP ਪੇਸ਼ੇਵਰ ਗ੍ਰੇਡ",
+      sam_where: "Where do you need installation?",
+      sam_enter: "Enter your Pincode or select City.",
+      sam_tab_pin: "Use Pincode",
+      sam_tab_city: "Select City",
+      sam_lbl_pin: "Pincode",
+      sam_lbl_state: "State",
+      sam_lbl_city: "City / Town",
+      sam_btn: "Get Quotation Now",
+      sam_btn_pin: "Use Pincode Instead",
+      sam_loading: "Loading...",
+      sam_no_city: "No cities found.",
+      sam_inv_pin: "Invalid Pincode or service unavailable...",
+      sam_sel_state: "Select your state...",
+      pcm_exp: "Service Expansion",
+      pcm_unlock: "Unlock Installation",
+      pcm_mob: "Mobile Number",
+      pcm_v_pin: "Verify Pincode",
+      pcm_v_otp: "Verify OTP",
+      pcm_conf: "Waitlist Confirmed!",
+      lwm_title: "Choose your language",
+      lwm_desc: "You can change this anytime from the top menu",
+      mcta_btn: "Get Free CCTV Quote",
+      wa_chat: "Chat with us",
+      wiz_prep: "Preparing your plan...",
+      wiz_wait: "Just a few more seconds",
+      wiz_err: "Something went wrong",
+      wiz_err_desc: "Could not load the configuration...",
+      wiz_try: "Try Again",
+      wiz_sel: "Selected",
+      wiz_add_cam: "Add Another Camera Group",
+      wiz_b2b_hint: "For more than 16 cameras, we offer custom B2B pricing.",
+      b2b_comp: "Company Name",
+      b2b_gst: "GST Number",
+      b2b_type: "Business Type",
+      cqu_title: "Upload Competitor Quote",
+      cqu_drop: "Drop file here",
+      cqu_fmt: "Supported formats: PDF, JPG, PNG",
+      clp_survey: "Same-Day Survey",
+      clp_item1: "4x 2MP/5MP HD CP Plus Cameras",
+      qp_hero: "Your security, made simple.",
+      step_timeline_desc: "How soon do you need the system installed?",
+      step_brand_desc: "Do you have a specific brand in mind?",
+      step_amc_desc: "Would you like an Annual Maintenance Contract (AMC)?",
+      progress_your: "Your Progress",
+      progress_question: "Question",
+      progress_of: "of",
+      wizard_safe: "Your Data is Safe",
+      wizard_smart: "Smart System Design"
 },
   or: {
     welcome: "CCTV Quotation କୁ ସ୍ୱାଗତ",
@@ -2025,5 +3025,60 @@ export const translations: Record<
     opt_res_5mp: "5MP ଅଲ୍ଟ୍ରା HD",
     opt_res_6mp: "6MP ପ୍ରିମିୟମ୍",
     opt_res_8mp: "8MP ବୃତ୍ତିଗତ ଗ୍ରେଡ୍",
-},
+      sam_where: "Where do you need installation?",
+      sam_enter: "Enter your Pincode or select City.",
+      sam_tab_pin: "Use Pincode",
+      sam_tab_city: "Select City",
+      sam_lbl_pin: "Pincode",
+      sam_lbl_state: "State",
+      sam_lbl_city: "City / Town",
+      sam_btn: "Get Quotation Now",
+      sam_btn_pin: "Use Pincode Instead",
+      sam_loading: "Loading...",
+      sam_no_city: "No cities found.",
+      sam_inv_pin: "Invalid Pincode or service unavailable...",
+      sam_sel_state: "Select your state...",
+      pcm_exp: "Service Expansion",
+      pcm_unlock: "Unlock Installation",
+      pcm_mob: "Mobile Number",
+      pcm_v_pin: "Verify Pincode",
+      pcm_v_otp: "Verify OTP",
+      pcm_conf: "Waitlist Confirmed!",
+      lwm_title: "Choose your language",
+      lwm_desc: "You can change this anytime from the top menu",
+      mcta_btn: "Get Free CCTV Quote",
+      wa_chat: "Chat with us",
+      wiz_prep: "Preparing your plan...",
+      wiz_wait: "Just a few more seconds",
+      wiz_err: "Something went wrong",
+      wiz_err_desc: "Could not load the configuration...",
+      wiz_try: "Try Again",
+      wiz_sel: "Selected",
+      wiz_add_cam: "Add Another Camera Group",
+      wiz_b2b_hint: "For more than 16 cameras, we offer custom B2B pricing.",
+      b2b_comp: "Company Name",
+      b2b_gst: "GST Number",
+      b2b_type: "Business Type",
+      cqu_title: "Upload Competitor Quote",
+      cqu_drop: "Drop file here",
+      cqu_fmt: "Supported formats: PDF, JPG, PNG",
+      clp_survey: "Same-Day Survey",
+      clp_item1: "4x 2MP/5MP HD CP Plus Cameras",
+      qp_hero: "Your security, made simple.",
+      step_timeline_desc: "How soon do you need the system installed?",
+      step_brand_desc: "Do you have a specific brand in mind?",
+      step_amc_desc: "Would you like an Annual Maintenance Contract (AMC)?",
+      progress_your: "Your Progress",
+      progress_question: "Question",
+      progress_of: "of",
+      wizard_safe: "Your Data is Safe",
+      wizard_smart: "Smart System Design",
+      'step_storage_desc': "તમારે કેટલા જૂના રેકોર્ડિંગ્સ જોવાની જરૂર છે?",
+      'step_features_desc': "શું કોઈ વિશેષ કેમેરા ક્ષમતાઓની જરૂર છે?",
+      'step_general_addons_desc': "શું તમે કોઈ વધારાની એસેસરીઝ શામેલ કરવા માંગો છો?",
+      'wiz_sel_all': "લાગુ પડતા તમામ પસંદ કરો",
+      'wiz_multi': "તમે એક કરતા વધુ વિકલ્પ પસંદ કરી શકો છો. પૂર્ણ થાય ત્યારે 'ચાલુ રાખો' પર ક્લિક કરો.",
+      'No Storage Required': "કોઈ સ્ટોરેજ જરૂરી નથી",
+      '3 Months': "3 મહિના",
+  }
 };

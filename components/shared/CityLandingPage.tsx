@@ -124,7 +124,7 @@ export default function CityLandingPage({
             <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-500" />
             <span>{derivedTagline}</span>
             <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-            <span className="text-blue-600 dark:text-emerald-500">Same-Day Survey</span>
+            <span className="text-blue-600 dark:text-emerald-500">{t('landing_same_day', 'Same-Day Survey')}</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 leading-[1.2] md:leading-[1.15] animate-in fade-in slide-in-from-bottom-8 duration-1000">
@@ -196,7 +196,12 @@ export default function CityLandingPage({
                     {t('landing_residential_desc', 'Perfect for independent houses and small shops. Includes {brand} cameras, DVR, wiring, and professional installation.').replace('{brand}', brand || "CP Plus")}
                   </p>
                   <ul className="space-y-4 mb-8">
-                     {[`4x 2MP/5MP HD ${brand || "CP Plus"} Cameras`, "4-Channel DVR + HDD", "Power Supply & Connectors", "Complete Installation Labor"].map((item, i) => (
+                     {[
+                       t('feat_res_1', '4x 2MP/5MP HD {brand} Cameras').replace('{brand}', brand || "CP Plus"),
+                       t('feat_res_2', '4-Channel DVR + HDD'),
+                       t('feat_res_3', 'Power Supply & Connectors'),
+                       t('feat_res_4', 'Complete Installation Labor')
+                     ].map((item, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                            <CheckCircle2 className="w-5 h-5 text-emerald-500" /> {item}
                         </li>
@@ -221,7 +226,12 @@ export default function CityLandingPage({
                     {t('landing_commercial_desc', 'Ideal for offices, warehouses, and factories in {commercialAreas}. High-definition IP cameras with extended storage.').replace('{commercialAreas}', commercialAreas)}
                   </p>
                   <ul className="space-y-4 mb-8">
-                     {[`Network/IP ${brand || "Hikvision"} Cameras`, "High-Capacity NVR System", "Structured Cabling", "Advanced Remote Viewing Setup"].map((item, i) => (
+                     {[
+                       t('feat_com_1', 'Network/IP {brand} Cameras').replace('{brand}', brand || "Hikvision"),
+                       t('feat_com_2', 'High-Capacity NVR System'),
+                       t('feat_com_3', 'Structured Cabling'),
+                       t('feat_com_4', 'Advanced Remote Viewing Setup')
+                     ].map((item, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-medium text-white">
                            <CheckCircle2 className="w-5 h-5 text-blue-300 dark:text-blue-200" /> {item}
                         </li>

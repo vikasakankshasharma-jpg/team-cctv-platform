@@ -5,9 +5,11 @@ import { useI18nStore } from "@/lib/i18n/store";
 import { languageNames, LocaleCode } from "@/lib/i18n/mapping";
 import { Globe, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function LanguageWelcomeModal() {
   const { hasSeenWelcome, setLocale, setHasSeenWelcome } = useI18nStore();
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [show, setShow] = useState(false);
 
@@ -56,10 +58,10 @@ export function LanguageWelcomeModal() {
             </div>
             
             <h2 className="text-2xl font-black text-center text-zinc-900 dark:text-white tracking-tight mb-2">
-              Choose your language
+              {t('lwm_title', 'Choose your language')}
             </h2>
             <p className="text-center text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-8">
-              अपनी पसंदीदा भाषा चुनें | तुमची आवडती भाषा निवडा
+              {t('lwm_subtitle', 'अपनी पसंदीदा भाषा चुनें | तुमची आवडती भाषा निवडा')}
             </p>
 
             <div className="grid grid-cols-2 gap-3 max-h-[40vh] overflow-y-auto px-1 pb-4 snap-y custom-scrollbar">
@@ -77,7 +79,7 @@ export function LanguageWelcomeModal() {
           
           <div className="bg-zinc-50 dark:bg-zinc-900/50 p-4 border-t border-zinc-100 dark:border-zinc-800 text-center">
             <p className="text-xs font-bold text-zinc-400">
-              You can change this anytime from the top menu
+              {t('lwm_desc', 'You can change this anytime from the top menu')}
             </p>
           </div>
         </motion.div>

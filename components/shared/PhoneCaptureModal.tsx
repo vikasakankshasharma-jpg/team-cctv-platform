@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { ShieldCheck, Phone, CheckCircle2, Loader2, ArrowRight, X, Sparkles } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface PhoneCaptureModalProps {
   pincode: string;
@@ -9,6 +10,7 @@ interface PhoneCaptureModalProps {
 }
 
 export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<"phone" | "otp" | "success">("phone");
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -207,13 +209,13 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
             <div className="text-center">
               <div className="inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold px-4.5 py-1.5 rounded-full text-[10px] uppercase tracking-widest mb-4 border border-indigo-100 dark:border-indigo-800">
                 <Sparkles className="w-3.5 h-3.5" />
-                Service Expansion
+                {t('pcm_exp', 'Service Expansion')}
               </div>
               <h3 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none mb-3">
-                Unlock Installation
+                {t('pcm_unlock', 'Unlock Installation')}
               </h3>
               <p className="text-zinc-500 dark:text-zinc-400 font-medium text-xs sm:text-sm">
-                Enter your mobile number to authorize the lookup for PIN-code <strong className="text-zinc-900 dark:text-white font-bold">{pincode}</strong>.
+                {t('pcm_desc_1', 'Enter your mobile number to authorize the lookup for PIN-code')} <strong className="text-zinc-900 dark:text-white font-bold">{pincode}</strong>.
               </p>
             </div>
 
@@ -226,7 +228,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
 
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1">
-                Mobile Number
+                {t('pcm_mob', 'Mobile Number')}
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-zinc-400 dark:text-zinc-600 border-r border-zinc-200 dark:border-zinc-800 pr-3">+91</span>
@@ -252,7 +254,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Verify Pincode <ArrowRight className="w-4 h-4" />
+                  {t('pcm_v_pin', 'Verify Pincode')} <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
@@ -264,7 +266,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
           <form onSubmit={handleVerifyAndSave} className="space-y-6 text-center">
             <div>
               <p className="text-zinc-500 dark:text-zinc-400 font-medium mb-1">
-                Enter verification code sent to
+                {t('pcm_otp_desc', 'Enter verification code sent to')}
               </p>
               <p className="text-lg font-black text-zinc-900 dark:text-white tracking-tight">
                 +91 {mobile}
@@ -300,7 +302,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
             {typeof window !== "undefined" && "OTPCredential" in window && (
               <div className="inline-flex items-center gap-1.5 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 px-3 py-1.5 rounded-full">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Tap 'Allow' on pop-up to auto-fill
+                {t('pcm_allow', "Tap 'Allow' on pop-up to auto-fill")}
               </div>
             )}
 
@@ -312,7 +314,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                "Verify OTP"
+                t('pcm_v_otp', 'Verify OTP')
               )}
             </button>
 
@@ -327,7 +329,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
                     : "text-indigo-600 dark:text-indigo-400 hover:underline"
                 }`}
               >
-                {countdown > 0 ? `Resend Code in ${countdown}s` : "Resend Security Code"}
+                {countdown > 0 ? `Resend Code in ${countdown}s` : t('pcm_resend', "Resend Security Code")}
               </button>
               <button
                 type="button"
@@ -339,7 +341,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
                 }}
                 className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest hover:underline touch-manipulation mt-1"
               >
-                ← Change Contact Details
+                ← {t('pcm_change', 'Change Contact Details')}
               </button>
             </div>
           </form>
@@ -354,10 +356,10 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
 
             <div className="space-y-2">
               <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">
-                Waitlist Confirmed!
+                {t('pcm_conf', 'Waitlist Confirmed!')}
               </h3>
               <p className="text-zinc-500 dark:text-zinc-400 font-medium text-xs sm:text-sm leading-relaxed px-2">
-                We are not actively serving PIN-code <strong className="text-zinc-900 dark:text-white font-bold">{pincode}</strong> yet, but we are expanding fast! 
+                {t('pcm_wait_desc', 'We are not actively serving PIN-code')} <strong className="text-zinc-900 dark:text-white font-bold">{pincode}</strong> yet, but we are expanding fast! 
                 <br/><br/>
                 Your request has been registered. We will notify you immediately as soon as we start operations in your area.
               </p>
@@ -367,7 +369,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
               onClick={onClose}
               className="w-full h-13 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-md touch-manipulation"
             >
-              Continue
+              {t('next', 'Continue')}
             </button>
           </div>
         )}

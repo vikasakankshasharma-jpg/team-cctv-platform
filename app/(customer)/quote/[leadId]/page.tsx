@@ -5,6 +5,7 @@ import { Lead, Product, Addon, AddonRule, AppSettings, Promoter } from "@/types"
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { WaitlistBanner } from "@/components/quotation/WaitlistBanner";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import { getPincodeCoordinates, findNearestHub, HubWithCoordinates } from "@/lib/geo-utils";
 
 export const dynamic = "force-dynamic";
@@ -260,12 +261,12 @@ export default async function QuoteResultPage({
           )}
            
            <h1 className="text-4xl sm:text-5xl md:text-7xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight leading-tight mb-4">
-              Your security,<br />
-              <span className="text-[#0066cc] dark:text-[#2997ff]">made simple.</span>
+              <TranslatedText tKey="quote_h1" defaultText="Your security," /><br />
+              <span className="text-[#0066cc] dark:text-[#2997ff]"><TranslatedText tKey="quote_h1_span" defaultText="made simple." /></span>
            </h1>
            
            <p className="text-lg sm:text-xl text-[#86868b] dark:text-[#a1a1a6] font-normal leading-relaxed max-w-2xl mx-auto">
-              Prepared just for <span className="text-[#1d1d1f] dark:text-white font-medium">{lead.customer_name}</span>. Look at our recommended {(lead.property_type || "").toLowerCase()} packages below or build your own.
+              <TranslatedText tKey="quote_prep" defaultText="Prepared just for " /> <span className="text-[#1d1d1f] dark:text-white font-medium">{lead.customer_name}</span>. <TranslatedText tKey="quote_rec" defaultText="Look at our recommended" /> {(lead.property_type || "").toLowerCase()} <TranslatedText tKey="quote_pkg" defaultText="packages below or build your own." />
            </p>
          </div>
       
@@ -273,15 +274,15 @@ export default async function QuoteResultPage({
       <div className="w-full animate-in fade-in fill-mode-both delay-300 duration-1000">
          {isExpired ? (
            <div className="max-w-2xl mx-auto bg-white dark:bg-[#1d1d1f] rounded-3xl p-8 sm:p-12 text-center shadow-sm">
-             <h2 className="text-2xl sm:text-4xl font-semibold text-[#1d1d1f] dark:text-white tracking-tight mb-4">Quotation Expired</h2>
+             <h2 className="text-2xl sm:text-4xl font-semibold text-[#1d1d1f] dark:text-white tracking-tight mb-4"><TranslatedText tKey="quote_exp" defaultText="Quotation Expired" /></h2>
              <p className="text-[#86868b] font-normal mb-8">
-               This quote is over 7 days old. Prices for camera parts change, so we need to make a new one for you.
+               <TranslatedText tKey="quote_exp_desc" defaultText="This quote is over 7 days old. Prices for camera parts change, so we need to make a new one for you." />
              </p>
              <a 
                href={`/wizard?requote=${lead.id}`}
                className="inline-flex items-center justify-center bg-[#0071e3] hover:bg-[#0077ED] text-white px-8 py-3.5 rounded-full font-medium text-[15px] transition-colors"
              >
-               Request Re-quote
+               <TranslatedText tKey="quote_req_new" defaultText="Request Re-quote" />
              </a>
            </div>
          ) : (
