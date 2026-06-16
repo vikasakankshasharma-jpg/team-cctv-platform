@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { useUiStore } from "@/lib/ui-store";
+import { useTranslation } from "@/hooks/useTranslation";
 
 /**
  * Sticky mobile CTA bar — appears only on mobile (md:hidden),
@@ -15,6 +16,7 @@ export function MobileStickyCtaBar() {
   const params = useParams();
   const router = useRouter();
   const { openServiceAreaModal } = useUiStore();
+  const { t } = useTranslation();
 
   // Hide on wizard and quote pages — they have their own CTAs
   if (pathname?.startsWith("/wizard") || pathname?.startsWith("/quote")) return null;
@@ -36,7 +38,7 @@ export function MobileStickyCtaBar() {
           onClick={handleClick}
           className="flex w-full justify-center items-center gap-2.5 h-14 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-2xl font-black text-sm uppercase tracking-[0.15em] shadow-lg shadow-zinc-900/20 dark:shadow-blue-500/30 transition-all active:scale-95 touch-manipulation"
         >
-          Get Free CCTV Quote
+          {t('mcta_btn', 'Get Free CCTV Quote')}
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

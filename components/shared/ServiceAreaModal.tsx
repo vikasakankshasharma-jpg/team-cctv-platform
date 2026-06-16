@@ -95,11 +95,11 @@ export function ServiceAreaModal() {
           router.push(`/wizard?city=${encodeURIComponent(district)}&pincode=${code}`);
         }
       } else {
-        setPincodeError("Invalid Pincode or service unavailable. Please try 'Select City'.");
+        setPincodeError(t('sam_inv_pin', "Invalid Pincode or service unavailable..."));
       }
     } catch (err) {
       console.error("Pincode verification failed:", err);
-      setPincodeError("An error occurred. Please try 'Select City'.");
+      setPincodeError(t('sam_inv_pin', "An error occurred. Please try 'Select City'."));
     } finally {
       setIsVerifyingPincode(false);
     }
@@ -126,9 +126,9 @@ export function ServiceAreaModal() {
             <div className="flex justify-between items-center mb-6 shrink-0">
               <div>
                 <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">
-                  Where do you need installation?
+                  {t('sam_where', 'Where do you need installation?')}
                 </h3>
-                <p className="text-xs text-zinc-500 font-medium mt-1">Enter your Pincode or select City.</p>
+                <p className="text-xs text-zinc-500 font-medium mt-1">{t('sam_enter', 'Enter your Pincode or select City.')}</p>
               </div>
               <button 
                 onClick={closeServiceAreaModal}
@@ -141,7 +141,7 @@ export function ServiceAreaModal() {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12 text-zinc-400 space-y-4 shrink-0">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                <p className="text-sm font-bold uppercase tracking-widest">Loading...</p>
+                <p className="text-sm font-bold uppercase tracking-widest">{t('sam_loading', 'Loading...')}</p>
               </div>
             ) : (
               <div className="flex flex-col flex-1 min-h-0 space-y-6">
@@ -152,13 +152,13 @@ export function ServiceAreaModal() {
                     onClick={() => { setMode("pincode"); setIsDropdownOpen(false); }}
                     className={`flex-1 text-xs font-bold py-2 rounded-lg transition-all ${mode === "pincode" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
                   >
-                    Use Pincode
+                    {t('sam_tab_pin', 'Use Pincode')}
                   </button>
                   <button 
                     onClick={() => setMode("manual")}
                     className={`flex-1 text-xs font-bold py-2 rounded-lg transition-all ${mode === "manual" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
                   >
-                    Select City
+                    {t('sam_tab_city', 'Select City')}
                   </button>
                 </div>
 
@@ -167,7 +167,7 @@ export function ServiceAreaModal() {
                   {mode === "pincode" && (
                     <div className="space-y-4 animate-in fade-in">
                       <div className="space-y-1.5 relative">
-                        <label className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-400 ml-1">Pincode</label>
+                        <label className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-400 ml-1">{t('sam_lbl_pin', 'Pincode')}</label>
                         <div className="relative">
                           <input 
                             type="text"
@@ -199,7 +199,7 @@ export function ServiceAreaModal() {
                     <div className="space-y-5 animate-in fade-in pb-2">
                       {/* State Selector */}
                       <div className="space-y-1.5">
-                        <label className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-400 ml-1">State</label>
+                        <label className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-400 ml-1">{t('sam_lbl_state', 'State')}</label>
                         <div className="relative">
                           <select 
                             value={selectedState}
@@ -210,7 +210,7 @@ export function ServiceAreaModal() {
                             }}
                             className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
                           >
-                            <option value="" disabled>Select your state...</option>
+                            <option value="" disabled>{t('sam_sel_state', 'Select your state...')}</option>
                             {locations.map(s => (
                               <option key={s.name} value={s.name}>{s.name}</option>
                             ))}
@@ -222,7 +222,7 @@ export function ServiceAreaModal() {
                       {/* City Selector */}
                       {selectedState && stateData && (
                         <div className="space-y-1.5 animate-in slide-in-from-top-2 fade-in duration-300 relative">
-                          <label className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-400 ml-1">City / Town</label>
+                          <label className="text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-400 ml-1">{t('sam_lbl_city', 'City / Town')}</label>
                           <div className="relative">
                             <input 
                               type="text"
@@ -247,7 +247,7 @@ export function ServiceAreaModal() {
                               />
                               <div className="relative mt-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-lg overflow-hidden z-[120] max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2">
                                 {stateData.children?.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
-                                  <div className="px-4 py-3 text-sm text-zinc-500 text-center font-medium">No cities found.</div>
+                                  <div className="px-4 py-3 text-sm text-zinc-500 text-center font-medium">{t('sam_no_city', 'No cities found.')}</div>
                                 ) : (
                                   stateData.children?.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map(c => (
                                     <button
@@ -276,7 +276,7 @@ export function ServiceAreaModal() {
                             onClick={handleContinue}
                             className="w-full py-3.5 rounded-xl text-white font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg bg-blue-600 hover:bg-blue-500 shadow-blue-600/20"
                           >
-                            Get Quotation Now
+                            {t('sam_btn', 'Get Quotation Now')}
                             <ArrowRight className="w-4 h-4" />
                           </button>
                         </div>
@@ -291,7 +291,7 @@ export function ServiceAreaModal() {
                           }}
                           className="w-full py-3 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors"
                         >
-                          Use Pincode Instead
+                          {t('sam_btn_pin', 'Use Pincode Instead')}
                         </button>
                       </div>
                     </div>

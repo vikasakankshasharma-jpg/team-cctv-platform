@@ -153,8 +153,8 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
              <ShieldCheck className="w-6 h-6 text-blue-600" />
           </div>
         </div>
-        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">Preparing your plan...</h2>
-        <p className="text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest text-xs sm:text-sm">Just a few more seconds</p>
+        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">{t('wiz_prep', 'Preparing your plan...')}</h2>
+        <p className="text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest text-xs sm:text-sm">{t('wiz_wait', 'Just a few more seconds')}</p>
       </div>
     );
   }
@@ -165,12 +165,12 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         <div className="p-5 bg-red-50 dark:bg-red-900/20 rounded-3xl mb-6">
           <ShieldAlert className="w-10 h-10 text-red-500" />
         </div>
-        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">Something went wrong</h2>
+        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter mb-2">{t('wiz_err', 'Something went wrong')}</h2>
         <p className="text-zinc-500 dark:text-zinc-400 font-medium max-w-xs text-sm">
-          {error || "Could not load the configuration. Please check your internet and try again."}
+          {error || t('wiz_err_desc', "Could not load the configuration. Please check your internet and try again.")}
         </p>
         <button onClick={() => window.location.reload()} className="mt-8 w-full max-w-xs py-4 bg-zinc-900 dark:bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
-          Try Again
+          {t('wiz_try', 'Try Again')}
         </button>
       </div>
     );
@@ -274,7 +274,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       if (!res.ok) throw new Error("Failed to complete quote");
       router.push(`/quote/${leadId}`);
     } catch (err) {
-      showToast("Error generating quote. Please try again.");
+      showToast(t('wiz_err_quote', "Error generating quote. Please try again."));
       setLoading(false);
     }
   };
@@ -292,14 +292,14 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
     });
 
     if (!isValid) {
-      showToast("Please select an option to continue.");
+      showToast(t('wiz_err_sel', "Please select an option to continue."));
       return;
     }
 
     if (currentStep.id === "step_cam_count") {
       const totalCameras = parseInt((answers["q_cam_count"] as string) || "0");
       if (totalCameras < 1) {
-        showToast("Please select at least 1 camera to continue.");
+        showToast(t('wiz_err_cam_min', "Please select at least 1 camera to continue."));
         return;
       }
       // B2B check: >16 cameras shows B2B info step before proceeding
@@ -307,7 +307,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       const techMax = catalogCapacity[selectedTech as keyof typeof catalogCapacity] ?? 16;
       if (totalCameras > techMax) {
         // True industrial — beyond recorder catalog capacity
-        showToast(`Max ${techMax} cameras available for ${selectedTech}. Please contact us for larger installations.`);
+        showToast(t('wiz_err_cam_max', `Max ${techMax} cameras available for ${selectedTech}. Please contact us for larger installations.`));
         return;
       }
       if (totalCameras > B2B_THRESHOLD && !answers["b2b_confirmed"]) {
@@ -606,12 +606,12 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                       className="flex items-center gap-2 text-[13px] font-black text-zinc-700 hover:text-blue-700 transition-colors uppercase tracking-widest bg-white border-[2px] border-dashed border-zinc-300 hover:border-blue-500 px-6 py-4 rounded-[20px]"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      Add Another Camera Group
+                      {t('wiz_add_cam', 'Add Another Camera Group')}
                     </button>
                   </div>
                   
                   <p className="text-sm font-bold text-zinc-500 mt-8 ml-2">
-                     {`For more than ${catalogCapacity[(answers["q_tech"] as keyof CatalogCapacity) ?? "HD"] ?? 16} cameras`} ({(answers["q_tech"] as string) || "HD"} technology limit), our team will reach out for a custom industrial quote. Above 16 cameras, a corporate quote is generated automatically.
+                     {t('wiz_b2b_hint_1', `For more than ${catalogCapacity[(answers["q_tech"] as keyof CatalogCapacity) ?? "HD"] ?? 16} cameras (${(answers["q_tech"] as string) || "HD"} technology limit), our team will reach out for a custom industrial quote. Above 16 cameras, a corporate quote is generated automatically.`)}
                   </p>
                 </div>
               );
@@ -636,14 +636,14 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
-                      <span className="text-xs sm:text-sm font-black uppercase tracking-widest">Select all that apply</span>
+                      <span className="text-xs sm:text-sm font-black uppercase tracking-widest">{t('wiz_sel_all', 'Select all that apply')}</span>
                     </div>
                     {(currentAns as string[]).length > 0 && (
                       <div className="flex items-center gap-1.5 bg-emerald-500 text-white px-3 py-2.5 rounded-xl shadow-sm shadow-emerald-500/20">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-xs sm:text-sm font-black uppercase tracking-widest">{(currentAns as string[]).length} Selected</span>
+                        <span className="text-xs sm:text-sm font-black uppercase tracking-widest">{(currentAns as string[]).length} {t('wiz_sel', 'Selected')}</span>
                       </div>
                     )}
                   </div>
@@ -655,7 +655,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                     <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    You can pick <span className="text-zinc-800 dark:text-zinc-200 font-black">more than one</span> option. Click Continue when done.
+                    {t('wiz_multi', 'You can pick more than one option...')}
                   </p>
                 )}
 
@@ -670,7 +670,7 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
                     return (
                       <OptionCard
                         key={opt.id}
-                        label={t(opt.id as any, opt.label)}
+                        label={t(opt.id as any, t(opt.label as any, opt.label))}
                         isSelected={isSelected}
                         isMulti={isMulti}
                         onClick={() => handleOptionSelect(q.id!, opt.value, isMulti)}
