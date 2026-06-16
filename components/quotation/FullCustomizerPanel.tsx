@@ -9,10 +9,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Product, Addon } from "@/types";
+import { TranslatedText } from "@/components/shared/TranslatedText";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type Tab = "cameras" | "recorders" | "storage" | "power" | "addons";
 
 export function FullCustomizerPanel() {
+  const { t } = useTranslation();
   const { selection, updateSelection, toggleAddon, products, addons, resetFilters, setActiveCheckoutOption, compare_options, setCompareOptions } = useConfiguratorStore();
   const [activeTab, setActiveTab] = useState<Tab>("cameras");
   const [search, setSearch] = useState("");
@@ -435,8 +438,8 @@ export function FullCustomizerPanel() {
       <div className="bg-[#fbfbfd] dark:bg-[#1d1d1f] px-6 py-6 border-b border-[#d2d2d7] dark:border-[#424245] flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Configuration Tool</h3>
-            <p className="text-[13px] text-[#86868b] mt-1">Select and pin components to build a fully customized setup.</p>
+            <h3 className="text-xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight"><TranslatedText tKey="config_tool" defaultText="Configuration Tool" /></h3>
+            <p className="text-[13px] text-[#86868b] mt-1"><TranslatedText tKey="config_desc" defaultText="Select and pin components to build a fully customized setup." /></p>
           </div>
           <div className="relative w-full sm:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#86868b]" />
@@ -444,7 +447,7 @@ export function FullCustomizerPanel() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={`Search ${activeTab}...`}
+              placeholder={t("search_cam", "Search cameras...") as string}
               className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-[#2d2d2f] border border-[#d2d2d7] dark:border-[#424245] rounded-full text-[13px] font-medium text-[#1d1d1f] dark:text-white placeholder:text-[#86868b] focus:outline-none focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] transition-all shadow-sm"
             />
           </div>

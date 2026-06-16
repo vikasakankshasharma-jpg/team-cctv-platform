@@ -11,6 +11,7 @@ import { SpecCompareTable } from "./SpecCompareTable";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
 import { SmartContextBar } from "./SmartContextBar";
 import { BaseQuoteSummary } from "./BaseQuoteSummary";
+import { TranslatedText } from "@/components/shared/TranslatedText";
 import dynamic from "next/dynamic";
 import { Shield, ChevronDown, ChevronRight, CheckCircle2, Sparkles, ArrowLeftRight } from "lucide-react";
 const SiteDetailsModal = dynamic(() => import("./SiteDetailsModal").then(mod => mod.SiteDetailsModal), { ssr: false });
@@ -72,6 +73,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   useEffect(() => {
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      // Next.js router might restore scroll position slightly after mount. Override it.
+      const timer = setTimeout(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, []);
 
@@ -487,8 +493,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       {/* FULL CUSTOMIZER - "Build Your Own" */}
       <div id="build-your-own" className="w-full max-w-7xl mx-auto px-4 scroll-mt-24">
         <div className="text-center mb-10">
-           <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Build your own system.</h2>
-           <p className="text-[15px] text-[#86868b] mt-2">Adjust every detail of your security setup.</p>
+           <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight"><TranslatedText tKey="build_own_title" defaultText="Build your own system." /></h2>
+           <p className="text-[15px] text-[#86868b] mt-2"><TranslatedText tKey="build_own_desc" defaultText="Adjust every detail of your security setup." /></p>
         </div>
         
         {is_compare_mode ? (
@@ -496,7 +502,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             {/* Mobile swipe instruction */}
             <div className="md:hidden flex items-center justify-center gap-2 mb-4 text-xs font-medium text-zinc-500 animate-pulse">
               <ArrowLeftRight className="w-4 h-4" />
-              Swipe to compare Base vs Custom
+              <TranslatedText tKey="swipe_cmp" defaultText="Swipe to compare Base vs Custom" />
             </div>
             <div className="flex flex-nowrap md:flex-wrap md:flex-row gap-4 md:gap-8 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 no-scrollbar">
               <div className="w-[90vw] md:w-full lg:w-[35%] shrink-0 snap-center order-1">
