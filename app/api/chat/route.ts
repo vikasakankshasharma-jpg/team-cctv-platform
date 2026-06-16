@@ -102,7 +102,9 @@ Do not leak internal database structures or admin secrets unless the role is ADM
     });
 
     // 4b. Handle Function Calling (Advanced RAG)
-    if (chatResponse.functionCalls && chatResponse.functionCalls.length > 0) {
+    let callCount = 0;
+    while (chatResponse.functionCalls && chatResponse.functionCalls.length > 0 && callCount < 3) {
+      callCount++;
       const call = chatResponse.functionCalls[0];
       let functionResponse: any = {};
 
