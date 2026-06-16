@@ -91,7 +91,9 @@ export function LeadGate({
     setLoading(true);
 
     try {
-      if (mobile === "9999999999") {
+      const cleanMobile = mobile.replace(/\s/g, "");
+
+      if (cleanMobile === "9999999999") {
         setConfirmationResult({
           confirm: async (code: string) => {
             return { user: { uid: "mock-e2e-uid" } } as any;
@@ -103,7 +105,7 @@ export function LeadGate({
         return;
       }
 
-      const formatPhone = "+91" + mobile.replace(/\s/g, "");
+      const formatPhone = "+91" + cleanMobile;
       
       // Escape React's lifecycle teardown by injecting the container directly into the body
       let recaptchaContainer = document.getElementById("recaptcha-container-leadgate");
