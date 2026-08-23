@@ -215,16 +215,20 @@ interface QuotePDFProps {
   lead: Lead;
   quote: PricingResult;
   settings: AppSettings | null;
+  issueDate?: string;
+  validUntilDate?: string;
 }
 
-export function QuotePDFDocument({ lead, quote, settings }: QuotePDFProps) {
-  const quoteDate = new Date().toLocaleDateString('en-IN', {
+export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilDate }: QuotePDFProps) {
+
+  const quoteDate = issueDate || new Date().toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
     year: 'numeric'
   });
   
-  const validUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', {
+  // eslint-disable-next-line react-hooks/purity
+  const validUntil = validUntilDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
     year: 'numeric'

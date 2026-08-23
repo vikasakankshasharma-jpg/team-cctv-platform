@@ -144,7 +144,7 @@ export function Sidebar() {
       </div>
 
       {/* ── NAVIGATION GROUPS ─────────────────────────────────────────────── */}
-      <nav className="flex-1 overflow-y-auto py-2 scrollbar-none">
+      <nav className="flex-1 min-h-0 overflow-y-auto py-2 scrollbar-none">
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
             {!isCollapsed ? (
@@ -191,7 +191,6 @@ export function Sidebar() {
       </nav>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      <div className="sb-spacer"></div>
       
       {isCollapsed ? (
         <NavTooltip label="Secure Logout">

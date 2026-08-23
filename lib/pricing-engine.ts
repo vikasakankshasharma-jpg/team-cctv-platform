@@ -83,6 +83,16 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       if (winner.flat_travel_fee !== undefined) effectiveTravelFee = winner.flat_travel_fee;
     }
   }
+  
+  // PINCODE based travel fee logic if explicitly provided in wizard/address
+  if (selection.lead_pincode && settings.visit_charge) {
+    const affordablePincodes = settings.affordable_pincodes || ["302001", "302002", "302003", "302004", "302005", "302006", "302015", "302016"];
+    if (affordablePincodes.includes(selection.lead_pincode)) {
+      effectiveTravelFee = 0;
+    } else {
+      effectiveTravelFee = settings.visit_charge;
+    }
+  }
 
   // Normalize technology to match product database (Wizard might pass "Analog", "WiFi", or "4G")
   const rawTech = (selection.technology || "HD").toLowerCase();
@@ -155,6 +165,18 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     totalPurchaseCost += addonCalc.totalCost;
   }
 
+  if (effectiveTravelFee > 0) {
+    lineItems.push({
+      product_id: "travel_fee",
+      display_name: "Site Visit & Travel Fee",
+      brand: "",
+      qty: 1,
+      unit_price: effectiveTravelFee,
+      line_total: effectiveTravelFee
+    });
+    baseHardwareCost += effectiveTravelFee;
+  }
+
   // 5. Final Financial Aggregation & Taxes
   const grossSubtotal = baseHardwareCost + addonsTotal;
   
@@ -174,14 +196,61 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     marginWarnings.push(`Low Margin Alert: ${grossProfitPercent.toFixed(1)}% (Threshold: ${settings.minimum_margin_threshold}%)`);
   }
 
-  // 7. Validation for Missing Hardware
+  const hasMultipleTechs = selection.mixed_camera_requirements?.some(req => req.technology && req.technology !== effectiveTech);
+  if (hasMultipleTechs) {
+    marginWarnings.push(`Warning: Mixed technology configurations (e.g. IP and HD) may require multiple recorders, which is not currently supported in auto-quoting.`);
+  }
+
+  // 7. Validation for Missing Hardware & Out of Stock
   let error = false;
   let errorMessage = undefined;
-  if (selection.camera_count > 0) {
+
+  // Check if any selected item is explicitly out of stock
+  const outOfStockItems = [
+    ...lineItems.filter(item => {
+      const p = products.find(prod => prod.id === item.product_id) || addons.find(a => a.id === item.product_id);
+      return p && p.stock_quantity === 0;
+    }),
+    ...quoteAddons.filter(item => {
+      const a = addons.find(addon => addon.id === item.addon_id);
+      if (!a) return false;
+      if (a.stock_quantity === undefined) return false;
+      return a.stock_quantity < (item.qty || 1);
+    }).map(i => ({ display_name: i.display_name }))
+  ];
+
+  if (outOfStockItems.length > 0) {
+    error = true;
+    errorMessage = `One or more selected items are out of stock: ${outOfStockItems.map(i => i.display_name).join(', ')}`;
+  } else if (selection.camera_count > 0) {
     const hasCamera = lineItems.some(item => products.some(p => p.id === item.product_id && p.category === "cctv_camera"));
     if (!hasCamera) {
       error = true;
       errorMessage = "Missing required camera hardware in catalog.";
+    } else {
+      // Validate recorder capacity
+      const recorderItem = lineItems.find(item => products.some(p => p.id === item.product_id && p.category === "recorder"));
+      if (!recorderItem && effectiveTech !== "Wireless") {
+        error = true;
+        errorMessage = "Missing required recorder hardware in catalog.";
+      } else if (recorderItem) {
+        const rec = products.find(p => p.id === recorderItem.product_id);
+        if (rec && (rec.channels || rec.max_cameras || 0) < selection.camera_count) {
+          error = true;
+          errorMessage = `Selected recorder supports up to ${rec.channels || rec.max_cameras} cameras, but ${selection.camera_count} are required.`;
+        }
+      }
+      
+      // Validate power supply capacity
+      const powerItem = lineItems.find(item => [...products, ...addons].some(p => p.id === item.product_id && (p.category === "power_device" || p.category === "power")));
+      if (powerItem) {
+        const pwr = [...products, ...addons].find(p => p.id === powerItem.product_id);
+        // Only validate if max_cameras is explicitly defined on the product
+        if (pwr && pwr.max_cameras != null && pwr.max_cameras < selection.camera_count) {
+          error = true;
+          errorMessage = `Selected power supply supports up to ${pwr.max_cameras} cameras, but ${selection.camera_count} are required.`;
+        }
+      }
     }
   }
 
@@ -253,6 +322,8 @@ function calculateHardware(
       if (typeLower.includes("4g")) extraFeatures.push("4g");
       if (typeLower.includes("audio") || typeLower.includes("speaker") || typeLower.includes("mic")) extraFeatures.push("audio");
       if (typeLower.includes("color")) extraFeatures.push("color");
+      if (typeLower.includes("indoor") || typeLower.includes("dome")) extraFeatures.push("dome");
+      if (typeLower.includes("outdoor") || typeLower.includes("bullet")) extraFeatures.push("bullet");
       
       proxySelection.requested_features = extraFeatures;
       
@@ -348,17 +419,29 @@ function calculateHardware(
   // 4. Transmission (PoE/PSU)
   const transmission = resolveTransmission(selection, [...products, ...addons] as any[], tech);
   if (transmission) {
-    const qty = Math.ceil(selection.camera_count / (transmission.max_cameras || 4));
-    const unitPrice = transmission.unit_price || transmission.price || 0;
-    items.push({
-      product_id: transmission.id!,
-      display_name: transmission.display_name,
-      qty,
-      unit_price: unitPrice,
-      line_total: unitPrice * qty
-    });
-    totalRetail += unitPrice * qty;
-    totalCost += (transmission.base_cost || 0) * qty;
+    let wiredCameraCount = selection.camera_count;
+    if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+      wiredCameraCount = selection.mixed_camera_requirements
+        .filter(req => {
+          const t = req.type.toLowerCase();
+          return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
+        })
+        .reduce((sum, req) => sum + req.count, 0);
+    }
+
+    if (wiredCameraCount > 0) {
+      const qty = Math.ceil(wiredCameraCount / (transmission.max_cameras || 4));
+      const unitPrice = transmission.unit_price || transmission.price || 0;
+      items.push({
+        product_id: transmission.id!,
+        display_name: transmission.display_name,
+        qty,
+        unit_price: unitPrice,
+        line_total: unitPrice * qty
+      });
+      totalRetail += unitPrice * qty;
+      totalCost += (transmission.base_cost || 0) * qty;
+    }
   }
 
   return { items, totalRetail, totalCost };
@@ -421,8 +504,9 @@ function calculateCabling(
     return { items, totalRetail: 0, totalCost: 0 };
   }
 
-  // Use explicitly requested meters per camera, or default to 20m per wired camera
-  const metersPerCamera = selection.cable_length_meters || 20;
+  // Use explicitly requested meters per camera, or default to admin configured / 20m per wired camera
+  const defaultMeters = settings.default_cable_length_per_camera || 20;
+  const metersPerCamera = meters || selection.cable_length_meters || defaultMeters;
   const totalMeters = metersPerCamera * wiredCameraCount;
 
   // Base Cable Cost
@@ -480,27 +564,40 @@ function calculateConnectors(
     return { items, totalRetail: 0, totalCost: 0 };
   }
   
-  const cameraCount = selection.camera_count || 1;
+  let wiredCameraCount = selection.camera_count || 1;
+  if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+    wiredCameraCount = selection.mixed_camera_requirements
+      .filter(req => {
+        const t = req.type.toLowerCase();
+        return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
+      })
+      .reduce((sum, req) => sum + req.count, 0);
+  }
+  
+  if (wiredCameraCount <= 0) {
+    return { items, totalRetail: 0, totalCost: 0 };
+  }
+
   const useRJ45 = tech === "IP" || selection.cable_type === "cat6";
   
   if (useRJ45) {
     const rate = settings.connector_rj45_cost || 25;
-    const lineTotal = rate * cameraCount;
+    const lineTotal = rate * wiredCameraCount;
     items.push({
       product_id: "connector_rj45",
       display_name: "RJ45 Connectors (Camera & Switch/Balun ends)",
-      qty: cameraCount,
+      qty: wiredCameraCount,
       unit_price: rate,
       line_total: lineTotal
     });
     return { items, totalRetail: lineTotal, totalCost: Math.round(lineTotal * 0.5) };
   } else {
     const rate = settings.connector_bnc_dc_cost || 70;
-    const lineTotal = rate * cameraCount;
+    const lineTotal = rate * wiredCameraCount;
     items.push({
       product_id: "connector_bnc_dc",
       display_name: "BNC & DC Connector Set",
-      qty: cameraCount,
+      qty: wiredCameraCount,
       unit_price: rate,
       line_total: lineTotal
     });
@@ -521,9 +618,22 @@ function calculateAddons(params: {
   let totalRetail = 0;
   let totalCost = 0;
 
-  // BUG FIX: Skip `amc_1yr` here — it is handled dynamically below
+  const amcAddonId = (settings as any).amc_addon_id || "amc_1yr";
+
+  // Skip the dynamic AMC here — it is handled below
   // to avoid double-counting (price is % of hardware, not a fixed price).
-  const staticAddonIds = selectedAddonIds.filter(id => id !== "amc_1yr");
+  let staticAddonIds = [...selectedAddonIds].filter(id => id !== amcAddonId);
+
+  // Conditional injection for SIM Router (No Broadband + Remote Viewing)
+  if (selection.wants_remote_viewing && selection.broadband_status === "sim_router") {
+    const router = addons.find(a => {
+      const name = (a.technical_name || a.display_name || "").toLowerCase();
+      return name.includes("sim router") || name.includes("4g router") || name.includes("4g 4 antenna");
+    });
+    if (router && router.id && !staticAddonIds.includes(router.id)) {
+      staticAddonIds.push(router.id);
+    }
+  }
 
   staticAddonIds.forEach(id => {
     const addon = addons.find(a => a.id === id);
@@ -545,14 +655,14 @@ function calculateAddons(params: {
   });
 
   // Dynamic AMC Logic (only runs once, price is % of hardware)
-  if (selectedAddonIds.includes("amc_1yr")) {
+  if (selectedAddonIds.includes(amcAddonId)) {
     const pct = settings.amc_1yr_pct || 15;
     const amcPrice = Math.round(baseHardwareCost * (pct / 100));
     
     if (activeOffer?.type === "free_amc") {
       // Show both lines so customer sees the saving
       items.push({
-        addon_id: "amc_1yr",
+        addon_id: amcAddonId,
         display_name: `1-Year Annual Maintenance Contract (${pct}%)`,
         price: amcPrice,
         qty: 1
@@ -566,7 +676,7 @@ function calculateAddons(params: {
       // Net zero — no change to totalRetail
     } else {
       items.push({
-        addon_id: "amc_1yr",
+        addon_id: amcAddonId,
         display_name: `1-Year Annual Maintenance Contract (${pct}%)`,
         price: amcPrice,
         qty: 1
@@ -608,12 +718,14 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
   const laborRate = tech === "IP" ? (settings.labor_ip_per_camera || 500) : (settings.labor_hd_per_camera || 400);
   const laborTotal = laborRate * qty;
 
-  const cableMeters = 50; // default estimated average used in engine
+  const defaultMeters = settings.default_cable_length_per_camera || 20;
+  const cableMeters = selection.cable_length_meters || defaultMeters; // Use explicitly selected meters or default
   const cableRate = tech === "IP" ? (settings.cable_copper_coated_ip || 12) : (settings.cable_copper_coated_hd || 8);
   const cableTotal = cableRate * (cableMeters * qty);
 
   let amcTotal = 0;
-  if ((selection.selected_addons || []).includes("amc_1yr")) {
+  const amcAddonId = (settings as any).amc_addon_id || "amc_1yr";
+  if ((selection.selected_addons || []).includes(amcAddonId)) {
     const pct = settings.amc_1yr_pct || 15;
     amcTotal = Math.round(baseHardware * (pct / 100));
   }
@@ -625,12 +737,16 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
 }
 
 function resolveCamera(selection: ConfiguratorSelection, products: Product[], addons: Addon[], settings: AppSettings, tech: string) {
+  // Exclude products that are out of stock or on order — they are deactivated from quoting
+  const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued" && (p.stock_quantity === undefined || p.stock_quantity > 0);
+
   if (selection.selected_camera_id) {
-    return products.find(p => p.id === selection.selected_camera_id);
+    const cam = products.find(p => p.id === selection.selected_camera_id);
+    if (cam && isAvailable(cam) && (cam.technologies || []).includes(tech as any)) {
+      return cam;
+    }
   }
 
-  // Exclude products that are out of stock or on order — they are deactivated from quoting
-  const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued";
   let pool = products.filter(p => p.category === "cctv_camera" && (p.technologies || []).includes(tech as any) && isAvailable(p));
 
   // ── Specialty Camera Guardrail ──────────────────────────────
@@ -672,7 +788,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     const resFiltered = pool.filter(cam => {
       // Safely parse resolution_mp (which might be "2MP", "2.4MP", "4MP", etc.)
       const camRes = String(cam.resolution_mp || "").toUpperCase();
-      return camRes.includes(resPref) || resPref.includes(camRes.replace("MP", ""));
+      return camRes === resPref || camRes === resPref.replace("MP", "") || camRes + "MP" === resPref;
     });
     // Fallback: If strict resolution matching eliminates ALL cameras, drop the filter
     if (resFiltered.length > 0) {
@@ -684,7 +800,18 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
   if (selection.requested_features?.length) {
     const filteredPool = pool.filter(cam => {
       const feats = (cam.features || []).map(f => f.toLowerCase().trim());
-      return selection.requested_features!.every(rf => feats.includes(rf.toLowerCase().trim()));
+      const name = (cam.technical_name + " " + cam.display_name).toLowerCase();
+      const formFactor = (cam.form_factor || "").toLowerCase();
+      
+      return selection.requested_features!.every(rf => {
+        const rfLower = rf.toLowerCase().trim();
+        if (rfLower === "dome") return formFactor === "dome" || name.includes("dome");
+        if (rfLower === "bullet") return formFactor === "bullet" || name.includes("bullet");
+        if (rfLower === "mic") return feats.some(f => f.includes("mic") || f.includes("audio")) || name.includes("mic") || name.includes("audio");
+        if (rfLower === "color") return feats.some(f => f.includes("color") || f.includes("night")) || name.includes("color");
+        if (rfLower === "ptz") return feats.some(f => f.includes("ptz")) || name.includes("ptz");
+        return feats.includes(rfLower) || name.includes(rfLower);
+      });
     });
     
     // Fallback: If strict feature matching eliminates ALL cameras, 
@@ -784,9 +911,14 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
 }
 
 function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: string) {
+  const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued" && (p.stock_quantity === undefined || p.stock_quantity > 0);
+
   if (selection.selected_recorder_id) {
     if (selection.selected_recorder_id === "none") return undefined;
-    return products.find(p => p.id === selection.selected_recorder_id);
+    const rec = products.find(p => p.id === selection.selected_recorder_id);
+    if (rec && isAvailable(rec) && (rec.technologies || []).includes(tech as any) && (rec.max_cameras || rec.channels || 0) >= selection.camera_count) {
+      return rec;
+    }
   }
 
   if (tech === "WiFi") return undefined; // WiFi cameras generally use SD Cards and no DVR/NVR
@@ -794,10 +926,7 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
 
   const recorders = products.filter(p => 
     p.category === "recorder" && 
-    p.is_active &&
-    p.stock_status !== "out_of_stock" &&
-    p.stock_status !== "on_order" &&
-    p.stock_status !== "discontinued" &&
+    isAvailable(p) &&
     (p.technologies || []).includes(tech as any) && 
     (p.max_cameras || p.channels || 0) >= selection.camera_count
   );
@@ -815,9 +944,12 @@ function resolveHDDCapacity(product: Addon & { storage_tb?: number }): number {
   // Fallback: extract first number from name (e.g. "Seagate 2TB HDD" → 2)
   const match = (product.technical_name || product.display_name || "").match(/(\d+(?:\.\d+)?)\s*TB/i);
   if (match) return parseFloat(match[1]);
-  // Last resort: any leading number
+  // Last resort: any leading number, only if TB or GB is in the name
   const numMatch = (product.technical_name || product.display_name || "").match(/^(\d+)/);
-  return numMatch ? parseFloat(numMatch[1]) : 0;
+  if (numMatch && (product.technical_name || product.display_name || "").match(/TB|GB/i)) {
+     return parseFloat(numMatch[1]);
+  }
+  return 0;
 }
 
 function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: string) {
@@ -850,7 +982,15 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   }
 
   // Use product's declared daily_gb_per_camera if available, else sensible defaults
-  const gbPerDay = tech === "IP" ? 15 : 10;
+  let gbPerDay = tech === "IP" ? 15 : 10;
+  
+  if (selection.resolution_preference && selection.resolution_preference !== "all") {
+    const res = String(selection.resolution_preference).toUpperCase();
+    if (res.includes("8MP") || res.includes("4K")) gbPerDay = 30;
+    else if (res.includes("5MP") || res.includes("4MP")) gbPerDay = 20;
+    else if (res.includes("2MP")) gbPerDay = 15;
+  }
+  
   const requiredGB = selection.camera_count * gbPerDay * recordingDays;
   const requiredTB = requiredGB / 1000;
 
@@ -869,11 +1009,44 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     return addons.find(a => a.id === selection.selected_power_id);
   }
 
-  const keyword = tech === "IP" ? "poe" : "psu";
-  const options = addons.filter(a => (a.category === "power_device" || a.category === "power") && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword));
+  const options = addons.filter(a => {
+    const name = (a.technical_name || a.display_name || "").toLowerCase();
+    const cat = (a.category || "").toLowerCase();
+
+    // Must be in a plausible category
+    const isPowerCat = cat.includes("power") || cat.includes("transmission") || cat.includes("switch") || cat.includes("network");
+    if (!isPowerCat) return false;
+    
+    // EXPLICIT BLACKLIST: Never select these as core power supplies
+    const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
+
+    if (tech === "IP") {
+      // IP Cameras need a dedicated PoE Switch
+      return name.includes("poe") && !name.includes("adapter") && !isRouterOrAccessory;
+    } else {
+      // HD Cameras need an SMPS or PSU
+      return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !name.includes("poe") && !isRouterOrAccessory;
+    }
+  });
+
+  if (options.length === 0) {
+    // Fallback: If strict filters fail, find ANY power supply that is definitely NOT a router or repair adapter
+    const fallbackOptions = addons.filter(a => {
+      const cat = (a.category || "").toLowerCase();
+      const name = (a.technical_name || a.display_name || "").toLowerCase();
+      const isRouter = name.includes("router") || name.includes("4g") || name.includes("sim");
+      return (cat.includes("power") || name.includes("power") || name.includes("smps") || name.includes("poe")) && !name.includes("adapter") && !isRouter;
+    });
+    
+    if (fallbackOptions.length === 0) return undefined;
+    
+    fallbackOptions.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
+    return fallbackOptions.find(o => (o.max_cameras || 0) >= selection.camera_count) || fallbackOptions[fallbackOptions.length - 1];
+  }
+
   if (options.length === 0) return undefined;
   
-    options.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
+  options.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
   return options.find(o => (o.max_cameras || 0) >= selection.camera_count) || options[options.length - 1];
 }
 

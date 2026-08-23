@@ -4,6 +4,10 @@ import { useConfiguratorStore } from "@/store/configurator";
 import { Shield, HardDrive, Zap, Cable, Wrench, X, Plus, Activity } from "lucide-react";
 import type { PricingResult, QuoteLineItem, QuoteAddon } from "@/types";
 
+import { motion, AnimatePresence } from "framer-motion";
+import { TranslatedText } from "@/components/shared/TranslatedText";
+import { TranslationKey } from "@/lib/i18n/translations";
+
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -119,10 +123,10 @@ export function BaseQuoteSummary({ activePricing }: BaseQuoteSummaryProps) {
       <div className="flex items-center justify-between mb-8 sticky top-0 bg-white dark:bg-[#1d1d1f] z-10 pb-4 border-b border-zinc-100 dark:border-zinc-800/50">
         <div>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-semibold uppercase tracking-wider mb-2">
-            <Activity className="w-3.5 h-3.5" /> Diff Viewer
+            <Activity className="w-3.5 h-3.5" /> <TranslatedText tKey="diff_viewer" defaultText="Diff Viewer" />
           </span>
           <h3 className="text-xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">
-            Base vs Custom
+            <TranslatedText tKey="base_vs_custom" defaultText="Base vs Custom" />
           </h3>
         </div>
         <button 
@@ -133,6 +137,26 @@ export function BaseQuoteSummary({ activePricing }: BaseQuoteSummaryProps) {
           <X className="w-5 h-5" />
         </button>
       </div>
+
+      {activePricing.error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h4 className="text-sm font-semibold text-red-800 dark:text-red-400 mb-1 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              Configuration Error
+            </h4>
+            <p className="text-xs text-red-600 dark:text-red-300">
+              {activePricing.error_message}
+            </p>
+          </div>
+          <button
+            onClick={exitCompareMode}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-full transition-colors shrink-0 shadow-sm"
+          >
+            Revert to Base
+          </button>
+        </div>
+      )}
 
       <div className="space-y-6">
         {categories.map(cat => {
@@ -150,24 +174,28 @@ export function BaseQuoteSummary({ activePricing }: BaseQuoteSummaryProps) {
           const colorClass = CATEGORY_COLORS[cat];
 
           return (
-            <div key={cat} className={`flex flex-col gap-3 transition-opacity duration-300 ${isMatch ? "opacity-60 hover:opacity-100" : ""}`}>
+            <motion.div layout key={cat} className={`flex flex-col gap-3 transition-opacity duration-300 ${isMatch ? "opacity-60 hover:opacity-100" : ""}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${colorClass}`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <h4 className="text-[14px] font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-tight">
-                    {cat}
+                    <TranslatedText tKey={`cat_${cat.toLowerCase()}` as TranslationKey} defaultText={cat} />
                   </h4>
                 </div>
                 {!isMatch && delta !== 0 && (
-                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-black tracking-wider uppercase shadow-sm ${
+                  <motion.span 
+                    key={delta}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-black tracking-wider uppercase shadow-sm ${
                     delta > 0 
                       ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-500/30' 
                       : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
                   }`}>
                     {delta > 0 ? '+' : ''}{formatCurrency(delta)}
-                  </span>
+                  </motion.span>
                 )}
               </div>
 
@@ -180,14 +208,14 @@ export function BaseQuoteSummary({ activePricing }: BaseQuoteSummaryProps) {
                   {/* Base Column */}
                   <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/50">
                     <div className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2.5">
-                      {base_tier_name} Tier
+                      {base_tier_name} <TranslatedText tKey="tier" defaultText="Tier" />
                     </div>
                     <div className="space-y-2">
                       {bItems.length > 0 ? bItems.map(i => (
                          <div key={i.id} className="text-[12px] text-zinc-600 dark:text-zinc-400 leading-tight">
                            <span className="font-bold text-zinc-800 dark:text-zinc-300">{i.qty}x</span> {i.name}
                          </div>
-                      )) : <div className="text-[12px] text-zinc-400 italic">None</div>}
+                      )) : <div className="text-[12px] text-zinc-400 italic"><TranslatedText tKey="none" defaultText="None" /></div>}
                     </div>
                   </div>
 
@@ -195,48 +223,66 @@ export function BaseQuoteSummary({ activePricing }: BaseQuoteSummaryProps) {
                   <div className="p-3 bg-blue-50/50 dark:bg-[#0071e3]/10 rounded-xl border border-blue-100 dark:border-[#0071e3]/30 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-bl-full pointer-events-none" />
                     <div className="text-[9px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest mb-2.5">
-                      Customized
+                      <TranslatedText tKey="customized" defaultText="Customized" />
                     </div>
                     <div className="space-y-2">
-                      {cItems.length > 0 ? cItems.map(i => (
-                         <div key={i.id} className="text-[12px] text-zinc-900 dark:text-zinc-100 font-medium leading-tight">
-                           <span className="font-bold text-blue-600 dark:text-blue-400">{i.qty}x</span> {i.name}
-                         </div>
-                      )) : <div className="text-[12px] text-zinc-400 italic">None</div>}
+                      <AnimatePresence mode="popLayout">
+                        {cItems.length > 0 ? cItems.map(i => (
+                           <motion.div 
+                             layout
+                             initial={{ opacity: 0, x: -10 }}
+                             animate={{ opacity: 1, x: 0 }}
+                             exit={{ opacity: 0, x: 10 }}
+                             key={i.id} 
+                             className="text-[12px] text-zinc-900 dark:text-zinc-100 font-medium leading-tight"
+                           >
+                             <span className="font-bold text-blue-600 dark:text-blue-400">{i.qty}x</span> {i.name}
+                           </motion.div>
+                        )) : <motion.div layout className="text-[12px] text-zinc-400 italic"><TranslatedText tKey="none" defaultText="None" /></motion.div>}
+                      </AnimatePresence>
                     </div>
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
       <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
         <div className="flex justify-between items-center mb-1">
-          <span className="text-[13px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Base Total</span>
+          <span className="text-[13px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest"><TranslatedText tKey="base_total" defaultText="Base Total" /></span>
           <span className="text-[15px] font-medium text-zinc-500 dark:text-zinc-400 line-through">
             {formatCurrency(base_quote_pricing.total_payable)}
           </span>
         </div>
         <div className="flex justify-between items-end mt-4">
           <div className="flex flex-col">
-            <span className="text-[11px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em] mb-1">Final Price</span>
-            <span className="text-3xl font-black text-zinc-950 dark:text-white tracking-tighter leading-none">
+            <span className="text-[11px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em] mb-1"><TranslatedText tKey="final_price" defaultText="Final Price" /></span>
+            <motion.span 
+              key={activePricing.total_payable}
+              initial={{ y: -10, opacity: 0, filter: "blur(4px)" }}
+              animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+              className="text-3xl font-black text-zinc-950 dark:text-white tracking-tighter leading-none inline-block"
+            >
               {formatCurrency(activePricing.total_payable)}
-            </span>
+            </motion.span>
           </div>
           {activePricing.total_payable - base_quote_pricing.total_payable !== 0 && (
              <div className="text-right">
-                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Net Change</div>
-                <div className={`text-[14px] font-black ${
+                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1"><TranslatedText tKey="net_change" defaultText="Net Change" /></div>
+                <motion.div 
+                  key={activePricing.total_payable}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className={`text-[14px] font-black ${
                   activePricing.total_payable - base_quote_pricing.total_payable > 0 
                     ? 'text-orange-600 dark:text-orange-400' 
                     : 'text-emerald-600 dark:text-emerald-400'
                 }`}>
                   {activePricing.total_payable - base_quote_pricing.total_payable > 0 ? '+' : ''}
                   {formatCurrency(activePricing.total_payable - base_quote_pricing.total_payable)}
-                </div>
+                </motion.div>
              </div>
           )}
         </div>

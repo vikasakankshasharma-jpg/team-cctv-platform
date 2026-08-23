@@ -352,14 +352,31 @@ export function CompareCards({
                     const modelLabel = rec?.recorder_model || rec?.technical_name || rec?.display_name || (card.recType + " Recorder");
                     return `1× ${modelLabel}`;
                   })(),
+                  // Storage
                   (() => {
                     const storageItem = card.pricing.items.find((i: any) => addons.find((a: any) => a.id === i.product_id)?.category === 'storage');
                     if (storageItem) return storageItem.display_name;
                     return selection.recording_days > 0 ? `${selection.recording_days}-Day Storage` : "No Storage";
                   })(),
+                  // Power Supply
+                  (() => {
+                    const powerItem = card.pricing.items.find((i: any) => {
+                       const n = (i.display_name || "").toLowerCase();
+                       return n.includes("power") || n.includes("poe") || n.includes("smps") || n.includes("psu");
+                    });
+                    if (powerItem) return `1× ${powerItem.display_name}`;
+                    return null;
+                  })(),
+                  // Cabling
                   card.pricing.items.find((i: any) => i.product_id === "cabling_material")?.display_name?.split(' @ ')[0] ?? "Cabling & Accessories",
+                  // Connectors
+                  (() => {
+                    const connectorItem = card.pricing.items.find((i: any) => i.product_id?.includes("connector"));
+                    if (connectorItem) return `${connectorItem.qty}× Connectors (BNC/DC/RJ45)`;
+                    return null;
+                  })(),
                   `Professional Installation`
-                ].map((item, i) => (
+                ].filter(Boolean).map((item, i) => (
                   <div key={i} className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-[#0071e3] shrink-0" />
                     <span className="text-[13px] text-[#1d1d1f] dark:text-[#a1a1a6] leading-tight">{item}</span>

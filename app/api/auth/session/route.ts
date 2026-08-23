@@ -9,6 +9,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing ID token" }, { status: 400 });
     }
 
+    // Allow mock token in local development for E2E testing
+    if (idToken === "mock-jwt-token" && process.env.NODE_ENV !== "production") {
+      const response = NextResponse.json({ status: "success" }, { status: 200 });
+      response.cookies.set({
+        name: "admin_session",
+        value: "mock_session_cookie",
+        maxAge: 1000 * 60 * 60 * 24 * 5 / 1000,
+        httpOnly: true,
+        secure: false,
+        path: "/",
+        sameSite: "lax",
+      });
+      return response;
+    }
+
     // Set session expiration to 5 days
     const expiresIn = 1000 * 60 * 60 * 24 * 5;
 

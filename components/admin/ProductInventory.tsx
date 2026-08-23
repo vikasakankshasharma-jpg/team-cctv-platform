@@ -112,16 +112,25 @@ function SubCategoryGroup({
 
       {open && (
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
+          <table className="w-full table-fixed text-left text-sm border-collapse min-w-[900px]">
+            <colgroup>
+              <col style={{ width: '25%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '10%' }} />
+            </colgroup>
             <thead className="bg-muted/20 border-y border-border">
               <tr className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                <th className="px-6 py-3 w-[25%] font-medium">SKU / Information</th>
-                <th className="px-6 py-3 w-[15%] font-medium">Manufacturer</th>
-                <th className="px-6 py-3 w-[15%] font-medium">Specs</th>
-                <th className="px-6 py-3 text-center w-[10%] font-medium">Stock</th>
-                <th className="px-6 py-3 text-right w-[15%] font-medium">Pricing</th>
-                <th className="px-6 py-3 text-center w-[10%] font-medium">Status</th>
-                <th className="px-6 py-3 text-center w-[10%] font-medium">Actions</th>
+                <th className="px-6 py-3 font-medium">SKU / Information</th>
+                <th className="px-6 py-3 font-medium">Manufacturer</th>
+                <th className="px-6 py-3 font-medium">Specs</th>
+                <th className="px-6 py-3 text-center font-medium">Stock</th>
+                <th className="px-6 py-3 text-right font-medium">Pricing</th>
+                <th className="px-6 py-3 text-center font-medium">Status</th>
+                <th className="px-6 py-3 text-center font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-card">
@@ -143,7 +152,7 @@ function SubCategoryGroup({
                           <Package className="w-4 h-4 text-muted-foreground" />
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="font-semibold text-sm text-foreground truncate">
+                          <span className="font-semibold text-sm text-foreground line-clamp-2 leading-snug" title={p.display_name}>
                             {p.display_name}
                           </span>
                           <div className="flex items-center gap-2 mt-0.5">
@@ -455,6 +464,7 @@ export function ProductInventory({
             <option value="all">Any Technology</option>
             <option value="IP">Digital IP System</option>
             <option value="HD">Analog HD System</option>
+            <option value="Wireless">Wireless System</option>
             <option value="both">Hybrid Tech</option>
           </select>
 

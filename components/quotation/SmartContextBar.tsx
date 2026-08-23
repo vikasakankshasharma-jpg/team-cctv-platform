@@ -53,15 +53,15 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
         {/* Core Settings Summary — hidden on mobile to prevent truncation */}
         <div className="hidden sm:flex items-center gap-5 text-[#1d1d1f] dark:text-[#f5f5f7] overflow-x-auto no-scrollbar w-full sm:w-auto">
           <div className="flex flex-col shrink-0">
-            <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">System</span>
+            <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">{t('system', 'System')}</span>
             <div className="flex items-center gap-1.5 mt-0.5">
               <Camera className="w-3.5 h-3.5" />
-              <span className="text-sm font-medium">{selection.camera_count} Cameras</span>
+              <span className="text-sm font-medium">{selection.camera_count} {t('cameras', 'Cameras')}</span>
             </div>
           </div>
           <div className="w-px h-8 bg-[#d2d2d7] dark:bg-[#424245] shrink-0" />
           <div className="flex flex-col shrink-0">
-            <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">Storage</span>
+            <span className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">{t('storage', 'Storage')}</span>
             <div className="flex items-center gap-1.5 mt-0.5">
               <HardDrive className="w-3.5 h-3.5" />
               <span className="text-sm font-medium">{storageText}</span>
@@ -73,7 +73,7 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
               <div className="w-px h-8 bg-[#d2d2d7] dark:bg-[#424245] shrink-0" />
               <div className="flex flex-col shrink-0">
                 <span className={`text-[10px] font-semibold uppercase tracking-wider ${customizationDiff > 0 ? 'text-[#0071e3]' : customizationDiff < 0 ? 'text-[#ff3b30]' : 'text-[#0071e3]'}`}>
-                  {customizationDiff > 0 ? 'Upgrades' : customizationDiff < 0 ? 'Savings' : 'Modified'}
+                  {customizationDiff > 0 ? t('upgrades', 'Upgrades') : customizationDiff < 0 ? t('savings', 'Savings') : t('modified', 'Modified')}
                 </span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   {customizationDiff !== 0 ? (
@@ -86,7 +86,7 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
                   ) : (
                     <>
                       <Settings2 className="w-3.5 h-3.5" />
-                      <span className="text-sm font-semibold">Custom Built</span>
+                      <span className="text-sm font-semibold">{t('custom_built', 'Custom Built')}</span>
                     </>
                   )}
                 </div>
@@ -126,31 +126,40 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
             </div>
           </div>
           
-          <div className="flex gap-2 shrink-0">
-            {lead && quote ? (
-              <DownloadQuoteButton 
-                lead={lead} 
-                quote={quote} 
-                settings={settings || null}
-                className="!px-4 !py-2.5 !text-xs !rounded-full !bg-white dark:!bg-[#2d2d2f] !text-[#1d1d1f] dark:!text-white border border-[#d2d2d7] dark:border-[#424245]"
-              />
+          <div className="flex gap-2 shrink-0 items-center">
+            {quote?.error ? (
+              <div className="px-4 py-2 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-xl text-xs font-semibold border border-red-200 dark:border-red-500/30 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                {quote.error_message || "Invalid configuration"}
+              </div>
             ) : (
-              <button 
-                onClick={() => onAction && onAction("download")}
-                disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#2d2d2f] hover:bg-[#f5f5f7] dark:hover:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white border border-[#d2d2d7] dark:border-[#424245] rounded-full text-xs font-medium transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" />
-                {t('quote_download_pdf', 'Save PDF')}
-              </button>
+              <>
+                {lead && quote ? (
+                  <DownloadQuoteButton 
+                    lead={lead} 
+                    quote={quote} 
+                    settings={settings || null}
+                    className="!px-4 !py-2.5 !text-xs !rounded-full !bg-white dark:!bg-[#2d2d2f] !text-[#1d1d1f] dark:!text-white border border-[#d2d2d7] dark:border-[#424245]"
+                  />
+                ) : (
+                  <button 
+                    onClick={() => onAction && onAction("download")}
+                    disabled={isSaving}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#2d2d2f] hover:bg-[#f5f5f7] dark:hover:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white border border-[#d2d2d7] dark:border-[#424245] rounded-full text-xs font-medium transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    {t('quote_download_pdf', 'Save PDF')}
+                  </button>
+                )}
+                <button 
+                  onClick={() => onAction && onAction("booking")}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t('quote_schedule_visit', 'Book Site Visit')}</>}
+                </button>
+              </>
             )}
-            <button 
-              onClick={() => onAction && onAction("booking")}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-2.5 bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
-            >
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t('quote_schedule_visit', 'Book Site Visit')}</>}
-            </button>
           </div>
         </div>
 

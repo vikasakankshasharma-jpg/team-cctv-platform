@@ -59,6 +59,7 @@ export default function VendorImportClient() {
   useEffect(() => {
     fetchData();
     fetchVendors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const fetchVendors = async () => {

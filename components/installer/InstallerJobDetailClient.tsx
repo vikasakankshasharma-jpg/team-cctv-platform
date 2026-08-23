@@ -189,7 +189,6 @@ export default function InstallerJobDetailClient({
               </label>
             ) : (
               <div className="relative w-full h-64 rounded-2xl overflow-hidden border border-border">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                 {!uploading && (
                   <button onClick={() => { setFile(null); setPreviewUrl(null); }} className="absolute top-2 right-2 bg-black/60 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-black/80 transition-colors">
@@ -257,7 +256,6 @@ export default function InstallerJobDetailClient({
           
           {(lead as any).installation_proof_url && (
             <div className="w-full max-w-sm rounded-2xl overflow-hidden border border-emerald-500/20">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={(lead as any).installation_proof_url} alt="Installation Proof" className="w-full h-auto" />
             </div>
           )}

@@ -347,6 +347,39 @@ export function getDefaultFallbackWizard(): WizardStep[] {
         },
       ],
     },
+    {
+      id: "step_remote_viewing",
+      title: "Remote Viewing",
+      description: "Do you need to view your cameras online via mobile or laptop?",
+      position: 7.5,
+      is_active: true,
+      created_at: null,
+      questions: [
+        {
+          id: "q_remote_viewing",
+          question_text: "Do you want to view your cameras remotely?",
+          input_type: "single",
+          is_required: true,
+          position: 0,
+          options: [
+            { id: "ropt_yes", label: "Yes, I need remote viewing", value: "yes", position: 0 },
+            { id: "ropt_no",  label: "No, local viewing on a monitor is enough", value: "no", position: 1 },
+          ],
+        },
+        {
+          id: "q_broadband",
+          question_text: "Great! To set this up, do you already have a Broadband/WiFi connection at the site?",
+          input_type: "single",
+          is_required: true,
+          position: 1,
+          options: [
+            { id: "bopt_yes", label: "Yes, I have Broadband/WiFi", value: "yes", position: 0 },
+            { id: "bopt_no",  label: "No, I need a 4G/SIM Router solution", value: "no", position: 1 },
+          ],
+        },
+      ],
+    },
+
 
     {
       id: "step_features",

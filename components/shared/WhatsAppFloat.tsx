@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
+import { motion } from "framer-motion";
 
 const WA_NUMBER = "919772699395";
 
@@ -21,7 +22,13 @@ export function WhatsAppFloat() {
   if (hideOn.some((p) => pathname.startsWith(p))) return null;
 
   return (
-    <aside aria-label="WhatsApp Support">
+    <motion.aside 
+      drag
+      dragMomentum={false}
+      aria-label="WhatsApp Support"
+      style={{ zIndex: 49, position: "fixed", bottom: "88px", left: "16px" }}
+      className="md:bottom-[28px] md:left-[28px]"
+    >
       <a
         href={waHref}
         target="_blank"
@@ -51,9 +58,7 @@ export function WhatsAppFloat() {
 
       <style jsx>{`
         .whatsapp-float {
-          position: fixed;
-          bottom: 88px; /* above mobile sticky bar */
-          left: 16px;
+          position: relative;
           z-index: 49;
           display: flex;
           align-items: center;
@@ -68,8 +73,6 @@ export function WhatsAppFloat() {
         }
         @media (min-width: 768px) {
           .whatsapp-float {
-            bottom: 28px;
-            left: 28px;
             width: 60px;
             height: 60px;
           }
@@ -129,6 +132,6 @@ export function WhatsAppFloat() {
         }
       `}</style>
       </a>
-    </aside>
+    </motion.aside>
   );
 }

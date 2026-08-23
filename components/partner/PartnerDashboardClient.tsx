@@ -207,7 +207,7 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
              <div className="flex-1 rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-zinc-800 dark:to-zinc-900 border border-zinc-200 dark:border-zinc-800/50 flex items-center justify-center p-6 min-h-[200px]">
                 <div className="grid grid-cols-5 gap-2 w-full h-full opacity-60">
                    {Array.from({ length: 25 }).map((_, i) => (
-                     <div key={i} className={`rounded-lg ${Math.random() > 0.7 ? 'bg-amber-500/80 animate-pulse' : Math.random() > 0.4 ? 'bg-amber-500/30' : 'bg-zinc-200 dark:bg-zinc-800'}`} />
+                     <div key={i} className={`rounded-lg ${((i * 13) % 10) / 10 > 0.7 ? 'bg-amber-500/80 animate-pulse' : ((i * 13) % 10) / 10 > 0.4 ? 'bg-amber-500/30' : 'bg-zinc-200 dark:bg-zinc-800'}`} />
                    ))}
                 </div>
              </div>

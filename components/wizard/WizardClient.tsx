@@ -133,6 +133,11 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
         filteredQuestions = filteredQuestions.filter((q: any) => q.id !== "q_wiring_type");
       }
 
+      // Hide "q_broadband" if remote viewing is not selected or selected as "no"
+      if (step.id === "step_remote_viewing" && answers["q_remote_viewing"] !== "yes") {
+        filteredQuestions = filteredQuestions.filter((q: any) => q.id !== "q_broadband");
+      }
+
       return {
         ...step,
         questions: filteredQuestions
@@ -209,34 +214,34 @@ export function WizardClient({ initialSteps, initialSettings }: { initialSteps?:
       
       // UX enhancement: Smart Auto-Navigate
       
-      // Compute what the questions will look like AFTER this answer
-      let futureQuestions = currentStep.questions || [];
-      if (currentStep.id === "step_wiring" && (newAnswers["q_wiring"] === "true" || newAnswers["q_install_type"] === "upgrade")) {
+      // Get the unmodified questions for this step
+      const baseStepsList = (initialSteps && initialSteps.length > 0) ? initialSteps : steps;
+      const baseStep = baseStepsList.find(s => s.id === currentStep.id) || currentStep;
+      let futureQuestions = baseStep.questions || [];
+      
+      // Re-apply dynamic display filters based on newAnswers
+      if (baseStep.id === "step_wiring" && (newAnswers["q_wiring"] === "true" || newAnswers["q_install_type"] === "upgrade")) {
         futureQuestions = futureQuestions.filter((q: any) => q.id !== "q_wiring_type");
       }
+      if (baseStep.id === "step_remote_viewing" && newAnswers["q_remote_viewing"] !== "yes") {
+        futureQuestions = futureQuestions.filter((q: any) => q.id !== "q_broadband");
+      }
 
-      const qIndex = futureQuestions.findIndex((q: WizardQuestion) => q.id === questionId);
-      const isLastQuestionInStep = qIndex === futureQuestions.length - 1;
+      // Find the first question that is still unanswered
+      const firstUnansweredIndex = futureQuestions.findIndex((q: WizardQuestion) => {
+        const ans = newAnswers[q.id!];
+        return !ans || (Array.isArray(ans) && ans.length === 0);
+      });
       
-      if (!isLastQuestionInStep && qIndex !== -1) {
-        // Scroll to the next question on the same page
-        const nextQId = futureQuestions[qIndex + 1].id;
+      if (firstUnansweredIndex !== -1) {
+        // Scroll to the first unanswered question
+        const nextQId = futureQuestions[firstUnansweredIndex].id;
         setTimeout(() => {
           document.getElementById(`question-${nextQId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 300);
-      } else if (isLastQuestionInStep) {
-        // Last question in the step: verify all required are answered before auto-advancing to next step
-        let isValid = true;
-        futureQuestions.forEach((q: WizardQuestion) => {
-          if (q.is_required) {
-            const ans = newAnswers[q.id!];
-            if (!ans || (Array.isArray(ans) && ans.length === 0)) {
-              isValid = false;
-            }
-          }
-        });
-
-        if (isValid && !isLastStep) {
+      } else {
+        // All displayed questions have answers! 
+        if (!isLastStep) {
           setTimeout(() => {
             trackEvent("wizard_step_complete", {
               step_index: safe_step_index,

@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface OptionCardProps {
   label: string;
@@ -13,6 +14,8 @@ interface OptionCardProps {
 }
 
 export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCount, isDisabled = false }: OptionCardProps) {
+  const { t } = useTranslation();
+
   return (
     <motion.button
       whileHover={isDisabled ? {} : { scale: 1.02, y: -2 }}
@@ -81,17 +84,17 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
         </span>
         {isDisabled && (
           <span className="block text-xs sm:text-sm font-bold text-zinc-500 mt-1">
-            Not available with current selection
+            {t("opt_not_avail", "Not available with current selection")}
           </span>
         )}
         {isMulti && !isSelected && !isDisabled && (
           <span className="block text-xs sm:text-sm font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mt-1">
-            Tap to select
+            {t("opt_tap_select", "Tap to select")}
           </span>
         )}
         {isMulti && isSelected && !isDisabled && (
           <span className="block text-xs sm:text-sm font-black text-blue-600 uppercase tracking-widest mt-1">
-            ✓ Added
+            {t("opt_added", "✓ Added")}
           </span>
         )}
       </div>
@@ -106,7 +109,7 @@ export function OptionCard({ label, isSelected, isMulti, onClick, prospectiveCou
               ? "bg-blue-600 text-white shadow-blue-600/30 border border-blue-600"
               : "bg-white dark:bg-zinc-900 text-blue-600 border border-blue-200 dark:border-blue-900/50"
         ].join(" ")}>
-          {prospectiveCount} {prospectiveCount === 1 ? 'Option' : 'Options'}
+          {prospectiveCount} {prospectiveCount === 1 ? t('opt_count_single', 'Option') : t('opt_count_multi', 'Options')}
         </div>
       )}
 

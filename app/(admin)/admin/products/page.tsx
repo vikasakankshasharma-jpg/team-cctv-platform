@@ -10,6 +10,7 @@ import { BackButton } from "@/components/admin/BackButton";
 import { BulkImportExport } from "@/components/admin/BulkImportExport";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { CategoryGroupSelector } from "@/components/admin/CategoryGroupSelector";
+import Link from "next/link";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -129,6 +130,29 @@ export default function AdminProductsPage() {
     }
   };
 
+  // Helper to auto-compute catalog paths for unassigned products
+  const autoComputeCatalogPath = (category: string, tech?: string) => {
+    const t = (tech || "").toLowerCase();
+    if (category === "cctv_camera") {
+      if (t === "hd") return "cctv_camera/hd/HD Camera";
+      if (t === "ip") return "cctv_camera/ip/IP Camera";
+      if (t === "wifi" || t === "wireless") return "cctv_camera/wifi/WiFi Camera";
+      return "cctv_camera/General";
+    }
+    if (category === "recorder") {
+      if (t === "hd") return "recorder/hd/DVR";
+      if (t === "ip") return "recorder/ip/NVR";
+      return "recorder/xvr/XVR";
+    }
+    if (category === "storage") return "storage/HDD";
+    if (category === "cable") return "cable/Transmission Cable";
+    if (category === "power_device") return "power_device/Power Supply";
+    if (category === "connector") return "connector/Connectors";
+    if (category === "network") return "network/Network Device";
+    if (category === "accessories") return "accessories/Accessory";
+    return `${category}/General`;
+  };
+
   const handleEdit = (product: Product) => {
     const p = { ...product };
     
@@ -158,6 +182,13 @@ export default function AdminProductsPage() {
         const match = p.display_name?.match(/\b(\d+(?:\.\d+)?)\s*w\b/i);
         if (match) p.power_wattage_w = parseFloat(match[1]);
       }
+    }
+
+    // Auto-fill catalog_path for pre-selection if it's missing
+    if (!p.catalog_path && !p.group_path && !p.group_id) {
+      const computedPath = autoComputeCatalogPath(p.category || "", p.technologies?.[0]);
+      p.catalog_path = computedPath;
+      p.group_path = computedPath;
     }
 
     setEditingProduct(p);
@@ -226,6 +257,13 @@ export default function AdminProductsPage() {
           .replace(/[^a-z0-9\s]/g, "")
           .replace(/\s+/g, "_")
           .substring(0, 80);
+      }
+
+      // Auto-assign catalog_path if missing
+      if (!payload.catalog_path && !payload.group_id) {
+        const computedPath = autoComputeCatalogPath(payload.category || "", payload.technologies?.[0]);
+        payload.catalog_path = computedPath;
+        payload.group_path = computedPath;
       }
 
       const res = await fetch("/api/admin/products", {
@@ -297,13 +335,13 @@ export default function AdminProductsPage() {
 
              <div className="w-px h-8 bg-border" />
 
-             <a
+             <Link
                href="/admin/products/enrich"
                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-xs font-semibold transition-all shadow-sm active:scale-95"
              >
                <Sparkles className="w-4 h-4" />
                AI Enrich
-             </a>
+             </Link>
 
              <button
                onClick={handleAdd}
@@ -457,8 +495,8 @@ export default function AdminProductsPage() {
                       </div>
                       {/* Tally-Style Group Selector */}
                       <CategoryGroupSelector
-                        value={editingProduct.group_id || null}
-                        onChange={(groupId, fullPath) => setEditingProduct({...editingProduct, group_id: groupId, group_path: fullPath})}
+                        value={editingProduct.group_id || editingProduct.group_path || editingProduct.catalog_path || null}
+                        onChange={(groupId, fullPath) => setEditingProduct({...editingProduct, group_id: groupId, group_path: fullPath, catalog_path: fullPath || undefined})}
                       />
                     </div>
 

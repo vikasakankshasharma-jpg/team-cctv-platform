@@ -4,6 +4,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Papa from "papaparse";
 import { toast } from "sonner";
+import Link from "next/link";
 import {
   Upload,
   Download,
@@ -263,13 +264,14 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
       <div className="flex flex-wrap items-center gap-3">
 
         {/* Download Smart Template Button */}
-        <a
+        <Link
           href="/api/admin/products/export-template"
+          target="_blank"
           className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all shadow-sm active:scale-95 whitespace-nowrap"
         >
           <FileText className="w-4 h-4 text-emerald-500" />
           Download Smart Template
-        </a>
+        </Link>
 
         {/* Export Dropdown */}
         <div className="relative">

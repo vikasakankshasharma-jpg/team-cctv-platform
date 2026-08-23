@@ -492,7 +492,10 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
             <View style={s.brandRow}>
               <View style={s.brandIconBox}>
                 {settings?.pdf_logo_url ? (
-                  <Image src={settings.pdf_logo_url} style={s.brandIconImage} />
+                  <>
+                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                    <Image src={settings.pdf_logo_url} style={s.brandIconImage} />
+                  </>
                 ) : (
                   <Text style={s.brandIconText}>▶</Text>
                 )}

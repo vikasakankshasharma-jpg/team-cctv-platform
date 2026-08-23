@@ -22,15 +22,15 @@ export function SystemSummary({ items, addons, isCustomOverride }: SystemSummary
         {isCustomOverride && (
           <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50 px-2.5 py-1 rounded-full">
             <Wrench className="w-3 h-3" />
-            <span className="text-[9px] font-black uppercase tracking-widest">Custom Selection</span>
+            <span className="text-[9px] font-black uppercase tracking-widest">{t('custom_selection', 'Custom Selection')}</span>
           </div>
         )}
       </div>
 
       <div className="rounded-[24px] border border-zinc-100 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-950 shadow-sm">
         <div className="px-4 py-3 sm:px-5 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-zinc-500">
-          <span className="text-[10px] font-black uppercase tracking-widest">Item Description</span>
-          <span className="text-[10px] font-black uppercase tracking-widest">Line Total</span>
+          <span className="text-[10px] font-black uppercase tracking-widest">{t('item_desc', 'Item Description')}</span>
+          <span className="text-[10px] font-black uppercase tracking-widest">{t('line_total', 'Line Total')}</span>
         </div>
         <div className="divide-y divide-zinc-100 dark:border-zinc-800/50">
           {items.map((item) => (

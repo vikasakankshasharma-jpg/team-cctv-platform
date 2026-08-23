@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import { ProductEnrichmentClient } from "@/components/admin/ProductEnrichmentClient";
 import type { Product, AppSettings } from "@/types";
 import { getSettingsConfig } from "@/lib/queries";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -37,12 +38,12 @@ export default async function ProductEnrichPage() {
         badge="AI-Powered"
         description="Automatically fill missing camera and recorder specifications using Gemini AI. Review every proposed change before saving."
         action={
-          <a
+          <Link
             href="/admin/products"
             className="px-4 py-2 text-sm font-semibold border border-border rounded-xl bg-card hover:bg-secondary transition-colors text-foreground"
           >
             ← Back to Products
-          </a>
+          </Link>
         }
       />
 

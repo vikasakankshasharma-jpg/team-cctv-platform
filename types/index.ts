@@ -345,6 +345,9 @@ export interface ConfiguratorSelection {
   cable_length_meters?: number;
   cable_type?: "cat6" | "coaxial";
   wiring_type?: "open" | "conduit";
+  lead_pincode?: string;
+  wants_remote_viewing?: boolean;
+  broadband_status?: "yes" | "no" | "sim_router";
 }
 
 export interface QuoteLineItem {
@@ -449,6 +452,10 @@ export interface AppSettings {
   pdf_terms?: string | null;
 
   conduit_cost_per_meter?: number;
+
+  // NEW: Pincode and Cabling Config
+  affordable_pincodes?: string[];
+  default_cable_length_per_camera?: number;
 
   updated_at?: unknown;
   updated_by?: string | null;

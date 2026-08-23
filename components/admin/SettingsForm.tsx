@@ -23,6 +23,9 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [apiKeysText, setApiKeysText] = useState<string>(
     initialSettings.gemini_api_keys ? initialSettings.gemini_api_keys.join("\n") : ""
   );
+  const [affordablePincodesText, setAffordablePincodesText] = useState<string>(
+    initialSettings.affordable_pincodes ? initialSettings.affordable_pincodes.join(", ") : ""
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -39,6 +42,11 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         .split("\n")
         .map(k => k.trim())
         .filter(k => k.length > 0);
+
+      payload.affordable_pincodes = affordablePincodesText
+        .split(",")
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
         
       await updateSettings(payload);
       setShowSuccess(true);
@@ -208,6 +216,21 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                   className="w-full bg-background border border-border text-foreground rounded-xl pl-8 pr-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-semibold text-base shadow-sm" 
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px] font-medium uppercase tracking-wider">/ m</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Def. Cable / Cam</label>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  name="default_cable_length_per_camera"
+                  value={formData.default_cable_length_per_camera || 20}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px] font-medium uppercase tracking-wider">m</span>
               </div>
             </div>
 
@@ -440,6 +463,16 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               <input 
                 type="number" name="visit_charge" value={formData.visit_charge} onChange={handleChange}
                 className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-warning/20 outline-none transition-all font-medium" 
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2 lg:col-span-3">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Affordable Pincodes (Zero Travel Fee) - Comma Separated</label>
+              <textarea 
+                name="affordablePincodesText" 
+                value={affordablePincodesText} 
+                onChange={(e) => setAffordablePincodesText(e.target.value)}
+                placeholder="302001, 302002, 302003"
+                className="w-full h-16 bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:ring-2 focus:ring-warning/20 outline-none transition-all font-medium text-sm shadow-sm font-mono" 
               />
             </div>
             <div className="space-y-2">

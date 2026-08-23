@@ -10,8 +10,10 @@ interface SiteDetailsModalProps {
   onClose: () => void;
   initialPincode?: string;
 }
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: SiteDetailsModalProps) {
+  const { t } = useTranslation();
   const [pincode, setPincode] = useState(initialPincode);
   const [landmark1, setLandmark1] = useState("");
   const [landmark2, setLandmark2] = useState("");
@@ -163,10 +165,10 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                 <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center">
                   <MapPin className="w-3.5 h-3.5 text-white" />
                 </div>
-                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Site Capture</span>
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">{t('site_capture', 'Site Capture')}</span>
               </div>
-              <h2 className="text-2xl font-black text-zinc-900 tracking-tighter">Pinpoint Your Site</h2>
-              <p className="text-sm text-zinc-400 font-medium mt-1">Required for PDF blueprint & installation dispatch.</p>
+              <h2 className="text-2xl font-black text-zinc-900 tracking-tighter">{t('pinpoint_site', 'Pinpoint Your Site')}</h2>
+              <p className="text-sm text-zinc-400 font-medium mt-1">{t('required_blueprint', 'Required for PDF blueprint & installation dispatch.')}</p>
             </div>
             <button
               onClick={onClose}
@@ -184,7 +186,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
 
             {/* Pincode */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">Area Pincode *</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">{t('area_pincode_req', 'Area Pincode *')}</label>
               <div className="relative">
                 <Navigation className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                  <input
@@ -214,14 +216,14 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                 ) : postOffices.length > 0 ? (
                   <>
                     <div className="space-y-1.5">
-                       <label className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] ml-1">Area Details</label>
+                       <label className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] ml-1">{t('area_details', 'Area Details')}</label>
                        <div className="w-full bg-blue-100/50 border border-transparent rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 border-dashed border-blue-200">
                          {areaInfo}
                        </div>
                     </div>
                     {postOffices.length > 1 ? (
                       <div className="space-y-1.5">
-                         <label className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] ml-1">Pinpoint Location</label>
+                         <label className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] ml-1">{t('pinpoint_location', 'Pinpoint Location')}</label>
                          <select 
                            value={selectedPostOffice}
                            onChange={(e) => setSelectedPostOffice(e.target.value)}
@@ -231,11 +233,11 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                              <option key={idx} value={po.Name}>{po.Name}</option>
                            ))}
                          </select>
-                         <p className="text-[10px] text-blue-600/80 font-medium ml-1">Multiple areas found. Please select yours.</p>
+                         <p className="text-[10px] text-blue-600/80 font-medium ml-1">{t('multiple_areas_found', 'Multiple areas found. Please select yours.')}</p>
                       </div>
                     ) : (
                       <div className="space-y-1.5">
-                         <label className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] ml-1">Pinpoint Location</label>
+                         <label className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] ml-1">{t('pinpoint_location', 'Pinpoint Location')}</label>
                          <div className="w-full bg-blue-100/50 border border-transparent rounded-xl px-4 py-3 text-sm font-bold text-zinc-900">
                            {selectedPostOffice}
                          </div>
@@ -252,7 +254,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
 
             {/* Primary Landmark */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">Primary Landmark *</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">{t('primary_landmark_req', 'Primary Landmark *')}</label>
               <input
                 type="text"
                 value={landmark1}
@@ -264,7 +266,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
 
             {/* Full Address */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">Full Address</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">{t('full_address', 'Full Address')}</label>
               <textarea
                 value={fullAddress}
                 onChange={(e) => setFullAddress(e.target.value)}
@@ -276,7 +278,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
 
             {/* Secondary Landmark */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">Secondary Landmark <span className="normal-case tracking-normal font-normal text-zinc-300">(optional)</span></label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">{t('secondary_landmark', 'Secondary Landmark')} <span className="normal-case tracking-normal font-normal text-zinc-300">({t('optional', 'optional')})</span></label>
               <input
                 type="text"
                 value={landmark2}
@@ -289,7 +291,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
 
           {/* RIGHT: GPS Visualizer */}
           <div className="flex flex-col gap-4">
-            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">GPS Pinpoint</label>
+            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] ml-1">{t('gps_pinpoint', 'GPS Pinpoint')}</label>
             <div className="flex-1 relative rounded-3xl overflow-hidden bg-zinc-100 border border-zinc-200 min-h-[220px]">
 
               {isMapReady ? (
@@ -334,8 +336,8 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                   ) : loadError ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center bg-zinc-50">
                        <ShieldAlert className="w-6 h-6 text-red-500/50" />
-                       <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">Map Configuration Error</p>
-                       <p className="text-[10px] text-zinc-400 font-medium">Your pinpoint is still saved via GPS coords, but the visual map is currently unavailable.</p>
+                       <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">{t('map_error', 'Map Configuration Error')}</p>
+                       <p className="text-[10px] text-zinc-400 font-medium">{t('map_error_desc', 'Your pinpoint is still saved via GPS coords, but the visual map is currently unavailable.')}</p>
                     </div>
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-zinc-50">
@@ -352,7 +354,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                           {coords.lat.toFixed(4)}°N, {coords.lng.toFixed(4)}°E
                         </span>
                       </div>
-                      <span className="text-[9px] font-medium text-zinc-400 bg-zinc-100 px-2 py-1 rounded-md">Draggable Target</span>
+                      <span className="text-[9px] font-medium text-zinc-400 bg-zinc-100 px-2 py-1 rounded-md">{t('draggable_target', 'Draggable Target')}</span>
                     </div>
                   </div>
                 </div>
@@ -361,7 +363,7 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
                   <div className="w-12 h-12 rounded-2xl bg-zinc-200 flex items-center justify-center">
                     <Navigation className="w-6 h-6 text-zinc-400" />
                   </div>
-                  <p className="text-xs font-bold text-zinc-400">Enter your 6-digit pincode<br/>to activate GPS mapping.</p>
+                  <p className="text-xs font-bold text-zinc-400">{t('enter_pincode_map', 'Enter your 6-digit pincode')}<br/>{t('to_activate_map', 'to activate GPS mapping.')}</p>
                 </div>
               )}
             </div>
@@ -383,14 +385,14 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
             onClick={onClose}
             className="text-xs font-black text-zinc-400 hover:text-zinc-600 uppercase tracking-widest transition-colors"
           >
-            Cancel
+            {t('cancel', 'Cancel')}
           </button>
           <button
             onClick={handleConfirm}
             disabled={!isValid}
             className="group flex items-center gap-3 bg-zinc-900 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black uppercase text-xs tracking-[0.2em] px-6 sm:px-8 py-4 rounded-2xl sm:rounded-3xl transition-all shadow-xl shadow-zinc-900/10 hover:shadow-blue-500/20 active:scale-95 touch-manipulation"
           >
-            Confirm Site
+            {t('confirm_site', 'Confirm Site')}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>

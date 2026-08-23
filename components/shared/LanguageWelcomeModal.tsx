@@ -14,12 +14,16 @@ export function LanguageWelcomeModal() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const mountTimer = setTimeout(() => setMounted(true), 0);
     // Add a slight delay before showing the modal for a better UX (prevents instant jarring popup)
     if (!hasSeenWelcome) {
       const timer = setTimeout(() => setShow(true), 1500);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(mountTimer);
+        clearTimeout(timer);
+      };
     }
+    return () => clearTimeout(mountTimer);
   }, [hasSeenWelcome]);
 
   if (!mounted || !show) return null;

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { Loader2, CheckCircle2, Rocket, ArrowRight } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function WaitlistBanner({ leadId, unservedCityName, nearestHubName, distanceKm }: { leadId: string; unservedCityName: string; nearestHubName?: string; distanceKm?: number }) {
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const { t } = useTranslation();
 
   const handleNotify = async () => {
     setLoading(true);
@@ -26,17 +28,17 @@ export function WaitlistBanner({ leadId, unservedCityName, nearestHubName, dista
           <Rocket className="w-6 h-6" />
         </div>
         <div>
-          <h3 className="text-lg font-black tracking-tight mb-1">Your Quote is Ready!</h3>
+          <h3 className="text-lg font-black tracking-tight mb-1">{t('waitlist_quote_ready', 'Your Quote is Ready!')}</h3>
           <p className="text-sm font-medium opacity-90 leading-relaxed max-w-2xl">
             {nearestHubName && distanceKm !== undefined ? (
-              <>Our primary installation hub is in <span className="font-black">{nearestHubName}</span> (approx. <strong>{distanceKm} km</strong> away). Based on your direct request, we are taking this on priority and expediting our operations in <span className="font-black uppercase">{unservedCityName}</span> specifically for you.</>
+              <>{t('waitlist_hub_in', 'Our primary installation hub is in')} <span className="font-black">{nearestHubName}</span> (approx. <strong>{distanceKm} km</strong> away). {t('waitlist_priority_for', 'Based on your direct request, we are taking this on priority and expediting our operations in')} <span className="font-black uppercase">{unservedCityName}</span> specifically for you.</>
             ) : (
-              <>Our primary installation hubs are currently active in Jaipur and surrounding regions. However, based on your direct request, we are taking this on priority and expediting our operations in <span className="font-black uppercase">{unservedCityName}</span> specifically for you.</>
+              <>{t('waitlist_hubs_active', 'Our primary installation hubs are currently active in Jaipur and surrounding regions. However, based on your direct request, we are taking this on priority and expediting our operations in')} <span className="font-black uppercase">{unservedCityName}</span> specifically for you.</>
             )}
           </p>
           {confirmed && (
             <p className="mt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-bottom-1">
-              <CheckCircle2 className="w-4 h-4" /> Priority Request Registered. Our team will contact you shortly.
+              <CheckCircle2 className="w-4 h-4" /> {t('waitlist_confirmed_msg', 'Priority Request Registered. Our team will contact you shortly.')}
             </p>
           )}
         </div>
@@ -50,7 +52,7 @@ export function WaitlistBanner({ leadId, unservedCityName, nearestHubName, dista
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <span className="flex items-center gap-2">Confirm Priority <ArrowRight className="w-4 h-4" /></span>
+            <span className="flex items-center gap-2">{t('waitlist_confirm_btn', 'Confirm Priority')} <ArrowRight className="w-4 h-4" /></span>
           )}
         </button>
       )}

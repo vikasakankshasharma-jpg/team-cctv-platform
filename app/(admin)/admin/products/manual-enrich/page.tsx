@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { FileEdit } from "lucide-react";
 import type { Product } from "@/types";
 import { ManualEnrichmentClient } from "@/components/admin/ManualEnrichmentClient";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -33,12 +34,12 @@ export default async function ManualEnrichmentPage() {
         title="Manual Spec Editor"
         description="Fast, spreadsheet-like data entry to manually fill in missing hardware specifications."
         action={
-          <a
+          <Link
             href="/admin/products"
             className="px-4 py-2 text-sm font-semibold border border-border rounded-xl bg-card hover:bg-secondary transition-colors text-foreground"
           >
             ← Back to Products
-          </a>
+          </Link>
         }
       />
 

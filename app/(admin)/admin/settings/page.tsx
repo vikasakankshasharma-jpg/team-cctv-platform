@@ -52,6 +52,10 @@ export default async function SettingsAdminPage() {
     amc_3yr_pct: 10,
     quote_validity_days: 8,
 
+    // NEW: Pincode and Cabling Config
+    affordable_pincodes: ["302001", "302002", "302003", "302004", "302005", "302006", "302015", "302016"],
+    default_cable_length_per_camera: 20,
+
     updated_at: null,
     updated_by: null,
   };

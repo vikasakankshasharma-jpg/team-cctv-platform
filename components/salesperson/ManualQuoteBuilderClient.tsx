@@ -347,7 +347,7 @@ export default function ManualQuoteBuilderClient() {
                 cart.map(item => (
                   <div key={item.id} className="flex gap-3 items-start p-3 rounded-2xl bg-muted/30 border border-border">
                     <div className="w-12 h-12 bg-background rounded-lg flex items-center justify-center border border-border shrink-0 overflow-hidden">
-                       {item.image_url ? <img src={item.image_url} className="object-cover w-full h-full" /> : <ImageIcon className="w-5 h-5 text-muted-foreground/30" />}
+                       {item.image_url ? <img src={item.image_url} alt={item.display_name || "Product image"} className="object-cover w-full h-full" /> : <ImageIcon className="w-5 h-5 text-muted-foreground/30" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-sm text-foreground truncate">{item.display_name}</h4>

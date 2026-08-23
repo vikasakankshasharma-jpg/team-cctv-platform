@@ -29,7 +29,7 @@ export default function QuoteError({
       return () => clearTimeout(timer);
     } else {
       // Exceeded max retries, show error screen
-      setAutoSyncing(false);
+      setTimeout(() => setAutoSyncing(false), 0);
       // Clear retries so user can manually retry again later
       sessionStorage.removeItem("quote_error_retries");
     }

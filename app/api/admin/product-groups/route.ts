@@ -15,8 +15,29 @@ export async function GET() {
       groups.push({ id: doc.id, ...doc.data() } as ProductGroup);
     });
 
+    // Automatically extract unique catalog paths from existing products
+    const productSnapshot = await adminDb.collection("products").select("catalog_path").get();
+    const existingPaths = new Set(groups.map(g => g.full_path));
+    
+    productSnapshot.forEach(doc => {
+      const path = doc.data()?.catalog_path;
+      if (path && typeof path === 'string' && path.trim() !== '') {
+        const cleanPath = path.trim();
+        if (!existingPaths.has(cleanPath)) {
+          existingPaths.add(cleanPath);
+          groups.push({
+            id: `auto-${Buffer.from(cleanPath).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 20)}`,
+            name: cleanPath.split('/').pop() || cleanPath,
+            full_path: cleanPath,
+            parent_id: null,
+            is_active: true
+          } as ProductGroup);
+        }
+      }
+    });
+
     // Sort alphabetically by full_path
-    groups.sort((a, b) => a.full_path.localeCompare(b.full_path));
+    groups.sort((a, b) => (a.full_path || "").localeCompare(b.full_path || ""));
 
     return NextResponse.json({ success: true, groups });
   } catch (error: any) {
@@ -40,7 +61,7 @@ export async function POST(req: NextRequest) {
     if (body.parent_id) {
       const parentDoc = await adminDb.collection("product_groups").doc(body.parent_id).get();
       if (parentDoc.exists) {
-        fullPath = `${parentDoc.data()?.full_path} / ${body.name}`;
+        fullPath = `${parentDoc.data()?.full_path}/${body.name}`;
       } else {
         return NextResponse.json({ success: false, error: "Parent group not found" }, { status: 404 });
       }
@@ -96,7 +117,7 @@ export async function PATCH(req: NextRequest) {
       if (newParentId) {
          const parentDoc = await adminDb.collection("product_groups").doc(newParentId).get();
          if (parentDoc.exists) {
-           newFullPath = `${parentDoc.data()?.full_path} / ${newName}`;
+           newFullPath = `${parentDoc.data()?.full_path}/${newName}`;
          }
       }
       updateData.full_path = newFullPath;

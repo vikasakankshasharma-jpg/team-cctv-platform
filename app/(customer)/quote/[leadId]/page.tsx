@@ -81,17 +81,8 @@ export default async function QuoteResultPage({
   }
 
   try {
-    const [
-      leadSnap,
-      productsSnap,
-      addonsSnap,
-      rulesSnap,
-      settingsSnap,
-      rulesSnap2,
-      layoutsSnap,
-      hubsSnap
-    ] = await Promise.all([
-      lead ? Promise.resolve(null) : adminDb.collection("leads").doc(leadId).get(),
+    const results = await Promise.allSettled([
+      lead ? Promise.resolve({ exists: true, id: lead.id, data: () => lead } as any) : adminDb.collection("leads").doc(leadId).get(),
       adminDb.collection("products").where("is_active", "==", true).get(),
       adminDb.collection("addons").where("is_active", "==", true).get(),
       adminDb.collection("addon_rules").get(),
@@ -101,46 +92,67 @@ export default async function QuoteResultPage({
       adminDb.collection("hubs").where("is_active", "==", true).get()
     ]);
 
-    if (!lead && leadSnap && leadSnap.exists) {
-      lead = { id: leadSnap.id, ...leadSnap.data() } as Lead;
+    const leadResult = results[0];
+    if (leadResult.status === "fulfilled" && !lead && leadResult.value && leadResult.value.exists) {
+      lead = { id: leadResult.value.id, ...leadResult.value.data() } as Lead;
     }
 
-    products = productsSnap.docs.map(doc => {
-      const data = doc.data() as any;
-      if (data.is_deleted === true) return null;
-      if (!Array.isArray(data.technologies)) {
-        data.technologies = data.technology ? [data.technology] : ["Common"];
-      }
-      const { base_cost, margin_percentage, ...publicData } = data;
-      return { id: doc.id, ...publicData } as Product;
-    }).filter(Boolean) as Product[];
-
-    addons = addonsSnap.docs.map(doc => {
-      const data = doc.data() as Addon;
-      if ((data as any).is_deleted === true) return null;
-      const { base_cost, ...publicData } = data;
-      return { id: doc.id, ...publicData } as Addon;
-    }).filter(Boolean) as Addon[];
-    
-    addon_rules = rulesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as AddonRule));
-    
-    if (settingsSnap.exists) {
-      settings = settingsSnap.data() as AppSettings;
+    if (results[1].status === "fulfilled" && results[1].value) {
+      products = results[1].value.docs.map(doc => {
+        const data = doc.data() as any;
+        if (data.is_deleted === true) return null;
+        if (!Array.isArray(data.technologies)) {
+          data.technologies = data.technology ? [data.technology] : ["Common"];
+        }
+        // Strip heavy fields that the client doesn't need for generating the quote
+        const { 
+          base_cost, 
+          margin_percentage, 
+          custom_attributes,
+          focus_reason,
+          focus_active_until,
+          ...publicData 
+        } = data;
+        return { id: doc.id, ...publicData } as Product;
+      }).filter(Boolean) as Product[];
     }
 
-    recommendation_rules = rulesSnap2.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter((rule: any) => rule.is_active === true);
+    if (results[2].status === "fulfilled" && results[2].value) {
+      addons = results[2].value.docs.map(doc => {
+        const data = doc.data() as Addon;
+        if ((data as any).is_deleted === true) return null;
+        const { base_cost, ...publicData } = data;
+        return { id: doc.id, ...publicData } as Addon;
+      }).filter(Boolean) as Addon[];
+    }
+    
+    if (results[3].status === "fulfilled" && results[3].value) {
+      addon_rules = results[3].value.docs.map(doc => ({ id: doc.id, ...doc.data() } as AddonRule));
+    }
+    
+    if (results[4].status === "fulfilled" && results[4].value && results[4].value.exists) {
+      settings = results[4].value.data() as AppSettings;
+    }
 
-    card_layouts = layoutsSnap.docs
-      .map((doc: any) => ({ id: doc.id, ...doc.data() }))
-      .sort((a: any, b: any) => (a.priority || 0) - (b.priority || 0));
+    if (results[5].status === "fulfilled" && results[5].value) {
+      recommendation_rules = results[5].value.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter((rule: any) => rule.is_active === true);
+    }
 
-    hubs = hubsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+    if (results[6].status === "fulfilled" && results[6].value) {
+      card_layouts = results[6].value.docs
+        .map((doc: any) => ({ id: doc.id, ...doc.data() }))
+        .sort((a: any, b: any) => (a.priority || 0) - (b.priority || 0));
+    }
+
+    if (results[7].status === "fulfilled" && results[7].value) {
+      hubs = results[7].value.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+    }
 
     if (lead?.promoter_id) {
-      const promoterSnap = await adminDb.collection("promoters").doc(lead.promoter_id).get();
-      if (promoterSnap.exists) {
+      const promoterSnap = await adminDb.collection("promoters").doc(lead.promoter_id).get().catch(() => null);
+      if (promoterSnap && promoterSnap.exists) {
         promoter = { id: promoterSnap.id, ...promoterSnap.data() } as Promoter;
       }
     }
@@ -155,12 +167,14 @@ export default async function QuoteResultPage({
     recommendation_rules = serializeDoc(recommendation_rules);
     card_layouts = serializeDoc(card_layouts);
 
-    try {
-      const fs = require('fs');
-      if (leadId === "QZ2c408TMC7xlNRp2ovi") {
-        fs.writeFileSync('debug_quote_data.json', JSON.stringify({ lead, products }, null, 2));
-      }
-    } catch (e) {}
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const fs = require('fs');
+        if (leadId === "QZ2c408TMC7xlNRp2ovi") {
+          fs.writeFileSync('debug_quote_data.json', JSON.stringify({ lead, products }, null, 2));
+        }
+      } catch (e) {}
+    }
 
   } catch (err) {
     console.error("Error fetching quote data:", err);

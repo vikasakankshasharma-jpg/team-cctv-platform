@@ -14,10 +14,10 @@ import { BaseQuoteSummary } from "./BaseQuoteSummary";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import dynamic from "next/dynamic";
 import { Shield, ChevronDown, ChevronRight, CheckCircle2, Sparkles, ArrowLeftRight } from "lucide-react";
-const SiteDetailsModal = dynamic(() => import("./SiteDetailsModal").then(mod => mod.SiteDetailsModal), { ssr: false });
-const ShareDialog = dynamic(() => import("./ShareDialog").then(mod => mod.ShareDialog), { ssr: false });
-const CompetitorQuoteUploader = dynamic(() => import("@/components/shared/CompetitorQuoteUploader").then(mod => mod.CompetitorQuoteUploader), { ssr: false });
-const PriceMatchPopup = dynamic(() => import("./PriceMatchPopup").then(mod => mod.PriceMatchPopup), { ssr: false });
+import { SiteDetailsModal } from "./SiteDetailsModal";
+import { ShareDialog } from "./ShareDialog";
+import { CompetitorQuoteUploader } from "@/components/shared/CompetitorQuoteUploader";
+import { PriceMatchPopup } from "./PriceMatchPopup";
 import { useRealtimeInventory } from "@/hooks/useRealtimeInventory";
 
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, CardLayoutRule } from "@/types";
@@ -69,26 +69,15 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // Force scroll to top on mount (fixes Next.js router restoring scroll from previous page)
+  // Setup manual scroll restoration to prevent Next.js from aggressively restoring scroll position
   useEffect(() => {
     if (typeof window !== "undefined") {
       window.history.scrollRestoration = 'manual';
-      const forceScroll = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       
-      forceScroll();
-      
-      // Force it multiple times during initial render to combat Next.js router & async layout shifts
-      let ticks = 0;
-      const interval = setInterval(() => {
-        forceScroll();
-        ticks++;
-        if (ticks > 15) {
-          clearInterval(interval);
-          window.history.scrollRestoration = 'auto';
-        }
-      }, 50);
-
-      return () => clearInterval(interval);
+      return () => {
+        window.history.scrollRestoration = 'auto';
+      };
     }
   }, []);
 
@@ -97,14 +86,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const currentProducts = liveProducts.length > 0 ? liveProducts : pricingCache.products;
   const currentAddons = liveAddons.length > 0 ? liveAddons : pricingCache.addons;
 
-  // Initial Setup
+  // Initial Setup & State Initialization (Unified to prevent render cascades)
   useEffect(() => {
-    setPricingCache({
-      ...pricingCache,
-      products: currentProducts,
-      addons: currentAddons
-    });
-    
     const initialCamCount = parseInt(lead.wizard_answers?.["q_cam_count"] as string) || 4;
     const initialDays = parseInt(lead.wizard_answers?.["q_storage"] as string) || 15;
     
@@ -147,14 +130,15 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
     const mixedReqs = (lead.wizard_answers?.["mixed_camera_requirements"] as any[]) || undefined;
 
-    // Normalize "Analog" to "HD" — the pricing engine uses "HD" as the canonical value
+    // Normalize "Analog" to "HD"
     const rawTech = (lead.wizard_answers?.["q_tech"] as string) || lead.technology_choice || "IP";
     const normalizedTech: "HD" | "IP" | "Wireless" = 
       (rawTech === "Analog" || rawTech === "analog" || rawTech === "HD" || rawTech === "hd") ? "HD"
       : (rawTech === "WiFi" || rawTech === "wifi" || rawTech === "Wireless" || rawTech === "wireless") ? "Wireless"
       : "IP";
 
-    updateSelection({
+    const initialSelection = {
+      ...selection,
       technology: normalizedTech,
       camera_count: initialCamCount,
       mixed_camera_requirements: mixedReqs,
@@ -167,7 +151,35 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       brand_preference: mappedBrand,
       installation_timeline: (lead.wizard_answers?.["q_timeline"] as string) || "research",
       property_type: lead.property_type,
+      lead_pincode: lead.address?.pincode || (lead.wizard_answers?.lead_pincode as string) || "",
+      wants_remote_viewing: lead.wizard_answers?.["q_remote_viewing"] === "yes",
+      broadband_status: (lead.wizard_answers?.["q_broadband"] as "yes" | "no" | "sim_router") || "yes",
+    };
+
+    // Calculate Recommendation Synchronously
+    const recommendation = getRecommendedOption(pricingCache.recommendation_rules, initialSelection as any, lead.property_type);
+    if (recommendation) {
+      initialSelection.selected_camera_option = recommendation.camera_option;
+    }
+
+    // Determine Dynamic Cards
+    const dynamicCards: Array<{technology: "HD" | "IP"; option: number}> = [
+      { technology: normalizedTech as "HD" | "IP", option: 1 },
+      { technology: normalizedTech as "HD" | "IP", option: 2 },
+      { technology: normalizedTech as "HD" | "IP", option: 3 }
+    ];
+    
+    const recCard = dynamicCards.find(c => c.technology === normalizedTech && c.option === recommendation?.camera_option) || dynamicCards[1];
+
+    // Batch update Zustand store in one pass
+    setPricingCache({
+      ...pricingCache,
+      products: currentProducts,
+      addons: currentAddons
     });
+    updateSelection(initialSelection);
+    setCompareOptions(dynamicCards);
+    setActiveCheckoutOption({ technology: recCard.technology, option: recCard.option });
 
     trackEvent("view_quote", { lead_id: lead.id, property_type: lead.property_type, technology: lead.technology_choice });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -181,55 +193,30 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     return Array.isArray(reqValues) ? reqValues : (reqValues ? [reqValues] : []);
   }, [lead.wizard_answers]);
 
+  const activeRecommendation = useMemo(() => {
+    return getRecommendedOption(pricingCache.recommendation_rules, selection as any, lead.property_type);
+  }, [pricingCache.recommendation_rules, selection, lead.property_type]);
+
   const evaluatedRules = useMemo(() => evaluateAddonRules(
     pricingCache.addon_rules, selection, cablingDone, propertyType, requirements
   ), [pricingCache.addon_rules, selection, cablingDone, propertyType, requirements]);
 
-  const activeRecommendation = useMemo(() => {
-    return getRecommendedOption(pricingCache.recommendation_rules, selection, propertyType);
-  }, [selection, pricingCache.recommendation_rules, propertyType]);
-
-  useEffect(() => {
-    if (activeRecommendation && activeRecommendation.camera_option !== selection.selected_camera_option && !active_checkout_option) {
-      updateSelection({ selected_camera_option: activeRecommendation.camera_option });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeRecommendation?.camera_option]);
-
-  useEffect(() => {
-    if (currentProducts.length === 0) return;
-    const currentTech = (!selection.technology) ? "IP" : selection.technology;
-    const dynamicCards: Array<{technology: "HD" | "IP"; option: number}> = [
-      { technology: currentTech as "HD" | "IP", option: 1 },
-      { technology: currentTech as "HD" | "IP", option: 2 },
-      { technology: currentTech as "HD" | "IP", option: 3 }
-    ];
-    setCompareOptions(dynamicCards);
-
-    const recommendedCard = dynamicCards.find(c => c.technology === currentTech && c.option === activeRecommendation?.camera_option) || dynamicCards[1];
-    if (!active_checkout_option || active_checkout_option.technology !== currentTech) {
-      setActiveCheckoutOption({ technology: recommendedCard.technology, option: recommendedCard.option });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentProducts.length, selection.technology, selection.brand_preference, selection.requested_features, selection.max_budget, selection.resolution_preference]);
-
   useEffect(() => {
     if (!pricingCache.settings) return;
-    const timeout = setTimeout(() => {
-      const calcTier = (type: "budget" | "recommended" | "premium"): PricingResult => {
-        const variation = { ...selection, plan_type: type };
-        if (type === "budget") variation.picture_quality = "good";
-        if (type === "premium") variation.picture_quality = "crystal_clear";
-        
-        return calculatePricing({
-          selection: variation, products: currentProducts, addons: currentAddons,
-          settings: pricingCache.settings, cablingDone, referralDiscountPercent: promoterDiscount?.percent || 0,
-          referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer
-        });
-      };
-      setPricingResults({ budget: calcTier("budget"), recommended: calcTier("recommended"), premium: calcTier("premium") });
-    }, 300);
-    return () => clearTimeout(timeout);
+    
+    const calcTier = (type: "budget" | "recommended" | "premium"): PricingResult => {
+      const variation = { ...selection, plan_type: type };
+      if (type === "budget") variation.picture_quality = "good";
+      if (type === "premium") variation.picture_quality = "crystal_clear";
+      
+      return calculatePricing({
+        selection: variation, products: currentProducts, addons: currentAddons,
+        settings: pricingCache.settings, cablingDone, referralDiscountPercent: promoterDiscount?.percent || 0,
+        referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer
+      });
+    };
+    
+    setPricingResults({ budget: calcTier("budget"), recommended: calcTier("recommended"), premium: calcTier("premium") });
   }, [selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, propertyType, requirements, setPricingResults, promoterDiscount, lead.active_offer, evaluatedRules]);
 
   const activePricing = useMemo(() => {
@@ -520,12 +507,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                 <BaseQuoteSummary activePricing={activePricing} />
               </div>
               <div className="w-[90vw] md:w-full lg:w-[62%] shrink-0 snap-center order-2">
-                <FullCustomizerPanel />
+                <FullCustomizerPanel activePricing={activePricing} />
               </div>
             </div>
           </>
         ) : (
-          <FullCustomizerPanel />
+          <FullCustomizerPanel activePricing={activePricing} />
         )}
       </div>
 

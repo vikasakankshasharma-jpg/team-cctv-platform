@@ -169,6 +169,38 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
     ],
   },
 
+  step_remote_viewing: {
+    title: "Remote Viewing",
+    description: "Do you need to view your cameras remotely on your phone or laptop?",
+    position: 5,
+    is_active: true,
+    questions: [
+      {
+        id: "q_remote_viewing",
+        question_text: "Remote View Capability:",
+        input_type: "single",
+        is_required: true,
+        position: 0,
+        options: [
+          { id: "opt_remote_yes", label: "Yes (Mobile & PC Access)", value: "yes", position: 0 },
+          { id: "opt_remote_no",  label: "No (Local Viewing Only)",  value: "no",  position: 1 },
+        ],
+      },
+      {
+        id: "q_broadband",
+        question_text: "Internet Connection Setup:",
+        input_type: "single",
+        is_required: false,
+        position: 1,
+        options: [
+          { id: "opt_net_yes", label: "Yes, I have Broadband/WiFi", value: "yes", position: 0 },
+          { id: "opt_net_no",  label: "No, I'll arrange it myself", value: "no", position: 1 },
+          { id: "opt_net_sim", label: "No, include a 4G SIM Router", value: "sim_router", position: 2 },
+        ],
+      },
+    ],
+  },
+
   step_general_addons: {
     title: "Accessories",
     description: "Would you like to include any extra accessories?",

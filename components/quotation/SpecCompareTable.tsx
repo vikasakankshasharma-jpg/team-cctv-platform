@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, X } from "luc
 import type { Product, AppSettings, ConfiguratorSelection } from "@/types";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { calculateSystemScore, inferResolutionFromName, inferNightVisionFromName } from "@/lib/system-score";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CompareOption {
   technology: string;
@@ -163,6 +164,7 @@ export function SpecCompareTable({
   settings,
   cablingDone,
 }: SpecCompareTableProps) {
+  const { t } = useTranslation();
   const [showDiffOnly, setShowDiffOnly] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
@@ -207,10 +209,10 @@ export function SpecCompareTable({
   }, [compareOptions, selection, products, settings, cablingDone]);
 
   const columnHeaders = tableColumns.map((col, idx) => {
-    if (idx === 0) return "Standard";
-    if (idx === 1) return "Professional";
-    if (idx === 2) return "Elite";
-    return "Custom";
+    if (idx === 0) return t('standard', 'Standard');
+    if (idx === 1) return t('professional', 'Professional');
+    if (idx === 2) return t('elite', 'Elite');
+    return t('custom', 'Custom');
   });
 
   const gridColsClass = tableColumns.length === 1 ? "grid-cols-2" : tableColumns.length === 2 ? "grid-cols-3" : tableColumns.length === 3 ? "grid-cols-4" : "grid-cols-5";
@@ -263,7 +265,7 @@ export function SpecCompareTable({
             className="w-4 h-4 rounded border-[#d2d2d7] text-[#0071e3] focus:ring-[#0071e3]"
           />
           <span className="text-sm font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">
-            Show Differences Only
+            {t('show_diff_only', 'Show Differences Only')}
           </span>
         </label>
       </div>
@@ -273,7 +275,7 @@ export function SpecCompareTable({
         {/* Table Header */}
         <div className={`grid ${gridColsClass} border-b border-[#d2d2d7] dark:border-[#424245] bg-[#fbfbfd] dark:bg-[#1d1d1f]`}>
           <div className="p-5 flex items-center font-medium text-[#86868b] text-sm uppercase tracking-wider">
-            Features
+            {t('features', 'Features')}
           </div>
           {tableColumns.map((col, idx) => (
             <div key={idx} className="p-5 border-l border-[#d2d2d7] dark:border-[#424245] flex flex-col items-center justify-between text-center">
@@ -283,7 +285,7 @@ export function SpecCompareTable({
               {col.scoreResult && (
                 <div className="w-full mt-3">
                   <div className="flex justify-between text-[11px] font-semibold mb-1 uppercase tracking-wider">
-                    <span className="text-[#86868b]">Score</span>
+                    <span className="text-[#86868b]">{t('score', 'Score')}</span>
                     <span className="text-[#0071e3]">{col.scoreResult.score}/100</span>
                   </div>
                   <div className="h-1.5 w-full bg-[#f5f5f7] dark:bg-[#2d2d2f] rounded-full overflow-hidden">

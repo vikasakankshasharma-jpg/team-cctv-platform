@@ -188,8 +188,31 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
       setConfirmationResult(result);
       setOtpSent(true);
     } catch (err: any) {
-      console.error(err);
-      setVerificationError(err.message || "Failed to send OTP.");
+      console.error("Phone OTP error:", err?.code, err?.message, err);
+      // Map common Firebase phone auth errors to friendly messages
+      const code: string = err?.code || "";
+      let friendlyMsg = err.message || "Failed to send OTP.";
+      if (code === "auth/internal-error") {
+        friendlyMsg = "OTP service is currently unavailable. Please try again later or contact support.";
+      } else if (code === "auth/invalid-phone-number") {
+        friendlyMsg = "Invalid phone number format. Please enter a valid 10-digit Indian mobile number.";
+      } else if (code === "auth/too-many-requests") {
+        friendlyMsg = "Too many attempts. Please wait a few minutes and try again.";
+      } else if (code === "auth/captcha-check-failed") {
+        friendlyMsg = "Security check failed. Please refresh the page and try again.";
+      } else if (code === "auth/quota-exceeded") {
+        friendlyMsg = "SMS quota exceeded. Please try again later.";
+      } else if (code === "auth/missing-phone-number") {
+        friendlyMsg = "Please enter a valid mobile number.";
+      }
+      // Reset recaptcha on failure so next attempt gets a fresh one
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch (_) { /* ignore */ }
+        window.recaptchaVerifier = undefined;
+      }
+      const container = document.getElementById("chat-recaptcha");
+      if (container) container.innerHTML = "";
+      setVerificationError(friendlyMsg);
     } finally {
       setIsVerifying(false);
     }
@@ -205,11 +228,14 @@ export function ChatInterface({ pageContext, initialMessage }: { pageContext?: s
     try {
       const result = await confirmationResult.confirm(fullOtp);
       const idToken = await result.user.getIdToken();
-      await fetch("/api/auth/session", {
+      const response = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken })
       });
+      if (!response.ok) {
+        throw new Error("Session creation failed");
+      }
       setShowOtpGate(false);
       setOtpSent(false);
       // Re-trigger the user's last message now that they are verified

@@ -11,7 +11,6 @@ import { Suspense } from "react";
 import { headers } from "next/headers";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
-import { FloatingAIChat } from "@/components/ai/FloatingAIChat";
 import { LanguageSync } from "@/components/shared/LanguageSync";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
@@ -102,7 +101,6 @@ export default async function RootLayout({
           <JsonLd />
           <Toaster position="top-center" richColors closeButton />
           {children}
-          <FloatingAIChat />
         </ThemeProvider>
       </body>
     </html>

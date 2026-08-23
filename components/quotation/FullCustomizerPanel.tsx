@@ -8,46 +8,110 @@ import {
   Search, X, Sparkles, Check, CheckCircle2, ChevronDown, ChevronUp, Unlock, Lock, Wrench, ArrowRight, Cable
 } from "lucide-react";
 import { toast } from "sonner";
-import type { Product, Addon } from "@/types";
+import type { Product, Addon, PricingResult } from "@/types";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import { useTranslation } from "@/hooks/useTranslation";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Tab = "cameras" | "recorders" | "storage" | "power" | "addons";
 
-export function FullCustomizerPanel() {
+const TAB_FLOW: Tab[] = ["cameras", "recorders", "storage", "power"];
+const TAB_LABELS: Record<Tab, string> = { cameras: "CCTV Camera", recorders: "Recorder", storage: "Storage", power: "Power", addons: "Accessories" };
+
+export function FullCustomizerPanel({ activePricing }: { activePricing?: PricingResult }) {
   const { t } = useTranslation();
   const { selection, updateSelection, toggleAddon, products, addons, resetFilters, setActiveCheckoutOption, compare_options, setCompareOptions } = useConfiguratorStore();
   const [activeTab, setActiveTab] = useState<Tab>("cameras");
   const [search, setSearch] = useState("");
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    setActiveFilters({});
-  }, [activeTab, selection.technology]);
-
   const isMixedCameraMode = (selection.mixed_camera_requirements || []).length > 0;
   const defaultMixedType = isMixedCameraMode ? selection.mixed_camera_requirements![0].type : undefined;
   const [activeMixedType, setActiveMixedType] = useState<string | undefined>(defaultMixedType);
 
-  useEffect(() => {
-    if (isMixedCameraMode) {
-      if (!activeMixedType || !selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)) {
-        setActiveMixedType(selection.mixed_camera_requirements![0].type);
+  const getDefaultFilters = (tab: Tab, currentSelection: any, activeMixedType?: string, currentPricing?: PricingResult) => {
+    const filters: Record<string, string> = {};
+    if (tab === "recorders") {
+      let defaultCh = "4 Ch";
+      if (currentSelection.camera_count > 4) defaultCh = "8 Ch";
+      if (currentSelection.camera_count > 8) defaultCh = "16 Ch";
+      if (currentSelection.camera_count > 16) defaultCh = "32 Ch";
+      filters.channels = defaultCh;
+      
+      if (currentPricing) {
+        const recItem = currentPricing.items.find(i => i.display_name.toLowerCase().includes("channel") && (i.display_name.toLowerCase().includes("nvr") || i.display_name.toLowerCase().includes("dvr")));
+        if (recItem) {
+          const chMatch = recItem.display_name.match(/(\d+)\s*-?\s*channel/i);
+          if (chMatch) filters.channels = `${chMatch[1]} Ch`;
+        }
       }
-    } else {
-      setActiveMixedType(undefined);
+    } else if (tab === "cameras") {
+      const isMixed = (currentSelection.mixed_camera_requirements || []).length > 0;
+      if (isMixed && activeMixedType) {
+        const tLower = activeMixedType.toLowerCase();
+        if (tLower.includes("indoor") || tLower.includes("dome")) filters.type = "Dome";
+        else if (tLower.includes("outdoor") || tLower.includes("bullet")) filters.type = "Bullet";
+      } else if (currentSelection.property_type === "office") {
+        filters.type = "Dome"; // Default office to dome
+      }
+      
+      if (currentPricing) {
+        const camItem = currentPricing.items.find(i => i.product_id?.startsWith("cam") || i.display_name.toLowerCase().includes("camera"));
+        if (camItem && camItem.brand) {
+          filters.brand = camItem.brand;
+        }
+      }
+    } else if (tab === "storage") {
+      if (currentSelection.technology === "Wireless") {
+        filters.type = "Micro SD";
+      } else {
+        filters.type = "Hard Disk";
+      }
+      
+      if (currentPricing) {
+        const storageItem = currentPricing.items.find(i => 
+          i.display_name.match(/(\d+(?:\.\d+)?\s*(?:TB|GB))/i) && 
+          !i.display_name.toLowerCase().includes("nvr") && 
+          !i.display_name.toLowerCase().includes("dvr")
+        );
+        if (storageItem) {
+          const match = storageItem.display_name.match(/(\d+(?:\.\d+)?\s*(?:TB|GB))/i);
+          if (match) {
+            filters.capacity = match[1].toUpperCase().replace(/\s/g, '');
+          }
+        }
+      }
     }
+    return filters;
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setActiveFilters(getDefaultFilters(activeTab, selection, activeMixedType, activePricing));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [activeTab, selection.technology, activeMixedType, selection.camera_count, activePricing]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isMixedCameraMode) {
+        if (!activeMixedType || !selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)) {
+          setActiveMixedType(selection.mixed_camera_requirements![0].type);
+        }
+      } else {
+        setActiveMixedType(undefined);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [isMixedCameraMode, selection.mixed_camera_requirements, activeMixedType]);
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     setSearch("");
-    setActiveFilters({});
+    setActiveFilters(getDefaultFilters(tab, selection, activeMixedType, activePricing));
   };
 
   // Step completion tracking
-  const TAB_FLOW: Tab[] = ["cameras", "recorders", "storage", "power"];
-  const TAB_LABELS: Record<Tab, string> = { cameras: "CCTV Camera", recorders: "Recorder", storage: "Storage", power: "Power", addons: "Accessories" };
 
   const stepCompletion = useMemo(() => ({
     cameras: isMixedCameraMode 
@@ -88,8 +152,17 @@ export function FullCustomizerPanel() {
       const proxyTech = isMixedCameraMode && activeMixedType 
         ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.technology || selection.technology
         : selection.technology;
+        
+      const requiredQty = isMixedCameraMode && activeMixedType 
+        ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.count || 1 
+        : selection.camera_count;
 
-      products.filter(p => p.category === "cctv_camera" && p.is_active && (!proxyTech || p.technologies?.includes(proxyTech as any) || p.technologies?.includes("Common"))).forEach(p => {
+      products.filter(p => 
+        p.category === "cctv_camera" && 
+        p.is_active && 
+        (p.stock_quantity === undefined || p.stock_quantity >= requiredQty) &&
+        (!proxyTech || p.technologies?.includes(proxyTech as any) || p.technologies?.includes("Common"))
+      ).forEach(p => {
         if (p.brand) brands.add(p.brand);
         if (p.resolution_mp) mps.add(`${p.resolution_mp}MP`);
         if (p.form_factor) types.add(p.form_factor.charAt(0).toUpperCase() + p.form_factor.slice(1));
@@ -110,13 +183,18 @@ export function FullCustomizerPanel() {
       const brands = new Set<string>();
       const channels = new Set<string>();
       const types = new Set<string>();
-      products.filter(p => p.category === "recorder" && p.is_active && (!selection.technology || p.technologies?.includes(selection.technology as any) || p.technologies?.includes("Common"))).forEach(p => {
+      products.filter(p => 
+        p.category === "recorder" && 
+        p.is_active && 
+        (p.stock_quantity === undefined || p.stock_quantity >= 1) &&
+        (!selection.technology || p.technologies?.includes(selection.technology as any) || p.technologies?.includes("Common")) &&
+        (p.max_cameras || p.channels || 0) >= selection.camera_count
+      ).forEach(p => {
         if (p.brand) brands.add(p.brand);
         if (p.channels) channels.add(`${p.channels} Ch`);
         const name = (p.technical_name || p.display_name || "").toLowerCase();
         if (name.includes("nvr")) types.add("NVR");
         if (name.includes("dvr")) types.add("DVR");
-        console.log(`Recorder Filter Debug: tech=${p.technologies?.join(', ')}, name=${name}, nvr=${name.includes("nvr")}, dvr=${name.includes("dvr")}, selectionTech=${selection.technology}`);
       });
       return [
         { key: "brand", label: "Brand", options: Array.from(brands).sort() },
@@ -126,7 +204,11 @@ export function FullCustomizerPanel() {
     } else if (activeTab === "storage") {
       const capacities = new Set<string>();
       const types = new Set<string>();
-      [...products, ...addons].filter(a => a.category === "storage" && a.is_active).forEach(a => {
+      [...products, ...addons].filter(a => 
+        a.category === "storage" && 
+        a.is_active &&
+        (a.stock_quantity === undefined || a.stock_quantity >= 1)
+      ).forEach(a => {
         const match = a.display_name.match(/(\d+TB|\d+GB)/i);
         if (match) capacities.add(match[1].toUpperCase());
         
@@ -144,7 +226,7 @@ export function FullCustomizerPanel() {
       ].filter(f => f.options.length > 1);
     }
     return [];
-  }, [activeTab, products, addons, selection.technology, isMixedCameraMode, activeMixedType, selection.mixed_camera_requirements]);
+  }, [activeTab, products, addons, selection.technology, isMixedCameraMode, activeMixedType, selection.mixed_camera_requirements, selection.camera_count]);
 
   const cameraStats = useMemo(() => {
     const stats: Record<string, number> = {};
@@ -157,7 +239,11 @@ export function FullCustomizerPanel() {
   }, [products]);
 
   const filteredCameras = useMemo(() => {
-    let list = products.filter(p => p.category === "cctv_camera" && p.is_active);
+    const requiredQty = isMixedCameraMode && activeMixedType
+      ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.count || 1
+      : selection.camera_count;
+
+    let list = products.filter(p => p.category === "cctv_camera" && p.is_active && (p.unit_price || 0) > 0 && (p.stock_quantity === undefined || p.stock_quantity >= requiredQty));
     
     // Evaluate proxy logic if we are configuring a mixed bucket
     const proxyTech = isMixedCameraMode && activeMixedType 
@@ -196,17 +282,37 @@ export function FullCustomizerPanel() {
       });
     }
 
-    if (selection.requested_features && selection.requested_features.length > 0) {
+    const effectiveFeatures = [...(selection.requested_features || [])];
+    if (isMixedCameraMode && activeMixedType) {
+      const typeLower = activeMixedType.toLowerCase();
+      if (typeLower.includes("indoor") || typeLower.includes("dome")) effectiveFeatures.push("dome");
+      if (typeLower.includes("outdoor") || typeLower.includes("bullet")) effectiveFeatures.push("bullet");
+      if (typeLower.includes("ptz")) effectiveFeatures.push("ptz");
+      if (typeLower.includes("solar")) effectiveFeatures.push("solar");
+      if (typeLower.includes("4g")) effectiveFeatures.push("4g");
+      if (typeLower.includes("audio") || typeLower.includes("speaker") || typeLower.includes("mic")) effectiveFeatures.push("audio");
+      if (typeLower.includes("color")) effectiveFeatures.push("color");
+      
+      const bucket = selection.mixed_camera_requirements!.find(r => r.type === activeMixedType);
+      if (bucket?.features) {
+        effectiveFeatures.push(...bucket.features);
+      }
+    }
+
+    if (effectiveFeatures.length > 0) {
       list = list.filter(cam => {
         const camFeats = (cam.features || []).map(f => f.toLowerCase());
         const name = (cam.display_name + " " + cam.technical_name).toLowerCase();
+        const formFactor = (cam.form_factor || "").toLowerCase();
         const check = (tag: string) => {
           if (tag === "mic") return camFeats.some(f => f.includes("mic") || f.includes("audio")) || name.includes("mic") || name.includes("audio");
-          if (tag === "color") return camFeats.some(f => f.includes("color")) || name.includes("color");
+          if (tag === "color") return camFeats.some(f => f.includes("color") || f.includes("night")) || name.includes("color");
           if (tag === "ptz") return camFeats.some(f => f.includes("ptz")) || name.includes("ptz");
+          if (tag === "dome") return formFactor === "dome" || name.includes("dome");
+          if (tag === "bullet") return formFactor === "bullet" || name.includes("bullet");
           return camFeats.some(f => f.includes(tag)) || name.includes(tag);
         };
-        return selection.requested_features!.every(reqFeat => check(reqFeat.toLowerCase().trim()));
+        return effectiveFeatures.every(reqFeat => check(reqFeat.toLowerCase().trim()));
       });
     }
     if (search.trim()) {
@@ -217,7 +323,7 @@ export function FullCustomizerPanel() {
   }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search, activeFilters, isMixedCameraMode, activeMixedType, selection.mixed_camera_requirements]);
 
   const filteredRecorders = useMemo(() => {
-    let list = products.filter(p => p.category === "recorder" && p.is_active);
+    let list = products.filter(p => p.category === "recorder" && p.is_active && (p.unit_price || 0) > 0);
     if (selection.technology && selection.technology !== "both" as any) list = list.filter(p => p.technologies?.includes(selection.technology as any));
     list = list.filter(p => (p.max_cameras || p.channels || 0) >= selection.camera_count);
     
@@ -236,7 +342,7 @@ export function FullCustomizerPanel() {
   }, [products, selection.technology, selection.camera_count, search, activeFilters]);
 
   const filteredStorage = useMemo(() => {
-    let list = [...products, ...addons].filter(a => a.category === "storage" && a.is_active);
+    let list = [...products, ...addons].filter(a => a.category === "storage" && a.is_active && (a.unit_price || (a as any).price || 0) > 0);
     
     // Auto-filter for Wireless technology if not explicitly overridden by user filter
     if (!activeFilters.type && selection.technology === "Wireless") {
@@ -266,21 +372,21 @@ export function FullCustomizerPanel() {
     
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()) || (a.technical_name || "").toLowerCase().includes(search.toLowerCase()));
     return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
-  }, [addons, search, activeFilters, selection.technology]);
+  }, [addons, search, activeFilters, selection.technology, products]);
 
   const filteredPower = useMemo(() => {
     const keyword = selection.technology === "IP" ? "poe" : "psu";
-    let list = [...products, ...addons].filter(a => (a.category === "power_device" || a.category === "power") && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword) && a.is_active);
+    let list = [...products, ...addons].filter(a => (a.category === "power_device" || a.category === "power") && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword) && a.is_active && (a.unit_price || (a as any).price || 0) > 0);
     list = list.filter(a => (a.max_cameras || 0) >= selection.camera_count);
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()) || (a.technical_name || "").toLowerCase().includes(search.toLowerCase()));
     return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
-  }, [addons, selection.technology, selection.camera_count, search]);
+  }, [addons, selection.technology, selection.camera_count, search, products]);
 
   const filteredAddons = useMemo(() => {
-    let list = [...products, ...addons].filter(a => !["cctv_camera", "recorder", "storage", "power", "power_device"].includes(a.category || "") && a.is_active);
+    let list = [...products, ...addons].filter(a => !["cctv_camera", "recorder", "storage", "power", "power_device"].includes(a.category || "") && a.is_active && (a.unit_price || (a as any).price || 0) > 0);
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()));
     return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
-  }, [addons, search]);
+  }, [addons, search, products]);
 
   // Tab bar scroll tracking
   const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -319,11 +425,13 @@ export function FullCustomizerPanel() {
   const renderTabs = () => (
     <div className="relative">
       <div ref={tabsContainerRef} className="flex overflow-x-auto shrink-0 scrollbar-none px-6 gap-6 border-b border-[#d2d2d7] dark:border-[#424245]">
-        <TabButton active={activeTab === "cameras"} onClick={() => handleTabChange("cameras")} label="Cameras" completed={stepCompletion.cameras} />
-        <TabButton active={activeTab === "recorders"} onClick={() => handleTabChange("recorders")} label="Recorders" completed={stepCompletion.recorders} />
-        <TabButton active={activeTab === "storage"} onClick={() => handleTabChange("storage")} label="Storage" completed={stepCompletion.storage} />
-        <TabButton active={activeTab === "power"} onClick={() => handleTabChange("power")} label="Power" completed={stepCompletion.power} />
-        <TabButton active={activeTab === "addons"} onClick={() => handleTabChange("addons")} label="Accessories" completed={stepCompletion.addons} />
+        <TabButton active={activeTab === "cameras"} onClick={() => handleTabChange("cameras")} label={<TranslatedText tKey="cameras" defaultText="Cameras" />} completed={stepCompletion.cameras} />
+        {selection.technology !== "Wireless" && (
+          <TabButton active={activeTab === "recorders"} onClick={() => handleTabChange("recorders")} label={<TranslatedText tKey="recorders" defaultText="Recorders" />} completed={stepCompletion.recorders} />
+        )}
+        <TabButton active={activeTab === "storage"} onClick={() => handleTabChange("storage")} label={<TranslatedText tKey="storage" defaultText="Storage" />} completed={stepCompletion.storage} />
+        <TabButton active={activeTab === "power"} onClick={() => handleTabChange("power")} label={<TranslatedText tKey="power" defaultText="Power" />} completed={stepCompletion.power} />
+        <TabButton active={activeTab === "addons"} onClick={() => handleTabChange("addons")} label={<TranslatedText tKey="accessories" defaultText="Accessories" />} completed={stepCompletion.addons} />
       </div>
       {/* Right fade gradient hint */}
       {showTabFade && (
@@ -344,7 +452,14 @@ export function FullCustomizerPanel() {
     const unitPrice = item.unit_price || ("price" in item ? item.price : 0) || 0;
     
     return (
-      <div key={item.id} className={`p-5 rounded-[24px] border transition-all duration-300 flex flex-col h-full ${
+      <motion.div 
+        layout
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.2 }}
+        key={item.id} 
+        className={`p-5 rounded-[24px] border transition-all duration-300 flex flex-col h-full ${
         isSelected
           ? "bg-[#0071e3]/5 border-[#0071e3] shadow-[0_4px_12px_rgba(0,113,227,0.1)] ring-2 ring-[#0071e3]/20"
           : isOutOfStock
@@ -358,7 +473,7 @@ export function FullCustomizerPanel() {
             </div>
             {isCustomOverride && isSelected && (
               <span className="text-[10px] font-medium text-[#1d1d1f] bg-[#f5f5f7] border border-[#d2d2d7] px-2 py-0.5 rounded-full flex items-center gap-1">
-                <Lock className="w-2.5 h-2.5" /> Pinned
+                <Lock className="w-2.5 h-2.5" /> <TranslatedText tKey="pinned" defaultText="Pinned" />
               </span>
             )}
           </div>
@@ -367,7 +482,7 @@ export function FullCustomizerPanel() {
               {item.display_name}
             </p>
             <div className="flex items-center justify-between mt-3">
-              <span className="text-[17px] font-semibold text-[#1d1d1f] dark:text-white">₹{unitPrice.toLocaleString("en-IN")}</span>
+              <span className="text-[17px] font-semibold text-[#1d1d1f] dark:text-white">₹{unitPrice.toLocaleString("en-IN")}{requiredQuantity > 1 ? ` × ${requiredQuantity}` : ""}</span>
               {"brand" in item && item.brand && (
                 <span className="text-[11px] font-medium text-[#86868b]">
                   {item.brand}
@@ -379,7 +494,13 @@ export function FullCustomizerPanel() {
         <div className="mt-5 pt-4 border-t border-[#f5f5f7] dark:border-[#2d2d2f] flex flex-row items-center justify-between shrink-0">
           {isOutOfStock ? (
              <span className="text-[11px] font-semibold text-red-500 tracking-wider">
-               {item.stock_quantity! <= 0 ? "Out of Stock" : `Only ${item.stock_quantity} left`}
+               {item.stock_quantity !== undefined && item.stock_quantity <= 5 ? (
+                 <span className="text-xs text-orange-600 font-medium">
+                   <TranslatedText tKey="only_left" defaultText={`Only ${item.stock_quantity} left`} params={{ count: String(item.stock_quantity) }} />
+                 </span>
+               ) : (
+                 <TranslatedText tKey="out_of_stock" defaultText="Out of Stock" />
+               )}
              </span>
           ) : (
             <button 
@@ -388,16 +509,16 @@ export function FullCustomizerPanel() {
                 isSelected ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-[#e8e8ed] dark:hover:bg-[#3d3d3f]"
               }`}
             >
-              {isSelected ? "Selected" : "Select"}
+              {isSelected ? <TranslatedText tKey="selected" defaultText="Selected" /> : <TranslatedText tKey="select" defaultText="Select" />}
             </button>
           )}
           {isCustomOverride && isSelected && onRemoveOverride && (
             <button onClick={onRemoveOverride} className="text-[11px] font-medium text-red-500 hover:underline">
-              Remove
+              <TranslatedText tKey="remove" defaultText="Remove" />
             </button>
           )}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -405,7 +526,14 @@ export function FullCustomizerPanel() {
     const isOutOfStock = addon.stock_quantity !== undefined && addon.stock_quantity <= 0;
     
     return (
-      <div key={addon.id} className={`p-5 rounded-[24px] border transition-all duration-300 flex flex-col h-full ${
+      <motion.div 
+        layout
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.2 }}
+        key={addon.id} 
+        className={`p-5 rounded-[24px] border transition-all duration-300 flex flex-col h-full ${
         isSelected
           ? "bg-[#0071e3]/5 border-[#0071e3] shadow-[0_4px_12px_rgba(0,113,227,0.1)] ring-2 ring-[#0071e3]/20"
           : isOutOfStock
@@ -421,7 +549,7 @@ export function FullCustomizerPanel() {
         <div className="mt-auto pt-4 border-t border-[#f5f5f7] dark:border-[#2d2d2f] flex flex-row items-center justify-end">
           {isOutOfStock ? (
              <span className="text-[11px] font-semibold text-red-500 tracking-wider">
-               Out of Stock
+               <TranslatedText tKey="out_of_stock" defaultText="Out of Stock" />
              </span>
           ) : (
             <button 
@@ -430,11 +558,11 @@ export function FullCustomizerPanel() {
                 isSelected ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-[#e8e8ed] dark:hover:bg-[#3d3d3f]"
               }`}
             >
-              {isSelected ? "Added" : "Add"}
+              {isSelected ? <TranslatedText tKey="added" defaultText="Added" /> : <TranslatedText tKey="add" defaultText="Add" />}
             </button>
           )}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
@@ -542,32 +670,39 @@ export function FullCustomizerPanel() {
 
       {renderTabs()}
 
-      {/* Sub-Navigation Toggle for Mixed Requirements */}
-      {activeTab === "cameras" && isMixedCameraMode && (
+      {/* Sub-Navigation Toggle for Camera Requirements */}
+      {activeTab === "cameras" && (
         <div className="px-6 py-4 border-b border-[#d2d2d7] dark:border-[#424245] bg-[#f5f5f7] dark:bg-[#2d2d2f] shrink-0">
           <div className="flex flex-col gap-3">
             <span className="text-[10px] font-bold text-[#86868b] uppercase tracking-wider flex items-center gap-1.5">
-              <Camera className="w-3.5 h-3.5" /> Mixed Configuration Active
+              <Camera className="w-3.5 h-3.5" /> {isMixedCameraMode ? "Mixed Configuration Active" : "Camera Configuration Active"}
             </span>
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-              {selection.mixed_camera_requirements!.map(req => {
-                const isActive = activeMixedType === req.type;
-                const isPinned = !!selection.selected_mixed_camera_ids?.[req.type];
-                return (
-                  <button
-                    key={req.type}
-                    onClick={() => setActiveMixedType(req.type)}
-                    className={`px-4 py-2 rounded-full text-[13px] font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
-                      isActive 
-                        ? "bg-[#1d1d1f] dark:bg-[#f5f5f7] text-white dark:text-[#1d1d1f] shadow-sm" 
-                        : "bg-white dark:bg-[#1d1d1f] text-[#1d1d1f] dark:text-[#f5f5f7] border border-[#d2d2d7] dark:border-[#424245] hover:border-[#86868b]"
-                    }`}
-                  >
-                    {req.type} Camera ({req.count})
-                    {isPinned && <CheckCircle2 className={`w-3.5 h-3.5 ${isActive ? "text-[#0071e3]" : "text-emerald-500"}`} />}
-                  </button>
-                )
-              })}
+              {isMixedCameraMode ? (
+                selection.mixed_camera_requirements!.map(req => {
+                  const isActive = activeMixedType === req.type;
+                  const isPinned = !!selection.selected_mixed_camera_ids?.[req.type];
+                  return (
+                    <button
+                      key={req.type}
+                      onClick={() => setActiveMixedType(req.type)}
+                      className={`px-4 py-2 rounded-full text-[13px] font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                        isActive 
+                          ? "bg-[#1d1d1f] dark:bg-[#f5f5f7] text-white dark:text-[#1d1d1f] shadow-sm" 
+                          : "bg-white dark:bg-[#1d1d1f] text-[#1d1d1f] dark:text-[#f5f5f7] border border-[#d2d2d7] dark:border-[#424245] hover:border-[#86868b]"
+                      }`}
+                    >
+                      {req.type} Camera ({req.count})
+                      {isPinned && <CheckCircle2 className={`w-3.5 h-3.5 ${isActive ? "text-[#0071e3]" : "text-emerald-500"}`} />}
+                    </button>
+                  )
+                })
+              ) : (
+                <div className="px-4 py-2 rounded-full text-[13px] font-medium bg-[#1d1d1f] dark:bg-[#f5f5f7] text-white dark:text-[#1d1d1f] shadow-sm flex items-center gap-2 whitespace-nowrap">
+                  Standard Camera ({selection.camera_count})
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#0071e3]" />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -617,6 +752,7 @@ export function FullCustomizerPanel() {
       )}
 
       <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 scrollbar-thin content-start bg-white dark:bg-black">
+        <AnimatePresence mode="popLayout">
         {activeTab === "cameras" && filteredCameras.map(cam => {
           const isSelected = isMixedCameraMode 
             ? selection.selected_mixed_camera_ids?.[activeMixedType!] === cam.id
@@ -685,7 +821,7 @@ export function FullCustomizerPanel() {
             {renderProductItem(
               {
                 id: "none",
-                display_name: "No Storage Required",
+                display_name: <TranslatedText tKey="no_storage_required" defaultText="No Storage Required" /> as any,
                 brand: "None",
                 unit_price: 0,
                 price: 0,
@@ -699,19 +835,47 @@ export function FullCustomizerPanel() {
               selection.selected_storage_id === "none" || (selection.recording_days === 0 && !selection.selected_storage_id),
               () => updateSelection({ selected_storage_id: undefined })
             )}
-            {filteredStorage.map(hdd => renderProductItem(
-              hdd, selection.selected_storage_id === hdd.id, () => { updateSelection({ selected_storage_id: hdd.id }); advanceToNextTab("storage"); }, !!selection.selected_storage_id, () => updateSelection({ selected_storage_id: undefined })
-            ))}
+            {filteredStorage.map(hdd => {
+              const isSdCard = ((hdd as any).storage_type === "Micro SD" || (hdd.display_name && hdd.display_name.toLowerCase().includes("sd card")) || (hdd.display_name && hdd.display_name.toLowerCase().includes("micro sd")));
+              const reqQty = (isSdCard && selection.technology === "Wireless") ? (selection.camera_count || 1) : 1;
+              return renderProductItem(
+                hdd, selection.selected_storage_id === hdd.id, () => { updateSelection({ selected_storage_id: hdd.id }); advanceToNextTab("storage"); }, !!selection.selected_storage_id, () => updateSelection({ selected_storage_id: undefined }), reqQty
+              );
+            })}
           </>
         )}
 
-        {activeTab === "power" && filteredPower.map(pwr => renderProductItem(
-          pwr, selection.selected_power_id === pwr.id, () => { updateSelection({ selected_power_id: pwr.id }); toast.success("Power supply pinned!", { description: "Your system is fully configured. Review your quote below.", duration: 3000 }); }, !!selection.selected_power_id, () => updateSelection({ selected_power_id: undefined })
-        ))}
+        {activeTab === "power" && filteredPower.map(pwr => {
+          const reqQty = Math.ceil((selection.camera_count || 1) / (pwr.max_cameras || 4));
+          return renderProductItem(
+            pwr, selection.selected_power_id === pwr.id, () => { updateSelection({ selected_power_id: pwr.id }); toast.success("Power supply pinned!", { description: "Your system is fully configured. Review your quote below.", duration: 3000 }); }, !!selection.selected_power_id, () => updateSelection({ selected_power_id: undefined }), reqQty
+          );
+        })}
 
-        {activeTab === "addons" && filteredAddons.map(addon => renderAddonItem(
-          addon, selection.selected_addons.includes(addon.id!), () => toggleAddon(addon.id!)
-        ))}
+        {activeTab === "addons" && (
+          <>
+            <div className="col-span-full mb-2 p-5 bg-white dark:bg-[#1d1d1f] rounded-[24px] border border-[#d2d2d7] dark:border-[#424245] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white">Expected Cable Length</h4>
+                <p className="text-[13px] text-[#86868b] mt-1">Adjust the estimated cable length per camera based on your site visit (default is 20m/camera).</p>
+              </div>
+              <div className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1 rounded-full shrink-0">
+                <button 
+                  onClick={() => updateSelection({ cable_length_meters: Math.max(5, (selection.cable_length_meters || 20) - 5) })}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-[#3d3d3f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
+                >-</button>
+                <span className="text-[14px] font-semibold w-12 text-center">{selection.cable_length_meters || 20}m</span>
+                <button 
+                  onClick={() => updateSelection({ cable_length_meters: (selection.cable_length_meters || 20) + 5 })}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-[#3d3d3f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
+                >+</button>
+              </div>
+            </div>
+            {filteredAddons.map(addon => renderAddonItem(
+              addon, selection.selected_addons.includes(addon.id!), () => toggleAddon(addon.id!)
+            ))}
+          </>
+        )}
         
         {((activeTab === "cameras" && filteredCameras.length === 0) ||
           (activeTab === "recorders" && filteredRecorders.length === 0) ||
@@ -719,16 +883,17 @@ export function FullCustomizerPanel() {
           (activeTab === "power" && filteredPower.length === 0) ||
           (activeTab === "addons" && filteredAddons.length === 0)) && (
           <div className="py-12 text-center col-span-full">
-            <p className="text-sm font-medium text-[#86868b]">No components match your search.</p>
+            <p className="text-sm font-medium text-[#86868b]"><TranslatedText tKey="no_components_match" defaultText="No components match your search." /></p>
           </div>
         )}
+        </AnimatePresence>
       </div>
 
     </div>
   );
 }
 
-function TabButton({ active, onClick, label, completed }: { active: boolean; onClick: () => void; label: string; completed?: boolean }) {
+function TabButton({ active, onClick, label, completed }: { active: boolean; onClick: () => void; label: React.ReactNode; completed?: boolean }) {
   return (
     <button
       onClick={onClick}

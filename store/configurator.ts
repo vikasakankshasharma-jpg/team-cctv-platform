@@ -146,9 +146,34 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
     }),
 
   updateSelection: (patch) =>
-    set((state) => ({
-      selection: { ...state.selection, ...patch },
-    })),
+    set((state) => {
+      const nextSelection = { ...state.selection, ...patch };
+
+      // If technology changed, clear all hardware selections to prevent mixing
+      if (patch.technology && patch.technology !== state.selection.technology) {
+        nextSelection.selected_camera_id = undefined;
+        nextSelection.selected_recorder_id = undefined;
+        nextSelection.selected_power_id = undefined;
+      }
+
+      // If camera_count changed, verify capacity of current recorder and power
+      if (patch.camera_count && patch.camera_count !== state.selection.camera_count) {
+        if (nextSelection.selected_recorder_id) {
+          const rec = state.products.find(p => p.id === nextSelection.selected_recorder_id);
+          if (rec && (rec.max_cameras || rec.channels || 0) < nextSelection.camera_count) {
+            nextSelection.selected_recorder_id = undefined;
+          }
+        }
+        if (nextSelection.selected_power_id) {
+          const pwr = [...state.products, ...state.addons].find(a => a.id === nextSelection.selected_power_id);
+          if (pwr && (pwr.max_cameras || 0) < nextSelection.camera_count) {
+            nextSelection.selected_power_id = undefined;
+          }
+        }
+      }
+
+      return { selection: nextSelection };
+    }),
 
   toggleAddon: (addonId) =>
     set((state) => {

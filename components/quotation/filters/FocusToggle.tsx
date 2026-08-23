@@ -2,14 +2,16 @@
 
 import { useConfiguratorStore } from "@/store/configurator";
 import { Target, IndianRupee, ShieldCheck } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function FocusToggle() {
   const { selection, updateSelection } = useConfiguratorStore();
+  const { t } = useTranslation();
 
   return (
     <div className="flex items-center gap-2">
       <label className="hidden sm:flex text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] items-center gap-1.5 mr-2">
-        <Target className="w-3 h-3 text-blue-600" /> Focus
+        <Target className="w-3 h-3 text-blue-600" /> {t('lbl_focus', 'Focus')}
       </label>
       <div className="flex gap-1 bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800/50">
         <button
@@ -20,7 +22,7 @@ export function FocusToggle() {
               : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
           }`}
         >
-          <IndianRupee className="w-3 h-3" /> Best Price
+          <IndianRupee className="w-3 h-3" /> {t('opt_best_price', 'Best Price')}
         </button>
         <button
           onClick={() => updateSelection({ focus_point: "quality", max_budget: null })}
@@ -30,7 +32,7 @@ export function FocusToggle() {
               : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
           }`}
         >
-          <ShieldCheck className="w-3 h-3" /> Quality
+          <ShieldCheck className="w-3 h-3" /> {t('opt_quality', 'Quality')}
         </button>
       </div>
     </div>

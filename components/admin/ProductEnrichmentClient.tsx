@@ -8,6 +8,7 @@ import {
   BarChart3, Zap
 } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 import type { AppSettings } from "@/types";
 
@@ -638,12 +639,12 @@ export function ProductEnrichmentClient({ products, settings }: ProductEnrichmen
           >
             <RefreshCw className="w-4 h-4" /> Run Again for Other Category
           </button>
-          <a
+          <Link
             href="/admin/products"
             className="px-6 py-3 border border-border bg-card text-foreground font-semibold text-sm rounded-xl hover:bg-secondary transition-colors"
           >
             View Products
-          </a>
+          </Link>
         </div>
       </div>
     );

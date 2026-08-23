@@ -43,6 +43,7 @@ function getAdminApp(): App {
   const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
 
   const isPlaceholder = !privateKey || privateKey.includes("YOUR_PRIVATE_KEY_HERE");
+  console.log("Firebase Admin Debug:", { isPlaceholder, pid: !!projectId, email: !!clientEmail, bucket: !!storageBucket, envFileLoaded: process.env.FIREBASE_PROJECT_ID === "team-cctv-live-8294" });
 
   if (isPlaceholder || !projectId || !clientEmail || !storageBucket) {
     // On Cloud Run/GCP, we can skip explicit credentials and use ADC (Application Default Credentials)

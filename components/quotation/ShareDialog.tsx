@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { MessageCircle, X, Phone, Share2, CheckCircle2, Loader2 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ShareDialogProps {
   leadId: string;
@@ -33,6 +34,7 @@ export function ShareDialog({
   const [shared, setShared] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => setMounted(true), []);
 
@@ -104,12 +106,12 @@ export function ShareDialog({
               <MessageCircle className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-emerald-100 text-[10px] font-black uppercase tracking-widest">Share Quote</p>
-              <p className="text-white font-black text-lg tracking-tight">Send on WhatsApp</p>
+              <p className="text-emerald-100 text-[10px] font-black uppercase tracking-widest">{t('share_quote', 'Share Quote')}</p>
+              <p className="text-white font-black text-lg tracking-tight">{t('send_on_whatsapp', 'Send on WhatsApp')}</p>
             </div>
           </div>
           <p className="text-emerald-100 text-sm font-medium">
-            Share your security quote instantly. Anyone you share with will be notified by our team.
+            {t('share_desc', 'Share your security quote instantly. Anyone you share with will be notified by our team.')}
           </p>
         </div>
 
@@ -118,13 +120,13 @@ export function ShareDialog({
           {shared ? (
             <div className="text-center py-4 space-y-3 animate-in fade-in zoom-in duration-300">
               <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
-              <p className="font-black text-zinc-900 text-lg tracking-tight">Quote Shared!</p>
-              <p className="text-zinc-400 text-sm">We&apos;ve noted the recipient in your quote record.</p>
+              <p className="font-black text-zinc-900 text-lg tracking-tight">{t('quote_shared', 'Quote Shared!')}</p>
+              <p className="text-zinc-400 text-sm">{t('quote_shared_desc', 'We\'ve noted the recipient in your quote record.')}</p>
               <button
                 onClick={onClose}
                 className="w-full h-12 bg-zinc-900 text-white font-black uppercase text-xs tracking-widest rounded-2xl mt-4"
               >
-                Done
+                {t('done', 'Done')}
               </button>
             </div>
           ) : (
@@ -135,9 +137,8 @@ export function ShareDialog({
                 </div>
               )}
 
-              {/* Option 1: Own Number */}
               <div className="space-y-2">
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Send to your number</p>
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{t('send_to_your_number', 'Send to your number')}</p>
                 <button
                   onClick={() => shareToNumber(customerMobile, false)}
                   disabled={sharing}
@@ -147,7 +148,7 @@ export function ShareDialog({
                     <Phone className="w-4 h-4 text-emerald-600" />
                     <div className="text-left">
                       <p className="font-black text-zinc-900 text-sm">+91 {customerMobile}</p>
-                      <p className="text-[10px] text-zinc-400 font-medium">Your registered number</p>
+                      <p className="text-[10px] text-zinc-400 font-medium">{t('your_registered_number', 'Your registered number')}</p>
                     </div>
                   </div>
                   <MessageCircle className="w-5 h-5 text-emerald-500 group-hover:scale-110 transition-transform" />
@@ -156,15 +157,15 @@ export function ShareDialog({
 
               <div className="flex items-center gap-4">
                 <div className="flex-1 h-px bg-zinc-100" />
-                <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest">Or share with</span>
+                <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest">{t('or_share_with', 'Or share with')}</span>
                 <div className="flex-1 h-px bg-zinc-100" />
               </div>
 
               {/* Option 2: Another Number */}
               <div className="space-y-3">
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Send to another number</p>
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{t('send_to_another_number', 'Send to another number')}</p>
                 <p className="text-xs text-zinc-400">
-                  Sharing with a family member or decision-maker? Their number will be recorded in our system for follow-up.
+                  {t('sharing_decision_maker', 'Sharing with a family member or decision-maker? Their number will be recorded in our system for follow-up.')}
                 </p>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-zinc-400 border-r border-zinc-200 pr-3">+91</span>
@@ -189,7 +190,7 @@ export function ShareDialog({
                   ) : (
                     <>
                       <Share2 className="w-4 h-4" />
-                      Share on WhatsApp
+                      {t('share_on_whatsapp', 'Share on WhatsApp')}
                     </>
                   )}
                 </button>
