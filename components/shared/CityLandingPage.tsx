@@ -63,7 +63,8 @@ export default function CityLandingPage({
     localizedNeighborhoods = localizedData.neighborhoods;
   }
 
-  const wizardUrl = `/wizard?city=${localizedCityName}${pincodeParam ? `&pincode=${pincodeParam}` : ''}${brand ? `&brand=${brand}` : ''}`;
+  const servedParam = searchParams.get('served');
+  const wizardUrl = `/wizard?city=${localizedCityName}${pincodeParam ? `&pincode=${pincodeParam}` : ''}${servedParam ? `&served=${servedParam}` : ''}${brand ? `&brand=${brand}` : ''}`;
 
   useEffect(() => {
     if (pincodeParam && !isManuallySet) {
@@ -97,7 +98,13 @@ export default function CityLandingPage({
     : t('prof_installation', `Professional ${brandPrefix}CCTV Installation`);
 
   return (
-    <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
+          <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-500">
+        
+        {servedParam === 'false' && (
+          <div className="bg-amber-100 dark:bg-amber-900/40 border-b border-amber-200 dark:border-amber-800 p-3 text-center text-amber-800 dark:text-amber-200 text-sm font-medium">
+            We are actively expanding to {pincodeParam || 'your area'}. Prices shown are for the nearest active hub ({localizedCityName}) as a reference.
+          </div>
+        )}
       
       {/* Premium Breadcrumb for SEO & Navigation */}
       <div className="bg-zinc-50/50 dark:bg-zinc-900/10 border-b border-zinc-100/50 dark:border-zinc-800/30 px-4 sm:px-6 py-3">
@@ -314,3 +321,4 @@ export default function CityLandingPage({
     </div>
   );
 }
+

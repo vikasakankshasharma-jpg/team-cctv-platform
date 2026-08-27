@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import https from "https";
 import { adminDb, serverTimestamp, increment } from "@/lib/firebase-admin";
 
 export const dynamic = 'force-dynamic';
+
+const ACTIVE_HUBS: Record<string, string> = {
+  "jaipur": "jaipur",
+  "jodhpur": "jodhpur",
+  "kota": "kota",
+  "ajmer": "ajmer",
+  "new delhi": "new-delhi",
+  "delhi": "new-delhi"
+};
 
 export async function GET(
   _req: NextRequest,
@@ -10,100 +18,69 @@ export async function GET(
 ) {
   const { pin } = await params;
   try {
-    const zipData: any = await new Promise((resolve, reject) => {
-      console.log("Fetching pincode for PIN: '" + pin + "'");
-      https.get(`https://api.zippopotam.us/in/${pin}`, {
-        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
-      }, (res) => {
-        console.log("Zippo API returned status:", res.statusCode);
-        if (res.statusCode === 404) {
-          resolve(null);
-          return;
-        }
-        if (res.statusCode !== 200) {
-          reject(new Error(`API returned ${res.statusCode}`));
-          return;
-        }
-        
-        let data = '';
-        res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () => {
-          try {
-            console.log("Zippo API response data:", data);
-            resolve(JSON.parse(data));
-          } catch (e) {
-            reject(new Error("Failed to parse response"));
-          }
-        });
-      }).on('error', (e) => {
-        reject(e);
-      });
-    });
+    const postRes = await fetch('https://api.postalpincode.in/pincode/' + pin);
+    const postData = await postRes.json();
 
-    if (!zipData) {
-      return NextResponse.json({ error: "Pincode not found" }, { status: 404 });
+    if (!postData || postData[0].Status === "Error" || !postData[0].PostOffice) {
+      return NextResponse.json({ error: "Pincode not found or invalid." }, { status: 404 });
     }
 
-    if (zipData.places && zipData.places.length > 0) {
-      let cityName = "";
-      let citySlug = "";
-      
-      const allPlaceNames = zipData.places.map((p: any) => (p["place name"] || "").toLowerCase());
-      const stateName = (zipData.places[0].state || "").toLowerCase();
-      
-      const hasMatch = (keyword: string) => {
-        return allPlaceNames.some((name: string) => name.includes(keyword)) || stateName.includes(keyword);
-      };
-      
-      if (hasMatch("jaipur")) {
-        cityName = "Jaipur";
-        citySlug = "jaipur";
-      } else if (hasMatch("jodhpur")) {
-        cityName = "Jodhpur";
-        citySlug = "jodhpur";
-      } else if (hasMatch("kota")) {
-        cityName = "Kota";
-        citySlug = "kota";
-      } else if (hasMatch("ajmer")) {
-        cityName = "Ajmer";
-        citySlug = "ajmer";
-      } else if (stateName.includes("delhi")) {
-        cityName = "New Delhi";
-        citySlug = "new-delhi";
-      } else {
-        const rawPlaceName = zipData.places[0]["place name"];
-        cityName = rawPlaceName;
-        citySlug = rawPlaceName.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+    const postOffice = postData[0].PostOffice[0];
+    const districtName = postOffice.District.toLowerCase();
+    const stateName = postOffice.State.toLowerCase();
+    const locationName = postOffice.Name;
+
+    let served = false;
+    let citySlug = "";
+    
+    for (const [hubKey, slug] of Object.entries(ACTIVE_HUBS)) {
+      if (districtName.includes(hubKey) || stateName.includes(hubKey)) {
+        served = true;
+        citySlug = slug;
+        break;
       }
+    }
 
-      try {
-        const batch = adminDb.batch();
-        const impressionRef = adminDb.collection("city_impressions").doc(citySlug);
-        batch.set(impressionRef, {
-          city: cityName,
-          state: zipData.places[0].state,
-          total_lookups: increment(1),
-          last_lookup: serverTimestamp(),
-        }, { merge: true });
+    if (!served) {
+      citySlug = "jaipur"; // Fallback to nearest hub for reference quote
+    }
 
+    try {
+      const batch = adminDb.batch();
+      const impressionRef = adminDb.collection("city_impressions").doc(districtName.replace(/\s+/g, '-'));
+      batch.set(impressionRef, {
+        city: postOffice.District,
+        state: postOffice.State,
+        pincode: pin,
+        served: served,
+        total_lookups: increment(1),
+        last_lookup: serverTimestamp(),
+      }, { merge: true });
+
+      if (served) {
         const serviceAreaRef = adminDb.collection("service_areas").doc(citySlug);
         batch.set(serviceAreaRef, {
           priority_score: increment(0.2),
           updated_at: serverTimestamp()
         }, { merge: true });
-        
-        await batch.commit();
-      } catch (logErr) {
-        console.error("Failed to log city impression:", logErr);
       }
-
-      return NextResponse.json(
-        { district: cityName, state: zipData.places[0].state, city: cityName, served: true, citySlug: citySlug },
-        { status: 200 }
-      );
+      
+      await batch.commit();
+    } catch (logErr) {
+      console.error("Failed to log city impression:", logErr);
     }
-    
-    return NextResponse.json({ error: "Pincode not found" }, { status: 404 });
+
+    return NextResponse.json(
+      { 
+        district: postOffice.District, 
+        state: postOffice.State, 
+        city: locationName, 
+        served: served, 
+        citySlug: citySlug,
+        message: served ? "" : "Nearest serviceable area shown as reference."
+      },
+      { status: 200 }
+    );
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Failed" }, { status: 500 });
   }
