@@ -19,6 +19,7 @@ const NAV_GROUPS = [
     label: "Overview",
     items: [
       { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+      { name: "Analytics", href: "/admin/analytics", icon: TrendingUp },
     ],
   },
   {

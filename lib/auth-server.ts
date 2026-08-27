@@ -5,7 +5,7 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 export interface SessionResult {
   isAuthenticated: boolean;
   user: DecodedIdToken | null;
-  role: "super_admin" | "sales_staff" | null;
+  role: string | null;
 }
 
 /**

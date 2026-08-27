@@ -86,7 +86,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         max_cameras: product.max_cameras,
         min_cameras: product.min_cameras,
         brand: product.brand,
-      });
+      } as any);
     } else {
       form.reset({
         display_name: "",
@@ -98,10 +98,10 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         margin_percentage: 0,
         unit_price: 0,
         is_active: true,
-        stock_status: "in_stock" as const,
+        stock_status: "in_stock",
         catalog_path: "",
         compatible_paths: [],
-      });
+      } as any);
     }
     setNewCompatiblePath("");
   }, [product, isOpen, form]);
@@ -570,3 +570,4 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
     </div>
   );
 }
+

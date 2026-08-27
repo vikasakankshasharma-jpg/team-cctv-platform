@@ -1,6 +1,5 @@
-import { WizardClient } from "@/components/wizard/WizardClient";
+import { WizardClientV2 } from "@/components/wizard/WizardClientV2";
 import type { Metadata } from "next";
-import { getWizardConfig, getSettingsConfig, getDefaultFallbackWizard } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "Get Free CCTV Quote | CCTVQuotation by TEAM",
@@ -24,25 +23,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function WizardPage() {
-  let wizardRes;
-  let settingsRes;
-
-  try {
-    const [w, s] = await Promise.all([
-      getWizardConfig(),
-      getSettingsConfig()
-    ]);
-    wizardRes = w;
-    settingsRes = s;
-
-    if (!wizardRes || !wizardRes.steps || wizardRes.steps.length === 0) {
-      wizardRes = { steps: getDefaultFallbackWizard() };
-    }
-  } catch (error) {
-    wizardRes = { steps: getDefaultFallbackWizard() };
-    settingsRes = null;
-  }
-
-  return <WizardClient initialSteps={wizardRes?.steps} initialSettings={settingsRes} />;
+export default function WizardPage() {
+  return <WizardClientV2 />;
 }

@@ -140,21 +140,21 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
     });
   }, [products, settings, addons]);
 
-  // â”€â”€â”€ Render Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ——————————————————————————————————————————————————————————————————————————
 
   const categories = [
     { name: "IP Recorders", filter: (p: Product) => p.category === "recorder" && p.technologies?.includes("IP"), icon: Monitor },
     { name: "HD Recorders", filter: (p: Product) => p.category === "recorder" && p.technologies?.includes("HD"), icon: HardDrive },
     { name: "IP Cameras", filter: (p: Product) => p.category === "cctv_camera" && p.technologies?.includes("IP"), icon: Camera },
     { name: "HD Cameras", filter: (p: Product) => p.category === "cctv_camera" && p.technologies?.includes("HD"), icon: Camera },
-    { name: "Storage (HDD)", filter: (p: Product) => p.category === "accessories" && p.technical_name.toLowerCase().includes("hdd"), icon: HardDrive },
-    { name: "Accessories & Cable", filter: (p: Product) => (p.category === "accessories" || p.category === "cable" || p.category === "power_device") && !p.technical_name.toLowerCase().includes("hdd"), icon: Cable },
+    { name: "Storage (HDD)", filter: (p: Product) => p.category === "storage", icon: HardDrive },
+    { name: "Accessories & Cable", filter: (p: Product) => (p.category === "accessories" || p.category === "cable" || p.category === "power_device" || p.category === "connector"), icon: Cable },
   ];
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
       
-      {/* â”€â”€â”€ LEFT: Product Catalog Editor (8 Cols) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ————————————————— LEFT: Product Catalog Editor (8 Cols) —————————————————— */}
       <div className="xl:col-span-8 space-y-6">
         <div className="flex items-center justify-between bg-card p-6 rounded-2xl border border-border shadow-sm">
           <div className="flex items-center gap-4">
@@ -352,3 +352,5 @@ export default function PricingBoard({ initialProducts, settings, addons }: Pric
     </div>
   );
 }
+
+

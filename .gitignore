@@ -52,6 +52,7 @@ next-env.d.ts
 playwright-report/
 test-results/
 /scratch/
+.playwright-session/
 
 # lint output
 lint_output*.txt
@@ -66,4 +67,11 @@ lint_output*.txt
 debug-page-content.html
 debug-partner-auth.txt
 test-api.js
+
+
+# Ignore service account keys and scratch logs
+*-key.json
+*_logs.json
+prod_*.json
+staging_*.json
 

@@ -35,7 +35,7 @@ const settings: AppSettings = {
 };
 
 // Dummy Products
-const products: Product[] = [
+const products: any[] = [
   {
     id: "cam1",
     technical_name: "IP Camera 2MP",
@@ -163,3 +163,4 @@ if (cableCost > 0) {
 }
 
 console.log("=== TESTS COMPLETE ===");
+

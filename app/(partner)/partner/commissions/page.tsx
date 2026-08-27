@@ -19,7 +19,7 @@ export default async function PartnerCommissionsPage() {
     .orderBy("created_at", "desc")
     .get();
   const recordsPromises = commsSnap.docs.map(async (doc) => {
-    const data = doc.data() as CommissionRecord;
+    const data = doc.data() as any;
     let customerName = "Unknown Customer";
     try {
       const leadSnap = await adminDb.collection(COLLECTIONS.LEADS).doc(data.lead_id).get();
@@ -55,3 +55,4 @@ export default async function PartnerCommissionsPage() {
     />
   );
 }
+

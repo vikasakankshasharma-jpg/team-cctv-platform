@@ -184,7 +184,7 @@ export default function ManualQuoteBuilderClient() {
         throw new Error(data.error || "Failed to create quote");
       }
       const { id } = await res.json();
-      setQuoteUrl(`${window.location.origin}/quote/${leadId}/pdf?quote_id=${id}`);
+      setQuoteUrl(`${window.location.origin}/api/quote/${id}/download`);
       setStep("done");
     } catch (err: any) {
       setError(err.message);
@@ -309,7 +309,7 @@ export default function ManualQuoteBuilderClient() {
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">{p.brand || CATEGORY_LABELS[p.category]}</p>
+                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">{p.brand || CATEGORY_LABELS[p.category as VendorCategory] || p.category}</p>
                         <h4 className="font-semibold text-sm leading-tight text-foreground line-clamp-2">{p.display_name}</h4>
                       </div>
                       <div className="flex items-center justify-between mt-auto">

@@ -1,157 +1,116 @@
-import { verifySession } from "@/lib/auth-server";
-import { redirect } from "next/navigation";
-import { adminDb } from "@/lib/firebase-admin";
-import { Users } from "lucide-react";
-import type { Lead } from "@/types";
-import { LeadsClient } from "@/components/admin/LeadsClient";
-import { PageHeader } from "@/components/admin/PageHeader";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Leads CRM | Intelligence Hub",
-  description: "Monitor and orchestrate OTP-verified customer acquisitions through the Catalyst pipeline.",
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { format } from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+
+type LeadListRow = {
+  id: string;
+  customer_name: string;
+  customer_mobile: string;
+  source: string;
+  total_payable: number;
+  selectedPlan: string;
+  status: string;
+  leadStatus: string;
+  createdAt: string;
 };
 
-export const dynamic = "force-dynamic";
+export default function LeadsPage() {
+  const [leads, setLeads] = useState<LeadListRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function LeadsAdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string; lastId?: string; lastDate?: string }>;
-}) {
-  const resolvedSearchParams = await searchParams;
-  const session = await verifySession();
-  const isAdmin = session.isAuthenticated && session.role === "super_admin";
-  const isSalesStaff = session.isAuthenticated && session.role === "sales_staff";
+  useEffect(() => {
+    fetchLeads();
+  }, []);
 
-  // Guard: only admins and active sales staff can access CRM
-  if (!isAdmin && !isSalesStaff) {
-    redirect("/admin/login?redirect=/admin/leads");
-  }
-  let allowedPincodes: string[] = [];
-  if (isSalesStaff && session.user) {
-    const salespersonSnap = await adminDb.collection("salespeople")
-      .where("firebase_uid", "==", session.user.uid)
-      .where("is_active", "==", true)
-      .limit(1)
-      .get();
-    
-    if (!salespersonSnap.empty) {
-      const spData = salespersonSnap.docs[0].data();
-      const zoneIds = spData.assigned_zone_ids || [];
-      if (zoneIds.length > 0) {
-        const zonesSnap = await adminDb.collection("coverage_zones")
-          .where("__name__", "in", zoneIds)
-          .get();
-        
-        zonesSnap.docs.forEach(doc => {
-          allowedPincodes = [...allowedPincodes, ...(doc.data().pincodes || [])];
-        });
+  const fetchLeads = async () => {
+    try {
+      const res = await fetch("/api/crm/quotes");
+      const data = await res.json();
+      if (data.success) {
+        setLeads(data.data);
       }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  const PAGE_SIZE = 25;
-  const lastDate = resolvedSearchParams.lastDate ? new Date(resolvedSearchParams.lastDate) : null;
-  
-  let query = adminDb.collection("leads")
-    .orderBy("created_at", "desc");
-
-  // Apply geo-filtering for sales staff
-  if (isSalesStaff) {
-    if (allowedPincodes.length > 0) {
-      // Note: Firestore 'in' query limit is 30 items
-      query = query.where("address.pincode", "in", allowedPincodes.slice(0, 30));
-    } else {
-      // No assigned pincodes = no leads
-      query = query.where("address.pincode", "==", "NONE_ASSIGNED");
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "NEW": return <Badge variant="secondary">New</Badge>;
+      case "CONTACTED": return <Badge variant="default" className="bg-blue-500">Contacted</Badge>;
+      case "WON": return <Badge variant="default" className="bg-green-500">Won</Badge>;
+      case "LOST": return <Badge variant="destructive">Lost</Badge>;
+      default: return <Badge variant="outline">{status}</Badge>;
     }
-  }
-
-  query = query.limit(PAGE_SIZE);
-
-  if (lastDate) {
-    query = query.startAfter(lastDate);
-  }
-
-  const snapshot = await query.get();
-
-  // Fetch industrial leads
-  const indSnapshot = await adminDb.collection("industrial_leads")
-    .orderBy("created_at", "desc")
-    .limit(50)
-    .get();
-
-  const industrialLeads = indSnapshot.docs.map(doc => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      status: data.status || "new",
-      created_at: (data.created_at as any)?.toDate?.()?.toISOString() || data.created_at || null,
-      updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
-      site_visit_date: (data.site_visit_date as any)?.toDate?.()?.toISOString() || data.site_visit_date || null,
-      sla_breach_at: (data.sla_breach_at as any)?.toDate?.()?.toISOString() || data.sla_breach_at || null,
-    };
-  }) as any[];
-
-  // Fetch all active promoters to join data
-  const promotersSnapshot = await adminDb.collection("promoters").get();
-  const promoterMap: Record<string, { name: string, business_name?: string }> = {};
-  promotersSnapshot.docs.forEach(doc => {
-    const data = doc.data();
-    promoterMap[doc.id] = { name: data.name, business_name: data.business_name };
-  });
-
-  const leads = snapshot.docs.map(doc => {
-    const data = doc.data() as Lead;
-    const promoter = data.promoter_id ? promoterMap[data.promoter_id] : null;
-    
-    return {
-      ...data,
-      id: doc.id,
-      promoter_name: promoter?.name || null,
-      promoter_business: promoter?.business_name || null,
-      created_at: (data.created_at as any)?.toDate?.()?.toISOString() || data.created_at || null,
-      updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
-      site_visit_date: (data.site_visit_date as any)?.toDate?.()?.toISOString() || data.site_visit_date || null,
-      sla_breach_at: (data.sla_breach_at as any)?.toDate?.()?.toISOString() || data.sla_breach_at || null
-    };
-  });
-
-  const nextCursor = snapshot.docs.length === PAGE_SIZE 
-    ? snapshot.docs[snapshot.docs.length - 1].data().created_at?.toDate?.()?.toISOString() 
-    : null;
-
-  const newCount = leads.filter(l => l.status === "new").length + industrialLeads.filter(l => l.status === "new").length;
-
-  // Fetch salespeople for assignment dropdown
-  let salespeople: { id: string; name: string }[] = [];
-  if (isAdmin) {
-    const spSnap = await adminDb.collection("salespeople").where("is_active", "==", true).get();
-    salespeople = spSnap.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
-  }
+  };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
-      <PageHeader
-        icon={Users}
-        title="Leads CRM"
-        description="Monitor and orchestrate OTP-verified customer acquisitions through the Catalyst pipeline."
-        badge={`${leads.length + industrialLeads.length} Total Spectrum · ${newCount} Hot Nodes`}
-      />
-      
-      <div className="pb-20">
-        <LeadsClient 
-          initialLeads={JSON.parse(JSON.stringify(leads))} 
-          industrialLeads={JSON.parse(JSON.stringify(industrialLeads))} 
-          nextCursor={nextCursor}
-          salespeople={salespeople}
-          isAdmin={isAdmin}
-          allowedPincodes={allowedPincodes}
-          isSalesStaff={isSalesStaff}
-        />
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Lead Management</h1>
+          <p className="text-muted-foreground mt-1">Track and manage generated quotations</p>
+        </div>
+        <Link href="/admin/quote/new">
+          <Button>+ Create Manual Quote</Button>
+        </Link>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Leads</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <p>Loading leads...</p>
+          ) : leads.length === 0 ? (
+            <p className="text-muted-foreground">No leads found.</p>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Quote ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Mobile</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Value</TableHead>
+                    <TableHead>Lead Status</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {leads.map((lead) => (
+                    <TableRow key={lead.id}>
+                      <TableCell className="font-medium">{lead.id}</TableCell>
+                      <TableCell>{format(new Date(lead.createdAt), "MMM d, yyyy")}</TableCell>
+                      <TableCell>{lead.customer_name}</TableCell>
+                      <TableCell>{lead.customer_mobile}</TableCell>
+                      <TableCell className="capitalize">{lead.source}</TableCell>
+                      <TableCell>₹{lead.total_payable.toLocaleString("en-IN")}</TableCell>
+                      <TableCell>{getStatusBadge(lead.leadStatus)}</TableCell>
+                      <TableCell className="text-right">
+                        <Link href={`/admin/leads/${lead.id}`}>
+                          <Button variant="ghost" size="sm">View Details</Button>
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

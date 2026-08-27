@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useMemo, useEffect } from "react";
 import type { ReactNode } from "react";
@@ -374,3 +374,4 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
     </div>
   );
 }
+

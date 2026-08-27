@@ -4,106 +4,83 @@
       "collectionGroup": "leads",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "status",     "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "created_at", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "leads",
+      "collectionGroup": "jobs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "promoter_id", "order": "ASCENDING" },
-        { "fieldPath": "created_at",  "order": "DESCENDING" }
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "scheduledDate", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "leads",
+      "collectionGroup": "jobs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "technology_choice", "order": "ASCENDING" },
-        { "fieldPath": "created_at",        "order": "DESCENDING" }
+        { "fieldPath": "technicianId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "scheduledDate", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "leads",
+      "collectionGroup": "service_tickets",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "cabling_done", "order": "ASCENDING" },
-        { "fieldPath": "created_at",   "order": "DESCENDING" }
+        { "fieldPath": "customerId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "leads",
+      "collectionGroup": "serial_assets",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "is_hot_lead", "order": "ASCENDING" },
-        { "fieldPath": "created_at",  "order": "DESCENDING" }
+        { "fieldPath": "customerId", "order": "ASCENDING" },
+        { "fieldPath": "warrantyEndDate", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "promoters",
+      "collectionGroup": "customer_warranty_items",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "referral_code", "order": "ASCENDING" },
-        { "fieldPath": "is_active",     "order": "ASCENDING" }
+        { "fieldPath": "customerId", "order": "ASCENDING" },
+        { "fieldPath": "skuId", "order": "ASCENDING" }
       ]
     },
     {
-      "collectionGroup": "commission_records",
+      "collectionGroup": "amc_contracts",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "promoter_id", "order": "ASCENDING" },
-        { "fieldPath": "status",      "order": "ASCENDING" }
+        { "fieldPath": "customerId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
       ]
     },
     {
-      "collectionGroup": "commission_records",
+      "collectionGroup": "invoices",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "promoter_id", "order": "ASCENDING" },
-        { "fieldPath": "created_at",  "order": "DESCENDING" }
+        { "fieldPath": "customerId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "dueDate", "order": "ASCENDING" }
       ]
     },
     {
-      "collectionGroup": "commission_records",
+      "collectionGroup": "receipts",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "status",     "order": "ASCENDING" },
-        { "fieldPath": "created_at", "order": "DESCENDING" }
+        { "fieldPath": "invoiceId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "addon_rules",
+      "collectionGroup": "stock_ledger",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "priority",    "order": "ASCENDING" },
-        { "fieldPath": "created_at",  "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "site_visit_bookings",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "status",     "order": "ASCENDING" },
-        { "fieldPath": "created_at", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "products",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "technology", "order": "ASCENDING" },
-        { "fieldPath": "category",   "order": "ASCENDING" },
-        { "fieldPath": "is_active",  "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "leads",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "detected_city",  "order": "ASCENDING" },
-        { "fieldPath": "service_status", "order": "ASCENDING" },
-        { "fieldPath": "created_at",     "order": "DESCENDING" }
+        { "fieldPath": "skuId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
       ]
     }
   ],

@@ -4,6 +4,7 @@
  */
 
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
 export type ApiErrorCode = 
   | "UNAUTHORIZED" 
@@ -15,21 +16,33 @@ export type ApiErrorCode =
   | "PRICE_TAMPERING_OR_STALE";
 
 export class ApiResponse {
-  static success(data: any, status = 200) {
+  static success(data: any, status = 200, requestId?: string) {
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
+      requestId: requestId || crypto.randomUUID(),
       data
     }, { status });
   }
 
-  static error(message: string, code: ApiErrorCode = "INTERNAL_ERROR", status = 500, details?: any) {
+  static error(message: string, code: ApiErrorCode = "INTERNAL_ERROR", status = 500, details?: any, requestId?: string) {
+    const reqId = requestId || crypto.randomUUID();
+    
+    // Masking rule for Production
+    let safeMessage = message;
+    if (process.env.NODE_ENV === "production" && status === 500) {
+       console.error(`[CRITICAL ERROR | REQ: ${reqId}] ${message}`, details);
+       safeMessage = "Unable to complete the request. An internal error occurred.";
+       details = undefined;
+    }
+
     return NextResponse.json({
       success: false,
       timestamp: new Date().toISOString(),
+      requestId: reqId,
       error: {
         code,
-        message,
+        message: safeMessage,
         details
       }
     }, { status });

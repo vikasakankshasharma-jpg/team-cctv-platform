@@ -170,6 +170,11 @@ export interface Product {
   is_active: boolean;
   vendor_id?: string;
   internal_sku?: string;
+  sku?: string;
+  markup_override?: number;
+  is_quotation_eligible?: boolean;
+  is_configurator_visible?: boolean;
+  [key: string]: any; // Allow dynamic fields from DB
   features?: string[];           // Array of FeatureTag IDs
   
   // Tally-style Grouping
@@ -367,6 +372,7 @@ export interface QuoteAddon {
 }
 
 export interface PricingResult {
+  [key: string]: any; // Allow dynamic fields
   plan_type: "budget" | "recommended" | "premium";
   technology: Technology | string;
   items: QuoteLineItem[];
@@ -850,6 +856,11 @@ export interface StagedProduct {
   channels?: number | null;
   vendor_id?: string;
   internal_sku?: string;
+  sku?: string;
+  markup_override?: number;
+  is_quotation_eligible?: boolean;
+  is_configurator_visible?: boolean;
+  [key: string]: any; // Allow dynamic fields from DB
   in_stock?: boolean;
   _raw_specs?: string;
   ai_confidence_score?: number;
@@ -867,3 +878,15 @@ export interface StagedProduct {
   _ai_confidence?: number | null;
   _ai_reasoning?: string | null;
 }
+
+// ============================================================
+// Sprint 1 Architecture Types (Code-freeze shim)
+// ============================================================
+export interface CCTVRequirement { [key: string]: any; }
+export interface CCTVConfiguration { [key: string]: any; }
+export interface ResolvedSystem { [key: string]: any; }
+export interface BuilderSelection { [key: string]: any; }
+export interface QuoteDelivery { [key: string]: any; }
+export interface QuoteSnapshot { [key: string]: any; }
+
+
