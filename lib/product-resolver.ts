@@ -14,15 +14,19 @@ export function resolveProducts(
   config: CCTVConfiguration,
   req: CCTVRequirement,
   catalog: Product[]
-): { budget: ResolvedSystem; recommended: ResolvedSystem; premium: ResolvedSystem } {
+): { budget: ResolvedSystem; recommended: ResolvedSystem; premium: ResolvedSystem; lifecycleWarnings: string[] } {
   
   // Filter catalog to eligible items
-  const pool = catalog.filter(p => 
-    p.is_active && 
-    p.stock_status !== "out_of_stock" && 
-    p.stock_status !== "discontinued" &&
-    p.is_quotation_eligible !== false
-  );
+  const lifecycleWarnings: string[] = [];
+  const pool = catalog.filter(p => {
+    if (!p.is_active || p.is_quotation_eligible === false) return false;
+    if (p.stock_status === "out_of_stock" || p.stock_status === "discontinued") return false;
+    
+    if ((p.stock_status as string) === "on_demand") {
+      lifecycleWarnings.push(`ON_DEMAND_WARNING: Product [${p.id}] ${p.display_name} is on-demand and may have longer lead times or unconfirmed pricing.`);
+    }
+    return true;
+  });
 
   const cameras = resolveCameras(config, req, pool);
   const recorders = resolveRecorders(config, pool);
@@ -37,7 +41,8 @@ export function resolveProducts(
       storage: storage.budget,
       power: power.budget,
       cable_meters: config.cable_meters || 0,
-      connectors_qty: config.connectors_count || 0
+      connectors_qty: config.connectors_count || 0,
+      site_surcharge_flags: config.site_surcharge_flags
     },
     recommended: {
       plan_type: "recommended",
@@ -46,7 +51,8 @@ export function resolveProducts(
       storage: storage.recommended,
       power: power.recommended,
       cable_meters: config.cable_meters || 0,
-      connectors_qty: config.connectors_count || 0
+      connectors_qty: config.connectors_count || 0,
+      site_surcharge_flags: config.site_surcharge_flags
     },
     premium: {
       plan_type: "premium",
@@ -55,33 +61,54 @@ export function resolveProducts(
       storage: storage.premium,
       power: power.premium,
       cable_meters: config.cable_meters || 0,
-      connectors_qty: config.connectors_count || 0
-    }
+      connectors_qty: config.connectors_count || 0,
+      site_surcharge_flags: config.site_surcharge_flags
+    },
+    lifecycleWarnings
   };
 }
 
 function resolveCameras(config: CCTVConfiguration, req: CCTVRequirement, pool: Product[]) {
-  // Simplistic placeholder for resolving cameras per bucket
-  const cams = pool.filter(p => p.category === "cctv_camera" && (p.technologies || []).includes(config.technology as any));
+  const cams = pool.filter(p => p.category === "CAMERA_HD" || p.category === "CAMERA_IP" || p.category === "cctv_camera");
   
-  // Sort by price or tier
-  const sorted = [...cams].sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
-  
-  const budgetCam = sorted[0];
-  const recCam = sorted[Math.floor(sorted.length / 2)] || budgetCam;
-  const premCam = sorted[sorted.length - 1] || recCam;
-
-  const getMapped = (cam: Product) => {
-    if (req.mixed_camera_requirements && req.mixed_camera_requirements.length > 0) {
-       return req.mixed_camera_requirements.map((r: any) => ({ product: cam, qty: r.count, bucket_type: r.type }));
+  const getCameraBySpec = (formFactor: string, targetTier: string) => {
+    let filtered = cams.filter(p => {
+      const matchForm = (p.specifications as any)?.formFactor === formFactor;
+      const matchTier = targetTier === "BUDGET" ? p.brand === "Budget Brand" : p.brand !== "Budget Brand";
+      return matchForm && matchTier;
+    });
+    if (filtered.length === 0) {
+      // Fallback
+      filtered = cams.filter(p => (p.specifications as any)?.formFactor === formFactor);
     }
-    return [{ product: cam, qty: config.total_cameras }];
+    if (filtered.length === 0) return cams[0]; // Desperate fallback
+    return filtered.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+  };
+
+  const mapCameras = (tier: string) => {
+    const res = [];
+    if (config.indoor_cameras > 0) {
+      const dome = getCameraBySpec('DOME', tier);
+      if (dome) res.push({ product: dome, qty: config.indoor_cameras });
+    }
+    if (config.outdoor_cameras > 0) {
+      const bullet = getCameraBySpec('BULLET', tier);
+      if (bullet) res.push({ product: bullet, qty: config.outdoor_cameras });
+    }
+    
+    // Fallback if split isn't there
+    if (config.indoor_cameras === 0 && config.outdoor_cameras === 0 && config.total_cameras > 0) {
+       const cam = getCameraBySpec('DOME', tier) || getCameraBySpec('BULLET', tier) || cams[0];
+       if (cam) res.push({ product: cam, qty: config.total_cameras });
+    }
+    
+    return res;
   };
 
   return {
-    budget: budgetCam ? getMapped(budgetCam) : [],
-    recommended: recCam ? getMapped(recCam) : [],
-    premium: premCam ? getMapped(premCam) : [],
+    budget: mapCameras("BUDGET"),
+    recommended: mapCameras("RECOMMENDED"),
+    premium: mapCameras("PREMIUM"),
   };
 }
 
