@@ -97,49 +97,50 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 1. Elite Hero Hub: Smart City Theme */}
+      {/* 1. Hero Section - Clean for Google Ads compatibility */}
       <section className="relative px-4 sm:px-6 pt-10 pb-16 sm:pt-16 sm:pb-20 md:pt-24 md:pb-32 overflow-hidden">
-        {/* Smart City Background Elements */}
-        <div className="absolute inset-0 overflow-hidden -z-10 bg-slate-50 dark:bg-[#050B14] transition-colors duration-500">
-          {/* Glowing City Grid */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(14,165,233,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] dark:[mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
-          
-          {/* Neon Glow Orbs */}
-          <div className="absolute top-[-20%] left-[10%] w-[500px] h-[500px] bg-blue-600/20 blur-[150px] rounded-full mix-blend-screen" />
-          <div className="absolute top-[10%] right-[5%] w-[400px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full mix-blend-screen" />
-          
-          {/* Horizon Line Glow */}
-          <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]" />
-          <div className="absolute bottom-0 left-0 w-full h-[200px] bg-gradient-to-t from-blue-900/10 to-transparent" />
+        {/* Simple Background - no blur/glow that breaks renderers */}
+        <div className="absolute inset-0 -z-10 bg-slate-50 dark:bg-[#050B14]">
+          {/* Subtle grid pattern using SVG instead of complex CSS gradients */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.04] dark:opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0ea5e9" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+          {/* Simple solid color accent - no blur */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600" />
         </div>
 
         <div className="max-w-7xl mx-auto flex flex-col items-center lg:items-start text-center lg:text-left relative z-10">
-          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-blue-500/20 text-slate-800 dark:text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_0_20px_rgba(59,130,246,0.15)] backdrop-blur-md">
-            <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)] dark:drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+          {/* Trust Badge - no backdrop-blur */}
+          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-blue-500/20 text-slate-800 dark:text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-sm">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span><TranslatedText tKey="landing_hero_highlight" defaultText="Simple & Reliable CCTV Security" /></span>
             <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-blue-500/50 hidden sm:block" />
-            <span className="text-emerald-700 dark:text-emerald-400 hidden sm:inline"><TranslatedText tKey="landing_free_quotes" defaultText="100% Free Quotes" /></span>
+            <span className="text-emerald-600 dark:text-emerald-400 hidden sm:inline"><TranslatedText tKey="landing_free_quotes" defaultText="100% Free Quotes" /></span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.3] md:leading-[1.2] transition-colors">
+          {/* H1 - solid color on mobile, gradient only on desktop (where renderer handles it fine) */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.3] md:leading-[1.2]">
             <TranslatedText tKey="protect_home" defaultText="Instant Free CCTV Quotation." /> <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:via-cyan-300 dark:to-emerald-400 drop-shadow-sm">
+            {/* Solid blue on mobile, gradient on md+ screens */}
+            <span className="text-blue-600 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-blue-600 md:to-indigo-600 dark:text-blue-400 dark:md:from-blue-400 dark:md:via-cyan-300 dark:md:to-emerald-400">
               <TranslatedText tKey="keep_family_safe" defaultText="Lowest Price Guaranteed." />
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-2xl text-slate-600 dark:text-blue-100/70 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed transition-colors">
+          <p className="text-base sm:text-lg md:text-2xl text-slate-600 dark:text-blue-100/70 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed">
             <TranslatedText tKey="landing_subtitle" defaultText="Get your exact CCTV installation cost online in 2 minutes. We offer easy CCTV on EMI options to secure your property without breaking the bank." />
           </p>
 
-          <div className="w-full mb-8 sm:mb-10 md:mb-16 relative group">
-             {/* Radar Pulse Effect behind Widget */}
-             <div className="absolute inset-0 bg-blue-500/20 rounded-[32px] sm:rounded-[48px] animate-ping opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-             <div className="absolute -inset-4 bg-blue-500/10 dark:bg-blue-500/5 blur-xl rounded-full -z-10 transition-colors" />
-             <PincodeWidget variant="hero" />
+          <div className="w-full mb-8 sm:mb-10 md:mb-16">
+            <PincodeWidget variant="hero" />
           </div>
 
-          <div className="flex sm:hidden items-center gap-4 mt-8 text-[10px] font-black text-blue-300/50 uppercase tracking-widest">
+          <div className="flex sm:hidden items-center gap-4 mt-8 text-[10px] font-black text-slate-400 dark:text-blue-300/50 uppercase tracking-widest">
             <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> <TranslatedText tKey="landing_gst_bill" defaultText="18% GST Bill" /></span>
             <span>·</span>
             <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> <TranslatedText tKey="landing_installs" defaultText="500+ Installs" /></span>
