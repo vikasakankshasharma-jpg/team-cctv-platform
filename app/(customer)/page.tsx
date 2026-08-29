@@ -122,14 +122,14 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.3] md:leading-[1.2] transition-colors">
-            <TranslatedText tKey="instant_free_quote" defaultText="Instant Free CCTV Quotation." /> <br />
+            <TranslatedText tKey="protect_home" defaultText="Instant Free CCTV Quotation." /> <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:via-cyan-300 dark:to-emerald-400 drop-shadow-sm">
-              <TranslatedText tKey="lowest_price_guaranteed" defaultText="Lowest Price Guaranteed." />
+              <TranslatedText tKey="keep_family_safe" defaultText="Lowest Price Guaranteed." />
             </span>
           </h1>
 
           <p className="text-base sm:text-lg md:text-2xl text-slate-600 dark:text-blue-100/70 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed transition-colors">
-            <TranslatedText tKey="landing_subtitle_emi" defaultText="Get your exact CCTV installation cost online in 2 minutes. We offer easy CCTV on EMI options to secure your property without breaking the bank." />
+            <TranslatedText tKey="landing_subtitle" defaultText="Get your exact CCTV installation cost online in 2 minutes. We offer easy CCTV on EMI options to secure your property without breaking the bank." />
           </p>
 
           <div className="w-full mb-8 sm:mb-10 md:mb-16 relative group">
