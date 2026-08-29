@@ -20,12 +20,12 @@ const inter = Inter({ subsets: ["latin"], display: "swap" });
 export const metadata: Metadata = {
   metadataBase: new URL("https://cctvquotation.com"),
   manifest: "/manifest.json",
-  title: "CCTV Quotation Online | India's Best Security Systems & Installation",
-  description: "Get an instant CCTV quotation online anywhere in India. We provide premium cameras like CP Plus & Hikvision with 18% GST included. 100% Free Smart Estimate.",
-  keywords: ["CCTV Quotation", "Security Systems India", "CCTV Installation", "Best CCTV Camera", "CP Plus", "Hikvision", "Smart Home Security"],
+  title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
+  description: "Get an instant free CCTV quotation online. We offer CCTV on EMI with the lowest price guaranteed for premium cameras like CP Plus & Hikvision.",
+  keywords: ["Instant free CCTV quotation", "CCTV on EMI", "Lowest Price Guaranteed CCTV", "CCTV Quotation", "Security Systems India", "CCTV Installation"],
   openGraph: {
-    title: "CCTV Quotation Online | India's Best Security Systems & Installation",
-    description: "Instant AI-driven professional CCTV blueprints and exact installation cost for property owners across India.",
+    title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
+    description: "Get your instant free CCTV quotation online. CCTV on EMI with the lowest price guaranteed for property owners across India.",
     url: "https://cctvquotation.com",
     siteName: "CCTVQuotation",
     locale: "en_IN",
@@ -41,8 +41,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CCTV Quotation Online | India's Best Security Systems & Installation",
-    description: "Instant professional CCTV blueprints and installation cost for property owners across India.",
+    title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
+    description: "Get your instant free CCTV quotation online. CCTV on EMI with the lowest price guaranteed.",
     images: ["https://cctvquotation.com/og-image.png"],
   },
   robots: {

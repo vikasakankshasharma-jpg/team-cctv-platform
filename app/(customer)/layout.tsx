@@ -12,12 +12,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "CCTV Quotation Online | Professional Installation & Setup | CCTVQuotation",
-  description: "Get a professional, tailored CCTV hardware blueprint and quote for your property in minutes. Transparent pricing with top brands.",
-  keywords: ["CCTV Quotation Online", "CCTV Installation", "CCTV Camera Price", "CCTVQuotation"],
+  title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
+  description: "Get an instant free CCTV quotation online. We offer CCTV on EMI with the lowest price guaranteed for CP Plus, Hikvision & Prama. 100% Free Smart Estimate.",
+  keywords: ["Instant free CCTV quotation", "CCTV on EMI", "Lowest Price Guaranteed CCTV", "CCTVQuotation", "CCTV Installation"],
   openGraph: {
-    title: "CCTV Quotation Online | Professional Installation & Setup | CCTVQuotation",
-    description: "Get your custom security blueprint and CCTV installation cost in 2 minutes.",
+    title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
+    description: "Get your custom security blueprint and CCTV installation cost instantly with the lowest price guaranteed.",
     type: "website",
     locale: "en_IN",
     siteName: "CCTVQuotation",

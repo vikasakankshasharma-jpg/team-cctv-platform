@@ -21,15 +21,15 @@ import type { Metadata } from "next";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const metadata: Metadata = {
-  title: "CCTVQuotation | Get Free & Instant CCTV Installation Price Online",
-  description: "Get an instant CCTV camera price with professional installation. Answer a few simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
-  keywords: ["CCTV price with installation", "CCTV camera price", "Online CCTV quotation", "CCTVQuotation", "TEAM CCTV"],
+  title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
+  description: "Get an instant free CCTV quotation online. We offer CCTV on EMI with the lowest price guaranteed for CP Plus, Hikvision & Prama. 100% Free Smart Estimate.",
+  keywords: ["Instant free CCTV quotation", "CCTV on EMI", "Lowest Price Guaranteed CCTV", "CCTV price with installation", "CCTVQuotation", "TEAM CCTV"],
   alternates: {
     canonical: "https://cctvquotation.com",
   },
   openGraph: {
-    title: "CCTVQuotation | Get Free & Instant CCTV Installation Price Online",
-    description: "Get an instant CCTV camera price with professional installation. Answer a few simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
+    title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
+    description: "Get an instant free CCTV quotation online. CCTV on EMI with the lowest price guaranteed for CP Plus & Prama systems.",
     type: "website",
     url: "https://cctvquotation.com",
     siteName: "CCTVQuotation",
@@ -45,8 +45,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CCTVQuotation | Get Free & Instant CCTV Installation Price Online",
-    description: "Get an instant CCTV camera price with professional installation. Answer a few simple questions and receive three dynamic quotes for CP Plus & Prama systems with 18% GST included.",
+    title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
+    description: "Get an instant free CCTV quotation online. CCTV on EMI with the lowest price guaranteed.",
     images: ["https://cctvquotation.com/og-image.png"],
   },
 };
@@ -122,14 +122,14 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.3] md:leading-[1.2] transition-colors">
-            <TranslatedText tKey="protect_home" defaultText="Protect Your Home." /> <br />
+            <TranslatedText tKey="instant_free_quote" defaultText="Instant Free CCTV Quotation." /> <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:via-cyan-300 dark:to-emerald-400 drop-shadow-sm">
-              <TranslatedText tKey="keep_family_safe" defaultText="Keep Your Family Safe." />
+              <TranslatedText tKey="lowest_price_guaranteed" defaultText="Lowest Price Guaranteed." />
             </span>
           </h1>
 
           <p className="text-base sm:text-lg md:text-2xl text-slate-600 dark:text-blue-100/70 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed transition-colors">
-            <TranslatedText tKey="landing_subtitle" defaultText="Find out the exact cost for your CCTV setup in just 2 minutes. Simple, reliable, and tailored for your needs." />
+            <TranslatedText tKey="landing_subtitle_emi" defaultText="Get your exact CCTV installation cost online in 2 minutes. We offer easy CCTV on EMI options to secure your property without breaking the bank." />
           </p>
 
           <div className="w-full mb-8 sm:mb-10 md:mb-16 relative group">

@@ -5,18 +5,31 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID?.replace(/[\r\n\s]/g, "");
+const GADS_ID = process.env.NEXT_PUBLIC_GADS_ID?.replace(/[\r\n\s]/g, "");
+const GADS_CONVERSION_LABEL = process.env.NEXT_PUBLIC_GADS_CONVERSION_LABEL?.replace(/[\r\n\s]/g, "");
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID?.replace(/[\r\n\s]/g, "");
 
 /**
  * Global Tracking Utility
- * Dispatches events to both GA4 and Meta Pixel simultaneously.
+ * Dispatches events to both GA4, Google Ads, and Meta Pixel simultaneously.
  */
 export const trackEvent = (eventName: string, params: Record<string, unknown> = {}) => {
   if (typeof window === "undefined") return;
 
-  // 1. Google Analytics 4
-  if (window.gtag && GA_ID) {
-    window.gtag("event", eventName, params);
+  // 1. Google Analytics 4 & Google Ads
+  if (window.gtag) {
+    if (GA_ID) {
+      window.gtag("event", eventName, params);
+    }
+    
+    // Google Ads Conversion Tracking
+    if (GADS_ID && eventName === "generate_lead" && GADS_CONVERSION_LABEL) {
+      window.gtag("event", "conversion", {
+        send_to: `${GADS_ID}/${GADS_CONVERSION_LABEL}`,
+        value: params.estimated_value || 0,
+        currency: "INR"
+      });
+    }
   }
 
   // 2. Meta Pixel
@@ -49,28 +62,35 @@ export function TrackingProvider({ nonce }: { nonce?: string }) {
 
   // Track page views on route change
   useEffect(() => {
-    if (pathname && window.gtag && GA_ID) {
-      window.gtag("config", GA_ID, {
-        page_path: pathname + searchParams.toString(),
-      });
+    if (pathname && window.gtag) {
+      const pagePath = pathname + searchParams.toString();
+      if (GA_ID) {
+        window.gtag("config", GA_ID, { page_path: pagePath });
+      }
+      if (GADS_ID) {
+        window.gtag("config", GADS_ID, { page_path: pagePath });
+      }
     }
     if (pathname && window.fbq && META_PIXEL_ID) {
       window.fbq("track", "PageView");
     }
   }, [pathname, searchParams]);
 
-  if (!GA_ID && !META_PIXEL_ID) return null;
+  const hasGoogleTag = !!(GA_ID || GADS_ID);
+  const primaryGoogleId = GA_ID || GADS_ID; // Use whichever exists to load the script
+
+  if (!hasGoogleTag && !META_PIXEL_ID) return null;
 
   return (
     <>
       {/* ───────────────────────────────────────────────────────────────────────
-          GOOGLE ANALYTICS 4
+          GOOGLE ANALYTICS 4 & GOOGLE ADS
           ─────────────────────────────────────────────────────────────────────── */}
-      {GA_ID && (
+      {hasGoogleTag && (
         <>
           <Script
             strategy="afterInteractive"
-            src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${primaryGoogleId}`}
             nonce={nonce}
           />
           <Script
@@ -82,9 +102,8 @@ export function TrackingProvider({ nonce }: { nonce?: string }) {
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
-                gtag('config', '${GA_ID}', {
-                  page_path: window.location.pathname,
-                });
+                ${GA_ID ? `gtag('config', '${GA_ID}', { page_path: window.location.pathname });` : ""}
+                ${GADS_ID ? `gtag('config', '${GADS_ID}', { page_path: window.location.pathname });` : ""}
               `,
             }}
           />
