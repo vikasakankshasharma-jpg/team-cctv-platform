@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { CCTVRequirement, AppSettings, Product, Addon } from "@/types";
 import { generateConfiguration } from "@/lib/configuration-engine";
 import { resolveProducts } from "@/lib/product-resolver";
-import { calculatePricingV2 } from "@/lib/pricing-engine-v2";
+import { generatePricingSnapshot } from "@/lib/pricing-engine-v2";
 
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     // 1. Fetch dependencies (Catalog, Settings, Addons)
     const settings = await getAdminSettings();
     const catalog = await getActiveProducts();
-    const addons = await getActiveAddons();
+    const addons = (await getActiveAddons()) as any; // Cast safely for now
 
     // 2. Requirements -> Engineering Configuration
     const config = generateConfiguration(req);
@@ -80,26 +80,29 @@ export async function POST(request: Request) {
     const resolvedSystems = resolveProducts(config, req, catalog);
 
     // 4. Resolved Hardware -> Pricing (3 Tiers)
-    const budgetQuote = calculatePricingV2({
-      resolvedSystem: resolvedSystems.budget,
+    const budgetQuote = generatePricingSnapshot(
+      resolvedSystems.budget,
       req,
-      settings,
-      addons
-    });
+      addons,
+      [],
+      settings
+    );
 
-    const recommendedQuote = calculatePricingV2({
-      resolvedSystem: resolvedSystems.recommended,
+    const recommendedQuote = generatePricingSnapshot(
+      resolvedSystems.recommended,
       req,
-      settings,
-      addons
-    });
+      addons,
+      [],
+      settings
+    );
 
-    const premiumQuote = calculatePricingV2({
-      resolvedSystem: resolvedSystems.premium,
+    const premiumQuote = generatePricingSnapshot(
+      resolvedSystems.premium,
       req,
-      settings,
-      addons
-    });
+      addons,
+      [],
+      settings
+    );
 
     // 5. Construct final response
     return NextResponse.json({

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Product } from "@/types";
-import { calculatePricingV2 } from "@/lib/pricing-engine-v2";
+import { generatePricingSnapshot } from "@/lib/pricing-engine-v2";
 
 export async function POST(request: Request) {
   try {
@@ -125,12 +125,13 @@ export async function POST(request: Request) {
       wire_cost_per_meter: 20
     };
 
-    const pricing = calculatePricingV2({
-      resolvedSystem: singlePlanSystem as any,
-      req: mockReq as any,
-      settings: mockSettings,
-      addons: []
-    });
+    const pricing = generatePricingSnapshot(
+      singlePlanSystem as any,
+      mockReq as any,
+      [],
+      [],
+      mockSettings as any
+    );
 
     return NextResponse.json({ 
       success: true, 
