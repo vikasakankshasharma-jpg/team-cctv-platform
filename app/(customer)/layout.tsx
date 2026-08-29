@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ShieldCheck, PhoneCall, Zap, ArrowRight, ChevronDown } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/shared/SiteFooter";
@@ -44,16 +45,15 @@ export default function CustomerLayout({
 
           {/* Left — Logo & Cities Dropdown */}
           <div className="flex items-center gap-2 sm:gap-6 shrink-0">
-            <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
-              <div className="bg-zinc-900 dark:bg-blue-600 text-white p-2 sm:p-2.5 rounded-xl sm:rounded-2xl group-hover:bg-blue-600 dark:group-hover:bg-blue-500 transition-all duration-300 shadow-lg shadow-zinc-900/10 group-hover:shadow-blue-500/30">
-                <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="font-black text-lg sm:text-2xl tracking-tighter text-zinc-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                  CCTV<span className="text-zinc-500 dark:text-zinc-400 font-medium tracking-tight">Quotation</span>
-                </span>
-                <span className="hidden sm:block text-xs sm:text-sm sm:text-xs font-black uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400 mt-1">by TEAM</span>
-              </div>
+            <Link href="/" className="flex items-center group shrink-0">
+              <Image 
+                src="/logo-horizontal.jpg"
+                alt="CCTVQuotation by TEAM"
+                width={200}
+                height={60}
+                className="h-8 sm:h-10 md:h-12 w-auto mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1.5 dark:rounded-xl transition-all"
+                priority
+              />
             </Link>
 
             {/* Smart Hierarchical Service Area Modal */}

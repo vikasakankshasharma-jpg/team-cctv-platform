@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ShieldCheck, Lock } from "lucide-react";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 
@@ -15,9 +16,14 @@ export function SiteFooter() {
     <footer className="border-t border-zinc-100 dark:border-zinc-900 bg-white dark:bg-zinc-950/50 py-10 sm:py-16 px-4 sm:px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] md:pb-10 transition-colors">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
         <div className="text-left space-y-4">
-          <div className="flex items-center gap-2 text-zinc-900 dark:text-white font-black tracking-tighter text-xl">
-            <ShieldCheck className="w-6 h-6 text-blue-600" />
-            CCTVQuotation
+          <div className="flex items-center gap-2">
+            <Image 
+              src="/logo-horizontal.jpg"
+              alt="CCTVQuotation by TEAM"
+              width={200}
+              height={60}
+              className="h-8 md:h-10 w-auto mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1.5 dark:rounded-xl transition-all"
+            />
           </div>
           <p className="text-zinc-500 dark:text-zinc-500 text-sm font-medium max-w-sm leading-relaxed">
             <TranslatedText tKey="footer_desc" defaultText="India's leading intelligent security planning ecosystem. We combine advanced hardware logic with certified human expertise." />
