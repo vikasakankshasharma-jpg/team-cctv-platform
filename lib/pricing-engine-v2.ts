@@ -153,7 +153,7 @@ export function generatePricingSnapshot(
 
   // Site Prep Surcharges
   const flags = (resolvedSystem as any).site_surcharge_flags || {};
-  const prepCfg = settings.site_preparation || {
+  const prepCfg = (settings as any).site_preparation || {
     ladderArrangementFee: 500,
     marbleLaborSurcharge: 400,
     metalInstallationSurcharge: 200,
