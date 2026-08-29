@@ -162,8 +162,8 @@ export async function POST(request: Request) {
           
           const updatePayload: any = { change_order_ids: updatedCoIds, invoice_ids: updatedInvIds };
           
-          if (!inventoryResult.success && jobData.status !== "backordered") {
-             updatePayload.status = "backordered";
+          if (!inventoryResult.success && (jobData.status as string) !== "BACKORDERED") {
+             updatePayload.status = "BACKORDERED";
              updatePayload.inventory_alert = `Missing items for CO ${coData.id}: ${inventoryResult.insufficientItems?.join(", ")}`;
           }
           
