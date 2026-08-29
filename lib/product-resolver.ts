@@ -43,7 +43,7 @@ export function resolveProducts(
       cable_meters: config.cable_meters || 0,
       connectors_qty: config.connectors_count || 0,
       site_surcharge_flags: config.site_surcharge_flags
-    },
+    } as any,
     recommended: {
       plan_type: "recommended",
       cameras: cameras.recommended,
@@ -53,7 +53,7 @@ export function resolveProducts(
       cable_meters: config.cable_meters || 0,
       connectors_qty: config.connectors_count || 0,
       site_surcharge_flags: config.site_surcharge_flags
-    },
+    } as any,
     premium: {
       plan_type: "premium",
       cameras: cameras.premium,
@@ -63,7 +63,7 @@ export function resolveProducts(
       cable_meters: config.cable_meters || 0,
       connectors_qty: config.connectors_count || 0,
       site_surcharge_flags: config.site_surcharge_flags
-    },
+    } as any,
     lifecycleWarnings
   };
 }
