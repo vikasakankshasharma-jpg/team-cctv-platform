@@ -9,14 +9,21 @@ export async function GET(
   try {
     const { quoteId } = await params;
     
-    // Fetch snapshot
-    const quotesSnap = await adminDb.collectionGroup("quotes").where(admin.firestore.FieldPath.documentId(), "==", quoteId).get();
-    if (quotesSnap.empty) {
-      return NextResponse.json({ success: false, message: "Quote not found" }, { status: 404 });
+    // Try root collection first (Wizard V2)
+    let doc = await adminDb.collection("quotes").doc(quoteId).get();
+    
+    // Fallback to searching all quotes if not found (legacy)
+    if (!doc.exists) {
+        const quotesSnap = await adminDb.collectionGroup("quotes").get();
+        const found = quotesSnap.docs.find((d: any) => d.id === quoteId);
+        if (!found) {
+            return NextResponse.json({ success: false, message: "Quote not found" }, { status: 404 });
+        }
+        doc = found as any;
     }
     
-    const quote = quotesSnap.docs[0].data() as any;
-    const quoteRef = quotesSnap.docs[0].ref;
+    const quote = doc.data() as any;
+    const quoteRef = doc.ref;
 
     // By-passing Firebase Storage due to GCP Billing absence.
     // Instead of uploading, we provide a dynamic stream endpoint.

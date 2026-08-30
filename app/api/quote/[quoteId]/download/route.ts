@@ -13,16 +13,22 @@ export async function GET(
   try {
     const { quoteId } = await params;
     
-    // Fetch snapshot using collectionGroup since quotes are stored under leads/{leadId}/quotes/{quoteId}
-    const quotesSnap = await adminDb.collectionGroup("quotes").get();
-    const doc = quotesSnap.docs.find((d: any) => d.id === quoteId);
+    let doc = await adminDb.collection("quotes").doc(quoteId).get();
     
-    if (!doc) {
-      return new NextResponse("Quote not found", { status: 404 });
+    if (!doc.exists) {
+        const quotesSnap = await adminDb.collectionGroup("quotes").get();
+        const found = quotesSnap.docs.find((d: any) => d.id === quoteId);
+        if (!found) {
+            return new NextResponse("Quote not found", { status: 404 });
+        }
+        doc = found as any;
     }
     
-    const leadSnap = await doc.ref.parent.parent?.get();
-    const leadData = leadSnap?.data() || {};
+    let leadData = {};
+    if (doc.ref.parent.parent) {
+        const leadSnap = await doc.ref.parent.parent.get();
+        leadData = leadSnap?.data() || {};
+    }
 
     const quote = {
       id: quoteId,
