@@ -108,6 +108,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
   // Initialize accumulators
   let baseHardwareCost = 0;
+    let actualLaborCost = 0;
+    let actualCablingCost = 0;
   let totalPurchaseCost = 0;
   let addonsTotal = 0;
   const lineItems: QuoteLineItem[] = [];
@@ -134,6 +136,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     const labor = calculateLabor(selection, settings, effectiveTech, effectiveLaborMultiplier);
     lineItems.push(...labor.items);
     baseHardwareCost += labor.totalRetail;
+      actualLaborCost = labor.totalRetail;
     // Labor purchase cost is usually 0 (internal staff) or a percentage (outsourced)
     totalPurchaseCost += (labor.totalRetail * (settings.labor_cost_margin_percent || 0)) / 100;
 
@@ -142,6 +145,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       const cabling = calculateCabling(selection, settings, effectiveTech, cablingMeters, effectiveLaborMultiplier);
       lineItems.push(...cabling.items);
       baseHardwareCost += cabling.totalRetail;
+        actualCablingCost = cabling.totalRetail;
       totalPurchaseCost += cabling.totalCost;
     }
 
@@ -259,9 +263,9 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     technology: effectiveTech,
     items: lineItems,
     addons: quoteAddons,
-    base_hardware_cost: Math.round(baseHardwareCost),
-    cabling_cost: 0, // Integrated into hardware or labor in this model
-    labor_cost: 0,   // Integrated into hardware or labor in this model
+    base_hardware_cost: Math.round(baseHardwareCost - actualLaborCost - actualCablingCost),
+    cabling_cost: actualCablingCost,
+    labor_cost: actualLaborCost,
     addons_total: Math.round(addonsTotal),
     gross_subtotal: Math.round(grossSubtotal),
     referral_discount: referralDiscount,
@@ -1154,4 +1158,5 @@ function resolveUnitPrice(product: Product, qty: number) {
   }
   return product.unit_price || 0;
 }
+
 
