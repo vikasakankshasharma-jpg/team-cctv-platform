@@ -1,29 +1,40 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
 
-export async function getKillSwitchState(): Promise<any> {
+interface KillSwitchState {
+  system_mode: "LIVE" | "MAINTENANCE";
+  payments_enabled: boolean;
+}
+
+export async function getKillSwitchState(): Promise<KillSwitchState> {
   try {
-    const doc = await adminDb.collection("settings").doc(SETTINGS_DOC_ID).get();
+    const doc = await adminDb
+      .collection("settings")
+      .doc(SETTINGS_DOC_ID)
+      .get();
+
     if (!doc.exists) {
-      return { system_mode: "MAINTENANCE", payments_enabled: false, debug: "DOC_MISSING" };
+      console.error("[KillSwitch] Settings doc missing! FAILING CLOSED: system_mode=MAINTENANCE, payments_enabled=false");
+      return { system_mode: "MAINTENANCE", payments_enabled: false };
     }
+
     const data = doc.data()!;
     const isLive = data.system_mode === "LIVE";
     const isPaymentsOn = data.payments_enabled === true;
+
     return {
       system_mode: isLive ? "LIVE" : "MAINTENANCE",
       payments_enabled: isLive && isPaymentsOn,
-      debug: "DOC_FOUND_" + data.system_mode
     };
-  } catch (err: any) {
-    return { system_mode: "MAINTENANCE", payments_enabled: false, debug: "ERROR: " + err.message };
+  } catch (err) {
+    console.error("[KillSwitch] Failed to read settings from Firestore (Outage/Error). FAILING CLOSED to MAINTENANCE & payments disabled:", err);
+    return { system_mode: "MAINTENANCE", payments_enabled: false };
   }
 }
 
-export async function isMaintenanceMode(): Promise<boolean | string> {
+export async function isMaintenanceMode(): Promise<boolean> {
   const state = await getKillSwitchState();
-  if (state.system_mode === "MAINTENANCE") return state.debug;
-  return false;
+  return state.system_mode === "MAINTENANCE";
 }
 
 export async function isPaymentsDisabled(): Promise<boolean> {

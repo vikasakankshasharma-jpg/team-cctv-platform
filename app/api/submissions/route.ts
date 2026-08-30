@@ -17,10 +17,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Kill Switch: Maintenance Mode Guard
-  const maint = await isMaintenanceMode();
-    if (maint) {
+  if (await isMaintenanceMode()) {
     return ApiResponse.error(
-      "Maintenance: " + maint,
+      "System is currently under maintenance. Please try again shortly.",
       "SYSTEM_MAINTENANCE",
       503
     );
@@ -211,5 +210,6 @@ export async function POST(request: NextRequest) {
     return ApiResponse.error("Internal server error", "INTERNAL_ERROR", 500, error.message);
   }
 }
+
 
 
