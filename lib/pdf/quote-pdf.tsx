@@ -190,11 +190,20 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
     id, 
     customer_name, 
     customer_mobile, 
-    expires_at: validUntil,
-    created_at: createdAt,
   } = quote;
 
-  const pricing = {
+  const validUntil = quote.validUntil || quote.expires_at;
+  const createdAt = quote.createdAt || quote.created_at;
+
+  const pricing = quote.pricingSnapshot ? {
+    total_payable: quote.pricingSnapshot.total_payable || 0,
+    items: quote.pricingSnapshot.items || [],
+    addons: quote.pricingSnapshot.addons || [],
+    labor_cost: quote.pricingSnapshot.labor_cost || 0,
+    gross_subtotal: quote.pricingSnapshot.gross_subtotal || 0,
+    gst_rate: quote.pricingSnapshot.gst_rate || 18,
+    gst_amount: quote.pricingSnapshot.gst_amount || 0
+  } : {
     total_payable: quote.total_payable || 0,
     items: quote.configuration_snapshot || [],
     addons: quote.addons_snapshot || [],
