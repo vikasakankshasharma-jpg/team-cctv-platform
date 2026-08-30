@@ -70,17 +70,20 @@ export function resolveProducts(
 
 function resolveCameras(config: CCTVConfiguration, req: CCTVRequirement, pool: Product[]) {
   const cams = pool.filter(p => (p.category as string) === "CAMERA_HD" || (p.category as string) === "CAMERA_IP" || p.category === "cctv_camera");
-  
-  const getCameraBySpec = (formFactor: string, targetTier: string) => {
-    let filtered = cams.filter(p => {
-      const matchForm = (p.specifications as any)?.formFactor === formFactor;
-      const matchTier = targetTier === "BUDGET" ? p.brand === "Budget Brand" : p.brand !== "Budget Brand";
-      return matchForm && matchTier;
-    });
-    if (filtered.length === 0) {
-      // Fallback
-      filtered = cams.filter(p => (p.specifications as any)?.formFactor === formFactor);
-    }
+    const getCameraBySpec = (formFactor: string, targetTier: string) => {
+      let filtered = cams.filter(p => {
+        const pForm = (p.specifications as any)?.formFactor || p.type;
+        const matchForm = pForm === formFactor || pForm?.toLowerCase() === formFactor.toLowerCase();
+        const matchTier = targetTier === "BUDGET" ? p.brand === "Budget Brand" : p.brand !== "Budget Brand";
+        return matchForm && matchTier;
+      });
+      if (filtered.length === 0) {
+        // Fallback
+        filtered = cams.filter(p => {
+          const pForm = (p.specifications as any)?.formFactor || p.type;
+          return pForm === formFactor || pForm?.toLowerCase() === formFactor.toLowerCase();
+        });
+      }
     if (filtered.length === 0) return cams[0]; // Desperate fallback
     return filtered.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
   };
@@ -118,7 +121,7 @@ function resolveRecorders(config: CCTVConfiguration, pool: Product[]) {
   const recs = pool.filter(p => 
     p.category === "recorder" && 
     (p.channels || p.max_cameras) === config.recorder_channels &&
-    (p.technologies || []).includes(config.technology as any)
+    ((p.technologies || []).includes(config.technology as any) || p.technology === config.technology)
   );
 
   const sorted = [...recs].sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
@@ -136,9 +139,19 @@ function resolveStorage(config: CCTVConfiguration, req: CCTVRequirement, pool: P
 
   // Very basic approximation: find HDD > storage_gb
   const storageItems = pool.filter(p => p.category === "storage" || p.storage_type === "Hard Disk");
-  const valid = storageItems.filter(p => (p.storage_capacity_tb || 0) * 1024 >= config.storage_gb!);
+  const valid = storageItems.filter(p => {
+    let tb = p.storage_capacity_tb || 0;
+    if (tb === 0 && typeof p.capacity === 'string' && p.capacity.includes('TB')) {
+      tb = parseInt(p.capacity.replace('TB', '')) || 0;
+    }
+    return tb * 1024 >= config.storage_gb!;
+  });
   
-  const sorted = [...valid].sort((a, b) => (a.storage_capacity_tb || 0) - (b.storage_capacity_tb || 0));
+  const sorted = [...valid].sort((a, b) => {
+    let aTb = a.storage_capacity_tb || (typeof a.capacity === 'string' ? parseInt(a.capacity.replace('TB', '')) || 0 : 0);
+    let bTb = b.storage_capacity_tb || (typeof b.capacity === 'string' ? parseInt(b.capacity.replace('TB', '')) || 0 : 0);
+    return aTb - bTb;
+  });
   const selected = sorted[0]; // Cheapest valid storage
 
   return {
@@ -152,7 +165,8 @@ function resolvePower(config: CCTVConfiguration, pool: Product[]) {
   if ((config.power_wattage_w || 0) === 0) return { budget: undefined, recommended: undefined, premium: undefined };
 
   const powerItems = pool.filter(p => p.category === "power_device");
-  const valid = powerItems.filter(p => (p.power_wattage_w || 0) >= config.power_wattage_w!);
+  let valid = powerItems.filter(p => (p.power_wattage_w || 0) >= config.power_wattage_w!);
+  if (valid.length === 0) valid = powerItems; // fallback to any power supply if wattage missing
 
   const sorted = [...valid].sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
   return {
@@ -160,6 +174,4 @@ function resolvePower(config: CCTVConfiguration, pool: Product[]) {
     recommended: sorted[0],
     premium: sorted[sorted.length - 1] || sorted[0]
   };
-}
-
 
