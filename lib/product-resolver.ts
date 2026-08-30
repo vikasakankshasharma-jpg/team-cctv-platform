@@ -69,7 +69,10 @@ export function resolveProducts(
 }
 
 function resolveCameras(config: CCTVConfiguration, req: CCTVRequirement, pool: Product[]) {
-  const cams = pool.filter(p => (p.category as string) === "CAMERA_HD" || (p.category as string) === "CAMERA_IP" || p.category === "cctv_camera");
+  const cams = pool.filter(p => {
+    const isCam = (p.category as string) === "CAMERA_HD" || (p.category as string) === "CAMERA_IP" || p.category === "cctv_camera";
+    return isCam && p.technology === config.technology;
+  });
     const getCameraBySpec = (formFactor: string, targetTier: string) => {
       let filtered = cams.filter(p => {
         const pForm = (p.specifications as any)?.formFactor || p.type;
