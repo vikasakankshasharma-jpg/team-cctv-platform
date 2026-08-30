@@ -24,7 +24,7 @@ export async function GET(
         doc = found as any;
     }
     
-    let leadData = {};
+    let leadData: any = {};
     if (doc.ref.parent.parent) {
         const leadSnap = await doc.ref.parent.parent.get();
         leadData = leadSnap?.data() || {};
