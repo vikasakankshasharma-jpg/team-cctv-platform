@@ -322,6 +322,29 @@ export function getDefaultFallbackWizard(): WizardStep[] {
             { id: "fopt_s_30", label: "1 Month (Required for strict security compliance)", value: "30", position: 2 },
           ],
         },
+        {
+          id: "q_recording_mode",
+          question_text: "Select recording mode preference:",
+          input_type: "single",
+          is_required: false,
+          position: 1,
+          options: [
+            { 
+              id: "opt_rec_continuous", 
+              label: "24×7 Continuous (Non-stop Recording · Banks, Retail Shops, Cash Counters)", 
+              value: "continuous", 
+              position: 0, 
+              badge: "Full Backup" 
+            },
+            { 
+              id: "opt_rec_motion", 
+              label: "Smart Motion Detection (Records only movement · Saves ~45% Disk Space & Cost)", 
+              value: "motion", 
+              position: 1, 
+              badge: "Best Value" 
+            },
+          ],
+        },
       ],
     },
     {
@@ -441,6 +464,39 @@ export function getDefaultFallbackWizard(): WizardStep[] {
             { id: "sopt_false",  label: "False Ceiling",          value: "false",   position: 1 },
             { id: "sopt_marble", label: "Marble / Stone",         value: "marble",  position: 2 },
             { id: "sopt_metal",  label: "Metal / Pole",           value: "metal",   position: 3 },
+          ],
+        },
+        {
+          id: "q_wiring_type",
+          question_text: "Select your preferred wiring finish:",
+          input_type: "single",
+          is_required: false,
+          position: 2,
+          options: [
+            { id: "wopt_open",    label: "Open Clip Wiring (Standard & Fast)", value: "open", position: 0 },
+            { id: "wopt_conduit", label: "PVC Conduit / Casing Piping (+Rs.20/m · Concealed & Neat)", value: "conduit", position: 1 },
+          ],
+        },
+        {
+          id: "q_power_dvr",
+          question_text: "Is there a 230V power socket available near the DVR/NVR location?",
+          input_type: "single",
+          is_required: false,
+          position: 3,
+          options: [
+            { id: "popt_yes", label: "Yes, power point is available nearby", value: "yes", position: 0 },
+            { id: "popt_no",  label: "No, power point needs extension / spike guard", value: "no", position: 1 },
+          ],
+        },
+        {
+          id: "q_router_dvr",
+          question_text: "Is the WiFi router in the same room as the DVR/NVR?",
+          input_type: "single",
+          is_required: false,
+          position: 4,
+          options: [
+            { id: "ropt_same", label: "Yes, in the same room (Short LAN cable works)", value: "same_room", position: 0 },
+            { id: "ropt_diff", label: "No, in a different room/floor (Extra LAN run needed)", value: "different_room", position: 1 },
           ],
         },
       ],

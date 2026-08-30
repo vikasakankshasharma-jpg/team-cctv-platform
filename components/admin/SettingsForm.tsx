@@ -560,6 +560,49 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 })}
               </div>
             </div>
+        </div>
+        </div>
+
+        {/* Section: Operational Mode & Emergency Kill Switch */}
+        <div className="lg:col-span-2 bg-card border-2 border-primary/30 rounded-2xl p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground tracking-tight">System Operational Mode & Kill Switch</h2>
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Emergency Controls for Public Launch</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-5 rounded-xl bg-secondary/30 border border-border">
+              <label className="text-xs font-bold uppercase tracking-wider block mb-2">System Mode</label>
+              <select
+                name="system_mode"
+                value={formData.system_mode || "LIVE"}
+                onChange={handleChange}
+                className="w-full bg-background border border-border text-foreground rounded-lg px-3 py-2 text-sm font-semibold outline-none"
+              >
+                <option value="LIVE">🟢 LIVE (All public customer flows active)</option>
+                <option value="MAINTENANCE">🟡 MAINTENANCE (Public site displays maintenance notice)</option>
+              </select>
+              <p className="text-[11px] text-muted-foreground mt-2">Switch to Maintenance to pause public intake during upgrades.</p>
+            </div>
+
+            <div className="p-5 rounded-xl bg-secondary/30 border border-border">
+              <label className="text-xs font-bold uppercase tracking-wider block mb-2">Payments Gateway Switch</label>
+              <select
+                name="payments_enabled"
+                value={formData.payments_enabled !== false ? "true" : "false"}
+                onChange={(e) => setFormData(prev => ({ ...prev, payments_enabled: e.target.value === "true" }))}
+                className="w-full bg-background border border-border text-foreground rounded-lg px-3 py-2 text-sm font-semibold outline-none"
+              >
+                <option value="true">🟢 PAYMENTS ENABLED (Checkout & online advance active)</option>
+                <option value="false">🔴 PAYMENTS DISABLED (Quotes generated & saved; online payment paused)</option>
+              </select>
+              <p className="text-[11px] text-muted-foreground mt-2">Allows quotation generation to continue while disabling online transactions.</p>
+            </div>
           </div>
         </div>
       </div>

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminApi } from "@/lib/auth-server";
+import { requireRoleApi } from "@/lib/auth-server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/firebase-client";
 
 export async function POST(req: NextRequest) {
   try {
-    await requireAdminApi();
+    await requireRoleApi(["admin", "super_admin"]);
     
     const body = await req.json();
     const { installerId, bank_account, ifsc, name_at_bank } = body;

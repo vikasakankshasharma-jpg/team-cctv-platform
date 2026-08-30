@@ -14,17 +14,50 @@ export interface Address {
 }
 
 // ── New Execution Models (Hub & Spoke) ──────────────────────────────────────
+export type JobStatus = 
+  | "PENDING_DISPATCH" 
+  | "BACKORDERED" 
+  | "ASSIGNED" 
+  | "IN_PROGRESS" 
+  | "MATERIAL_SHORTAGE" 
+  | "COMPLETED" 
+  | "CANCELLED";
+
+export interface SiteSurveySnapshot {
+  mounting_height: string;
+  surface_type: string;
+  furnishing_status?: string;
+  wall_penetration?: string;
+  ladder_required: boolean;
+  ladder_arrangement?: "customer" | "team";
+  outdoor_camera_count: number;
+  indoor_camera_count: number;
+  wiring_type?: "open" | "conduit";
+  power_socket_near_dvr?: boolean;
+  router_near_dvr?: boolean;
+  junction_box_count?: number;
+}
+
 export interface Job {
   id?: string;
   lead_id: string;
   quote_id?: string;
+  invoice_ids?: string[];
+  change_order_ids?: string[];
+  
   address: Address;
-  hub_id?: string | null;            // Which hub supplies hardware
-  installer_id?: string | null;      // Which installer executes
+  hub_id?: string | null;            
+  installer_id?: string | null;      
   type: "survey" | "installation" | "amc_visit";
-  status: "pending_dispatch" | "assigned" | "en_route" | "in_progress" | "pending_customer_approval" | "completed" | "audited" | "cancelled";
+  
+  status: JobStatus;
+  
+  site_survey?: SiteSurveySnapshot;
+  inventory_alert?: string;
+  
   scheduled_at?: unknown;
   sla_deadline?: string | null;
+  completed_at?: unknown;
   created_at: unknown;
   updated_at?: unknown;
 }
@@ -353,6 +386,12 @@ export interface ConfiguratorSelection {
   lead_pincode?: string;
   wants_remote_viewing?: boolean;
   broadband_status?: "yes" | "no" | "sim_router";
+  recording_mode?: "continuous" | "motion" | "smart";
+  indoor_camera_count?: number;
+  outdoor_camera_count?: number;
+  power_socket_near_dvr?: boolean;
+  router_near_dvr?: boolean;
+  include_junction_boxes?: boolean;
 }
 
 export interface QuoteLineItem {
@@ -473,6 +512,10 @@ export interface AppSettings {
     end_time: string;   // HH:mm format, e.g. "18:00"
     days_off: number[]; // 0=Sunday, 1=Monday...
   };
+
+  // Launch Kill Switch & Operational Controls
+  system_mode?: "LIVE" | "MAINTENANCE";
+  payments_enabled?: boolean;
 }
 
 export interface Promoter {
@@ -527,6 +570,7 @@ export interface WizardOption {
   pricing_tags?: string[];
   icon?: string;
   tier_hint?: string;
+  badge?: string;
 }
 
 export interface WizardQuestion {
@@ -890,3 +934,131 @@ export interface QuoteDelivery { [key: string]: any; }
 export interface QuoteSnapshot { [key: string]: any; }
 
 
+
+// ============================================================
+// Phase 3: Financial Contracts & Change Orders
+// ============================================================
+
+export interface InvoiceItemSnapshot {
+  product_id: string;
+  display_name: string;
+  qty: number;
+  unit_price: number;
+  line_total: number;
+  base_cost_at_quote: number;
+  stock_status_at_quote?: string;
+  brand?: string;
+}
+
+export interface ChangeOrder {
+  id: string;
+  base_invoice_id: string;
+  base_job_id: string;
+  supplementary_quote_id: string;
+
+  reason: "extra_material" | "extra_labor" | "site_change" | "customer_request";
+  items: InvoiceItemSnapshot[];
+
+  subtotal: number;
+  gst_amount: number;
+  total_payable: number;
+
+  status: "draft" | "pending_customer_approval" | "approved" | "rejected" | "paid" | "cancelled";
+
+  created_by: string;
+  created_at: string;
+}
+
+export interface Invoice {
+  id: string;
+  quote_id: string;
+  base_invoice_id?: string;
+
+  customer_mobile: string;
+  items: InvoiceItemSnapshot[];
+
+  subtotal: number;
+  gst_amount: number;
+  total_payable: number;
+
+  payment_status: "unpaid" | "paid_advance" | "fully_paid";
+  payment_references: string[];
+
+  is_supplementary: boolean;
+  change_order_id?: string;
+
+  created_at: string;
+}
+
+// ============================================================
+// Phase 3: Inventory & Stock Ledger
+// ============================================================
+
+export interface InventoryItem {
+  id: string; // product_id
+  total_stock: number;
+  reserved_stock: number;
+  available_stock: number; // total_stock - reserved_stock
+  last_updated: string;
+}
+
+export interface InventoryLedgerEntry {
+  id: string;
+  product_id: string;
+  qty: number; // Positive for addition/returns, negative for consumption
+  type: "purchase" | "consumption" | "reservation" | "reversal" | "adjustment";
+  reference_entity_id: string; // Job ID, Invoice ID, or ChangeOrder ID
+  reference_entity_type: "job" | "invoice" | "change_order" | "manual";
+  notes?: string;
+  created_at: string;
+}
+
+export interface AuditLog {
+  id: string;
+  entity_type: "quote" | "invoice" | "change_order" | "job" | "inventory";
+  entity_id: string;
+  action: "created" | "updated" | "payment_success" | "payment_failed" | "inventory_deducted";
+  actor: "system" | "webhook" | "admin" | "installer";
+  details: Record<string, any>;
+  created_at: string;
+}
+
+export interface PaymentTransaction {
+  id: string;
+  transaction_id: string;
+  order_id: string;
+  reference_entity_id: string; // Invoice ID or Change Order ID
+  reference_entity_type: "invoice" | "change_order";
+  amount: number;
+  status: "SUCCESS" | "FAILED";
+  gateway_response: Record<string, any>;
+  created_at: string;
+}
+
+
+// ============================================================
+// Phase 4A: CRM & Follow-up Queue
+// ============================================================
+
+export type LeadPriority = "HOT" | "WARM" | "NURTURE" | "COLD";
+export type FollowUpStatus = "pending" | "sending" | "sent" | "failed" | "retry_pending" | "needs_manual_followup" | "cancelled";
+
+export interface FollowUpTask {
+  id: string; // Idempotent key (e.g., LEAD_ID-INITIAL_FOLLOWUP)
+  lead_id: string;
+  quote_id?: string;
+  priority: LeadPriority;
+  campaign_type: string;
+  channel: "whatsapp" | "sms" | "email" | "call";
+  
+  due_at: string;
+  attempt_count: number;
+  max_attempts: number;
+  
+  status: FollowUpStatus;
+  last_outcome?: string;
+  assigned_to?: string;
+  
+  created_at: string;
+  updated_at: string;
+}

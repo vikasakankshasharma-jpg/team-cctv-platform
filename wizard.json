@@ -173,11 +173,19 @@
       "updated_at": null,
       "questions": [
         {
-          "id": "q_cam_count",
-          "question_text": "Enter number of cameras:",
+          "id": "q_indoor_cam_count",
+          "question_text": "How many Indoor cameras (Dome)?",
           "is_required": true,
           "input_type": "number",
           "position": 0,
+          "options": []
+        },
+        {
+          "id": "q_outdoor_cam_count",
+          "question_text": "How many Outdoor cameras (Bullet)?",
+          "is_required": true,
+          "input_type": "number",
+          "position": 1,
           "options": []
         }
       ]
@@ -302,8 +310,18 @@
           "is_required": true,
           "position": 0,
           "options": [
-            { "id": "opt_remote_yes", "label": "Yes (Mobile & PC Access)", "value": "yes", "position": 0 },
-            { "id": "opt_remote_no",  "label": "No (Local Viewing Only)",  "value": "no",  "position": 1 }
+            {
+              "id": "opt_remote_yes",
+              "label": "Yes (Mobile & PC Access)",
+              "value": "yes",
+              "position": 0
+            },
+            {
+              "id": "opt_remote_no",
+              "label": "No (Local Viewing Only)",
+              "value": "no",
+              "position": 1
+            }
           ]
         },
         {
@@ -313,9 +331,24 @@
           "is_required": false,
           "position": 1,
           "options": [
-            { "id": "opt_net_yes", "label": "Yes, I have Broadband/WiFi", "value": "yes", "position": 0 },
-            { "id": "opt_net_no",  "label": "No, I'll arrange it myself", "value": "no", "position": 1 },
-            { "id": "opt_net_sim", "label": "No, include a 4G SIM Router", "value": "sim_router", "position": 2 }
+            {
+              "id": "opt_net_yes",
+              "label": "Yes, I have Broadband/WiFi",
+              "value": "yes",
+              "position": 0
+            },
+            {
+              "id": "opt_net_no",
+              "label": "No, I'll arrange it myself",
+              "value": "no",
+              "position": 1
+            },
+            {
+              "id": "opt_net_sim",
+              "label": "No, include a 4G SIM Router",
+              "value": "sim_router",
+              "position": 2
+            }
           ]
         }
       ]
@@ -448,11 +481,32 @@
           ]
         },
         {
+          "id": "q_ladder",
+          "question_text": "Since the mounting height is high, is a tall ladder or scaffolding available on-site?",
+          "is_required": false,
+          "input_type": "single",
+          "position": 1,
+          "options": [
+            {
+              "id": "lopt_yes",
+              "label": "Yes, I will provide it",
+              "position": 0,
+              "value": "customer_provided"
+            },
+            {
+              "id": "lopt_no",
+              "label": "No, Installer needs to bring it",
+              "position": 1,
+              "value": "installer_brings"
+            }
+          ]
+        },
+        {
           "id": "q_surface",
           "question_text": "What kind of surface will the cameras be mounted on?",
           "is_required": true,
           "input_type": "multi",
-          "position": 1,
+          "position": 2,
           "options": [
             {
               "id": "sopt_brick",
@@ -464,7 +518,7 @@
               "id": "sopt_false",
               "label": "False Ceiling",
               "position": 1,
-              "value": "false"
+              "value": "false_ceiling"
             },
             {
               "id": "sopt_marble",
@@ -477,6 +531,48 @@
               "label": "Metal / Pole",
               "position": 3,
               "value": "metal"
+            }
+          ]
+        },
+        {
+          "id": "q_site_condition",
+          "question_text": "What is the current condition of the site?",
+          "is_required": true,
+          "input_type": "single",
+          "position": 3,
+          "options": [
+            {
+              "id": "copt_furn",
+              "label": "Fully Furnished / Occupied",
+              "position": 0,
+              "value": "furnished"
+            },
+            {
+              "id": "copt_under",
+              "label": "Under Construction / Bare Shell",
+              "position": 1,
+              "value": "under_construction"
+            }
+          ]
+        },
+        {
+          "id": "q_wall_penetration",
+          "question_text": "Will the wiring need to pass through multiple thick walls or different floors?",
+          "is_required": true,
+          "input_type": "single",
+          "position": 4,
+          "options": [
+            {
+              "id": "wopt_easy",
+              "label": "No, mostly same room / easy routing",
+              "position": 0,
+              "value": "easy"
+            },
+            {
+              "id": "wopt_thick",
+              "label": "Yes, requires drilling through thick walls/floors",
+              "position": 1,
+              "value": "thick_drilling"
             }
           ]
         }
@@ -493,34 +589,40 @@
       "questions": [
         {
           "id": "q_timeline",
-          "question_text": "Select urgency:",
+          "question_text": "When do you want to install the CCTV?",
           "input_type": "single",
           "is_required": true,
           "position": 0,
           "options": [
             {
-              "id": "fopt_t_asap",
-              "label": "ASAP (Today/Tomorrow)",
-              "value": "asap",
+              "id": "opt_immed",
+              "label": "Immediately",
+              "value": "immediately",
               "position": 0
             },
             {
-              "id": "fopt_t_week",
-              "label": "Within a week",
-              "value": "week",
+              "id": "opt_week",
+              "label": "This week",
+              "value": "this_week",
               "position": 1
             },
             {
-              "id": "fopt_t_month",
-              "label": "Next Month",
-              "value": "month",
+              "id": "opt_month",
+              "label": "This month",
+              "value": "this_month",
               "position": 2
             },
             {
-              "id": "fopt_t_research",
-              "label": "Just researching",
-              "value": "research",
+              "id": "opt_not_decided",
+              "label": "Date is not decided",
+              "value": "not_decided",
               "position": 3
+            },
+            {
+              "id": "opt_cold",
+              "label": "Just doing cold inquiry",
+              "value": "cold_inquiry",
+              "position": 4
             }
           ]
         }

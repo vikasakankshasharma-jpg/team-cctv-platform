@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Invoice, Job, ChangeOrder } from "@/types";
 import { InventoryEngine } from "@/lib/inventory-engine";
+import { isPaymentsDisabled } from "@/lib/kill-switch";
 
 function verifyWebhookSignature(payload: any, signature: string | null) {
   if (process.env.NODE_ENV === "test" || process.env.FIRESTORE_EMULATOR_HOST) {
@@ -22,6 +23,16 @@ export async function POST(request: Request) {
 
     if (!transaction_id || !reference_entity_id || !reference_entity_type) {
       return NextResponse.json({ success: false, message: "Missing fields" }, { status: 400 });
+    }
+
+    // Kill Switch: Payments Disabled Guard
+    // Still allow FAILED status webhooks through (to record failures), but block SUCCESS processing
+    if (status !== "FAILED" && await isPaymentsDisabled()) {
+      console.warn(`[KillSwitch] Payment webhook BLOCKED — payments disabled. txn=${transaction_id}`);
+      return NextResponse.json(
+        { success: false, message: "Payment processing is temporarily disabled. Transaction not processed." },
+        { status: 503 }
+      );
     }
 
     const result = await adminDb.runTransaction(async (transaction) => {

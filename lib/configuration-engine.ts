@@ -5,6 +5,17 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   
   // Calculate total cameras
   let totalCameras = req.camera_count || 0;
+  let indoorCameras = req.indoor_camera_count || 0;
+  let outdoorCameras = req.outdoor_camera_count || 0;
+  
+  // If explicitly provided via indoor/outdoor split
+  if (indoorCameras > 0 || outdoorCameras > 0) {
+    totalCameras = indoorCameras + outdoorCameras;
+  } else if (totalCameras > 0) {
+    // Fallback: If only total was provided (old wizard), assume all indoor for safety
+    indoorCameras = totalCameras;
+    outdoorCameras = 0;
+  }
   
   // If specific mixed requirements are provided, sum them up
   if (req.mixed_camera_requirements && req.mixed_camera_requirements.length > 0) {
@@ -77,10 +88,51 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   // Industrial Check (e.g. > 16 cameras)
   const isIndustrial = totalCameras > 16;
 
+
+  // --- Site Preparation & Logistics ---
+  const installer_requirements: string[] = [];
+  const site_surcharge_flags = {
+    requiresLadderFee: false,
+    requiresMarbleSurcharge: false,
+    requiresMetalSurcharge: false,
+    requiresFurnishedSurcharge: false,
+    requiresHeavyDrillingSurcharge: false,
+  };
+
+  if (req.mounting_height === 'high' || req.mounting_height === 'very_high') {
+    if (req.ladder_available === 'installer_brings') {
+      site_surcharge_flags.requiresLadderFee = true;
+      installer_requirements.push(req.mounting_height === 'very_high' ? '20ft Ladder / Scaffolding' : '15ft Ladder');
+    }
+  }
+
+  if (req.surface_types?.includes('marble')) {
+    site_surcharge_flags.requiresMarbleSurcharge = true;
+    installer_requirements.push('Diamond core drill bits (Marble/Stone)');
+  }
+  if (req.surface_types?.includes('metal')) {
+    site_surcharge_flags.requiresMetalSurcharge = true;
+    installer_requirements.push('Metal drill bits & self-tapping screws');
+  }
+
+  if (req.site_condition === 'furnished') {
+    site_surcharge_flags.requiresFurnishedSurcharge = true;
+    installer_requirements.push('Drop cloths, dust-covers, and vacuum for clean drilling');
+  }
+
+  if (req.wall_penetration === 'thick_drilling') {
+    site_surcharge_flags.requiresHeavyDrillingSurcharge = true;
+    installer_requirements.push('Heavy duty hammer drill & 1.5ft+ long masonry bits');
+  }
+
+  // --- End Site Preparation ---
+
   return {
     technology: req.technology_preference,
     technologies: req.technology_preference ? [req.technology_preference] : [],
     total_cameras: totalCameras,
+    indoor_cameras: indoorCameras,
+    outdoor_cameras: outdoorCameras,
     wired_cameras: wiredCameras,
     wireless_cameras: wirelessCameras,
     recorder_channels: recorderChannels || 0,
@@ -92,7 +144,9 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
     connectors_count: connectorsCount,
     connector_type: connectorType,
     requires_sim_router: requiresSimRouter,
-    industrial_threshold_exceeded: isIndustrial
+    industrial_threshold_exceeded: isIndustrial,
+    installer_requirements,
+    site_surcharge_flags
   } as CCTVConfiguration;
 }
 

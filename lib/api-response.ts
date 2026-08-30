@@ -13,7 +13,9 @@ export type ApiErrorCode =
   | "VALIDATION_ERROR" 
   | "INTERNAL_ERROR" 
   | "RATE_LIMIT_EXCEEDED"
-  | "PRICE_TAMPERING_OR_STALE";
+  | "PRICE_TAMPERING_OR_STALE"
+  | "SYSTEM_MAINTENANCE"
+  | "PAYMENTS_DISABLED";
 
 export class ApiResponse {
   static success(data: any, status = 200, requestId?: string) {

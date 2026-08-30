@@ -166,6 +166,29 @@ const WIZARD_STEPS: Record<string, WizardStep> = {
           { id: "fopt_s_30", label: "1 Month",             value: "30", position: 2 },
         ],
       },
+      {
+        id: "q_recording_mode",
+        question_text: "Select recording mode preference:",
+        input_type: "single",
+        is_required: false,
+        position: 1,
+        options: [
+          { 
+            id: "opt_rec_continuous", 
+            label: "24×7 Continuous (Non-stop Recording · Banks, Retail Shops, Cash Counters)", 
+            value: "continuous", 
+            position: 0, 
+            badge: "Full Backup",
+          },
+          { 
+            id: "opt_rec_motion", 
+            label: "Smart Motion Detection (Records only movement · Saves ~45% Disk Space & Cost)", 
+            value: "motion", 
+            position: 1, 
+            badge: "Best Value",
+          },
+        ],
+      },
     ],
   },
 

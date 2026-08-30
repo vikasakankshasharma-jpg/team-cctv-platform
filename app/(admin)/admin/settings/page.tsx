@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth-server";
+import { requireSuperAdmin } from "@/lib/auth-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
 import { Settings2 } from "lucide-react";
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function SettingsAdminPage() {
-  await requireAdmin();
+  await requireSuperAdmin();
 
   // Default values if the document hasn't been created yet
   const defaultSettings: AppSettings = {
@@ -55,6 +55,9 @@ export default async function SettingsAdminPage() {
     // NEW: Pincode and Cabling Config
     affordable_pincodes: ["302001", "302002", "302003", "302004", "302005", "302006", "302015", "302016"],
     default_cable_length_per_camera: 20,
+
+    system_mode: "LIVE",
+    payments_enabled: true,
 
     updated_at: null,
     updated_by: null,

@@ -38,9 +38,20 @@ function getAdminApp(): App {
   }
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
+  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+  
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    console.log("Using GOOGLE_APPLICATION_CREDENTIALS for Firebase Admin");
+    const credPath = require("path").resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    const serviceAccount = JSON.parse(require("fs").readFileSync(credPath, "utf8"));
+    return initializeApp({
+      credential: cert(serviceAccount),
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    });
+  }
 
   const isPlaceholder = !privateKey || privateKey.includes("YOUR_PRIVATE_KEY_HERE");
   console.log("Firebase Admin Debug:", { isPlaceholder, pid: !!projectId, email: !!clientEmail, bucket: !!storageBucket, envFileLoaded: process.env.FIREBASE_PROJECT_ID === "team-cctv-live-8294" });
@@ -78,6 +89,9 @@ function getAdminApp(): App {
   }
 
   try {
+    if (process.env.FIRESTORE_EMULATOR_HOST) {
+        return initializeApp({ projectId: "demo-secure-easy" });
+    }
     return initializeApp({
       credential: cert({
         projectId,

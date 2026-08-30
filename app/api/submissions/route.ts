@@ -4,6 +4,7 @@ import { adminDb, arrayUnion, serverTimestamp, increment } from "@/lib/firebase-
 import { rateLimit } from "@/lib/rate-limit";
 import { ApiResponse } from "@/lib/api-response";
 import { calculateSlaDeadline, OperatingHours } from "@/lib/sla-engine";
+import { isMaintenanceMode } from "@/lib/kill-switch";
 
 /**
  * ENTERPRISE LEAD INGESTION
@@ -13,6 +14,15 @@ export async function POST(request: NextRequest) {
   const { success } = await rateLimit(request);
   if (!success) {
     return ApiResponse.error("Too many requests", "RATE_LIMIT_EXCEEDED", 429);
+  }
+
+  // Kill Switch: Maintenance Mode Guard
+  if (await isMaintenanceMode()) {
+    return ApiResponse.error(
+      "System is currently under maintenance. Please try again shortly.",
+      "SYSTEM_MAINTENANCE",
+      503
+    );
   }
 
   try {
@@ -117,6 +127,25 @@ export async function POST(request: NextRequest) {
     const slaTimeoutMinutes = isHotLead ? 15 : 60;
     const slaBreachAt = new Date(Date.now() + slaTimeoutMinutes * 60 * 1000);
 
+    const cameraCount = Number(wizardAnswers?.camera_count || wizardAnswers?.q_cam_count || leadData.camera_count || 4);
+    const outdoorCount = Number(wizardAnswers?.outdoor_camera_count || wizardAnswers?.q_outdoor_cameras || 0);
+    const indoorCount = wizardAnswers?.indoor_camera_count !== undefined 
+      ? Number(wizardAnswers.indoor_camera_count)
+      : Math.max(0, cameraCount - outdoorCount);
+
+    const siteSurvey = {
+      mounting_height: String(wizardAnswers?.mounting_height || wizardAnswers?.q_height || "standard"),
+      surface_type: String(wizardAnswers?.surface_type || wizardAnswers?.q_surface || "brick"),
+      ladder_required: String(wizardAnswers?.mounting_height || wizardAnswers?.q_height || "").includes("high"),
+      ladder_arrangement: (wizardAnswers?.ladder_arrangement as any) || "customer",
+      outdoor_camera_count: outdoorCount,
+      indoor_camera_count: indoorCount,
+      wiring_type: (wizardAnswers?.wiring_type as any) || (wizardAnswers?.q_wiring_type as any) || "open",
+      power_socket_near_dvr: wizardAnswers?.power_socket_near_dvr !== undefined ? Boolean(wizardAnswers.power_socket_near_dvr) : true,
+      router_near_dvr: wizardAnswers?.router_near_dvr !== undefined ? Boolean(wizardAnswers.router_near_dvr) : true,
+      junction_box_count: cameraCount,
+    };
+
     await newLeadRef.set({
       customer_name:        leadData.customer_name,
       mobile_number:        leadData.mobile_number,
@@ -129,6 +158,7 @@ export async function POST(request: NextRequest) {
       technology_choice:    leadData.technology_choice,
       cabling_done:         leadData.cabling_done,
       is_hot_lead:          isHotLead,
+      site_survey:          siteSurvey,
 
       // Hub & Spoke Routing
       hub_id: null,

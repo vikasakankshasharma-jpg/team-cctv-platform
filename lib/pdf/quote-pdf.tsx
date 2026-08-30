@@ -7,134 +7,182 @@ const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontFamily: 'Helvetica',
-    fontSize: 12,
+    fontSize: 9,
     color: '#1d1d1f',
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 40,
-    borderBottom: '1 solid #e5e5ea',
-    paddingBottom: 20,
   },
-  logo: {
+  headerLeft: {
+    flexDirection: 'column',
+  },
+  logoText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    color: '#000000',
+  },
+  companyInfo: {
+    fontSize: 8,
+    color: '#6b7280',
+    lineHeight: 1.4,
+  },
+  headerRight: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+  },
+  quoteTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#0066cc',
-  },
-  quoteInfo: {
-    textAlign: 'right',
-    color: '#86868b',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  greeting: {
-    marginBottom: 20,
-  },
-  highlightBox: {
-    backgroundColor: '#f5f5f7',
-    padding: 20,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  highlightTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: '#4f46e5', // Indigo-600
     marginBottom: 10,
-    color: '#0066cc',
+    textTransform: 'uppercase',
   },
-  bulletPoint: {
+  quoteMetaGrid: {
+    flexDirection: 'column',
+  },
+  quoteMetaRow: {
     flexDirection: 'row',
-    marginBottom: 5,
+    justifyContent: 'flex-end',
+    marginBottom: 3,
   },
-  bulletText: {
-    marginLeft: 10,
+  quoteMetaLabel: {
+    color: '#6b7280',
+    fontSize: 8,
+    marginRight: 10,
+    width: 60,
+    textAlign: 'right',
   },
-  totalPriceBox: {
-    marginTop: 20,
-    alignItems: 'center',
-    padding: 20,
-    borderTop: '1 solid #e5e5ea',
-  },
-  totalPriceText: {
-    fontSize: 24,
+  quoteMetaValue: {
+    fontSize: 8,
     fontWeight: 'bold',
-    color: '#1d1d1f',
+    width: 70,
+    textAlign: 'right',
   },
-  planTag: {
-    marginTop: 10,
-    backgroundColor: '#e5f0ff',
-    color: '#0066cc',
-    padding: '4 12',
-    borderRadius: 12,
-    fontSize: 10,
+  preparedForLabel: {
+    fontSize: 8,
     fontWeight: 'bold',
+    color: '#6b7280',
+    marginBottom: 4,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 30,
-    marginBottom: 15,
-    borderBottom: '1 solid #e5e5ea',
-    paddingBottom: 5,
-  },
-  configItem: {
-    marginBottom: 15,
-  },
-  configLabel: {
-    fontWeight: 'bold',
-    color: '#86868b',
-    fontSize: 10,
-    marginBottom: 2,
-  },
-  configValue: {
+  customerName: {
     fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 2,
+    color: '#000000',
+  },
+  customerPhone: {
+    fontSize: 9,
+    color: '#6b7280',
+    marginBottom: 30,
   },
   table: {
     width: '100%',
-    marginTop: 20,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottom: '1 solid #e5e5ea',
-    paddingVertical: 8,
+    marginBottom: 30,
   },
   tableHeader: {
-    fontWeight: 'bold',
-    color: '#86868b',
-  },
-  col1: { width: '50%' },
-  col2: { width: '15%', textAlign: 'center' },
-  col3: { width: '35%', textAlign: 'right' },
-  tableTotalRow: {
     flexDirection: 'row',
+    backgroundColor: '#f3f4f6',
     paddingVertical: 8,
-    marginTop: 10,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
   },
-  tableTotalLabel: {
-    width: '65%',
-    textAlign: 'right',
-    fontWeight: 'bold',
+  colDesc: { width: '55%', fontWeight: 'bold' },
+  colQty: { width: '10%', textAlign: 'center', fontWeight: 'bold' },
+  colUnit: { width: '15%', textAlign: 'right', fontWeight: 'bold' },
+  colTotal: { width: '20%', textAlign: 'right', fontWeight: 'bold' },
+  tableRow: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
   },
-  tableTotalValue: {
-    width: '35%',
-    textAlign: 'right',
-    fontWeight: 'bold',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    textAlign: 'center',
-    color: '#86868b',
+  itemTitle: {
     fontSize: 9,
-    borderTop: '1 solid #e5e5ea',
-    paddingTop: 10,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 2,
   },
+  itemBrand: {
+    fontSize: 7,
+    color: '#9ca3af',
+  },
+  itemText: {
+    fontSize: 9,
+    color: '#374151',
+  },
+  bottomSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  termsBox: {
+    width: '60%',
+  },
+  termsTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 6,
+  },
+  termsText: {
+    fontSize: 7,
+    color: '#6b7280',
+    lineHeight: 1.5,
+  },
+  totalsBox: {
+    width: '35%',
+    flexDirection: 'column',
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  totalLabel: {
+    fontSize: 9,
+    color: '#4b5563',
+  },
+  totalValue: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  grandTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  grandTotalLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  grandTotalValue: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#4f46e5',
+  },
+  watermark: {
+    position: 'absolute',
+    top: 350,
+    left: 80,
+    fontSize: 120,
+    color: '#f3f4f6',
+    transform: 'rotate(-45deg)',
+    zIndex: -1,
+    opacity: 0.5,
+  }
 });
 
 export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
@@ -142,155 +190,140 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
     id, 
     customer_name, 
     customer_mobile, 
-    requirementSnapshot: req, 
-    pricingSnapshot: pricing,
-    selectedPlan,
-    validUntil
+    expires_at: validUntil,
+    created_at: createdAt,
   } = quote;
 
-  const validDate = new Date(validUntil).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
-  const createdDate = new Date(quote.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+  const pricing = {
+    total_payable: quote.total_payable || 0,
+    items: quote.configuration_snapshot || [],
+    addons: quote.addons_snapshot || [],
+    labor_cost: quote.labor_cost || 0,
+    gross_subtotal: quote.gross_subtotal || 0,
+    gst_rate: quote.gst_rate || 18,
+    gst_amount: quote.gst_amount || 0
+  };
 
-  // Format currency
+  const validDate = validUntil ? new Date(validUntil).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
+  const createdDate = createdAt ? new Date(createdAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
+
   const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString('en-IN')}`;
 
   return (
     <Document>
-      {/* Page 1: Executive Quote */}
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.logo}>TEAM CCTV</Text>
-          <View style={styles.quoteInfo}>
-            <Text>Quotation: {id}</Text>
-            <Text>Date: {createdDate}</Text>
-            <Text>Valid Until: {validDate}</Text>
+        <Text style={styles.watermark}>QUOTATION</Text>
+
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.logoText}>TEAM CCTV</Text>
+            <Text style={styles.companyInfo}>Premium Security Solutions</Text>
+            <Text style={styles.companyInfo}>GST Registration Pending</Text>
+            <Text style={styles.companyInfo}>sales@teamcctv.com</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <Text style={styles.quoteTitle}>QUOTATION</Text>
+            <View style={styles.quoteMetaGrid}>
+              <View style={styles.quoteMetaRow}>
+                <Text style={styles.quoteMetaLabel}>Quote Ref:</Text>
+                <Text style={styles.quoteMetaValue}>{id ? `QT-${new Date().getFullYear()}-${id.substring(0, 6).toUpperCase()}` : 'DRAFT'}</Text>
+              </View>
+              <View style={styles.quoteMetaRow}>
+                <Text style={styles.quoteMetaLabel}>Date:</Text>
+                <Text style={styles.quoteMetaValue}>{createdDate}</Text>
+              </View>
+              <View style={styles.quoteMetaRow}>
+                <Text style={styles.quoteMetaLabel}>Valid Until:</Text>
+                <Text style={styles.quoteMetaValue}>{validDate}</Text>
+              </View>
+            </View>
           </View>
         </View>
 
-        <View style={styles.greeting}>
-          <Text>Hi {customer_name || 'Customer'},</Text>
-        </View>
+        {/* Prepared For */}
+        <Text style={styles.preparedForLabel}>PREPARED FOR:</Text>
+        <Text style={styles.customerName}>{customer_name || 'Customer'}</Text>
+        <Text style={styles.customerPhone}>Phone: {customer_mobile || 'N/A'}</Text>
 
-        <Text style={styles.title}>Your {selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} CCTV System</Text>
-
-        <View style={styles.highlightBox}>
-          <Text style={styles.highlightTitle}>System Highlights</Text>
-          <View style={styles.bulletPoint}>
-            <Text>•</Text>
-            <Text style={styles.bulletText}>{req.camera_count} × Cameras ({req.technology_preference || 'IP'})</Text>
-          </View>
-          <View style={styles.bulletPoint}>
-            <Text>•</Text>
-            <Text style={styles.bulletText}>{req.recording_days === 0 ? 'Live Viewing Only' : `${req.recording_days} Days Recording`}</Text>
-          </View>
-          <View style={styles.bulletPoint}>
-            <Text>•</Text>
-            <Text style={styles.bulletText}>{req.wants_remote_viewing ? 'Mobile Viewing Included' : 'Local Viewing Only'}</Text>
-          </View>
-        </View>
-
-        <View style={styles.totalPriceBox}>
-          <Text style={styles.totalPriceText}>{formatCurrency(pricing.total_payable)}</Text>
-          <Text style={styles.planTag}>{selectedPlan.toUpperCase()} PLAN</Text>
-        </View>
-
-        <Text style={styles.footer}>TEAM CCTV • +91 9876543210 • info@teamcctv.com</Text>
-      </Page>
-
-      {/* Page 2: System Configuration */}
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>System Configuration</Text>
-        
-        <View style={styles.configItem}>
-          <Text style={styles.configLabel}>CAMERAS</Text>
-          {pricing.items.filter((item: any) => item.product_id.includes('cam')).map((cam: any, i: number) => (
-             <Text key={i} style={styles.configValue}>{cam.qty} × {cam.display_name}</Text>
-          ))}
-        </View>
-
-        <View style={styles.configItem}>
-          <Text style={styles.configLabel}>RECORDER</Text>
-          {pricing.items.filter((item: any) => item.product_id.includes('dvr') || item.product_id.includes('nvr')).map((rec: any, i: number) => (
-             <Text key={i} style={styles.configValue}>{rec.qty} × {rec.display_name}</Text>
-          ))}
-        </View>
-
-        <View style={styles.configItem}>
-          <Text style={styles.configLabel}>STORAGE</Text>
-          {pricing.items.filter((item: any) => item.product_id.includes('hdd')).map((hdd: any, i: number) => (
-             <Text key={i} style={styles.configValue}>{hdd.qty} × {hdd.display_name}</Text>
-          ))}
-        </View>
-
-        <View style={styles.configItem}>
-          <Text style={styles.configLabel}>CABLING & POWER</Text>
-          <Text style={styles.configValue}>High-quality surveillance grade cables and power supplies included.</Text>
-        </View>
-
-        <View style={styles.configItem}>
-          <Text style={styles.configLabel}>INSTALLATION</Text>
-          <Text style={styles.configValue}>Professional installation and setup by certified technicians.</Text>
-        </View>
-
-        <Text style={styles.footer}>Quotation: {id} • TEAM CCTV</Text>
-      </Page>
-
-      {/* Page 3: BOQ + Terms */}
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Bill of Quantities (BOQ)</Text>
-        
+        {/* Table */}
         <View style={styles.table}>
-          <View style={[styles.tableRow, styles.tableHeader]}>
-            <Text style={styles.col1}>Item Description</Text>
-            <Text style={styles.col2}>Qty</Text>
-            <Text style={styles.col3}>Amount</Text>
+          <View style={styles.tableHeader}>
+            <Text style={styles.colDesc}>Description</Text>
+            <Text style={styles.colQty}>Qty</Text>
+            <Text style={styles.colUnit}>Unit Price</Text>
+            <Text style={styles.colTotal}>Total</Text>
           </View>
-          
+
           {pricing.items.map((item: any, i: number) => (
-            <View key={i} style={styles.tableRow}>
-              <Text style={styles.col1}>{item.display_name}</Text>
-              <Text style={styles.col2}>{item.qty}</Text>
-              <Text style={styles.col3}>{formatCurrency(item.line_total)}</Text>
+            <View key={`item-${i}`} style={styles.tableRow}>
+              <View style={styles.colDesc}>
+                <Text style={styles.itemTitle}>{item.display_name}</Text>
+                <Text style={styles.itemBrand}>Brand: {item.brand || 'TEAM CCTV'}</Text>
+              </View>
+              <Text style={[styles.colQty, styles.itemText]}>{item.qty}</Text>
+              <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(item.unit_price)}</Text>
+              <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(item.line_total)}</Text>
             </View>
           ))}
 
           {pricing.addons.map((addon: any, i: number) => (
             <View key={`addon-${i}`} style={styles.tableRow}>
-              <Text style={styles.col1}>{addon.display_name}</Text>
-              <Text style={styles.col2}>{addon.qty || 1}</Text>
-              <Text style={styles.col3}>{formatCurrency(addon.price * (addon.qty || 1))}</Text>
+              <View style={styles.colDesc}>
+                <Text style={styles.itemTitle}>{addon.display_name}</Text>
+                <Text style={styles.itemBrand}>Brand: Add-on</Text>
+              </View>
+              <Text style={[styles.colQty, styles.itemText]}>{addon.qty || 1}</Text>
+              <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(addon.price)}</Text>
+              <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(addon.price * (addon.qty || 1))}</Text>
             </View>
           ))}
 
-          <View style={styles.tableRow}>
-            <Text style={styles.col1}>Labor & Installation</Text>
-            <Text style={styles.col2}>1</Text>
-            <Text style={styles.col3}>{formatCurrency(pricing.labor_cost)}</Text>
+          {pricing.labor_cost > 0 && (
+            <View style={styles.tableRow}>
+              <View style={styles.colDesc}>
+                <Text style={styles.itemTitle}>Labor & Installation</Text>
+                <Text style={styles.itemBrand}>Service</Text>
+              </View>
+              <Text style={[styles.colQty, styles.itemText]}>1</Text>
+              <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(pricing.labor_cost)}</Text>
+              <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(pricing.labor_cost)}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Bottom Section */}
+        <View style={styles.bottomSection}>
+          <View style={styles.termsBox}>
+            <Text style={styles.termsTitle}>Terms & Conditions</Text>
+            <Text style={styles.termsText}>1. Prices are valid for 7 days from the date of this quotation.</Text>
+            <Text style={styles.termsText}>2. Standard 1-Year Warranty on all hardware items unless specified otherwise.</Text>
+            <Text style={styles.termsText}>3. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.</Text>
+            <Text style={styles.termsText}>4. Additional cabling beyond the estimated requirement will be charged at actual per-meter rate as quoted above.</Text>
+            <Text style={styles.termsText}>5. 50% advance payment required for order confirmation, balance on completion of installation.</Text>
           </View>
 
-          <View style={styles.tableTotalRow}>
-            <Text style={styles.tableTotalLabel}>Subtotal:</Text>
-            <Text style={styles.tableTotalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
-          </View>
-          <View style={styles.tableTotalRow}>
-            <Text style={styles.tableTotalLabel}>GST ({pricing.gst_rate}%):</Text>
-            <Text style={styles.tableTotalValue}>{formatCurrency(pricing.gst_amount)}</Text>
-          </View>
-          <View style={styles.tableTotalRow}>
-            <Text style={styles.tableTotalLabel}>Total Payable:</Text>
-            <Text style={[styles.tableTotalValue, { color: '#0066cc', fontSize: 16 }]}>{formatCurrency(pricing.total_payable)}</Text>
+          <View style={styles.totalsBox}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Subtotal:</Text>
+              <Text style={styles.totalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
+            </View>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Taxable Amount:</Text>
+              <Text style={styles.totalValue}>{formatCurrency(pricing.gross_subtotal)}</Text>
+            </View>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>GST ({pricing.gst_rate}%):</Text>
+              <Text style={styles.totalValue}>{formatCurrency(pricing.gst_amount)}</Text>
+            </View>
+            
+            <View style={styles.grandTotalRow}>
+              <Text style={styles.grandTotalLabel}>Grand Total:</Text>
+              <Text style={styles.grandTotalValue}>{formatCurrency(pricing.total_payable)}</Text>
+            </View>
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Terms & Conditions</Text>
-        <View style={{ fontSize: 10, color: '#86868b' }}>
-          <Text style={{ marginBottom: 4 }}>1. Warranty: Standard 1-year warranty on all electronic equipment.</Text>
-          <Text style={{ marginBottom: 4 }}>2. Payment: 50% advance, balance upon completion of installation.</Text>
-          <Text style={{ marginBottom: 4 }}>3. Validity: This quotation is valid until {validDate}.</Text>
-          <Text style={{ marginBottom: 4 }}>4. Exclusions: Civil work, core cutting, or conduit piping not explicitly mentioned are excluded.</Text>
-        </View>
-
-        <Text style={styles.footer}>Quotation: {id} • TEAM CCTV</Text>
       </Page>
     </Document>
   );

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-
+import admin from "firebase-admin";
 
 export async function GET(
   request: Request,
@@ -10,12 +10,13 @@ export async function GET(
     const { quoteId } = await params;
     
     // Fetch snapshot
-    const doc = await adminDb.collection("quotes").doc(quoteId).get();
-    if (!doc.exists) {
+    const quotesSnap = await adminDb.collectionGroup("quotes").where(admin.firestore.FieldPath.documentId(), "==", quoteId).get();
+    if (quotesSnap.empty) {
       return NextResponse.json({ success: false, message: "Quote not found" }, { status: 404 });
     }
     
-    const quote = doc.data() as any;
+    const quote = quotesSnap.docs[0].data() as any;
+    const quoteRef = quotesSnap.docs[0].ref;
 
     // By-passing Firebase Storage due to GCP Billing absence.
     // Instead of uploading, we provide a dynamic stream endpoint.
@@ -24,7 +25,7 @@ export async function GET(
 
     // Update quote status
     if (quote.status === "GENERATED" || quote.status === "DRAFT") {
-        await adminDb.collection("quotes").doc(quoteId).update({
+        await quoteRef.update({
             status: "PDF_GENERATED"
         });
     }

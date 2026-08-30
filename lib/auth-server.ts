@@ -20,20 +20,16 @@ export async function verifySession(): Promise<SessionResult> {
     return { isAuthenticated: false, user: null, role: null };
   }
 
-
-
   try {
-    if (sessionCookie === "mock_session_cookie" && process.env.NODE_ENV !== "production") {
-      return { isAuthenticated: true, user: { uid: "mock-user-id" } as any, role: null };
+    if (sessionCookie.startsWith("mock_session_") && process.env.NODE_ENV !== "production") {
+      const parts = sessionCookie.replace("mock_session_", "").split("_UID_");
+      const role = parts[0];
+      const uid = parts.length > 1 ? parts[1] : `mock-${role}-id`;
+      return { isAuthenticated: true, user: { uid } as any, role };
     }
 
-    // Verify the session cookie and obtain the decoded claims
-    // We expect the custom claims (role) to be bundled inside
     const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
-    
-    // Check role enforcement
-    const role = (decodedToken.role as "super_admin" | "sales_staff" | undefined) || null;
-    
+    const role = (decodedToken.role as "super_admin" | "sales_staff" | "installer" | undefined) || null;
     return { isAuthenticated: true, user: decodedToken, role };
   } catch (error) {
     console.error("Session verification failed:", error);
@@ -56,24 +52,36 @@ export async function requireSuperAdmin() {
 }
 
 /**
- * Enforces any admin role (super_admin or sales_staff). Redirects if not authorized.
+ * Enforces any admin role (super_admin, admin, or sales_staff). Redirects if not authorized.
  */
 export async function requireAdmin() {
   const session = await verifySession();
-  if (!session.isAuthenticated) {
+  if (!session.isAuthenticated || !["super_admin", "admin", "sales_staff"].includes(session.role as string)) {
     redirect("/admin/login");
   }
   return session;
 }
 
 /**
- * Enforces any admin role (super_admin or sales_staff) for API routes.
+ * Enforces any admin role (super_admin, admin, or sales_staff) for API routes.
  * Returns a 401 response instead of redirecting.
  */
 export async function requireAdminApi() {
   const session = await verifySession();
-  if (!session.isAuthenticated) {
+  if (!session.isAuthenticated || !["super_admin", "admin", "sales_staff"].includes(session.role as string)) {
     throw new Error("Unauthorized"); // This will be caught by the API route and returned as 401
+  }
+  return session;
+}
+
+/**
+ * Strict Role Enforcement for APIs.
+ * Pass an array of allowed roles. Throws if unauthorized.
+ */
+export async function requireRoleApi(allowedRoles: string[]): Promise<SessionResult> {
+  const session = await verifySession();
+  if (!session.isAuthenticated || !session.role || !allowedRoles.includes(session.role)) {
+    throw new Error("Unauthorized");
   }
   return session;
 }

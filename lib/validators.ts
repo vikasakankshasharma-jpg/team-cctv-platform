@@ -116,6 +116,12 @@ export const GenerateQuoteSchema = z.object({
   max_budget: z.number().nullable().optional(),
   cable_length_meters: z.number().nullable().optional(),
   wiring_type: z.enum(["open", "conduit"]).nullable().optional(),
+  recording_mode: z.enum(["continuous", "motion", "smart"]).nullable().optional(),
+  indoor_camera_count: z.number().int().nonnegative().nullable().optional(),
+  outdoor_camera_count: z.number().int().nonnegative().nullable().optional(),
+  power_socket_near_dvr: z.boolean().nullable().optional(),
+  router_near_dvr: z.boolean().nullable().optional(),
+  include_junction_boxes: z.boolean().nullable().optional(),
 });
 
 export type GenerateQuoteInput = z.infer<typeof GenerateQuoteSchema>;

@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/admin/Sidebar";
 import { OmniSearch } from "@/components/admin/OmniSearch";
 import { verifySession } from "@/lib/auth-server";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { redirect } from "next/navigation";
 
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
@@ -48,15 +49,8 @@ export default async function AdminLayout({
 }) {
   const session = await verifySession();
   
-  if (!session.isAuthenticated) {
-    return (
-      <div 
-        className={`dark ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]`}
-        style={adminThemeVars}
-      >
-        {children}
-      </div>
-    );
+  if (!session.isAuthenticated || !["super_admin", "admin", "sales_staff"].includes(session.role as string)) {
+    redirect("/admin/login");
   }
 
   return (

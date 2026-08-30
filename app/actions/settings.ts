@@ -1,17 +1,17 @@
 "use server";
 
 import { adminDb } from "@/lib/firebase-admin";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireSuperAdmin } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
 import type { AppSettings } from "@/types";
 
 /**
  * Updates the global application settings in Firestore.
- * Requires admin session.
+ * Requires super_admin session.
  */
 export async function updateSettings(data: Partial<AppSettings>) {
-  const session = await requireAdmin();
+  const session = await requireSuperAdmin();
 
   const settingsData = {
     ...data,

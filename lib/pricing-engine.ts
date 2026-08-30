@@ -297,8 +297,29 @@ function calculateHardware(
   let totalCost = 0;
 
   // 1. Camera Selection
-  if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
-    for (const req of selection.mixed_camera_requirements) {
+  // Synthesize mixed_camera_requirements from indoor/outdoor counts if present
+  let mixedReqs = selection.mixed_camera_requirements;
+  if (!mixedReqs && (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined)) {
+    const indoor = selection.indoor_camera_count || 0;
+    const outdoor = selection.outdoor_camera_count || 0;
+    if (indoor > 0 && outdoor > 0) {
+      mixedReqs = [
+        { type: "Outdoor Bullet Camera", count: outdoor, features: ["bullet"] },
+        { type: "Indoor Dome Camera", count: indoor, features: ["dome"] }
+      ];
+    } else if (outdoor > 0) {
+      mixedReqs = [
+        { type: "Outdoor Bullet Camera", count: outdoor, features: ["bullet"] }
+      ];
+    } else if (indoor > 0) {
+      mixedReqs = [
+        { type: "Indoor Dome Camera", count: indoor, features: ["dome"] }
+      ];
+    }
+  }
+
+  if (mixedReqs && mixedReqs.length > 0) {
+    for (const req of mixedReqs) {
       const proxySelection = { ...selection };
       proxySelection.camera_count = req.count;
       if (req.resolution) proxySelection.resolution_preference = req.resolution;
@@ -336,20 +357,22 @@ function calculateHardware(
         const lineTotal = unitPrice * qty;
         let featureLabel = "";
         if (req.features && req.features.length > 0) {
-          const names = req.features.map(f => {
-            if (f === "color") return "Color Night Vision";
-            if (f === "audio") return "Audio/Mic";
-            if (f === "ptz") return "PTZ";
-            if (f === "solar") return "Solar";
-            if (f === "4g") return "4G";
-            return f;
-          });
-          featureLabel = ` (${names.join(", ")})`;
+          const names = req.features
+            .filter(f => f !== "bullet" && f !== "dome")
+            .map(f => {
+              if (f === "color") return "Color Night Vision";
+              if (f === "audio") return "Audio/Mic";
+              if (f === "ptz") return "PTZ";
+              if (f === "solar") return "Solar";
+              if (f === "4g") return "4G";
+              return f;
+            });
+          if (names.length > 0) featureLabel = ` (${names.join(", ")})`;
         }
 
         items.push({
           product_id: camera.id!,
-          display_name: `${req.type}${featureLabel} - ${camera.display_name}`,
+          display_name: `${req.type}: ${camera.display_name}${featureLabel}`,
           brand: camera.brand,
           qty,
           unit_price: unitPrice,
@@ -395,7 +418,7 @@ function calculateHardware(
   }
 
   // 3. Storage (HDD / SD Card)
-  const hdd = resolveHDD(selection, [...products, ...addons] as any[], tech);
+  const hdd = resolveHDD(selection, [...products, ...addons] as any[], tech, recorder);
   if (hdd) {
     const unitPrice = hdd.unit_price || hdd.price || 0;
     
@@ -542,7 +565,7 @@ function calculateCabling(
 
   items.push({
     product_id: "cabling_material",
-    display_name: `${typeLabel} (~${totalMeters}m) @ ₹${ratePerMeter}/m`,
+    display_name: `${typeLabel} (~${totalMeters}m) @ Rs.${ratePerMeter}/m`,
     qty: totalMeters,
     unit_price: ratePerMeter,
     line_total: lineTotal
@@ -578,8 +601,10 @@ function calculateConnectors(
     return { items, totalRetail: 0, totalCost: 0 };
   }
 
+  let totalRetail = 0;
+  let totalCost = 0;
+
   const useRJ45 = tech === "IP" || selection.cable_type === "cat6";
-  
   if (useRJ45) {
     const rate = settings.connector_rj45_cost || 25;
     const lineTotal = rate * wiredCameraCount;
@@ -590,7 +615,8 @@ function calculateConnectors(
       unit_price: rate,
       line_total: lineTotal
     });
-    return { items, totalRetail: lineTotal, totalCost: Math.round(lineTotal * 0.5) };
+    totalRetail += lineTotal;
+    totalCost += Math.round(lineTotal * 0.5);
   } else {
     const rate = settings.connector_bnc_dc_cost || 70;
     const lineTotal = rate * wiredCameraCount;
@@ -601,8 +627,25 @@ function calculateConnectors(
       unit_price: rate,
       line_total: lineTotal
     });
-    return { items, totalRetail: lineTotal, totalCost: Math.round(lineTotal * 0.5) };
+    totalRetail += lineTotal;
+    totalCost += Math.round(lineTotal * 0.5);
   }
+
+  // Weatherproof PVC Camera Junction Boxes for all wired cameras (1 per camera)
+  const junctionRate = 35;
+  const junctionTotal = junctionRate * wiredCameraCount;
+  items.push({
+    product_id: "acc_junction_box",
+    display_name: "PVC Weatherproof Camera Junction Box",
+    brand: "TEAM CCTV",
+    qty: wiredCameraCount,
+    unit_price: junctionRate,
+    line_total: junctionTotal
+  });
+  totalRetail += junctionTotal;
+  totalCost += 20 * wiredCameraCount;
+
+  return { items, totalRetail, totalCost };
 }
 
 function calculateAddons(params: {
@@ -706,7 +749,7 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
   const recorder = resolveRecorder(selection, products, tech);
   const recTotal = recorder ? recorder.unit_price : 0;
   
-  const hdd = resolveHDD(selection, [...products, ...addons] as any[], tech);
+  const hdd = resolveHDD(selection, [...products, ...addons] as any[], tech, recorder);
   const hddTotal = hdd ? (hdd.unit_price || hdd.price || 0) : 0;
 
   const transmission = resolveTransmission(selection, [...products, ...addons] as any[], tech);
@@ -924,13 +967,22 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
   if (tech === "WiFi") return undefined; // WiFi cameras generally use SD Cards and no DVR/NVR
 
 
-  const recorders = products.filter(p => 
-    p.category === "recorder" && 
-    isAvailable(p) &&
-    (p.technologies || []).includes(tech as any) && 
-    (p.max_cameras || p.channels || 0) >= selection.camera_count
-  );
-  recorders.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
+  const recorders = products.filter(p => {
+    if (p.category !== "recorder" || !isAvailable(p)) return false;
+    if (!(p.technologies || []).includes(tech as any)) return false;
+    if ((p.max_cameras || p.channels || 0) < selection.camera_count) return false;
+
+    // Filter HD DVR by resolution if applicable
+    if (tech === "HD" && selection.resolution_preference) {
+        const resPref = String(selection.resolution_preference).toUpperCase();
+        const dvrName = String(p.display_name || "").toUpperCase();
+        if ((resPref === "5MP" || resPref === "8MP") && dvrName.includes("2MP SUPPORTED")) {
+            return false; // Don't use a 2MP DVR for 5MP cameras
+        }
+    }
+    return true;
+  });
+  recorders.sort((a, b) => (a.max_cameras || a.channels || 0) - (b.max_cameras || b.channels || 0));
   return recorders[0];
 }
 
@@ -952,7 +1004,7 @@ function resolveHDDCapacity(product: Addon & { storage_tb?: number }): number {
   return 0;
 }
 
-function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: string) {
+function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: string, recorder?: Product) {
   if (selection.selected_storage_id) {
     if (selection.selected_storage_id === "none") return undefined; // Explicit no-storage request
     return addons.find(a => a.id === selection.selected_storage_id);
@@ -981,18 +1033,39 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
     return undefined;
   }
 
-  // Use product's declared daily_gb_per_camera if available, else sensible defaults
-  let gbPerDay = tech === "IP" ? 15 : 10;
-  
+  // 1. Compression technology: Default to H.264 for safer storage estimation if not specified
+  const compression = (recorder?.compression as string) || "H.264";
+  let compressionMultiplier = 1.0; // H.264 baseline safe side
+  if (compression === "H.265") compressionMultiplier = 0.55;
+  else if (compression === "H.265+" || compression === "H.265 Pro+") compressionMultiplier = 0.35;
+
+  // 2. Base Daily GB per camera based on resolution (at H.264 baseline)
+  let baseGbPerDay = 18; // Default 2MP baseline at H.264
   if (selection.resolution_preference && selection.resolution_preference !== "all") {
     const res = String(selection.resolution_preference).toUpperCase();
-    if (res.includes("8MP") || res.includes("4K")) gbPerDay = 30;
-    else if (res.includes("5MP") || res.includes("4MP")) gbPerDay = 20;
-    else if (res.includes("2MP")) gbPerDay = 15;
+    if (res.includes("8MP") || res.includes("4K")) baseGbPerDay = 68;
+    else if (res.includes("6MP")) baseGbPerDay = 48;
+    else if (res.includes("5MP") || res.includes("4MP")) baseGbPerDay = 36;
+    else if (res.includes("2MP")) baseGbPerDay = 18;
   }
-  
-  const requiredGB = selection.camera_count * gbPerDay * recordingDays;
+
+  // 3. Recording mode: Continuous (1.0) vs Smart Motion (0.55)
+  const recordingMode = (selection as any).recording_mode || "continuous";
+  const modeMultiplier = recordingMode === "motion" ? 0.55 : 1.0;
+
+  // 4. Effective daily GB per camera and total required GB
+  const effectiveDailyGb = Math.max(5, Math.round(baseGbPerDay * compressionMultiplier * modeMultiplier));
+  const totalDailyGb = selection.camera_count * effectiveDailyGb;
+  const requiredGB = totalDailyGb * recordingDays;
   const requiredTB = requiredGB / 1000;
+
+  // 5. In-stock hard disks only
+  const isAvailable = (p: any) => 
+    p.is_active !== false && 
+    p.stock_status !== "out_of_stock" && 
+    p.stock_status !== "on_order" && 
+    p.stock_status !== "discontinued" && 
+    (p.stock_quantity === undefined || p.stock_quantity > 0);
 
   const hardDisks = hdds.filter(a => {
     const name = a.display_name.toLowerCase();
@@ -1000,8 +1073,33 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   });
   if (hardDisks.length === 0) return undefined;
 
-  hardDisks.sort((a, b) => resolveHDDCapacity(a) - resolveHDDCapacity(b));
-  return hardDisks.find(h => resolveHDDCapacity(h) >= requiredTB) || hardDisks[hardDisks.length - 1];
+  const inStockDisks = hardDisks.filter(isAvailable);
+  const candidateDisks = inStockDisks.length > 0 ? inStockDisks : hardDisks;
+  candidateDisks.sort((a, b) => resolveHDDCapacity(a) - resolveHDDCapacity(b));
+
+  // 6. Find best fit HDD from in-stock options
+  let chosenHdd = candidateDisks.find(h => resolveHDDCapacity(h) >= requiredTB);
+  if (!chosenHdd) {
+    // If requirement exceeds single drive in stock (e.g. 6TB needed, but max in stock is 4TB for 1-SATA)
+    // Strictly pick the largest available in-stock drive!
+    chosenHdd = candidateDisks[candidateDisks.length - 1];
+  }
+
+  // 7. Calculate realistic actual backup days based on chosen drive
+  const capacityTB = resolveHDDCapacity(chosenHdd);
+  const capacityGB = capacityTB * 1000;
+  const approxDays = Math.max(1, Math.floor(capacityGB / (totalDailyGb || 1)));
+
+  // 8. Return enriched HDD with approx backup days in display name
+  const modeLabel = recordingMode === "motion" ? "Motion" : "24×7";
+  const backupNote = `(Approx. ${approxDays} Days Backup · ${modeLabel} @ ${compression})`;
+
+  return {
+    ...chosenHdd,
+    display_name: `${chosenHdd.display_name} ${backupNote}`,
+    approx_days: approxDays,
+    compression_used: compression
+  };
 }
 
 function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], tech: string) {

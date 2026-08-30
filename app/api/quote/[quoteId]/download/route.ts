@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
+import admin from "firebase-admin";
 
 import { renderToStream } from "@react-pdf/renderer";
 import { QuotePDFDocument } from "@/lib/pdf/quote-pdf";
@@ -12,13 +13,23 @@ export async function GET(
   try {
     const { quoteId } = await params;
     
-    // Fetch snapshot
-    const doc = await adminDb.collection("quotes").doc(quoteId).get();
-    if (!doc.exists) {
+    // Fetch snapshot using collectionGroup since quotes are stored under leads/{leadId}/quotes/{quoteId}
+    const quotesSnap = await adminDb.collectionGroup("quotes").get();
+    const doc = quotesSnap.docs.find((d: any) => d.id === quoteId);
+    
+    if (!doc) {
       return new NextResponse("Quote not found", { status: 404 });
     }
     
-    const quote = doc.data() as any;
+    const leadSnap = await doc.ref.parent.parent?.get();
+    const leadData = leadSnap?.data() || {};
+
+    const quote = {
+      id: quoteId,
+      customer_name: leadData.customer_name || "Customer",
+      customer_mobile: leadData.mobile_number || "N/A",
+      ...doc.data()
+    };
 
     // Generate PDF directly in memory
     const pdfStream = await renderToStream(React.createElement(QuotePDFDocument, { quote }) as any);

@@ -75,6 +75,12 @@ export async function POST(req: NextRequest) {
       updated_at: new Date()
     };
 
+    // Default compression to H.264 for safer side if not specified
+    if (product.category === "recorder") {
+      if (!product.compression) product.compression = "H.264";
+      if (!product.hdd_slots) product.hdd_slots = 1;
+    }
+
     // Calculate unit_price if base_cost and margin_percentage exist
     if (product.base_cost !== undefined && product.margin_percentage !== undefined) {
       const calculatedPrice = product.base_cost + (product.base_cost * (product.margin_percentage / 100));

@@ -250,6 +250,12 @@ export default function AdminProductsPage() {
         payload.unit_price = Math.round(Number(payload.base_cost) + (Number(payload.base_cost) * (Number(payload.margin_percentage) / 100)));
       }
 
+      // Safe defaults for recorders
+      if (payload.category === "recorder") {
+        if (!payload.compression) payload.compression = "H.264";
+        if (!payload.hdd_slots) payload.hdd_slots = 1;
+      }
+
       // Auto-generate technical_name from display_name if empty
       if (!payload.technical_name && payload.display_name) {
         payload.technical_name = payload.display_name
@@ -727,6 +733,33 @@ export default function AdminProductsPage() {
                             <option value="good">Up to 2MP</option>
                             <option value="very_clear">Up to 5MP</option>
                             <option value="crystal_clear">Up to 8MP (4K)</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Compression Technology</label>
+                          <select 
+                            value={editingProduct.compression || "H.264"}
+                            onChange={e => setEditingProduct({...editingProduct, compression: e.target.value as any})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                          >
+                            <option value="H.264">H.264 (Default · Safe Storage)</option>
+                            <option value="H.265">H.265 (Smart Compression)</option>
+                            <option value="H.265+">H.265+ (Ultra Compression)</option>
+                            <option value="H.265 Pro+">H.265 Pro+ (Hikvision / CP Plus)</option>
+                          </select>
+                          <p className="text-[10px] text-muted-foreground ml-1">Defaults to H.264 for safer storage estimation if not specified.</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">SATA HDD Slots</label>
+                          <select 
+                            value={editingProduct.hdd_slots || 1}
+                            onChange={e => setEditingProduct({...editingProduct, hdd_slots: Number(e.target.value)})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                          >
+                            <option value={1}>1 SATA Slot (Single HDD)</option>
+                            <option value={2}>2 SATA Slots (Dual HDD)</option>
+                            <option value={4}>4 SATA Slots (4 HDDs)</option>
+                            <option value={8}>8 SATA Slots (8 HDDs)</option>
                           </select>
                         </div>
                       </div>

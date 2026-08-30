@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 
-import { OfficialWhatsAppProvider } from "@/lib/whatsapp/official-provider";
+import { TwilioWhatsAppProvider } from "@/lib/whatsapp/twilio-provider";
 
 export async function POST(
   request: Request,
@@ -46,11 +46,9 @@ export async function POST(
       console.log(`[TEST MODE] Mock WhatsApp sending to ${quote.customer_mobile}`);
       deliveryResult = { success: true, messageId: `mock_${Date.now()}`, error: "" };
     } else {
-      const waProvider = new OfficialWhatsAppProvider();
+      const waProvider = new TwilioWhatsAppProvider();
       
-      // Formatting phone: ensure country code
       let phone = quote.customer_mobile;
-      if (phone.length === 10) phone = `91${phone}`;
 
       deliveryResult = (await waProvider.sendQuote({
         phone,

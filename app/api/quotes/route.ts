@@ -7,6 +7,7 @@ import { GenerateQuoteSchema } from "@/lib/validators";
 import { Product, Addon, AppSettings, Lead } from "@/types";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { ApiResponse } from "@/lib/api-response";
+import { isMaintenanceMode } from "@/lib/kill-switch";
 
 /** 
  * ENTERPRISE-GRADE QUOTE PERSISTENCE
@@ -16,6 +17,15 @@ export async function POST(request: NextRequest) {
   const { success } = await rateLimit(request);
   if (!success) {
     return ApiResponse.error("Too many requests", "RATE_LIMIT_EXCEEDED", 429);
+  }
+
+  // Kill Switch: Maintenance Mode Guard
+  if (await isMaintenanceMode()) {
+    return ApiResponse.error(
+      "System is currently under maintenance. Please try again shortly.",
+      "SYSTEM_MAINTENANCE",
+      503
+    );
   }
 
   try {
@@ -30,6 +40,13 @@ export async function POST(request: NextRequest) {
 
     const { lead_id, firebase_uid, address, status, accepted_at } = body;
     const selection = validation.data;
+
+    // Map picture_quality to resolution_preference if not present
+    if (!selection.resolution_preference && selection.picture_quality) {
+      if (selection.picture_quality === "good") selection.resolution_preference = "2MP";
+      else if (selection.picture_quality === "very_clear") selection.resolution_preference = "5MP";
+      else if (selection.picture_quality === "crystal_clear") selection.resolution_preference = "8MP";
+    }
 
     if (!lead_id) {
       return ApiResponse.badRequest("Missing lead_id");
@@ -72,6 +89,39 @@ export async function POST(request: NextRequest) {
 
 
     const settings = settingsSnap.data() as AppSettings;
+
+    const wizardAnswers = (leadData.wizard_answers || {}) as Record<string, unknown>;
+    const siteSurvey = (leadData as any).site_survey || {};
+
+    // Map recording_mode from wizard answers if not explicitly passed
+    if (!selection.recording_mode && wizardAnswers.q_recording_mode) {
+      selection.recording_mode = wizardAnswers.q_recording_mode as any;
+    }
+
+    // Map outdoor and indoor camera counts
+    if (selection.outdoor_camera_count === undefined) {
+      if (siteSurvey.outdoor_camera_count !== undefined) {
+        selection.outdoor_camera_count = siteSurvey.outdoor_camera_count;
+      } else if (wizardAnswers.outdoor_camera_count !== undefined) {
+        selection.outdoor_camera_count = Number(wizardAnswers.outdoor_camera_count);
+      }
+    }
+
+    if (selection.indoor_camera_count === undefined) {
+      if (siteSurvey.indoor_camera_count !== undefined) {
+        selection.indoor_camera_count = siteSurvey.indoor_camera_count;
+      } else if (wizardAnswers.indoor_camera_count !== undefined) {
+        selection.indoor_camera_count = Number(wizardAnswers.indoor_camera_count);
+      }
+    }
+
+    // Map wiring_type (open vs conduit)
+    if (!selection.wiring_type) {
+      const wType = siteSurvey.wiring_type || wizardAnswers.wiring_type || wizardAnswers.q_wiring_type;
+      if (wType === "conduit" || wType === "open") {
+        selection.wiring_type = wType;
+      }
+    }
 
     // 3. SERVER-SIDE PRICE RECALCULATION (IMMUTABLE BY CLIENT)
     const pricing = calculatePricing({
