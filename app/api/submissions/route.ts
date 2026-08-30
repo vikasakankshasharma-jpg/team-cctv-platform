@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const maint = await isMaintenanceMode();
     if (maint) {
     return ApiResponse.error(
-      "System is currently under maintenance. Please try again shortly.",
+      "Maintenance: " + maint,
       "SYSTEM_MAINTENANCE",
       503
     );
@@ -211,4 +211,5 @@ export async function POST(request: NextRequest) {
     return ApiResponse.error("Internal server error", "INTERNAL_ERROR", 500, error.message);
   }
 }
+
 
