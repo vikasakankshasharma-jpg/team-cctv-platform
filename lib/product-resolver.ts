@@ -175,3 +175,5 @@ function resolvePower(config: CCTVConfiguration, pool: Product[]) {
     premium: sorted[sorted.length - 1] || sorted[0]
   };
 
+
+}
