@@ -95,8 +95,13 @@ export function WizardClientV2() {
   };
 
   const handleSaveQuote = async (planType: "budget" | "recommended" | "premium") => {
-    const mobile = prompt("Please enter your mobile number to save and receive the quotation:");
-    if (!mobile) return;
+    const mobile = quoteResult.requirement.customer_mobile;
+    const name = quoteResult.requirement.customer_name;
+    
+    if (!mobile) {
+      alert("Mobile number is required. Please edit your configuration and provide it.");
+      return;
+    }
     
     setLoading(true);
     try {
@@ -105,6 +110,7 @@ export function WizardClientV2() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer_mobile: mobile,
+          customer_name: name,
           requirementSnapshot: quoteResult.requirement,
           configurationSnapshot: quoteResult.configuration,
           pricingSnapshot: quoteResult.plans[planType],
@@ -554,9 +560,41 @@ export function WizardClientV2() {
       case 10:
         return (
           <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2">Almost Done!</h2>
-            <p className="text-gray-600 mb-6">We have gathered your requirements. Click below to generate your personalized CCTV options.</p>
-            <Button onClick={handleFinishWizard} disabled={loading} size="lg" className="w-full text-lg h-14">
+            <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
+            <p className="text-gray-600 mb-6">Please enter your details to view your personalized CCTV options instantly.</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. Rahul Kumar" 
+                  value={req.customer_name || ''} 
+                  onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))} 
+                  className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number *</label>
+                <input 
+                  type="tel" 
+                  required
+                  placeholder="10-digit mobile number" 
+                  maxLength={10}
+                  value={req.customer_mobile || ''} 
+                  onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))} 
+                  className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleFinishWizard} 
+              disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} 
+              size="lg" 
+              className="w-full text-lg h-14 mt-6"
+            >
               {loading ? "Analyzing Requirement..." : "View My CCTV Options"}
             </Button>
           </div>
