@@ -91,7 +91,7 @@ export function generatePricingSnapshot(
 
   // Cable
   if (resolvedSystem.cable_meters > 0) {
-    const isIP = req.technology_preference === "IP";
+    const isIP = resolvedSystem.plan_type?.includes("IP");
     const cableName = isIP ? "CAT6 IP Camera Cable" : "3+1 HD Camera Cable";
     // Usually the cable is also a product, but if not in resolvedSystem, use a dummy baseCost
     const baseCost = isIP ? 25 : 15; // 25/meter
@@ -111,7 +111,7 @@ export function generatePricingSnapshot(
 
   // Connectors
   if (resolvedSystem.connectors_qty > 0) {
-    const isIP = req.technology_preference === "IP";
+    const isIP = resolvedSystem.plan_type?.includes("IP");
     const baseCost = isIP ? 10 : 30; // RJ45 vs BNC
     const calc = MarginEngine.calculateUnitPricing(baseCost, 'accessory', planType, marginPolicy);
     const qty = resolvedSystem.connectors_qty;
@@ -135,14 +135,14 @@ export function generatePricingSnapshot(
   let surchargeExTaxTotal = 0;
 
   if (wiredCameraCount > 0) {
-    const baseRate = req.technology_preference === "IP" ? 500 : 400; // Base labor cost
+    const baseRate = resolvedSystem.plan_type?.includes("IP") ? 500 : 400; // Base labor cost
     // Surcharge for labor margin
     const rate = baseRate * (1 + marginPolicy.labor_margin);
     const laborTotal = rate * wiredCameraCount;
 
     lineItems.push({
       product_id: "labor_install",
-      display_name: `Installation & Termination (${req.technology_preference})`,
+      display_name: `Installation & Termination (${resolvedSystem.plan_type?.split("_")[0] || "HD"})`,
       qty: wiredCameraCount,
       unit_price: rate,
       line_total: laborTotal,
@@ -192,7 +192,7 @@ export function generatePricingSnapshot(
 
   return {
     plan_type: resolvedSystem.plan_type,
-    technology: req.technology_preference || "IP",
+    technology: (resolvedSystem.plan_type?.split("_")[0] || "HD"),
     items: lineItems,
     addons: [], // ignoring addons for simplicity in this refactor
     base_hardware_cost: totals.rawSubtotal,

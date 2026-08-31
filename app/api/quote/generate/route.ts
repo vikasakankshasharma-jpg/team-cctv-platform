@@ -76,46 +76,29 @@ export async function POST(request: Request) {
     // 2. Requirements -> Engineering Configuration
     const config = generateConfiguration(req);
 
-    // 3. Configuration -> Resolved Hardware (3 Tiers)
-    const resolvedSystems = resolveProducts(config, req, catalog);
+    // 3. Configuration -> Resolved Hardware (Dynamic Tech+MP Combinations)
+    const { plans: resolvedPlans, lifecycleWarnings } = resolveProducts(config, req, catalog);
 
-    // 4. Resolved Hardware -> Pricing (3 Tiers)
-    const budgetQuote = generatePricingSnapshot(
-      resolvedSystems.budget,
-      req,
-      addons,
-      [],
-      settings
-    );
-
-    const recommendedQuote = generatePricingSnapshot(
-      resolvedSystems.recommended,
-      req,
-      addons,
-      [],
-      settings
-    );
-
-    const premiumQuote = generatePricingSnapshot(
-      resolvedSystems.premium,
-      req,
-      addons,
-      [],
-      settings
-    );
+    // 4. Resolved Hardware -> Pricing
+    const quotePlans: Record<string, any> = {};
+    for (const [key, resolvedSystem] of Object.entries(resolvedPlans)) {
+       quotePlans[key] = generatePricingSnapshot(
+         resolvedSystem,
+         req,
+         addons,
+         [],
+         settings
+       );
+    }
 
     // 5. Construct final response
     return NextResponse.json({
       success: true,
       requirement: req,
       configuration: config,
-      plans: {
-        budget: budgetQuote,
-        recommended: recommendedQuote,
-        premium: premiumQuote
-      }
+      plans: quotePlans,
+      lifecycleWarnings
     });
-
   } catch (error: any) {
     console.error("Quote generation error:", error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

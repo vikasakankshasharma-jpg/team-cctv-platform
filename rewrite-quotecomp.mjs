@@ -1,4 +1,6 @@
+import fs from "fs";
 
+const newContent = `
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -59,7 +61,7 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
         <div>
           <h3 className="text-lg font-semibold text-blue-900">Your CCTV Requirement</h3>
           <p className="text-sm text-blue-700">
-            {requirement.camera_count} Cameras ï¿½ {requirement.recording_days || 15} Days Recording 
+            {requirement.camera_count} Cameras • {requirement.recording_days || 15} Days Recording 
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={onEditConfiguration}>
@@ -72,13 +74,13 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
         <div className="bg-gray-100 p-1 rounded-xl flex space-x-1 shadow-inner">
            <button 
              onClick={() => setActiveTech("HD")}
-             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTech === "HD" ? 'bg-white text-blue-600 shadow' : 'text-gray-500 hover:text-gray-800'}`}
+             className={\`px-6 py-2.5 rounded-lg text-sm font-bold transition-all \${activeTech === "HD" ? 'bg-white text-blue-600 shadow' : 'text-gray-500 hover:text-gray-800'}\`}
            >
              Standard HD (Analog)
            </button>
            <button 
              onClick={() => setActiveTech("IP")}
-             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTech === "IP" ? 'bg-white text-blue-600 shadow' : 'text-gray-500 hover:text-gray-800'}`}
+             className={\`px-6 py-2.5 rounded-lg text-sm font-bold transition-all \${activeTech === "IP" ? 'bg-white text-blue-600 shadow' : 'text-gray-500 hover:text-gray-800'}\`}
            >
              Premium IP (Network)
            </button>
@@ -112,7 +114,7 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
              const isRecommended = idx === Math.floor(filteredPlans.length / 2) && filteredPlans.length >= 2;
              
              return (
-                <Card key={key} className={`flex flex-col ${isRecommended ? 'border-primary shadow-lg relative transform md:-translate-y-2' : ''}`}>
+                <Card key={key} className={\`flex flex-col \${isRecommended ? 'border-primary shadow-lg relative transform md:-translate-y-2' : ''}\`}>
                   {isRecommended && (
                     <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
                       <Badge className="bg-primary text-primary-foreground px-3 py-1 uppercase tracking-wide">? Recommended</Badge>
@@ -120,12 +122,12 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
                   )}
                   <CardHeader className={isRecommended ? "pt-8" : ""}>
                     <CardTitle className="text-center text-gray-500 uppercase text-sm tracking-wider">{mp} Resolution</CardTitle>
-                    <div className={`text-center text-3xl font-bold mt-2 ${isRecommended ? 'text-primary' : ''}`}>{formatPrice(plan.total_payable)}</div>
+                    <div className={\`text-center text-3xl font-bold mt-2 \${isRecommended ? 'text-primary' : ''}\`}>{formatPrice(plan.total_payable)}</div>
                   </CardHeader>
                   <CardContent className="flex-grow">
                     <ul className="space-y-3 text-sm">
                       <li className="flex justify-between"><span>Cameras</span> <span className="font-medium">{requirement.camera_count}x {activeTech}</span></li>
-                      <li className="flex justify-between"><span>Clarity</span> <span className={`font-medium ${isRecommended ? 'text-primary font-bold' : ''}`}>{mp}</span></li>
+                      <li className="flex justify-between"><span>Clarity</span> <span className={\`font-medium \${isRecommended ? 'text-primary font-bold' : ''}\`}>{mp}</span></li>
                       <li className="flex justify-between"><span>Recording</span> <span className="font-medium">{requirement.recording_days || 15} Days</span></li>
                       <li className="flex justify-between"><span>Installation</span> <span className="font-medium">Included</span></li>
                     </ul>
@@ -143,8 +145,12 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
       
       <div className="mt-8 bg-gray-50 p-6 rounded-xl border">
         <h4 className="font-bold text-gray-800 mb-4">Want to customize your cameras?</h4>
-        <p className="text-sm text-gray-600 mb-4">You can upgrade specific cameras to PTZ (360ï¿½ Rotating), add Two-Way Audio, or choose Color Night Vision on the next screen after selecting a base plan.</p>
+        <p className="text-sm text-gray-600 mb-4">You can upgrade specific cameras to PTZ (360° Rotating), add Two-Way Audio, or choose Color Night Vision on the next screen after selecting a base plan.</p>
       </div>
     </div>
   );
 }
+`;
+
+fs.writeFileSync("components/QuoteComparison.tsx", newContent);
+console.log("Rewrote QuoteComparison.tsx completely!");

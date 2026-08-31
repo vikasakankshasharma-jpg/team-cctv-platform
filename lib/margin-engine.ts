@@ -66,7 +66,7 @@ export const MarginEngine = {
     let markup = 0;
 
     if (category === 'anchor') {
-      markup = policy.anchor_margin[tier];
+      markup = policy.anchor_margin[tier] ?? policy.anchor_margin['recommended'] ?? 0.12;
       
       const vCat = (vendorCategory || '').toLowerCase();
       const pBrand = (productBrand || '').toLowerCase();
@@ -86,7 +86,7 @@ export const MarginEngine = {
         }
       }
     } else if (category === 'accessory') {
-      markup = policy.accessory_margin[tier];
+      markup = policy.accessory_margin[tier] ?? policy.accessory_margin['recommended'] ?? 0.65;
     } else if (category === 'cable') {
       markup = policy.cable_margin;
       workingCost = baseCost * policy.cable_wastage_factor;

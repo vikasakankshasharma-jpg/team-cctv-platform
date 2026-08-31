@@ -1,4 +1,6 @@
+import fs from "fs";
 
+const newContent = `
 import { Product, CCTVRequirement, CCTVConfiguration, ResolvedSystem } from "@/types";
 
 export function resolveProducts(
@@ -12,13 +14,13 @@ export function resolveProducts(
     if (!p.is_active || p.is_quotation_eligible === false) return false;
     if (p.stock_status === "out_of_stock" || p.stock_status === "discontinued") return false;
     if ((p.stock_status as string) === "on_demand") {
-      lifecycleWarnings.push(`ON_DEMAND_WARNING: Product [${p.id}] ${p.display_name} is on-demand.`);
+      lifecycleWarnings.push(\`ON_DEMAND_WARNING: Product [\${p.id}] \${p.display_name} is on-demand.\`);
     }
     return true;
   });
 
   // Find all available Camera combinations
-  const allCameras = pool.filter(p => (p.category as any) === "CAMERA_HD" || (p.category as any) === "CAMERA_IP" || p.category === "cctv_camera");
+  const allCameras = pool.filter(p => p.category === "CAMERA_HD" || p.category === "CAMERA_IP" || p.category === "cctv_camera");
   const combinations = new Set<string>(); // e.g. "HD_2MP", "IP_5MP"
   
   allCameras.forEach(c => {
@@ -31,7 +33,7 @@ export function resolveProducts(
         else if (c.display_name?.toLowerCase().includes("6mp")) res = "6MP";
         else if (c.display_name?.toLowerCase().includes("8mp")) res = "8MP";
      }
-     if (tech && res) combinations.add(`${tech}_${res}`);
+     if (tech && res) combinations.add(\`\${tech}_\${res}\`);
   });
 
   const plans: Record<string, ResolvedSystem> = {};
@@ -40,7 +42,7 @@ export function resolveProducts(
       const [tech, res] = combo.split("_");
       
       // Override config for this permutation
-      const permConfig: any = { ...config, technology: tech };
+      const permConfig = { ...config, technology: tech };
       
       const cameras = resolveCamerasForPermutation(permConfig, res, allCameras);
       if (cameras.length === 0) return; // Skip if we can't find a complete set
@@ -189,3 +191,7 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[]) 
 
   return valid.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
 }
+`;
+
+fs.writeFileSync("lib/product-resolver.ts", newContent);
+console.log("Rewrote product-resolver.ts completely!");

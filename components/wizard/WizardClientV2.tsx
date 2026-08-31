@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 export function WizardClientV2() {
   const [sessionId] = useState(() => crypto.randomUUID());
   const [step, setStep] = useState(1);
-  const totalSteps = 10;
+  const totalSteps = 4;
   
   useEffect(() => {
     // Send session start
@@ -94,7 +94,7 @@ export function WizardClientV2() {
     handleNext();
   };
 
-  const handleSaveQuote = async (planType: "budget" | "recommended" | "premium") => {
+  const handleSaveQuote = async (planType: string) => {
     const mobile = quoteResult.requirement.customer_mobile;
     const name = quoteResult.requirement.customer_name;
     
@@ -225,17 +225,25 @@ export function WizardClientV2() {
     );
   }
 
+
   const renderStep = () => {
-    switch(step) {
+    switch (step) {
       case 1:
         return (
           <div className="space-y-6 animate-in fade-in">
             <h2 className="text-3xl font-semibold mb-2">Where do you need CCTV?</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {['Home', 'Shop', 'Office', 'Warehouse', 'School', 'Factory'].map(opt => (
-                <button key={opt} onClick={() => updateReq({ property_type: opt.toLowerCase() as any })}
-                  className="p-6 rounded-xl border-2 text-center hover:border-blue-500 hover:bg-blue-50 transition-all">
-                  <span className="block font-bold text-lg">{opt}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { val: "Residential", label: "Home / Residential", desc: "House, Apartment, Villa" },
+                { val: "Commercial", label: "Office / Shop", desc: "Retail, Workplace, Godown" },
+                { val: "Industrial", label: "Factory / Warehouse", desc: "Large industrial premises" },
+                { val: "Institutional", label: "School / Hospital", desc: "Campus, Clinics" },
+                { val: "Outdoor", label: "Open Plot / Farm", desc: "Agriculture, Empty Land" }
+              ].map((opt, i) => (
+                <button key={i} onClick={() => updateReq({ property_type: opt.val as any })}
+                  className="p-6 rounded-xl border-2 text-left hover:border-blue-500 hover:bg-blue-50 transition-all group">
+                  <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">{opt.label}</span>
+                  <span className="block text-sm text-gray-500 mt-1">{opt.desc}</span>
                 </button>
               ))}
             </div>
@@ -244,14 +252,13 @@ export function WizardClientV2() {
       case 2:
         return (
           <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2">How many cameras do you need?</h2>
-            <p className="text-gray-600">Estimate the count. You can adjust this later.</p>
+            <h2 className="text-3xl font-semibold mb-2">How many cameras total?</h2>
+            <p className="text-gray-600 mb-6">Select the total number of cameras you need.</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[2, 4, 6, 8, 12, 16].map(num => (
+              {[2, 4, 6, 8, 12, 16, 24, 32].map(num => (
                 <button key={num} onClick={() => updateReq({ camera_count: num })}
-                  className={`p-6 rounded-xl border-2 text-center hover:border-blue-500 transition-all ${req.camera_count === num ? 'border-blue-600 bg-blue-50 text-blue-700' : ''}`}>
-                  <span className="text-2xl font-bold">{num}</span>
-                  <span className="block text-sm">Cameras</span>
+                  className="p-4 rounded-xl border-2 text-center text-xl font-bold hover:border-blue-500 hover:bg-blue-50 transition-all">
+                  {num} Cameras
                 </button>
               ))}
             </div>
@@ -274,32 +281,14 @@ export function WizardClientV2() {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="font-bold text-base text-gray-900">Outdoor Cameras</h3>
-                    <p className="text-xs text-gray-500">Weatherproof Bullet (IP67 Rated)</p>
+                    <p className="text-xs text-gray-500">Weatherproof Bullet</p>
                   </div>
-                  <span className="text-2xl">🌦️</span>
+                  <span className="text-2xl">???</span>
                 </div>
-                <div className="flex items-center justify-between mt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newOut = Math.max(0, currentOutdoor - 1);
-                      setReq(prev => ({ ...prev, outdoor_camera_count: newOut, indoor_camera_count: totalCams - newOut }));
-                    }}
-                    className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center font-bold text-lg hover:bg-gray-100 transition-colors"
-                  >
-                    -
-                  </button>
-                  <span className="text-2xl font-bold text-blue-600">{currentOutdoor}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newOut = Math.min(totalCams, currentOutdoor + 1);
-                      setReq(prev => ({ ...prev, outdoor_camera_count: newOut, indoor_camera_count: totalCams - newOut }));
-                    }}
-                    className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center font-bold text-lg hover:bg-gray-100 transition-colors"
-                  >
-                    +
-                  </button>
+                <div className="flex items-center justify-between">
+                  <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1) }))} disabled={currentOutdoor === 0}>-</Button>
+                  <span className="text-2xl font-bold w-12 text-center">{currentOutdoor}</span>
+                  <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.min(totalCams, currentOutdoor + 1) }))} disabled={currentOutdoor === totalCams}>+</Button>
                 </div>
               </div>
 
@@ -307,257 +296,26 @@ export function WizardClientV2() {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="font-bold text-base text-gray-900">Indoor Cameras</h3>
-                    <p className="text-xs text-gray-500">Ceiling Dome Cameras</p>
+                    <p className="text-xs text-gray-500">Ceiling Dome</p>
                   </div>
-                  <span className="text-2xl">🏠</span>
+                  <span className="text-2xl">??</span>
                 </div>
-                <div className="flex items-center justify-between mt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newOut = Math.min(totalCams, currentOutdoor + 1);
-                      setReq(prev => ({ ...prev, outdoor_camera_count: newOut, indoor_camera_count: totalCams - newOut }));
-                    }}
-                    className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center font-bold text-lg hover:bg-gray-100 transition-colors"
-                  >
-                    -
-                  </button>
-                  <span className="text-2xl font-bold text-blue-600">{currentIndoor}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newOut = Math.max(0, currentOutdoor - 1);
-                      setReq(prev => ({ ...prev, outdoor_camera_count: newOut, indoor_camera_count: totalCams - newOut }));
-                    }}
-                    className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center font-bold text-lg hover:bg-gray-100 transition-colors"
-                  >
-                    +
-                  </button>
+                <div className="flex items-center justify-between">
+                  <Button variant="outline" size="icon" disabled className="opacity-50">-</Button>
+                  <span className="text-2xl font-bold w-12 text-center text-gray-400">{currentIndoor}</span>
+                  <Button variant="outline" size="icon" disabled className="opacity-50">+</Button>
                 </div>
               </div>
             </div>
 
-            <p className="text-xs text-gray-500 text-center">Total {totalCams} Cameras: {currentOutdoor} Outdoor Bullet + {currentIndoor} Indoor Dome</p>
-
             <div className="pt-2">
-              <Button onClick={handleNext} className="w-full h-12 text-sm font-semibold">
-                Confirm Placement & Continue →
+              <Button onClick={() => handleNext()} className="w-full h-12 text-sm font-semibold">
+                Confirm Placement & Continue ?
               </Button>
             </div>
           </div>
         );
       case 4:
-        return (
-          <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2">Camera Quality?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { val: "HD", res: "2MP", label: "Basic (2MP)", desc: "Good for general monitoring" },
-                { val: "IP", res: "5MP", label: "Recommended (5MP)", desc: "Better detail & identification" },
-                { val: "IP", res: "8MP", label: "Premium (8MP)", desc: "Maximum detail" }
-              ].map((opt, i) => (
-                <button key={i} onClick={() => updateReq({ technology_preference: opt.val as any, camera_resolution: opt.res })}
-                  className="p-6 rounded-xl border-2 text-left hover:border-blue-500 hover:bg-blue-50 transition-all">
-                  <span className="block font-bold text-lg">{opt.label}</span>
-                  <span className="block text-sm text-gray-500 mt-2">{opt.desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      case 5:
-        return (
-          <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2">Night Vision?</h2>
-            <div className="grid grid-cols-1 gap-4">
-              {['Basic (Clear B&W)', 'Better (Improved low-light)', 'Colour Night Vision'].map(opt => (
-                <button key={opt} onClick={() => handleNext()}
-                  className="p-4 rounded-xl border-2 text-left hover:border-blue-500 hover:bg-blue-50 transition-all font-semibold">
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      case 6:
-        return (
-          <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2">Do you need sound?</h2>
-            <div className="grid grid-cols-1 gap-4">
-              {['No Audio', 'I want to hear (Built-in Mic)', 'I want to hear + talk (Two-way audio)'].map(opt => (
-                <button key={opt} onClick={() => handleNext()}
-                  className="p-4 rounded-xl border-2 text-left hover:border-blue-500 hover:bg-blue-50 transition-all font-semibold">
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      case 7:
-        return (
-          <div className="space-y-6 animate-in fade-in">
-            <div>
-              <h2 className="text-3xl font-semibold mb-2">Recording Storage & Mode</h2>
-              <p className="text-gray-600 text-sm">Choose how far back you want recordings and how cameras should record.</p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">1. Retention Duration</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                  { val: 0, label: "Live Only", desc: "No recording" },
-                  { val: 7, label: "7 Days", desc: "Basic home backup" },
-                  { val: 15, label: "15 Days", desc: "Popular for shops" },
-                  { val: 30, label: "30 Days", desc: "Full compliance" }
-                ].map(opt => (
-                  <button 
-                    key={opt.val} 
-                    type="button"
-                    onClick={() => setReq(prev => ({ ...prev, recording_days: opt.val }))}
-                    className={`p-3.5 rounded-xl border-2 text-left transition-all ${req.recording_days === opt.val ? 'border-blue-600 bg-blue-50/80 shadow-sm' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <span className="block font-bold text-sm text-gray-900">{opt.label}</span>
-                    <span className="block text-[11px] text-gray-500 mt-0.5">{opt.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {req.recording_days !== 0 && (
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">2. Recording Mode Preference</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  <button 
-                    type="button"
-                    onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))}
-                    className={`p-4 rounded-xl border-2 text-left transition-all relative ${req.recording_mode !== "motion" ? 'border-blue-600 bg-blue-50/80 shadow-sm' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-bold text-sm text-gray-900">24×7 Continuous</span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700">Full Coverage</span>
-                    </div>
-                    <p className="text-[11px] text-gray-600 leading-relaxed">
-                      <strong>Pros:</strong> Non-stop 24-hour recording. Never misses ambient background action.<br />
-                      <strong>Cons:</strong> Uses 2x disk space, requires larger HDD.<br />
-                      <span className="text-blue-600 font-medium">Best for:</span> Banks, Cash Counters, Main Gates.
-                    </p>
-                  </button>
-
-                  <button 
-                    type="button"
-                    onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))}
-                    className={`p-4 rounded-xl border-2 text-left transition-all relative ${req.recording_mode === "motion" ? 'border-emerald-600 bg-emerald-50/80 shadow-sm' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-bold text-sm text-gray-900">Smart Motion Detection</span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Saves ~45% Cost</span>
-                    </div>
-                    <p className="text-[11px] text-gray-600 leading-relaxed">
-                      <strong>Pros:</strong> Saves 40-50% HDD space, doubles backup days on same drive, faster footage review.<br />
-                      <strong>Cons:</strong> Only triggers when movement occurs.<br />
-                      <span className="text-emerald-600 font-medium">Best for:</span> Homes, Offices, Warehouses.
-                    </p>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-2">
-              <Button onClick={handleNext} className="w-full h-12 text-sm font-semibold">
-                Continue to Next Step →
-              </Button>
-            </div>
-          </div>
-        );
-      case 8:
-        return (
-          <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2">Where do you want to watch?</h2>
-            <div className="grid grid-cols-1 gap-4">
-              {[
-                { val: true, label: "Mobile Phone (Internet Required)" },
-                { val: false, label: "TV / Monitor Only" }
-              ].map((opt, i) => (
-                <button key={i} onClick={() => updateReq({ wants_remote_viewing: opt.val })}
-                  className="p-4 rounded-xl border-2 text-left hover:border-blue-500 hover:bg-blue-50 transition-all font-semibold">
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      case 9:
-        return (
-          <div className="space-y-6 animate-in fade-in">
-            <div>
-              <h2 className="text-3xl font-semibold mb-2">Wiring & Site Readiness</h2>
-              <p className="text-gray-600 text-sm">Help us prepare the right cabling and ensure smooth on-site installation.</p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">1. Wiring Finish Preference</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                <button
-                  type="button"
-                  onClick={() => setReq(prev => ({ ...prev, wiring_type: "open" }))}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${req.wiring_type !== "conduit" ? 'border-blue-600 bg-blue-50/80 shadow-sm' : 'border-gray-200 hover:border-gray-300'}`}
-                >
-                  <span className="block font-bold text-sm text-gray-900">Open Clip Wiring (Standard)</span>
-                  <span className="block text-[11px] text-gray-500 mt-1">Cables neatly clipped along wall edges. Cost-effective and fast to install.</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setReq(prev => ({ ...prev, wiring_type: "conduit" }))}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${req.wiring_type === "conduit" ? 'border-emerald-600 bg-emerald-50/80 shadow-sm' : 'border-gray-200 hover:border-gray-300'}`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-sm text-gray-900">PVC Conduit / Casing</span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">+Rs. 20/m</span>
-                  </div>
-                  <span className="block text-[11px] text-gray-500">Cables concealed inside rigid PVC pipes/casing. Tamper-proof, neat corporate look.</span>
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">2. Site Readiness Pre-Check</label>
-              <div className="space-y-2.5">
-                <label className="flex items-center gap-3 p-3.5 border rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={req.power_socket_near_dvr !== false}
-                    onChange={e => setReq(prev => ({ ...prev, power_socket_near_dvr: e.target.checked }))}
-                    className="w-4 h-4 rounded text-blue-600"
-                  />
-                  <div>
-                    <span className="text-sm font-semibold text-gray-800">230V Power Socket available near DVR/NVR location</span>
-                    <p className="text-[11px] text-gray-500">Recorder & camera power supply need 2-3 standard sockets</p>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 p-3.5 border rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={req.router_near_dvr !== false}
-                    onChange={e => setReq(prev => ({ ...prev, router_near_dvr: e.target.checked }))}
-                    className="w-4 h-4 rounded text-blue-600"
-                  />
-                  <div>
-                    <span className="text-sm font-semibold text-gray-800">WiFi Router is in the same room as the DVR/NVR</span>
-                    <p className="text-[11px] text-gray-500">Needed for wired LAN cable to enable mobile app viewing</p>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <Button onClick={handleNext} className="w-full h-12 text-sm font-semibold">
-                Proceed to Final Step →
-              </Button>
-            </div>
-          </div>
-        );
-      case 10:
         return (
           <div className="space-y-6 animate-in fade-in">
             <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
@@ -583,7 +341,7 @@ export function WizardClientV2() {
                   placeholder="10-digit mobile number" 
                   maxLength={10}
                   value={req.customer_mobile || ''} 
-                  onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))} 
+                  onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/D/g, '') }))} 
                   className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
