@@ -59,7 +59,9 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   // E.g. 2MP ~ 20-30GB/day. 5MP ~ 40-50GB/day. We'll use 40GB average for now.
   let storageGb = 0;
   if (!isLiveOnly) {
-    storageGb = totalCameras * 40 * (req.recording_days || 15);
+    const days = req.recording_days !== undefined ? req.recording_days : 15;
+    const gbPerDay = req.recording_mode === "motion" ? 20 : 40;
+    storageGb = totalCameras * gbPerDay * days;
   }
 
   // Calculate Power (Watts) (Assume 6W per wired camera + 20W for recorder)
