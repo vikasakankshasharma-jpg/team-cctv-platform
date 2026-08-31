@@ -215,6 +215,7 @@ export function WizardClientV2() {
         basePlan={quoteResult.plans[customizerPlanId]}
         requirement={quoteResult.requirement}
         availableAddons={quoteResult.addons || []}
+        storageDrives={quoteResult.storageDrives || []}
         onBack={() => setCustomizerPlanId(null)}
         onConfirm={(modifiedPlan) => handleConfirmCustomizer(customizerPlanId, modifiedPlan)}
         isSaving={loading}

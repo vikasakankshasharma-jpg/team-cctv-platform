@@ -140,6 +140,7 @@ export async function POST(request: Request) {
       configuration: config,
       plans: quotePlans,
       addons: addons,
+      storageDrives: catalog.filter(p => p.category === "storage"),
       lifecycleWarnings
     });
   } catch (error: any) {
