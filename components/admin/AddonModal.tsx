@@ -17,6 +17,7 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
     display_name: "",
     technical_name: "",
     price: 0,
+    stock_quantity: 1,
     is_active: true,
     unit_multiplier: "none" as "none" | "camera_count",
     category: "accessory" as string,
@@ -29,6 +30,7 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
         display_name: addon.display_name || "",
         technical_name: addon.technical_name || "",
         price: addon.price || 0,
+        stock_quantity: addon.stock_quantity ?? 1,
         is_active: addon.is_active ?? true,
         unit_multiplier: addon.unit_multiplier || "none",
         category: addon.category || "accessory",
@@ -39,6 +41,7 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
         display_name: "",
         technical_name: "",
         price: 0,
+        stock_quantity: 1,
         is_active: true,
         unit_multiplier: "none",
         category: "accessory",
@@ -141,6 +144,27 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
               </select>
             </div>
 
+            
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                Stock Quantity
+              </label>
+              <div className="relative">
+                <input
+                  required
+                  type="number"
+                  min="-1"
+                  value={formData.stock_quantity}
+                  onChange={(e) => setFormData({ ...formData, stock_quantity: Number(e.target.value) })}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-black text-lg focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-inner"
+                />
+                <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                  (-1 for NA)
+                </span>
+              </div>
+            </div>
+
+
             <div className="space-y-2 col-span-2">
               <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2">Internal Technical Ref (Optional)</label>
               <input
@@ -159,6 +183,7 @@ export function AddonModal({ isOpen, onClose, addon, onSave }: AddonModalProps) 
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
               >
+                <option value="upgrade_camera">Camera Upgrade (PTZ, Audio, etc.)</option>
                 <option value="accessory">Accessory</option>
                 <option value="storage">Storage</option>
                 <option value="power">Power</option>

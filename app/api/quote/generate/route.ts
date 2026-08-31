@@ -97,6 +97,7 @@ export async function POST(request: Request) {
       requirement: req,
       configuration: config,
       plans: quotePlans,
+      addons: addons,
       lifecycleWarnings
     });
   } catch (error: any) {

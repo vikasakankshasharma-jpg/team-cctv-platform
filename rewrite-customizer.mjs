@@ -1,4 +1,6 @@
+import fs from "fs";
 
+let content = `
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -29,13 +31,13 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
   // Dynamically pull upgrades from availableAddons that are 'upgrade_camera' and in stock
   const UPGRADES = useMemo(() => {
     return availableAddons
-      .filter(a => a.category === "upgrade_camera" && a.stock_quantity !== 0 && a.stock_quantity !== -1)
+      .filter(a => a.category === "upgrade_camera" && a.stock !== 0 && a.stock !== "NA")
       .map(a => ({
         id: a.id!,
         name: a.display_name,
-        desc: a.brand ? `${a.brand} - Upgrade feature` : "Upgrade feature",
+        desc: a.brand ? \`\${a.brand} - Upgrade feature\` : "Upgrade feature",
         priceExTax: a.unit_price || a.price || 0,
-        stock: typeof a.stock_quantity === "number" ? a.stock_quantity : Infinity
+        stock: typeof a.stock === "number" ? a.stock : Infinity
       }));
   }, [availableAddons]);
 
@@ -43,7 +45,7 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
     if (totalUpgradesCount >= maxUpgradable) return;
     const currentQty = upgrades[id] || 0;
     if (currentQty >= stock) {
-      alert(`Only ${stock} available in stock.`);
+      alert(\`Only \${stock} available in stock.\`);
       return;
     }
     setUpgrades(prev => ({ ...prev, [id]: currentQty + 1 }));
@@ -72,7 +74,7 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
       
       plan.items.push({
         product_id: upgId,
-        display_name: `${qty}x Upgrade: ${upgDef.name}`,
+        display_name: \`\${qty}x Upgrade: \${upgDef.name}\`,
         qty: qty,
         unit_price: upgDef.priceExTax,
         line_total: lineTotalEx,
@@ -111,12 +113,12 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
           {UPGRADES.map(upg => {
              const qty = upgrades[upg.id] || 0;
              return (
-               <Card key={upg.id} className={`transition-all ${qty > 0 ? 'border-blue-500 bg-blue-50/20' : ''}`}>
+               <Card key={upg.id} className={\`transition-all \${qty > 0 ? 'border-blue-500 bg-blue-50/20' : ''}\`}>
                  <CardContent className="p-4 flex items-center justify-between">
                    <div>
                      <h4 className="font-bold text-gray-900">{upg.name}</h4>
                      <p className="text-xs text-gray-500">{upg.desc}</p>
-                     <div className={`text-sm font-semibold mt-1 ${upg.priceExTax < 0 ? 'text-green-600' : 'text-gray-700'}`}>
+                     <div className={\`text-sm font-semibold mt-1 \${upg.priceExTax < 0 ? 'text-green-600' : 'text-gray-700'}\`}>
                         {upg.priceExTax < 0 ? 'Save ' : '+ '}{formatPrice(Math.abs(upg.priceExTax))} per camera
                         {upg.stock !== Infinity && <span className="text-xs text-gray-400 ml-2 font-normal">({upg.stock} in stock)</span>}
                      </div>
@@ -185,3 +187,7 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
     </div>
   );
 }
+`;
+
+fs.writeFileSync("components/CameraCustomizer.tsx", content);
+console.log("Rewrote CameraCustomizer with stock logic");

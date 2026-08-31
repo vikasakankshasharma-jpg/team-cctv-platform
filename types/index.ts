@@ -306,9 +306,10 @@ export interface Addon {
   
   // NEW: Multiplier logic
   unit_multiplier?: "none" | "camera_count";
+  stock?: number | "NA";
   brand?: string;                // NEW: Optional brand labeling
   stock_quantity?: number;       // NEW: Inventory tracking
-  category?: "storage" | "power" | "cable" | "accessory" | "service" | string;
+  category?: "upgrade_camera" | "storage" | "power" | "cable" | "accessory" | "service" | string;
   storage_type?: "Micro SD" | "Hard Disk" | string;
   technology?: string;
   technical_name?: string;
