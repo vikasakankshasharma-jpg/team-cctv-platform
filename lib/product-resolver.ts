@@ -69,7 +69,7 @@ export function resolveProducts(
       if (cameras.length === 0) return; // Skip if we can't find a complete set
 
       const recorder = resolveRecorderForPermutation(permConfig, pool);
-      const storage = resolveStorageForPermutation(permConfig, pool);
+      const storage = resolveStorageForPermutation(permConfig, pool, brandFilter);
       const power = resolvePowerForPermutation(permConfig, pool);
 
       plans[combo] = {
@@ -158,7 +158,7 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
   return recs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
 }
 
-function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[]) {
+function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string) {
   if (config.storage_gb === 0 || config.storage_gb === undefined) return undefined;
 
   const storageItems = pool.filter(p => p.category === "storage" || p.storage_type === "Hard Disk");
