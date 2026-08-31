@@ -14,12 +14,20 @@ export function resolveProducts(
        // Only filter cameras and recorders by brand
        const isCamOrDvr = p.category === "cctv_camera" || p.category === "recorder" || (p.category as any) === "CAMERA_HD" || (p.category as any) === "CAMERA_IP";
        if (isCamOrDvr) {
-          let pBrand = p.brand;
+                    let pBrand = p.brand;
           if (!pBrand) {
              if (p.display_name.toLowerCase().includes("cp plus")) pBrand = "CP Plus";
              else if (p.display_name.toLowerCase().includes("hikvision")) pBrand = "Hikvision";
              else if (p.display_name.toLowerCase().includes("prama")) pBrand = "Prama";
              else if (p.display_name.toLowerCase().includes("dahua")) pBrand = "Dahua";
+          }
+          if (pBrand) {
+             const lower = pBrand.toLowerCase().replace(/\s+/g, "");
+             if (lower === "cpplus") pBrand = "CP Plus";
+             else if (lower.includes("budget")) pBrand = "";
+             else if (lower === "prama") pBrand = "Prama";
+             else if (lower === "hikvision") pBrand = "Hikvision";
+             else if (lower === "dahua") pBrand = "Dahua";
           }
           if (pBrand !== brandFilter) return false;
        }

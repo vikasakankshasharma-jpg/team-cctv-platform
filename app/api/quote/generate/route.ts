@@ -81,11 +81,22 @@ export async function POST(request: Request) {
     const brands = new Set<string>();
     catalog.forEach(p => {
        if (p.category === "cctv_camera" || p.category === "recorder" || (p.category as any) === "CAMERA_HD" || (p.category as any) === "CAMERA_IP") {
-          if (p.brand) brands.add(p.brand);
-          else if (p.display_name.toLowerCase().includes("cp plus")) brands.add("CP Plus");
-          else if (p.display_name.toLowerCase().includes("hikvision")) brands.add("Hikvision");
-          else if (p.display_name.toLowerCase().includes("prama")) brands.add("Prama");
-          else if (p.display_name.toLowerCase().includes("dahua")) brands.add("Dahua");
+                    let b = p.brand;
+          if (!b) {
+             if (p.display_name.toLowerCase().includes("cp plus")) b = "CP Plus";
+             else if (p.display_name.toLowerCase().includes("hikvision")) b = "Hikvision";
+             else if (p.display_name.toLowerCase().includes("prama")) b = "Prama";
+             else if (p.display_name.toLowerCase().includes("dahua")) b = "Dahua";
+          }
+          if (b) {
+             const lower = b.toLowerCase().replace(/\s+/g, "");
+             if (lower === "cpplus") b = "CP Plus";
+             else if (lower.includes("budget")) b = "";
+             else if (lower === "prama") b = "Prama";
+             else if (lower === "hikvision") b = "Hikvision";
+             else if (lower === "dahua") b = "Dahua";
+          }
+          if (b) brands.add(b);
        }
     });
     const uniqueBrands = Array.from(brands);
