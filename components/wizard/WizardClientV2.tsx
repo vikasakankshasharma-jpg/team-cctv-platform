@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 export function WizardClientV2() {
   const [sessionId] = useState(() => crypto.randomUUID());
   const [step, setStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 4;
   
   useEffect(() => {
     // Send session start
@@ -275,72 +275,62 @@ export function WizardClientV2() {
           </div>
         );
       case 2:
-        return (
-          <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2">How many cameras total?</h2>
-            <p className="text-gray-600 mb-6">Select the total number of cameras you need.</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[2, 4, 6, 8, 12, 16, 24, 32].map(num => (
-                <button key={num} onClick={() => updateReq({ camera_count: num })}
-                  className="p-4 rounded-xl border-2 text-center text-xl font-bold hover:border-blue-500 hover:bg-blue-50 transition-all">
-                  {num} Cameras
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      case 3:
-        const totalCams = req.camera_count || 4;
-        const currentOutdoor = req.outdoor_camera_count !== undefined ? req.outdoor_camera_count : Math.min(2, totalCams);
-        const currentIndoor = Math.max(0, totalCams - currentOutdoor);
-
-        return (
-          <div className="space-y-6 animate-in fade-in">
-            <div>
-              <h2 className="text-3xl font-semibold mb-2">Camera Placement Split</h2>
-              <p className="text-gray-600 text-sm">How many cameras will be installed Outdoors (weatherproof) vs Indoors (ceiling)?</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-5 rounded-2xl border-2 border-gray-200 bg-card">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h3 className="font-bold text-base text-gray-900">Outdoor Cameras</h3>
-                    <p className="text-xs text-gray-500">Weatherproof Bullet</p>
+          const currentOutdoor = req.outdoor_camera_count !== undefined ? req.outdoor_camera_count : 2;
+          const currentIndoor = req.indoor_camera_count !== undefined ? req.indoor_camera_count : 2;
+          const totalCams = currentOutdoor + currentIndoor;
+  
+          return (
+            <div className="space-y-6 animate-in fade-in">
+              <div>
+                <h2 className="text-3xl font-semibold mb-2">How many cameras do you need?</h2>
+                <p className="text-gray-600 text-sm">Select the exact number of indoor and outdoor cameras.</p>
+              </div>
+  
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-5 rounded-2xl border-2 border-gray-200 bg-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">Outdoor Cameras</h3>
+                      <p className="text-xs text-gray-500">Weatherproof Bullet</p>
+                    </div>
+                    <span className="text-2xl">???</span>
                   </div>
-                  <span className="text-2xl">???</span>
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
+                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-2 hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1), camera_count: Math.max(0, currentOutdoor - 1) + currentIndoor }))} disabled={currentOutdoor === 0}>-</Button>
+                    <span className="text-2xl font-bold w-12 text-center text-blue-800">{currentOutdoor}</span>
+                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: currentOutdoor + 1, camera_count: currentOutdoor + 1 + currentIndoor }))}>+</Button>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1) }))} disabled={currentOutdoor === 0}>-</Button>
-                  <span className="text-2xl font-bold w-12 text-center">{currentOutdoor}</span>
-                  <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.min(totalCams, currentOutdoor + 1) }))} disabled={currentOutdoor === totalCams}>+</Button>
+  
+                <div className="p-5 rounded-2xl border-2 border-gray-200 bg-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">Indoor Cameras</h3>
+                      <p className="text-xs text-gray-500">Ceiling Dome</p>
+                    </div>
+                    <span className="text-2xl">??</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
+                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-2 hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, currentIndoor - 1), camera_count: currentOutdoor + Math.max(0, currentIndoor - 1) }))} disabled={currentIndoor === 0}>-</Button>
+                    <span className="text-2xl font-bold w-12 text-center text-blue-800">{currentIndoor}</span>
+                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: currentIndoor + 1, camera_count: currentOutdoor + currentIndoor + 1 }))}>+</Button>
+                  </div>
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl border-2 border-gray-200 bg-card">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h3 className="font-bold text-base text-gray-900">Indoor Cameras</h3>
-                    <p className="text-xs text-gray-500">Ceiling Dome</p>
-                  </div>
-                  <span className="text-2xl">??</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Button variant="outline" size="icon" disabled className="opacity-50">-</Button>
-                  <span className="text-2xl font-bold w-12 text-center text-gray-400">{currentIndoor}</span>
-                  <Button variant="outline" size="icon" disabled className="opacity-50">+</Button>
-                </div>
+              <div className="bg-blue-50 p-4 rounded-xl flex justify-between items-center border border-blue-100">
+                <span className="font-semibold text-blue-900">Total Cameras:</span>
+                <span className="text-2xl font-black text-blue-700">{totalCams}</span>
+              </div>
+  
+              <div className="pt-2">
+                <Button onClick={() => handleNext()} disabled={totalCams === 0} className="w-full h-12 text-sm font-semibold">
+                  Confirm Cameras & Continue ?
+                </Button>
               </div>
             </div>
-
-            <div className="pt-2">
-              <Button onClick={() => handleNext()} className="w-full h-12 text-sm font-semibold">
-                Confirm Placement & Continue ?
-              </Button>
-            </div>
-          </div>
-        );
-              case 4:
+          );
+        case 3:
           return (
             <div className="space-y-6 animate-in fade-in">
               <h2 className="text-3xl font-semibold mb-2">Recording & Storage Backup</h2>
@@ -376,7 +366,7 @@ export function WizardClientV2() {
               </div>
             </div>
           );
-        case 5:
+        case 4:
         return (
           <div className="space-y-6 animate-in fade-in">
             <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
