@@ -34,7 +34,8 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
         id: a.id!,
         name: a.display_name,
         desc: a.brand ? `${a.brand} - Upgrade feature` : "Upgrade feature",
-        priceExTax: a.unit_price || a.price || 0,
+        priceExTax: (a.unit_price || a.price || 0) / 1.18,
+          priceIncGst: a.unit_price || a.price || 0,
         stock: typeof a.stock_quantity === "number" ? a.stock_quantity : Infinity
       }));
   }, [availableAddons]);
@@ -116,8 +117,8 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
                    <div>
                      <h4 className="font-bold text-gray-900">{upg.name}</h4>
                      <p className="text-xs text-gray-500">{upg.desc}</p>
-                     <div className={`text-sm font-semibold mt-1 ${upg.priceExTax < 0 ? 'text-green-600' : 'text-gray-700'}`}>
-                        {upg.priceExTax < 0 ? 'Save ' : '+ '}{formatPrice(Math.abs(upg.priceExTax))} per camera
+                     <div className={`text-sm font-semibold mt-1 ${upg.priceIncGst < 0 ? 'text-green-600' : 'text-gray-700'}`}>
+                        {upg.priceIncGst < 0 ? 'Save ' : '+ '}{formatPrice(Math.abs(upg.priceIncGst))} per camera
                         {upg.stock !== Infinity && <span className="text-xs text-gray-400 ml-2 font-normal">({upg.stock} in stock)</span>}
                      </div>
                    </div>
@@ -154,7 +155,7 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
                 if (qty === 0) return null;
                 const upg = UPGRADES.find(u => u.id === id);
                 if (!upg) return null;
-                const amount = upg.priceExTax * qty * 1.18; // Inc GST
+                const amount = upg.priceIncGst * qty;
                 return (
                   <div key={id} className="flex justify-between items-center text-sm text-blue-700 font-medium">
                     <span>{qty}x {upg.name}</span>

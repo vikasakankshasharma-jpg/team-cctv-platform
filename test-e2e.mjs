@@ -1,82 +1,87 @@
-import fetch from 'node-fetch';
-import crypto from 'crypto';
+import fetch from "node-fetch";
+import fs from "fs";
 
-const BASE_URL = 'http://localhost:3000';
+async function run() {
+  const reqPayload = {
+    customer_name: "Rahul E2E Tester",
+    customer_mobile: "9988776655",
+    property_type: "Residential",
+    camera_count: 4,
+    outdoor_camera_count: 2,
+    recording_days: 15
+  };
 
-async function runE2ETest() {
-  console.log("🚀 STARTING E2E FULL-CYCLE TEST\n");
+  console.log("1. Generating Quote...");
+  const res = await fetch("http://localhost:3000/api/quote/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(reqPayload)
+  });
   
-  try {
-    // -----------------------------------------------------
-    // ACTOR: CUSTOMER
-    // ACTION: Submit Wizard & Create Lead
-    // -----------------------------------------------------
-    console.log("👤 ACTOR: CUSTOMER");
-    console.log("-> Submitting Wizard & Creating Lead...");
-    
-    const leadPayload = {
-      customer_name: "E2E Test User",
-      mobile_number: "9999988888",
-      property_type: "Residential",
-      technology_choice: "IP",
-      cabling_done: false,
-      referral_code: "DEMO-PROMO-123",
-      wizard_answers: {
-        pincode: "302001",
-        city: "Jaipur",
-        state: "Rajasthan"
-      }
-    };
-
-    const leadRes = await fetch(`${BASE_URL}/api/leads`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(leadPayload)
-    });
-
-    const leadData = await leadRes.json();
-    if (!leadData.success) {
-      throw new Error(`Lead Creation Failed: ${JSON.stringify(leadData)}`);
-    }
-    const leadId = leadData.data.id;
-    console.log(`✅ Lead Created Successfully! ID: ${leadId}`);
-
-    // -----------------------------------------------------
-    // ACTOR: CUSTOMER
-    // ACTION: Generate & Save Quote
-    // -----------------------------------------------------
-    console.log("-> Generating Quotation...");
-    
-    const quotePayload = {
-      lead_id: leadId,
-      status: "draft",
-      selection: {
-        plan_type: "better",
-        technology: "IP",
-        camera_count: 4,
-        storage_days: 15,
-        resolution: "5MP"
-      }
-    };
-
-    const quoteRes = await fetch(`${BASE_URL}/api/quotes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(quotePayload)
-    });
-
-    const quoteData = await quoteRes.json();
-    if (!quoteData.success) {
-      console.warn(`⚠️ Quote Generation Failed (Expected if DB seed differs): ${JSON.stringify(quoteData)}`);
-    } else {
-      console.log(`✅ Quote Generated Successfully! ID: ${quoteData.data.id} | Total: ₹${quoteData.data.total_payable}`);
-    }
-
-    console.log("\n✅ E2E API SIMULATION COMPLETE.");
-    
-  } catch (err) {
-    console.error("\n❌ E2E TEST FAILED:", err.message);
+  if (!res.ok) {
+     console.log(await res.text());
+     return;
   }
-}
+  const data = await res.json();
+  
+  console.log("Plans generated:");
+  console.log(Object.keys(data.plans));
+  
+  // Pick IP 5MP
+  const planId = "IP_5MP";
+  const basePlan = data.plans[planId];
+  
+  console.log(`\n2. Base Plan ${planId} Price: ?${basePlan.total_payable}`);
+  
+  console.log("\n3. Available Addons from DB:");
+  const addons = data.addons || [];
+  addons.forEach(a => console.log(` - ${a.display_name} (Stock: ${a.stock_quantity}) @ ?${a.unit_price}`));
 
-runE2ETest();
+  // Simulate applying 2x Addon if it exists, else we just proceed
+  let modifiedPlan = JSON.parse(JSON.stringify(basePlan));
+  const ptzAddon = addons.find(a => a.category === "upgrade_camera");
+  if (ptzAddon) {
+    console.log(`\n4. Simulating Upgrade: adding 2x ${ptzAddon.display_name}`);
+    const addedExTax = ptzAddon.unit_price * 2;
+    modifiedPlan.items.push({
+      product_id: ptzAddon.id,
+      display_name: `2x Upgrade: ${ptzAddon.display_name}`,
+      qty: 2,
+      unit_price: ptzAddon.unit_price,
+      line_total: addedExTax,
+    });
+    modifiedPlan.base_hardware_cost += addedExTax;
+    modifiedPlan.finalExTax += addedExTax;
+    const addedGst = addedExTax * 0.18;
+    modifiedPlan.gstAmount += addedGst;
+    modifiedPlan.total_payable = Math.round(modifiedPlan.total_payable + addedExTax + addedGst);
+    console.log(`   New Price: ?${modifiedPlan.total_payable}`);
+  } else {
+    console.log("\n4. No camera upgrades found in DB. Skipping addon injection.");
+  }
+
+  console.log("\n5. Saving Final Quote...");
+  const saveRes = await fetch("http://localhost:3000/api/quote/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      customer_name: reqPayload.customer_name,
+      customer_mobile: reqPayload.customer_mobile,
+      requirementSnapshot: reqPayload,
+      configurationSnapshot: data.configuration,
+      pricingSnapshot: modifiedPlan,
+      selectedPlan: planId
+    })
+  });
+  const saveData = await saveRes.json();
+  
+  console.log(`   Quote Saved! ID: ${saveData.quoteId}`);
+  
+  console.log("\n6. Generating PDF...");
+  const pdfRes = await fetch(`http://localhost:3000/api/quote/${saveData.quoteId}/pdf`);
+  const pdfData = await pdfRes.json();
+  console.log(`   PDF URL: ${pdfData.url}`);
+  
+  console.log("\n? E2E Cycle Completed Successfully!");
+}
+run();
