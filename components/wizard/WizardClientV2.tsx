@@ -352,11 +352,11 @@ export function WizardClientV2() {
             <h2 className="text-3xl font-semibold mb-2">Camera Quality?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { val: "HD", label: "Basic (2MP)", desc: "Good for general monitoring" },
-                { val: "IP", label: "Recommended (5MP)", desc: "Better detail & identification" },
-                { val: "IP", label: "Premium (8MP)", desc: "Maximum detail" }
+                { val: "HD", res: "2MP", label: "Basic (2MP)", desc: "Good for general monitoring" },
+                { val: "IP", res: "5MP", label: "Recommended (5MP)", desc: "Better detail & identification" },
+                { val: "IP", res: "8MP", label: "Premium (8MP)", desc: "Maximum detail" }
               ].map((opt, i) => (
-                <button key={i} onClick={() => updateReq({ technology_preference: opt.val as any })}
+                <button key={i} onClick={() => updateReq({ technology_preference: opt.val as any, camera_resolution: opt.res })}
                   className="p-6 rounded-xl border-2 text-left hover:border-blue-500 hover:bg-blue-50 transition-all">
                   <span className="block font-bold text-lg">{opt.label}</span>
                   <span className="block text-sm text-gray-500 mt-2">{opt.desc}</span>
