@@ -52,7 +52,8 @@ export const MarginEngine = {
     baseCost: number, 
     vendorCategory: string, 
     tier: PlanType, 
-    policy: MarginPolicyConfig = DEFAULT_MARGIN_POLICY
+    policy: MarginPolicyConfig = DEFAULT_MARGIN_POLICY,
+    productBrand?: string
   ): PricingCalculationResult {
     
     // Fail-safe: if base cost is missing, return 0 (ON_DEMAND items with null baseCost)
@@ -66,6 +67,24 @@ export const MarginEngine = {
 
     if (category === 'anchor') {
       markup = policy.anchor_margin[tier];
+      
+      const vCat = (vendorCategory || '').toLowerCase();
+      const pBrand = (productBrand || '').toLowerCase();
+
+      // HDD: 5%
+      if (vCat === 'storage' || vCat === 'hard disk') {
+        markup = 0.05;
+      }
+      
+      // CP Plus CCTV Camera & Recorder: 10%
+      // Budget CCTV Camera: 30%
+      else if (vCat.includes('camera') || vCat === 'cctv_camera' || vCat === 'recorder' || vCat === 'dvr' || vCat === 'nvr') {
+        if (pBrand.includes('cp plus') || pBrand.includes('cpplus')) {
+          markup = 0.10;
+        } else if (pBrand.includes('budget')) {
+          markup = 0.30;
+        }
+      }
     } else if (category === 'accessory') {
       markup = policy.accessory_margin[tier];
     } else if (category === 'cable') {

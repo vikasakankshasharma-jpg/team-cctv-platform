@@ -23,7 +23,7 @@ export function generatePricingSnapshot(
   for (const cam of resolvedSystem.cameras) {
     const qty = cam.qty;
     const baseCost = cam.product.baseCost || cam.product.unit_price || 0;
-    const calc = MarginEngine.calculateUnitPricing(baseCost, cam.product.category, planType, marginPolicy);
+    const calc = MarginEngine.calculateUnitPricing(baseCost, cam.product.category, planType, marginPolicy, cam.product.brand);
     
     lineItems.push({
       product_id: cam.product.id,
@@ -41,7 +41,7 @@ export function generatePricingSnapshot(
   // Add Recorder
   if (resolvedSystem.recorder) {
     const baseCost = resolvedSystem.recorder.baseCost || resolvedSystem.recorder.unit_price || 0;
-    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.recorder.category, planType, marginPolicy);
+    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.recorder.category, planType, marginPolicy, resolvedSystem.recorder.brand);
     lineItems.push({
       product_id: resolvedSystem.recorder.id,
       display_name: resolvedSystem.recorder.display_name,
@@ -58,7 +58,7 @@ export function generatePricingSnapshot(
   // Add Storage
   if (resolvedSystem.storage) {
     const baseCost = resolvedSystem.storage.baseCost || resolvedSystem.storage.unit_price || 0;
-    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.storage.category, planType, marginPolicy);
+    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.storage.category, planType, marginPolicy, resolvedSystem.storage.brand);
     lineItems.push({
       product_id: resolvedSystem.storage.id,
       display_name: resolvedSystem.storage.display_name,
@@ -75,7 +75,7 @@ export function generatePricingSnapshot(
   // Add Power
   if (resolvedSystem.power) {
     const baseCost = resolvedSystem.power.baseCost || resolvedSystem.power.unit_price || 0;
-    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.power.category, planType, marginPolicy);
+    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.power.category, planType, marginPolicy, resolvedSystem.power.brand);
     lineItems.push({
       product_id: resolvedSystem.power.id,
       display_name: resolvedSystem.power.display_name,
