@@ -141,7 +141,7 @@ function resolveStorage(config: CCTVConfiguration, req: CCTVRequirement, pool: P
   }
 
   const storageItems = pool.filter(p => p.category === "storage" || p.storage_type === "Hard Disk");
-  const getTb = (p) => {
+  const getTb = (p: Product) => {
     if (p.storage_capacity_tb) return p.storage_capacity_tb;
     if (typeof p.capacity === "string") {
       if (p.capacity.includes("TB")) return parseInt(p.capacity.replace("TB", "")) || 0;
