@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { CCTVRequirement } from "@/types";
 import { QuoteComparison } from "@/components/QuoteComparison";
+import { CameraCustomizer } from "@/components/CameraCustomizer";
 import { EditConfigurationDrawer } from "@/components/EditConfigurationDrawer";
 import { Button } from "@/components/ui/button";
 
@@ -207,7 +208,22 @@ export function WizardClientV2() {
     );
   }
 
+  if (customizerPlanId && quoteResult) {
+    return (
+      <CameraCustomizer
+        basePlanId={customizerPlanId}
+        basePlan={quoteResult.plans[customizerPlanId]}
+        requirement={quoteResult.requirement}
+        availableAddons={quoteResult.addons || []}
+        onBack={() => setCustomizerPlanId(null)}
+        onConfirm={(modifiedPlan) => handleConfirmCustomizer(customizerPlanId, modifiedPlan)}
+        isSaving={loading}
+      />
+    );
+  }
+
   if (quoteResult) {
+
     return (
       <div className="max-w-6xl mx-auto py-12 px-4 sm:px-6">
         <div className="text-center mb-12">
