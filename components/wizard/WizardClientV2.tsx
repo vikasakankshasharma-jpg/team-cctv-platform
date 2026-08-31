@@ -343,10 +343,10 @@ export function WizardClientV2() {
               case 4:
           return (
             <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-3xl font-semibold mb-2">Recording & Backup</h2>
+              <h2 className="text-3xl font-semibold mb-2">Recording & Storage Backup</h2>
               <p className="text-gray-600 mb-6">How long do you want to keep the CCTV recordings?</p>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                 {[0, 7, 15, 30, 45, 60].map(days => (
                   <button key={days} onClick={() => setReq(prev => ({ ...prev, recording_days: days }))}
                     className={`p-4 rounded-xl border-2 text-center text-xl font-bold transition-all ${req.recording_days === days ? 'border-blue-600 bg-blue-50 text-blue-700' : 'hover:border-blue-300 hover:bg-gray-50 text-gray-700'}`}>
