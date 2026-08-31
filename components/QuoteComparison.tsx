@@ -16,39 +16,32 @@ interface QuoteComparisonProps {
 
 export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfiguration }: QuoteComparisonProps) {
   const [activeTech, setActiveTech] = useState<"HD" | "IP">("HD");
-  const [activeBrand, setActiveBrand] = useState<string>("All");
+  const [activeBrand, setActiveBrand] = useState<string>("Budget");
 
   const formatPrice = (price: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(price);
 
   // Extract available brands
   const brands = useMemo(() => {
      const bSet = new Set<string>();
-     Object.values(plans).forEach(plan => {
-        plan.items.filter(i => i.product_id.includes("cctv_camera") || i.product_id.includes("camera")).forEach(item => {
-           // We'll approximate brand from display name if brand isn't explicitly in PricingResult
-           if (item.display_name.toLowerCase().includes("cp plus")) bSet.add("CP Plus");
-           else if (item.display_name.toLowerCase().includes("budget")) bSet.add("Budget Brand");
-           else if (item.display_name.toLowerCase().includes("prama")) bSet.add("Prama");
-        });
+     Object.keys(plans).forEach(key => {
+        const parts = key.split("_");
+        if (parts.length >= 3) {
+           bSet.add(parts[0]);
+        }
      });
-     return ["All", ...Array.from(bSet)];
+     return ["Budget", ...Array.from(bSet).filter(b => b !== "Budget")];
   }, [plans]);
 
   // Filter plans based on Toggle & Brand
   const filteredPlans = useMemo(() => {
-     let result = Object.entries(plans).filter(([key, plan]) => key.startsWith(activeTech + "_"));
+     let result = Object.entries(plans).filter(([key, plan]) => key.includes("_" + activeTech + "_"));
      
-     if (activeBrand !== "All") {
-        result = result.filter(([key, plan]) => {
-           const hasBrand = plan.items.some(i => i.display_name.toLowerCase().includes(activeBrand.toLowerCase()));
-           return hasBrand;
-        });
-     }
+     result = result.filter(([key, plan]) => key.startsWith(activeBrand + "_"));
      
-     // Sort by MP resolution (2MP < 5MP < 8MP)
+     // Sort by MP resolution (e.g. Budget_HD_2MP -> index 2)
      return result.sort((a, b) => {
-        const mpA = parseInt(a[0].split("_")[1].replace("MP", "")) || 0;
-        const mpB = parseInt(b[0].split("_")[1].replace("MP", "")) || 0;
+        const mpA = parseInt(a[0].split("_")[2]?.replace("MP", "") || "0");
+        const mpB = parseInt(b[0].split("_")[2]?.replace("MP", "") || "0");
         return mpA - mpB;
      });
   }, [plans, activeTech, activeBrand]);

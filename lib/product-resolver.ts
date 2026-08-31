@@ -4,11 +4,26 @@ import { Product, CCTVRequirement, CCTVConfiguration, ResolvedSystem } from "@/t
 export function resolveProducts(
   config: CCTVConfiguration,
   req: CCTVRequirement,
-  catalog: Product[]
+  catalog: Product[],
+  brandFilter?: string
 ): { plans: Record<string, ResolvedSystem>; lifecycleWarnings: string[] } {
   
   const lifecycleWarnings: string[] = [];
   const pool = catalog.filter(p => {
+    if (brandFilter) {
+       // Only filter cameras and recorders by brand
+       const isCamOrDvr = p.category === "cctv_camera" || p.category === "recorder" || (p.category as any) === "CAMERA_HD" || (p.category as any) === "CAMERA_IP";
+       if (isCamOrDvr) {
+          let pBrand = p.brand;
+          if (!pBrand) {
+             if (p.display_name.toLowerCase().includes("cp plus")) pBrand = "CP Plus";
+             else if (p.display_name.toLowerCase().includes("hikvision")) pBrand = "Hikvision";
+             else if (p.display_name.toLowerCase().includes("prama")) pBrand = "Prama";
+             else if (p.display_name.toLowerCase().includes("dahua")) pBrand = "Dahua";
+          }
+          if (pBrand !== brandFilter) return false;
+       }
+    }
     if (!p.is_active || p.is_quotation_eligible === false) return false;
     if (p.stock_status === "out_of_stock" || p.stock_status === "discontinued") return false;
     if ((p.stock_status as string) === "on_demand") {

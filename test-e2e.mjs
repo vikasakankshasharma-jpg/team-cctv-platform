@@ -28,7 +28,7 @@ async function run() {
   console.log(Object.keys(data.plans));
   
   // Pick IP 5MP
-  const planId = "IP_5MP";
+  const planId = "Budget_IP_5MP";
   const basePlan = data.plans[planId];
   
   console.log(`\n2. Base Plan ${planId} Price: ?${basePlan.total_payable}`);

@@ -76,12 +76,43 @@ export async function POST(request: Request) {
     // 2. Requirements -> Engineering Configuration
     const config = generateConfiguration(req);
 
-    // 3. Configuration -> Resolved Hardware (Dynamic Tech+MP Combinations)
-    const { plans: resolvedPlans, lifecycleWarnings } = resolveProducts(config, req, catalog);
+    
+    // 3. Extract unique brands from catalog
+    const brands = new Set<string>();
+    catalog.forEach(p => {
+       if (p.category === "cctv_camera" || p.category === "recorder" || (p.category as any) === "CAMERA_HD" || (p.category as any) === "CAMERA_IP") {
+          if (p.brand) brands.add(p.brand);
+          else if (p.display_name.toLowerCase().includes("cp plus")) brands.add("CP Plus");
+          else if (p.display_name.toLowerCase().includes("hikvision")) brands.add("Hikvision");
+          else if (p.display_name.toLowerCase().includes("prama")) brands.add("Prama");
+          else if (p.display_name.toLowerCase().includes("dahua")) brands.add("Dahua");
+       }
+    });
+    const uniqueBrands = Array.from(brands);
 
-    // 4. Resolved Hardware -> Pricing
+    // 4. Resolve Hardware (Dynamic Tech+MP Combinations) for "Budget" (No Brand Filter) + Each Brand
+    let allResolvedPlans: Record<string, any> = {};
+    const lifecycleWarnings: string[] = [];
+
+    // Run for "Budget"
+    const budgetRes = resolveProducts(config, req, catalog);
+    Object.entries(budgetRes.plans).forEach(([key, plan]) => {
+        allResolvedPlans["Budget_" + key] = plan;
+    });
+    lifecycleWarnings.push(...budgetRes.lifecycleWarnings);
+
+    // Run for each brand
+    uniqueBrands.forEach(brand => {
+       const brandRes = resolveProducts(config, req, catalog, brand);
+       Object.entries(brandRes.plans).forEach(([key, plan]) => {
+           allResolvedPlans[brand + "_" + key] = plan;
+       });
+       lifecycleWarnings.push(...brandRes.lifecycleWarnings);
+    });
+
+    // 5. Resolved Hardware -> Pricing
     const quotePlans: Record<string, any> = {};
-    for (const [key, resolvedSystem] of Object.entries(resolvedPlans)) {
+    for (const [key, resolvedSystem] of Object.entries(allResolvedPlans)) {
        quotePlans[key] = generatePricingSnapshot(
          resolvedSystem,
          req,
