@@ -51,6 +51,7 @@ export function WizardClientV2() {
   const [loading, setLoading] = useState(false);
   const [quoteResult, setQuoteResult] = useState<any>(null);
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [customizerPlanId, setCustomizerPlanId] = useState<string | null>(null);
 
   const handleNext = () => setStep(s => Math.min(s + 1, totalSteps + 1));
   const handlePrev = () => setStep(s => Math.max(s - 1, 1));
@@ -94,17 +95,23 @@ export function WizardClientV2() {
     handleNext();
   };
 
-  const handleSaveQuote = async (planType: string) => {
+  
+  const handleSelectBasePlan = (planId: string) => {
+    setCustomizerPlanId(planId);
+  };
+
+  const handleConfirmCustomizer = async (planType: string, modifiedPricingSnapshot?: any) => {
     const mobile = quoteResult.requirement.customer_mobile;
     const name = quoteResult.requirement.customer_name;
     
     if (!mobile) {
-      alert("Mobile number is required. Please edit your configuration and provide it.");
+      alert("Mobile number is required.");
       return;
     }
     
     setLoading(true);
     try {
+      const pricingToSave = modifiedPricingSnapshot || quoteResult.plans[planType];
       const res = await fetch("/api/quote/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -113,9 +120,10 @@ export function WizardClientV2() {
           customer_name: name,
           requirementSnapshot: quoteResult.requirement,
           configurationSnapshot: quoteResult.configuration,
-          pricingSnapshot: quoteResult.plans[planType],
+          pricingSnapshot: pricingToSave,
           selectedPlan: planType
         })
+
       });
       const data = await res.json();
       if (data.success) {
@@ -208,9 +216,9 @@ export function WizardClientV2() {
         </div>
         
         <QuoteComparison 
-          plans={quoteResult.plans}
-          requirement={quoteResult.requirement}
-          onSelectPlan={handleSaveQuote}
+            plans={quoteResult.plans}
+            requirement={quoteResult.requirement}
+            onSelectPlan={handleSelectBasePlan}
           onEditConfiguration={() => setIsEditDrawerOpen(true)}
         />
 
