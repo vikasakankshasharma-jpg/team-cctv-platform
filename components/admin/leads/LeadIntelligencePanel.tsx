@@ -18,7 +18,7 @@ export default function LeadIntelligencePanel({
   const [expectedClosingDate, setExpectedClosingDate] = useState(lead.expectedClosingDate || "");
   const [probabilityPercent, setProbabilityPercent] = useState(lead.probabilityPercent || 0);
   const [expectedValue, setExpectedValue] = useState(
-    lead.expectedValue || (lead.pricingSnapshot?.finalPrice || 0)
+    lead.expectedValue || lead.pricingSnapshot?.finalPrice || lead.pricingSnapshot?.total_payable || 0
   );
 
   const handleSave = async () => {

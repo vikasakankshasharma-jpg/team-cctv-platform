@@ -98,7 +98,7 @@ export default function LeadDetailPage() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Technology</p>
-                  <p className="font-medium">{lead.requirementSnapshot?.technology || "N/A"}</p>
+                  <p className="font-medium">{lead.requirementSnapshot?.technology_preference || lead.requirementSnapshot?.existing_technology || "N/A"}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Quote Value</p>
