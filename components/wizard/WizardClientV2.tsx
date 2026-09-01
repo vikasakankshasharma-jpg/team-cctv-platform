@@ -210,28 +210,14 @@ export function WizardClientV2() {
             <div className="bg-gray-50 border rounded-xl p-6 text-left mb-8 max-w-lg mx-auto shadow-sm">
               <h3 className="font-bold text-lg border-b pb-3 mb-4 text-gray-800">Final System Configuration</h3>
               <ul className="space-y-3 text-sm">
-                <li className="flex justify-between">
-                  <span className="text-gray-600">Hardware & Cameras</span>
-                  <span className="font-semibold text-gray-900">{formatPrice(finalPlan.base_hardware_cost)}</span>
-                </li>
-                {finalPlan.cabling_cost > 0 && (
-                  <li className="flex justify-between">
-                    <span className="text-gray-600">Estimated Cabling</span>
-                    <span className="font-semibold text-gray-900">{formatPrice(finalPlan.cabling_cost)}</span>
+                {finalPlan.items.map((item: any, index: number) => (
+                  <li key={index} className="flex justify-between items-start mb-2 pb-2 border-b border-gray-100 last:border-0">
+                    <span className="text-gray-700 pr-4">
+                      {item.display_name} <span className="text-gray-400 text-xs ml-1">x{item.qty}</span>
+                    </span>
+                    <span className="font-medium text-gray-900 whitespace-nowrap">{formatPrice(item.line_total)}</span>
                   </li>
-                )}
-                {finalPlan.labor_cost > 0 && (
-                  <li className="flex justify-between">
-                    <span className="text-gray-600">Installation Labor</span>
-                    <span className="font-semibold text-gray-900">{formatPrice(finalPlan.labor_cost)}</span>
-                  </li>
-                )}
-                {finalPlan.addons_total > 0 && (
-                  <li className="flex justify-between">
-                    <span className="text-gray-600">Optional Upgrades</span>
-                    <span className="font-semibold text-gray-900">{formatPrice(finalPlan.addons_total)}</span>
-                  </li>
-                )}
+                ))}
                 <li className="flex justify-between border-t pt-3 mt-3">
                   <span className="text-gray-600">GST (18%)</span>
                   <span className="font-semibold text-gray-900">{formatPrice(finalPlan.gst_amount)}</span>
@@ -246,6 +232,9 @@ export function WizardClientV2() {
 
           <div className="space-y-4 max-w-sm mx-auto">
 
+            <Button variant="outline" onClick={() => { setSavedQuoteId(null); setFinalPlan(null); setCustomizerPlanId(null); setStep(1); }} className="w-full">
+              Modify My Setup
+            </Button>
             {pdfUrl ? (
               <>
                 <a href={pdfUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full py-3 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">

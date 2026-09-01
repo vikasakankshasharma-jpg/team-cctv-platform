@@ -1,87 +1,77 @@
-import fetch from "node-fetch";
+import http from "http";
 import fs from "fs";
 
-async function run() {
-  const reqPayload = {
-    customer_name: "Rahul E2E Tester",
-    customer_mobile: "9988776655",
-    property_type: "Residential",
-    camera_count: 4,
-    outdoor_camera_count: 2,
-    recording_days: 15
-  };
-
-  console.log("1. Generating Quote...");
-  const res = await fetch("http://localhost:3000/api/quote/generate", {
+async function runEndToEnd() {
+  console.log("Starting E2E Test...");
+  
+  // 1. Generate Quote
+  const generateRes = await fetch("http://localhost:3000/api/quote/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(reqPayload)
+    body: JSON.stringify({
+      installation_type: "new",
+      indoor_camera_count: 2,
+      outdoor_camera_count: 2,
+      recording_days: 7,
+      recording_mode: "motion",
+      property_type: "Residential"
+    })
   });
   
-  if (!res.ok) {
-     console.log(await res.text());
-     return;
-  }
-  const data = await res.json();
+  const generateData = await generateRes.json();
+  if (!generateData.success) throw new Error("Failed to generate: " + JSON.stringify(generateData));
   
-  console.log("Plans generated:");
-  console.log(Object.keys(data.plans));
+  const ipPlan = generateData.plans["Budget_IP_5MP"];
+  const ptzBudget = generateData.addons.find(a => a.id === "upg_ptz_budget_15x");
   
-  // Pick IP 5MP
-  const planId = "Budget_IP_5MP";
-  const basePlan = data.plans[planId];
+  const modifiedPlan = { ...ipPlan };
+  const ptzAddonLine = {
+     item_id: "upg_ptz_budget_15x",
+     display_name: ptzBudget.display_name,
+     qty: 1,
+     unit_price: ptzBudget.unit_price,
+     line_total: ptzBudget.unit_price,
+     base_cost_at_quote: ptzBudget.base_cost
+  };
+  modifiedPlan.items.push(ptzAddonLine);
+  modifiedPlan.addons_total = ptzBudget.unit_price;
   
-  console.log(`\n2. Base Plan ${planId} Price: ?${basePlan.total_payable}`);
-  
-  console.log("\n3. Available Addons from DB:");
-  const addons = data.addons || [];
-  addons.forEach(a => console.log(` - ${a.display_name} (Stock: ${a.stock_quantity}) @ ?${a.unit_price}`));
+  const oldGross = modifiedPlan.gross_subtotal;
+  modifiedPlan.gross_subtotal = oldGross + ptzBudget.unit_price;
+  modifiedPlan.net_taxable_amount = modifiedPlan.gross_subtotal;
+  modifiedPlan.gst_amount = modifiedPlan.net_taxable_amount * 0.18;
+  modifiedPlan.total_payable = Math.round(modifiedPlan.net_taxable_amount + modifiedPlan.gst_amount);
 
-  // Simulate applying 2x Addon if it exists, else we just proceed
-  let modifiedPlan = JSON.parse(JSON.stringify(basePlan));
-  const ptzAddon = addons.find(a => a.category === "upgrade_camera");
-  if (ptzAddon) {
-    console.log(`\n4. Simulating Upgrade: adding 2x ${ptzAddon.display_name}`);
-    const addedExTax = ptzAddon.unit_price * 2;
-    modifiedPlan.items.push({
-      product_id: ptzAddon.id,
-      display_name: `2x Upgrade: ${ptzAddon.display_name}`,
-      qty: 2,
-      unit_price: ptzAddon.unit_price,
-      line_total: addedExTax,
-    });
-    modifiedPlan.base_hardware_cost += addedExTax;
-    modifiedPlan.finalExTax += addedExTax;
-    const addedGst = addedExTax * 0.18;
-    modifiedPlan.gstAmount += addedGst;
-    modifiedPlan.total_payable = Math.round(modifiedPlan.total_payable + addedExTax + addedGst);
-    console.log(`   New Price: ?${modifiedPlan.total_payable}`);
-  } else {
-    console.log("\n4. No camera upgrades found in DB. Skipping addon injection.");
-  }
-
-  console.log("\n5. Saving Final Quote...");
+  // 3. Save Quote
   const saveRes = await fetch("http://localhost:3000/api/quote/save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      customer_name: reqPayload.customer_name,
-      customer_mobile: reqPayload.customer_mobile,
-      requirementSnapshot: reqPayload,
-      configurationSnapshot: data.configuration,
+      customer_name: "Test E2E User",
+      customer_mobile: "9999999999",
+      requirementSnapshot: generateData.requirement,
+      configurationSnapshot: generateData.configuration,
       pricingSnapshot: modifiedPlan,
-      selectedPlan: planId
+      selectedPlan: "Budget_IP_5MP",
+      isV2: true
     })
   });
+  
   const saveData = await saveRes.json();
+  if (!saveData.success) throw new Error("Failed to save: " + JSON.stringify(saveData));
   
-  console.log(`   Quote Saved! ID: ${saveData.quoteId}`);
+  const quoteId = saveData.quoteId;
+  console.log("Saved Quote ID:", quoteId);
   
-  console.log("\n6. Generating PDF...");
-  const pdfRes = await fetch(`http://localhost:3000/api/quote/${saveData.quoteId}/pdf`);
-  const pdfData = await pdfRes.json();
-  console.log(`   PDF URL: ${pdfData.url}`);
+  // 4. Download PDF
+  const pdfRes = await fetch(`http://localhost:3000/api/quote/${quoteId}/download`);
+  if (!pdfRes.ok) throw new Error("Failed to download PDF");
   
-  console.log("\n? E2E Cycle Completed Successfully!");
+  const pdfBuffer = await pdfRes.arrayBuffer();
+  const pdfPath = "C:/Users/hp/.gemini/antigravity/brain/a1a0a74c-ede4-4dcc-84de-4e2ec5b4b775/Test_E2E_Quotation_PTZ.pdf";
+  fs.writeFileSync(pdfPath, Buffer.from(pdfBuffer));
+  
+  console.log(`Saved PDF to ${pdfPath}`);
 }
-run();
+
+runEndToEnd().catch(console.error);
