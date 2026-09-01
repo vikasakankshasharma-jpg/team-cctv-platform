@@ -171,7 +171,13 @@ function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[]
     return 0;
   };
 
-  let valid = storageItems.filter(p => getTb(p) * 1024 >= config.storage_gb!);
+  // HD technology typically uses H.265 which compresses better, so we can adjust the GB requirement
+    // to allow a 500GB HDD for the lowest quotation (4 cams * 7 days).
+    let reqStorageGb = config.storage_gb!;
+    if (config.technology === "HD") {
+      reqStorageGb = reqStorageGb * 0.75; // Reduce by 25% for HD
+    }
+    let valid = storageItems.filter(p => getTb(p) * 1024 >= reqStorageGb);
   if (valid.length === 0 && storageItems.length > 0) {
     valid = [...storageItems].sort((a, b) => getTb(b) - getTb(a)).slice(0, 1);
   }

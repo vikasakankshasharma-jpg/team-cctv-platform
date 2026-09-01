@@ -106,11 +106,11 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
              const totalCams = requirement.installation_type === "addon" ? (requirement.indoor_camera_count || 0) + (requirement.outdoor_camera_count || 0) : requirement.camera_count || 0;
              
              // Extract storage string
-             const storageItem = plan.items.find(i => i.category === "storage");
+             const storageItem = plan.items.find((i: any) => i.category === "storage");
              const storageDisplay = storageItem ? storageItem.display_name.match(/\d+TB|\d+GB/)?.[0] || "Included" : "None";
              
              // Extract recorder string
-             const recorderItem = plan.items.find(i => i.category === "recorder");
+             const recorderItem = plan.items.find((i: any) => i.category === "recorder");
              const recorderDisplay = recorderItem ? (recorderItem.display_name.includes("8 Ch") ? "8-Channel" : recorderItem.display_name.includes("16 Ch") ? "16-Channel" : recorderItem.display_name.includes("32 Ch") ? "32-Channel" : "4-Channel") : "Existing";
              const isRecommended = idx === Math.floor(filteredPlans.length / 2) && filteredPlans.length >= 2;
              
