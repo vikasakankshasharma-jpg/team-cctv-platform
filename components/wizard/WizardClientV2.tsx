@@ -56,6 +56,7 @@ export function WizardClientV2() {
   const [customizerPlanId, setCustomizerPlanId] = useState<string | null>(null);
 
   const handleNext = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (req.installation_type === "new" && step === 3) {
       setStep(5);
     } else {
@@ -63,6 +64,7 @@ export function WizardClientV2() {
     }
   };
   const handlePrev = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (req.installation_type === "new" && step === 5) {
       setStep(3);
     } else {
