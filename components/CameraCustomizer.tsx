@@ -191,7 +191,7 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
                      <p className="text-xs text-gray-500">{upg.desc}</p>
                      <div className={`text-sm font-semibold mt-1 ${upg.priceIncGst < 0 ? 'text-green-600' : 'text-gray-700'}`}>
                         {upg.priceIncGst < 0 ? 'Save ' : '+ '}{formatPrice(Math.abs(upg.priceIncGst))} per camera
-                        {upg.stock !== Infinity && <span className="text-xs text-gray-400 ml-2 font-normal">({upg.stock} in stock)</span>}
+                        
                      </div>
                    </div>
                    <div className="flex items-center space-x-3 bg-gray-100 p-1 rounded-lg">
