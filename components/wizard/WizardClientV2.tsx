@@ -174,25 +174,14 @@ export function WizardClientV2() {
     setLoading(false);
   };
 
-  const handleSendWhatsApp = async () => {
-    if (!savedQuoteId || !pdfUrl) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/quote/${savedQuoteId}/whatsapp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pdfUrl })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(data.idempotent ? "WhatsApp already sent previously." : "WhatsApp sent successfully!");
-      } else {
-        alert("Failed to send WhatsApp.");
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    setLoading(false);
+  const handleSendWhatsApp = () => {
+    if (!savedQuoteId) return;
+    const salesNumber = "919772699395";
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://cctvquotation.com';
+    const pdfLink = `${baseUrl}/api/quote/${savedQuoteId}/download`;
+    const message = `Hi team! ??\n\nI just generated a CCTV Quotation on your website.\n*Quote ID:* ${savedQuoteId}\n\nHere is my PDF link:\n${pdfLink}\n\nPlease review it and let me know the next steps.`;
+    const whatsappUrl = `https://wa.me/${salesNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   if (savedQuoteId) {
