@@ -304,8 +304,8 @@ export function WizardClientV2() {
               
               <button onClick={() => window.location.href = '/pro-builder'}
                 className="p-8 rounded-2xl border-2 text-left hover:border-zinc-900 transition-all group bg-white border-zinc-200 shadow-sm hover:shadow-md">
-                <span className="block font-black text-xl text-zinc-900 group-hover:text-black mb-2">?? Pro Builder (Advanced)</span>
-                <span className="block text-sm text-zinc-500 font-medium leading-relaxed">For installers, B2B clients, and tech-savvy users who want to manually browse the catalog and select every individual component.</span>
+                <span className="block font-black text-xl text-zinc-900 group-hover:text-black mb-2">?? Custom Build (Advanced)</span>
+                <span className="block text-sm text-zinc-500 font-medium leading-relaxed">I already know exactly what cameras and technical specifications I need. Let me build my own custom package from the catalog.</span>
               </button>
             </div>
           </div>
