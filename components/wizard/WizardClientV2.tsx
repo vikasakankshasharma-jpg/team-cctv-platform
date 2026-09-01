@@ -11,7 +11,7 @@ const formatPrice = (p: number) => new Intl.NumberFormat('en-IN', { style: 'curr
 
 export function WizardClientV2() {
   const [sessionId] = useState(() => crypto.randomUUID());
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
     
   useEffect(() => {
     // Send session start
@@ -289,6 +289,27 @@ export function WizardClientV2() {
 
   const renderStep = () => {
     switch (step) {
+      case 0:
+        return (
+          <div className="space-y-6 animate-in fade-in">
+            <h2 className="text-3xl font-semibold mb-2 text-center text-slate-900">How would you like to build your quote?</h2>
+            <p className="text-center text-slate-500 mb-8 max-w-lg mx-auto">Choose between our easy guided setup or our advanced professional builder for custom configurations.</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button onClick={() => setStep(1)}
+                className="p-8 rounded-2xl border-2 text-left hover:border-blue-500 transition-all group bg-blue-50/50 border-blue-100 shadow-sm hover:shadow-md">
+                <span className="block font-black text-xl text-blue-900 group-hover:text-blue-700 mb-2">? Guided Setup (Recommended)</span>
+                <span className="block text-sm text-blue-700/80 font-medium leading-relaxed">Answer a few simple questions about your property, and our AI will calculate the perfect, most compatible CCTV package for you instantly.</span>
+              </button>
+              
+              <button onClick={() => window.location.href = '/pro-builder'}
+                className="p-8 rounded-2xl border-2 text-left hover:border-zinc-900 transition-all group bg-white border-zinc-200 shadow-sm hover:shadow-md">
+                <span className="block font-black text-xl text-zinc-900 group-hover:text-black mb-2">?? Pro Builder (Advanced)</span>
+                <span className="block text-sm text-zinc-500 font-medium leading-relaxed">For installers, B2B clients, and tech-savvy users who want to manually browse the catalog and select every individual component.</span>
+              </button>
+            </div>
+          </div>
+        );
       case 1:
         return (
           <div className="space-y-6 animate-in fade-in">
@@ -606,20 +627,24 @@ export function WizardClientV2() {
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
       <div className="bg-white rounded-2xl shadow-sm border p-8">
-        <div className="mb-8">
-          <div className="h-2 bg-gray-100 rounded-full w-full overflow-hidden">
-            <div className="h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(Math.min((req.installation_type === "new" && step === 5 ? 4 : step), totalSteps) / totalSteps) * 100}%` }}></div>
+        {step > 0 && (
+          <div className="mb-8">
+            <div className="h-2 bg-gray-100 rounded-full w-full overflow-hidden">
+              <div className="h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(Math.min((req.installation_type === "new" && step === 5 ? 4 : step), totalSteps) / totalSteps) * 100}%` }}></div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2 text-right">Step {req.installation_type === "new" && step === 5 ? 4 : step} of {totalSteps}</p>
           </div>
-          <p className="text-sm text-gray-500 mt-2 text-right">Step {req.installation_type === "new" && step === 5 ? 4 : step} of {totalSteps}</p>
-        </div>
+        )}
 
         {renderStep()}
 
-        <div className="mt-12 flex justify-between">
-          <Button variant="outline" onClick={handlePrev} disabled={step === 1 || loading}>
-            Back
-          </Button>
-        </div>
+        {step > 0 && (
+          <div className="mt-12 flex justify-between">
+            <Button variant="outline" onClick={handlePrev} disabled={step <= 1 || loading}>
+              Back
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
