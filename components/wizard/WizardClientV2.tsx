@@ -302,7 +302,7 @@ export function WizardClientV2() {
                    )}
 
                    <div className="space-y-4">
-                      <button className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white py-4 rounded-xl font-black transition-all shadow-lg shadow-zinc-900/20 active:scale-95">
+                      <button onClick={handlePayment} disabled={loading} className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white py-4 rounded-xl font-black transition-all shadow-lg shadow-zinc-900/20 active:scale-95">
                          💳 Pay Now & Schedule Installation
                       </button>
                       <button className="w-full flex items-center justify-center gap-2 bg-white border-2 border-zinc-200 hover:border-zinc-300 text-zinc-900 py-4 rounded-xl font-black transition-all active:scale-95">
