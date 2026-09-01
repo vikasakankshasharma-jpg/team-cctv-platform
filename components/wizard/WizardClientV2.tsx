@@ -43,8 +43,8 @@ export function WizardClientV2() {
 
   const [req, setReq] = useState<Partial<CCTVRequirement>>({
     camera_count: 4,
-    recording_days: 15,
-    recording_mode: "continuous",
+    recording_days: 7,
+    recording_mode: "motion",
     technology_preference: "IP",
     wants_remote_viewing: true
   });
