@@ -79,6 +79,10 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
   const UPGRADES = useMemo(() => {
     return availableAddons
       .filter(a => a.category === "upgrade_camera" && a.stock_quantity !== 0 && a.stock_quantity !== -1)
+        .filter(a => {
+          const tech = basePlanId.split("_")[1];
+          return !a.technology || a.technology === "BOTH" || a.technology === tech || a.technology.includes(tech);
+        })
       .map(a => ({
         id: a.id!,
         name: a.display_name,
