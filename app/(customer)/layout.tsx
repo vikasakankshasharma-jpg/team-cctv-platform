@@ -9,7 +9,6 @@ import { GetQuotationButton } from "@/components/shared/GetQuotationButton";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  // maximumScale removed — was blocking iOS zoom accessibility
 };
 
 export const metadata: Metadata = {
@@ -41,17 +40,17 @@ export default function CustomerLayout({
     <div className="flex flex-col min-h-screen bg-white dark:bg-zinc-950 font-sans transition-colors duration-500 selection:bg-blue-600 selection:text-white">
       {/* Premium Public Header */}
       <header className="sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 shadow-sm transition-all">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 md:h-20 flex items-center justify-between relative">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-20 md:h-24 flex items-center justify-between relative">
 
-          {/* Left — Logo & Cities Dropdown */}
+          {/* Left ?" Logo & Cities Dropdown */}
           <div className="flex items-center gap-2 sm:gap-6 shrink-0">
             <Link href="/" className="flex items-center group shrink-0">
               <Image 
                 src="/logo-horizontal.jpg"
                 alt="CCTVQuotation by TEAM"
-                width={200}
-                height={60}
-                className="h-8 sm:h-10 md:h-12 w-auto mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1.5 dark:rounded-xl transition-all"
+                width={300}
+                height={90}
+                className="h-10 sm:h-14 md:h-16 w-auto mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1.5 dark:rounded-xl transition-transform hover:scale-105 origin-left"
                 priority
               />
             </Link>
@@ -62,12 +61,12 @@ export default function CustomerLayout({
             </div>
           </div>
 
-          {/* Centre — Get Quotation CTA */}
+          {/* Centre ?" Get Quotation CTA */}
           <div className="hidden lg:flex flex-1 justify-center">
             <GetQuotationButton />
           </div>
 
-          {/* Right — Support + Portal */}
+          {/* Right ?" Support + Portal */}
           <div className="flex items-center gap-1.5 sm:gap-4 md:gap-6 shrink-0">
             {/* Phone icon visible on mobile, full button on desktop */}
             <a
@@ -106,10 +105,10 @@ export default function CustomerLayout({
 
       <SiteFooter />
 
-      {/* Sticky mobile CTA bar — hidden on wizard pages (handled inside component) */}
+      {/* Sticky mobile CTA bar ?" hidden on wizard pages (handled inside component) */}
       <MobileStickyCtaBar />
 
-      {/* WhatsApp floating button — auto-hides on wizard/admin pages */}
+      {/* WhatsApp floating button ?" auto-hides on wizard/admin pages */}
       <WhatsAppFloat />
 
       {/* Welcome Language Modal */}
