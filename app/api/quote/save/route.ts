@@ -60,6 +60,47 @@ export async function POST(request: Request) {
         _serverCreatedAt: serverTimestamp(),
     });
 
+    // ---------------------------------------------------------
+    // CRITICAL FIX: Also capture the quote in the leads collection
+    // ---------------------------------------------------------
+    if (!parentQuoteId) {
+      try {
+        const leadsRef = adminDb.collection("leads");
+        // Try to find if a lead already exists for this mobile number
+        const existingLeadSnap = await leadsRef.where("mobile_number", "==", customer_mobile).limit(1).get();
+        
+        let leadId;
+        if (!existingLeadSnap.empty) {
+          leadId = existingLeadSnap.docs[0].id;
+          await leadsRef.doc(leadId).update({
+            updated_at: serverTimestamp(),
+            latest_quote_id: quoteId,
+            wizard_answers: requirementSnapshot,
+            status: "new"
+          });
+        } else {
+          const newLeadRef = leadsRef.doc();
+          leadId = newLeadRef.id;
+          await newLeadRef.set({
+            id: leadId,
+            customer_name: customer_name || "Unknown User",
+            mobile_number: customer_mobile,
+            property_type: requirementSnapshot.property_type || "home",
+            technology_choice: requirementSnapshot.technology_preference || "HD",
+            cabling_done: false, // Default assumption
+            wizard_answers: requirementSnapshot,
+            latest_quote_id: quoteId,
+            status: "new",
+            source: source || "wizard",
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp()
+          });
+        }
+      } catch (err) {
+        console.error("Failed to capture lead in quotes save route:", err);
+      }
+    }
+
     return NextResponse.json({ success: true, quoteId, snapshot });
   } catch (error: any) {
     console.error("Quote save error:", error);
