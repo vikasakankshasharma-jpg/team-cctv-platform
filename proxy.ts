@@ -31,7 +31,14 @@ export function proxy(request: NextRequest) {
   }
 
   // 2. Security Headers (Enterprise Standard)
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
   
   // CSP Definition
   const cspHeader = `

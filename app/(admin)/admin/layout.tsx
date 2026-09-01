@@ -4,6 +4,7 @@ import { OmniSearch } from "@/components/admin/OmniSearch";
 import { verifySession } from "@/lib/auth-server";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
@@ -49,8 +50,22 @@ export default async function AdminLayout({
 }) {
   const session = await verifySession();
   
+  const headersList = await headers();
+  const currentPath = headersList.get("x-pathname") || "";
+
   if (!session.isAuthenticated || !["super_admin", "admin", "sales_staff"].includes(session.role as string)) {
-    redirect("/admin/login");
+    if (currentPath === "/admin/login") {
+      return (
+        <div 
+          className={`dark ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]`}
+          style={adminThemeVars}
+        >
+          {children}
+        </div>
+      );
+    } else {
+      redirect("/admin/login");
+    }
   }
 
   return (
