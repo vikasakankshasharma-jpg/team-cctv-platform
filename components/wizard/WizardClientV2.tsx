@@ -108,7 +108,6 @@ export function WizardClientV2() {
 
   const updateReq = (updates: Partial<CCTVRequirement>) => {
     setReq(prev => ({ ...prev, ...updates }));
-    handleNext();
   };
 
   
@@ -274,12 +273,12 @@ export function WizardClientV2() {
             <h2 className="text-3xl font-semibold mb-2">What kind of installation do you need?</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button onClick={() => updateReq({ installation_type: "new", property_type: "Residential" })}
+              <button onClick={() => { updateReq({ installation_type: "new", property_type: "Residential" }); handleNext(); }}
                 className={`p-6 rounded-xl border-2 text-left hover:border-blue-500 transition-all group ${req.installation_type === "new" ? "border-blue-500 bg-blue-50" : "bg-white"}`}>
                 <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">Completely New System</span>
                 <span className="block text-sm text-gray-500 mt-1">I don't have any CCTV cameras installed right now.</span>
               </button>
-              <button onClick={() => updateReq({ installation_type: "addon", existing_system_known: undefined })}
+              <button onClick={() => { updateReq({ installation_type: "addon", existing_system_known: undefined }); }}
                 className={`p-6 rounded-xl border-2 text-left hover:border-blue-500 transition-all group ${req.installation_type === "addon" ? "border-blue-500 bg-blue-50" : "bg-white"}`}>
                 <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">Add to Existing System</span>
                 <span className="block text-sm text-gray-500 mt-1">I already have a CCTV system and want to add more cameras.</span>
@@ -318,25 +317,7 @@ export function WizardClientV2() {
               </div>
             )}
             
-            {req.installation_type === "new" && (
-              <div className="mt-8 animate-in fade-in">
-                 <h3 className="text-xl font-semibold mb-4">Where do you need the CCTV?</h3>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      { val: "Residential", label: "Home / Residential", desc: "House, Apartment, Villa" },
-                      { val: "Commercial", label: "Office / Shop", desc: "Retail, Workplace, Godown" },
-                      { val: "Industrial", label: "Factory / Warehouse", desc: "Large industrial premises" },
-                      { val: "Institutional", label: "School / Hospital", desc: "Campus, Clinics" }
-                    ].map((opt, i) => (
-                      <button key={i} onClick={() => { updateReq({ property_type: opt.val as any }); handleNext(); }}
-                        className={`p-4 rounded-xl border-2 text-left hover:border-blue-500 transition-all ${req.property_type === opt.val ? 'border-blue-500 bg-blue-50' : 'bg-white'}`}>
-                        <span className="block font-bold text-gray-900">{opt.label}</span>
-                        <span className="block text-xs text-gray-500 mt-1">{opt.desc}</span>
-                      </button>
-                    ))}
-                 </div>
-              </div>
-            )}
+            
           </div>
         );
       case 2:
