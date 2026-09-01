@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       amount: Math.round(amount * 100), // Razorpay amount is in paise
       currency,
       receipt: receipt || `rcpt_${crypto.randomBytes(4).toString("hex")}`,
-      notes,
+      notes: { ...notes, quote_id: receipt },
     };
 
     const order = await razorpay.orders.create(options);
@@ -38,3 +38,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+

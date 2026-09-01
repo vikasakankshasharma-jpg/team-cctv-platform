@@ -163,7 +163,7 @@ export function WizardClientV2() {
         image: "/logo-horizontal.jpg",
         order_id: orderData.order.id,
         handler: function (response: any) {
-          alert("Payment Successful! Payment ID: " + response.razorpay_payment_id + ". We will contact you shortly to schedule installation.");
+          window.location.href = `/payment-success?quoteId=${savedQuoteId}&paymentId=${response.razorpay_payment_id}`;
         },
         prefill: {
           name: req.customer_name || "",
