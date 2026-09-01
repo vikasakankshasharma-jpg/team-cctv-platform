@@ -15,7 +15,8 @@ interface QuoteComparisonProps {
 }
 
 export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfiguration }: QuoteComparisonProps) {
-  const [activeTech, setActiveTech] = useState<"HD" | "IP">("HD");
+  const lockedTech = requirement.installation_type === "addon" && requirement.existing_technology ? requirement.existing_technology as "HD" | "IP" : null;
+  const [activeTech, setActiveTech] = useState<"HD" | "IP">(lockedTech || "HD");
   const [activeBrand, setActiveBrand] = useState<string>("Budget");
 
   const formatPrice = (price: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(price);
@@ -61,6 +62,13 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
       </div>
       
       {/* Smart Toggle */}
+      {lockedTech ? (
+        <div className="flex justify-center mb-4">
+          <div className="bg-blue-50 border border-blue-200 px-5 py-2.5 rounded-xl text-sm font-semibold text-blue-700">
+            {lockedTech === "HD" ? "🔒 Standard HD (Analog) — Matching Your Existing System" : "🔒 Premium IP (Network) — Matching Your Existing System"}
+          </div>
+        </div>
+      ) : (
       <div className="flex justify-center mb-4">
         <div className="bg-gray-100 p-1 rounded-xl flex space-x-1 shadow-inner">
            <button 
@@ -77,6 +85,7 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
            </button>
         </div>
       </div>
+      )}
 
       {/* Brand Filter */}
       {brands.length > 2 && (
