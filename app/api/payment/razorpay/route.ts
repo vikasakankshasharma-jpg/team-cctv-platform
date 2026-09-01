@@ -7,9 +7,12 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { amount, currency = "INR", receipt, notes } = body;
 
-    // Use dummy keys if environment variables are not set yet
-    const key_id = process.env.RAZORPAY_KEY_ID || "rzp_test_dummy_key_123456";
-    const key_secret = process.env.RAZORPAY_KEY_SECRET || "dummy_secret_1234567890";
+    const key_id = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!key_id || !key_secret) {
+      throw new Error("Razorpay keys not configured in environment variables");
+    }
 
     const razorpay = new Razorpay({
       key_id,
