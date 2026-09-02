@@ -134,12 +134,24 @@ export async function POST(req: NextRequest) {
       for (const doc of chunk) {
         const data = doc.data();
         
-        // Always update to enforce correct hierarchical paths (overwriting old generic ones)
+        // Always update to enforce correct hierarchical paths and critical flags
         try {
           const path = deriveCatalogPath(data);
+          const updates: Record<string, any> = {};
           if (data.catalog_path !== path) {
-            batch.update(doc.ref, { catalog_path: path, updated_at: new Date() });
+            updates.catalog_path = path;
             pathDistribution[path] = (pathDistribution[path] || 0) + 1;
+          }
+          if (data.is_deleted === undefined || data.is_deleted === null) {
+            updates.is_deleted = false;
+          }
+          if (data.is_quotation_eligible === undefined) {
+            updates.is_quotation_eligible = true;
+          }
+
+          if (Object.keys(updates).length > 0) {
+            updates.updated_at = new Date();
+            batch.update(doc.ref, updates);
             updated++;
             batchHasWrites = true;
           } else {

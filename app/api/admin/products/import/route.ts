@@ -59,11 +59,15 @@ export async function POST(req: NextRequest) {
           dataToSave.created_at = now;
           dataToSave.is_active = dataToSave.is_active ?? true;
           dataToSave.is_quotation_eligible = true;
+          dataToSave.is_deleted = false;
           created++;
         } else {
           updated++;
           // Ensure imported updates are eligible for quoting
           dataToSave.is_quotation_eligible = true;
+          if (dataToSave.is_deleted === undefined) {
+            dataToSave.is_deleted = false;
+          }
         }
 
         batch.set(docRef, dataToSave, { merge: true });

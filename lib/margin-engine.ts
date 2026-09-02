@@ -67,29 +67,48 @@ export const MarginEngine = {
 
     if (category === 'anchor') {
       markup = policy.anchor_margin[tier] ?? policy.anchor_margin['recommended'] ?? 0.12;
-      
-      const vCat = (vendorCategory || '').toLowerCase();
-      const pBrand = (productBrand || '').toLowerCase();
-
-      // HDD: 5%
-      if (vCat === 'storage' || vCat === 'hard disk') {
-        markup = 0.05;
-      }
-      
-      // CP Plus CCTV Camera & Recorder: 10%
-      // Budget CCTV Camera: 30%
-      else if (vCat.includes('camera') || vCat === 'cctv_camera' || vCat === 'recorder' || vCat === 'dvr' || vCat === 'nvr') {
-        if (pBrand.includes('cp plus') || pBrand.includes('cpplus')) {
-          markup = 0.10;
-        } else if (pBrand.includes('budget')) {
-          markup = 0.30;
-        }
-      }
     } else if (category === 'accessory') {
       markup = policy.accessory_margin[tier] ?? policy.accessory_margin['recommended'] ?? 0.65;
     } else if (category === 'cable') {
       markup = policy.cable_margin;
       workingCost = baseCost * policy.cable_wastage_factor;
+    }
+
+    // Apply specific product overrides
+    const vCat = (vendorCategory || '').toLowerCase();
+    const pBrand = (productBrand || '').toLowerCase();
+
+    // HDD: 5%, Budget HDD: 10%
+    if (vCat.includes('storage') || vCat.includes('hard disk') || vCat === 'hdd') {
+      if (pBrand.includes('budget')) {
+        markup = 0.10;
+      } else {
+        markup = 0.05;
+      }
+    }
+    // CCTV Camera & Recorders: 15%, Budget CCTV: 30%
+    else if (vCat.includes('camera') || vCat.includes('recorder') || vCat.includes('dvr') || vCat.includes('nvr')) {
+      if (pBrand.includes('budget')) {
+        markup = 0.30;
+      } else {
+        markup = 0.15;
+      }
+    }
+    // Junction PVC Box: 50%
+    else if (vCat.includes('junction') || vCat.includes('pvc') || vCat.includes('box')) {
+      markup = 0.50;
+    }
+    // Connectors: 50%
+    else if (vCat.includes('connector') || vCat.includes('bnc') || vCat.includes('dc')) {
+      markup = 0.50;
+    }
+    // HDMI Cable: 20%
+    else if (vCat.includes('hdmi')) {
+      markup = 0.20;
+    }
+    // Rack: 30%
+    else if (vCat.includes('rack')) {
+      markup = 0.30;
     }
 
     const marginAmount = workingCost * markup;

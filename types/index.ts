@@ -491,6 +491,19 @@ export interface AppSettings {
   high_reach_fee?: number;           // Fee for high ceilings
   labor_cost_margin_percent?: number; // Purchase cost of labor as % of retail (e.g. 70%)
   
+  // Component & Hardware Margins (%)
+  margin_hdd?: number;
+  margin_hdd_budget?: number;
+  margin_cctv_camera?: number;
+  margin_cctv_camera_budget?: number;
+  margin_recorder?: number;
+  margin_junction_box?: number;
+  margin_connectors?: number;
+  margin_hdmi_cable?: number;
+  margin_rack?: number;
+  margin_power_supply?: number;
+  margin_policy?: any;
+  
   // NEW: PDF Quote Generation
   pdf_logo_url?: string | null;
   bank_details?: string | null;

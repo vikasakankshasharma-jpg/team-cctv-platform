@@ -11,25 +11,36 @@ export const dynamic = "force-dynamic";
 export default async function CatalogHealthPage() {
   await requireAdmin();
 
-  const productsSnap = await adminDb.collection("products").where("is_deleted", "==", false).get();
-  const products = productsSnap.docs.map(doc => {
-    const data = doc.data() as any;
-    if (!Array.isArray(data.technologies)) {
-      data.technologies = data.technology ? [data.technology] : ["Common"];
-    }
-    return { id: doc.id, ...data } as Product;
-  });
+  const productsSnap = await adminDb.collection("products").get();
+  const products = productsSnap.docs
+    .map(doc => {
+      const data = doc.data() as any;
+      if (!Array.isArray(data.technologies)) {
+        data.technologies = data.technology ? [data.technology] : ["Common"];
+      }
+      return { id: doc.id, ...data } as Product;
+    })
+    .filter(p => !p.is_deleted);
 
-  // Diagnostic Categories
+  // Diagnostic Categories: Ensure the 6 core hardware pillars exist for quotation engine
   const missingMandatory: Product[] = [];
+  if (!products.some(p => p.category === 'cctv_camera' || (p.category as string) === 'camera')) {
+    missingMandatory.push({ id: 'sys_camera', display_name: 'No Camera Products Found', technical_name: 'Catalog Incomplete', is_active: false } as Product);
+  }
+  if (!products.some(p => p.category === 'recorder')) {
+    missingMandatory.push({ id: 'sys_recorder', display_name: 'No DVR/NVR Recorders Found', technical_name: 'Catalog Incomplete', is_active: false } as Product);
+  }
+  if (!products.some(p => p.category === 'storage')) {
+    missingMandatory.push({ id: 'sys_storage', display_name: 'No Storage/Hard Disks Found', technical_name: 'Catalog Incomplete', is_active: false } as Product);
+  }
+  if (!products.some(p => p.category === 'power_device')) {
+    missingMandatory.push({ id: 'sys_power', display_name: 'No Power Supplies / SMPS Found', technical_name: 'Catalog Incomplete', is_active: false } as Product);
+  }
   if (!products.some(p => p.category === 'cable' || p.display_name?.toLowerCase().includes('cable'))) {
-    missingMandatory.push({ id: 'sys_cable', display_name: 'No Cable Products Found', technical_name: 'System Error', is_active: false } as Product);
+    missingMandatory.push({ id: 'sys_cable', display_name: 'No Cable Products Found', technical_name: 'Catalog Incomplete', is_active: false } as Product);
   }
   if (!products.some(p => p.category === 'connector' || p.display_name?.toLowerCase().includes('connector') || p.display_name?.toLowerCase().includes('bnc') || p.display_name?.toLowerCase().includes('rj45'))) {
-    missingMandatory.push({ id: 'sys_conn', display_name: 'No Connector Products Found', technical_name: 'System Error', is_active: false } as Product);
-  }
-  if (!products.some(p => (p.category as string) === 'labor' || (p.category as string) === 'installation' || p.display_name?.toLowerCase().includes('install'))) {
-    missingMandatory.push({ id: 'sys_labor', display_name: 'No Labor/Installation Products Found', technical_name: 'System Error', is_active: false } as Product);
+    missingMandatory.push({ id: 'sys_conn', display_name: 'No Connector Products Found', technical_name: 'Catalog Incomplete', is_active: false } as Product);
   }
 
   const brandNames = Array.from(new Set(products.map(p => p.brand).filter(Boolean))) as string[];
