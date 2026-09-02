@@ -164,26 +164,39 @@ function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[]
   const storageItems = pool.filter(p => p.category === "storage" || p.storage_type === "Hard Disk");
   const getTb = (p: Product) => {
     if (p.storage_capacity_tb) return p.storage_capacity_tb;
-    if (typeof p.capacity === "string") {
-      if (p.capacity.includes("TB")) return parseInt(p.capacity.replace("TB", "")) || 0;
-      if (p.capacity.includes("GB")) return (parseInt(p.capacity.replace("GB", "")) || 0) / 1024;
-    }
+    
+    let capStr = "";
+    if (typeof p.capacity === "string") capStr = p.capacity.toUpperCase();
+    else if (p.display_name) capStr = p.display_name.toUpperCase();
+    
+    const tbMatch = capStr.match(/(\d+)\s*TB/);
+    if (tbMatch) return parseInt(tbMatch[1], 10);
+    
+    const gbMatch = capStr.match(/(\d+)\s*GB/);
+    if (gbMatch) return parseInt(gbMatch[1], 10) / 1024;
+    
     return 0;
   };
 
   // HD technology typically uses H.265 which compresses better, so we can adjust the GB requirement
-    // to allow a 500GB HDD for the lowest quotation (4 cams * 7 days).
-    let reqStorageGb = config.storage_gb!;
-    if (config.technology === "HD") {
-      reqStorageGb = reqStorageGb * 0.75; // Reduce by 25% for HD
-    }
-    let valid = storageItems.filter(p => getTb(p) * 1024 >= reqStorageGb);
+  // to allow a 500GB HDD for the lowest quotation (4 cams * 7 days).
+  let reqStorageGb = config.storage_gb!;
+  if (config.technology === "HD") {
+    reqStorageGb = reqStorageGb * 0.75; // Reduce by 25% for HD
+  }
+  let valid = storageItems.filter(p => getTb(p) * 1024 >= reqStorageGb);
+  
   if (valid.length === 0 && storageItems.length > 0) {
     valid = [...storageItems].sort((a, b) => getTb(b) - getTb(a)).slice(0, 1);
   }
   
   if (valid.length === 0) return undefined;
-  return valid.sort((a, b) => getTb(a) - getTb(b))[0];
+  
+  return valid.sort((a, b) => {
+    const tbDiff = getTb(a) - getTb(b);
+    if (tbDiff !== 0) return tbDiff;
+    return (a.unit_price || 0) - (b.unit_price || 0);
+  })[0];
 }
 
 function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[]) {
