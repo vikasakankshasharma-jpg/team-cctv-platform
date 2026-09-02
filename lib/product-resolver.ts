@@ -204,16 +204,20 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[]) 
 
   const powerItems = pool.filter(p => p.category === "power_device");
   
+  const getPowerCh = (p: Product) => {
+    return p.max_cameras || p.channels || 0;
+  };
+  
   let valid = powerItems.filter(p => {
       const matchTech = !p.technology || p.technology === config.technology;
-      const matchCams = (p.max_cameras || 0) === config.recorder_channels;
+      const matchCams = getPowerCh(p) === config.recorder_channels;
       return matchTech && matchCams;
   });
 
   if (valid.length === 0) {
       valid = powerItems.filter(p => {
           const matchTech = !p.technology || p.technology === config.technology;
-          const matchCams = (p.max_cameras || 0) >= config.recorder_channels;
+          const matchCams = getPowerCh(p) >= config.recorder_channels;
           return matchTech && matchCams;
       });
   }
