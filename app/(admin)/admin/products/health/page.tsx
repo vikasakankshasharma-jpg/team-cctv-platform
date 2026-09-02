@@ -21,7 +21,44 @@ export default async function CatalogHealthPage() {
   });
 
   // Diagnostic Categories
+  const missingMandatory: Product[] = [];
+  if (!products.some(p => p.category === 'cable' || p.display_name?.toLowerCase().includes('cable'))) {
+    missingMandatory.push({ id: 'sys_cable', display_name: 'No Cable Products Found', technical_name: 'System Error', is_active: false } as Product);
+  }
+  if (!products.some(p => p.category === 'connector' || p.display_name?.toLowerCase().includes('connector') || p.display_name?.toLowerCase().includes('bnc') || p.display_name?.toLowerCase().includes('rj45'))) {
+    missingMandatory.push({ id: 'sys_conn', display_name: 'No Connector Products Found', technical_name: 'System Error', is_active: false } as Product);
+  }
+  if (!products.some(p => p.category === 'labor' || p.category === 'installation' || p.display_name?.toLowerCase().includes('install'))) {
+    missingMandatory.push({ id: 'sys_labor', display_name: 'No Labor/Installation Products Found', technical_name: 'System Error', is_active: false } as Product);
+  }
+
+  const brandNames = Array.from(new Set(products.map(p => p.brand).filter(Boolean))) as string[];
+  const messyBrands: Product[] = [];
+  const normalizedSet = new Map<string, string>();
+  brandNames.forEach(b => {
+      const norm = b.toLowerCase().replace(/\s+/g, '');
+      if (normalizedSet.has(norm) && normalizedSet.get(norm) !== b) {
+        messyBrands.push({ id: `brand_${norm}`, display_name: `Inconsistent Brand Name: ${b} vs ${normalizedSet.get(norm)}`, technical_name: 'Brand Error', is_active: false } as Product);
+      } else {
+        normalizedSet.set(norm, b);
+      }
+  });
+
   const issues = {
+    missing_quotation_eligibility: products.filter(p => p.is_active && !p.is_quotation_eligible),
+    missing_channels: products.filter(p => (p.category === "recorder" || p.category === "power_device") && !p.channels && !p.max_cameras),
+    unreadable_storage: products.filter(p => {
+      if (p.category !== "storage" && p.storage_type !== "Hard Disk") return false;
+      if (p.storage_capacity_tb) return false;
+      let capStr = "";
+      if (typeof p.capacity === "string") capStr = p.capacity.toUpperCase();
+      else if (p.display_name) capStr = p.display_name.toUpperCase();
+      const tbMatch = capStr.match(/(\d+)\s*TB/);
+      const gbMatch = capStr.match(/(\d+)\s*GB/);
+      return !tbMatch && !gbMatch;
+    }),
+    missing_mandatory_categories: missingMandatory,
+    brand_normalization_warning: messyBrands,
     missing_catalog_path: products.filter(p => !p.catalog_path),
     missing_cost: products.filter(p => !p.base_cost || p.base_cost <= 0),
     missing_margin: products.filter(p => !p.margin_percentage || p.margin_percentage <= 0),
@@ -34,6 +71,11 @@ export default async function CatalogHealthPage() {
   };
 
   const attributeMap: Record<string, string> = {
+    missing_quotation_eligibility: "is_quotation_eligible",
+    missing_channels: "channels or max_cameras",
+    unreadable_storage: "capacity string (e.g. 1TB)",
+    missing_mandatory_categories: "catalog completeness",
+    brand_normalization_warning: "consistent spelling",
     missing_catalog_path: "catalog_path",
     missing_cost: "base_cost",
     missing_margin: "margin_percentage",
