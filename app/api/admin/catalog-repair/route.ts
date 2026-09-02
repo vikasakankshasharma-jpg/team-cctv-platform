@@ -28,22 +28,23 @@ function deriveCatalogPath(data: any): string {
   const category = (data.category || "").toLowerCase();
   const technology = (data.technology || "both").toUpperCase();
   
-  // Resolution detection — from resolution_mp, technical tags, or display name
+  // Resolution detection
   function detectResolution(): string {
     if (data.resolution_mp) return `${data.resolution_mp}MP`;
-    // Check technical_name / display_name for MP hints
     const name = `${data.display_name || ""} ${data.technical_name || ""}`.toLowerCase();
     if (name.includes("8mp") || name.includes("4k")) return "8MP";
+    if (name.includes("6mp")) return "6MP";
     if (name.includes("5mp")) return "5MP";
     if (name.includes("4mp")) return "4MP";
-    if (name.includes("2mp") || name.includes("2.4mp")) return "2MP";
+    if (name.includes("2.4mp") || name.includes("2mp")) return "2MP";
     if (name.includes("1mp") || name.includes("720p")) return "1MP";
     return "General";
   }
 
-  // Channel detection for recorders
+  // Channel detection
   function detectChannels(): string {
     if (data.channels) return `${data.channels}ch`;
+    if (data.max_cameras) return `${data.max_cameras}ch`;
     const name = `${data.display_name || ""}`.toLowerCase();
     if (name.includes("32 ch") || name.includes("32ch")) return "32ch";
     if (name.includes("16 ch") || name.includes("16ch")) return "16ch";
@@ -51,19 +52,33 @@ function deriveCatalogPath(data: any): string {
     if (name.includes("4 ch") || name.includes("4ch")) return "4ch";
     return "General";
   }
+  
+  // Storage detection
+  function detectStorage(): string {
+    const name = `${data.display_name || ""}`.toLowerCase();
+    const tbMatch = name.match(/(\d+)\s*tb/);
+    if (tbMatch) return `${tbMatch[1]}TB`;
+    const gbMatch = name.match(/(\d+)\s*gb/);
+    if (gbMatch) return `${gbMatch[1]}GB`;
+    return "General";
+  }
 
   switch (category) {
     case "camera":
+    case "cctv_camera":
+    case "camera_hd":
+    case "camera_ip":
       return `CCTV/Camera/${technology}/${detectResolution()}`;
     
     case "recorder":
       return `CCTV/Recorder/${technology}/${detectChannels()}`;
     
     case "accessory":
+    case "accessories":
       return `CCTV/Accessory/both/General`;
     
     case "cable":
-      if (technology === "IP") return "CCTV/Cable/IP/CAT6";
+      if (technology === "IP" || data.display_name?.toLowerCase().includes("cat6")) return "CCTV/Cable/IP/CAT6";
       return "CCTV/Cable/HD/Coaxial";
     
     case "network":
@@ -74,10 +89,19 @@ function deriveCatalogPath(data: any): string {
     
     case "storage":
     case "hdd":
-      return "CCTV/Storage/both/HDD";
+      return `CCTV/Storage/both/${detectStorage()}`;
     
     case "power":
-      return "CCTV/Power/both/General";
+    case "power_device":
+      return `CCTV/Power/both/${detectChannels()}`;
+      
+    case "connector":
+      return `CCTV/Connector/both/General`;
+      
+    case "labor":
+    case "installation":
+    case "labor_install":
+      return `CCTV/Labor/both/General`;
     
     default:
       return `CCTV/${category || "Other"}/both/General`;
@@ -110,19 +134,19 @@ export async function POST(req: NextRequest) {
       for (const doc of chunk) {
         const data = doc.data();
         
-        // Only update if catalog_path is missing or empty
-        if (!data.catalog_path) {
-          try {
-            const path = deriveCatalogPath(data);
+        // Always update to enforce correct hierarchical paths (overwriting old generic ones)
+        try {
+          const path = deriveCatalogPath(data);
+          if (data.catalog_path !== path) {
             batch.update(doc.ref, { catalog_path: path, updated_at: new Date() });
             pathDistribution[path] = (pathDistribution[path] || 0) + 1;
             updated++;
             batchHasWrites = true;
-          } catch (e) {
-            errors++;
+          } else {
+            skipped++;
           }
-        } else {
-          skipped++;
+        } catch (e) {
+          errors++;
         }
       }
 
