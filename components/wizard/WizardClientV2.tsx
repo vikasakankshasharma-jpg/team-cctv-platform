@@ -88,7 +88,7 @@ export function WizardClientV2() {
       } else {
         alert("Error generating quote");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       alert("Error generating quote");
     }
