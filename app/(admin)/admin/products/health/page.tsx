@@ -28,7 +28,7 @@ export default async function CatalogHealthPage() {
   if (!products.some(p => p.category === 'connector' || p.display_name?.toLowerCase().includes('connector') || p.display_name?.toLowerCase().includes('bnc') || p.display_name?.toLowerCase().includes('rj45'))) {
     missingMandatory.push({ id: 'sys_conn', display_name: 'No Connector Products Found', technical_name: 'System Error', is_active: false } as Product);
   }
-  if (!products.some(p => p.category === 'labor' || p.category === 'installation' || p.display_name?.toLowerCase().includes('install'))) {
+  if (!products.some(p => (p.category as string) === 'labor' || (p.category as string) === 'installation' || p.display_name?.toLowerCase().includes('install'))) {
     missingMandatory.push({ id: 'sys_labor', display_name: 'No Labor/Installation Products Found', technical_name: 'System Error', is_active: false } as Product);
   }
 
