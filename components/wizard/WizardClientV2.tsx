@@ -106,10 +106,16 @@ export function WizardClientV2() {
   
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
-      if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+      if ((window as any).Razorpay) {
         resolve(true);
         return;
       }
+      
+      const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+      
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.onload = () => resolve(true);
