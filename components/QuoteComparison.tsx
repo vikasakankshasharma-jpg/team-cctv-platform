@@ -88,7 +88,7 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
       )}
 
       {/* Brand Filter */}
-      {brands.length > 2 && (
+      {brands.length > 1 && (
         <div className="flex justify-center space-x-2 mb-2">
           <span className="text-sm text-gray-500 flex items-center mr-2">Brand:</span>
           {brands.map(b => (
