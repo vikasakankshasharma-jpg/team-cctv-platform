@@ -1,22 +1,100 @@
-# Sprint Task Execution Status
+# Hardening Sprint — Live Status Tracker
 
-- [x] **Audit Before Modify Gate:** Read-only audit complete. Baseline documented in `/docs/ANTIGRAVITY_INITIAL_AUDIT.md`.
-- [x] **Governance Initialized:** Maintained `CAPABILITY_MATRIX.md`, `PRODUCTION_TRUTH.md`, `FUTURE_BACKLOG.md`.
-- [x] **Task 2.1:** Razorpay hardening complete — server-authoritative amount from quote, fail-closed webhook, HMAC verification, idempotency, cross-binding.
-- [x] **Phase 0.1:** Quarantined/deleted exposed credentials (`push-vercel-env.js`, `push-vercel-env.ps1`, `fix-keys.js`, `staging-firebase-adminsdk.json`).
-- [x] **Phase 0.2:** Cashfree retired — deleted `lib/cashfree.ts`, webhook, `@cashfreepayments/*` deps, rewired `QuoteReviewClient.tsx` to Razorpay.
-- [ ] **Phase 0.3:** Root directory cleanup (relocate/delete scratch scripts, stray logs, loose HTML).
-- [x] **Phase 1.1:** Consolidated to single canonical pricing engine (`lib/pricing-engine.ts`); deleted `pricing-engine-v2.ts`. Verified `tsc --noEmit` clean.
-- [x] **Phase 1.2:** Server-authoritative quote generation in `app/api/quote/save/route.ts`. ProBuilder phone validation & routing fixed.
-- [x] **Phase 1.3:** Quote immutability — collision-safe `QT-YYYY-XXXXXX` IDs with existence check, versioned revisions `parentId_v{N}`, no parent mutation.
-- [x] **Phase 2.1:** Funnel unification — `WizardClientV2` redirects to `/quote/${leadId}` on save completion instead of inline checkout.
-- [x] **Phase 2.2:** `QuoteReviewClient.tsx` rewired to Razorpay checkout with dynamic SDK loading.
-- [x] **Phase 2.3:** Dead `WizardClient.tsx` deleted.
-- [ ] **Phase 3.1:** Wizard steps reconciliation — ensure all wizard questions map to `CCTVRequirement` fields consumed by pricing engine.
-- [ ] **Phase 3.2:** Site-survey parameters — validate that `coverage_area`, `floors`, `outdoor_count` flow through to configuration and pricing.
-- [x] **Phase 4.1:** Inventory reservation (deduction + RESERVED ledger entry) fires atomically inside Razorpay webhook on `payment.captured`.
-- [x] **Phase 4.2:** State-driven invoice status polling — created `/api/invoice/[quoteId]/status` endpoint, `PaymentSuccessClient` polls for `PAID` status.
-- [x] **Phase 4.3:** Wired cron triggers in `vercel.json` — followups (hourly), SLA escalation (every 15 min), profitability snapshot (daily at 2 AM).
-- [ ] **Phase 4.4:** Installer Job Card operational template.
-- [ ] **Phase 5:** Security, tamper, and commercial consistency Playwright tests + Golden Path launch gate.
+> Last updated: 2026-09-03 by Antigravity  
+> Branch: `hardening-sprint`  
+> Canonical plan: [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md)
 
+---
+
+## Section 2 — Pre-Merge Fixes
+
+| # | Item | Status |
+|---|------|--------|
+| 2.1a | Delete 3 leaked credential files (`read-otp.mjs`, `lint_results.json`, `add-demo-addons.mjs`) | `[DONE-UNMERGED]` commit `4ac239d` |
+| 2.1b | Fix webhook advance payment amount cross-check | `[DONE-UNMERGED]` commit `4ac239d` |
+| 2.1c | Fix e2e test pricing assertion | `[DONE-UNMERGED]` commit `4ac239d` |
+| 2.1d | Delete dead `handlePayment`/WhatsApp/PDF code from `WizardClientV2.tsx` | `[DONE-UNMERGED]` pending commit |
+| 2.1e | Explain unmentioned admin files in PR | `[DONE-UNMERGED]` see below |
+| 2.2 | Run `npm run build`, `npx tsc --noEmit` | `[TODO]` — tsc running now |
+| 2.3 | Merge to `master` | `[TODO]` |
+
+### 2.1e — Explanation of unmentioned admin files
+
+These files were **not written by this hardening session**. They were uncommitted modifications left in the working tree by a previous agent session and got swept up by `git add -A`. All are functionally coherent improvements to the admin panel's margin management, but they are **unrelated to the security hardening scope** of this PR.
+
+| File | What it does |
+|------|-------------|
+| `components/admin/SettingsForm.tsx` (+220 lines) | Adds a "Hardware & Component Margins (%)" section to the admin settings form — per-category margin inputs (HDD, cameras, recorders, connectors, etc.) that feed the margin engine. Previously these were hardcoded. |
+| `app/(admin)/admin/catalog-manager/page.tsx` (+11 lines) | Adds default values for the new `margin_*` fields so the settings page doesn't break on first load. |
+| `app/(admin)/admin/catalog-manager/CatalogManagerClient.tsx` (+1 line) | Renames a tab label from "Labor & Wire Pricing" to "Labor, Wire & Margins" to match the new content. |
+| `app/(admin)/admin/products/health/page.tsx` (+55 lines) | Improves the catalog health diagnostic page: adds checks for missing quotation-eligible products, unreadable storage capacities, missing recorder channels, and inconsistent brand naming. |
+| `lib/margin-engine.ts` (+80 lines, -20 lines) | Replaces hardcoded per-category margin overrides with dynamic values loaded from admin settings. Adds `toDecimalMargin()` helper and new `margin_*` fields to `MarginPolicyConfig`. |
+| `lib/product-resolver.ts` (+17 lines, -13 lines) | Improves storage/power device resolution: better capacity parsing (handles display_name fallback, regex instead of brittle string replace), tie-breaking by price when TB is equal. |
+
+**Recommendation**: These are good changes that should be kept — they make margins admin-configurable instead of hardcoded, which directly supports the "server is the only source of commercial truth" principle. But they should be acknowledged in the PR description rather than slipping in silently.
+
+---
+
+## Phase 0 — Security Emergency
+
+| Item | Status |
+|------|--------|
+| Revoke Firebase Admin key in GCP Console | `[TODO]` — manual, owner action |
+| Regenerate & restrict Google Maps API key | `[TODO]` — manual, owner action |
+| New keys in Vercel env vars only | `[TODO]` — manual, owner action |
+| Scrub git history (BFG/filter-repo) | `[TODO]` — after merge + all 7 files removed |
+| Check Firebase audit logs | `[TODO]` — manual |
+| Add secret scanning CI check | `[TODO]` |
+| Delete Cashfree code | `[DONE-UNMERGED]` |
+| Remove Cashfree from package.json | `[DONE-UNMERGED]` |
+| Repo root cleanup (438 items → clean) | `[TODO]` |
+
+## Phase 0.5 — UX & IA Audit
+
+| Item | Status |
+|------|--------|
+| 6 persona breakdowns | `[TODO]` |
+| Screen inventory with KEEP/SIMPLIFY/MERGE/MOVE/REMOVE/BUILD tags | `[TODO]` |
+| `docs/UX_ARCHITECTURE.md` | `[TODO]` |
+| `docs/ROLE_JOURNEYS.md` | `[TODO]` |
+| `docs/SCREEN_INVENTORY.md` | `[TODO]` |
+| Canonical nav per role | `[TODO]` |
+| CTA business rule (Pay vs Site Survey) | `[TODO]` |
+| Adopt `components/ui` as mandatory design system | `[TODO]` |
+| Replace native alert/confirm/prompt calls | `[TODO]` |
+
+## Phase 0.75 — Canonical Wiring Map
+
+| Item | Status |
+|------|--------|
+| Customer journey wiring map | `[TODO]` |
+| Staff journey wiring maps | `[TODO]` |
+| `docs/CANONICAL_FLOW.md` | `[TODO]` |
+| `docs/API_SCREEN_MAP.md` | `[TODO]` |
+| `docs/DATA_LIFECYCLE.md` | `[TODO]` |
+| Flag orphan routes/screens | `[TODO]` |
+
+## Phase 1 — Commercial Core
+
+| Item | Status |
+|------|--------|
+| Pricing engines consolidated | `[DONE-UNMERGED]` |
+| Server-authoritative quote save | `[DONE-UNMERGED]` |
+| Quote immutability + collision-safe IDs | `[DONE-UNMERGED]` |
+| Verify storage calc uses catalog `daily_gb_per_camera` | `[TODO]` |
+| Verify all v2 callers migrated | `[TODO]` |
+| Verify `quote/generate` is server-computed | `[TODO]` |
+| Verify 7-day `validUntil` enforced at payment | `[TODO]` |
+
+## Phase 2 — Funnel Unification
+
+| Item | Status |
+|------|--------|
+| WizardClientV2 redirects to `/quote/[leadId]` | `[DONE-UNMERGED]` |
+| Dead checkout code deleted from WizardClientV2 | `[DONE-UNMERGED]` pending commit |
+| QuoteReviewClient rewired to Razorpay | `[DONE-UNMERGED]` |
+| Verify LeadGate OTP + B2B routing | `[TODO]` |
+
+## Phase 3–6
+
+All `[TODO]` — blocked on Phase 0.5/0.75 docs.
