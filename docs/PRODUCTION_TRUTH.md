@@ -23,11 +23,14 @@ bfg --delete-files staging-firebase-adminsdk.json
 bfg --delete-files push-vercel-env.js
 bfg --delete-files push-vercel-env.ps1
 bfg --delete-files fix-keys.js
+bfg --delete-files read-otp.mjs
+bfg --delete-files lint_results.json
+bfg --delete-files add-demo-addons.mjs
 git reflog expire --expire=now --all && git gc --prune=now --aggressive
 git push --force
 
 # Option B: git filter-repo (if BFG unavailable)
-git filter-repo --invert-paths --path staging-firebase-adminsdk.json --path push-vercel-env.js --path push-vercel-env.ps1 --path fix-keys.js
+git filter-repo --invert-paths --path staging-firebase-adminsdk.json --path push-vercel-env.js --path push-vercel-env.ps1 --path fix-keys.js --path scripts/read-otp.mjs --path lint_results.json --path add-demo-addons.mjs
 git push --force
 ```
 

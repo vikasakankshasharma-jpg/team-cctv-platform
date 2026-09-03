@@ -43,10 +43,16 @@ test.describe('Commercial Core Hardening - Phase 5', () => {
 
     const proRes = await request.post('/api/quote/save', { data: proBuilderPayload });
     expect(proRes.ok()).toBeTruthy();
-    
-    // In a full environment we would fetch the saved quote back and assert the total matches basePrice, ignoring the 1 INR.
-    // Assuming we fetch it back or the API returns it:
-    // expect(savedProQuote.total_payable).toBe(basePrice);
+    const proData = await proRes.json();
+
+    // This is the assertion that actually proves tamper-resistance: the
+    // server must have discarded the client's unit_price: 1 and recomputed
+    // the real total from the catalog. Without this assertion, the test only
+    // proves the save request didn't error — it does not prove the price was
+    // recomputed, which was the entire point of this test.
+    expect(proData.snapshot?.total_payable).toBeDefined();
+    expect(proData.snapshot.total_payable).not.toBe(4); // 4 items x tampered ₹1
+    expect(proData.snapshot.total_payable).toBeGreaterThan(1000); // sanity: real CCTV pricing, not ₹1/unit
   });
 
   test('Payment tamper resistance (Razorpay)', async ({ request }) => {

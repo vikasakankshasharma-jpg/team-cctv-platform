@@ -80,7 +80,13 @@ export async function POST(req: Request) {
         }
 
         // Binding Cross-Check 3: Amount match (within 1 rupee tolerance for rounding)
+        // IMPORTANT: compare against razorpay_order_amount (the amount actually
+        // ordered for THIS payment, set correctly at order-creation time for
+        // both full and "advance" partial payments) — not the quote's full
+        // total_payable. Comparing against the full total unconditionally
+        // rejects every legitimate advance/partial payment as a "mismatch".
         const expectedRupees = Number(
+          quoteData.razorpay_order_amount ??
           quoteData.pricingSnapshot?.total_payable ??
           quoteData.total_payable ??
           quoteData.total ??
