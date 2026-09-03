@@ -78,13 +78,13 @@ These files were **not written by this hardening session**. They were uncommitte
 
 | Item | Status |
 |------|--------|
-| Pricing engines consolidated | `[DONE-UNMERGED]` |
-| Server-authoritative quote save | `[DONE-UNMERGED]` |
-| Quote immutability + collision-safe IDs | `[DONE-UNMERGED]` |
-| Verify storage calc uses catalog `daily_gb_per_camera` | `[TODO]` |
-| Verify all v2 callers migrated | `[TODO]` |
-| Verify `quote/generate` is server-computed | `[TODO]` |
-| Verify 7-day `validUntil` enforced at payment | `[TODO]` |
+| Pricing engines consolidated | `[DONE]` |
+| Server-authoritative quote save | `[DONE]` |
+| Quote immutability + collision-safe IDs | `[DONE]` |
+| Verify storage calc uses catalog `daily_gb_per_camera` | `[DONE]` |
+| Verify all v2 callers migrated | `[DONE]` |
+| Verify `quote/generate` is server-computed | `[DONE]` |
+| Verify 7-day `validUntil` enforced at payment | `[DONE]` |
 
 ## Phase 2 — Funnel Unification
 

@@ -69,7 +69,7 @@ export function resolveProducts(
       if (cameras.length === 0) return; // Skip if we can't find a complete set
 
       const recorder = resolveRecorderForPermutation(permConfig, pool);
-      const storage = resolveStorageForPermutation(permConfig, pool, brandFilter);
+      const storage = resolveStorageForPermutation(permConfig, pool, brandFilter, cameras);
       const power = resolvePowerForPermutation(permConfig, pool);
 
       plans[combo] = {
@@ -158,8 +158,22 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
   return recs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
 }
 
-function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string) {
+function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string, resolvedCameras?: { product: Product, qty: number }[]) {
   if (config.storage_gb === 0 || config.storage_gb === undefined) return undefined;
+
+  let reqStorageGb = config.storage_gb!;
+  if (resolvedCameras && resolvedCameras.length > 0) {
+    let preciseDailyGb = 0;
+    for (const cam of resolvedCameras) {
+      const fallbackGb = config.technology === "HD" ? 20 : 40;
+      const gbPerDay = cam.product.daily_gb_per_camera || fallbackGb;
+      preciseDailyGb += gbPerDay * cam.qty;
+    }
+    const days = config.recording_days !== undefined ? config.recording_days : 15;
+    reqStorageGb = preciseDailyGb * days;
+  } else if (config.technology === "HD") {
+    reqStorageGb = reqStorageGb * 0.75; // Reduce by 25% for HD (fallback)
+  }
 
   const storageItems = pool.filter(p => p.category === "storage" || p.storage_type === "Hard Disk");
   const getTb = (p: Product) => {
@@ -178,12 +192,6 @@ function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[]
     return 0;
   };
 
-  // HD technology typically uses H.265 which compresses better, so we can adjust the GB requirement
-  // to allow a 500GB HDD for the lowest quotation (4 cams * 7 days).
-  let reqStorageGb = config.storage_gb!;
-  if (config.technology === "HD") {
-    reqStorageGb = reqStorageGb * 0.75; // Reduce by 25% for HD
-  }
   let valid = storageItems.filter(p => getTb(p) * 1024 >= reqStorageGb);
   
   if (valid.length === 0 && storageItems.length > 0) {

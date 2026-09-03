@@ -27,7 +27,7 @@ export function LeadGate({
 }: { 
   isIndustrial?: boolean;
   mode?: "final" | "partial";
-  onSuccess?: (leadId: string) => void;
+  onSuccess?: (leadId: string, mobile?: string, name?: string) => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -212,7 +212,7 @@ export function LeadGate({
           })
         });
         if (!indRes.ok) throw new Error("Failed to register industrial interest.");
-        if (onSuccess) onSuccess("industrial");
+        if (onSuccess) onSuccess("industrial", mobile, name);
         return;
       }
 
@@ -233,7 +233,7 @@ export function LeadGate({
 
       if (mode === "partial") {
         setPartialLeadId(leadId);
-        if (onSuccess) onSuccess(leadId);
+        if (onSuccess) onSuccess(leadId, mobile, name);
       } else {
         router.push(`/quote/${leadId}`);
       }

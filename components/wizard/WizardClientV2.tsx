@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CCTVRequirement } from "@/types";
 import { QuoteComparison } from "@/components/QuoteComparison";
 import { CameraCustomizer } from "@/components/CameraCustomizer";
 import { EditConfigurationDrawer } from "@/components/EditConfigurationDrawer";
 import { Button } from "@/components/ui/button";
+import { LeadGate } from "@/components/wizard/LeadGate";
+import { CheckCircle2, ShieldAlert, ShieldCheck, FileText, ArrowRight, Server, Box, Info } from "lucide-react";
 
 
 
@@ -58,6 +60,8 @@ export function WizardClientV2() {
   const totalSteps = req.installation_type === "new" ? 4 : 5;
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [customizerPlanId, setCustomizerPlanId] = useState<string | null>(null);
+  const [showLeadGate, setShowLeadGate] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleNext = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -78,6 +82,7 @@ export function WizardClientV2() {
 
   const generateQuote = async (finalReq: CCTVRequirement) => {
     setLoading(true);
+    setErrorMsg(null);
     try {
       const res = await fetch("/api/quote/generate", {
         method: "POST",
@@ -88,11 +93,11 @@ export function WizardClientV2() {
       if (data.success) {
         setQuoteResult(data);
       } else {
-        alert("Error generating quote");
+        setErrorMsg("Error generating quote. Please try again.");
       }
     } catch (e: any) {
       console.error(e);
-      alert("Error generating quote");
+      setErrorMsg("Error generating quote. Please check your connection and try again.");
     }
     setLoading(false);
   };
@@ -123,7 +128,7 @@ export function WizardClientV2() {
     const name = quoteResult.requirement.customer_name;
     
     if (!mobile) {
-      alert("Mobile number is required.");
+      setErrorMsg("Mobile number is required.");
       return;
     }
     
@@ -160,7 +165,7 @@ export function WizardClientV2() {
         router.push(`/quote/${targetId}`);
         return;
       } else {
-        alert(data.message || "Failed to save quote.");
+        setErrorMsg(data.message || "Failed to save quote.");
       }
     } catch (e) {
       console.error(e);
@@ -183,7 +188,7 @@ export function WizardClientV2() {
         availableAddons={quoteResult.addons || []}
         storageDrives={quoteResult.storageDrives || []}
         onBack={() => setCustomizerPlanId(null)}
-        onConfirm={(modifiedPlan) => handleConfirmCustomizer(customizerPlanId, modifiedPlan)}
+        onConfirm={(modifiedPlan: any) => handleConfirmCustomizer(customizerPlanId, modifiedPlan)}
         isSaving={loading}
       />
     );
@@ -512,43 +517,17 @@ export function WizardClientV2() {
         }
       case 5:
         return (
-          <div className="space-y-6 animate-in fade-in">
+          <div className="space-y-6 animate-in fade-in text-center py-8">
+            <ShieldCheck className="w-16 h-16 text-blue-500 mx-auto mb-4" />
             <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
-            <p className="text-gray-600 mb-6">Please enter your details to view your personalized CCTV options instantly.</p>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="e.g. Rahul Kumar" 
-                  value={req.customer_name || ''} 
-                  onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))} 
-                  className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number *</label>
-                <input 
-                  type="tel" 
-                  required
-                  placeholder="10-digit mobile number" 
-                  maxLength={10}
-                  value={req.customer_mobile || ''} 
-                  onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/D/g, '') }))} 
-                  className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                />
-              </div>
-            </div>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">You're one step away from viewing your customized, itemized CCTV options. We require a quick verification to generate your quote.</p>
 
             <Button 
-              onClick={handleFinishWizard} 
-              disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} 
+              onClick={() => setShowLeadGate(true)} 
               size="lg" 
-              className="w-full text-lg h-14 mt-6"
+              className="w-full sm:w-auto min-w-[280px] text-lg h-14"
             >
-              {loading ? "Analyzing Requirement..." : "View My CCTV Options"}
+              Secure Verification & View Quotes
             </Button>
           </div>
         );
@@ -565,6 +544,15 @@ export function WizardClientV2() {
             <p className="text-sm text-gray-500 mt-2 text-right">Step {req.installation_type === "new" && step === 5 ? 4 : step} of {totalSteps}</p>
           </div>
         )}
+        {errorMsg && (
+          <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm font-medium rounded-xl border border-red-200 flex items-start gap-2">
+            <ShieldAlert className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <div>
+              <span>{errorMsg}</span>
+              <button onClick={() => setErrorMsg(null)} className="ml-2 underline text-red-600 hover:text-red-800">Dismiss</button>
+            </div>
+          </div>
+        )}
 
         {renderStep()}
 
@@ -576,6 +564,24 @@ export function WizardClientV2() {
           </div>
         )}
       </div>
+
+      {/* OTP Lead Gate Modal */}
+      {showLeadGate && (
+        <LeadGate
+          mode="partial"
+          onSuccess={(leadId, verifiedMobile, verifiedName) => {
+            setShowLeadGate(false);
+            // Set verified mobile/name into the requirement, then generate quote
+            const updatedReq = {
+              ...req,
+              customer_mobile: verifiedMobile || req.customer_mobile || "",
+              customer_name: verifiedName || req.customer_name || "",
+            } as CCTVRequirement;
+            setReq(updatedReq);
+            generateQuote(updatedReq);
+          }}
+        />
+      )}
     </div>
   );
 }
