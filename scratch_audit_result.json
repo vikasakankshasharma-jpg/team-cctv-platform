@@ -1,0 +1,1972 @@
+{
+  "routes": [
+    {
+      "path": "/api/admin/amc-plans",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "amc_plans"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\amc-plans\\route.ts"
+    },
+    {
+      "path": "/api/admin/amc-plans/[id]",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "collections": [
+        "amc_plans"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\amc-plans\\[id]\\route.ts"
+    },
+    {
+      "path": "/api/admin/analytics",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quoteDeliveries",
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\analytics\\route.ts"
+    },
+    {
+      "path": "/api/admin/analytics/territory",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\analytics\\territory\\route.ts"
+    },
+    {
+      "path": "/api/admin/audit",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "audit_logs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\audit\\route.ts"
+    },
+    {
+      "path": "/api/admin/card-layouts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "comparison_card_layouts"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\card-layouts\\route.ts"
+    },
+    {
+      "path": "/api/admin/card-layouts/[id]",
+      "methods": [
+        "PUT",
+        "DELETE"
+      ],
+      "collections": [
+        "comparison_card_layouts"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\card-layouts\\[id]\\route.ts"
+    },
+    {
+      "path": "/api/admin/catalog-repair",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\catalog-repair\\route.ts"
+    },
+    {
+      "path": "/api/admin/catalog-repair/fix-technologies",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\catalog-repair\\fix-technologies\\route.ts"
+    },
+    {
+      "path": "/api/admin/coverage-zones",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "coverage_zones"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\coverage-zones\\route.ts"
+    },
+    {
+      "path": "/api/admin/coverage-zones/[id]",
+      "methods": [
+        "PUT",
+        "DELETE"
+      ],
+      "collections": [
+        "coverage_zones"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\coverage-zones\\[id]\\route.ts"
+    },
+    {
+      "path": "/api/admin/dispatch/jobs",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "jobs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\dispatch\\jobs\\route.ts"
+    },
+    {
+      "path": "/api/admin/dispatch/jobs/[jobId]",
+      "methods": [
+        "PATCH"
+      ],
+      "collections": [
+        "jobs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\dispatch\\jobs\\[jobId]\\route.ts"
+    },
+    {
+      "path": "/api/admin/enrich-products",
+      "methods": [
+        "POST",
+        "PATCH"
+      ],
+      "collections": [
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\enrich-products\\route.ts"
+    },
+    {
+      "path": "/api/admin/features",
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "collections": [
+        "feature_tags"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\features\\route.ts"
+    },
+    {
+      "path": "/api/admin/geo-rules",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "geo_pricing_rules"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\geo-rules\\route.ts"
+    },
+    {
+      "path": "/api/admin/hubs",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "hubs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\hubs\\route.ts"
+    },
+    {
+      "path": "/api/admin/installers",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "installers"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\installers\\route.ts"
+    },
+    {
+      "path": "/api/admin/installers/verify-bank",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\installers\\verify-bank\\route.ts"
+    },
+    {
+      "path": "/api/admin/payouts/approve",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "payout_requests",
+        "ledger_transactions"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\payouts\\approve\\route.ts"
+    },
+    {
+      "path": "/api/admin/payouts/manual",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "transactions"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\payouts\\manual\\route.ts"
+    },
+    {
+      "path": "/api/admin/price-match",
+      "methods": [
+        "GET"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\price-match\\route.ts"
+    },
+    {
+      "path": "/api/admin/price-match/[requestId]",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\price-match\\[requestId]\\route.ts"
+    },
+    {
+      "path": "/api/admin/pricing/config",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "app_config",
+        "audit_logs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\pricing\\config\\route.ts"
+    },
+    {
+      "path": "/api/admin/pricing/products",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\pricing\\products\\route.ts"
+    },
+    {
+      "path": "/api/admin/pricing/products/[id]",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "audit_logs",
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\pricing\\products\\[id]\\route.ts"
+    },
+    {
+      "path": "/api/admin/product-groups",
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "collections": [
+        "product_groups",
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\product-groups\\route.ts"
+    },
+    {
+      "path": "/api/admin/products",
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE",
+        "PATCH"
+      ],
+      "collections": [
+        "addons",
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\products\\route.ts"
+    },
+    {
+      "path": "/api/admin/products/export",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\products\\export\\route.ts"
+    },
+    {
+      "path": "/api/admin/products/export-template",
+      "methods": [
+        "GET"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\products\\export-template\\route.ts"
+    },
+    {
+      "path": "/api/admin/products/import",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\products\\import\\route.ts"
+    },
+    {
+      "path": "/api/admin/quotes/custom",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\quotes\\custom\\route.ts"
+    },
+    {
+      "path": "/api/admin/recommendation-rules",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "recommendation_rules"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\recommendation-rules\\route.ts"
+    },
+    {
+      "path": "/api/admin/recommendation-rules/[id]",
+      "methods": [
+        "PUT",
+        "DELETE"
+      ],
+      "collections": [
+        "recommendation_rules"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\recommendation-rules\\[id]\\route.ts"
+    },
+    {
+      "path": "/api/admin/salespersons",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "salespeople"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\salespersons\\route.ts"
+    },
+    {
+      "path": "/api/admin/salespersons/[id]",
+      "methods": [
+        "PUT",
+        "DELETE"
+      ],
+      "collections": [
+        "salespeople"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\salespersons\\[id]\\route.ts"
+    },
+    {
+      "path": "/api/admin/search",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "franchise_dealers",
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\search\\route.ts"
+    },
+    {
+      "path": "/api/admin/settings",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "collections": [
+        "settings"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\settings\\route.ts"
+    },
+    {
+      "path": "/api/admin/warranty-matrix",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\admin\\warranty-matrix\\route.ts"
+    },
+    {
+      "path": "/api/ai/night-school",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "ai_brain"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\ai\\night-school\\route.ts"
+    },
+    {
+      "path": "/api/analytics/executive/live",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "jobs",
+        "amc_contracts",
+        "inventory",
+        "service_tickets"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\executive\\live\\route.ts"
+    },
+    {
+      "path": "/api/analytics/finance",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "invoices",
+        "receipts"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\finance\\route.ts"
+    },
+    {
+      "path": "/api/analytics/funnel",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quote_sessions"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\funnel\\route.ts"
+    },
+    {
+      "path": "/api/analytics/inventory",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "serial_assets",
+        "stock_ledger",
+        "inventory"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\inventory\\route.ts"
+    },
+    {
+      "path": "/api/analytics/overview",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\overview\\route.ts"
+    },
+    {
+      "path": "/api/analytics/products",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\products\\route.ts"
+    },
+    {
+      "path": "/api/analytics/profitability",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "deals"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\profitability\\route.ts"
+    },
+    {
+      "path": "/api/analytics/rejections",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "analytics_rejections"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\rejections\\route.ts"
+    },
+    {
+      "path": "/api/analytics/sales",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quotes",
+        "deals",
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\sales\\route.ts"
+    },
+    {
+      "path": "/api/analytics/service",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "jobs",
+        "amc_contracts",
+        "service_tickets"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\service\\route.ts"
+    },
+    {
+      "path": "/api/analytics/track",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "quote_events",
+        "quote_sessions"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\analytics\\track\\route.ts"
+    },
+    {
+      "path": "/api/auth/otp/email",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "admins"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\auth\\otp\\email\\route.ts"
+    },
+    {
+      "path": "/api/auth/otp/mobile",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "admins",
+        "salespeople"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\auth\\otp\\mobile\\route.ts"
+    },
+    {
+      "path": "/api/auth/otp/verify",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "salespeople"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\auth\\otp\\verify\\route.ts"
+    },
+    {
+      "path": "/api/auth/session",
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\auth\\session\\route.ts"
+    },
+    {
+      "path": "/api/bookings",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\bookings\\route.ts"
+    },
+    {
+      "path": "/api/build/calculate",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "analytics_rejections",
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\build\\calculate\\route.ts"
+    },
+    {
+      "path": "/api/build/products",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\build\\products\\route.ts"
+    },
+    {
+      "path": "/api/catalog",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "addons",
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\catalog\\route.ts"
+    },
+    {
+      "path": "/api/catalog/pricing-rules",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "collections": [
+        "settings",
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\catalog\\pricing-rules\\route.ts"
+    },
+    {
+      "path": "/api/catalog/products/[productId]",
+      "methods": [
+        "PATCH"
+      ],
+      "collections": [
+        "products"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\catalog\\products\\[productId]\\route.ts"
+    },
+    {
+      "path": "/api/chat",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\chat\\route.ts"
+    },
+    {
+      "path": "/api/chat/feedback",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\chat\\feedback\\route.ts"
+    },
+    {
+      "path": "/api/crm/deals",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "quotes",
+        "customers",
+        "deals"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\crm\\deals\\route.ts"
+    },
+    {
+      "path": "/api/crm/leads/[id]",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quotes",
+        "invoices",
+        "jobs",
+        "followup_tasks",
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\crm\\leads\\[id]\\route.ts"
+    },
+    {
+      "path": "/api/crm/quotes",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\crm\\quotes\\route.ts"
+    },
+    {
+      "path": "/api/crm/quotes/[quoteId]",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "collections": [
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\crm\\quotes\\[quoteId]\\route.ts"
+    },
+    {
+      "path": "/api/crm/quotes/[quoteId]/followup",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\crm\\quotes\\[quoteId]\\followup\\route.ts"
+    },
+    {
+      "path": "/api/crm/tasks",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "followup_tasks",
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\crm\\tasks\\route.ts"
+    },
+    {
+      "path": "/api/crm/tasks/generate",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "followup_tasks",
+        "audit_logs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\crm\\tasks\\generate\\route.ts"
+    },
+    {
+      "path": "/api/crm/tasks/[id]/action",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "followup_tasks",
+        "audit_logs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\crm\\tasks\\[id]\\action\\route.ts"
+    },
+    {
+      "path": "/api/cron/followups",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "followup_tasks",
+        "audit_logs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\cron\\followups\\route.ts"
+    },
+    {
+      "path": "/api/cron/profitability-snapshot",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "deals"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\cron\\profitability-snapshot\\route.ts"
+    },
+    {
+      "path": "/api/cron/sla-escalation",
+      "methods": [
+        "GET"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\cron\\sla-escalation\\route.ts"
+    },
+    {
+      "path": "/api/customer/leads",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\customer\\leads\\route.ts"
+    },
+    {
+      "path": "/api/customer/[customerId]/assets",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "serial_assets"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\customer\\[customerId]\\assets\\route.ts"
+    },
+    {
+      "path": "/api/customer/[customerId]/dashboard",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "serial_assets",
+        "customers",
+        "rma_tickets",
+        "service_tickets"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\customer\\[customerId]\\dashboard\\route.ts"
+    },
+    {
+      "path": "/api/finance/invoices",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "invoices",
+        "deals",
+        "service_tickets"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\finance\\invoices\\route.ts"
+    },
+    {
+      "path": "/api/finance/receipts",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "invoices",
+        "receipts",
+        "deals"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\finance\\receipts\\route.ts"
+    },
+    {
+      "path": "/api/impressions",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "demand_impressions"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\impressions\\route.ts"
+    },
+    {
+      "path": "/api/installer/auth/otp/email",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\installer\\auth\\otp\\email\\route.ts"
+    },
+    {
+      "path": "/api/installer/auth/otp/mobile",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\installer\\auth\\otp\\mobile\\route.ts"
+    },
+    {
+      "path": "/api/installer/auth/otp/verify",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\installer\\auth\\otp\\verify\\route.ts"
+    },
+    {
+      "path": "/api/installer/auth/session",
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\installer\\auth\\session\\route.ts"
+    },
+    {
+      "path": "/api/installer/me",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\installer\\me\\route.ts"
+    },
+    {
+      "path": "/api/installers/apply",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "installer_applications"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\installers\\apply\\route.ts"
+    },
+    {
+      "path": "/api/interest-leads",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "interest_leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\interest-leads\\route.ts"
+    },
+    {
+      "path": "/api/inventory",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "catalog",
+        "inventory"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\inventory\\route.ts"
+    },
+    {
+      "path": "/api/inventory/exceptions",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "inventory_exceptions"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\inventory\\exceptions\\route.ts"
+    },
+    {
+      "path": "/api/inventory/ledger",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "stock_ledger"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\inventory\\ledger\\route.ts"
+    },
+    {
+      "path": "/api/inventory/purchase",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "purchase_orders"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\inventory\\purchase\\route.ts"
+    },
+    {
+      "path": "/api/inventory/purchase/[poId]/receive",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "serial_assets",
+        "stock_ledger",
+        "purchase_orders",
+        "inventory"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\inventory\\purchase\\[poId]\\receive\\route.ts"
+    },
+    {
+      "path": "/api/inventory/reconcile",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "stock_ledger",
+        "inventory"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\inventory\\reconcile\\route.ts"
+    },
+    {
+      "path": "/api/inventory/serials",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "serial_assets",
+        "jobs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\inventory\\serials\\route.ts"
+    },
+    {
+      "path": "/api/invoice/change-order",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "jobs",
+        "change_orders",
+        "invoices",
+        "audit_logs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\invoice\\change-order\\route.ts"
+    },
+    {
+      "path": "/api/invoice/generate",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "quotes",
+        "invoices"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\invoice\\generate\\route.ts"
+    },
+    {
+      "path": "/api/invoice/[quoteId]/download",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\invoice\\[quoteId]\\download\\route.ts"
+    },
+    {
+      "path": "/api/invoice/[quoteId]/status",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\invoice\\[quoteId]\\status\\route.ts"
+    },
+    {
+      "path": "/api/leads/industrial",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "industrial_leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\leads\\industrial\\route.ts"
+    },
+    {
+      "path": "/api/leads/[id]",
+      "methods": [
+        "PATCH"
+      ],
+      "collections": [
+        "salespersons",
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\leads\\[id]\\route.ts"
+    },
+    {
+      "path": "/api/leads/[id]/price-match",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\leads\\[id]\\price-match\\route.ts"
+    },
+    {
+      "path": "/api/leads/[id]/price-match/[requestId]",
+      "methods": [
+        "PATCH"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\leads\\[id]\\price-match\\[requestId]\\route.ts"
+    },
+    {
+      "path": "/api/onboarding/partner",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "promoters"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\onboarding\\partner\\route.ts"
+    },
+    {
+      "path": "/api/operations/jobs",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "jobs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\operations\\jobs\\route.ts"
+    },
+    {
+      "path": "/api/operations/jobs/[jobId]",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "jobs",
+        "quotes",
+        "change_orders"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\operations\\jobs\\[jobId]\\route.ts"
+    },
+    {
+      "path": "/api/operations/jobs/[jobId]/transition",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "jobs",
+        "audit_logs"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\operations\\jobs\\[jobId]\\transition\\route.ts"
+    },
+    {
+      "path": "/api/operations/jobs/[jobId]/warranty",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "jobs",
+        "warranty_certificates",
+        "serial_assets"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\operations\\jobs\\[jobId]\\warranty\\route.ts"
+    },
+    {
+      "path": "/api/operations/rma",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "serial_assets",
+        "inventory",
+        "stock_ledger",
+        "rma_tickets"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\operations\\rma\\route.ts"
+    },
+    {
+      "path": "/api/operations/tickets",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "service_tickets"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\operations\\tickets\\route.ts"
+    },
+    {
+      "path": "/api/operations/tickets/[ticketId]",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "collections": [
+        "jobs",
+        "service_tickets"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\operations\\tickets\\[ticketId]\\route.ts"
+    },
+    {
+      "path": "/api/partner/auth/otp/email",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\partner\\auth\\otp\\email\\route.ts"
+    },
+    {
+      "path": "/api/partner/auth/otp/mobile",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\partner\\auth\\otp\\mobile\\route.ts"
+    },
+    {
+      "path": "/api/partner/auth/otp/verify",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\partner\\auth\\otp\\verify\\route.ts"
+    },
+    {
+      "path": "/api/partner/auth/session",
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\partner\\auth\\session\\route.ts"
+    },
+    {
+      "path": "/api/partner/commissions",
+      "methods": [
+        "GET"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\partner\\commissions\\route.ts"
+    },
+    {
+      "path": "/api/partner/leads",
+      "methods": [
+        "GET"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\partner\\leads\\route.ts"
+    },
+    {
+      "path": "/api/partner/me",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\partner\\me\\route.ts"
+    },
+    {
+      "path": "/api/payment/razorpay",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\payment\\razorpay\\route.ts"
+    },
+    {
+      "path": "/api/pincode/[pin]",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "service_areas",
+        "city_impressions"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\pincode\\[pin]\\route.ts"
+    },
+    {
+      "path": "/api/products",
+      "methods": [
+        "GET"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\products\\route.ts"
+    },
+    {
+      "path": "/api/quote/generate",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "settings"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\quote\\generate\\route.ts"
+    },
+    {
+      "path": "/api/quote/save",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "settings",
+        "addons",
+        "products",
+        "quotes",
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\quote\\save\\route.ts"
+    },
+    {
+      "path": "/api/quote/[quoteId]/download",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\quote\\[quoteId]\\download\\route.ts"
+    },
+    {
+      "path": "/api/quote/[quoteId]/pdf",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\quote\\[quoteId]\\pdf\\route.ts"
+    },
+    {
+      "path": "/api/quote/[quoteId]/whatsapp",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "quoteDeliveries",
+        "quotes"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\quote\\[quoteId]\\whatsapp\\route.ts"
+    },
+    {
+      "path": "/api/quotes",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "geo_pricing_rules",
+        "settings",
+        "addons",
+        "products",
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\quotes\\route.ts"
+    },
+    {
+      "path": "/api/quotes/manual",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "quotes",
+        "customers",
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\quotes\\manual\\route.ts"
+    },
+    {
+      "path": "/api/send-otp",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\send-otp\\route.ts"
+    },
+    {
+      "path": "/api/settings",
+      "methods": [
+        "GET"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\settings\\route.ts"
+    },
+    {
+      "path": "/api/submissions",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "leads",
+        "service_areas",
+        "installers",
+        "salespersons"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\submissions\\route.ts"
+    },
+    {
+      "path": "/api/submissions/industrial",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "industrial_leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\submissions\\industrial\\route.ts"
+    },
+    {
+      "path": "/api/submissions/[id]",
+      "methods": [
+        "PATCH"
+      ],
+      "collections": [
+        "salespersons",
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\submissions\\[id]\\route.ts"
+    },
+    {
+      "path": "/api/submissions/[id]/price-match",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\submissions\\[id]\\price-match\\route.ts"
+    },
+    {
+      "path": "/api/submissions/[id]/price-match/[requestId]",
+      "methods": [
+        "PATCH"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\submissions\\[id]\\price-match\\[requestId]\\route.ts"
+    },
+    {
+      "path": "/api/test-login",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\test-login\\route.ts"
+    },
+    {
+      "path": "/api/v1/leads/[leadId]/quotes/[quoteId]/pdf",
+      "methods": [
+        "GET"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\v1\\leads\\[leadId]\\quotes\\[quoteId]\\pdf\\route.ts"
+    },
+    {
+      "path": "/api/v1/leads/[leadId]/waitlist-confirm",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\v1\\leads\\[leadId]\\waitlist-confirm\\route.ts"
+    },
+    {
+      "path": "/api/verify-otp",
+      "methods": [
+        "POST"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\verify-otp\\route.ts"
+    },
+    {
+      "path": "/api/webhooks/payment",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "change_orders",
+        "audit_logs",
+        "invoices",
+        "jobs",
+        "payment_transactions"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\webhooks\\payment\\route.ts"
+    },
+    {
+      "path": "/api/webhooks/razorpay",
+      "methods": [
+        "POST"
+      ],
+      "collections": [
+        "jobs",
+        "quotes",
+        "invoices",
+        "leads"
+      ],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\webhooks\\razorpay\\route.ts"
+    },
+    {
+      "path": "/api/wizard",
+      "methods": [
+        "GET"
+      ],
+      "collections": [],
+      "file": "c:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\wizard\\route.ts"
+    }
+  ],
+  "callers": {
+    "/api/admin/amc-plans": [],
+    "/api/admin/amc-plans/[id]": [],
+    "/api/admin/analytics": [
+      "components\\admin\\AnalyticsClient.tsx"
+    ],
+    "/api/admin/analytics/territory": [],
+    "/api/admin/audit": [
+      "app\\sys-admin\\pricing\\page.tsx",
+      "tests\\e2e-admin-ui.spec.ts"
+    ],
+    "/api/admin/card-layouts": [
+      "components\\admin\\CardLayoutClient.tsx"
+    ],
+    "/api/admin/card-layouts/[id]": [],
+    "/api/admin/catalog-repair": [
+      "components\\admin\\CatalogRepairButton.tsx"
+    ],
+    "/api/admin/catalog-repair/fix-technologies": [],
+    "/api/admin/coverage-zones": [
+      "app\\(admin)\\admin\\salespersons\\SalespersonsClient.tsx",
+      "components\\admin\\ExpansionClient.tsx"
+    ],
+    "/api/admin/coverage-zones/[id]": [],
+    "/api/admin/dispatch/jobs": [],
+    "/api/admin/dispatch/jobs/[jobId]": [],
+    "/api/admin/enrich-products": [
+      "components\\admin\\ProductEnrichmentClient.tsx"
+    ],
+    "/api/admin/features": [
+      "app\\(admin)\\admin\\products\\page.tsx"
+    ],
+    "/api/admin/geo-rules": [],
+    "/api/admin/hubs": [],
+    "/api/admin/installers": [],
+    "/api/admin/installers/verify-bank": [
+      "components\\admin\\InstallersClient.tsx"
+    ],
+    "/api/admin/payouts/approve": [
+      "app\\(admin)\\admin\\payouts\\PayoutsClient.tsx"
+    ],
+    "/api/admin/payouts/manual": [
+      "components\\admin\\InstallersClient.tsx"
+    ],
+    "/api/admin/price-match": [
+      "app\\(admin)\\admin\\price-match\\PriceMatchHubClient.tsx"
+    ],
+    "/api/admin/price-match/[requestId]": [],
+    "/api/admin/pricing/config": [
+      "app\\sys-admin\\pricing\\page.tsx",
+      "tests\\e2e-admin-pricing.spec.ts",
+      "tests\\e2e-admin-ui.spec.ts"
+    ],
+    "/api/admin/pricing/products": [
+      "app\\sys-admin\\pricing\\page.tsx",
+      "tests\\e2e-admin-pricing.spec.ts",
+      "tests\\e2e-admin-ui.spec.ts",
+      "tests\\e2e-production-readiness.spec.ts"
+    ],
+    "/api/admin/pricing/products/[id]": [],
+    "/api/admin/product-groups": [
+      "components\\admin\\CategoryGroupSelector.tsx"
+    ],
+    "/api/admin/products": [
+      "app\\(admin)\\admin\\catalog-manager\\CatalogManagerClient.tsx",
+      "app\\(admin)\\admin\\products\\page.tsx",
+      "components\\admin\\BulkImportExport.tsx"
+    ],
+    "/api/admin/products/export": [
+      "components\\admin\\BulkImportExport.tsx"
+    ],
+    "/api/admin/products/export-template": [
+      "components\\admin\\BulkImportExport.tsx"
+    ],
+    "/api/admin/products/import": [
+      "components\\admin\\BulkImportExport.tsx"
+    ],
+    "/api/admin/quotes/custom": [
+      "components\\admin\\QuotationBuilderClient.tsx",
+      "tests\\e2e-quote-security.spec.ts"
+    ],
+    "/api/admin/recommendation-rules": [
+      "components\\admin\\RulesClient.tsx"
+    ],
+    "/api/admin/recommendation-rules/[id]": [],
+    "/api/admin/salespersons": [
+      "app\\(admin)\\admin\\salespersons\\SalespersonsClient.tsx"
+    ],
+    "/api/admin/salespersons/[id]": [],
+    "/api/admin/search": [
+      "components\\admin\\OmniSearch.tsx"
+    ],
+    "/api/admin/settings": [
+      "app\\(admin)\\admin\\pricing\\matrices\\MatricesClient.tsx",
+      "components\\salesperson\\ManualQuoteBuilderClient.tsx"
+    ],
+    "/api/admin/warranty-matrix": [],
+    "/api/ai/night-school": [],
+    "/api/analytics/executive/live": [
+      "app\\(admin)\\reports\\executive\\page.tsx"
+    ],
+    "/api/analytics/finance": [
+      "app\\(admin)\\reports\\finance\\page.tsx"
+    ],
+    "/api/analytics/funnel": [
+      "app\\(admin)\\admin\\analytics\\page.tsx",
+      "tests\\analytics.spec.ts",
+      "tests\\phase-3b2.spec.ts"
+    ],
+    "/api/analytics/inventory": [
+      "app\\(admin)\\reports\\inventory\\page.tsx"
+    ],
+    "/api/analytics/overview": [],
+    "/api/analytics/products": [
+      "app\\(admin)\\admin\\analytics\\page.tsx",
+      "tests\\analytics.spec.ts"
+    ],
+    "/api/analytics/profitability": [
+      "app\\(admin)\\reports\\profitability\\page.tsx"
+    ],
+    "/api/analytics/rejections": [
+      "app\\(admin)\\admin\\analytics\\page.tsx",
+      "tests\\analytics.spec.ts",
+      "tests\\phase-3b2.spec.ts"
+    ],
+    "/api/analytics/sales": [
+      "app\\(admin)\\reports\\sales\\page.tsx"
+    ],
+    "/api/analytics/service": [
+      "app\\(admin)\\reports\\service\\page.tsx"
+    ],
+    "/api/analytics/track": [
+      "components\\build\\BuilderClient.tsx",
+      "components\\wizard\\WizardClientV2.tsx",
+      "tests\\analytics.spec.ts",
+      "tests\\phase-3b2.spec.ts"
+    ],
+    "/api/auth/otp/email": [
+      "app\\(admin)\\admin\\login\\LoginForm.tsx"
+    ],
+    "/api/auth/otp/mobile": [
+      "app\\(admin)\\admin\\login\\LoginForm.tsx",
+      "tests\\e2e-customer-auth-isolation.spec.ts"
+    ],
+    "/api/auth/otp/verify": [
+      "app\\(admin)\\admin\\login\\LoginForm.tsx",
+      "tests\\e2e-customer-auth-isolation.spec.ts"
+    ],
+    "/api/auth/session": [
+      "app\\(admin)\\admin\\login\\LoginForm.tsx",
+      "app\\test-login\\page.tsx",
+      "app\\__e2e\\login\\page.tsx",
+      "components\\admin\\Sidebar.tsx",
+      "components\\ai\\ChatInterface.tsx",
+      "components\\salesperson\\Sidebar.tsx"
+    ],
+    "/api/bookings": [
+      "components\\quotation\\ConfiguratorView.tsx"
+    ],
+    "/api/build/calculate": [
+      "components\\build\\BuilderClient.tsx",
+      "tests\\e2e-builder-flow.spec.ts",
+      "tests\\phase-3b2.spec.ts",
+      "tests\\release-gates.spec.ts"
+    ],
+    "/api/build/products": [
+      "components\\build\\BuilderClient.tsx",
+      "tests\\phase-3b2.spec.ts",
+      "tests\\release-gates.spec.ts"
+    ],
+    "/api/catalog": [
+      "components\\admin\\catalog\\CatalogManager.tsx",
+      "components\\builder\\ProBuilderClient.tsx"
+    ],
+    "/api/catalog/pricing-rules": [
+      "app\\(admin)\\admin\\pricing\\page.tsx"
+    ],
+    "/api/catalog/products/[productId]": [],
+    "/api/chat": [
+      "components\\ai\\ChatInterface.tsx",
+      "tests\\e2e\\ai-chat.spec.ts"
+    ],
+    "/api/chat/feedback": [
+      "components\\ai\\ChatInterface.tsx",
+      "tests\\e2e\\ai-chat.spec.ts"
+    ],
+    "/api/crm/deals": [
+      "app\\(admin)\\admin\\leads\\[leadId]\\deal\\page.tsx",
+      "tests\\e2e-sales-crm.spec.ts",
+      "tests\\master-e2e.spec.ts",
+      "tests\\phase-7-operations.spec.ts"
+    ],
+    "/api/crm/leads/[id]": [],
+    "/api/crm/quotes": [
+      "app\\(admin)\\admin\\leads\\page.tsx",
+      "app\\(admin)\\admin\\leads\\[leadId]\\page.tsx",
+      "app\\(admin)\\admin\\leads\\[leadId]\\deal\\page.tsx",
+      "components\\admin\\leads\\FollowUpManager.tsx",
+      "components\\admin\\leads\\LeadIntelligencePanel.tsx",
+      "tests\\phase-4-sales.spec.ts"
+    ],
+    "/api/crm/quotes/[quoteId]": [],
+    "/api/crm/quotes/[quoteId]/followup": [],
+    "/api/crm/tasks": [
+      "app\\sales\\page.tsx",
+      "app\\sales\\lead\\[id]\\page.tsx",
+      "tests\\e2e-sales-crm-api.spec.ts"
+    ],
+    "/api/crm/tasks/generate": [
+      "tests\\e2e-crm-followup.spec.ts"
+    ],
+    "/api/crm/tasks/[id]/action": [],
+    "/api/cron/followups": [
+      "tests\\e2e-crm-followup.spec.ts"
+    ],
+    "/api/cron/profitability-snapshot": [],
+    "/api/cron/sla-escalation": [],
+    "/api/customer/leads": [
+      "tests\\e2e-customer-auth-isolation.spec.ts"
+    ],
+    "/api/customer/[customerId]/assets": [],
+    "/api/customer/[customerId]/dashboard": [],
+    "/api/finance/invoices": [
+      "app\\(admin)\\admin\\finance\\page.tsx",
+      "tests\\e2e-revenue-lifecycle.spec.ts",
+      "tests\\phase-10-service-dashboard.spec.ts",
+      "tests\\phase-9-finance.spec.ts"
+    ],
+    "/api/finance/receipts": [
+      "tests\\e2e-revenue-lifecycle.spec.ts",
+      "tests\\phase-9-finance.spec.ts"
+    ],
+    "/api/impressions": [
+      "components\\landing\\PincodeWidget.tsx",
+      "tests\\e2e-expansion-hub.spec.ts"
+    ],
+    "/api/installer/auth/otp/email": [
+      "components\\installer\\InstallerLoginClient.tsx"
+    ],
+    "/api/installer/auth/otp/mobile": [
+      "components\\installer\\InstallerLoginClient.tsx"
+    ],
+    "/api/installer/auth/otp/verify": [
+      "components\\installer\\InstallerLoginClient.tsx"
+    ],
+    "/api/installer/auth/session": [
+      "components\\installer\\InstallerLoginClient.tsx",
+      "components\\installer\\InstallerSidebar.tsx"
+    ],
+    "/api/installer/me": [
+      "components\\installer\\InstallerProfileClient.tsx"
+    ],
+    "/api/installers/apply": [
+      "app\\(customer)\\onboarding\\page.tsx"
+    ],
+    "/api/interest-leads": [
+      "components\\shared\\PhoneCaptureModal.tsx"
+    ],
+    "/api/inventory": [
+      "app\\(admin)\\admin\\inventory\\page.tsx",
+      "app\\(admin)\\admin\\inventory\\purchase\\page.tsx",
+      "tests\\phase-10-serial.spec.ts",
+      "tests\\phase-8-inventory.spec.ts"
+    ],
+    "/api/inventory/exceptions": [
+      "app\\(admin)\\admin\\inventory\\exceptions\\page.tsx"
+    ],
+    "/api/inventory/ledger": [
+      "app\\(admin)\\admin\\inventory\\ledger\\page.tsx",
+      "tests\\phase-8-inventory.spec.ts"
+    ],
+    "/api/inventory/purchase": [
+      "app\\(admin)\\admin\\inventory\\purchase\\page.tsx",
+      "tests\\master-e2e.spec.ts",
+      "tests\\phase-10-serial.spec.ts",
+      "tests\\phase-8-inventory.spec.ts"
+    ],
+    "/api/inventory/purchase/[poId]/receive": [],
+    "/api/inventory/reconcile": [
+      "tests\\master-e2e.spec.ts"
+    ],
+    "/api/inventory/serials": [],
+    "/api/invoice/change-order": [
+      "tests\\e2e-financial-contracts.spec.ts"
+    ],
+    "/api/invoice/generate": [
+      "tests\\e2e-financial-contracts.spec.ts"
+    ],
+    "/api/invoice/[quoteId]/download": [],
+    "/api/invoice/[quoteId]/status": [],
+    "/api/leads/industrial": [
+      "tests\\e2e-b2b-industrial.spec.ts"
+    ],
+    "/api/leads/[id]": [],
+    "/api/leads/[id]/price-match": [],
+    "/api/leads/[id]/price-match/[requestId]": [],
+    "/api/onboarding/partner": [
+      "components\\partner\\PartnerOnboardingClient.tsx"
+    ],
+    "/api/operations/jobs": [
+      "app\\(admin)\\admin\\operations\\page.tsx",
+      "app\\(admin)\\admin\\operations\\jobs\\[jobId]\\page.tsx",
+      "app\\operations\\page.tsx",
+      "app\\operations\\jobs\\[id]\\page.tsx",
+      "tests\\e2e-amc-lifecycle.spec.ts",
+      "tests\\e2e-operations-api.spec.ts",
+      "tests\\e2e-operations-ui.spec.ts",
+      "tests\\e2e-production-readiness.spec.ts",
+      "tests\\e2e-revenue-lifecycle.spec.ts",
+      "tests\\phase-10-serial.spec.ts",
+      "tests\\phase-10-service.spec.ts",
+      "tests\\phase-7-operations-restored.spec.ts",
+      "tests\\phase-7-operations.spec.ts",
+      "tests\\unit-inventory-boundary.spec.ts"
+    ],
+    "/api/operations/jobs/[jobId]": [],
+    "/api/operations/jobs/[jobId]/transition": [],
+    "/api/operations/jobs/[jobId]/warranty": [],
+    "/api/operations/rma": [
+      "tests\\phase-10-serial.spec.ts"
+    ],
+    "/api/operations/tickets": [
+      "tests\\e2e-amc-lifecycle.spec.ts",
+      "tests\\phase-10-service.spec.ts"
+    ],
+    "/api/operations/tickets/[ticketId]": [],
+    "/api/partner/auth/otp/email": [
+      "components\\partner\\PartnerLoginClient.tsx"
+    ],
+    "/api/partner/auth/otp/mobile": [
+      "components\\partner\\PartnerLoginClient.tsx"
+    ],
+    "/api/partner/auth/otp/verify": [
+      "components\\partner\\PartnerLoginClient.tsx"
+    ],
+    "/api/partner/auth/session": [
+      "app\\test-login\\page.tsx",
+      "components\\partner\\PartnerLoginClient.tsx",
+      "components\\partner\\PartnerSidebar.tsx"
+    ],
+    "/api/partner/commissions": [],
+    "/api/partner/leads": [],
+    "/api/partner/me": [
+      "components\\partner\\PartnerProfileClient.tsx"
+    ],
+    "/api/payment/razorpay": [
+      "app\\(customer)\\quote\\[leadId]\\review\\[quoteId]\\QuoteReviewClient.tsx",
+      "tests\\e2e-commercial-hardening.spec.ts"
+    ],
+    "/api/pincode/[pin]": [],
+    "/api/products": [
+      "components\\salesperson\\ManualQuoteBuilderClient.tsx"
+    ],
+    "/api/quote/generate": [
+      "components\\wizard\\WizardClientV2.tsx",
+      "tests\\e2e-b2b-industrial.spec.ts",
+      "tests\\e2e-commercial-hardening.spec.ts",
+      "tests\\e2e-quote-flow.spec.ts",
+      "tests\\e2e-quote-security.spec.ts",
+      "tests\\phase-3b2.spec.ts",
+      "tests\\release-gates.spec.ts"
+    ],
+    "/api/quote/save": [
+      "components\\build\\BuilderClient.tsx",
+      "components\\builder\\ProBuilderClient.tsx",
+      "components\\wizard\\WizardClientV2.tsx",
+      "tests\\e2e-commercial-hardening.spec.ts",
+      "tests\\e2e-pricing-lifecycle.spec.ts",
+      "tests\\e2e-quote-flow.spec.ts",
+      "tests\\e2e-sales-crm.spec.ts",
+      "tests\\phase-3b2.spec.ts",
+      "tests\\release-gates.spec.ts"
+    ],
+    "/api/quote/[quoteId]/download": [],
+    "/api/quote/[quoteId]/pdf": [],
+    "/api/quote/[quoteId]/whatsapp": [],
+    "/api/quotes": [
+      "components\\quotation\\ConfiguratorView.tsx"
+    ],
+    "/api/quotes/manual": [
+      "components\\salesperson\\ManualQuoteBuilderClient.tsx",
+      "tests\\phase-4-sales.spec.ts"
+    ],
+    "/api/send-otp": [
+      "components\\shared\\PhoneCaptureModal.tsx",
+      "tests\\e2e-partner-auth.spec.ts",
+      "tests\\e2e-rate-limiting.spec.ts"
+    ],
+    "/api/settings": [],
+    "/api/submissions": [
+      "components\\salesperson\\ManualQuoteBuilderClient.tsx",
+      "tests\\e2e-sales-crm.spec.ts"
+    ],
+    "/api/submissions/industrial": [
+      "components\\wizard\\LeadGate.tsx"
+    ],
+    "/api/submissions/[id]": [],
+    "/api/submissions/[id]/price-match": [],
+    "/api/submissions/[id]/price-match/[requestId]": [],
+    "/api/test-login": [
+      "app\\test-login\\page.tsx"
+    ],
+    "/api/v1/leads/[leadId]/quotes/[quoteId]/pdf": [],
+    "/api/v1/leads/[leadId]/waitlist-confirm": [],
+    "/api/verify-otp": [
+      "tests\\e2e-partner-auth.spec.ts"
+    ],
+    "/api/webhooks/payment": [
+      "tests\\e2e-financial-contracts.spec.ts",
+      "tests\\e2e-production-readiness.spec.ts"
+    ],
+    "/api/webhooks/razorpay": [
+      "tests\\e2e-commercial-hardening.spec.ts"
+    ],
+    "/api/wizard": []
+  },
+  "collections": [
+    "admins",
+    "demand_impressions",
+    "coverage_zones",
+    "pricing_audit_logs",
+    "otp_verifications",
+    "settings",
+    "staged_products",
+    "industrial_leads",
+    "catalog",
+    "recommendation_rules",
+    "inventory",
+    "quote_sessions",
+    "change_orders",
+    "followup_tasks",
+    "franchise_dealers",
+    "product_groups",
+    "installer_applications",
+    "installers",
+    "followup_campaigns",
+    "service_tickets",
+    "warranty_certificates",
+    "customers",
+    "receipts",
+    "hubs",
+    "salespersons",
+    "products",
+    "inventory_exceptions",
+    "ai_brain",
+    "profitability_snapshots",
+    "purchase_orders",
+    "rma_tickets",
+    "temp_otps",
+    "otps",
+    "payment_transactions",
+    "payout_requests",
+    "quote_events",
+    "feature_tags",
+    "city_impressions",
+    "leads",
+    "amc_plans",
+    "amc_contracts",
+    "wizard_steps",
+    "site_visit_bookings",
+    "data_migration_review",
+    "vendor_categories",
+    "comparison_card_layouts",
+    "price_change_log",
+    "service_areas",
+    "ledger_transactions",
+    "inventory_ledger",
+    "specification_knowledge",
+    "app_config",
+    "addon_rules",
+    "transactions",
+    "jobs",
+    "quoteDeliveries",
+    "deals",
+    "analytics_rejections",
+    "customer_warranty_items",
+    "serial_assets",
+    "audit_logs",
+    "vendors",
+    "geo_pricing_rules",
+    "commission_records",
+    "rate_limits",
+    "addons",
+    "quotes",
+    "stock_ledger",
+    "invoices",
+    "salespeople",
+    "interest_leads",
+    "promoters"
+  ]
+}

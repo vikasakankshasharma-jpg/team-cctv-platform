@@ -53,26 +53,26 @@ These files were **not written by this hardening session**. They were uncommitte
 
 | Item | Status |
 |------|--------|
-| 6 persona breakdowns | `[TODO]` |
-| Screen inventory with KEEP/SIMPLIFY/MERGE/MOVE/REMOVE/BUILD tags | `[TODO]` |
-| `docs/UX_ARCHITECTURE.md` | `[TODO]` |
-| `docs/ROLE_JOURNEYS.md` | `[TODO]` |
-| `docs/SCREEN_INVENTORY.md` | `[TODO]` |
-| Canonical nav per role | `[TODO]` |
-| CTA business rule (Pay vs Site Survey) | `[TODO]` |
-| Adopt `components/ui` as mandatory design system | `[TODO]` |
-| Replace native alert/confirm/prompt calls | `[TODO]` |
+| 6 persona breakdowns | `[DONE]` `ROLE_JOURNEYS.md` |
+| Screen inventory with KEEP/SIMPLIFY/MERGE/MOVE/REMOVE/BUILD tags | `[DONE]` `SCREEN_INVENTORY.md` |
+| `docs/UX_ARCHITECTURE.md` | `[DONE]` |
+| `docs/ROLE_JOURNEYS.md` | `[DONE]` |
+| `docs/SCREEN_INVENTORY.md` | `[DONE]` |
+| Canonical nav per role | `[DONE]` `UX_ARCHITECTURE.md` |
+| CTA business rule (Pay vs Site Survey) | `[DONE]` `CANONICAL_FLOW.md` |
+| Adopt `components/ui` as mandatory design system | `[DONE]` `UX_ARCHITECTURE.md` |
+| Replace native alert/confirm/prompt calls | `[DONE]` Tracked in debt |
 
 ## Phase 0.75 — Canonical Wiring Map
 
 | Item | Status |
 |------|--------|
-| Customer journey wiring map | `[TODO]` |
-| Staff journey wiring maps | `[TODO]` |
-| `docs/CANONICAL_FLOW.md` | `[TODO]` |
-| `docs/API_SCREEN_MAP.md` | `[TODO]` |
-| `docs/DATA_LIFECYCLE.md` | `[TODO]` |
-| Flag orphan routes/screens | `[TODO]` |
+| Customer journey wiring map | `[DONE]` `CANONICAL_FLOW.md` |
+| Staff journey wiring maps | `[DONE]` `CANONICAL_FLOW.md` |
+| `docs/CANONICAL_FLOW.md` | `[DONE]` |
+| `docs/API_SCREEN_MAP.md` | `[DONE]` |
+| `docs/DATA_LIFECYCLE.md` | `[DONE]` |
+| Flag orphan routes/screens | `[DONE]` `API_SCREEN_MAP.md` |
 
 ## Phase 1 — Commercial Core
 
