@@ -8,6 +8,16 @@ export interface MarginPolicyConfig {
   labor_margin: number;
   gst_rate: number;
   rounding_mode: 'nearest_10' | 'nearest_1' | 'none';
+  margin_hdd?: number;
+  margin_hdd_budget?: number;
+  margin_cctv_camera?: number;
+  margin_cctv_camera_budget?: number;
+  margin_recorder?: number;
+  margin_junction_box?: number;
+  margin_connectors?: number;
+  margin_hdmi_cable?: number;
+  margin_rack?: number;
+  margin_power_supply?: number;
   [key: string]: any;
 }
 
@@ -18,7 +28,18 @@ export const DEFAULT_MARGIN_POLICY: MarginPolicyConfig = {
   cable_wastage_factor: 1.10, // +10%
   labor_margin: 0.20,
   gst_rate: 0.18,
-  rounding_mode: 'nearest_10'
+  rounding_mode: 'nearest_10',
+  // Dynamic component margin defaults (%)
+  margin_hdd: 5,
+  margin_hdd_budget: 10,
+  margin_cctv_camera: 15,
+  margin_cctv_camera_budget: 30,
+  margin_recorder: 15,
+  margin_junction_box: 50,
+  margin_connectors: 50,
+  margin_hdmi_cable: 20,
+  margin_rack: 30,
+  margin_power_supply: 25,
 };
 
 export type ProductMarginCategory = 'anchor' | 'accessory' | 'cable';
@@ -41,12 +62,21 @@ export interface PricingCalculationResult {
 }
 
 /**
+ * Safely converts percentage representation (e.g. 15 or 0.15) to decimal (0.15)
+ */
+function toDecimalMargin(val: number | undefined | null, fallbackDecimal: number): number {
+  if (val === undefined || val === null || isNaN(val)) return fallbackDecimal;
+  return val > 1 ? val / 100 : val;
+}
+
+/**
  * The Canonical Pricing Calculator
  * Provides a single source of truth for both Quotation Engine and Profitability Engine.
  */
 export const MarginEngine = {
   /**
    * Calculates unit economics for a given product under a specific plan tier.
+   * All margins are loaded dynamically from the Admin Panel policy.
    */
   calculateUnitPricing(
     baseCost: number, 
@@ -74,41 +104,50 @@ export const MarginEngine = {
       workingCost = baseCost * policy.cable_wastage_factor;
     }
 
-    // Apply specific product overrides
+    // Apply specific product overrides dynamically from policy configured in Admin Panel
     const vCat = (vendorCategory || '').toLowerCase();
     const pBrand = (productBrand || '').toLowerCase();
+    const isBudgetTierOrBrand = tier === 'budget' || pBrand.includes('budget');
 
-    // HDD: 5%, Budget HDD: 10%
+    // HDD: configured in Admin Panel (default 5% standard, 10% budget)
     if (vCat.includes('storage') || vCat.includes('hard disk') || vCat === 'hdd') {
-      if (pBrand.includes('budget')) {
-        markup = 0.10;
+      if (isBudgetTierOrBrand) {
+        markup = toDecimalMargin(policy.margin_hdd_budget, 0.10);
       } else {
-        markup = 0.05;
+        markup = toDecimalMargin(policy.margin_hdd, 0.05);
       }
     }
-    // CCTV Camera & Recorders: 15%, Budget CCTV: 30%
-    else if (vCat.includes('camera') || vCat.includes('recorder') || vCat.includes('dvr') || vCat.includes('nvr')) {
-      if (pBrand.includes('budget')) {
-        markup = 0.30;
+    // CCTV Camera: configured in Admin Panel (default 15% standard, 30% budget)
+    else if (vCat.includes('camera') || vCat === 'cctv_camera') {
+      if (isBudgetTierOrBrand) {
+        markup = toDecimalMargin(policy.margin_cctv_camera_budget, 0.30);
       } else {
-        markup = 0.15;
+        markup = toDecimalMargin(policy.margin_cctv_camera, 0.15);
       }
     }
-    // Junction PVC Box: 50%
+    // Recorders (DVR / NVR): configured in Admin Panel (default 15%)
+    else if (vCat.includes('recorder') || vCat.includes('dvr') || vCat.includes('nvr')) {
+      markup = toDecimalMargin(policy.margin_recorder, 0.15);
+    }
+    // Junction PVC Box: configured in Admin Panel (default 50%)
     else if (vCat.includes('junction') || vCat.includes('pvc') || vCat.includes('box')) {
-      markup = 0.50;
+      markup = toDecimalMargin(policy.margin_junction_box, 0.50);
     }
-    // Connectors: 50%
+    // Connectors (BNC / DC / RJ45): configured in Admin Panel (default 50%)
     else if (vCat.includes('connector') || vCat.includes('bnc') || vCat.includes('dc')) {
-      markup = 0.50;
+      markup = toDecimalMargin(policy.margin_connectors, 0.50);
     }
-    // HDMI Cable: 20%
+    // HDMI Cable: configured in Admin Panel (default 20%)
     else if (vCat.includes('hdmi')) {
-      markup = 0.20;
+      markup = toDecimalMargin(policy.margin_hdmi_cable, 0.20);
     }
-    // Rack: 30%
+    // Rack: configured in Admin Panel (default 30%)
     else if (vCat.includes('rack')) {
-      markup = 0.30;
+      markup = toDecimalMargin(policy.margin_rack, 0.30);
+    }
+    // Power Supply: configured in Admin Panel (default 25%)
+    else if (vCat.includes('power') || vCat.includes('smps') || vCat.includes('poe')) {
+      markup = toDecimalMargin(policy.margin_power_supply, 0.25);
     }
 
     const marginAmount = workingCost * markup;

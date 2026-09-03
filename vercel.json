@@ -1,6 +1,18 @@
 {
   "crons": [
     {
+      "path": "/api/cron/followups",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/sla-escalation",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/profitability-snapshot",
+      "schedule": "0 2 * * *"
+    },
+    {
       "path": "/api/ai/night-school",
       "schedule": "0 0 * * *"
     }

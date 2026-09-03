@@ -46,6 +46,17 @@ export default async function CatalogManagerPage() {
     amc_2yr_pct: 8,
     amc_3yr_pct: 10,
     quote_validity_days: 8,
+    // Hardware Component Margins (%)
+    margin_hdd: 5,
+    margin_hdd_budget: 10,
+    margin_cctv_camera: 15,
+    margin_cctv_camera_budget: 30,
+    margin_recorder: 15,
+    margin_junction_box: 50,
+    margin_connectors: 50,
+    margin_hdmi_cable: 20,
+    margin_rack: 30,
+    margin_power_supply: 25,
     updated_at: null,
     updated_by: null,
   };

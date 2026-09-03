@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI, Content } from "@google/genai";
 import { getAISecurityContext } from "@/lib/ai/security";
 import { searchBrain, saveToBrain } from "@/lib/ai/vector-db";
-import { cashfreeToolDefinition, executeCashfreePayoutStatus } from "@/lib/ai/tools/cashfree";
 import { wizardToolDefinition, executeQuotationWizardStatus, updateQuotationWizardToolDefinition, executeUpdateQuotationWizard } from "@/lib/ai/tools/wizard";
 
 // Initialize Gemini SDK
@@ -90,7 +89,7 @@ Do not leak internal database structures or admin secrets unless the role is ADM
 
     let availableTools: any[] = [];
     if (securityContext.role === "ADMIN" || securityContext.role === "USER") {
-      availableTools = [cashfreeToolDefinition as any, wizardToolDefinition as any, updateQuotationWizardToolDefinition as any];
+      availableTools = [wizardToolDefinition as any, updateQuotationWizardToolDefinition as any];
     }
 
     let chatResponse = await ai.models.generateContent({
@@ -108,10 +107,7 @@ Do not leak internal database structures or admin secrets unless the role is ADM
       const call = chatResponse.functionCalls[0];
       let functionResponse: any = {};
 
-      if (call.name === "getCashfreePayoutStatus") {
-        const transferId = (call.args as any).transferId;
-        functionResponse = await executeCashfreePayoutStatus(transferId, securityContext.role);
-      } else if (call.name === "getQuotationWizardStatus") {
+      if (call.name === "getQuotationWizardStatus") {
         const userId = (call.args as any).userId;
         functionResponse = await executeQuotationWizardStatus(userId, securityContext.role);
       } else if (call.name === "updateQuotationWizard") {

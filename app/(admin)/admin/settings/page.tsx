@@ -51,6 +51,17 @@ export default async function SettingsAdminPage() {
     amc_2yr_pct: 8,
     amc_3yr_pct: 10,
     quote_validity_days: 8,
+    // Hardware Component Margins (%)
+    margin_hdd: 5,
+    margin_hdd_budget: 10,
+    margin_cctv_camera: 15,
+    margin_cctv_camera_budget: 30,
+    margin_recorder: 15,
+    margin_junction_box: 50,
+    margin_connectors: 50,
+    margin_hdmi_cable: 20,
+    margin_rack: 30,
+    margin_power_supply: 25,
 
     // NEW: Pincode and Cabling Config
     affordable_pincodes: ["302001", "302002", "302003", "302004", "302005", "302006", "302015", "302016"],

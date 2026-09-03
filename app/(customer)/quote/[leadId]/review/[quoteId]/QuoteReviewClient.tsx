@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { load } from "@cashfreepayments/cashfree-js";
-import type { Cashfree } from "@cashfreepayments/cashfree-js";
 import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -116,7 +114,6 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const [isPayingEMI, setIsPayingEMI] = useState(false);
   const [isPayingFull, setIsPayingFull] = useState(false);
   const [isPayingAdvance, setIsPayingAdvance] = useState(false);
-  const [cashfree, setCashfree] = useState<Cashfree | null>(null);
 
   const subtotal = quote.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
   const total = subtotal + (subtotal * quote.gstPercent / 100);
@@ -124,45 +121,88 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const advance = Math.round(total * (quote.advancePercent / 100));
   const daysLeft = daysUntil(quote.validUntil);
 
-  useEffect(() => {
-    const initCashfree = async () => {
-      try {
-        const cf = await load({ mode: "sandbox" }); 
-        setCashfree(cf);
-      } catch (err) {
-        console.error("Failed to load Cashfree SDK", err);
+  const loadRazorpayScript = () => {
+    return new Promise<boolean>((resolve) => {
+      if (typeof window !== "undefined" && (window as any).Razorpay) {
+        resolve(true);
+        return;
       }
-    };
-    initCashfree();
-  }, []);
+      const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (existing) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
   const handlePayment = async (type: "advance" | "full", method: "all" | "emi") => {
-    if (!cashfree) {
-      toast.error("Payment system not ready. Please refresh.");
-      return;
-    }
-
     if (method === "emi") setIsPayingEMI(true);
     else if (type === "full") setIsPayingFull(true);
     else setIsPayingAdvance(true);
 
     try {
-      const res = await fetch(`/api/quotes/${quote.id}/accept`, {
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        toast.error("Payment SDK failed to load. Please check your internet connection.");
+        return;
+      }
+
+      const res = await fetch("/api/payment/razorpay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadId: quote.leadId, paymentType: type, paymentMethod: method }),
+        body: JSON.stringify({
+          quoteId: quote.id,
+          paymentType: type,
+          notes: {
+            customer_name: quote.customer.name,
+            customer_phone: quote.customer.phone,
+            payment_type: type,
+            payment_method: method
+          }
+        }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to initiate payment");
 
-      const checkoutOptions = {
-        paymentSessionId: data.payment_session_id,
-        redirectTarget: "_self" as const,
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to initiate payment");
+      }
+
+      const options = {
+        key: data.key_id,
+        amount: data.order.amount,
+        currency: data.order.currency || "INR",
+        name: "TEAM CCTV",
+        description: `Security System Installation (${type === "advance" ? "Advance Booking" : "Full Payment"})`,
+        order_id: data.order.id,
+        prefill: {
+          name: quote.customer.name,
+          contact: quote.customer.phone,
+          email: quote.customer.email || "",
+        },
+        theme: {
+          color: "#0F172A",
+        },
+        handler: async function (response: any) {
+          toast.success("Payment confirmed! Scheduling installation...");
+          setAccepted(true);
+          window.location.href = `/payment-success?quoteId=${quote.id}&paymentId=${response.razorpay_payment_id}`;
+        },
+        modal: {
+          ondismiss: function () {
+            toast.info("Payment window closed.");
+          },
+        },
       };
 
-      await cashfree.checkout(checkoutOptions);
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Payment initiation failed");
       console.error(err);
     } finally {
       setIsPayingEMI(false);
@@ -391,10 +431,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                    
                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                      <div className="max-w-md">
-                       <div className="flex items-center gap-2 mb-3">
-                         <span className="bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Easy EMI</span>
-                         <span className="text-xs text-zinc-400 font-medium">Powered by Cashfree Payments</span>
-                       </div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Easy EMI</span>
+                          <span className="text-xs text-zinc-400 font-medium">Credit & Debit Card EMI</span>
+                        </div>
                        <h4 className="text-lg font-semibold text-white mb-2">Split into manageable instalments</h4>
                        <p className="text-sm text-zinc-400">No-cost EMI available on major credit cards. Zero foreclosure charges. Instant digital approval.</p>
                      </div>

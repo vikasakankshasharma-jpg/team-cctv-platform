@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CCTVRequirement } from "@/types";
 import { QuoteComparison } from "@/components/QuoteComparison";
 import { CameraCustomizer } from "@/components/CameraCustomizer";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 const formatPrice = (p: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(p || 0);
 
 export function WizardClientV2() {
+  const router = useRouter();
   const [sessionId] = useState(() => crypto.randomUUID());
   const [step, setStep] = useState(0);
     
@@ -137,13 +139,18 @@ export function WizardClientV2() {
         return;
       }
 
+      if (!savedQuoteId) {
+        alert("Please save your quote first before proceeding to payment.");
+        setLoading(false);
+        return;
+      }
+
       // Create Order
       const orderRes = await fetch("/api/payment/razorpay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: finalPlan.total_payable,
-          receipt: savedQuoteId,
+          quoteId: savedQuoteId,
           notes: {
             customer_name: req.customer_name,
             customer_mobile: req.customer_mobile,
@@ -245,14 +252,12 @@ export function WizardClientV2() {
           })
         }).catch(console.error);
 
-        // Automatically generate PDF
-        const pdfRes = await fetch(`/api/quote/${data.quoteId}/pdf`);
-        const pdfData = await pdfRes.json();
-        if (pdfData.success) {
-          setPdfUrl(pdfData.url);
-        }
+        // Redirect to unified rich quotation and comparison experience
+        const targetId = data.leadId || data.quoteId;
+        router.push(`/quote/${targetId}`);
+        return;
       } else {
-        alert("Failed to save quote.");
+        alert(data.message || "Failed to save quote.");
       }
     } catch (e) {
       console.error(e);
