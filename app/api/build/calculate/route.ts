@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Product } from "@/types";
-import { generatePricingSnapshot } from "@/lib/pricing-engine-v2";
+import { generatePricingSnapshot } from "@/lib/pricing-engine";
 
 export async function POST(request: Request) {
   try {

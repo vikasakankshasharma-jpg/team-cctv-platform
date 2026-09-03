@@ -168,7 +168,7 @@ export default function CatalogManagerClient({ initialSettings }: CatalogManager
               activeTab === "services" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Labor & Wire Pricing
+            Labor, Wire & Margins
           </button>
         </div>
       </header>

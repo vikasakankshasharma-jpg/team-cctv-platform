@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CCTVRequirement } from "@/types";
 import { QuoteComparison } from "@/components/QuoteComparison";
 import { CameraCustomizer } from "@/components/CameraCustomizer";
 import { EditConfigurationDrawer } from "@/components/EditConfigurationDrawer";
 import { Button } from "@/components/ui/button";
 
-const formatPrice = (p: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(p || 0);
+
 
 export function WizardClientV2() {
+  const router = useRouter();
   const [sessionId] = useState(() => crypto.randomUUID());
   const [step, setStep] = useState(0);
     
@@ -99,95 +101,7 @@ export function WizardClientV2() {
     generateQuote(req as CCTVRequirement);
   };
 
-  const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
-  const [finalPlan, setFinalPlan] = useState<any>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-  
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if ((window as any).Razorpay) {
-        resolve(true);
-        return;
-      }
-      
-      const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
-      if (existingScript) {
-        existingScript.remove();
-      }
-      
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
-
-  const handlePayment = async () => {
-    if (!finalPlan) return;
-    setLoading(true);
-    
-    try {
-      const res = await loadRazorpayScript();
-      if (!res) {
-        alert("Razorpay SDK failed to load. Are you online?");
-        setLoading(false);
-        return;
-      }
-
-      // Create Order
-      const orderRes = await fetch("/api/payment/razorpay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: finalPlan.total_payable,
-          receipt: savedQuoteId,
-          notes: {
-            customer_name: req.customer_name,
-            customer_mobile: req.customer_mobile,
-            installation_type: req.installation_type
-          }
-        })
-      });
-      const orderData = await orderRes.json();
-      
-      if (!orderData.success) {
-        alert("Error initiating payment");
-        setLoading(false);
-        return;
-      }
-
-      // Open Razorpay Checkout Modal
-      const options = {
-        key: orderData.key_id,
-        amount: orderData.order.amount,
-        currency: orderData.order.currency,
-        name: "CCTVQuotation by TEAM",
-        description: "CCTV System & Installation",
-        image: "/logo-horizontal.jpg",
-        order_id: orderData.order.id,
-        handler: function (response: any) {
-          window.location.href = `/payment-success?quoteId=${savedQuoteId}&paymentId=${response.razorpay_payment_id}`;
-        },
-        prefill: {
-          name: req.customer_name || "",
-          contact: req.customer_mobile || "",
-        },
-        theme: {
-          color: "#2563EB"
-        }
-      };
-
-      const paymentObject = new (window as any).Razorpay(options);
-      paymentObject.open();
-    } catch (e) {
-      console.error(e);
-      alert("Payment Error");
-    }
-    setLoading(false);
-  };
 
   const handleUpdateQuote = (newReq: CCTVRequirement) => {
     setReq(newReq);
@@ -216,7 +130,6 @@ export function WizardClientV2() {
     setLoading(true);
     try {
       const pricingToSave = modifiedPricingSnapshot || quoteResult.plans[planType];
-        setFinalPlan(pricingToSave);
       const res = await fetch("/api/quote/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -228,12 +141,9 @@ export function WizardClientV2() {
           pricingSnapshot: pricingToSave,
           selectedPlan: planType
         })
-
       });
       const data = await res.json();
       if (data.success) {
-        setSavedQuoteId(data.quoteId);
-        
         fetch("/api/analytics/track", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -245,14 +155,12 @@ export function WizardClientV2() {
           })
         }).catch(console.error);
 
-        // Automatically generate PDF
-        const pdfRes = await fetch(`/api/quote/${data.quoteId}/pdf`);
-        const pdfData = await pdfRes.json();
-        if (pdfData.success) {
-          setPdfUrl(pdfData.url);
-        }
+        // Redirect to unified rich quotation and comparison experience
+        const targetId = data.leadId || data.quoteId;
+        router.push(`/quote/${targetId}`);
+        return;
       } else {
-        alert("Failed to save quote.");
+        alert(data.message || "Failed to save quote.");
       }
     } catch (e) {
       console.error(e);
@@ -260,101 +168,11 @@ export function WizardClientV2() {
     setLoading(false);
   };
 
-  const handleSendWhatsApp = () => {
-    if (!savedQuoteId) return;
-    const salesNumber = "919772699395";
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://cctvquotation.com';
-    const pdfLink = `${baseUrl}/api/quote/${savedQuoteId}/download`;
-    const message = `Hi team! ??\n\nI just generated a CCTV Quotation on your website.\n*Quote ID:* ${savedQuoteId}\n\nHere is my PDF link:\n${pdfLink}\n\nPlease review it and let me know the next steps.`;
-    const whatsappUrl = `https://wa.me/${salesNumber}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
 
-  if (savedQuoteId) {
-      return (
-        <div className="max-w-5xl mx-auto py-12 px-4 sm:px-6">
-          <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
-             <div className="bg-blue-600 p-8 text-center text-white">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                </div>
-                <h2 className="text-3xl font-black mb-2 tracking-tight">Your Quotation is Ready!</h2>
-                <p className="text-blue-100 font-medium">Quote Reference ID: {savedQuoteId}</p>
-             </div>
 
-             <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <div className="space-y-8">
-                   {finalPlan && (
-                   <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border-2 border-indigo-100 rounded-2xl p-6 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">
-                         🔥 Market First
-                      </div>
-                      <h3 className="text-xl font-black text-indigo-900 mb-2 mt-2">CCTV Installation on EMI!</h3>
-                      <p className="text-sm text-indigo-700/80 mb-4 font-medium leading-relaxed">
-                         We are the only platform offering complete CCTV hardware + installation packages on flexible EMI plans. Secure your home now, pay later!
-                      </p>
-                      <div className="flex items-center gap-4 mb-4">
-                         <div className="bg-white px-4 py-3 rounded-xl border border-indigo-100 shadow-sm flex-1 text-center">
-                            <span className="block text-xs text-indigo-500 font-bold mb-1 uppercase tracking-wider">Starting At Just</span>
-                            <span className="block text-2xl font-black text-indigo-600">{formatPrice(finalPlan.total_payable / 12)}<span className="text-sm text-indigo-400 font-bold">/mo</span></span>
-                         </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                         {['UPI / QR', 'Credit Cards', 'Debit Cards', 'Wallets', 'Pay Later'].map(pm => (
-                            <span key={pm} className="text-[10px] bg-white border border-indigo-100 px-2 py-1 rounded text-indigo-600 font-bold">{pm}</span>
-                         ))}
-                      </div>
-                   </div>
-                   )}
 
-                   <div className="space-y-4">
-                      <button onClick={handlePayment} disabled={loading} className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white py-4 rounded-xl font-black transition-all shadow-lg shadow-zinc-900/20 active:scale-95">
-                         💳 Pay Now & Schedule Installation
-                      </button>
-                      <button className="w-full flex items-center justify-center gap-2 bg-white border-2 border-zinc-200 hover:border-zinc-300 text-zinc-900 py-4 rounded-xl font-black transition-all active:scale-95">
-                         📅 Book Free Site Survey
-                      </button>
-                      
-                      <div className="pt-4 flex items-center justify-center gap-3">
-                         <button onClick={handleSendWhatsApp} disabled={loading} className="flex-1 flex items-center justify-center gap-2 bg-green-50 text-green-700 hover:bg-green-100 py-3 rounded-lg font-bold transition-all text-sm">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
-                            WhatsApp
-                         </button>
-                         <button onClick={() => { setSavedQuoteId(null); setFinalPlan(null); setCustomizerPlanId(null); setStep(1); }} className="flex-1 flex items-center justify-center gap-2 bg-gray-50 text-gray-700 hover:bg-gray-100 py-3 rounded-lg font-bold transition-all text-sm border">
-                            Modify Setup
-                         </button>
-                      </div>
-                   </div>
-                </div>
 
-                <div className="bg-gray-50 rounded-2xl border-2 border-gray-100 p-2 h-[600px] flex flex-col relative">
-                   <div className="flex justify-between items-center p-3 border-b border-gray-200 mb-2">
-                      <span className="font-bold text-gray-700 text-sm flex items-center gap-2">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                        Official Quotation PDF
-                      </span>
-                      {pdfUrl && (
-                        <a href={pdfUrl} target="_blank" rel="noreferrer" className="text-xs bg-white border px-3 py-1.5 rounded-lg font-bold text-blue-600 hover:bg-blue-50 transition-colors shadow-sm">
-                           Open Fullscreen
-                        </a>
-                      )}
-                   </div>
-                   
-                   {pdfUrl ? (
-                      <iframe src={`${pdfUrl}#toolbar=0`} className="w-full h-full rounded-xl bg-white border" title="PDF Preview" />
-                   ) : (
-                      <div className="flex-1 flex flex-col items-center justify-center text-gray-400 animate-pulse bg-white rounded-xl border border-dashed">
-                         <svg className="w-12 h-12 mb-4 opacity-20" fill="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                         <span className="font-medium">Generating official document...</span>
-                      </div>
-                   )}
-                </div>
-             </div>
-          </div>
-        </div>
-      );
-    }
-  
+
 
     if (customizerPlanId && quoteResult) {
     return (

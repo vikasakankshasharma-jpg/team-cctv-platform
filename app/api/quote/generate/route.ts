@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { CCTVRequirement, AppSettings, Product, Addon } from "@/types";
 import { generateConfiguration } from "@/lib/configuration-engine";
 import { resolveProducts } from "@/lib/product-resolver";
-import { generatePricingSnapshot } from "@/lib/pricing-engine-v2";
+import { generatePricingSnapshot } from "@/lib/pricing-engine";
 
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
@@ -43,6 +43,16 @@ async function getAdminSettings(): Promise<AppSettings> {
     amc_2yr_pct: 25,
     amc_3yr_pct: 35,
     quote_validity_days: 7,
+    margin_hdd: 5,
+    margin_hdd_budget: 10,
+    margin_cctv_camera: 15,
+    margin_cctv_camera_budget: 30,
+    margin_recorder: 15,
+    margin_junction_box: 50,
+    margin_connectors: 50,
+    margin_hdmi_cable: 20,
+    margin_rack: 30,
+    margin_power_supply: 25,
   } as AppSettings;
 }
 

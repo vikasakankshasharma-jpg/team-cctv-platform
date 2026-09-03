@@ -9,13 +9,41 @@ interface Props {
 }
 
 export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
-  const [invoiceReady, setInvoiceReady] = useState(false);
+  const [invoiceState, setInvoiceState] = useState<"polling" | "ready" | "timed_out">("polling");
 
   useEffect(() => {
-    // Give webhook a moment to process
-    const timer = setTimeout(() => setInvoiceReady(true), 3000);
-    return () => clearTimeout(timer);
-  }, []);
+    let isMounted = true;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    const checkInvoiceStatus = async () => {
+      try {
+        const res = await fetch(`/api/invoice/${quoteId}/status`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.ready && isMounted) {
+            setInvoiceState("ready");
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check invoice status:", err);
+      }
+
+      attempts++;
+      if (attempts < maxAttempts && isMounted) {
+        setTimeout(checkInvoiceStatus, 2000);
+      } else if (isMounted) {
+        setInvoiceState("timed_out");
+      }
+    };
+
+    checkInvoiceStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [quoteId]);
 
   const invoiceUrl = `/api/invoice/${quoteId}/download`;
   const whatsappUrl = `https://wa.me/919772699395?text=${encodeURIComponent(`Hi! I just made a payment for my CCTV installation. Quote ID: ${quoteId}, Payment ID: ${paymentId}. Please schedule my installation.`)}`;
@@ -78,14 +106,19 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
           </div>
 
           <div className="space-y-4">
-            {invoiceReady ? (
+            {invoiceState === "ready" ? (
               <a href={invoiceUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-white py-4 rounded-xl font-black transition-all shadow-lg active:scale-95">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 Download Tax Invoice (PDF)
               </a>
-            ) : (
+            ) : invoiceState === "polling" ? (
               <div className="flex items-center justify-center gap-2 w-full bg-gray-200 text-gray-500 py-4 rounded-xl font-bold animate-pulse">
                 Generating Invoice...
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2 w-full bg-amber-50 border border-amber-200 text-amber-800 py-4 rounded-xl font-semibold text-sm">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Your invoice is still being processed. We&apos;ll send it to you on WhatsApp shortly.
               </div>
             )}
             <a href={whatsappUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 w-full bg-green-50 border-2 border-green-200 hover:border-green-300 text-green-800 py-4 rounded-xl font-black transition-all active:scale-95">

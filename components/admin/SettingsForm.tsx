@@ -14,6 +14,16 @@ interface SettingsFormProps {
 export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [formData, setFormData] = useState<AppSettings>({
     ...initialSettings,
+    margin_hdd: initialSettings.margin_hdd ?? 5,
+    margin_hdd_budget: initialSettings.margin_hdd_budget ?? 10,
+    margin_cctv_camera: initialSettings.margin_cctv_camera ?? 15,
+    margin_cctv_camera_budget: initialSettings.margin_cctv_camera_budget ?? 30,
+    margin_recorder: initialSettings.margin_recorder ?? 15,
+    margin_junction_box: initialSettings.margin_junction_box ?? 50,
+    margin_connectors: initialSettings.margin_connectors ?? 50,
+    margin_hdmi_cable: initialSettings.margin_hdmi_cable ?? 20,
+    margin_rack: initialSettings.margin_rack ?? 30,
+    margin_power_supply: initialSettings.margin_power_supply ?? 25,
     default_sla_operating_hours: initialSettings.default_sla_operating_hours || {
       start_time: "10:00",
       end_time: "18:00",
@@ -264,6 +274,216 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">/ Cam</span>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section: Component Margins & Hardware Markups (%) */}
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                <BadgePercent className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-foreground tracking-tight">Hardware & Component Margins (%)</h2>
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Editable Quotation Engine Markups per Hardware Category & Brand</p>
+              </div>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Live Margin Engine
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* HDD Standard */}
+            <div className="space-y-2 p-4 rounded-xl bg-secondary/30 border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">Hard Disk Drive (HDD)</label>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground bg-secondary px-2 py-0.5 rounded">Standard</span>
+              </div>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  step="0.5"
+                  name="margin_hdd"
+                  value={formData.margin_hdd ?? 5}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Standard surveillance drives (WD Purple, Seagate SkyHawk)</p>
+            </div>
+
+            {/* HDD Budget */}
+            <div className="space-y-2 p-4 rounded-xl bg-secondary/30 border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">Budget Brand HDD</label>
+                <span className="text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">Budget</span>
+              </div>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  step="0.5"
+                  name="margin_hdd_budget"
+                  value={formData.margin_hdd_budget ?? 10}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Entry-level / budget drives (Consistent, Zebronics, etc.)</p>
+            </div>
+
+            {/* CCTV Camera Standard */}
+            <div className="space-y-2 p-4 rounded-xl bg-secondary/30 border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">CCTV Cameras</label>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground bg-secondary px-2 py-0.5 rounded">Standard</span>
+              </div>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  step="0.5"
+                  name="margin_cctv_camera"
+                  value={formData.margin_cctv_camera ?? 15}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Mainstream camera brands (CP Plus, Hikvision, Dahua)</p>
+            </div>
+
+            {/* CCTV Camera Budget */}
+            <div className="space-y-2 p-4 rounded-xl bg-secondary/30 border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">Budget Brand CCTV</label>
+                <span className="text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">Budget</span>
+              </div>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  step="0.5"
+                  name="margin_cctv_camera_budget"
+                  value={formData.margin_cctv_camera_budget ?? 30}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">White-label / budget cameras or Value Tier packages</p>
+            </div>
+
+            {/* Recorders */}
+            <div className="space-y-2 p-4 rounded-xl bg-secondary/30 border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">Recorders (DVR / NVR)</label>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground bg-secondary px-2 py-0.5 rounded">Core</span>
+              </div>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  step="0.5"
+                  name="margin_recorder"
+                  value={formData.margin_recorder ?? 15}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">4/8/16/32 Channel DVRs and NVRs</p>
+            </div>
+
+            {/* Junction PVC Box */}
+            <div className="space-y-2 p-4 rounded-xl bg-secondary/30 border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">Junction PVC Box</label>
+                <span className="text-[10px] uppercase font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">Accessory</span>
+              </div>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  step="0.5"
+                  name="margin_junction_box"
+                  value={formData.margin_junction_box ?? 50}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Weatherproof PVC Camera Junction Boxes</p>
+            </div>
+
+            {/* Connectors */}
+            <div className="space-y-2 p-4 rounded-xl bg-secondary/30 border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">Connectors (BNC / DC / RJ45)</label>
+                <span className="text-[10px] uppercase font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">Accessory</span>
+              </div>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  step="0.5"
+                  name="margin_connectors"
+                  value={formData.margin_connectors ?? 50}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Copper BNC, DC Pins, and RJ45 modular plugs</p>
+            </div>
+
+            {/* HDMI Cable */}
+            <div className="space-y-2 p-4 rounded-xl bg-secondary/30 border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">HDMI Cable</label>
+                <span className="text-[10px] uppercase font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">Cabling</span>
+              </div>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  step="0.5"
+                  name="margin_hdmi_cable"
+                  value={formData.margin_hdmi_cable ?? 20}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Display interconnect cables (1.5m, 3m, 5m 4K HDMI)</p>
+            </div>
+
+            {/* Rack */}
+            <div className="space-y-2 p-4 rounded-xl bg-secondary/30 border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">Server / DVR Rack</label>
+                <span className="text-[10px] uppercase font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">Infrastructure</span>
+              </div>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  step="0.5"
+                  name="margin_rack"
+                  value={formData.margin_rack ?? 30}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Wall-mount 2U, 4U, 6U DVR and networking racks</p>
             </div>
           </div>
         </div>

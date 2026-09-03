@@ -13,9 +13,14 @@ import type {
   QuoteLineItem,
   QuoteAddon,
   AddonRuleResult,
-  GeoPricingRule
+  GeoPricingRule,
+  CCTVRequirement,
+  QuoteDelivery,
+  ResolvedSystem,
+  PlanType
 } from "@/types";
 import { getCatalogCapacity } from "@/lib/catalog-capacity";
+import { MarginEngine, DEFAULT_MARGIN_POLICY } from "./margin-engine";
 
 export interface PricingEngineParams {
   selection: ConfiguratorSelection;
@@ -1008,7 +1013,7 @@ function resolveHDDCapacity(product: Addon & { storage_tb?: number }): number {
   return 0;
 }
 
-function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: string, recorder?: Product) {
+function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: string, recorder?: Product, cameraProduct?: Product) {
   if (selection.selected_storage_id) {
     if (selection.selected_storage_id === "none") return undefined; // Explicit no-storage request
     return addons.find(a => a.id === selection.selected_storage_id);
@@ -1043,7 +1048,7 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   if (compression === "H.265") compressionMultiplier = 0.55;
   else if (compression === "H.265+" || compression === "H.265 Pro+") compressionMultiplier = 0.35;
 
-  // 2. Base Daily GB per camera based on resolution (at H.264 baseline)
+  // 2. Base Daily GB per camera: Prefer catalog daily_gb_per_camera, fallback to resolution bitrate
   let baseGbPerDay = 18; // Default 2MP baseline at H.264
   if (selection.resolution_preference && selection.resolution_preference !== "all") {
     const res = String(selection.resolution_preference).toUpperCase();
@@ -1147,7 +1152,6 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
   }
 
   if (options.length === 0) return undefined;
-  
   options.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
   return options.find(o => (o.max_cameras || 0) >= selection.camera_count) || options[options.length - 1];
 }
@@ -1159,4 +1163,278 @@ function resolveUnitPrice(product: Product, qty: number) {
   return product.unit_price || 0;
 }
 
+/**
+ * Generates an authoritative pricing snapshot for a resolved system configuration.
+ * Consolidates margin engine calculations, catalog pricing, addons, labor, and cabling.
+ */
+export function generatePricingSnapshot(
+  resolvedSystem: ResolvedSystem,
+  req: CCTVRequirement,
+  addons: any[] = [],
+  selectedAddonIds: string[] = [],
+  settings: AppSettings,
+  activeOffer?: any,
+  referralCode?: string
+): QuoteDelivery {
+  const lineItems: any[] = [];
+  const quoteAddons: any[] = [];
+  
+  let totalPurchaseCost = 0;
+  let baseHardwareCost = 0;
+  let cablingCost = 0;
+  let laborCost = 0;
+  let addonsTotal = 0;
+  const marginWarnings: string[] = [];
 
+  const marginPolicy: any = {
+    ...DEFAULT_MARGIN_POLICY,
+    ...((settings as any)?.margin_policy || {}),
+    margin_hdd: settings?.margin_hdd ?? (settings as any)?.margin_policy?.margin_hdd ?? DEFAULT_MARGIN_POLICY.margin_hdd,
+    margin_hdd_budget: settings?.margin_hdd_budget ?? (settings as any)?.margin_policy?.margin_hdd_budget ?? DEFAULT_MARGIN_POLICY.margin_hdd_budget,
+    margin_cctv_camera: settings?.margin_cctv_camera ?? (settings as any)?.margin_policy?.margin_cctv_camera ?? DEFAULT_MARGIN_POLICY.margin_cctv_camera,
+    margin_cctv_camera_budget: settings?.margin_cctv_camera_budget ?? (settings as any)?.margin_policy?.margin_cctv_camera_budget ?? DEFAULT_MARGIN_POLICY.margin_cctv_camera_budget,
+    margin_recorder: settings?.margin_recorder ?? (settings as any)?.margin_policy?.margin_recorder ?? DEFAULT_MARGIN_POLICY.margin_recorder,
+    margin_junction_box: settings?.margin_junction_box ?? (settings as any)?.margin_policy?.margin_junction_box ?? DEFAULT_MARGIN_POLICY.margin_junction_box,
+    margin_connectors: settings?.margin_connectors ?? (settings as any)?.margin_policy?.margin_connectors ?? DEFAULT_MARGIN_POLICY.margin_connectors,
+    margin_hdmi_cable: settings?.margin_hdmi_cable ?? (settings as any)?.margin_policy?.margin_hdmi_cable ?? DEFAULT_MARGIN_POLICY.margin_hdmi_cable,
+    margin_rack: settings?.margin_rack ?? (settings as any)?.margin_policy?.margin_rack ?? DEFAULT_MARGIN_POLICY.margin_rack,
+    margin_power_supply: settings?.margin_power_supply ?? (settings as any)?.margin_policy?.margin_power_supply ?? DEFAULT_MARGIN_POLICY.margin_power_supply,
+  };
+  const planType = (resolvedSystem.plan_type || "recommended") as PlanType;
+
+  // 1. Cameras
+  for (const cam of resolvedSystem.cameras) {
+    const qty = cam.qty;
+    const baseCost = cam.product.baseCost || cam.product.unit_price || 0;
+    const calc = MarginEngine.calculateUnitPricing(baseCost, cam.product.category, planType, marginPolicy, cam.product.brand);
+    
+    lineItems.push({
+      product_id: cam.product.id,
+      display_name: cam.product.display_name,
+      qty,
+      unit_price: calc.sellingPriceExTax,
+      line_total: calc.sellingPriceExTax * qty,
+      base_cost_at_quote: baseCost,
+      stock_status_at_quote: cam.product.stock_status,
+      brand: cam.product.brand
+    });
+    baseHardwareCost += calc.sellingPriceExTax * qty;
+    totalPurchaseCost += calc.workingCost * qty;
+  }
+
+  // 2. Recorder
+  if (resolvedSystem.recorder) {
+    const baseCost = resolvedSystem.recorder.baseCost || resolvedSystem.recorder.unit_price || 0;
+    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.recorder.category, planType, marginPolicy, resolvedSystem.recorder.brand);
+    lineItems.push({
+      product_id: resolvedSystem.recorder.id,
+      display_name: resolvedSystem.recorder.display_name,
+      qty: 1,
+      unit_price: calc.sellingPriceExTax,
+      line_total: calc.sellingPriceExTax,
+      base_cost_at_quote: baseCost,
+      stock_status_at_quote: resolvedSystem.recorder.stock_status,
+      brand: resolvedSystem.recorder.brand
+    });
+    baseHardwareCost += calc.sellingPriceExTax;
+    totalPurchaseCost += calc.workingCost;
+  }
+
+  // 3. Storage
+  if (resolvedSystem.storage) {
+    const baseCost = resolvedSystem.storage.baseCost || resolvedSystem.storage.unit_price || 0;
+    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.storage.category, planType, marginPolicy, resolvedSystem.storage.brand);
+    lineItems.push({
+      product_id: resolvedSystem.storage.id,
+      display_name: resolvedSystem.storage.display_name,
+      qty: 1,
+      unit_price: calc.sellingPriceExTax,
+      line_total: calc.sellingPriceExTax,
+      base_cost_at_quote: baseCost,
+      stock_status_at_quote: resolvedSystem.storage.stock_status,
+      brand: resolvedSystem.storage.brand
+    });
+    baseHardwareCost += calc.sellingPriceExTax;
+    totalPurchaseCost += calc.workingCost;
+  }
+
+  // 4. Power Supply
+  if (resolvedSystem.power) {
+    const baseCost = resolvedSystem.power.baseCost || resolvedSystem.power.unit_price || 0;
+    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.power.category, planType, marginPolicy, resolvedSystem.power.brand);
+    lineItems.push({
+      product_id: resolvedSystem.power.id,
+      display_name: resolvedSystem.power.display_name,
+      qty: 1,
+      unit_price: calc.sellingPriceExTax,
+      line_total: calc.sellingPriceExTax,
+      base_cost_at_quote: baseCost,
+      stock_status_at_quote: resolvedSystem.power.stock_status,
+      brand: resolvedSystem.power.brand
+    });
+    baseHardwareCost += calc.sellingPriceExTax;
+    totalPurchaseCost += calc.workingCost;
+  }
+
+  // 5. Cable (Derived from Catalog/Settings rather than hardcoded 25/15)
+  if (resolvedSystem.cable_meters > 0) {
+    const isIP = resolvedSystem.plan_type?.includes("IP");
+    const cableName = isIP ? "CAT6 IP Camera Cable" : "3+1 HD Camera Cable";
+    const baseCost = isIP 
+      ? (settings.cable_copper_coated_ip || (settings as any).wire_cost_per_meter || 15)
+      : (settings.cable_copper_coated_hd || (settings as any).wire_cost_per_meter || 12);
+    const calc = MarginEngine.calculateUnitPricing(baseCost, 'cable', planType, marginPolicy);
+    const qty = resolvedSystem.cable_meters;
+    
+    lineItems.push({
+      product_id: isIP ? "cable_cat6" : "cable_3plus1",
+      display_name: cableName,
+      qty,
+      unit_price: calc.sellingPriceExTax,
+      line_total: calc.sellingPriceExTax * qty,
+      base_cost_at_quote: baseCost
+    });
+    cablingCost += calc.sellingPriceExTax * qty;
+    totalPurchaseCost += calc.workingCost * qty;
+  }
+
+  // 6. Connectors (Derived from Settings)
+  if (resolvedSystem.connectors_qty > 0) {
+    const isIP = resolvedSystem.plan_type?.includes("IP");
+    const baseCost = isIP ? (settings.connector_rj45_cost || 25) : (settings.connector_bnc_dc_cost || 70);
+    const calc = MarginEngine.calculateUnitPricing(baseCost, 'accessory', planType, marginPolicy);
+    const qty = resolvedSystem.connectors_qty;
+
+    lineItems.push({
+      product_id: isIP ? "conn_rj45" : "conn_bnc_dc",
+      display_name: isIP ? "RJ45 Connectors" : "BNC & DC Connectors",
+      qty,
+      unit_price: calc.sellingPriceExTax,
+      line_total: calc.sellingPriceExTax * qty,
+      base_cost_at_quote: baseCost
+    });
+    baseHardwareCost += calc.sellingPriceExTax * qty;
+    totalPurchaseCost += calc.workingCost * qty;
+  }
+
+  // 7. Labor & Prep (Derived from Settings rather than hardcoded 500/400)
+  const wiredCameraCount = resolvedSystem.cameras.reduce((sum: number, c: any) => {
+    return c.product.technologies?.includes("Wireless") ? sum : (sum + c.qty);
+  }, 0);
+
+  if (wiredCameraCount > 0) {
+    const isIP = resolvedSystem.plan_type?.includes("IP");
+    const baseRate = isIP 
+      ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500)
+      : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400);
+    const rate = Math.round(baseRate * (1 + marginPolicy.labor_margin));
+    const laborTotal = rate * wiredCameraCount;
+
+    lineItems.push({
+      product_id: "labor_install",
+      display_name: `Installation & Termination (${resolvedSystem.plan_type?.split("_")[0] || "HD"})`,
+      qty: wiredCameraCount,
+      unit_price: rate,
+      line_total: laborTotal,
+      base_cost_at_quote: baseRate
+    });
+    laborCost += laborTotal;
+    totalPurchaseCost += baseRate * wiredCameraCount;
+  }
+
+  // 8. Site Prep Surcharges
+  const flags = (resolvedSystem as any).site_surcharge_flags || {};
+  const prepCfg = (settings as any).site_preparation || {
+    ladderArrangementFee: 500,
+    marbleLaborSurcharge: 400,
+    metalInstallationSurcharge: 200,
+    furnishedSiteSurcharge: 300,
+    heavyWallDrillingSurcharge: 600
+  };
+
+  const addSurcharge = (id: string, name: string, cost: number) => {
+    const price = Math.round(cost * (1 + marginPolicy.labor_margin));
+    lineItems.push({
+      product_id: id,
+      display_name: name,
+      qty: 1,
+      unit_price: price,
+      line_total: price,
+      base_cost_at_quote: cost
+    });
+    laborCost += price;
+    totalPurchaseCost += cost;
+  };
+
+  if (flags.requiresLadderFee) addSurcharge("surcharge_ladder", "Ladder / Scaffolding Arrangement Fee", prepCfg.ladderArrangementFee);
+  if (flags.requiresMarbleSurcharge) addSurcharge("surcharge_marble", "Specialized Drilling (Marble/Stone)", prepCfg.marbleLaborSurcharge);
+  if (flags.requiresMetalSurcharge) addSurcharge("surcharge_metal", "Metal/Pole Installation Surcharge", prepCfg.metalInstallationSurcharge);
+  if (flags.requiresFurnishedSurcharge) addSurcharge("surcharge_furnished", "Furnished Site Care & Cleanup Premium", prepCfg.furnishedSiteSurcharge);
+  if (flags.requiresHeavyDrillingSurcharge) addSurcharge("surcharge_wall_drilling", "Heavy Wall/Floor Penetration Surcharge", prepCfg.heavyWallDrillingSurcharge);
+
+  // 9. Add-ons (CRITICAL FIX: Support Addons - Do Not Drop!)
+  if (selectedAddonIds && selectedAddonIds.length > 0 && addons && addons.length > 0) {
+    for (const addonId of selectedAddonIds) {
+      const addonObj = addons.find((a: any) => a.id === addonId);
+      if (addonObj) {
+        const baseCost = addonObj.baseCost || addonObj.unit_price || 0;
+        const calc = MarginEngine.calculateUnitPricing(baseCost, 'accessory', planType, marginPolicy);
+        const qty = 1;
+        const lineTotal = calc.sellingPriceExTax * qty;
+        
+        quoteAddons.push({
+          addon_id: addonObj.id,
+          display_name: addonObj.display_name || addonObj.name,
+          category: addonObj.category || "addon",
+          unit_price: calc.sellingPriceExTax,
+          qty,
+          line_total: lineTotal,
+        });
+
+        lineItems.push({
+          product_id: addonObj.id,
+          display_name: addonObj.display_name || addonObj.name,
+          qty,
+          unit_price: calc.sellingPriceExTax,
+          line_total: lineTotal,
+          base_cost_at_quote: baseCost,
+        });
+
+        addonsTotal += lineTotal;
+        totalPurchaseCost += calc.workingCost * qty;
+      }
+    }
+  }
+
+  // 10. Geo Multiplier
+  const geoMultiplier = (settings as any).geo_multiplier || 1.0;
+
+  // 11. Final Financials with MarginEngine
+  const mappedLineItems = lineItems.map(li => ({ sellingPriceExTax: li.unit_price, qty: li.qty }));
+  const totals = MarginEngine.calculateDocumentTotals(mappedLineItems, 0, geoMultiplier, marginPolicy);
+
+  const grossProfitValue = totals.finalExTax - totalPurchaseCost;
+  const grossProfitPercent = totals.finalExTax > 0 ? (grossProfitValue / totals.finalExTax) * 100 : 0;
+
+  return {
+    plan_type: resolvedSystem.plan_type,
+    technology: (resolvedSystem.plan_type?.split("_")[0] || "HD"),
+    items: lineItems,
+    addons: quoteAddons,
+    base_hardware_cost: baseHardwareCost,
+    cabling_cost: cablingCost,
+    labor_cost: laborCost,
+    addons_total: addonsTotal,
+    gross_subtotal: totals.rawSubtotal,
+    referral_discount: 0,
+    net_taxable_amount: totals.finalExTax,
+    gst_rate: marginPolicy.gst_rate * 100,
+    gst_amount: totals.gstAmount,
+    total_payable: totals.totalPayable,
+    total_purchase_cost: totalPurchaseCost,
+    gross_profit_value: grossProfitValue,
+    gross_profit_percent: Number(grossProfitPercent.toFixed(2)),
+    margin_warnings: marginWarnings,
+    recommendation_reasons: []
+  };
+}

@@ -11,6 +11,10 @@ export function ProBuilderClient() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("camera");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const [checkoutPhone, setCheckoutPhone] = useState("");
+  const [checkoutName, setCheckoutName] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const router = useRouter();
 
   const { technology, items, addItem, removeItem, updateQty, clearCart, getTotal, getCameraCount } = useCartStore();
@@ -56,8 +60,21 @@ export function ProBuilderClient() {
     });
   }, [products, activeCategory, technology]);
 
+  const initiateCheckout = () => {
+    setPhoneError("");
+    setShowCheckoutForm(true);
+  };
+
   const handleCheckout = async () => {
+    // Validate phone from inline form state
+    const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
+    if (cleanedPhone.length !== 10 || !/^[6-9]/.test(cleanedPhone)) {
+      setPhoneError("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.");
+      return;
+    }
+    setPhoneError("");
     setIsGenerating(true);
+
     try {
       const camCount = getCameraCount();
       const quoteItems = items.map(i => {
@@ -74,41 +91,32 @@ export function ProBuilderClient() {
         };
       });
 
-      const total = getTotal();
-      const gst = Math.round(total * 0.18);
-      const grandTotal = total + gst;
-
-      const pricingSnapshot = {
-        base_price: total,
-        gst_amount: gst,
-        total_price: grandTotal,
-        items: quoteItems,
-        is_custom_pro: true,
-        technology
-      };
-
       const res = await fetch("/api/quote/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customer_name: "Pro Builder Guest",
-          customer_mobile: "",
+          customer_name: checkoutName || "Pro Builder Client",
+          customer_mobile: cleanedPhone,
           requirementSnapshot: {
             installation_type: "new",
             camera_count: camCount,
             technology_preference: technology || "IP",
             is_pro_builder: true
           },
-          configurationSnapshot: {},
-          pricingSnapshot,
+          configurationSnapshot: {
+            items: quoteItems
+          },
           selectedPlan: "Pro_Custom_Build",
-          isV2: true
+          source: "pro_builder"
         })
       });
 
       const data = await res.json();
-      if (data.success && data.quoteId) {
-        router.push(`/quote/${data.quoteId}`);
+      if (data.success) {
+        router.push(data.leadId ? `/quote/${data.leadId}` : `/quote/${data.quoteId}`);
+      } else {
+        alert(data.message || "Failed to generate quotation.");
+        setIsGenerating(false);
       }
     } catch (e) {
       console.error(e);
@@ -311,13 +319,57 @@ export function ProBuilderClient() {
               </div>
             </div>
             
-            <Button 
-              onClick={handleCheckout} 
-              disabled={isGenerating || items.length === 0} 
-              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-lg font-bold shadow-xl shadow-blue-600/20"
-            >
-              {isGenerating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Review & Download PDF"}
-            </Button>
+            {showCheckoutForm ? (
+              <div className="space-y-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Number *</label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. 9876543210"
+                    value={checkoutPhone}
+                    onChange={(e) => { setCheckoutPhone(e.target.value); setPhoneError(""); }}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    maxLength={13}
+                    autoFocus
+                  />
+                  {phoneError && <p className="text-red-600 text-xs mt-1 font-medium">{phoneError}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Your Name (optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Rajesh Kumar"
+                    value={checkoutName}
+                    onChange={(e) => setCheckoutName(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setShowCheckoutForm(false)}
+                    variant="outline"
+                    className="flex-1 h-12 rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleCheckout}
+                    disabled={isGenerating}
+                    className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg"
+                  >
+                    {isGenerating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Generate Quote"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button 
+                onClick={initiateCheckout} 
+                disabled={isGenerating || items.length === 0} 
+                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-lg font-bold shadow-xl shadow-blue-600/20"
+              >
+                Review & Download PDF
+              </Button>
+            )}
           </div>
         )}
       </div>

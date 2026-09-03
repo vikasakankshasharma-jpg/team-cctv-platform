@@ -167,13 +167,23 @@ export default async function QuoteResultPage({
     recommendation_rules = serializeDoc(recommendation_rules);
     card_layouts = serializeDoc(card_layouts);
 
-    if (process.env.NODE_ENV === 'development') {
-      try {
-        const fs = require('fs');
-        if (leadId === "QZ2c408TMC7xlNRp2ovi") {
-          fs.writeFileSync('debug_quote_data.json', JSON.stringify({ lead, products }, null, 2));
-        }
-      } catch (e) {}
+    // If lead not found directly, check if leadId is actually a quoteId
+    if (!lead) {
+      const quoteSnap = await adminDb.collection("quotes").doc(leadId).get().catch(() => null);
+      if (quoteSnap && quoteSnap.exists) {
+        const qData = quoteSnap.data() as any;
+        lead = {
+          id: qData.leadId || qData.lead_id || leadId,
+          customer_name: qData.customer_name || "Valued Customer",
+          mobile_number: qData.customer_mobile || "",
+          property_type: qData.requirementSnapshot?.property_type || "home",
+          technology_choice: qData.requirementSnapshot?.technology_preference || "HD",
+          cabling_done: qData.requirementSnapshot?.cabling_done ?? false,
+          wizard_answers: qData.requirementSnapshot || {},
+          latest_quote_id: leadId,
+          status: "new"
+        } as unknown as Lead;
+      }
     }
 
   } catch (err) {
