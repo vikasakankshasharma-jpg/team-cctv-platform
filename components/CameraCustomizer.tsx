@@ -14,13 +14,14 @@ interface CameraCustomizerProps {
   availableAddons: Addon[];
   storageDrives?: Product[];
   onBack: () => void;
-  onConfirm: (modifiedPlan: PricingResult) => void;
+  onConfirm: (modifiedPlan: PricingResult, updatedRequirement: CCTVRequirement) => void;
   isSaving: boolean;
 }
 
 export function CameraCustomizer({ basePlanId, basePlan, requirement, availableAddons, storageDrives, onBack, onConfirm, isSaving }: CameraCustomizerProps) {
   
   const [wantsPremiumStorage, setWantsPremiumStorage] = useState(false);
+  const [wantsStqcCompliance, setWantsStqcCompliance] = useState(false);
 
   // State: Record of AddonID -> Qty
   const [upgrades, setUpgrades] = useState<Record<string, number>>({});
@@ -153,6 +154,18 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
       }
     }
 
+    if (wantsStqcCompliance) {
+      const stqcExTax = 450 * (requirement.camera_count || 1);
+      addedExTax += stqcExTax;
+      plan.items.push({
+        product_id: "upgrade_stqc_compliance",
+        display_name: `STQC / BIS-ER Certified Hardware Upgrade (${requirement.camera_count} cameras)`,
+        qty: requirement.camera_count || 1,
+        unit_price: 450,
+        line_total: stqcExTax,
+      });
+    }
+
     if (addedExTax !== 0) {
       plan.base_hardware_cost += addedExTax;
       plan.finalExTax += addedExTax;
@@ -163,7 +176,7 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
     }
 
     return plan;
-  }, [basePlan, upgrades, wantsPremiumStorage, storageUpgrade, UPGRADES]);
+  }, [basePlan, upgrades, wantsPremiumStorage, storageUpgrade, UPGRADES, wantsStqcCompliance, requirement.camera_count]);
 
   return (
     <div className="space-y-6 animate-in fade-in">
@@ -210,6 +223,51 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
               You are upgrading {totalUpgradesCount} out of {maxUpgradable} cameras.
             </div>
           )}
+
+          {/* STQC Compliance Upgrade */}
+          <Card className={`transition-all ${wantsStqcCompliance ? 'border-blue-500 bg-blue-50/20' : ''}`}>
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-gray-900">STQC / BIS-ER Certified Hardware</h4>
+                <p className="text-xs text-gray-500">Government compliant secure chips</p>
+                <div className="text-sm font-semibold mt-1 text-gray-700">
+                  + {formatPrice(450 * 1.18)} per camera
+                </div>
+              </div>
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  checked={wantsStqcCompliance}
+                  onChange={(e) => setWantsStqcCompliance(e.target.checked)}
+                  className="w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Premium Storage Upgrade */}
+          {storageUpgrade && (
+            <Card className={`transition-all ${wantsPremiumStorage ? 'border-blue-500 bg-blue-50/20' : ''}`}>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-gray-900">{storageUpgrade.name}</h4>
+                  <p className="text-xs text-gray-500">{storageUpgrade.desc}</p>
+                  <div className="text-sm font-semibold mt-1 text-gray-700">
+                    + {formatPrice(storageUpgrade.priceIncGst)}
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    checked={wantsPremiumStorage}
+                    onChange={(e) => setWantsPremiumStorage(e.target.checked)}
+                    className="w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
         </div>
         
         <div className="md:col-span-1">
@@ -250,7 +308,22 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
               
               <Button 
                 className="w-full h-12 text-lg mt-4" 
-                onClick={() => onConfirm(modifiedPlan)}
+                onClick={() => {
+                  const updatedReq = JSON.parse(JSON.stringify(requirement)) as CCTVRequirement;
+                  updatedReq.selected_addons = updatedReq.selected_addons || [];
+                  Object.entries(upgrades).forEach(([id, qty]) => {
+                    for (let i = 0; i < qty; i++) {
+                      updatedReq.selected_addons!.push(id);
+                    }
+                  });
+                  if (wantsPremiumStorage && storageUpgrade) {
+                    updatedReq.selected_addons!.push(storageUpgrade.id);
+                  }
+                  if (wantsStqcCompliance) {
+                    updatedReq.wants_stqc_compliance = true;
+                  }
+                  onConfirm(modifiedPlan, updatedReq);
+                }}
                 disabled={isSaving}
               >
                 {isSaving ? "Generating PDF..." : "Confirm & Generate"}

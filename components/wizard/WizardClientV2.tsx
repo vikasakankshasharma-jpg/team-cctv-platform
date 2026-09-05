@@ -7,6 +7,7 @@ import { QuoteComparison } from "@/components/QuoteComparison";
 import { CameraCustomizer } from "@/components/CameraCustomizer";
 import { EditConfigurationDrawer } from "@/components/EditConfigurationDrawer";
 import { Button } from "@/components/ui/button";
+import { LeadGate } from "./LeadGate";
 
 
 
@@ -14,6 +15,8 @@ export function WizardClientV2() {
   const router = useRouter();
   const [sessionId] = useState(() => crypto.randomUUID());
   const [step, setStep] = useState(0);
+  const [showLeadGate, setShowLeadGate] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
     
   useEffect(() => {
     // Send session start
@@ -98,7 +101,7 @@ export function WizardClientV2() {
   };
 
   const handleFinishWizard = () => {
-    generateQuote(req as CCTVRequirement);
+    setShowLeadGate(true);
   };
 
 
@@ -118,7 +121,7 @@ export function WizardClientV2() {
     setCustomizerPlanId(planId);
   };
 
-  const handleConfirmCustomizer = async (planType: string, modifiedPricingSnapshot?: any) => {
+  const handleConfirmCustomizer = async (planType: string, modifiedPricingSnapshot?: any, updatedRequirement?: CCTVRequirement) => {
     const mobile = quoteResult.requirement.customer_mobile;
     const name = quoteResult.requirement.customer_name;
     
@@ -130,13 +133,15 @@ export function WizardClientV2() {
     setLoading(true);
     try {
       const pricingToSave = modifiedPricingSnapshot || quoteResult.plans[planType];
+      const reqToSave = updatedRequirement || quoteResult.requirement;
       const res = await fetch("/api/quote/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          leadId: leadId,
           customer_mobile: mobile,
           customer_name: name,
-          requirementSnapshot: quoteResult.requirement,
+          requirementSnapshot: reqToSave,
           configurationSnapshot: quoteResult.configuration,
           pricingSnapshot: pricingToSave,
           selectedPlan: planType
@@ -183,7 +188,7 @@ export function WizardClientV2() {
         availableAddons={quoteResult.addons || []}
         storageDrives={quoteResult.storageDrives || []}
         onBack={() => setCustomizerPlanId(null)}
-        onConfirm={(modifiedPlan) => handleConfirmCustomizer(customizerPlanId, modifiedPlan)}
+        onConfirm={(modifiedPlan, updatedReq) => handleConfirmCustomizer(customizerPlanId, modifiedPlan, updatedReq)}
         isSaving={loading}
       />
     );
@@ -576,6 +581,25 @@ export function WizardClientV2() {
           </div>
         )}
       </div>
+
+      {/* OTP Lead Gate Modal */}
+      {showLeadGate && (
+        <LeadGate
+          mode="partial"
+          answersPayload={req}
+          onSuccess={(newLeadId, verifiedMobile, verifiedName) => {
+            setShowLeadGate(false);
+            setLeadId(newLeadId);
+            const updatedReq = {
+              ...req,
+              customer_mobile: verifiedMobile || req.customer_mobile || "",
+              customer_name: verifiedName || req.customer_name || "",
+            } as CCTVRequirement;
+            setReq(updatedReq);
+            generateQuote(updatedReq);
+          }}
+        />
+      )}
     </div>
   );
 }

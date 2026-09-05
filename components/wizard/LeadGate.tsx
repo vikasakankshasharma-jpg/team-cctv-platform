@@ -23,15 +23,19 @@ declare global {
 export function LeadGate({ 
   isIndustrial,
   mode = "final",
-  onSuccess 
+  onSuccess,
+  answersPayload
 }: { 
   isIndustrial?: boolean;
   mode?: "final" | "partial";
-  onSuccess?: (leadId: string) => void;
+  onSuccess?: (leadId: string, mobile?: string, name?: string) => void;
+  answersPayload?: any;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { answers, setPartialLeadId } = useWizardStore();
+  const store = useWizardStore();
+  const answers = answersPayload || store.answers;
+  const setPartialLeadId = store.setPartialLeadId;
   const { t } = useTranslation();
 
   const [mobile, setMobile] = useState("");
@@ -190,10 +194,13 @@ export function LeadGate({
         email: email || undefined,
         firebase_uid: firebaseUid,
         wizard_answers: { ...answers, lead_pincode: pincode, q_city: city, q_state: state },
-        property_type: (extractAns("q_prop_type") || "home") as "home" | "shop" | "office" | "factory" | "other",
-        technology_choice: (["HD", "IP", "WiFi", "4G", "Analog", "Wireless"].includes(extractAns("q_tech")) ? extractAns("q_tech") : "HD") as "HD" | "IP" | "WiFi" | "4G" | "Analog" | "Wireless",
-        cabling_done: extractAns("q_install_type") === "upgrade" || extractAns("q_wiring") === "true",
-        camera_count: parseInt(extractAns("q_cam_count") || "0") || 0,
+        property_type: (extractAns("q_prop_type") || answers.property_type || "home") as "home" | "shop" | "office" | "factory" | "other" | "warehouse" | "bungalow",
+        technology_choice: (["HD", "IP", "WiFi", "4G", "Analog", "Wireless"].includes(extractAns("q_tech") || answers.technology_preference) ? (extractAns("q_tech") || answers.technology_preference) : "HD") as "HD" | "IP" | "WiFi" | "4G" | "Analog" | "Wireless",
+        cabling_done: extractAns("q_install_type") === "upgrade" || extractAns("q_wiring") === "true" || answers.cabling_done === true,
+        camera_count: parseInt(extractAns("q_cam_count") || "0") || answers.camera_count || 0,
+        is_b2b: answers.is_b2b || false,
+        company_name: answers.company_name || null,
+        gst_number: answers.gst_number || null,
         status: (mode === "partial" ? "partial" : "new") as "partial" | "new",
         detected_city: city || undefined,
         source: "wizard",
@@ -212,7 +219,7 @@ export function LeadGate({
           })
         });
         if (!indRes.ok) throw new Error("Failed to register industrial interest.");
-        if (onSuccess) onSuccess("industrial");
+        if (onSuccess) onSuccess("industrial", mobile, name);
         return;
       }
 
@@ -233,7 +240,7 @@ export function LeadGate({
 
       if (mode === "partial") {
         setPartialLeadId(leadId);
-        if (onSuccess) onSuccess(leadId);
+        if (onSuccess) onSuccess(leadId, mobile, name);
       } else {
         router.push(`/quote/${leadId}`);
       }

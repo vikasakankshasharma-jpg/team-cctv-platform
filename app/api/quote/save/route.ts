@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import { adminDb, serverTimestamp, arrayUnion } from "@/lib/firebase-admin";
 import { QuoteSnapshot, Product, Addon, AppSettings } from "@/types";
 import { generateConfiguration } from "@/lib/configuration-engine";
 import { resolveProducts } from "@/lib/product-resolver";
@@ -248,17 +248,33 @@ export async function POST(request: Request) {
     });
 
     // 6. Lead Association (Find or Create Lead)
-    let leadId: string | null = null;
+    let leadId: string | null = data.leadId || null;
     try {
       const leadsRef = adminDb.collection("leads");
-      const existingLeadSnap = await leadsRef.where("mobile_number", "==", customer_mobile).limit(1).get();
+      let existingLeadSnap = null;
+      
+      if (leadId) {
+        const doc = await leadsRef.doc(leadId).get();
+        if (doc.exists) {
+          existingLeadSnap = { empty: false, docs: [doc] };
+        }
+      }
+      
+      if (!existingLeadSnap || existingLeadSnap.empty) {
+        existingLeadSnap = await leadsRef.where("mobile_number", "==", customer_mobile).limit(1).get();
+      }
 
       if (!existingLeadSnap.empty) {
         leadId = existingLeadSnap.docs[0].id;
+        
         await leadsRef.doc(leadId).update({
           updated_at: serverTimestamp(),
           latest_quote_id: quoteId,
-          wizard_answers: requirementSnapshot,
+          quote_ids: arrayUnion(quoteId),
+          // Do not overwrite top-level camera_count, property_type, etc. 
+          // to preserve the original conversation intent.
+          // Just update the latest wizard_answers for reference.
+          "wizard_answers.latest": requirementSnapshot,
         });
       } else {
         const newLeadRef = leadsRef.doc();
@@ -270,8 +286,10 @@ export async function POST(request: Request) {
           property_type: requirementSnapshot.property_type || "home",
           technology_choice: requirementSnapshot.technology_preference || "HD",
           cabling_done: requirementSnapshot.cabling_done ?? false,
-          wizard_answers: requirementSnapshot,
+          camera_count: requirementSnapshot.camera_count || 0,
+          wizard_answers: { latest: requirementSnapshot },
           latest_quote_id: quoteId,
+          quote_ids: [quoteId],
           status: "new",
           source: source || "wizard",
           created_at: serverTimestamp(),
