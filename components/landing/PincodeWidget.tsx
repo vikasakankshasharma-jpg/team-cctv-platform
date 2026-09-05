@@ -89,7 +89,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
             value={pincode}
             onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             placeholder={t("enter_pincode_placeholder", "Enter Pincode (e.g., 302017)")}
-            className={`w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-2xl pl-12 pr-12 outline-none transition-all font-bold tracking-wider text-zinc-950 dark:text-white ${
+            className={`w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-2xl pl-12 pr-12 outline-none transition-all font-bold tracking-wider text-zinc-950 dark:text-white placeholder:text-zinc-600 dark:placeholder:text-zinc-400 ${
               isHero 
                 ? `py-4 sm:py-5.5 text-base sm:text-lg focus:bg-white dark:focus:bg-zinc-900 ${pincode.length === 6 ? 'ring-4 ring-emerald-500/20 border-emerald-500' : 'focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500'}`
                 : `py-3.5 text-sm focus:bg-white dark:focus:bg-zinc-900 ${pincode.length === 6 ? 'ring-4 ring-emerald-500/20 border-emerald-500' : 'focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500'}`

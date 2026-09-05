@@ -16,54 +16,32 @@ test.describe('Quote & Booking End-to-End Flow', () => {
       
       await page.goto('/wizard');
 
-      // Step 0: Property Type (single -> auto-advances)
-      await page.getByText('Home / Residential', { exact: true }).click();
+      // Step 0: Guided Setup
+      await page.getByRole('button', { name: /Guided Setup/i }).click();
 
-      // Step 1: Setup Type (single -> auto-advances)
-      await page.getByText('New Installation', { exact: true }).click();
+      // Step 1: New Installation
+      await page.getByText(/Completely New System/i, { exact: false }).click();
 
-      // Step 2: Camera Technology (single -> auto-advances)
-      await page.getByText('IP Network Camera (Smart Digital)', { exact: true }).click();
-
-      // Step 3: Camera Count (number -> requires Continue)
-      await page.locator('input[type="number"]').first().fill('4');
-      await page.getByRole('button', { name: /Continue/i }).click();
-
-      // Step 4: Camera Technology (single -> auto-advances)
-      await page.getByText('Smart Digital IP Cameras (Recommended)', { exact: true }).click();
-
-      // Step 5: Recording Storage (single -> auto-advances)
-      await page.getByText('1 Week (Standard)', { exact: true }).click();
-
-      // Step 5.5: Dynamic Image Resolution (single -> auto-advances)
-      // Since it's dynamic based on DB products, we click the first available resolution option
-      // await page.getByText(/MP /i).first().click();
-
-      // Step 6: Features (multi -> requires Continue)
-      await page.getByText('Microphone', { exact: true }).click();
-      await page.getByRole('button', { name: /Continue/i }).click();
-
-      // Step 7: Wiring (multi-question on same step)
-      await page.getByText('No – Full installation required', { exact: true }).click();
-      // Clicking the last single-choice question auto-advances!
-      await page.getByText('Conduit Flat Pipe', { exact: true }).click();
-
-      // Step 8: Timeline (single -> auto-advances)
-      await page.getByText('Within a week', { exact: true }).click();
-
-      // Step 9: Brand (single -> auto-advances)
-      await page.getByText('Unsure, please recommend the best value', { exact: true }).click();
-
-      // Step 10: Maintenance (single -> last step does not auto-advance)
-      await page.getByText("No, I'll manage it myself", { exact: true }).click();
+      // Step 2: Camera Count
+      await page.getByRole('button', { name: '+' }).first().click(); // outdoor
+      await page.getByRole('button', { name: '+' }).nth(1).click(); // indoor
       
-      // The last step does NOT auto-advance. Must click Generate Quote.
-      await page.getByRole('button', { name: /Generate Quote/i }).click();
+      await page.getByRole('button', { name: /Confirm Cameras/i }).click();
+
+      // Step 3: Recording Storage
+      await page.getByText('15 Days', { exact: true }).click();
+      await page.getByText('24x7 Continuous', { exact: true }).click();
+      await page.getByRole('button', { name: /Confirm Recording/i }).click();
+
+      // Step 4: Final Contact Info
+      await page.fill('input[placeholder="e.g. Rahul Kumar"]', 'E2E Test User');
+      await page.fill('input[placeholder="10-digit mobile number"]', '9999999999');
+      await page.getByRole('button', { name: /View My CCTV Options/i }).click();
 
       // Lead Gate appears
       await expect(page.locator('text=Unlock Your Proposal')).toBeVisible({ timeout: 15000 });
 
-      // Fill Lead Gate details (Use bypass value)
+      // Fill Lead Gate details (Use bypass value) - mobile and name might be pre-filled
       await page.fill('input[placeholder="Enter mobile number"]', '9999999999');
       await page.fill('input[placeholder="Enter full name"]', 'E2E Test User');
       await page.fill('input[placeholder="6-digit pincode"]', '302001');
@@ -81,6 +59,16 @@ test.describe('Quote & Booking End-to-End Flow', () => {
       }
 
       await page.click('button:has-text("Verify & View Quote")');
+
+      // Quote Options appear on Wizard
+      await expect(page.locator('h1', { hasText: 'Your CCTV Options' })).toBeVisible({ timeout: 15000 });
+
+      // Select first plan to open Customizer
+      await page.locator('button:has-text("Select Plan"), button:has-text("View Details")').first().click();
+
+      // In Customizer, confirm and save quote
+      await expect(page.locator('button', { hasText: 'Confirm & Generate' })).toBeVisible({ timeout: 15000 });
+      await page.locator('button', { hasText: 'Confirm & Generate' }).click();
 
       // Wait for navigation to the quotation page
       await expect(page).toHaveURL(/\/quote\/.+/, { timeout: 15000 });
@@ -108,13 +96,13 @@ test.describe('Quote & Booking End-to-End Flow', () => {
       await page.locator('button', { hasText: 'Accessories' }).click();
 
       // Wait for add-ons to load
-      await expect(page.locator('button', { hasText: /^Add$/i }).first()).toBeVisible();
-      
-      // Click Add on the first available Addon
-      await page.locator('button', { hasText: /^Add$/i }).first().click();
+      const addBtn = page.locator('button', { hasText: /^Add$/i }).first();
+      await expect(addBtn).toBeVisible({ timeout: 15000 });
+      await addBtn.scrollIntoViewIfNeeded();
+      await addBtn.click();
 
       // Ensure it changes to Added
-      await expect(page.locator('button', { hasText: /^Added$/i }).first()).toBeVisible();
+      await expect(page.locator('button', { hasText: /^Added$/i }).first()).toBeVisible({ timeout: 15000 });
     });
 
     // ---------------------------------------------------------
@@ -123,8 +111,8 @@ test.describe('Quote & Booking End-to-End Flow', () => {
     await test.step('Review & Submit Booking', async () => {
       // Removed the summary section check as it's no longer present.
 
-      // Click the "Book Site Visit" button from the SmartContextBar
-      await page.locator('button', { hasText: 'Book Site Visit' }).click();
+      // Click the "Schedule Site Visit" button from the SmartContextBar
+      await page.locator('button:has-text("Schedule Site Visit"), button:has-text("Book Site Visit")').first().click();
 
       // Wait for the SiteDetailsModal to appear
       await expect(page.locator('h2', { hasText: 'Pinpoint Your Site' })).toBeVisible();

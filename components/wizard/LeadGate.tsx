@@ -194,7 +194,7 @@ export function LeadGate({
         email: email || undefined,
         firebase_uid: firebaseUid,
         wizard_answers: { ...answers, lead_pincode: pincode, q_city: city, q_state: state },
-        property_type: (extractAns("q_prop_type") || answers.property_type || "home") as "home" | "shop" | "office" | "factory" | "other" | "warehouse" | "bungalow",
+        property_type: ((extractAns("q_prop_type") || answers.property_type || "home").toLowerCase() === "residential" ? "home" : (extractAns("q_prop_type") || answers.property_type || "home").toLowerCase()) as any,
         technology_choice: (["HD", "IP", "WiFi", "4G", "Analog", "Wireless"].includes(extractAns("q_tech") || answers.technology_preference) ? (extractAns("q_tech") || answers.technology_preference) : "HD") as "HD" | "IP" | "WiFi" | "4G" | "Analog" | "Wireless",
         cabling_done: extractAns("q_install_type") === "upgrade" || extractAns("q_wiring") === "true" || answers.cabling_done === true,
         camera_count: parseInt(extractAns("q_cam_count") || "0") || answers.camera_count || 0,

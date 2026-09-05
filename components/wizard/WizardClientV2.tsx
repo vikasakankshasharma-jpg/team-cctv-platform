@@ -235,7 +235,7 @@ export function WizardClientV2() {
               <button onClick={() => setStep(1)}
                 className="p-8 rounded-2xl border-2 text-left hover:border-blue-500 transition-all group bg-blue-50/50 border-blue-100 shadow-sm hover:shadow-md">
                 <span className="block font-black text-xl text-blue-900 group-hover:text-blue-700 mb-2">? Guided Setup (Recommended)</span>
-                <span className="block text-sm text-blue-700/80 font-medium leading-relaxed">Answer a few simple questions about your property, and our AI will calculate the perfect, most compatible CCTV package for you instantly.</span>
+                <span className="block text-sm text-blue-800 font-medium leading-relaxed">Answer a few simple questions about your property, and our AI will calculate the perfect, most compatible CCTV package for you instantly.</span>
               </button>
               
               <button onClick={() => window.location.href = '/pro-builder'}
@@ -252,7 +252,7 @@ export function WizardClientV2() {
             <h2 className="text-3xl font-semibold mb-2">What kind of installation do you need?</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button onClick={() => { updateReq({ installation_type: "new", property_type: "Residential" }); handleNext(); }}
+              <button onClick={() => { updateReq({ installation_type: "new", property_type: "home" }); handleNext(); }}
                 className={`p-6 rounded-xl border-2 text-left hover:border-blue-500 transition-all group ${req.installation_type === "new" ? "border-blue-500 bg-blue-50" : "bg-white"}`}>
                 <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">Completely New System</span>
                 <span className="block text-sm text-gray-500 mt-1">I don't have any CCTV cameras installed right now.</span>
@@ -562,6 +562,7 @@ export function WizardClientV2() {
   };
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
+      <h1 className="sr-only">CCTV Quotation Wizard</h1>
       <div className="bg-white rounded-2xl shadow-sm border p-8">
         {step > 0 && (
           <div className="mb-8">

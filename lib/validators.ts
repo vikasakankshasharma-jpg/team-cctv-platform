@@ -65,7 +65,7 @@ export const CreateLeadSchema = z.object({
   firebase_uid: z.string().min(1, "Firebase UID is required"),
   referral_code: ReferralCodeSchema,
   wizard_answers: WizardAnswersSchema,
-  property_type: z.enum(["home", "shop", "office", "factory", "other"]),
+  property_type: z.enum(["home", "shop", "office", "factory", "other", "warehouse", "bungalow", "residential"]),
   technology_choice: z.enum(["HD", "IP", "WiFi", "4G", "Analog", "Wireless"]),
   cabling_done: z.boolean(),
   camera_count: z.number().int().nonnegative().optional(),
