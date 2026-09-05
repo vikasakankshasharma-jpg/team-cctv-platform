@@ -119,7 +119,7 @@ These files were **not written by this hardening session**. They were uncommitte
 | Gate | Status |
 |------|--------|
 | Layer 1: TypeScript compilation (`tsc --noEmit`) | `[VERIFIED]` (0 errors) |
-| Layer 2: Next.js Production Build (`npm run build`) | `[READY]` |
+| Layer 2: Next.js Production Build (`npm run build`) | `[VERIFIED]` (Exit code 0, all static & dynamic routes compiled) |
 | Layer 3: Unit / E2E test suite (Tamper resistance & pricing consistency) | `[READY]` |
 | Layer 4: State machine integrity (Webhook, quotes, jobs) | `[VERIFIED]` |
 | Layer 5: Role-based boundary check (Admin, installer, customer) | `[VERIFIED]` |
