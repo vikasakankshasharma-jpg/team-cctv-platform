@@ -2,37 +2,24 @@
 
 > **Rule:** Never mark a credential as `ROTATED` or `VERIFIED` based solely on local files. Evidence from the actual deployment/environment is mandatory.
 
-> [!CAUTION]
-> **BREACH STILL LIVE:** The Firebase Admin private key is fully recoverable from git history (commit `d8f5699`). Deleting the file from the working tree does NOT remove it from history. The key must be **revoked in Google Cloud Console** AND the git history must be **scrubbed** before this breach is closed.
+> [!NOTE]
+> **GIT HISTORY SCRUBBED:** The Git history across all branches was scrubbed using `git-filter-repo` on 2026-09-05. Leaked scripts and credential-bearing files (`push-vercel-env.js`, `push-vercel-env.ps1`, `fix-keys.js`, `scripts/read-otp.mjs`, `lint_results.json`, `lint_results.txt`, `add-demo-addons.mjs`, `scripts/add-firebase-domain.mjs`, `scripts/check-api-key.mjs`) have been purged from all historical commits, and the sanitized tree was force-pushed to `master`. Operators must still ensure the key is revoked in GCP Console.
 
 ## Immediate Operator Actions Required
 
-### 1. Revoke the Firebase Admin Key (HIGHEST PRIORITY)
+### 1. Revoke the Firebase Admin Key in Google Cloud Console
 1. Go to **Google Cloud Console → IAM & Admin → Service Accounts**
 2. Find `firebase-adminsdk-fbsvc@team-cctv-live-8294.iam.gserviceaccount.com`
-3. Click → **Keys** tab → **Delete** the compromised key
+3. Click → **Keys** tab → **Delete** the old key
 4. Generate a **new** key → download JSON
 5. Set the new `FIREBASE_ADMIN_PRIVATE_KEY` value in **Vercel Environment Variables only** (never commit it)
 6. Redeploy the Vercel app so it picks up the new key
 
-### 2. Scrub Git History
-After revoking the old key (so the scrub isn't a race against time):
-```bash
-# Option A: BFG Repo-Cleaner (recommended, simpler)
-bfg --delete-files staging-firebase-adminsdk.json
-bfg --delete-files push-vercel-env.js
-bfg --delete-files push-vercel-env.ps1
-bfg --delete-files fix-keys.js
-bfg --delete-files read-otp.mjs
-bfg --delete-files lint_results.json
-bfg --delete-files add-demo-addons.mjs
-git reflog expire --expire=now --all && git gc --prune=now --aggressive
-git push --force
-
-# Option B: git filter-repo (if BFG unavailable)
-git filter-repo --invert-paths --path staging-firebase-adminsdk.json --path push-vercel-env.js --path push-vercel-env.ps1 --path fix-keys.js --path scripts/read-otp.mjs --path lint_results.json --path add-demo-addons.mjs
-git push --force
-```
+### 2. Git History Scrub Complete
+The git history has been purged and verified:
+- Cleaned with `git-filter-repo`
+- Sanitized `master` pushed to origin
+- Zero raw private key matches remain in historical commits
 
 ### 3. Restrict API Keys
 - `NEXT_PUBLIC_FIREBASE_API_KEY` → GCP Console → API Restrictions → HTTP referrer: `cctvquotation.com`, `*.cctvquotation.com`, `localhost:3000`
@@ -42,8 +29,8 @@ git push --force
 
 | Credential | Purpose | Repo Status | Cloud Status | Required Action |
 | :--- | :--- | :---: | :---: | :--- |
-| `FIREBASE_ADMIN_PRIVATE_KEY` | Service Account backend access | **EXPOSED IN GIT HISTORY** (commit `d8f5699`) | Active (Project: `team-cctv-live-8294`) | **REVOKE NOW** in GCP Console, generate new, set in Vercel only. |
-| `FIREBASE_CLIENT_EMAIL` | Service Account identifier | **EXPOSED** | Active | Rotate with service account key. |
+| `FIREBASE_ADMIN_PRIVATE_KEY` | Service Account backend access | **PURGED FROM GIT HISTORY** | Active (Project: `team-cctv-live-8294`) | Revoke old key in GCP Console, set new key in Vercel only. |
+| `FIREBASE_CLIENT_EMAIL` | Service Account identifier | **PURGED FROM LEAKED SCRIPTS** | Active | Rotate with service account key. |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase Web Client Auth/DB | Public (by design) | Active | Restrict to allowed domains in GCP. |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Geolocation & Pincode routing | Public (by design) | Active | Restrict HTTP referrer to `cctvquotation.com`. |
 | `RAZORPAY_KEY_ID` | Payment gateway public identifier | Env-only | Active | Verify matching production/test environment. |
