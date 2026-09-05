@@ -10,7 +10,7 @@ export function resolveProducts(
   
   const lifecycleWarnings: string[] = [];
   const pool = catalog.filter(p => {
-    if (brandFilter) {
+    if (brandFilter && brandFilter !== "Budget") {
        // Only filter cameras and recorders by brand
        const isCamOrDvr = p.category === "cctv_camera" || p.category === "recorder" || (p.category as any) === "CAMERA_HD" || (p.category as any) === "CAMERA_IP";
        if (isCamOrDvr) {
@@ -24,7 +24,7 @@ export function resolveProducts(
           if (pBrand) {
              const lower = pBrand.toLowerCase().replace(/\s+/g, "");
              if (lower === "cpplus") pBrand = "CP Plus";
-             else if (lower.includes("budget")) pBrand = "";
+             else if (lower.includes("budget")) pBrand = "Budget";
              else if (lower === "prama") pBrand = "Prama";
              else if (lower === "hikvision") pBrand = "Hikvision";
              else if (lower === "dahua") pBrand = "Dahua";
@@ -65,12 +65,12 @@ export function resolveProducts(
       // Override config for this permutation
       const permConfig: any = { ...config, technology: tech };
       
-      const cameras = resolveCamerasForPermutation(permConfig, res, allCameras);
+      const cameras = resolveCamerasForPermutation(permConfig, res, allCameras, brandFilter);
       if (cameras.length === 0) return; // Skip if we can't find a complete set
 
-      const recorder = resolveRecorderForPermutation(permConfig, pool);
+      const recorder = resolveRecorderForPermutation(permConfig, pool, brandFilter);
       const storage = resolveStorageForPermutation(permConfig, pool, brandFilter, cameras);
-      const power = resolvePowerForPermutation(permConfig, pool);
+      const power = resolvePowerForPermutation(permConfig, pool, brandFilter);
 
       plans[combo] = {
         plan_type: combo,
@@ -87,7 +87,9 @@ export function resolveProducts(
   return { plans, lifecycleWarnings };
 }
 
-function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolution: string, cams: Product[]) {
+function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolution: string, cams: Product[], brandFilter?: string) {
+  const isBudget = !brandFilter || brandFilter === "Budget";
+
   const getCameraBySpec = (formFactor: string) => {
     let filtered = cams.filter(p => {
       // Must match Technology
@@ -111,10 +113,14 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
 
     if (filtered.length === 0) return undefined;
 
-    // Prefer CP Plus if available, otherwise pick the cheapest
-    const cpPlus = filtered.filter(p => p.brand?.toLowerCase().includes("cp plus") || p.brand?.toLowerCase().includes("cpplus"));
-    if (cpPlus.length > 0) return cpPlus.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
-    
+    if (isBudget) {
+      // For Budget tier: prefer products marked "budget", otherwise pick the cheapest available product
+      const budgetItems = filtered.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));
+      if (budgetItems.length > 0) return budgetItems.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+      return filtered.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+    }
+
+    // For specific brand: pool already filtered by brand, sort by price
     return filtered.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
   };
 
@@ -140,8 +146,9 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
   return res;
 }
 
-function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[]) {
+function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string) {
   if (!config.recorder_channels) return undefined;
+  const isBudget = !brandFilter || brandFilter === "Budget";
   
   const recs = pool.filter(p => 
     p.category === "recorder" && 
@@ -151,9 +158,11 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
 
   if (recs.length === 0) return undefined;
 
-  // Prefer CP Plus
-  const cpPlus = recs.filter(p => p.brand?.toLowerCase().includes("cp plus") || p.brand?.toLowerCase().includes("cpplus"));
-  if (cpPlus.length > 0) return cpPlus.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+  if (isBudget) {
+    const budgetRecs = recs.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));
+    if (budgetRecs.length > 0) return budgetRecs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+    return recs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+  }
 
   return recs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
 }
@@ -207,8 +216,9 @@ function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[]
   })[0];
 }
 
-function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[]) {
+function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string) {
   if (config.wired_cameras === 0) return undefined;
+  const isBudget = !brandFilter || brandFilter === "Budget";
 
   const powerItems = pool.filter(p => p.category === "power_device");
   
@@ -237,9 +247,16 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[]) 
   if (valid.length === 0) valid = powerItems;
   if (valid.length === 0) return undefined;
 
-  // Prefer CP Plus
-  const cpPlus = valid.filter(p => p.brand?.toLowerCase().includes("cp plus") || p.brand?.toLowerCase().includes("cpplus"));
-  if (cpPlus.length > 0) return cpPlus.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+  if (isBudget) {
+    const budgetPsu = valid.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));
+    if (budgetPsu.length > 0) return budgetPsu.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+    return valid.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+  }
+
+  if (brandFilter) {
+    const brandPsu = valid.filter(p => p.brand?.toLowerCase().includes(brandFilter.toLowerCase()) || (brandFilter.toLowerCase().includes("cp") && (p.brand?.toLowerCase().includes("cp") || p.display_name?.toLowerCase().includes("cp"))));
+    if (brandPsu.length > 0) return brandPsu.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+  }
 
   return valid.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
 }

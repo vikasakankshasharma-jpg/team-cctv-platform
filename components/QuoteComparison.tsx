@@ -21,17 +21,27 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
 
   const formatPrice = (price: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(price);
 
-  // Extract available brands
+  // Extract available brands for the currently active technology
   const brands = useMemo(() => {
      const bSet = new Set<string>();
      Object.keys(plans).forEach(key => {
-        const parts = key.split("_");
-        if (parts.length >= 3) {
-           bSet.add(parts[0]);
+        if (key.includes("_" + activeTech + "_")) {
+           const parts = key.split("_");
+           if (parts.length >= 3) {
+              bSet.add(parts[0]);
+           }
         }
      });
-     return ["Budget", ...Array.from(bSet).filter(b => b !== "Budget")];
-  }, [plans]);
+     const list = Array.from(bSet);
+     return list.includes("Budget") ? ["Budget", ...list.filter(b => b !== "Budget")] : list;
+  }, [plans, activeTech]);
+
+  // Keep activeBrand valid when switching tech or when available brands change
+  React.useEffect(() => {
+     if (brands.length > 0 && !brands.includes(activeBrand)) {
+        setActiveBrand(brands[0]);
+     }
+  }, [brands, activeBrand]);
 
   // Filter plans based on Toggle & Brand
   const filteredPlans = useMemo(() => {
@@ -53,7 +63,7 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
         <div>
           <h3 className="text-lg font-semibold text-blue-900">Your CCTV Requirement</h3>
           <p className="text-sm text-blue-700">
-            {requirement.camera_count} Cameras � {requirement.recording_days || 15} Days Recording 
+            {requirement.camera_count} Cameras  {requirement.recording_days || 15} Days Recording 
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={onEditConfiguration}>
@@ -89,18 +99,20 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
 
       {/* Brand Filter */}
       {brands.length > 1 && (
-        <div className="flex justify-center space-x-2 mb-2">
-          <span className="text-sm text-gray-500 flex items-center mr-2">Brand:</span>
-          {brands.map(b => (
-            <Badge 
-              key={b} 
-              variant={activeBrand === b ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => setActiveBrand(b)}
-            >
-              {b}
-            </Badge>
-          ))}
+        <div className="flex justify-center items-center space-x-2 mb-3">
+          <span className="text-sm font-medium text-gray-500 mr-2">Brand:</span>
+          <div className="flex flex-wrap gap-2">
+            {brands.map(b => (
+              <Badge 
+                key={b} 
+                variant={activeBrand === b ? "default" : "outline"}
+                className={`cursor-pointer px-4 py-1 text-sm transition-all ${activeBrand === b ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-gray-100'}`}
+                onClick={() => setActiveBrand(b)}
+              >
+                {b}
+              </Badge>
+            ))}
+          </div>
         </div>
       )}
 
@@ -111,6 +123,7 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
         ) : (
            filteredPlans.map(([key, plan], idx) => {
              const keyParts = key.split("_");
+             const brandName = keyParts[0];
              const mp = keyParts.length > 2 ? keyParts[2] : keyParts[1];
              const totalCams = requirement.installation_type === "addon" ? (requirement.indoor_camera_count || 0) + (requirement.outdoor_camera_count || 0) : requirement.camera_count || 0;
              
@@ -124,23 +137,49 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
              const isRecommended = idx === Math.floor(filteredPlans.length / 2) && filteredPlans.length >= 2;
              
              return (
-                <Card key={key} className={`flex flex-col ${isRecommended ? 'border-primary shadow-lg relative transform md:-translate-y-2' : ''}`}>
+                <Card key={key} className={`flex flex-col transition-all duration-200 ${isRecommended ? 'border-primary shadow-lg relative transform md:-translate-y-2' : 'hover:shadow-md'}`}>
                   {isRecommended && (
                     <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                      <Badge className="bg-primary text-primary-foreground px-3 py-1 uppercase tracking-wide">? Recommended</Badge>
+                      <Badge className="bg-primary text-primary-foreground px-3 py-1 uppercase tracking-wide">⭐ Recommended</Badge>
                     </div>
                   )}
                   <CardHeader className={isRecommended ? "pt-8" : ""}>
-                    <CardTitle className="text-center text-gray-500 uppercase text-sm tracking-wider">{mp} Resolution</CardTitle>
-                    <div className={`text-center text-3xl font-bold mt-2 ${isRecommended ? 'text-primary' : ''}`}>{formatPrice(plan.total_payable)}</div>
+                    <div className="flex items-center justify-center mb-1">
+                      <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                        {brandName}
+                      </span>
+                    </div>
+                    <CardTitle className="text-center text-gray-700 uppercase text-sm tracking-wider font-semibold">
+                      {mp} Resolution
+                    </CardTitle>
+                    <div className={`text-center text-3xl font-bold mt-2 ${isRecommended ? 'text-primary' : 'text-gray-900'}`}>{formatPrice(plan.total_payable)}</div>
                   </CardHeader>
                   <CardContent className="flex-grow">
                     <ul className="space-y-3 text-sm">
-                      <li className="flex justify-between"><span>Cameras</span> <span className="font-medium">{totalCams}x {activeTech}</span></li>
-                      <li className="flex justify-between"><span>Clarity</span> <span className={`font-medium ${isRecommended ? 'text-primary font-bold' : ''}`}>{mp}</span></li>
-                      <li className="flex justify-between"><span>Storage</span> <span className="font-medium">{storageDisplay} ({requirement.recording_days || 0} Days)</span></li>
-                        <li className="flex justify-between"><span>Recorder</span> <span className="font-medium">{recorderDisplay}</span></li>
-                      <li className="flex justify-between"><span>Installation</span> <span className="font-medium">Included</span></li>
+                      <li className="flex justify-between border-b pb-2">
+                        <span className="text-gray-500">Brand</span> 
+                        <span className="font-semibold text-gray-900">{brandName}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span className="text-gray-500">Cameras</span> 
+                        <span className="font-medium">{totalCams}x {activeTech}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span className="text-gray-500">Clarity</span> 
+                        <span className={`font-medium ${isRecommended ? 'text-primary font-bold' : ''}`}>{mp}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span className="text-gray-500">Storage</span> 
+                        <span className="font-medium">{storageDisplay} ({requirement.recording_days || 0} Days)</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span className="text-gray-500">Recorder</span> 
+                        <span className="font-medium">{recorderDisplay}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span className="text-gray-500">Installation</span> 
+                        <span className="font-medium text-emerald-600 font-semibold">Included</span>
+                      </li>
                     </ul>
                   </CardContent>
                   <CardFooter>

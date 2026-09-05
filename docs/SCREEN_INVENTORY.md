@@ -9,7 +9,7 @@
   - `(partner)`: 5 screens
   - `(salesperson)`: 4 screens
   - `root / other`: 11 screens
-- **`components/ui` Usage:** ~90% (85/94) pages leverage standard shadcn/ui components (verified across major route samples).
+- **`components/ui` Usage:** ~21% (20/94) pages leverage standard shadcn/ui components (specifically ~20/68 admin pages, and 0% across customer, installer, and partner routes).
 - **Native Dialogs (`alert`, `confirm`, `prompt`):**
   - `app/(admin)/admin/products/page.tsx` (Line 93): Uses `confirm("Are you sure you want to delete...")`
 

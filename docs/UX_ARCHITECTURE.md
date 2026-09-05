@@ -21,7 +21,7 @@ The `team-cctv-platform` relies on a unified design system powered by **shadcn/u
 - **Fail-closed**: All forms should fail gracefully and display inline validation errors (using `react-hook-form` and `zod` where possible).
 
 ## 4. Current UX Debt & Migration Path
-- Phase 0.5 audit reveals that ~90% of screens use `components/ui`.
+- Phase 0.5 audit reveals that only ~21% of screens (specifically ~20 admin screens) use the standard `components/ui` library. The remaining ~80% across all personas need modernization.
 - **Action items**: 
   - Remove remnant `confirm()` in `app/(admin)/admin/products/page.tsx` line 93.
   - Refactor legacy `/operations` and `/sales` screens that circumvent the standard layout.

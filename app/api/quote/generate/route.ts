@@ -111,12 +111,12 @@ export async function POST(request: Request) {
     });
     const uniqueBrands = Array.from(brands);
 
-    // 4. Resolve Hardware (Dynamic Tech+MP Combinations) for "Budget" (No Brand Filter) + Each Brand
+    // 4. Resolve Hardware (Dynamic Tech+MP Combinations) for "Budget" + Each Brand
     let allResolvedPlans: Record<string, any> = {};
     const lifecycleWarnings: string[] = [];
 
     // Run for "Budget"
-    const budgetRes = resolveProducts(config, req, catalog);
+    const budgetRes = resolveProducts(config, req, catalog, "Budget");
     Object.entries(budgetRes.plans).forEach(([key, plan]) => {
         allResolvedPlans["Budget_" + key] = plan;
     });
@@ -134,8 +134,9 @@ export async function POST(request: Request) {
     // 5. Resolved Hardware -> Pricing
     const quotePlans: Record<string, any> = {};
     for (const [key, resolvedSystem] of Object.entries(allResolvedPlans)) {
+       const isBudget = key.startsWith("Budget_");
        quotePlans[key] = generatePricingSnapshot(
-         resolvedSystem,
+         { ...resolvedSystem, plan_type: isBudget ? "budget" : "recommended" },
          req,
          addons,
          [],
