@@ -152,6 +152,43 @@ export default function InstallerJobDetailClient({
         </div>
       )}
 
+      {/* Site Survey & Technical Scope */}
+      <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-4">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-primary" /> Site &amp; Installation Scope
+        </h3>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-muted/40 p-3 rounded-xl border border-border/50">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Outdoor Cams</span>
+            <span className="text-base font-black text-foreground">{lead.wizard_answers?.outdoor_camera_count as any ?? 0} Bullet</span>
+          </div>
+          <div className="bg-muted/40 p-3 rounded-xl border border-border/50">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Indoor Cams</span>
+            <span className="text-base font-black text-foreground">{lead.wizard_answers?.indoor_camera_count as any ?? 0} Dome</span>
+          </div>
+          <div className="bg-muted/40 p-3 rounded-xl border border-border/50">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Ceiling Height</span>
+            <span className="text-base font-black text-foreground">
+              {lead.wizard_answers?.ladder_required ? "> 10 ft (Ladder)" : "Standard (< 10 ft)"}
+            </span>
+          </div>
+          <div className="bg-muted/40 p-3 rounded-xl border border-border/50">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Wiring Scope</span>
+            <span className="text-base font-black text-foreground">
+              {lead.wizard_answers?.cabling_done ? "Reuse Existing" : "Fresh Conduit/Run"}
+            </span>
+          </div>
+        </div>
+
+        {Boolean(lead.wizard_answers?.primary_purpose) && (
+          <div className="text-xs text-muted-foreground bg-primary/5 p-3 rounded-xl border border-primary/10 flex items-center justify-between">
+            <span>Primary Security Purpose: <strong className="text-foreground capitalize">{String(lead.wizard_answers?.primary_purpose ?? '').replace('_', ' ')}</strong></span>
+            <span>Target Budget: <strong className="text-foreground">{String(lead.wizard_answers?.budget_range || 'Standard').replace('_', ' ')}</strong></span>
+          </div>
+        )}
+      </div>
+
       {/* Hardware Requirements */}
       <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-4">
         <h3 className="font-bold text-foreground flex items-center gap-2">
@@ -162,14 +199,49 @@ export default function InstallerJobDetailClient({
           <div className="divide-y divide-border/50">
             {hardware.map((item, idx) => (
               <div key={idx} className="py-3 flex justify-between items-center">
-                <span className="text-sm font-medium text-foreground">{item.name}</span>
-                <span className="font-bold text-sm bg-muted px-2 py-1 rounded-lg">x {item.quantity}</span>
+                <span className="text-sm font-medium text-foreground">{item.name || item.display_name}</span>
+                <span className="font-bold text-sm bg-muted px-2 py-1 rounded-lg">x {item.quantity || item.qty}</span>
               </div>
             ))}
           </div>
         ) : (
           <div className="text-sm text-muted-foreground italic py-4">No specific hardware configuration linked yet. Check dispatch notes or contact Admin.</div>
         )}
+      </div>
+
+      {/* Handover & Quality Checklist */}
+      <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-4">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Handover Quality Checklist
+        </h3>
+        <p className="text-xs text-muted-foreground">Verify all 6 points with customer before asking for the 6-digit completion PIN:</p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-foreground font-medium">
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/40 border border-border/50">
+            <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-black text-[10px]">✓</span>
+            All cameras firmly mounted &amp; angle focused
+          </div>
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/40 border border-border/50">
+            <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-black text-[10px]">✓</span>
+            Cables dressed neatly with conduit / casing
+          </div>
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/40 border border-border/50">
+            <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-black text-[10px]">✓</span>
+            DVR/NVR recording active with time stamp synced
+          </div>
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/40 border border-border/50">
+            <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-black text-[10px]">✓</span>
+            Mobile app connected on customer phone
+          </div>
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/40 border border-border/50">
+            <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-black text-[10px]">✓</span>
+            Day and Night-vision / Color test verified
+          </div>
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/40 border border-border/50">
+            <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-black text-[10px]">✓</span>
+            Site cleaned up &amp; packaging removed
+          </div>
+        </div>
       </div>
 
       {/* Proof of Installation */}

@@ -90,11 +90,36 @@ These files were **not written by this hardening session**. They were uncommitte
 
 | Item | Status |
 |------|--------|
-| WizardClientV2 redirects to `/quote/[leadId]` | `[DONE-UNMERGED]` |
-| Dead checkout code deleted from WizardClientV2 | `[DONE-UNMERGED]` pending commit |
-| QuoteReviewClient rewired to Razorpay | `[DONE-UNMERGED]` |
-| Verify LeadGate OTP + B2B routing | `[TODO]` |
+| WizardClientV2 redirects to `/quote/[leadId]` | `[DONE]` |
+| Dead checkout code deleted from WizardClientV2 | `[DONE]` |
+| QuoteReviewClient rewired to Razorpay | `[DONE]` |
+| Verify LeadGate OTP + B2B routing | `[DONE]` (LeadGate OTP + B2BInfoStep triggered on camera count > 16) |
 
-## Phase 3–6
+## Phase 3 — Data Model / Business-Logic Alignment (P1)
 
-All `[TODO]` — blocked on Phase 0.5/0.75 docs.
+| Item | Status |
+|------|--------|
+| Reconcile Firestore wizard questions vs WizardClientV2 | `[DONE]` (Unified canonical WizardClientV2 with direct dynamic controls) |
+| Add high-conversion wizard questions (budget, wiring reuse, purpose) | `[DONE]` (Added primary purpose, budget range, and existing wiring savings) |
+| Site-survey alignment (mounting height, surface, ladder need) | `[DONE]` (Collected ladder / high ceiling and wiring conditions) |
+| Configuration engine fallback risk (indoor/outdoor split enforced) | `[DONE]` (Explicit outdoor/indoor camera counters with validation in step 2) |
+| STQC upgrade toggle in wizard/customizer | `[DONE]` (STQC & BIS-ER certified hardware toggle with ₹450/camera pricing) |
+
+## Phase 4 — Operational Integrity (P1)
+
+| Item | Status |
+|------|--------|
+| Inventory reservation in webhook | `[DONE]` |
+| Invoice generation state-driven polling | `[DONE]` |
+| Cron jobs in `vercel.json` | `[DONE]` |
+| Dedicated Installer Job Card | `[DONE]` (Site conditions, camera split, hardware specs, and 6-point handover checklist) |
+
+## Phase 5 — Testing & Verification Gates
+
+| Gate | Status |
+|------|--------|
+| Layer 1: TypeScript compilation (`tsc --noEmit`) | `[VERIFIED]` (0 errors) |
+| Layer 2: Next.js Production Build (`npm run build`) | `[READY]` |
+| Layer 3: Unit / E2E test suite (Tamper resistance & pricing consistency) | `[READY]` |
+| Layer 4: State machine integrity (Webhook, quotes, jobs) | `[VERIFIED]` |
+| Layer 5: Role-based boundary check (Admin, installer, customer) | `[VERIFIED]` |

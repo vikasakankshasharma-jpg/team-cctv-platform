@@ -8,6 +8,7 @@ import { CameraCustomizer } from "@/components/CameraCustomizer";
 import { EditConfigurationDrawer } from "@/components/EditConfigurationDrawer";
 import { Button } from "@/components/ui/button";
 import { LeadGate } from "@/components/wizard/LeadGate";
+import { B2BInfoStep } from "@/components/wizard/B2BInfoStep";
 import { CheckCircle2, ShieldAlert, ShieldCheck, FileText, ArrowRight, Server, Box, Info } from "lucide-react";
 
 
@@ -62,9 +63,22 @@ export function WizardClientV2() {
   const [customizerPlanId, setCustomizerPlanId] = useState<string | null>(null);
   const [showLeadGate, setShowLeadGate] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showB2BStep, setShowB2BStep] = useState(false);
 
   const handleNext = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Check for B2B threshold on camera steps (step 2 for new, step 3 for addon)
+    if ((req.installation_type === "new" && step === 2) || (req.installation_type === "addon" && step === 3)) {
+      const outdoor = req.outdoor_camera_count || 0;
+      const indoor = req.indoor_camera_count || 0;
+      const totalCams = outdoor + indoor;
+      if (totalCams > 16 && !req.is_b2b) {
+        setShowB2BStep(true);
+        return;
+      }
+    }
+
     if (req.installation_type === "new" && step === 3) {
       setStep(5);
     } else {
@@ -464,10 +478,78 @@ export function WizardClientV2() {
                   <span className="block text-sm text-gray-500 mt-1">Records only when movement is detected. <strong className="text-green-700">Saves up to 50% hard disk cost!</strong></span>
                 </button>
               </div>
-              
+
+              <h3 className="text-xl font-semibold mb-3">Primary Security Purpose</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+                {[
+                  { id: "general", label: "General Monitoring", desc: "Overall perimeter, entry/exit surveillance" },
+                  { id: "face_detection", label: "Clear Face Detection", desc: "High-resolution crisp facial identification" },
+                  { id: "vehicle_plate", label: "Vehicle / Number Plate", desc: "Gate & roadway license plate capture" },
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setReq(prev => ({ ...prev, primary_purpose: p.id }))}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${req.primary_purpose === p.id || (!req.primary_purpose && p.id === "general") ? "border-blue-600 bg-blue-50/50" : "bg-white hover:border-gray-300"}`}
+                  >
+                    <span className="block font-bold text-gray-900 text-sm mb-1">{p.label}</span>
+                    <span className="block text-xs text-gray-500 leading-relaxed">{p.desc}</span>
+                  </button>
+                ))}
+              </div>
+
+              <h3 className="text-xl font-semibold mb-3">Target Budget Range</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+                {[
+                  { id: "under_30k", label: "< ₹30,000", sub: "Budget Friendly" },
+                  { id: "30k_75k", label: "₹30k – ₹75k", sub: "Popular Value" },
+                  { id: "75k_150k", label: "₹75k – ₹1.5L", sub: "Enterprise Grade" },
+                  { id: "no_limit", label: "Premium / No Limit", sub: "Top Specs" },
+                ].map(b => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => setReq(prev => ({ ...prev, budget_range: b.id }))}
+                    className={`p-3.5 rounded-xl border-2 text-center transition-all ${req.budget_range === b.id || (!req.budget_range && b.id === "30k_75k") ? "border-blue-600 bg-blue-50 text-blue-900" : "bg-white hover:border-gray-300 text-gray-700"}`}
+                  >
+                    <span className="block font-bold text-sm">{b.label}</span>
+                    <span className="block text-[10px] text-gray-500 mt-0.5">{b.sub}</span>
+                  </button>
+                ))}
+              </div>
+
+              <h3 className="text-xl font-semibold mb-3">Wiring &amp; Site Conditions</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setReq(prev => ({ ...prev, cabling_done: !prev.cabling_done }))}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${req.cabling_done ? "border-emerald-600 bg-emerald-50/50" : "bg-white hover:border-gray-300"}`}
+                >
+                  <span className="block font-bold text-gray-900 text-sm">
+                    {req.cabling_done ? "✓ Existing Wiring Can Be Reused" : "Need Complete Fresh Cabling"}
+                  </span>
+                  <span className="block text-xs text-gray-500 mt-1">
+                    {req.cabling_done ? "Reusing existing good cables saves ₹8,000 – ₹20,000 in material costs!" : "Our team routes high-grade copper cable with neat casing/conduit."}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setReq(prev => ({ ...prev, ladder_required: !prev.ladder_required }))}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${req.ladder_required ? "border-blue-600 bg-blue-50/50" : "bg-white hover:border-gray-300"}`}
+                >
+                  <span className="block font-bold text-gray-900 text-sm">
+                    {req.ladder_required ? "High Ceiling / Double Height Installation (> 10 ft)" : "Standard Ceiling Height (Under 10 ft)"}
+                  </span>
+                  <span className="block text-xs text-gray-500 mt-1">
+                    {req.ladder_required ? "Requires tall ladder / scaffolding for safe engineer mounting." : "Standard indoor / outdoor wall mount height."}
+                  </span>
+                </button>
+              </div>
+
               <div className="pt-6">
                 <Button onClick={handleNext} className="w-full h-12 text-lg font-semibold">
-                  Confirm Recording
+                  Confirm &amp; Proceed
                 </Button>
               </div>
             </div>
@@ -554,9 +636,38 @@ export function WizardClientV2() {
           </div>
         )}
 
-        {renderStep()}
+        {showB2BStep ? (
+          <B2BInfoStep
+            cameraCount={(req.outdoor_camera_count || 0) + (req.indoor_camera_count || 0)}
+            technology={req.technology_preference || "IP"}
+            onConfirm={({ company_name, gst_number }) => {
+              updateReq({
+                is_b2b: true,
+                company_name,
+                gst_number
+              });
+              setShowB2BStep(false);
+              if (req.installation_type === "new" && step === 3) {
+                setStep(5);
+              } else {
+                setStep(s => Math.min(s + 1, 5));
+              }
+            }}
+            onSkip={() => {
+              updateReq({ is_b2b: true });
+              setShowB2BStep(false);
+              if (req.installation_type === "new" && step === 3) {
+                setStep(5);
+              } else {
+                setStep(s => Math.min(s + 1, 5));
+              }
+            }}
+          />
+        ) : (
+          renderStep()
+        )}
 
-        {step > 0 && (
+        {step > 0 && !showB2BStep && (
           <div className="mt-12 flex justify-between">
             <Button variant="outline" onClick={handlePrev} disabled={step <= 1 || loading}>
               Back
