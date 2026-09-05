@@ -8,6 +8,7 @@ import { CameraCustomizer } from "@/components/CameraCustomizer";
 import { EditConfigurationDrawer } from "@/components/EditConfigurationDrawer";
 import { Button } from "@/components/ui/button";
 import { LeadGate } from "./LeadGate";
+import { toast } from "sonner";
 
 
 
@@ -91,11 +92,11 @@ export function WizardClientV2() {
       if (data.success) {
         setQuoteResult(data);
       } else {
-        alert("Error generating quote");
+        toast.error("Error generating quote");
       }
     } catch (e: any) {
       console.error(e);
-      alert("Error generating quote");
+      toast.error("Error generating quote");
     }
     setLoading(false);
   };
@@ -126,7 +127,7 @@ export function WizardClientV2() {
     const name = quoteResult.requirement.customer_name;
     
     if (!mobile) {
-      alert("Mobile number is required.");
+      toast.error("Mobile number is required.");
       return;
     }
     
@@ -165,7 +166,7 @@ export function WizardClientV2() {
         router.push(`/quote/${targetId}`);
         return;
       } else {
-        alert(data.message || "Failed to save quote.");
+        toast.error(data.message || "Failed to save quote.");
       }
     } catch (e) {
       console.error(e);
