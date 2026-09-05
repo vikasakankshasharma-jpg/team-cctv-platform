@@ -18,12 +18,12 @@ test.describe('Commercial Core Hardening - Phase 5', () => {
       source: 'wizard'
     };
 
-    const wizardRes = await request.post('/api/quote/generate', { data: wizardPayload });
+    const wizardRes = await request.post('/api/quote/save', { data: wizardPayload });
     expect(wizardRes.ok()).toBeTruthy();
     const wizardQuote = await wizardRes.json();
-    const basePrice = wizardQuote.quote.pricingSnapshot.total_payable;
+    const basePrice = wizardQuote.snapshot.total_payable;
 
-    const items = wizardQuote.quote.configurationSnapshot.items;
+    const items = wizardQuote.snapshot.pricingSnapshot.items || [];
     
     // Tamper the price to 1 INR
     const tamperedItems = items.map((i: any) => ({ ...i, unit_price: 1 }));
@@ -63,10 +63,10 @@ test.describe('Commercial Core Hardening - Phase 5', () => {
       selectedPlan: 'Pro_System',
       source: 'wizard'
     };
-    const quoteRes = await request.post('/api/quote/generate', { data: wizardPayload });
+    const quoteRes = await request.post('/api/quote/save', { data: wizardPayload });
     const quoteData = await quoteRes.json();
-    const quoteId = quoteData.quote.id;
-    const realTotal = quoteData.quote.pricingSnapshot.total_payable;
+    const quoteId = quoteData.quoteId;
+    const realTotal = quoteData.snapshot.total_payable;
 
     // Attacker attempts to dictate amount = 1
     const orderRes = await request.post('/api/payment/razorpay', {
@@ -77,13 +77,13 @@ test.describe('Commercial Core Hardening - Phase 5', () => {
     const orderData = await orderRes.json();
     
     // Server must ignore the 1 INR and charge the real total in paise
-    expect(orderData.amount).toBe(realTotal * 100);
-    expect(orderData.amount).not.toBe(100);
+    expect(orderData.order.amount).toBe(realTotal * 100);
+    expect(orderData.order.amount).not.toBe(100);
     
     // Tampered webhook attempt
     const fakeWebhookPayload = {
       event: 'payment.captured',
-      payload: { payment: { entity: { id: 'pay_fake123', order_id: orderData.id, amount: 100, notes: { quoteId } } } }
+      payload: { payment: { entity: { id: 'pay_fake123', order_id: orderData.order.id, amount: 100, notes: { quoteId } } } }
     };
 
     const webhookRes = await request.post('/api/webhooks/razorpay', {

@@ -1374,12 +1374,16 @@ export function generatePricingSnapshot(
 
   // 9. Add-ons (CRITICAL FIX: Support Addons - Do Not Drop!)
   if (selectedAddonIds && selectedAddonIds.length > 0 && addons && addons.length > 0) {
-    for (const addonId of selectedAddonIds) {
+    const addonCounts = selectedAddonIds.reduce((acc, id) => {
+      acc[id] = (acc[id] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    for (const [addonId, qty] of Object.entries(addonCounts)) {
       const addonObj = addons.find((a: any) => a.id === addonId);
       if (addonObj) {
         const baseCost = addonObj.baseCost || addonObj.unit_price || 0;
         const calc = MarginEngine.calculateUnitPricing(baseCost, 'accessory', planType, marginPolicy);
-        const qty = 1;
         const lineTotal = calc.sellingPriceExTax * qty;
         
         quoteAddons.push({
@@ -1408,6 +1412,21 @@ export function generatePricingSnapshot(
 
   // 10. Geo Multiplier
   const geoMultiplier = (settings as any).geo_multiplier || 1.0;
+
+  // 10.5. STQC Compliance Customizer
+  if (req.wants_stqc_compliance) {
+    const stqcCostPerCamera = 450;
+    const totalStqcCostExTax = stqcCostPerCamera * (req.camera_count || 1);
+    lineItems.push({
+      product_id: "upgrade_stqc_compliance",
+      display_name: `STQC / BIS-ER Certified Hardware Upgrade (${req.camera_count} cameras)`,
+      qty: req.camera_count || 1,
+      unit_price: stqcCostPerCamera,
+      line_total: totalStqcCostExTax,
+    });
+    baseHardwareCost += totalStqcCostExTax;
+    totalPurchaseCost += 300 * (req.camera_count || 1);
+  }
 
   // 11. Final Financials with MarginEngine
   const mappedLineItems = lineItems.map(li => ({ sellingPriceExTax: li.unit_price, qty: li.qty }));

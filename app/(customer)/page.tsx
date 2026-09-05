@@ -120,7 +120,7 @@ export default function LandingPage() {
             <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span><TranslatedText tKey="landing_hero_highlight" defaultText="Simple & Reliable CCTV Security" /></span>
             <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-blue-500/50 hidden sm:block" />
-            <span className="text-emerald-600 dark:text-emerald-400 hidden sm:inline"><TranslatedText tKey="landing_free_quotes" defaultText="100% Free Quotes" /></span>
+            <span className="text-emerald-700 dark:text-emerald-400 hidden sm:inline"><TranslatedText tKey="landing_free_quotes" defaultText="100% Free Quotes" /></span>
           </div>
 
           {/* H1 - solid color on mobile, gradient only on desktop (where renderer handles it fine) */}

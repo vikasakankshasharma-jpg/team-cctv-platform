@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CCTVRequirement } from "@/types";
 import { QuoteComparison } from "@/components/QuoteComparison";
 import { CameraCustomizer } from "@/components/CameraCustomizer";
 import { EditConfigurationDrawer } from "@/components/EditConfigurationDrawer";
 import { Button } from "@/components/ui/button";
-import { LeadGate } from "@/components/wizard/LeadGate";
-import { B2BInfoStep } from "@/components/wizard/B2BInfoStep";
-import { CheckCircle2, ShieldAlert, ShieldCheck, FileText, ArrowRight, Server, Box, Info } from "lucide-react";
+import { LeadGate } from "./LeadGate";
+import { toast } from "sonner";
 
 
 
@@ -17,6 +16,8 @@ export function WizardClientV2() {
   const router = useRouter();
   const [sessionId] = useState(() => crypto.randomUUID());
   const [step, setStep] = useState(0);
+  const [showLeadGate, setShowLeadGate] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
     
   useEffect(() => {
     // Send session start
@@ -61,24 +62,9 @@ export function WizardClientV2() {
   const totalSteps = req.installation_type === "new" ? 4 : 5;
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [customizerPlanId, setCustomizerPlanId] = useState<string | null>(null);
-  const [showLeadGate, setShowLeadGate] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showB2BStep, setShowB2BStep] = useState(false);
 
   const handleNext = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Check for B2B threshold on camera steps (step 2 for new, step 3 for addon)
-    if ((req.installation_type === "new" && step === 2) || (req.installation_type === "addon" && step === 3)) {
-      const outdoor = req.outdoor_camera_count || 0;
-      const indoor = req.indoor_camera_count || 0;
-      const totalCams = outdoor + indoor;
-      if (totalCams > 16 && !req.is_b2b) {
-        setShowB2BStep(true);
-        return;
-      }
-    }
-
     if (req.installation_type === "new" && step === 3) {
       setStep(5);
     } else {
@@ -96,7 +82,6 @@ export function WizardClientV2() {
 
   const generateQuote = async (finalReq: CCTVRequirement) => {
     setLoading(true);
-    setErrorMsg(null);
     try {
       const res = await fetch("/api/quote/generate", {
         method: "POST",
@@ -107,17 +92,17 @@ export function WizardClientV2() {
       if (data.success) {
         setQuoteResult(data);
       } else {
-        setErrorMsg("Error generating quote. Please try again.");
+        toast.error("Error generating quote");
       }
     } catch (e: any) {
       console.error(e);
-      setErrorMsg("Error generating quote. Please check your connection and try again.");
+      toast.error("Error generating quote");
     }
     setLoading(false);
   };
 
   const handleFinishWizard = () => {
-    generateQuote(req as CCTVRequirement);
+    setShowLeadGate(true);
   };
 
 
@@ -137,25 +122,27 @@ export function WizardClientV2() {
     setCustomizerPlanId(planId);
   };
 
-  const handleConfirmCustomizer = async (planType: string, modifiedPricingSnapshot?: any) => {
+  const handleConfirmCustomizer = async (planType: string, modifiedPricingSnapshot?: any, updatedRequirement?: CCTVRequirement) => {
     const mobile = quoteResult.requirement.customer_mobile;
     const name = quoteResult.requirement.customer_name;
     
     if (!mobile) {
-      setErrorMsg("Mobile number is required.");
+      toast.error("Mobile number is required.");
       return;
     }
     
     setLoading(true);
     try {
       const pricingToSave = modifiedPricingSnapshot || quoteResult.plans[planType];
+      const reqToSave = updatedRequirement || quoteResult.requirement;
       const res = await fetch("/api/quote/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          leadId: leadId,
           customer_mobile: mobile,
           customer_name: name,
-          requirementSnapshot: quoteResult.requirement,
+          requirementSnapshot: reqToSave,
           configurationSnapshot: quoteResult.configuration,
           pricingSnapshot: pricingToSave,
           selectedPlan: planType
@@ -179,7 +166,7 @@ export function WizardClientV2() {
         router.push(`/quote/${targetId}`);
         return;
       } else {
-        setErrorMsg(data.message || "Failed to save quote.");
+        toast.error(data.message || "Failed to save quote.");
       }
     } catch (e) {
       console.error(e);
@@ -202,7 +189,7 @@ export function WizardClientV2() {
         availableAddons={quoteResult.addons || []}
         storageDrives={quoteResult.storageDrives || []}
         onBack={() => setCustomizerPlanId(null)}
-        onConfirm={(modifiedPlan: any) => handleConfirmCustomizer(customizerPlanId, modifiedPlan)}
+        onConfirm={(modifiedPlan, updatedReq) => handleConfirmCustomizer(customizerPlanId, modifiedPlan, updatedReq)}
         isSaving={loading}
       />
     );
@@ -248,7 +235,7 @@ export function WizardClientV2() {
               <button onClick={() => setStep(1)}
                 className="p-8 rounded-2xl border-2 text-left hover:border-blue-500 transition-all group bg-blue-50/50 border-blue-100 shadow-sm hover:shadow-md">
                 <span className="block font-black text-xl text-blue-900 group-hover:text-blue-700 mb-2">? Guided Setup (Recommended)</span>
-                <span className="block text-sm text-blue-700/80 font-medium leading-relaxed">Answer a few simple questions about your property, and our AI will calculate the perfect, most compatible CCTV package for you instantly.</span>
+                <span className="block text-sm text-blue-800 font-medium leading-relaxed">Answer a few simple questions about your property, and our AI will calculate the perfect, most compatible CCTV package for you instantly.</span>
               </button>
               
               <button onClick={() => window.location.href = '/pro-builder'}
@@ -265,7 +252,7 @@ export function WizardClientV2() {
             <h2 className="text-3xl font-semibold mb-2">What kind of installation do you need?</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button onClick={() => { updateReq({ installation_type: "new", property_type: "Residential" }); handleNext(); }}
+              <button onClick={() => { updateReq({ installation_type: "new", property_type: "home" }); handleNext(); }}
                 className={`p-6 rounded-xl border-2 text-left hover:border-blue-500 transition-all group ${req.installation_type === "new" ? "border-blue-500 bg-blue-50" : "bg-white"}`}>
                 <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">Completely New System</span>
                 <span className="block text-sm text-gray-500 mt-1">I don't have any CCTV cameras installed right now.</span>
@@ -478,78 +465,10 @@ export function WizardClientV2() {
                   <span className="block text-sm text-gray-500 mt-1">Records only when movement is detected. <strong className="text-green-700">Saves up to 50% hard disk cost!</strong></span>
                 </button>
               </div>
-
-              <h3 className="text-xl font-semibold mb-3">Primary Security Purpose</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-                {[
-                  { id: "general", label: "General Monitoring", desc: "Overall perimeter, entry/exit surveillance" },
-                  { id: "face_detection", label: "Clear Face Detection", desc: "High-resolution crisp facial identification" },
-                  { id: "vehicle_plate", label: "Vehicle / Number Plate", desc: "Gate & roadway license plate capture" },
-                ].map(p => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setReq(prev => ({ ...prev, primary_purpose: p.id }))}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${req.primary_purpose === p.id || (!req.primary_purpose && p.id === "general") ? "border-blue-600 bg-blue-50/50" : "bg-white hover:border-gray-300"}`}
-                  >
-                    <span className="block font-bold text-gray-900 text-sm mb-1">{p.label}</span>
-                    <span className="block text-xs text-gray-500 leading-relaxed">{p.desc}</span>
-                  </button>
-                ))}
-              </div>
-
-              <h3 className="text-xl font-semibold mb-3">Target Budget Range</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-                {[
-                  { id: "under_30k", label: "< ₹30,000", sub: "Budget Friendly" },
-                  { id: "30k_75k", label: "₹30k – ₹75k", sub: "Popular Value" },
-                  { id: "75k_150k", label: "₹75k – ₹1.5L", sub: "Enterprise Grade" },
-                  { id: "no_limit", label: "Premium / No Limit", sub: "Top Specs" },
-                ].map(b => (
-                  <button
-                    key={b.id}
-                    type="button"
-                    onClick={() => setReq(prev => ({ ...prev, budget_range: b.id }))}
-                    className={`p-3.5 rounded-xl border-2 text-center transition-all ${req.budget_range === b.id || (!req.budget_range && b.id === "30k_75k") ? "border-blue-600 bg-blue-50 text-blue-900" : "bg-white hover:border-gray-300 text-gray-700"}`}
-                  >
-                    <span className="block font-bold text-sm">{b.label}</span>
-                    <span className="block text-[10px] text-gray-500 mt-0.5">{b.sub}</span>
-                  </button>
-                ))}
-              </div>
-
-              <h3 className="text-xl font-semibold mb-3">Wiring &amp; Site Conditions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <button
-                  type="button"
-                  onClick={() => setReq(prev => ({ ...prev, cabling_done: !prev.cabling_done }))}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${req.cabling_done ? "border-emerald-600 bg-emerald-50/50" : "bg-white hover:border-gray-300"}`}
-                >
-                  <span className="block font-bold text-gray-900 text-sm">
-                    {req.cabling_done ? "✓ Existing Wiring Can Be Reused" : "Need Complete Fresh Cabling"}
-                  </span>
-                  <span className="block text-xs text-gray-500 mt-1">
-                    {req.cabling_done ? "Reusing existing good cables saves ₹8,000 – ₹20,000 in material costs!" : "Our team routes high-grade copper cable with neat casing/conduit."}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setReq(prev => ({ ...prev, ladder_required: !prev.ladder_required }))}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${req.ladder_required ? "border-blue-600 bg-blue-50/50" : "bg-white hover:border-gray-300"}`}
-                >
-                  <span className="block font-bold text-gray-900 text-sm">
-                    {req.ladder_required ? "High Ceiling / Double Height Installation (> 10 ft)" : "Standard Ceiling Height (Under 10 ft)"}
-                  </span>
-                  <span className="block text-xs text-gray-500 mt-1">
-                    {req.ladder_required ? "Requires tall ladder / scaffolding for safe engineer mounting." : "Standard indoor / outdoor wall mount height."}
-                  </span>
-                </button>
-              </div>
-
+              
               <div className="pt-6">
                 <Button onClick={handleNext} className="w-full h-12 text-lg font-semibold">
-                  Confirm &amp; Proceed
+                  Confirm Recording
                 </Button>
               </div>
             </div>
@@ -599,17 +518,43 @@ export function WizardClientV2() {
         }
       case 5:
         return (
-          <div className="space-y-6 animate-in fade-in text-center py-8">
-            <ShieldCheck className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+          <div className="space-y-6 animate-in fade-in">
             <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">You're one step away from viewing your customized, itemized CCTV options. We require a quick verification to generate your quote.</p>
+            <p className="text-gray-600 mb-6">Please enter your details to view your personalized CCTV options instantly.</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. Rahul Kumar" 
+                  value={req.customer_name || ''} 
+                  onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))} 
+                  className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number *</label>
+                <input 
+                  type="tel" 
+                  required
+                  placeholder="10-digit mobile number" 
+                  maxLength={10}
+                  value={req.customer_mobile || ''} 
+                  onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/D/g, '') }))} 
+                  className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+            </div>
 
             <Button 
-              onClick={() => setShowLeadGate(true)} 
+              onClick={handleFinishWizard} 
+              disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} 
               size="lg" 
-              className="w-full sm:w-auto min-w-[280px] text-lg h-14"
+              className="w-full text-lg h-14 mt-6"
             >
-              Secure Verification & View Quotes
+              {loading ? "Analyzing Requirement..." : "View My CCTV Options"}
             </Button>
           </div>
         );
@@ -617,6 +562,7 @@ export function WizardClientV2() {
   };
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
+      <h1 className="sr-only">CCTV Quotation Wizard</h1>
       <div className="bg-white rounded-2xl shadow-sm border p-8">
         {step > 0 && (
           <div className="mb-8">
@@ -626,48 +572,10 @@ export function WizardClientV2() {
             <p className="text-sm text-gray-500 mt-2 text-right">Step {req.installation_type === "new" && step === 5 ? 4 : step} of {totalSteps}</p>
           </div>
         )}
-        {errorMsg && (
-          <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm font-medium rounded-xl border border-red-200 flex items-start gap-2">
-            <ShieldAlert className="w-5 h-5 mt-0.5 flex-shrink-0" />
-            <div>
-              <span>{errorMsg}</span>
-              <button onClick={() => setErrorMsg(null)} className="ml-2 underline text-red-600 hover:text-red-800">Dismiss</button>
-            </div>
-          </div>
-        )}
 
-        {showB2BStep ? (
-          <B2BInfoStep
-            cameraCount={(req.outdoor_camera_count || 0) + (req.indoor_camera_count || 0)}
-            technology={req.technology_preference || "IP"}
-            onConfirm={({ company_name, gst_number }) => {
-              updateReq({
-                is_b2b: true,
-                company_name,
-                gst_number
-              });
-              setShowB2BStep(false);
-              if (req.installation_type === "new" && step === 3) {
-                setStep(5);
-              } else {
-                setStep(s => Math.min(s + 1, 5));
-              }
-            }}
-            onSkip={() => {
-              updateReq({ is_b2b: true });
-              setShowB2BStep(false);
-              if (req.installation_type === "new" && step === 3) {
-                setStep(5);
-              } else {
-                setStep(s => Math.min(s + 1, 5));
-              }
-            }}
-          />
-        ) : (
-          renderStep()
-        )}
+        {renderStep()}
 
-        {step > 0 && !showB2BStep && (
+        {step > 0 && (
           <div className="mt-12 flex justify-between">
             <Button variant="outline" onClick={handlePrev} disabled={step <= 1 || loading}>
               Back
@@ -680,9 +588,10 @@ export function WizardClientV2() {
       {showLeadGate && (
         <LeadGate
           mode="partial"
-          onSuccess={(leadId, verifiedMobile, verifiedName) => {
+          answersPayload={req}
+          onSuccess={(newLeadId, verifiedMobile, verifiedName) => {
             setShowLeadGate(false);
-            // Set verified mobile/name into the requirement, then generate quote
+            setLeadId(newLeadId);
             const updatedReq = {
               ...req,
               customer_mobile: verifiedMobile || req.customer_mobile || "",

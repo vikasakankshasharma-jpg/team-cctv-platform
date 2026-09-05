@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import { adminDb, serverTimestamp, arrayUnion } from "@/lib/firebase-admin";
 import { QuoteSnapshot, Product, Addon, AppSettings } from "@/types";
 import { generateConfiguration } from "@/lib/configuration-engine";
 import { resolveProducts } from "@/lib/product-resolver";
@@ -77,7 +77,26 @@ export async function POST(request: Request) {
       const verifiedItems: any[] = [];
 
       for (const item of configurationSnapshot.items as any[]) {
-        const dbProduct = catalog.find(p => p.id === item.product_id) || addons.find(a => a.id === item.product_id);
+        let dbProduct: any = catalog.find(p => p.id === item.product_id) || addons.find(a => a.id === item.product_id);
+
+        if (!dbProduct) {
+          // Check known system-generated line items (cables, connectors, labor, surcharges)
+          if (item.product_id === "cable_cat6") {
+            dbProduct = { id: "cable_cat6", display_name: "CAT6 IP Camera Cable", category: "cable", unit_price: settings.cable_copper_coated_ip || 15 };
+          } else if (item.product_id === "cable_3plus1") {
+            dbProduct = { id: "cable_3plus1", display_name: "3+1 HD Camera Cable", category: "cable", unit_price: settings.cable_copper_coated_hd || 12 };
+          } else if (item.product_id === "conn_rj45") {
+            dbProduct = { id: "conn_rj45", display_name: "RJ45 Connectors", category: "accessory", unit_price: settings.connector_rj45_cost || 25 };
+          } else if (item.product_id === "conn_bnc_dc") {
+            dbProduct = { id: "conn_bnc_dc", display_name: "BNC & DC Connectors", category: "accessory", unit_price: settings.connector_bnc_dc_cost || 70 };
+          } else if (item.product_id === "labor_install") {
+            dbProduct = { id: "labor_install", display_name: "Installation & Labor", category: "labor", unit_price: settings.labor_ip_per_camera || 500 };
+          } else if (item.product_id === "upgrade_stqc_compliance") {
+            dbProduct = { id: "upgrade_stqc_compliance", display_name: "STQC Hardware Upgrade", category: "upgrade", unit_price: 450 };
+          } else if (item.product_id?.startsWith("surcharge_")) {
+            dbProduct = { id: item.product_id, display_name: item.name || item.display_name || "Site Surcharge", category: "labor", unit_price: 500 };
+          }
+        }
 
         if (!dbProduct) {
           // Unknown product — reject entirely rather than trusting client price
@@ -242,23 +261,40 @@ export async function POST(request: Request) {
     };
 
     // Save as a brand new immutable document
+    const cleanSnapshot = JSON.parse(JSON.stringify(snapshot));
     await adminDb.collection("quotes").doc(quoteId).set({
-      ...snapshot,
+      ...cleanSnapshot,
       _serverCreatedAt: serverTimestamp(),
     });
 
     // 6. Lead Association (Find or Create Lead)
-    let leadId: string | null = null;
+    let leadId: string | null = data.leadId || null;
     try {
       const leadsRef = adminDb.collection("leads");
-      const existingLeadSnap = await leadsRef.where("mobile_number", "==", customer_mobile).limit(1).get();
+      let existingLeadSnap = null;
+      
+      if (leadId) {
+        const doc = await leadsRef.doc(leadId).get();
+        if (doc.exists) {
+          existingLeadSnap = { empty: false, docs: [doc] };
+        }
+      }
+      
+      if (!existingLeadSnap || existingLeadSnap.empty) {
+        existingLeadSnap = await leadsRef.where("mobile_number", "==", customer_mobile).limit(1).get();
+      }
 
       if (!existingLeadSnap.empty) {
         leadId = existingLeadSnap.docs[0].id;
+        
         await leadsRef.doc(leadId).update({
           updated_at: serverTimestamp(),
           latest_quote_id: quoteId,
-          wizard_answers: requirementSnapshot,
+          quote_ids: arrayUnion(quoteId),
+          // Do not overwrite top-level camera_count, property_type, etc. 
+          // to preserve the original conversation intent.
+          // Just update the latest wizard_answers for reference.
+          "wizard_answers.latest": JSON.parse(JSON.stringify(requirementSnapshot)),
         });
       } else {
         const newLeadRef = leadsRef.doc();
@@ -270,8 +306,10 @@ export async function POST(request: Request) {
           property_type: requirementSnapshot.property_type || "home",
           technology_choice: requirementSnapshot.technology_preference || "HD",
           cabling_done: requirementSnapshot.cabling_done ?? false,
-          wizard_answers: requirementSnapshot,
+          camera_count: requirementSnapshot.camera_count || 0,
+          wizard_answers: { latest: JSON.parse(JSON.stringify(requirementSnapshot)) },
           latest_quote_id: quoteId,
+          quote_ids: [quoteId],
           status: "new",
           source: source || "wizard",
           created_at: serverTimestamp(),
