@@ -65,7 +65,7 @@ export const CreateLeadSchema = z.object({
   firebase_uid: z.string().min(1, "Firebase UID is required"),
   referral_code: ReferralCodeSchema,
   wizard_answers: WizardAnswersSchema,
-  property_type: z.enum(["home", "shop", "office", "factory", "other", "warehouse", "bungalow", "residential"]),
+  property_type: z.enum(["home", "shop", "office", "factory", "warehouse", "bungalow", "residential", "other"]),
   technology_choice: z.enum(["HD", "IP", "WiFi", "4G", "Analog", "Wireless"]),
   cabling_done: z.boolean(),
   camera_count: z.number().int().nonnegative().optional(),
@@ -117,7 +117,7 @@ export const GenerateQuoteSchema = z.object({
   expected_total_payable: z.number().nonnegative().optional(),
   brand_preference: z.string().nullable().optional(),
   resolution_preference: z.string().nullable().optional(),
-  property_type: z.string().nullable().optional(),
+  property_type: z.enum(["home", "shop", "office", "factory", "warehouse", "bungalow", "residential", "other"]).nullable().optional(),
   requested_features: z.array(z.string()).nullable().optional(),
   max_budget: z.number().nullable().optional(),
   cable_length_meters: z.number().nullable().optional(),
@@ -206,7 +206,7 @@ export const UpdateAddonSchema = CreateAddonSchema.partial().extend({
 export const CreateAddonRuleSchema = z.object({
   priority: z.number().int().positive(),
   conditions: z.object({
-    property_type: z.enum(["home", "shop", "office", "factory", "other"]).optional(),
+    property_type: z.enum(["home", "shop", "office", "factory", "warehouse", "bungalow", "residential", "other"]).optional(),
     technology: z.enum(["HD", "IP"]).optional(),
     requirements: z.array(z.string()).optional(),
     cabling_done: z.boolean().optional(),

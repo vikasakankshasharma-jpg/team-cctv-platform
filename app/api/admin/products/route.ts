@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/auth-server";
+import { requireRoleApi } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Product } from "@/types";
@@ -9,8 +9,10 @@ export const dynamic = "force-dynamic";
  * GET: Fetch all products for the admin dashboard.
  */
 export async function GET(req: NextRequest) { console.log('GET /api/admin/products STARTED');
-  const session = await verifySession();
-  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
 
   try {
     const [prodSnap, addonSnap] = await Promise.all([
@@ -61,8 +63,10 @@ import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
  * POST: Create a new product.
  */
 export async function POST(req: NextRequest) {
-  const session = await verifySession();
-  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
 
   try {
     const body = await req.json();
@@ -123,8 +127,10 @@ export async function POST(req: NextRequest) {
  * PATCH: Update an existing product.
  */
 export async function PATCH(req: NextRequest) {
-  const session = await verifySession();
-  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
 
   try {
     const body = await req.json();
@@ -176,8 +182,10 @@ console.log('API Hit: /api/admin/products');
  * DELETE: Delete a product or multiple products.
  */
 export async function DELETE(req: NextRequest) {
-  const session = await verifySession();
-  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
 
   try {
     const { searchParams } = new URL(req.url);

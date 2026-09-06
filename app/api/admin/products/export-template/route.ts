@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/auth-server";
+import { requireRoleApi } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 
@@ -7,9 +7,9 @@ const VALID_TECHNOLOGIES = ["HD", "IP", "Common", "WiFi", "4G", "Solar"];
 const BOOLEAN_VALUES = ["TRUE", "FALSE"];
 
 export async function GET(req: NextRequest) {
-  const session = await verifySession();
-  if (!session.isAuthenticated) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   try {

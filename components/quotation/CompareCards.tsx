@@ -308,6 +308,12 @@ export function CompareCards({
                     🎙 Audio
                   </span>
                 )}
+                {/* Certifications */}
+                {card.camProduct?.certifications?.includes("STQC") && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full">
+                    ✓ STQC Ready
+                  </span>
+                )}
               </div>
             )}
 

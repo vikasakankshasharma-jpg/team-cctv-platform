@@ -1,3 +1,4 @@
+import { getCachedProducts, getCachedAddons } from "@/lib/cached-catalog";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { adminDb, serverTimestamp, arrayUnion } from "@/lib/firebase-admin";
@@ -7,7 +8,7 @@ import { resolveProducts } from "@/lib/product-resolver";
 import { generatePricingSnapshot } from "@/lib/pricing-engine";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
 
-async function getAdminSettings(): Promise<AppSettings> {
+async function getCachedAdminSettings(): Promise<AppSettings> {
   const doc = await adminDb.collection("settings").doc(SETTINGS_DOC_ID).get();
   if (doc.exists) {
     return doc.data() as AppSettings;
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
 
     // 2. Fetch Fresh Catalog & Settings (Server Authority)
     const [settings, productsSnap, addonsSnap] = await Promise.all([
-      getAdminSettings(),
+      getCachedAdminSettings(),
       adminDb.collection("products").where("is_active", "==", true).where("is_quotation_eligible", "==", true).get(),
       adminDb.collection("addons").where("is_active", "==", true).get(),
     ]);
@@ -91,8 +92,6 @@ export async function POST(request: Request) {
             dbProduct = { id: "conn_bnc_dc", display_name: "BNC & DC Connectors", category: "accessory", unit_price: settings.connector_bnc_dc_cost || 70 };
           } else if (item.product_id === "labor_install") {
             dbProduct = { id: "labor_install", display_name: "Installation & Labor", category: "labor", unit_price: settings.labor_ip_per_camera || 500 };
-          } else if (item.product_id === "upgrade_stqc_compliance") {
-            dbProduct = { id: "upgrade_stqc_compliance", display_name: "STQC Hardware Upgrade", category: "upgrade", unit_price: 450 };
           } else if (item.product_id?.startsWith("surcharge_")) {
             dbProduct = { id: item.product_id, display_name: item.name || item.display_name || "Site Surcharge", category: "labor", unit_price: 500 };
           }
@@ -338,3 +337,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: error.message || "Failed to save quote" }, { status: 500 });
   }
 }
+
+

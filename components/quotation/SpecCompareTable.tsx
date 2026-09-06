@@ -72,6 +72,12 @@ const SECTIONS: SpecSection[] = [
         formatValue: (v) => v ? <Check className="w-5 h-5 text-[#0071e3] mx-auto" /> : <X className="w-5 h-5 text-[#d2d2d7] mx-auto" />,
       },
       {
+        label: "Certifications",
+        key: "cam_certifications",
+        getValue: ({ cam }) => cam?.certifications?.join(", ") || "-",
+        formatValue: (v) => v,
+      },
+      {
         label: "Form Factor",
         key: "cam_form",
         getValue: ({ cam }) => cam ? cam.form_factor ?? (cam.technical_name?.toLowerCase().includes("bullet") ? "bullet" : "dome") : undefined,

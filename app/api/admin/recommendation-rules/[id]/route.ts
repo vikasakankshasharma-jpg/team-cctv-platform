@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/auth-server";
+import { requireRoleApi } from "@/lib/auth-server";
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import type { RecommendationRule } from "@/types";
@@ -13,8 +13,10 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await verifySession();
-  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
   try {
     const { id } = await params;
     const rule: Partial<RecommendationRule> = await request.json();
@@ -41,8 +43,10 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await verifySession();
-  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
   try {
     const { id } = await params;
     const docRef = adminDb.collection("recommendation_rules").doc(id);

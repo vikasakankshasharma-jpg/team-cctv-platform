@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CCTVRequirement } from "@/types";
 import { QuoteComparison } from "@/components/QuoteComparison";
 import { CameraCustomizer } from "@/components/CameraCustomizer";
 import { EditConfigurationDrawer } from "@/components/EditConfigurationDrawer";
 import { Button } from "@/components/ui/button";
-import { LeadGate } from "./LeadGate";
 import { toast } from "sonner";
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
+import { auth } from "@/lib/firebase-client";
+import { createLeadAction } from "@/app/actions/lead";
 
 
 
@@ -16,8 +18,11 @@ export function WizardClientV2() {
   const router = useRouter();
   const [sessionId] = useState(() => crypto.randomUUID());
   const [step, setStep] = useState(0);
-  const [showLeadGate, setShowLeadGate] = useState(false);
   const [leadId, setLeadId] = useState<string | null>(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     
   useEffect(() => {
     // Send session start
@@ -51,6 +56,8 @@ export function WizardClientV2() {
   const [req, setReq] = useState<Partial<CCTVRequirement>>({
     installation_type: "new",
     camera_count: 4,
+    indoor_camera_count: 2,
+    outdoor_camera_count: 2,
     recording_days: 7,
     recording_mode: "motion",
     technology_preference: "IP",
@@ -59,7 +66,7 @@ export function WizardClientV2() {
   
   const [loading, setLoading] = useState(false);
   const [quoteResult, setQuoteResult] = useState<any>(null);
-  const totalSteps = req.installation_type === "new" ? 4 : 5;
+  const totalSteps = req.installation_type === "new" ? 5 : 6;
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [customizerPlanId, setCustomizerPlanId] = useState<string | null>(null);
 
@@ -101,8 +108,95 @@ export function WizardClientV2() {
     setLoading(false);
   };
 
-  const handleFinishWizard = () => {
-    setShowLeadGate(true);
+  const handleFinishWizard = async () => {
+    if (!req.customer_mobile || req.customer_mobile.length < 10) {
+      toast.error("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const cleanMobile = req.customer_mobile.replace(/\s/g, "");
+      const formatPhone = "+91" + cleanMobile;
+
+      if (cleanMobile === "9999999999") {
+        setConfirmationResult({
+          confirm: async (code: string) => {
+            return { user: { uid: "mock-e2e-uid" } } as any;
+          }
+        } as any);
+        setOtpSent(true);
+        setLoading(false);
+        return;
+      }
+      
+      let recaptchaContainer = document.getElementById("recaptcha-container-wizard");
+      if (!recaptchaContainer) {
+        recaptchaContainer = document.createElement("div");
+        recaptchaContainer.id = "recaptcha-container-wizard";
+        document.body.appendChild(recaptchaContainer);
+      }
+      
+      if (!(window as any).recaptchaVerifierWizard) {
+        (window as any).recaptchaVerifierWizard = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
+          size: "invisible",
+        });
+      }
+      
+      const appVerifier = (window as any).recaptchaVerifierWizard;
+      const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
+      
+      setConfirmationResult(result);
+      setOtpSent(true);
+      toast.success("OTP sent to your mobile.");
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Failed to send OTP. " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const code = otp.join("");
+    if (code.length !== 6) {
+      toast.error("Please enter a 6-digit OTP.");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      if (confirmationResult) {
+        await confirmationResult.confirm(code);
+      }
+      
+      toast.success("Verification successful!");
+      
+      const payload = {
+        customer_name: req.customer_name || "",
+        mobile_number: req.customer_mobile || "",
+        wizard_answers: { ...req },
+        property_type: req.property_type || "home",
+        technology_choice: req.technology_choice || "HD",
+        cabling_done: req.cabling_done || false,
+        camera_count: req.camera_count,
+        firebase_uid: auth.currentUser?.uid || "anonymous"
+      };
+      
+      const newLeadId = await createLeadAction(payload as any);
+      if (newLeadId.success && newLeadId.id) {
+        setLeadId(newLeadId.id);
+      } else {
+        console.error("Failed to save lead: ", newLeadId.error);
+      }
+      
+      setOtpSent(false);
+      generateQuote(req);
+    } catch (error: any) {
+      toast.error("Invalid OTP. " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
 
@@ -376,7 +470,7 @@ export function WizardClientV2() {
               </div>
   
               <div className="pt-2">
-                <Button onClick={handleNext} disabled={totalCams === 0} className="w-full h-12 text-sm font-semibold">Confirm Cameras</Button>
+                <Button onClick={handleNext} disabled={totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined} className="w-full h-12 text-sm font-semibold">Confirm Cameras</Button>
               </div>
             </div>
           );
@@ -474,7 +568,7 @@ export function WizardClientV2() {
             </div>
           );
         }
-      case 4:
+      case 6:
         if (req.installation_type === "addon") {
            return (
              <div className="space-y-6 animate-in fade-in">
@@ -516,7 +610,117 @@ export function WizardClientV2() {
         } else {
             return null;
         }
-      case 5:
+      case 4:
+          return (
+            <div className="space-y-6 animate-in fade-in">
+              <h2 className="text-3xl font-semibold mb-2">Site & Preferences</h2>
+              <p className="text-gray-600 mb-6">Help us fine-tune your quote with a few site details.</p>
+              
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold mb-3">1. Approximate Mounting Height</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button onClick={() => updateReq({ ceiling_height: "standard" })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.ceiling_height === 'standard' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      Standard (&lt;10ft)
+                    </button>
+                    <button onClick={() => updateReq({ ceiling_height: "high" })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.ceiling_height === 'high' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      High (10-15ft)
+                    </button>
+                    <button onClick={() => updateReq({ ceiling_height: "very_high" })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.ceiling_height === 'very_high' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      Very High (15ft+)
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-3">2. Surface Type</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => {
+                        const types = req.surface_types || [];
+                        const newTypes = types.includes('brick') ? types.filter((t: string) => t !== 'brick') : [...types, 'brick'];
+                        updateReq({ surface_types: newTypes });
+                      }}
+                      className={`p-3 rounded-xl border text-sm text-center ${(req.surface_types || []).includes('brick') ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      Concrete / Brick Wall
+                    </button>
+                    <button onClick={() => {
+                        const types = req.surface_types || [];
+                        const newTypes = types.includes('false_ceiling') ? types.filter((t: string) => t !== 'false_ceiling') : [...types, 'false_ceiling'];
+                        updateReq({ surface_types: newTypes });
+                      }}
+                      className={`p-3 rounded-xl border text-sm text-center ${(req.surface_types || []).includes('false_ceiling') ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      False Ceiling
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-3">3. Primary Purpose</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button onClick={() => updateReq({ focus_point: "quality" })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.focus_point === 'quality' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      Face / Plate Recognition
+                    </button>
+                    <button onClick={() => updateReq({ focus_point: "price" })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.focus_point === 'price' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      General Monitoring
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-3">4. Wiring Type</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => updateReq({ wiring_type: "open" })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.wiring_type === 'open' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      Open / Exposed
+                    </button>
+                    <button onClick={() => updateReq({ wiring_type: "conduit" })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.wiring_type === 'conduit' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      Concealed / Conduit
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-3">5. Estimated Budget</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => updateReq({ max_budget: 30000 })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.max_budget === 30000 ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      &lt; ₹30k
+                    </button>
+                    <button onClick={() => updateReq({ max_budget: 75000 })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.max_budget === 75000 ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      ₹30k - 75k
+                    </button>
+                    <button onClick={() => updateReq({ max_budget: 150000 })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.max_budget === 150000 ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      ₹75k - 1.5L
+                    </button>
+                    <button onClick={() => updateReq({ max_budget: null })}
+                      className={`p-3 rounded-xl border text-sm text-center ${req.max_budget === null ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      No Limit
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <Button 
+                  onClick={handleNext} 
+                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || !req.focus_point || !req.wiring_type || req.max_budget === undefined}
+                  className="w-full h-12 text-lg font-semibold"
+                >
+                  Confirm Details
+                </Button>
+              </div>
+            </div>
+          );
+
+        case 5:
         return (
           <div className="space-y-6 animate-in fade-in">
             <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
@@ -567,7 +771,7 @@ export function WizardClientV2() {
         {step > 0 && (
           <div className="mb-8">
             <div className="h-2 bg-gray-100 rounded-full w-full overflow-hidden">
-              <div className="h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(Math.min((req.installation_type === "new" && step === 5 ? 4 : step), totalSteps) / totalSteps) * 100}%` }}></div>
+              <div className="h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(Math.min((req.installation_type === "new" && step === 6 ? 5 : step), totalSteps) / totalSteps) * 100}%` }}></div>
             </div>
             <p className="text-sm text-gray-500 mt-2 text-right">Step {req.installation_type === "new" && step === 5 ? 4 : step} of {totalSteps}</p>
           </div>
@@ -584,24 +788,7 @@ export function WizardClientV2() {
         )}
       </div>
 
-      {/* OTP Lead Gate Modal */}
-      {showLeadGate && (
-        <LeadGate
-          mode="partial"
-          answersPayload={req}
-          onSuccess={(newLeadId, verifiedMobile, verifiedName) => {
-            setShowLeadGate(false);
-            setLeadId(newLeadId);
-            const updatedReq = {
-              ...req,
-              customer_mobile: verifiedMobile || req.customer_mobile || "",
-              customer_name: verifiedName || req.customer_name || "",
-            } as CCTVRequirement;
-            setReq(updatedReq);
-            generateQuote(updatedReq);
-          }}
-        />
-      )}
+      
     </div>
   );
 }

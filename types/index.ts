@@ -101,7 +101,7 @@ export interface Lead {
   customer_name: string;
   mobile_number: string;
   firebase_uid?: string; // Link to authenticated customer
-  property_type: "home" | "office" | "warehouse" | "bungalow";
+  property_type: "home" | "shop" | "office" | "factory" | "warehouse" | "bungalow" | "residential" | "other";
   technology_choice: Technology;
   cabling_done: boolean;
   address?: Address; // Added for Site Details
@@ -273,6 +273,7 @@ export interface Product {
   power_wattage_w?: number;          // e.g. 60, 120
   storage_type?: string;             // e.g. "HDD", "SSD", "MicroSD"
   storage_capacity_tb?: number;      // e.g. 1, 2, 4
+  certifications?: string[];         // e.g. ['STQC', 'BIS-ER', 'IP67']
   network_ports?: number;            // e.g. 4, 8, 16, 24
   network_speed?: string;            // e.g. "10/100", "10/100/1000", "1Gbps"
   custom_attributes?: { key: string; value: string }[];
@@ -380,7 +381,7 @@ export interface ConfiguratorSelection {
   wants_amc?: boolean;
   focus_point?: "price" | "quality";
   max_budget?: number | null;
-  property_type?: "home" | "office" | "warehouse" | "bungalow"; // Added for smart recommendations
+  property_type?: "home" | "shop" | "office" | "factory" | "warehouse" | "bungalow" | "residential" | "other"; // Added for smart recommendations
   cable_length_meters?: number;
   cable_type?: "cat6" | "coaxial";
   wiring_type?: "open" | "conduit";

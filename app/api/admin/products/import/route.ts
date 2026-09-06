@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/auth-server";
+import { requireRoleApi } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
@@ -15,12 +15,8 @@ const BATCH_SIZE = 500;
  * - If `id` is empty/missing, a new document is auto-generated.
  */
 export async function POST(req: NextRequest) {
-  const session = await verifySession();
-  if (!session.isAuthenticated) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+    const session = await requireRoleApi(["super_admin", "admin"]);
     const body = await req.json();
     const { ip, ua } = getRequestMetadata(req);
 
@@ -101,3 +97,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

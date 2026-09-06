@@ -1,3 +1,4 @@
+import { getCachedProducts, getCachedAddons } from "@/lib/cached-catalog";
 import { NextResponse } from "next/server";
 import { CCTVRequirement, AppSettings, Product, Addon } from "@/types";
 import { generateConfiguration } from "@/lib/configuration-engine";
@@ -7,7 +8,7 @@ import { generatePricingSnapshot } from "@/lib/pricing-engine";
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
 
-async function getAdminSettings(): Promise<AppSettings> {
+async function getCachedAdminSettings(): Promise<AppSettings> {
   const doc = await adminDb.collection("settings").doc(SETTINGS_DOC_ID).get();
   if (doc.exists) {
     return doc.data() as AppSettings;
@@ -79,9 +80,9 @@ export async function POST(request: Request) {
     const req: CCTVRequirement = await request.json();
 
     // 1. Fetch dependencies (Catalog, Settings, Addons)
-    const settings = await getAdminSettings();
-    const catalog = await getActiveProducts();
-    const addons = (await getActiveAddons()) as any; // Cast safely for now
+    const settings = await getCachedAdminSettings();
+    const catalog = await getCachedProducts();
+    const addons = await getCachedAddons(); // Cast safely for now
 
     // 2. Requirements -> Engineering Configuration
     const config = generateConfiguration(req);
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
     
     // 3. Extract unique brands from catalog
     const brands = new Set<string>();
-    catalog.forEach(p => {
+    catalog.forEach((p: Product) => {
        if (p.category === "cctv_camera" || p.category === "recorder" || (p.category as any) === "CAMERA_HD" || (p.category as any) === "CAMERA_IP") {
                     let b = p.brand;
           if (!b) {
@@ -151,7 +152,7 @@ export async function POST(request: Request) {
       configuration: config,
       plans: quotePlans,
       addons: addons,
-      storageDrives: catalog.filter(p => p.category === "storage"),
+      storageDrives: catalog.filter((p: Product) => p.category === "storage"),
       lifecycleWarnings
     });
   } catch (error: any) {
@@ -159,3 +160,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
+

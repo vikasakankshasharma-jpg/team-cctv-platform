@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/auth-server";
+import { requireRoleApi } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import Papa from "papaparse";
@@ -37,9 +37,9 @@ const CSV_COLUMNS: (keyof Product)[] = [
  * Returns a CSV file download.
  */
 export async function GET(req: NextRequest) {
-  const session = await verifySession();
-  if (!session.isAuthenticated) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   try {
