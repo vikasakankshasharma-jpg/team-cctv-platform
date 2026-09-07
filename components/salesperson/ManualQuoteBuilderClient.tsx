@@ -139,7 +139,18 @@ export default function ManualQuoteBuilderClient() {
       if (search) {
         return p.display_name.toLowerCase().includes(search.toLowerCase()) || p.internal_sku?.toLowerCase().includes(search.toLowerCase());
       }
-      return p.category === activeCategory;
+      
+      // Normalize category to match tabs
+      let normCat = (p.category || "").toLowerCase();
+      if (normCat.includes("cam") || normCat.includes("cctv")) normCat = "camera";
+      else if (normCat.includes("rec") || normCat.includes("dvr") || normCat.includes("nvr")) normCat = "recorder";
+      else if (normCat.includes("stor") || normCat.includes("hdd") || normCat.includes("hard drive")) normCat = "storage";
+      else if (normCat.includes("cab") || normCat.includes("wire")) normCat = "cable";
+      else if (normCat.includes("power") || normCat.includes("network") || normCat.includes("power_device")) normCat = "power";
+      else if (normCat.includes("acc") || normCat.includes("conn") || normCat.includes("junc") || normCat.includes("rack") || normCat.includes("display")) normCat = "accessory";
+      else if (normCat.includes("install") || normCat.includes("service")) normCat = "installation";
+
+      return normCat === activeCategory;
     });
   }, [products, search, activeCategory]);
 

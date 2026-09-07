@@ -459,25 +459,7 @@ export function ProBuilderClient() {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Pro Builder</h1>
             <p className="text-slate-500 mt-2">Build a custom quotation item by item.</p>
           </div>
-          
-          <div className={`p-4 rounded-xl border flex items-center gap-4 ${technology ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200 shadow-sm'}`}>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${technology ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-              {technology ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-slate-900">
-                {technology ? `Technology Locked: ${technology}` : "Open Architecture"}
-              </h3>
-              <p className="text-sm text-slate-500">
-                {technology ? "Catalog is automatically filtered to show only compatible parts." : "Select your first camera or recorder to lock the technology."}
-              </p>
-            </div>
-            {technology && (
-              <Button variant="outline" size="sm" onClick={clearCart} className="text-red-600 border-red-200 hover:bg-red-50">
-                Clear & Reset
-              </Button>
-            )}
-          </div>
+
 
           {/* 1-Click Auto-Complete Compatible Setup Banner */}
           {canAutoComplete && (
@@ -918,7 +900,7 @@ export function ProBuilderClient() {
               {activeStepIndex > 0 && activeStepIndex < STEPS.length - 1 && (
                 <div className="sticky bottom-6 mt-8 w-full max-w-sm mx-auto z-20">
                   <Button 
-                    onClick={handleNextStep}
+                    onClick={() => handleNextStep()}
                     className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl shadow-2xl shadow-slate-900/20 text-lg font-bold flex items-center justify-between px-6"
                   >
                     <span>Next: {STEPS[activeStepIndex + 1].label}</span>
