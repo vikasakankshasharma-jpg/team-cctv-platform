@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/auth-server";
+import { requireRoleApi } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
@@ -8,8 +8,8 @@ import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
  * GET: Fetch global settings.
  */
 export async function GET(req: NextRequest) {
-  const session = await verifySession();
-  if (!session.isAuthenticated) return NextResponse.json({error: "Unauthorized"}, {status: 401});
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  if (!session) return NextResponse.json({error: "Unauthorized"}, {status: 403});
 
   try {
     const doc = await adminDb.collection("settings").doc(SETTINGS_DOC_ID).get();
@@ -24,9 +24,9 @@ export async function GET(req: NextRequest) {
  * PATCH: Update global settings with audit logging.
  */
 export async function PATCH(req: NextRequest) {
-  const session = await verifySession();
-  if (!session.isAuthenticated || session.role !== "super_admin") {
-    return NextResponse.json({error: "Unauthorized"}, {status: 401});
+  const session = await requireRoleApi(["super_admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({error: "Unauthorized"}, {status: 403});
   }
 
   try {
@@ -57,3 +57,4 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Failed to update settings" }, { status: 500 });
   }
 }
+

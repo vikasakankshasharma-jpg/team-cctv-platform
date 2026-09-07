@@ -111,41 +111,41 @@ const RAW_PRODUCTS = [
   { sku: "HDD-SEA-4TB", brand: "Seagate", category: "storage", capacity: "4TB", base_cost: 18500 },
 
   // --- Cables (HD) ---
-  { sku: "CAB-HD-CPP-90", brand: "CP Plus", category: "cable", description: "3+1 Cable HD - 90 MTR Copper", base_cost: 1350 },
-  { sku: "CAB-HD-BUD-70", brand: "Budget Brand", category: "cable", description: "3+1 Cable HD - 70 MTR Copper Coated", base_cost: 600 },
+  { sku: "CAB-HD-CPP-90", brand: "CP Plus", category: "cable", description: "3+1 Cable HD - 90 MTR Copper", base_cost: 1350, technology: "HD" },
+  { sku: "CAB-HD-BUD-70", brand: "Budget Brand", category: "cable", description: "3+1 Cable HD - 70 MTR Copper Coated", base_cost: 600, technology: "HD" },
 
   // --- Cables (IP / Network) ---
-  { sku: "CAB-IP-CPP-305-CU", brand: "CP Plus", category: "network", description: "CAT6 - 305 MTR Copper", base_cost: 9500 },
-  { sku: "CAB-IP-CPP-305-CCA", brand: "CP Plus", category: "network", description: "CAT6 - 305 MTR Copper Coated", base_cost: 3700 },
-  { sku: "CAB-IP-BUD-100-CU", brand: "Budget Brand", category: "network", description: "CAT6 - 100 MTR Copper", base_cost: 1200 },
-  { sku: "CAB-IP-BUD-305-CCA", brand: "Budget Brand", category: "network", description: "CAT6 - 305 MTR Copper Coated", base_cost: 3200 },
+  { sku: "CAB-IP-CPP-305-CU", brand: "CP Plus", category: "cable", description: "CAT6 - 305 MTR Copper", base_cost: 9500, technology: "IP" },
+  { sku: "CAB-IP-CPP-305-CCA", brand: "CP Plus", category: "cable", description: "CAT6 - 305 MTR Copper Coated", base_cost: 3700, technology: "IP" },
+  { sku: "CAB-IP-BUD-100-CU", brand: "Budget Brand", category: "cable", description: "CAT6 - 100 MTR Copper", base_cost: 1200, technology: "IP" },
+  { sku: "CAB-IP-BUD-305-CCA", brand: "Budget Brand", category: "cable", description: "CAT6 - 305 MTR Copper Coated", base_cost: 3200, technology: "IP" },
 
   // --- PoE Switches ---
-  { sku: "POE-BUD-4CH", brand: "Budget Brand", category: "network", description: "PoE Switch 4Ch", base_cost: 900 },
-  { sku: "POE-BUD-8CH", brand: "Budget Brand", category: "network", description: "PoE Switch 8Ch", base_cost: 1200 },
-  { sku: "POE-DLINK-16CH", brand: "D-Link", category: "network", description: "PoE Switch 16Ch", base_cost: 9500 },
+  { sku: "POE-BUD-4CH", brand: "Budget Brand", category: "network", description: "PoE Switch 4Ch", base_cost: 900, technology: "IP" },
+  { sku: "POE-BUD-8CH", brand: "Budget Brand", category: "network", description: "PoE Switch 8Ch", base_cost: 1200, technology: "IP" },
+  { sku: "POE-DLINK-16CH", brand: "D-Link", category: "network", description: "PoE Switch 16Ch", base_cost: 9500, technology: "IP" },
 
   // --- Power Supply (SMPS) ---
-  { sku: "SMPS-CPP-8CH", brand: "CP Plus", category: "power_device", description: "Power Supply SMPS 8Ch", base_cost: 600 },
-  { sku: "SMPS-BUD-8CH", brand: "Budget Brand", category: "power_device", description: "Power Supply SMPS 8Ch", base_cost: 350 },
+  { sku: "SMPS-CPP-8CH", brand: "CP Plus", category: "power_device", description: "Power Supply SMPS 8Ch", base_cost: 600, technology: "HD" },
+  { sku: "SMPS-BUD-8CH", brand: "Budget Brand", category: "power_device", description: "Power Supply SMPS 8Ch", base_cost: 350, technology: "HD" },
 
   // --- Connectors ---
-  { sku: "CONN-BNC", brand: "Budget Brand", category: "connector", description: "BNC Connector", base_cost: 15 },
-  { sku: "CONN-DC", brand: "Budget Brand", category: "connector", description: "DC Connector", base_cost: 5 },
-  { sku: "CONN-RJ45", brand: "Budget Brand", category: "connector", description: "RJ45 Connector", base_cost: 5 },
+  { sku: "CONN-BNC", brand: "Budget Brand", category: "connector", description: "BNC Connector", base_cost: 15, technology: "HD" },
+  { sku: "CONN-DC", brand: "Budget Brand", category: "connector", description: "DC Connector", base_cost: 5, technology: "HD" },
+  { sku: "CONN-RJ45", brand: "Budget Brand", category: "connector", description: "RJ45 Connector", base_cost: 5, technology: "IP" },
 
   // --- HDMI Cables ---
-  { sku: "HDMI-1.5M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 1.5 MTR", base_cost: 60 },
-  { sku: "HDMI-3M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 3 MTR", base_cost: 120 },
-  { sku: "HDMI-5M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 5 MTR", base_cost: 180 },
-  { sku: "HDMI-10M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 10 MTR", base_cost: 300 },
+  { sku: "HDMI-1.5M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 1.5 MTR", base_cost: 60, technology: "Common" },
+  { sku: "HDMI-3M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 3 MTR", base_cost: 120, technology: "Common" },
+  { sku: "HDMI-5M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 5 MTR", base_cost: 180, technology: "Common" },
+  { sku: "HDMI-10M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 10 MTR", base_cost: 300, technology: "Common" },
 
   // --- Accessories & Displays ---
-  { sku: "ACC-JUNCTION-BOX", brand: "Budget Brand", category: "accessories", description: "Junction Box for Camera", base_cost: 20 },
-  { sku: "ACC-2U-RACK-RECORDER", brand: "Budget Brand", category: "rack", description: "2U Rack for Recorder", base_cost: 350 },
-  { sku: "ACC-2U-RACK-POE", brand: "Budget Brand", category: "rack", description: "2U Rack for PoE Switch", base_cost: 450 },
-  { sku: "ACC-4G-ROUTER", brand: "Budget Brand", category: "network", description: "4G Router", base_cost: 1450 },
-  { sku: "DISP-19-INCH", brand: "Budget Brand", category: "display", description: "Display 19 inch", base_cost: 2100 },
+  { sku: "ACC-JUNCTION-BOX", brand: "Budget Brand", category: "accessories", description: "Junction Box for Camera", base_cost: 20, technology: "Common" },
+  { sku: "ACC-2U-RACK-RECORDER", brand: "Budget Brand", category: "rack", description: "2U Rack for Recorder", base_cost: 350, technology: "Common" },
+  { sku: "ACC-2U-RACK-POE", brand: "Budget Brand", category: "rack", description: "2U Rack for PoE Switch", base_cost: 450, technology: "IP" },
+  { sku: "ACC-4G-ROUTER", brand: "Budget Brand", category: "network", description: "4G Router", base_cost: 1450, technology: "Common" },
+  { sku: "DISP-19-INCH", brand: "Budget Brand", category: "display", description: "Display 19 inch", base_cost: 2100, technology: "Common" },
 ];
 
 async function seedDatabase() {
@@ -188,6 +188,7 @@ async function seedDatabase() {
     const docRef = adminDb.collection("products").doc(finalProduct.sku);
     batch2.set(docRef, {
       ...finalProduct,
+      technologies: finalProduct.technologies || (finalProduct.technology ? [finalProduct.technology] : ["Common"]),
       display_name: displayName.trim(),
       created_at: new Date().toISOString(),
       is_active: true,

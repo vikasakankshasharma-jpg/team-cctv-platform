@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { requireRoleApi } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
@@ -116,6 +117,8 @@ export async function POST(req: NextRequest) {
       user_agent: ua
     });
 
+    // @ts-ignore
+    revalidateTag("catalog");
     return NextResponse.json({ success: true, product });
   } catch (error) {
     console.error("Error creating product:", error);
@@ -169,6 +172,8 @@ export async function PATCH(req: NextRequest) {
       user_agent: ua
     });
 
+      // @ts-ignore
+      revalidateTag("catalog");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error updating product:", error);
@@ -194,7 +199,9 @@ export async function DELETE(req: NextRequest) {
     
     if (id) {
       await adminDb.collection("products").doc(id).delete();
-      return NextResponse.json({ success: true });
+        // @ts-ignore
+      revalidateTag("catalog");
+    return NextResponse.json({ success: true });
     } else if (ids) {
       const idArray = ids.split(",");
       const batch = adminDb.batch();
@@ -202,7 +209,9 @@ export async function DELETE(req: NextRequest) {
         batch.delete(adminDb.collection("products").doc(docId));
       });
       await batch.commit();
-      return NextResponse.json({ success: true });
+        // @ts-ignore
+      revalidateTag("catalog");
+    return NextResponse.json({ success: true });
     }
     
     return NextResponse.json({ success: false, error: "Missing id or ids parameter" }, { status: 400 });
@@ -211,3 +220,4 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Failed to delete" }, { status: 500 });
   }
 }
+

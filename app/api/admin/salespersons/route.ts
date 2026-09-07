@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
-import { verifySession } from "@/lib/auth-server";
+import { requireRoleApi } from "@/lib/auth-server";
 
 // GET all salespersons
 export async function GET() {
-  const session = await verifySession();
-  if (!session.isAuthenticated) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireRoleApi(["super_admin", "admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
   try {
     const snap = await adminDb.collection("salespeople").orderBy("created_at", "desc").get();
@@ -22,9 +22,9 @@ export async function GET() {
 
 // POST — create new salesperson
 export async function POST(req: NextRequest) {
-  const session = await verifySession();
-  if (!session.isAuthenticated || session.role !== "super_admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireRoleApi(["super_admin"]).catch(() => null);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
   try {
     const body = await req.json();
