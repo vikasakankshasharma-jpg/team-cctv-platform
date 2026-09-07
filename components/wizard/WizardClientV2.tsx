@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
+import { ShieldCheck, Loader2 } from "lucide-react";
 
 
 
@@ -23,6 +24,95 @@ export function WizardClientV2() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [countdown, setCountdown] = useState(0);
+
+  // Resend OTP countdown timer
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  // Auto-focus first OTP input when OTP screen opens
+  useEffect(() => {
+    if (otpSent) {
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 150);
+    }
+  }, [otpSent]);
+
+  // WebOTP API auto-fill support for mobile browsers
+  useEffect(() => {
+    if (!otpSent) return;
+    if (typeof window !== "undefined" && "OTPCredential" in window) {
+      const ac = new AbortController();
+      (navigator.credentials as any)
+        ?.get({
+          otp: { transport: ["sms"] },
+          signal: ac.signal,
+        })
+        .then((otpCred: any) => {
+          if (otpCred && otpCred.code) {
+            const digits = otpCred.code.replace(/\D/g, "").slice(0, 6).split("");
+            if (digits.length === 6) {
+              setOtp(digits);
+              inputRefs.current[5]?.focus();
+            }
+          }
+        })
+        .catch(() => {});
+      return () => ac.abort();
+    }
+  }, [otpSent]);
+
+  const handleOtpChange = (value: string, index: number) => {
+    const clean = value.replace(/\D/g, "");
+    if (clean.length > 1) {
+      const digits = clean.slice(0, 6).split("");
+      const newOtp = [...otp];
+      digits.forEach((d, i) => {
+        newOtp[i] = d;
+      });
+      setOtp(newOtp);
+      const nextIdx = Math.min(digits.length, 5);
+      inputRefs.current[nextIdx]?.focus();
+      return;
+    }
+
+    if (value && isNaN(Number(value))) return;
+    const newOtp = [...otp];
+    newOtp[index] = value ? value.substring(value.length - 1) : "";
+    setOtp(newOtp);
+
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    } else if (e.key === "Enter" && otp.join("").length === 6) {
+      e.preventDefault();
+      handleVerifyOtp();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    const digits = pasted.split("");
+    const newOtp = ["", "", "", "", "", ""];
+    digits.forEach((d, i) => {
+      newOtp[i] = d;
+    });
+    setOtp(newOtp);
+    const focusIdx = Math.min(digits.length, 5);
+    inputRefs.current[focusIdx]?.focus();
+  };
     
   useEffect(() => {
     // Send session start
@@ -80,6 +170,11 @@ export function WizardClientV2() {
   };
   const handlePrev = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (step === 5 && otpSent) {
+      setOtpSent(false);
+      setOtp(["", "", "", "", "", ""]);
+      return;
+    }
     if (req.installation_type === "new" && step === 5) {
       setStep(3);
     } else {
@@ -126,6 +221,8 @@ export function WizardClientV2() {
           }
         } as any);
         setOtpSent(true);
+        setCountdown(30);
+        setOtp(["", "", "", "", "", ""]);
         setLoading(false);
         return;
       }
@@ -137,21 +234,28 @@ export function WizardClientV2() {
         document.body.appendChild(recaptchaContainer);
       }
       
-      if (!(window as any).recaptchaVerifierWizard) {
-        (window as any).recaptchaVerifierWizard = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
-          size: "invisible",
-        });
+      if ((window as any).recaptchaVerifierWizard) {
+        try {
+          (window as any).recaptchaVerifierWizard.clear();
+        } catch (e) {}
+        (window as any).recaptchaVerifierWizard = null;
       }
+      
+      (window as any).recaptchaVerifierWizard = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
+        size: "invisible",
+      });
       
       const appVerifier = (window as any).recaptchaVerifierWizard;
       const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
       
       setConfirmationResult(result);
       setOtpSent(true);
+      setCountdown(30);
+      setOtp(["", "", "", "", "", ""]);
       toast.success("OTP sent to your mobile.");
     } catch (error: any) {
       console.error(error);
-      toast.error("Failed to send OTP. " + error.message);
+      toast.error("Failed to send OTP. " + (error.message || "Please check your number."));
     } finally {
       setLoading(false);
     }
@@ -160,7 +264,7 @@ export function WizardClientV2() {
   const handleVerifyOtp = async () => {
     const code = otp.join("");
     if (code.length !== 6) {
-      toast.error("Please enter a 6-digit OTP.");
+      toast.error("Please enter the 6-digit OTP.");
       return;
     }
     
@@ -172,28 +276,38 @@ export function WizardClientV2() {
       
       toast.success("Verification successful!");
       
+      let city = "";
+      let pincode = "";
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        city = urlParams.get("city") || "";
+        pincode = urlParams.get("pincode") || "";
+      }
+
       const payload = {
         customer_name: req.customer_name || "",
         mobile_number: req.customer_mobile || "",
-        wizard_answers: { ...req },
+        wizard_answers: { ...req, pincode, city },
         property_type: req.property_type || "home",
         technology_choice: req.technology_choice || "HD",
         cabling_done: req.cabling_done || false,
         camera_count: req.camera_count,
+        detected_city: city,
         firebase_uid: auth.currentUser?.uid || "anonymous"
       };
       
       const newLeadId = await createLeadAction(payload as any);
-      if (newLeadId.success && newLeadId.id) {
+      if (newLeadId && 'success' in newLeadId && newLeadId.success && newLeadId.id) {
         setLeadId(newLeadId.id);
       } else {
-        console.error("Failed to save lead: ", newLeadId.error);
+        console.error("Failed to save lead: ", (newLeadId as any)?.error);
       }
       
+      await generateQuote(req as CCTVRequirement);
       setOtpSent(false);
-      generateQuote(req);
     } catch (error: any) {
-      toast.error("Invalid OTP. " + error.message);
+      console.error("OTP verification error:", error);
+      toast.error("Invalid OTP. " + (error.message || "Please check the code and try again."));
     } finally {
       setLoading(false);
     }
@@ -721,65 +835,150 @@ export function WizardClientV2() {
           );
 
         case 5:
-        return (
-          <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
-            <p className="text-gray-600 mb-6">Please enter your details to view your personalized CCTV options instantly.</p>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="e.g. Rahul Kumar" 
-                  value={req.customer_name || ''} 
-                  onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))} 
-                  className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number *</label>
-                <input 
-                  type="tel" 
-                  required
-                  placeholder="10-digit mobile number" 
-                  maxLength={10}
-                  value={req.customer_mobile || ''} 
-                  onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/D/g, '') }))} 
-                  className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                />
-              </div>
-            </div>
+          if (otpSent) {
+            return (
+              <div className="space-y-6 animate-in fade-in">
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 text-blue-600 mb-3 mx-auto">
+                    <ShieldCheck className="w-7 h-7" />
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-slate-900">Enter Verification Code</h2>
+                  <p className="text-gray-600 text-sm">
+                    We've sent a 6-digit verification code to{" "}
+                    <span className="font-semibold text-slate-900">+91 {req.customer_mobile}</span>
+                  </p>
+                </div>
 
-            <Button 
-              onClick={handleFinishWizard} 
-              disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} 
-              size="lg" 
-              className="w-full text-lg h-14 mt-6"
-            >
-              {loading ? "Analyzing Requirement..." : "View My CCTV Options"}
-            </Button>
-          </div>
-        );
+                <div className="py-2">
+                  <div className="flex justify-center gap-2 sm:gap-3" onPaste={handleOtpPaste}>
+                    {otp.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => { inputRefs.current[index] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        autoComplete={index === 0 ? "one-time-code" : "off"}
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(e.target.value, index)}
+                        onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                        className="w-11 h-14 sm:w-13 sm:h-16 text-center text-xl sm:text-2xl font-bold border-2 rounded-xl border-gray-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white text-gray-900"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleVerifyOtp}
+                  disabled={loading || otp.join("").length !== 6}
+                  size="lg"
+                  className="w-full text-lg h-14 font-semibold shadow-md bg-blue-600 hover:bg-blue-700"
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2 justify-center">
+                      <Loader2 className="w-5 h-5 animate-spin" /> Verifying OTP...
+                    </span>
+                  ) : (
+                    "Submit OTP & View Quotation"
+                  )}
+                </Button>
+
+                <div className="flex items-center justify-between pt-2 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false);
+                      setOtp(["", "", "", "", "", ""]);
+                    }}
+                    className="text-gray-500 hover:text-gray-800 font-medium transition-colors"
+                  >
+                    ← Change Mobile Number
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={countdown > 0 || loading}
+                    onClick={handleFinishWizard}
+                    className={`font-semibold transition-colors ${
+                      countdown > 0
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-blue-600 hover:text-blue-700 hover:underline"
+                    }`}
+                  >
+                    {countdown > 0 ? `Resend OTP in ${countdown}s` : "Resend OTP"}
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="space-y-6 animate-in fade-in">
+              <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
+              <p className="text-gray-600 mb-6">Please enter your details to view your personalized CCTV options instantly.</p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. Rahul Kumar" 
+                    value={req.customer_name || ''} 
+                    onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))} 
+                    className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number *</label>
+                  <input 
+                    type="tel" 
+                    required
+                    placeholder="10-digit mobile number" 
+                    maxLength={10}
+                    value={req.customer_mobile || ''} 
+                    onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))} 
+                    className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleFinishWizard} 
+                disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} 
+                size="lg" 
+                className="w-full text-lg h-14 mt-6"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2 justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin" /> Sending OTP...
+                  </span>
+                ) : (
+                  "View My CCTV Options"
+                )}
+              </Button>
+            </div>
+          );
     }
   };
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
+      <div id="recaptcha-container-wizard"></div>
       <h1 className="sr-only">CCTV Quotation Wizard</h1>
       <div className="bg-white rounded-2xl shadow-sm border p-8">
         {step > 0 && (
           <div className="mb-8">
             <div className="h-2 bg-gray-100 rounded-full w-full overflow-hidden">
-              <div className="h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(Math.min((req.installation_type === "new" && step === 6 ? 5 : step), totalSteps) / totalSteps) * 100}%` }}></div>
+              <div className="h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(((req.installation_type === "new" && step === 5 ? (otpSent ? 5 : 4) : Math.min(step, totalSteps))) / totalSteps) * 100}%` }}></div>
             </div>
-            <p className="text-sm text-gray-500 mt-2 text-right">Step {req.installation_type === "new" && step === 5 ? 4 : step} of {totalSteps}</p>
+            <p className="text-sm text-gray-500 mt-2 text-right">Step {req.installation_type === "new" && step === 5 ? (otpSent ? 5 : 4) : step} of {totalSteps}</p>
           </div>
         )}
 
         {renderStep()}
 
-        {step > 0 && (
+        {step > 0 && !otpSent && (
           <div className="mt-12 flex justify-between">
             <Button variant="outline" onClick={handlePrev} disabled={step <= 1 || loading}>
               Back
