@@ -1,3 +1,8 @@
+## STQC & BIS-ER Certification Tracking (Decision Date: September 2026)
+**Context:** The application previously had complex logic (e.g., wantsStqcCompliance) inside the wizard and product resolver to enforce STQC/BIS-ER certifications on quotations.
+**Business Decision:** The business serves general consumers (B2C) and local businesses, competing with platforms like Amazon and Flipkart. They do NOT currently serve government, PSU, or institutional buyers who mandate strict hardware certifications for compliance.
+**Implementation:** STQC and BIS-ER certifications are treated strictly as decorative visual badges on the frontend to build trust. There is zero technical enforcement in product-resolver.ts or pricing-engine.ts. The Wizard does not ask users if they require certification, and the engine does not filter out uncertified products. This is an explicit, documented business decision.
+
 # Hardening Sprint — Live Status Tracker
 
 > Last updated: 2026-09-03 by Antigravity  
@@ -123,3 +128,4 @@ These files were **not written by this hardening session**. They were uncommitte
 | Layer 3: Unit / E2E test suite (Tamper resistance & pricing consistency) | `[READY]` |
 | Layer 4: State machine integrity (Webhook, quotes, jobs) | `[VERIFIED]` |
 | Layer 5: Role-based boundary check (Admin, installer, customer) | `[VERIFIED]` |
+
