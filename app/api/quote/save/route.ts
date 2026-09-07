@@ -92,6 +92,12 @@ export async function POST(request: Request) {
             dbProduct = { id: "conn_bnc_dc", display_name: "BNC & DC Connectors", category: "accessory", unit_price: settings.connector_bnc_dc_cost || 70 };
           } else if (item.product_id === "labor_install") {
             dbProduct = { id: "labor_install", display_name: "Installation & Labor", category: "labor", unit_price: settings.labor_ip_per_camera || 500 };
+          } else if (item.product_id === "PRO_INSTALL_HD") {
+            dbProduct = { id: "PRO_INSTALL_HD", display_name: "Standard Installation (HD)", category: "installation", unit_price: 600 };
+          } else if (item.product_id === "PRO_INSTALL_IP") {
+            dbProduct = { id: "PRO_INSTALL_IP", display_name: "Standard Installation (IP)", category: "installation", unit_price: 800 };
+          } else if (item.product_id?.startsWith("PRO_INSTALL_")) {
+            dbProduct = { id: item.product_id, display_name: item.display_name || item.name || "Standard Installation", category: "installation", unit_price: item.product_id.includes("HD") ? 600 : 800 };
           } else if (item.product_id?.startsWith("surcharge_")) {
             dbProduct = { id: item.product_id, display_name: item.name || item.display_name || "Site Surcharge", category: "labor", unit_price: 500 };
           }
