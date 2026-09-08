@@ -241,12 +241,21 @@ export function WizardClientV2() {
         (window as any).recaptchaVerifierWizard = null;
       }
       
-      (window as any).recaptchaVerifierWizard = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
+      const verifier = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
         size: "invisible",
+        callback: () => {
+          // reCAPTCHA solved - will proceed with phone auth
+        },
+        "expired-callback": () => {
+          toast.error("reCAPTCHA expired. Please try again.");
+        },
       });
+      (window as any).recaptchaVerifierWizard = verifier;
+
+      // Explicitly render reCAPTCHA widget first to catch load errors early
+      await verifier.render();
       
-      const appVerifier = (window as any).recaptchaVerifierWizard;
-      const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
+      const result = await signInWithPhoneNumber(auth, formatPhone, verifier);
       
       setConfirmationResult(result);
       setOtpSent(true);
@@ -254,11 +263,28 @@ export function WizardClientV2() {
       setOtp(["", "", "", "", "", ""]);
       toast.success("OTP sent to your mobile.");
     } catch (error: any) {
-      console.error(error);
-      let errMsg = error.message || "Please check your number.";
-      if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please wait a few minutes.";
+      console.error("OTP Send Error:", error);
+      const errCode = error.code || "";
+      const errMsg = error.message || "Please check your number.";
       
-      toast.error("Failed to send OTP. " + errMsg);
+      let userMsg = errMsg;
+      if (errCode === "auth/too-many-requests" || errMsg.includes("auth/too-many-requests")) {
+        userMsg = "Too many attempts. Please wait a few minutes and try again.";
+      } else if (errCode === "auth/invalid-app-credential" || errMsg.includes("auth/invalid-app-credential")) {
+        userMsg = "reCAPTCHA verification failed. Please refresh the page and try again.";
+      } else if (errCode === "auth/network-request-failed" || errMsg.includes("auth/network-request-failed")) {
+        userMsg = "Network error. Please check your internet connection.";
+      } else if (errCode === "auth/quota-exceeded" || errMsg.includes("auth/quota-exceeded")) {
+        userMsg = "SMS quota exceeded. Please try again later.";
+      } else if (errCode === "auth/captcha-check-failed" || errMsg.includes("auth/captcha-check-failed")) {
+        userMsg = "reCAPTCHA verification failed. Please refresh the page and try again.";
+      } else if (errCode === "auth/missing-app-credential" || errMsg.includes("auth/missing-app-credential")) {
+        userMsg = "reCAPTCHA could not load. Please disable ad blockers and refresh.";
+      } else if (errCode === "auth/internal-error" || errMsg.includes("auth/internal-error")) {
+        userMsg = "Firebase service error. Please try again in a moment.";
+      }
+      
+      toast.error("Failed to send OTP. " + userMsg);
     } finally {
       setLoading(false);
     }
@@ -314,7 +340,6 @@ export function WizardClientV2() {
       if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
       else if (errMsg.includes("auth/code-expired")) errMsg = "The code has expired. Please resend.";
       else if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please try again later.";
-      else if (errMsg.includes("Firebase:")) errMsg = "Authentication failed. Please try again.";
       toast.error(errMsg);
     } finally {
       setLoading(false);
