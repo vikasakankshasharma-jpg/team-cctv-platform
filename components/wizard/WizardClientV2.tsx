@@ -212,14 +212,8 @@ export function WizardClientV2() {
     setLoading(true);
     try {
       const cleanMobile = req.customer_mobile.replace(/\s/g, "");
-      const formatPhone = "+91" + cleanMobile;
 
       if (cleanMobile === "9999999999") {
-        setConfirmationResult({
-          confirm: async (code: string) => {
-            return { user: { uid: "mock-e2e-uid" } } as any;
-          }
-        } as any);
         setOtpSent(true);
         setCountdown(30);
         setOtp(["", "", "", "", "", ""]);
@@ -227,28 +221,17 @@ export function WizardClientV2() {
         return;
       }
       
-      let recaptchaContainer = document.getElementById("recaptcha-container-wizard");
-      if (!recaptchaContainer) {
-        recaptchaContainer = document.createElement("div");
-        recaptchaContainer.id = "recaptcha-container-wizard";
-        document.body.appendChild(recaptchaContainer);
-      }
-      
-      if ((window as any).recaptchaVerifierWizard) {
-        try {
-          (window as any).recaptchaVerifierWizard.clear();
-        } catch (e) {}
-        (window as any).recaptchaVerifierWizard = null;
-      }
-      
-      (window as any).recaptchaVerifierWizard = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
-        size: "invisible",
+      const res = await fetch("/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile: cleanMobile }),
       });
-      
-      const appVerifier = (window as any).recaptchaVerifierWizard;
-      const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
-      
-      setConfirmationResult(result);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send OTP.");
+      }
+
       setOtpSent(true);
       setCountdown(30);
       setOtp(["", "", "", "", "", ""]);
@@ -270,8 +253,18 @@ export function WizardClientV2() {
     
     setLoading(true);
     try {
-      if (confirmationResult) {
-        await confirmationResult.confirm(code);
+      const cleanMobile = (req.customer_mobile || "").replace(/\s/g, "");
+      
+      if (cleanMobile !== "9999999999") {
+        const res = await fetch("/api/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mobile: cleanMobile, code }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Invalid OTP code.");
+        }
       }
       
       toast.success("Verification successful!");
@@ -286,14 +279,14 @@ export function WizardClientV2() {
 
       const payload = {
         customer_name: req.customer_name || "",
-        mobile_number: req.customer_mobile || "",
+        mobile_number: cleanMobile,
         wizard_answers: { ...req, pincode, city },
         property_type: req.property_type || "home",
         technology_choice: req.technology_choice || "HD",
         cabling_done: req.cabling_done || false,
         camera_count: req.camera_count,
         detected_city: city,
-        firebase_uid: auth.currentUser?.uid || "anonymous"
+        firebase_uid: "anonymous"
       };
       
       const newLeadId = await createLeadAction(payload as any);
@@ -307,7 +300,7 @@ export function WizardClientV2() {
       setOtpSent(false);
     } catch (error: any) {
       console.error("OTP verification error:", error);
-      toast.error("Invalid OTP. " + (error.message || "Please check the code and try again."));
+      toast.error(error.message || "Invalid OTP. Please check the code and try again.");
     } finally {
       setLoading(false);
     }
