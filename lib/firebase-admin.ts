@@ -77,8 +77,8 @@ function getAdminApp(): App {
     }, "build-safe-admin-app");
   }
 
-  // privateKey from .env has literal \n — replace with actual newlines
-  let formattedKey = privateKey.replace(/\\n/g, "\n");
+  // Fix private key formatting robustly
+  let formattedKey = privateKey;
   
   // Vercel sometimes injects literal double-quotes if the variable was pasted with quotes
   if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
@@ -86,6 +86,20 @@ function getAdminApp(): App {
   }
   if (formattedKey.startsWith("'") && formattedKey.endsWith("'")) {
     formattedKey = formattedKey.substring(1, formattedKey.length - 1);
+  }
+
+  // Replace escaped newlines
+  formattedKey = formattedKey.replace(/\\n/g, "\n");
+  
+  // If spaces were accidentally used instead of newlines
+  if (!formattedKey.includes("\n") && formattedKey.includes("-----BEGIN PRIVATE KEY-----")) {
+    formattedKey = formattedKey.replace("-----BEGIN PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----\n");
+    formattedKey = formattedKey.replace("-----END PRIVATE KEY-----", "\n-----END PRIVATE KEY-----");
+    const parts = formattedKey.split("\n");
+    if (parts.length >= 3) {
+      parts[1] = parts[1].replace(/\s+/g, "\n");
+      formattedKey = parts.join("\n");
+    }
   }
 
   try {

@@ -289,7 +289,7 @@ export function WizardClientV2() {
 
       const payload = {
         customer_name: req.customer_name || "",
-        mobile_number: req.customer_mobile || "",
+        mobile_number: (req.customer_mobile || "").replace(/\s/g, ""),
         wizard_answers: { ...req, pincode, city },
         property_type: req.property_type || "home",
         technology_choice: req.technology_choice || "HD",
