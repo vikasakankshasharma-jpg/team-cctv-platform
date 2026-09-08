@@ -17,7 +17,7 @@ interface QuoteComparisonProps {
 export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfiguration }: QuoteComparisonProps) {
   const lockedTech = requirement.installation_type === "addon" && requirement.existing_technology ? requirement.existing_technology as "HD" | "IP" : null;
   const [activeTech, setActiveTech] = useState<"HD" | "IP">(lockedTech || "HD");
-  const [activeBrand, setActiveBrand] = useState<string>("Budget");
+  const [activeBrand, setActiveBrand] = useState<string>("All");
   
   // State for side-by-side comparison mode
   const [showComparison, setShowComparison] = useState(false);
@@ -40,13 +40,13 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
   }, [plans, activeTech]);
 
   React.useEffect(() => {
-     if (brands.length > 0 && !brands.includes(activeBrand)) {
-        setActiveBrand(brands[0]);
-     }
+     if (brands.length > 0 && activeBrand !== "All" && !brands.includes(activeBrand)) {
+      setActiveBrand("All");
+   }
   }, [brands, activeBrand]);
 
   const filteredPlans = useMemo(() => {
-     let result = Object.entries(plans).filter(([key]) => key.includes("_" + activeTech + "_") && key.startsWith(activeBrand + "_"));
+     let result = Object.entries(plans).filter(([key]) => key.includes("_" + activeTech + "_") && (activeBrand === "All" || key.startsWith(activeBrand + "_")));
      return result.sort((a, b) => {
         const mpA = parseInt(a[0].split("_")[2]?.replace("MP", "") || "0");
         const mpB = parseInt(b[0].split("_")[2]?.replace("MP", "") || "0");
@@ -66,8 +66,17 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
     }
   }, [filteredPlans, activeResolution]);
 
-  const activePlanKey = `${activeBrand}_${activeTech}_${activeResolution}`;
-  const activePlan = plans[activePlanKey];
+  const plansToRender = useMemo(() => {
+    if (activeBrand !== "All") {
+      const key = `${activeBrand}_${activeTech}_${activeResolution}`;
+      return plans[key] ? [{ key, plan: plans[key] }] : [];
+    }
+    // If "All", find all brands that have this tech and resolution
+    return brands.map(b => {
+      const key = `${b}_${activeTech}_${activeResolution}`;
+      return { key, plan: plans[key] };
+    }).filter(p => p.plan);
+  }, [activeBrand, activeTech, activeResolution, brands, plans]);
 
   const totalCams = requirement.installation_type === "addon" ? (requirement.indoor_camera_count || 0) + (requirement.outdoor_camera_count || 0) : requirement.camera_count || 0;
 
@@ -199,6 +208,7 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
           <div className="bg-white p-5 rounded-2xl border shadow-sm">
             <h4 className="font-bold text-gray-900 mb-4">2. Brand</h4>
             <div className="flex flex-wrap gap-2">
+              <Badge variant={activeBrand === "All" ? "default" : "outline"} className={`cursor-pointer px-4 py-2 text-sm transition-all ${activeBrand === "All" ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600 border-gray-300'}`} onClick={() => setActiveBrand("All")}>All Brands</Badge>
               {brands.map(b => (
                 <Badge key={b} variant={activeBrand === b ? "default" : "outline"} className={`cursor-pointer px-4 py-2 text-sm transition-all ${activeBrand === b ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600 border-gray-300'}`} onClick={() => setActiveBrand(b)}>
                   {b}
