@@ -45,7 +45,7 @@ export function CompareTray({ selectedItems, onRemove, onCompareNow }: CompareTr
           ))}
 
           {/* Placeholders */}
-          {Array.from({ length: 3 - selectedItems.length }).map((_, idx) => (
+          {Array.from({ length: Math.max(0, 3 - selectedItems.length) }).map((_, idx) => (
             <div key={`empty-${idx}`} className="flex items-center gap-3 bg-slate-50/50 dark:bg-[#2d2d2f]/50 border border-dashed border-slate-300 dark:border-zinc-700 rounded-lg p-2 pr-3 shrink-0 min-w-[180px] opacity-60">
               <div className="w-10 h-10 rounded-md flex items-center justify-center shrink-0 border border-dashed border-slate-300 dark:border-zinc-700">
                 <PlusIcon className="w-4 h-4 text-slate-300" />

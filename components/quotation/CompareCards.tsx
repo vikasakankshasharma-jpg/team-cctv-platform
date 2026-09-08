@@ -80,16 +80,24 @@ export function CompareCards({
     return compareOptions
       .map((co) => {
         let plan_type: "budget" | "recommended" | "premium" = "recommended";
+        let isCustomId = false;
+
         if (typeof co.option === "number") {
           if (co.option === 1) plan_type = "budget";
           else if (co.option === 3) plan_type = "premium";
+        } else if (typeof co.option === "string") {
+          if (co.option === "budget" || co.option === "recommended" || co.option === "premium") {
+            plan_type = co.option;
+          } else {
+            isCustomId = true;
+          }
         }
 
         const cardSelection: ConfiguratorSelection = {
           ...selection,
           technology: co.technology,
           selected_camera_option: typeof co.option === "number" ? co.option : undefined,
-          selected_camera_id: typeof co.option === "string" ? co.option : undefined,
+          selected_camera_id: isCustomId ? (co.option as string) : undefined,
           plan_type,
           picture_quality: "good",
         };
@@ -206,13 +214,13 @@ export function CompareCards({
       <div ref={scrollRef} className={`flex sm:grid sm:grid-cols-1 ${cardsData.length < 4 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible`}>
       {cardsData.map((card, idx) => {
         const isCheckout = activeCheckoutOption?.technology === card.technology && activeCheckoutOption?.option === card.option;
-        const isCustom = typeof card.option === 'string';
+        const isCustom = typeof card.option === 'string' && !["budget", "recommended", "premium"].includes(card.option);
         const isUpgradeSuggestion = customerTechnology === "HD" && card.isIP && !isCustom;
         
         let tierName = "Standard";
-        if (card.option === 1) tierName = "Standard";
-        else if (card.option === 2) tierName = "Professional";
-        else if (card.option === 3) tierName = "Elite";
+        if (card.option === 1 || card.option === "budget") tierName = "Standard";
+        else if (card.option === 2 || card.option === "recommended") tierName = "Professional";
+        else if (card.option === 3 || card.option === "premium") tierName = "Elite";
 
         if (isCustom) tierName = "Custom Built";
         else if (isUpgradeSuggestion) tierName = "Smart Upgrade";

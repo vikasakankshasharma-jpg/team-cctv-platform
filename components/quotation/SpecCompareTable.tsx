@@ -181,19 +181,25 @@ export function SpecCompareTable({
   const tableColumns = useMemo(() => {
     return compareOptions.slice(0, 4).map((opt) => {
       let plan_type: "budget" | "recommended" | "premium" = "recommended";
+      let isCustomId = false;
+
       if (typeof opt.option === "number") {
         if (opt.option === 1) plan_type = "budget";
         else if (opt.option === 3) plan_type = "premium";
       } else if (typeof opt.option === "string") {
-        plan_type = opt.option as any;
+        if (opt.option === "budget" || opt.option === "recommended" || opt.option === "premium") {
+          plan_type = opt.option;
+        } else {
+          isCustomId = true;
+        }
       }
 
       const baseSelection: ConfiguratorSelection = {
         ...selection,
         technology: opt.technology,
         selected_camera_option: typeof opt.option === "number" ? opt.option : undefined,
+        selected_camera_id: isCustomId ? (opt.option as string) : undefined,
         plan_type,
-        selected_camera_id: typeof opt.option === "string" ? opt.option : undefined,
       };
 
       const quote = calculatePricing({ selection: baseSelection, products, addons: [], settings, cablingDone });
@@ -214,10 +220,11 @@ export function SpecCompareTable({
     });
   }, [compareOptions, selection, products, settings, cablingDone]);
 
-  const columnHeaders = tableColumns.map((col, idx) => {
-    if (idx === 0) return t('standard', 'Standard');
-    if (idx === 1) return t('professional', 'Professional');
-    if (idx === 2) return t('elite', 'Elite');
+  const columnHeaders = tableColumns.map((col) => {
+    const optValue = col.opt.option;
+    if (optValue === 1 || optValue === "budget") return t('standard', 'Standard');
+    if (optValue === 2 || optValue === "recommended") return t('professional', 'Professional');
+    if (optValue === 3 || optValue === "premium") return t('elite', 'Elite');
     return t('custom', 'Custom');
   });
 
