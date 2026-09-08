@@ -8,6 +8,9 @@ import { evaluateAddonRules } from "@/lib/addon-rules";
 import { getRecommendedOption } from "@/lib/recommendation-engine";
 import { CompareCards } from "./CompareCards";
 import { SpecCompareTable } from "./SpecCompareTable";
+import { DynamicVariantGenerator } from "./DynamicVariantGenerator";
+import { CompareTray } from "./CompareTray";
+import { Button } from "@/components/ui/button";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
 import { SmartContextBar } from "./SmartContextBar";
 import { BaseQuoteSummary } from "./BaseQuoteSummary";
@@ -47,6 +50,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
   const [savedPdfUrl, setSavedPdfUrl] = useState<string | null>(null);
 
+  // Dynamic Compare UX state
+  const [selectedCompareItems, setSelectedCompareItems] = useState<PricingResult[]>([]);
+  const [showComparisonMode, setShowComparisonMode] = useState(false);
+
   // Price Match
   const [showPriceMatchUploader, setShowPriceMatchUploader] = useState(false);
   const [priceMatchSubmitted, setPriceMatchSubmitted] = useState(false);
@@ -80,6 +87,21 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       };
     }
   }, []);
+
+  // Compare Tray toggle handler
+  const handleToggleCompare = (pricing: PricingResult) => {
+    setSelectedCompareItems(prev => {
+      const exists = prev.some(p => p.plan_type === pricing.plan_type && p.technology === pricing.technology);
+      if (exists) {
+        return prev.filter(p => !(p.plan_type === pricing.plan_type && p.technology === pricing.technology));
+      }
+      if (prev.length >= 3) {
+        toast.error("You can compare up to 3 quotes at a time.");
+        return prev;
+      }
+      return [...prev, pricing];
+    });
+  };
 
   // Real-Time Inventory Sync
   const { products: liveProducts, addons: liveAddons } = useRealtimeInventory(pricingCache.products, pricingCache.addons);
@@ -388,45 +410,81 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           </div>
         )}
 
-        {/* Curated Packages Segment */}
-        <div className="mb-16">
-          <div className="text-center mb-10">
-             <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Ready-Made Packages</h2>
-             <p className="text-[15px] text-[#86868b] mt-2">Choose a starting package that fits your needs. You can change it later.</p>
+        {/* Dynamic Generator vs Compare Mode */}
+        {!showComparisonMode ? (
+          <div className="mb-16">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Build Your Quotation</h2>
+              <p className="text-[15px] text-[#86868b] mt-2">Select your preferred technology and brand to see matching variants.</p>
+            </div>
+            <DynamicVariantGenerator
+              products={currentProducts}
+              addons={currentAddons}
+              settings={pricingCache.settings}
+              selection={selection}
+              cablingDone={cablingDone}
+              promoterDiscount={promoterDiscount}
+              evaluatedAddonRules={evaluatedRules}
+              activeOffer={lead.active_offer}
+              onSelectCheckout={(pricing) => {
+                setActiveCheckoutOption({ technology: pricing.technology as string, option: pricing.plan_type });
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+              }}
+              onToggleCompare={handleToggleCompare}
+              selectedCompareItems={selectedCompareItems}
+            />
+            <CompareTray
+              selectedItems={selectedCompareItems}
+              onRemove={(pricing) => handleToggleCompare(pricing)}
+              onCompareNow={() => {
+                setShowComparisonMode(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
           </div>
+        ) : (
+          <div className="mb-16">
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Quote Comparison</h2>
+                <p className="text-[15px] text-[#86868b] mt-1">Comparing {selectedCompareItems.length} selected variants side by side.</p>
+              </div>
+              <Button variant="outline" onClick={() => setShowComparisonMode(false)} className="rounded-full">
+                <ArrowLeftRight className="w-4 h-4 mr-2" /> Back to Generator
+              </Button>
+            </div>
+            
+            {/* Reuse existing CompareCards with the compare_options format it expects */}
+            <CompareCards
+              compareOptions={selectedCompareItems.map(p => ({ technology: p.technology as string, option: p.plan_type }))}
+              activeCheckoutOption={active_checkout_option}
+              onSelectCheckout={setActiveCheckoutOption}
+              selection={selection}
+              products={currentProducts}
+              addons={currentAddons}
+              settings={pricingCache.settings}
+              cablingDone={cablingDone}
+              recommendation={activeRecommendation}
+              customerTechnology={selection.technology}
+              promoterDiscount={promoterDiscount}
+              evaluatedAddonRules={evaluatedRules}
+              activeOffer={lead.active_offer}
+            />
 
-          
-          <CompareCards
-            compareOptions={compare_options}
-            activeCheckoutOption={active_checkout_option}
-            onSelectCheckout={setActiveCheckoutOption}
-            selection={selection}
-            products={currentProducts}
-            addons={currentAddons}
-            settings={pricingCache.settings}
-            cablingDone={cablingDone}
-            recommendation={activeRecommendation}
-            customerTechnology={selection.technology}
-            promoterDiscount={promoterDiscount}
-            evaluatedAddonRules={evaluatedRules}
-            activeOffer={lead.active_offer}
-          />
-        </div>
-
-        {/* Spec Table Segment */}
-        <div className="mb-16">
-          <div className="text-center mb-8">
-             <h3 className="text-2xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Compare camera details.</h3>
+            <div className="mb-20 hidden md:block border-t border-[#f5f5f7] dark:border-[#2d2d2f] pt-16 mt-16">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Compare camera details.</h3>
+              </div>
+              <SpecCompareTable
+                compareOptions={selectedCompareItems.map(p => ({ technology: p.technology as string, option: p.plan_type }))}
+                products={currentProducts}
+                selection={selection}
+                settings={pricingCache.settings}
+                cablingDone={cablingDone}
+              />
+            </div>
           </div>
-          
-          <SpecCompareTable
-            compareOptions={compare_options}
-            products={currentProducts}
-            selection={selection}
-            settings={pricingCache.settings}
-            cablingDone={cablingDone}
-          />
-        </div>
+        )}
 
         {/* PRICE MATCH — Subtle inline link (main UX is via the smart popup) */}
         <div className="mb-16">
