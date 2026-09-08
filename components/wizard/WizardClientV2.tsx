@@ -78,16 +78,23 @@ export function WizardClientV2() {
       setOtp(newOtp);
       const nextIdx = Math.min(digits.length, 5);
       inputRefs.current[nextIdx]?.focus();
+      if (digits.length === 6) {
+        handleVerifyOtp(digits.join(""));
+      }
       return;
     }
 
     if (value && isNaN(Number(value))) return;
     const newOtp = [...otp];
-    newOtp[index] = value ? value.substring(value.length - 1) : "";
+    newOtp[index] = clean;
     setOtp(newOtp);
 
-    if (value && index < 5) {
+    if (clean && index < 5) {
       inputRefs.current[index + 1]?.focus();
+    }
+    
+    if (newOtp.join("").length === 6) {
+      handleVerifyOtp(newOtp.join(""));
     }
   };
 
@@ -112,6 +119,9 @@ export function WizardClientV2() {
     setOtp(newOtp);
     const focusIdx = Math.min(digits.length, 5);
     inputRefs.current[focusIdx]?.focus();
+    if (digits.length === 6) {
+      handleVerifyOtp(digits.join(""));
+    }
   };
     
   useEffect(() => {
@@ -290,8 +300,8 @@ export function WizardClientV2() {
     }
   };
 
-  const handleVerifyOtp = async () => {
-    const code = otp.join("");
+  const handleVerifyOtp = async (codeOverride?: string) => {
+    const code = codeOverride || otp.join("");
     if (code.length !== 6) {
       toast.error("Please enter the 6-digit OTP.");
       return;
@@ -892,7 +902,7 @@ export function WizardClientV2() {
                         inputMode="numeric"
                         pattern="[0-9]*"
                         autoComplete={index === 0 ? "one-time-code" : "off"}
-                        maxLength={1}
+                        maxLength={6}
                         value={digit}
                         onChange={(e) => handleOtpChange(e.target.value, index)}
                         onKeyDown={(e) => handleOtpKeyDown(e, index)}
@@ -903,7 +913,7 @@ export function WizardClientV2() {
                 </div>
 
                 <Button
-                  onClick={handleVerifyOtp}
+                  onClick={() => handleVerifyOtp()}
                   disabled={loading || otp.join("").length !== 6}
                   size="lg"
                   className="w-full text-lg h-14 font-semibold shadow-md bg-blue-600 hover:bg-blue-700"

@@ -83,7 +83,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
 
   // Sends the OTP via the mock endpoint
   const sendOtpCode = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+    if (e) if (e) e.preventDefault();
     setError("");
 
     if (!/^[6-9]\d{9}$/.test(mobile)) {
@@ -139,14 +139,33 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
   };
 
   const handleOtpChange = (value: string, index: number) => {
-    if (isNaN(Number(value))) return;
+    const clean = value.replace(/\D/g, "");
+    if (clean.length > 1) {
+      const digits = clean.slice(0, 6).split("");
+      const newOtp = [...otp];
+      digits.forEach((d, i) => {
+        newOtp[i] = d;
+      });
+      setOtp(newOtp);
+      const nextIdx = Math.min(digits.length, 5);
+      inputRefs.current[nextIdx]?.focus();
+      if (digits.length === 6) {
+        handleVerifyAndSave(undefined, digits.join(""));
+      }
+      return;
+    }
+
+    if (value && isNaN(Number(value))) return;
     const newOtp = [...otp];
-    newOtp[index] = value.substring(value.length - 1);
+    newOtp[index] = clean;
     setOtp(newOtp);
 
-    // Auto-focus next input
-    if (value && index < 5) {
+    if (clean && index < 5) {
       inputRefs.current[index + 1]?.focus();
+    }
+    
+    if (newOtp.join("").length === 6) {
+      handleVerifyAndSave(undefined, newOtp.join(""));
     }
   };
 
@@ -157,9 +176,9 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
   };
 
   // Handles manual submission
-  const handleVerifyAndSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const fullOtp = otp.join("");
+  const handleVerifyAndSave = async (e?: React.FormEvent, codeOverride?: string) => {
+    if (e) e.preventDefault();
+    const fullOtp = codeOverride || otp.join("");
     if (fullOtp.length < 6) return setError("Please enter the complete 6-digit code.");
 
     setLoading(true);
@@ -340,7 +359,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
                   type="text"
                   inputMode="numeric"
                   autoComplete={i === 0 ? "one-time-code" : "off"}
-                  maxLength={1}
+                  maxLength={6}
                   value={digit}
                   onChange={(e) => handleOtpChange(e.target.value, i)}
                   onKeyDown={(e) => handleKeyDown(e, i)}
