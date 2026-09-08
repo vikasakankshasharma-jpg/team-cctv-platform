@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
-import { verifySession } from "@/lib/auth-server";
+import { verifySession, requireRoleApi } from "@/lib/auth-server";
 
 export async function POST(
   request: Request,

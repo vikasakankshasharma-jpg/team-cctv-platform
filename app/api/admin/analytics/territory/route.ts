@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifySession } from "@/lib/auth-server";
+import { verifySession, requireRoleApi } from "@/lib/auth-server";
 
 export async function GET(req: NextRequest) {
   const session = await verifySession();
