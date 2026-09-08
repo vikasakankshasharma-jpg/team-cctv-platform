@@ -1,32 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyOtp } from "@/lib/otp-store";
-import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import { adminDb, adminAuth, serverTimestamp } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
   try {
-    const { pincode, mobile, code } = await req.json();
+    const { pincode, idToken } = await req.json();
 
     // 1. Basic Validations
     if (!pincode || !/^\d{6}$/.test(pincode)) {
       return NextResponse.json({ error: "Invalid pincode" }, { status: 400 });
     }
-    if (!mobile || !/^\d{10}$/.test(mobile)) {
-      return NextResponse.json({ error: "Invalid mobile number" }, { status: 400 });
-    }
-    if (!code || !/^\d{6}$/.test(code)) {
-      return NextResponse.json({ error: "Invalid 6-digit OTP code" }, { status: 400 });
+    if (!idToken) {
+      return NextResponse.json({ error: "Missing Firebase ID token" }, { status: 400 });
     }
 
-    // 2. Verify OTP
-    const isValid = await verifyOtp(mobile, code);
-    if (!isValid) {
-      return NextResponse.json({ error: "Incorrect or expired OTP" }, { status: 400 });
+    // 2. Verify Firebase ID Token
+    let decodedToken;
+    try {
+      decodedToken = await adminAuth.verifyIdToken(idToken);
+    } catch (e) {
+      return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
     }
+
+    const mobile = decodedToken.phone_number || "unknown";
 
     // 3. Save to Firestore interest_leads collection
     const leadRef = await adminDb.collection("interest_leads").add({
       pincode,
       mobile_number: mobile,
+      firebase_uid: decodedToken.uid,
       createdAt: serverTimestamp(),
       status: "waitlist"
     });

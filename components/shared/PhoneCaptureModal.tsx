@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ShieldCheck, Phone, CheckCircle2, Loader2, ArrowRight, X, Sparkles } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
+import { auth } from "@/lib/firebase-client";
 
 interface PhoneCaptureModalProps {
   pincode: string;
@@ -18,6 +20,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [canResend, setCanResend] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -84,30 +87,45 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
     setError("");
 
     if (!/^[6-9]\d{9}$/.test(mobile)) {
-      return setError("Enter a valid 10-digit Indian mobile number (starts with 6–9).");
+      return setError("Enter a valid 10-digit Indian mobile number (starts with 6-9).");
     }
 
     setLoading(true);
     try {
-      const res = await fetch("/api/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile }),
-      });
-      const data = await res.json();
+      const cleanMobile = mobile.replace(/\s/g, "");
+      const formatPhone = "+91" + cleanMobile;
 
-      if (!res.ok) throw new Error(data.error || "Failed to transmit verification code.");
-
-      // In development, alert the code for local convenience
-      if (process.env.NODE_ENV === "development" && data.devCode) {
-        console.log(`%c[DEV MOCK OTP]: ${data.devCode}`, "color: #10B981; font-weight: bold; font-size: 14px;");
+      let recaptchaContainer = document.getElementById("recaptcha-container-phone");
+      if (!recaptchaContainer) {
+        recaptchaContainer = document.createElement("div");
+        recaptchaContainer.id = "recaptcha-container-phone";
+        document.body.appendChild(recaptchaContainer);
       }
-
+      
+      if ((window as any).recaptchaVerifierPhone) {
+        try {
+          (window as any).recaptchaVerifierPhone.clear();
+        } catch (e) {}
+        (window as any).recaptchaVerifierPhone = null;
+      }
+      
+      (window as any).recaptchaVerifierPhone = new RecaptchaVerifier(auth, "recaptcha-container-phone", {
+        size: "invisible",
+      });
+      
+      const appVerifier = (window as any).recaptchaVerifierPhone;
+      const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
+      
+      setConfirmationResult(result);
       setStep("otp");
       setCountdown(30);
       setCanResend(false);
     } catch (err: any) {
-      setError(err.message || "Failed to send code. Please try again.");
+      console.error(err);
+      let errMsg = err.message || "Failed to send code. Please try again.";
+      if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please wait a few minutes.";
+      else if (errMsg.includes("Firebase:")) errMsg = "System error. Please try again.";
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
@@ -141,13 +159,20 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
     setError("");
 
     try {
+      let idToken = "";
+      if (confirmationResult) {
+        const result = await confirmationResult.confirm(fullOtp);
+        idToken = await result.user.getIdToken();
+      } else {
+        throw new Error("Verification session missing. Please go back and request a new code.");
+      }
+
       const res = await fetch("/api/interest-leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pincode,
-          mobile,
-          code: fullOtp,
+          idToken
         }),
       });
       const data = await res.json();
@@ -158,37 +183,56 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
     } catch (err: any) {
       setOtp(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
-      setError(err.message || "Incorrect code. Please try again.");
+      
+      let errMsg = err.message || "Incorrect code. Please try again.";
+      if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
+      else if (errMsg.includes("auth/code-expired")) errMsg = "The code has expired. Please resend.";
+      else if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please try again later.";
+      else if (errMsg.includes("Firebase:")) errMsg = "Authentication failed. Please try again.";
+      
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
   };
-
-  // Handles WebOTP automatic submit without manual button clicks
   const handleAutoSubmit = async (otpArray: string[]) => {
     const fullOtp = otpArray.join("");
     setLoading(true);
     setError("");
     try {
+      let idToken = "";
+      if (confirmationResult) {
+        const result = await confirmationResult.confirm(fullOtp);
+        idToken = await result.user.getIdToken();
+      } else {
+        throw new Error("Verification session missing.");
+      }
+
       const res = await fetch("/api/interest-leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pincode,
-          mobile,
-          code: fullOtp,
+          idToken
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Verification failed.");
+      
       setStep("success");
     } catch (err: any) {
       setOtp(["", "", "", "", "", ""]);
-      setError(err.message || "Auto-fill verification failed. Please enter code manually.");
+      
+      let errMsg = err.message || "Auto-fill verification failed. Please enter code manually.";
+      if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
+      else if (errMsg.includes("auth/code-expired")) errMsg = "The code has expired. Please resend.";
+      
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-4 bg-zinc-950/40 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-300">

@@ -255,7 +255,10 @@ export function WizardClientV2() {
       toast.success("OTP sent to your mobile.");
     } catch (error: any) {
       console.error(error);
-      toast.error("Failed to send OTP. " + (error.message || "Please check your number."));
+      let errMsg = error.message || "Please check your number.";
+      if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please wait a few minutes.";
+      else if (errMsg.includes("Firebase:")) errMsg = "System error. Please try again.";
+      toast.error("Failed to send OTP. " + errMsg);
     } finally {
       setLoading(false);
     }
@@ -307,7 +310,12 @@ export function WizardClientV2() {
       setOtpSent(false);
     } catch (error: any) {
       console.error("OTP verification error:", error);
-      toast.error("Invalid OTP. " + (error.message || "Please check the code and try again."));
+      let errMsg = error.message || "Please check the code and try again.";
+      if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
+      else if (errMsg.includes("auth/code-expired")) errMsg = "The code has expired. Please resend.";
+      else if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please try again later.";
+      else if (errMsg.includes("Firebase:")) errMsg = "Authentication failed. Please try again.";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
