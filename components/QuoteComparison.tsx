@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -6,6 +5,7 @@ import { PricingResult, CCTVRequirement } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Settings2, ArrowLeftRight } from "lucide-react";
 
 interface QuoteComparisonProps {
   plans: Record<string, PricingResult>;
@@ -18,10 +18,13 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
   const lockedTech = requirement.installation_type === "addon" && requirement.existing_technology ? requirement.existing_technology as "HD" | "IP" : null;
   const [activeTech, setActiveTech] = useState<"HD" | "IP">(lockedTech || "HD");
   const [activeBrand, setActiveBrand] = useState<string>("Budget");
+  
+  // State for side-by-side comparison mode
+  const [showComparison, setShowComparison] = useState(false);
+  const [selectedToCompare, setSelectedToCompare] = useState<string[]>([]);
 
   const formatPrice = (price: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(price);
 
-  // Extract available brands for the currently active technology
   const brands = useMemo(() => {
      const bSet = new Set<string>();
      Object.keys(plans).forEach(key => {
@@ -36,20 +39,14 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
      return list.includes("Budget") ? ["Budget", ...list.filter(b => b !== "Budget")] : list;
   }, [plans, activeTech]);
 
-  // Keep activeBrand valid when switching tech or when available brands change
   React.useEffect(() => {
      if (brands.length > 0 && !brands.includes(activeBrand)) {
         setActiveBrand(brands[0]);
      }
   }, [brands, activeBrand]);
 
-  // Filter plans based on Toggle & Brand
   const filteredPlans = useMemo(() => {
-     let result = Object.entries(plans).filter(([key, plan]) => key.includes("_" + activeTech + "_"));
-     
-     result = result.filter(([key, plan]) => key.startsWith(activeBrand + "_"));
-     
-     // Sort by MP resolution (e.g. Budget_HD_2MP -> index 2)
+     let result = Object.entries(plans).filter(([key]) => key.includes("_" + activeTech + "_") && key.startsWith(activeBrand + "_"));
      return result.sort((a, b) => {
         const mpA = parseInt(a[0].split("_")[2]?.replace("MP", "") || "0");
         const mpB = parseInt(b[0].split("_")[2]?.replace("MP", "") || "0");
@@ -57,145 +54,195 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
      });
   }, [plans, activeTech, activeBrand]);
 
-  return (
-    <div className="flex flex-col space-y-6 w-full">
-      <div className="flex justify-between items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
-        <div>
-          <h3 className="text-lg font-semibold text-blue-900">Your CCTV Requirement</h3>
-          <p className="text-sm text-blue-700">
-            {requirement.camera_count} Cameras  {requirement.recording_days || 15} Days Recording 
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={onEditConfiguration}>
-          Edit Requirement
-        </Button>
-      </div>
-      
-      {/* Smart Toggle */}
-      {lockedTech ? (
-        <div className="flex justify-center mb-4">
-          <div className="bg-blue-50 border border-blue-200 px-5 py-2.5 rounded-xl text-sm font-semibold text-blue-700">
-            {lockedTech === "HD" ? "🔒 Standard HD (Analog) — Matching Your Existing System" : "🔒 Premium IP (Network) — Matching Your Existing System"}
-          </div>
-        </div>
-      ) : (
-      <div className="flex justify-center mb-4">
-        <div className="bg-gray-100 p-1 rounded-xl flex space-x-1 shadow-inner">
-           <button 
-             onClick={() => setActiveTech("HD")}
-             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTech === "HD" ? 'bg-white text-blue-600 shadow' : 'text-gray-500 hover:text-gray-800'}`}
-           >
-             Standard HD (Analog)
-           </button>
-           <button 
-             onClick={() => setActiveTech("IP")}
-             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTech === "IP" ? 'bg-white text-blue-600 shadow' : 'text-gray-500 hover:text-gray-800'}`}
-           >
-             Premium IP (Network)
-           </button>
-        </div>
-      </div>
-      )}
+  const [activeResolution, setActiveResolution] = useState<string>("");
 
-      {/* Brand Filter */}
-      {brands.length > 1 && (
-        <div className="flex justify-center items-center space-x-2 mb-3">
-          <span className="text-sm font-medium text-gray-500 mr-2">Brand:</span>
-          <div className="flex flex-wrap gap-2">
-            {brands.map(b => (
-              <Badge 
-                key={b} 
-                variant={activeBrand === b ? "default" : "outline"}
-                className={`cursor-pointer px-4 py-1 text-sm transition-all ${activeBrand === b ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-gray-100'}`}
-                onClick={() => setActiveBrand(b)}
-              >
-                {b}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
+  React.useEffect(() => {
+    if (filteredPlans.length > 0) {
+      const availableMps = filteredPlans.map(([key]) => key.split("_")[2]);
+      if (!activeResolution || !availableMps.includes(activeResolution)) {
+        // default to middle or first
+        setActiveResolution(availableMps[Math.floor(availableMps.length / 2)] || availableMps[0]);
+      }
+    }
+  }, [filteredPlans, activeResolution]);
 
-      {/* Dynamic Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-        {filteredPlans.length === 0 ? (
-           <div className="col-span-3 text-center text-gray-500 py-8">No configurations available for the selected filters.</div>
+  const activePlanKey = `${activeBrand}_${activeTech}_${activeResolution}`;
+  const activePlan = plans[activePlanKey];
+
+  const totalCams = requirement.installation_type === "addon" ? (requirement.indoor_camera_count || 0) + (requirement.outdoor_camera_count || 0) : requirement.camera_count || 0;
+
+  const renderCard = (planKey: string, plan: PricingResult, isMain: boolean = false) => {
+    const keyParts = planKey.split("_");
+    const brandName = keyParts[0];
+    const tech = keyParts[1];
+    const mp = keyParts.length > 2 ? keyParts[2] : "";
+    
+    const storageItem = plan.items.find((i: any) => i.category === "storage");
+    const storageDisplay = storageItem ? storageItem.display_name.match(/\d+TB|\d+GB/)?.[0] || "Included" : "None";
+    
+    const recorderItem = plan.items.find((i: any) => i.category === "recorder");
+    const recorderDisplay = recorderItem ? (recorderItem.display_name.includes("8 Ch") ? "8-Channel" : recorderItem.display_name.includes("16 Ch") ? "16-Channel" : recorderItem.display_name.includes("32 Ch") ? "32-Channel" : "4-Channel") : "Existing";
+
+    return (
+      <Card key={planKey} className={`flex flex-col transition-all duration-200 ${isMain ? 'border-primary shadow-xl ring-2 ring-primary/20' : 'hover:shadow-md'}`}>
+        <CardHeader className={isMain ? "bg-primary/5 pb-6" : ""}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+              {brandName}
+            </span>
+            <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-zinc-100 text-zinc-700 border border-zinc-200">
+              {mp}
+            </span>
+          </div>
+          <CardTitle className={`text-center text-gray-700 uppercase tracking-wider font-semibold ${isMain ? 'text-xl' : 'text-sm'}`}>
+            {totalCams}x {tech} Cameras
+          </CardTitle>
+          <div className={`text-center font-black mt-3 ${isMain ? 'text-4xl text-primary' : 'text-3xl text-gray-900'}`}>{formatPrice(plan.total_payable)}</div>
+        </CardHeader>
+        <CardContent className="flex-grow pt-4">
+          <ul className={`space-y-3 ${isMain ? 'text-base' : 'text-sm'}`}>
+            <li className="flex justify-between border-b pb-2">
+              <span className="text-gray-500">Brand</span> 
+              <span className="font-semibold text-gray-900">{brandName}</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-gray-500">Clarity</span> 
+              <span className="font-medium text-primary font-bold">{mp}</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-gray-500">Storage</span> 
+              <span className="font-medium">{storageDisplay} ({requirement.recording_days || 0} Days)</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-gray-500">Recorder</span> 
+              <span className="font-medium">{recorderDisplay}</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-gray-500">Installation</span> 
+              <span className="font-medium">Included</span>
+            </li>
+          </ul>
+        </CardContent>
+        <CardFooter className="pt-4 flex flex-col gap-2">
+          <Button className="w-full font-bold" size={isMain ? "lg" : "default"} onClick={() => onSelectPlan(planKey)}>
+            {isMain ? "Select & Continue" : "Select"}
+          </Button>
+          {!isMain && (
+            <Button variant="outline" className="w-full" onClick={() => {
+              setSelectedToCompare(prev => prev.includes(planKey) ? prev.filter(p => p !== planKey) : [...prev, planKey].slice(0, 3));
+            }}>
+              {selectedToCompare.includes(planKey) ? "Remove from Compare" : "Compare"}
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+    );
+  };
+
+  if (showComparison) {
+    const comparePlans = Object.entries(plans).filter(([key]) => selectedToCompare.includes(key));
+    return (
+      <div className="flex flex-col space-y-6 w-full animate-in fade-in">
+        <div className="flex justify-between items-center bg-zinc-50 p-4 rounded-lg border border-zinc-200">
+          <h3 className="text-lg font-bold">Side-by-Side Comparison</h3>
+          <Button variant="outline" onClick={() => setShowComparison(false)}>
+            Back to Options
+          </Button>
+        </div>
+        {comparePlans.length === 0 ? (
+          <div className="text-center py-10 text-gray-500">No quotes selected for comparison. Select options from the main card to compare.</div>
         ) : (
-           filteredPlans.map(([key, plan], idx) => {
-             const keyParts = key.split("_");
-             const brandName = keyParts[0];
-             const mp = keyParts.length > 2 ? keyParts[2] : keyParts[1];
-             const totalCams = requirement.installation_type === "addon" ? (requirement.indoor_camera_count || 0) + (requirement.outdoor_camera_count || 0) : requirement.camera_count || 0;
-             
-             // Extract storage string
-             const storageItem = plan.items.find((i: any) => i.category === "storage");
-             const storageDisplay = storageItem ? storageItem.display_name.match(/\d+TB|\d+GB/)?.[0] || "Included" : "None";
-             
-             // Extract recorder string
-             const recorderItem = plan.items.find((i: any) => i.category === "recorder");
-             const recorderDisplay = recorderItem ? (recorderItem.display_name.includes("8 Ch") ? "8-Channel" : recorderItem.display_name.includes("16 Ch") ? "16-Channel" : recorderItem.display_name.includes("32 Ch") ? "32-Channel" : "4-Channel") : "Existing";
-             const isRecommended = idx === Math.floor(filteredPlans.length / 2) && filteredPlans.length >= 2;
-             
-             return (
-                <Card key={key} className={`flex flex-col transition-all duration-200 ${isRecommended ? 'border-primary shadow-lg relative transform md:-translate-y-2' : 'hover:shadow-md'}`}>
-                  {isRecommended && (
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                      <Badge className="bg-primary text-primary-foreground px-3 py-1 uppercase tracking-wide">⭐ Recommended</Badge>
-                    </div>
-                  )}
-                  <CardHeader className={isRecommended ? "pt-8" : ""}>
-                    <div className="flex items-center justify-center mb-1">
-                      <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                        {brandName}
-                      </span>
-                    </div>
-                    <CardTitle className="text-center text-gray-700 uppercase text-sm tracking-wider font-semibold">
-                      {mp} Resolution
-                    </CardTitle>
-                    <div className={`text-center text-3xl font-bold mt-2 ${isRecommended ? 'text-primary' : 'text-gray-900'}`}>{formatPrice(plan.total_payable)}</div>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <ul className="space-y-3 text-sm">
-                      <li className="flex justify-between border-b pb-2">
-                        <span className="text-gray-500">Brand</span> 
-                        <span className="font-semibold text-gray-900">{brandName}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-gray-500">Cameras</span> 
-                        <span className="font-medium">{totalCams}x {activeTech}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-gray-500">Clarity</span> 
-                        <span className={`font-medium ${isRecommended ? 'text-primary font-bold' : ''}`}>{mp}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-gray-500">Storage</span> 
-                        <span className="font-medium">{storageDisplay} ({requirement.recording_days || 0} Days)</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-gray-500">Recorder</span> 
-                        <span className="font-medium">{recorderDisplay}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-gray-500">Installation</span> 
-                        <span className="font-medium text-emerald-600 font-semibold">Included</span>
-                      </li>
-                    </ul>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant={isRecommended ? "default" : "outline"} className="w-full" onClick={() => onSelectPlan(key)}>
-                       {isRecommended ? "Select Plan" : "View Details"}
-                    </Button>
-                  </CardFooter>
-                </Card>
-             );
-           })
+          <div className={`grid grid-cols-1 md:grid-cols-${Math.min(comparePlans.length, 3)} gap-6`}>
+            {comparePlans.map(([key, plan]) => renderCard(key, plan, false))}
+          </div>
         )}
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col space-y-6 w-full animate-in fade-in">
+      <div className="flex flex-col md:flex-row justify-between md:items-center bg-blue-50 p-4 rounded-lg border border-blue-100 gap-4">
+        <div>
+          <h3 className="text-lg font-semibold text-blue-900">Your Quotation Variants</h3>
+          <p className="text-sm text-blue-700">
+            Select Brand and Quality to instantly see your tailored quote.
+          </p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => setShowComparison(true)}>
+            <ArrowLeftRight className="w-4 h-4 mr-2" />
+            Compare Side-by-Side ({selectedToCompare.length})
+          </Button>
+          <Button variant="outline" size="sm" onClick={onEditConfiguration}>
+            <Settings2 className="w-4 h-4 mr-2" />
+            Edit Requirement
+          </Button>
+        </div>
+      </div>
       
-      <div className="mt-8 bg-gray-50 p-6 rounded-xl border">
-        <h4 className="font-bold text-gray-800 mb-4">Want to customize your cameras?</h4>
-        <p className="text-sm text-gray-600 mb-4">You can upgrade specific cameras to PTZ (360� Rotating), add Two-Way Audio, or choose Color Night Vision on the next screen after selecting a base plan.</p>
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        {/* Left: Options panel */}
+        <div className="col-span-1 md:col-span-5 space-y-6">
+          <div className="bg-white p-5 rounded-2xl border shadow-sm">
+            <h4 className="font-bold text-gray-900 mb-4">1. Technology</h4>
+            <div className="flex flex-col space-y-2">
+              <button onClick={() => !lockedTech && setActiveTech("HD")} disabled={!!lockedTech && lockedTech !== "HD"} className={`px-4 py-3 rounded-lg text-sm font-bold text-left transition-all border ${activeTech === "HD" ? 'bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-500' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                Standard HD (Analog)
+              </button>
+              <button onClick={() => !lockedTech && setActiveTech("IP")} disabled={!!lockedTech && lockedTech !== "IP"} className={`px-4 py-3 rounded-lg text-sm font-bold text-left transition-all border ${activeTech === "IP" ? 'bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-500' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                Premium IP (Network)
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border shadow-sm">
+            <h4 className="font-bold text-gray-900 mb-4">2. Brand</h4>
+            <div className="flex flex-wrap gap-2">
+              {brands.map(b => (
+                <Badge key={b} variant={activeBrand === b ? "default" : "outline"} className={`cursor-pointer px-4 py-2 text-sm transition-all ${activeBrand === b ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600 border-gray-300'}`} onClick={() => setActiveBrand(b)}>
+                  {b}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border shadow-sm">
+            <h4 className="font-bold text-gray-900 mb-4">3. Camera Quality</h4>
+            <div className="flex flex-wrap gap-2">
+              {filteredPlans.map(([key]) => {
+                const mp = key.split("_")[2];
+                return (
+                  <Badge key={mp} variant={activeResolution === mp ? "default" : "outline"} className={`cursor-pointer px-4 py-2 text-sm transition-all ${activeResolution === mp ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600 border-gray-300'}`} onClick={() => setActiveResolution(mp)}>
+                    {mp}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Main Card */}
+        <div className="col-span-1 md:col-span-7 flex flex-col justify-start items-center pt-4">
+          <div className="w-full max-w-md">
+            {activePlan ? (
+              <div className="relative">
+                {renderCard(activePlanKey, activePlan, true)}
+                <div className="mt-4 flex justify-center">
+                  <Button variant="outline" className="text-sm font-medium" onClick={() => {
+                    setSelectedToCompare(prev => prev.includes(activePlanKey) ? prev.filter(p => p !== activePlanKey) : [...prev, activePlanKey].slice(0, 3));
+                  }}>
+                    {selectedToCompare.includes(activePlanKey) ? "Added to Compare" : "+ Add to Side-by-Side Compare"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-10 text-center text-gray-500">
+                No matching configuration found for selected options.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
