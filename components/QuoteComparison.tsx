@@ -234,17 +234,36 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
 
         {/* Right: Main Card */}
         <div className="col-span-1 md:col-span-7 flex flex-col justify-start items-center pt-4">
-          <div className="w-full max-w-md">
-            {activePlan ? (
-              <div className="relative">
-                {renderCard(activePlanKey, activePlan, true)}
-                <div className="mt-4 flex justify-center">
-                  <Button variant="outline" className="text-sm font-medium" onClick={() => {
-                    setSelectedToCompare(prev => prev.includes(activePlanKey) ? prev.filter(p => p !== activePlanKey) : [...prev, activePlanKey].slice(0, 3));
-                  }}>
-                    {selectedToCompare.includes(activePlanKey) ? "Added to Compare" : "+ Add to Side-by-Side Compare"}
-                  </Button>
-                </div>
+          <div className="w-full">
+            {plansToRender.length > 0 ? (
+              <div className="relative w-full">
+                {plansToRender.length === 1 ? (
+                  <div className="max-w-md mx-auto">
+                    {renderCard(plansToRender[0].key, plansToRender[0].plan, true)}
+                    <div className="mt-4 flex justify-center">
+                      <Button variant="outline" className="text-sm font-medium" onClick={() => {
+                        setSelectedToCompare(prev => prev.includes(plansToRender[0].key) ? prev.filter(p => p !== plansToRender[0].key) : [...prev, plansToRender[0].key].slice(0, 3));
+                      }}>
+                        {selectedToCompare.includes(plansToRender[0].key) ? "Added to Compare" : "+ Add to Side-by-Side Compare"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    {plansToRender.map(p => (
+                      <div key={p.key}>
+                        {renderCard(p.key, p.plan, true)}
+                        <div className="mt-4 flex justify-center">
+                          <Button variant="outline" className="text-sm font-medium" onClick={() => {
+                            setSelectedToCompare(prev => prev.includes(p.key) ? prev.filter(item => item !== p.key) : [...prev, p.key].slice(0, 3));
+                          }}>
+                            {selectedToCompare.includes(p.key) ? "Added to Compare" : "+ Add to Compare"}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-10 text-center text-gray-500">
