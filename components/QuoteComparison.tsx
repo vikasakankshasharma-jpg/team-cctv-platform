@@ -5,7 +5,7 @@ import { PricingResult, CCTVRequirement } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings2, ArrowLeftRight } from "lucide-react";
+import { Settings2, ArrowLeftRight, X } from "lucide-react";
 
 interface QuoteComparisonProps {
   plans: Record<string, PricingResult>;
@@ -163,8 +163,8 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
     const comparePlans = Object.entries(plans).filter(([key]) => selectedToCompare.includes(key));
     return (
       <div className="flex flex-col space-y-6 w-full animate-in fade-in">
-        <div className="flex justify-between items-center bg-zinc-50 p-4 rounded-lg border border-zinc-200">
-          <h3 className="text-lg font-bold">Side-by-Side Comparison</h3>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-zinc-50 p-4 rounded-lg border border-zinc-200 gap-4">
+          <h3 className="text-lg font-bold text-zinc-800">Detailed Side-by-Side Comparison</h3>
           <Button variant="outline" onClick={() => setShowComparison(false)}>
             Back to Options
           </Button>
@@ -172,14 +172,75 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
         {comparePlans.length === 0 ? (
           <div className="text-center py-10 text-gray-500">No quotes selected for comparison. Select options from the main card to compare.</div>
         ) : (
-          <div className={`grid grid-cols-1 md:grid-cols-${Math.min(comparePlans.length, 3)} gap-6`}>
-            {comparePlans.map(([key, plan]) => renderCard(key, plan, false))}
+          <div className="overflow-x-auto border border-zinc-200 rounded-xl bg-white shadow-sm">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr>
+                  <th className="p-4 border-b border-r bg-zinc-50 w-[150px] sm:w-[200px] text-zinc-500 font-semibold align-bottom">Features</th>
+                  {comparePlans.map(([key, plan]) => {
+                     const parts = key.split("_");
+                     return (
+                        <th key={key} className="p-6 border-b border-r text-center align-top relative min-w-[220px]">
+                          <button 
+                            onClick={() => setSelectedToCompare(prev => prev.filter(p => p !== key))} 
+                            className="absolute top-3 right-3 text-zinc-400 hover:text-red-500 transition-colors p-1 bg-white rounded-full hover:bg-red-50"
+                            title="Remove from comparison"
+                          >
+                             <X size={18} />
+                          </button>
+                          <div className="flex items-center justify-center gap-2 mb-3">
+                             <Badge variant="outline" className="bg-blue-50 text-blue-700 font-bold">{parts[0]}</Badge>
+                             <Badge variant="outline" className="bg-zinc-100 text-zinc-800 font-bold">{parts[2]}</Badge>
+                          </div>
+                          <div className="text-sm font-semibold text-zinc-500 mb-2">{totalCams}x {parts[1]} Cameras</div>
+                          <div className="text-3xl font-black text-zinc-900 mb-5">{formatPrice(plan.total_payable)}</div>
+                          <Button className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm" size="lg" onClick={() => onSelectPlan(key)}>Select This Plan</Button>
+                        </th>
+                     )
+                  })}
+                </tr>
+              </thead>
+              <tbody className="text-sm sm:text-base">
+                 <tr className="hover:bg-zinc-50/50 transition-colors">
+                   <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Brand</td>
+                   {comparePlans.map(([key]) => <td key={key} className="p-4 border-b border-r text-center font-bold text-zinc-900">{key.split("_")[0]}</td>)}
+                 </tr>
+                 <tr className="hover:bg-zinc-50/50 transition-colors">
+                   <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Clarity (Resolution)</td>
+                   {comparePlans.map(([key]) => <td key={key} className="p-4 border-b border-r text-center font-medium text-blue-700">{key.split("_")[2]}</td>)}
+                 </tr>
+                 <tr className="hover:bg-zinc-50/50 transition-colors">
+                   <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Storage Drive</td>
+                   {comparePlans.map(([key, plan]) => {
+                      const item = plan.items.find((i: any) => i.category === "storage");
+                      const val = item ? item.display_name.match(/\d+TB|\d+GB/)?.[0] || "Included" : "None (7 Days)";
+                      return <td key={key} className="p-4 border-b border-r text-center">{val}</td>;
+                   })}
+                 </tr>
+                 <tr className="hover:bg-zinc-50/50 transition-colors">
+                   <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Recorder Unit</td>
+                   {comparePlans.map(([key, plan]) => {
+                      const item = plan.items.find((i: any) => i.category === "recorder");
+                      const val = item ? (item.display_name.includes("8 Ch") ? "8-Channel" : item.display_name.includes("16 Ch") ? "16-Channel" : item.display_name.includes("32 Ch") ? "32-Channel" : "4-Channel") : "Existing";
+                      return <td key={key} className="p-4 border-b border-r text-center">{val}</td>;
+                   })}
+                 </tr>
+                 <tr className="hover:bg-zinc-50/50 transition-colors">
+                   <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Installation</td>
+                   {comparePlans.map(([key]) => <td key={key} className="p-4 border-b border-r text-center text-green-600 font-bold bg-green-50/30">Included</td>)}
+                 </tr>
+                 <tr className="hover:bg-zinc-50/50 transition-colors">
+                   <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Warranty</td>
+                   {comparePlans.map(([key]) => <td key={key} className="p-4 border-b border-r text-center font-medium">1 Year On-Site</td>)}
+                 </tr>
+              </tbody>
+            </table>
           </div>
         )}
       </div>
     );
   }
-
+  
   return (
     <div className="flex flex-col space-y-6 w-full animate-in fade-in">
       <div className="flex flex-col md:flex-row justify-between md:items-center bg-blue-50 p-4 rounded-lg border border-blue-100 gap-4">
