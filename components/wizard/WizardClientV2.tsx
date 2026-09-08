@@ -257,7 +257,7 @@ export function WizardClientV2() {
       console.error(error);
       let errMsg = error.message || "Please check your number.";
       if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please wait a few minutes.";
-      else if (errMsg.includes("Firebase:")) errMsg = "System error. Please try again.";
+      
       toast.error("Failed to send OTP. " + errMsg);
     } finally {
       setLoading(false);

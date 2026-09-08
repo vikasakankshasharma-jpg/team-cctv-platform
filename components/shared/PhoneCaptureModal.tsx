@@ -188,7 +188,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
       if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
       else if (errMsg.includes("auth/code-expired")) errMsg = "The code has expired. Please resend.";
       else if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please try again later.";
-      else if (errMsg.includes("Firebase:")) errMsg = "Authentication failed. Please try again.";
+      
       
       setError(errMsg);
     } finally {
