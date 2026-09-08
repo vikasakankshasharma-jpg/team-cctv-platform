@@ -95,13 +95,8 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
       const cleanMobile = mobile.replace(/\s/g, "");
       const formatPhone = "+91" + cleanMobile;
 
-      let recaptchaContainer = document.getElementById("recaptcha-container-phone");
-      if (!recaptchaContainer) {
-        recaptchaContainer = document.createElement("div");
-        recaptchaContainer.id = "recaptcha-container-phone";
-        document.body.appendChild(recaptchaContainer);
-      }
       
+      // 1. Clear the Firebase instance
       if ((window as any).recaptchaVerifierPhone) {
         try {
           (window as any).recaptchaVerifierPhone.clear();
@@ -109,15 +104,27 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
         (window as any).recaptchaVerifierPhone = null;
       }
       
-      (window as any).recaptchaVerifierPhone = new RecaptchaVerifier(auth, "recaptcha-container-phone", {
+      // 2. Completely nuke the old DOM container to prevent "already rendered" errors
+      const oldContainer = document.getElementById("recaptcha-container-phone");
+      if (oldContainer) {
+        oldContainer.remove();
+      }
+
+      // 3. Create a pristine container
+      const recaptchaContainer = document.createElement("div");
+      recaptchaContainer.id = "recaptcha-container-phone";
+      document.body.appendChild(recaptchaContainer);
+      
+      const verifier = new RecaptchaVerifier(auth, "recaptcha-container-phone", {
         size: "invisible",
         callback: () => {},
         "expired-callback": () => {
-          setError("reCAPTCHA expired. Please try again.");
+          console.log("reCAPTCHA expired");
         },
       });
-      
-      const appVerifier = (window as any).recaptchaVerifierPhone;
+      (window as any).recaptchaVerifierPhone = verifier;
+  
+      const appVerifier = verifier;
       await appVerifier.render();
       const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
       

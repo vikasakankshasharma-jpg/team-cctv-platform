@@ -237,30 +237,32 @@ export function WizardClientV2() {
         return;
       }
       
-      let recaptchaContainer = document.getElementById("recaptcha-container-wizard");
-      if (!recaptchaContainer) {
-        recaptchaContainer = document.createElement("div");
+      
+        if ((window as any).recaptchaVerifierWizard) {
+          try {
+            (window as any).recaptchaVerifierWizard.clear();
+          } catch (e) {}
+          (window as any).recaptchaVerifierWizard = null;
+        }
+        
+        const oldContainer = document.getElementById("recaptcha-container-wizard");
+        if (oldContainer) {
+          oldContainer.remove();
+        }
+
+        const recaptchaContainer = document.createElement("div");
         recaptchaContainer.id = "recaptcha-container-wizard";
         document.body.appendChild(recaptchaContainer);
-      }
-      
-      if ((window as any).recaptchaVerifierWizard) {
-        try {
-          (window as any).recaptchaVerifierWizard.clear();
-        } catch (e) {}
-        (window as any).recaptchaVerifierWizard = null;
-      }
-      
-      const verifier = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
-        size: "invisible",
-        callback: () => {
-          // reCAPTCHA solved - will proceed with phone auth
-        },
-        "expired-callback": () => {
-          toast.error("reCAPTCHA expired. Please try again.");
-        },
-      });
-      (window as any).recaptchaVerifierWizard = verifier;
+        
+        const verifier = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
+          size: "invisible",
+          callback: () => {},
+          "expired-callback": () => {
+            toast.error("reCAPTCHA expired. Please try again.");
+          },
+        });
+        (window as any).recaptchaVerifierWizard = verifier;
+    
 
       // Explicitly render reCAPTCHA widget first to catch load errors early
       await verifier.render();
@@ -1007,7 +1009,7 @@ export function WizardClientV2() {
   };
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
-      <div id="recaptcha-container-wizard"></div>
+      
       <h1 className="sr-only">CCTV Quotation Wizard</h1>
       <div className="bg-white rounded-2xl shadow-sm border p-8">
         {step > 0 && (
