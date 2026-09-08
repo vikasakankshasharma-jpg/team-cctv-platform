@@ -131,7 +131,7 @@ This document tracks all API routes, their HTTP methods, the Firestore collectio
 | `/api/quote/[quoteId]/whatsapp` | POST | quoteDeliveries, quotes | *Orphan Route?* |
 | `/api/quotes` | POST | geo_pricing_rules, settings, addons, products, leads | ConfiguratorView.tsx |
 | `/api/quotes/manual` | POST | quotes, customers, leads | ManualQuoteBuilderClient.tsx<br>phase-4-sales.spec.ts |
-| `/api/send-otp` | POST | - | PhoneCaptureModal.tsx<br>e2e-partner-auth.spec.ts<br>e2e-rate-limiting.spec.ts |
+| `/api/send-otp` | POST | - | [REMOVED (Migrated to Firebase Auth)] |
 | `/api/settings` | GET | - | *Orphan Route?* |
 | `/api/submissions` | POST | leads, service_areas, installers, salespersons | ManualQuoteBuilderClient.tsx<br>e2e-sales-crm.spec.ts |
 | `/api/submissions/industrial` | POST | industrial_leads | LeadGate.tsx |
@@ -141,7 +141,7 @@ This document tracks all API routes, their HTTP methods, the Firestore collectio
 | `/api/test-login` | POST | - | page.tsx |
 | `/api/v1/leads/[leadId]/quotes/[quoteId]/pdf` | GET | leads | *Orphan Route?* |
 | `/api/v1/leads/[leadId]/waitlist-confirm` | POST | leads | *Orphan Route?* |
-| `/api/verify-otp` | POST | - | e2e-partner-auth.spec.ts |
+| `/api/verify-otp` | POST | - | [REMOVED (Migrated to Firebase Auth)] |
 | `/api/webhooks/payment` | POST | change_orders, audit_logs, invoices, jobs, payment_transactions | e2e-financial-contracts.spec.ts<br>e2e-production-readiness.spec.ts |
 | `/api/webhooks/razorpay` | POST | jobs, quotes, invoices, leads | e2e-commercial-hardening.spec.ts |
 | `/api/wizard` | GET | - | *Orphan Route?* |

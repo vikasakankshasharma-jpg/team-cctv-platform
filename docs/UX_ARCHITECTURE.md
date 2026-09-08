@@ -25,3 +25,7 @@ The `team-cctv-platform` relies on a unified design system powered by **shadcn/u
 - **Action items**: 
   - Remove remnant `confirm()` in `app/(admin)/admin/products/page.tsx` line 93.
   - Refactor legacy `/operations` and `/sales` screens that circumvent the standard layout.
+
+## 5. Specialized Interaction Patterns
+- **Quotation Wizard (Single Card Variation)**: To reduce cognitive load, the system presents users with a *Single Card UI* immediately following OTP verification in the Wizard. This main card contains inline controls to toggle 'Technology' and 'Quality' (MP), updating prices reactively. A 3-card side-by-side grid is only invoked upon explicit 'Compare' intent.
+- **Authentication**: Strict reliance on Firebase Phone Auth invisible reCAPTCHA. Custom backend SMS APIs are deprecated to unify trust boundaries.

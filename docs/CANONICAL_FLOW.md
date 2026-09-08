@@ -3,10 +3,11 @@
 ## The Primary B2C Commercial Engine
 The backbone of the application is the customer checkout pipeline. It follows a strict sequence of state transitions to guarantee commercial integrity.
 
-### 1. Lead Generation -> Requirement Capture
+### 1. Lead Generation -> OTP -> Requirement Capture
 - **UI Element**: `WizardClientV2` (`/wizard`) or `ProBuilderClient` (`/pro-builder`).
 - **Data Action**: Captures physical constraints (camera count, days of recording, property type).
-- **Backend Flow**: Calls `generateQuote(requirement)`.
+- **Backend Flow**: Uses Firebase Phone Auth for OTP verification (signInWithPhoneNumber). Once verified, creates a lead via /api/actions/lead.ts and computes pricing.
+- **UI Pattern**: Renders a single-card dynamic variation UI (QuoteComparison.tsx) instantly after OTP to prevent analysis paralysis, allowing side-by-side comparison on demand.
 - **Engine**: Local state computation.
 
 ### 2. Pricing Engine Execution & Quote Save
