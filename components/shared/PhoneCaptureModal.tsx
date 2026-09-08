@@ -111,9 +111,14 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
       
       (window as any).recaptchaVerifierPhone = new RecaptchaVerifier(auth, "recaptcha-container-phone", {
         size: "invisible",
+        callback: () => {},
+        "expired-callback": () => {
+          setError("reCAPTCHA expired. Please try again.");
+        },
       });
       
       const appVerifier = (window as any).recaptchaVerifierPhone;
+      await appVerifier.render();
       const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
       
       setConfirmationResult(result);
@@ -121,10 +126,12 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
       setCountdown(30);
       setCanResend(false);
     } catch (err: any) {
-      console.error(err);
+      console.error("PhoneCaptureModal OTP Error:", err);
+      const errCode = err.code || "";
       let errMsg = err.message || "Failed to send code. Please try again.";
-      if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please wait a few minutes.";
-      else if (errMsg.includes("Firebase:")) errMsg = "System error. Please try again.";
+      if (errCode === "auth/too-many-requests" || errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please wait a few minutes.";
+      else if (errCode === "auth/invalid-app-credential" || errMsg.includes("auth/invalid-app-credential")) errMsg = "reCAPTCHA verification failed. Please refresh.";
+      else if (errCode === "auth/captcha-check-failed" || errMsg.includes("auth/captcha-check-failed")) errMsg = "reCAPTCHA failed. Please refresh the page.";
       setError(errMsg);
     } finally {
       setLoading(false);
