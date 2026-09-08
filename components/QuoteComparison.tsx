@@ -45,38 +45,49 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
    }
   }, [brands, activeBrand]);
 
-  const filteredPlans = useMemo(() => {
-     let result = Object.entries(plans).filter(([key]) => key.includes("_" + activeTech + "_") && (activeBrand === "All" || key.startsWith(activeBrand + "_")));
-     return result.sort((a, b) => {
-        const mpA = parseInt(a[0].split("_")[2]?.replace("MP", "") || "0");
-        const mpB = parseInt(b[0].split("_")[2]?.replace("MP", "") || "0");
-        return mpA - mpB;
-     });
+  const uniqueMps = useMemo(() => {
+    const mps = new Set<string>();
+    Object.keys(plans).forEach(key => {
+      if (key.includes("_" + activeTech + "_")) {
+        if (activeBrand === "All" || key.startsWith(activeBrand + "_")) {
+           mps.add(key.split("_")[2]);
+        }
+      }
+    });
+    return Array.from(mps).filter(Boolean).sort((a,b) => parseInt(a) - parseInt(b));
   }, [plans, activeTech, activeBrand]);
 
   const [activeResolution, setActiveResolution] = useState<string>("");
 
   React.useEffect(() => {
-    if (filteredPlans.length > 0) {
-      const availableMps = filteredPlans.map(([key]) => key.split("_")[2]);
-      if (!activeResolution || !availableMps.includes(activeResolution)) {
-        // default to middle or first
-        setActiveResolution(availableMps[Math.floor(availableMps.length / 2)] || availableMps[0]);
-      }
+    if (activeBrand === "All" && activeResolution === "All") {
+       if (uniqueMps.length > 0) setActiveResolution(uniqueMps[Math.floor(uniqueMps.length / 2)] || uniqueMps[0]);
+    } else if (activeResolution !== "All" && activeResolution !== "" && !uniqueMps.includes(activeResolution)) {
+       if (uniqueMps.length > 0) setActiveResolution(uniqueMps[Math.floor(uniqueMps.length / 2)] || uniqueMps[0]);
+    } else if (activeResolution === "" && uniqueMps.length > 0) {
+       setActiveResolution(uniqueMps[Math.floor(uniqueMps.length / 2)] || uniqueMps[0]);
     }
-  }, [filteredPlans, activeResolution]);
+  }, [activeBrand, activeResolution, uniqueMps]);
 
   const plansToRender = useMemo(() => {
-    if (activeBrand !== "All") {
+    if (activeBrand === "All" && activeResolution !== "All") {
+      return brands.map(b => {
+        const key = `${b}_${activeTech}_${activeResolution}`;
+        return { key, plan: plans[key] };
+      }).filter(p => p.plan);
+    }
+    if (activeBrand !== "All" && activeResolution === "All") {
+      return uniqueMps.map(mp => {
+        const key = `${activeBrand}_${activeTech}_${mp}`;
+        return { key, plan: plans[key] };
+      }).filter(p => p.plan);
+    }
+    if (activeBrand !== "All" && activeResolution !== "All") {
       const key = `${activeBrand}_${activeTech}_${activeResolution}`;
       return plans[key] ? [{ key, plan: plans[key] }] : [];
     }
-    // If "All", find all brands that have this tech and resolution
-    return brands.map(b => {
-      const key = `${b}_${activeTech}_${activeResolution}`;
-      return { key, plan: plans[key] };
-    }).filter(p => p.plan);
-  }, [activeBrand, activeTech, activeResolution, brands, plans]);
+    return [];
+  }, [activeBrand, activeTech, activeResolution, brands, uniqueMps, plans]);
 
   const totalCams = requirement.installation_type === "addon" ? (requirement.indoor_camera_count || 0) + (requirement.outdoor_camera_count || 0) : requirement.camera_count || 0;
 
@@ -220,14 +231,16 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
           <div className="bg-white p-5 rounded-2xl border shadow-sm">
             <h4 className="font-bold text-gray-900 mb-4">3. Camera Quality</h4>
             <div className="flex flex-wrap gap-2">
-              {filteredPlans.map(([key]) => {
-                const mp = key.split("_")[2];
-                return (
+              {activeBrand !== "All" && (
+                  <Badge variant={activeResolution === "All" ? "default" : "outline"} className={`cursor-pointer px-4 py-2 text-sm transition-all ${activeResolution === "All" ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600 border-gray-300'}`} onClick={() => setActiveResolution("All")}>
+                    All Qualities
+                  </Badge>
+                )}
+                {uniqueMps.map((mp) => (
                   <Badge key={mp} variant={activeResolution === mp ? "default" : "outline"} className={`cursor-pointer px-4 py-2 text-sm transition-all ${activeResolution === mp ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600 border-gray-300'}`} onClick={() => setActiveResolution(mp)}>
                     {mp}
                   </Badge>
-                );
-              })}
+                ))}
             </div>
           </div>
         </div>
