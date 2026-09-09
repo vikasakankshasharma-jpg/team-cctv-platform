@@ -262,7 +262,10 @@ export async function POST(request: Request) {
       pricing_engine_version: "2026.1",
       catalog_version: new Date().toISOString(),
       createdAt: new Date().toISOString(),
+      generatedAt: serverTimestamp() as any,
       validUntil: validUntilDate.toISOString(),
+      is_test: customer_mobile === "9999999999" || customer_name?.toLowerCase().includes("e2e test"),
+      ttl: (customer_mobile === "9999999999" || customer_name?.toLowerCase().includes("e2e test")) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null,
     };
 
     // Save as a brand new immutable document

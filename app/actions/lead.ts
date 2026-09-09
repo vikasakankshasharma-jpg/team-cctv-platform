@@ -64,10 +64,12 @@ export async function createLeadAction(payload: {
     let assigned_salesperson_id: string | null = null;
     let broadcasted_to_salesperson_ids: string[] = [];
 
+    const isTestLead = leadData.mobile_number === "9999999999" || leadData.customer_name?.toLowerCase().includes("e2e test");
+
     if (eligibleSalespersons.length === 1) {
       assigned_salesperson_id = eligibleSalespersons[0];
       const spDoc = allSalespersons.find((s: any) => s.id === assigned_salesperson_id);
-      if (spDoc?.mobile_number) {
+      if (spDoc?.mobile_number && !isTestLead) {
         await sendCustomerWhatsApp(spDoc.mobile_number, `🎯 *New Lead!*\nCustomer: ${leadData.customer_name}\nPincode: ${pincode}`);
       }
     } else if (eligibleSalespersons.length > 1) {
@@ -84,7 +86,7 @@ export async function createLeadAction(payload: {
     }
 
     let is_escalated = false;
-    if (eligibleSalespersons.length === 0) {
+    if (eligibleSalespersons.length === 0 && !isTestLead) {
       is_escalated = true;
       await sendAdminNotification(`⚠️ *Unmapped Territory*\nLead: ${leadData.customer_name}, Pincode: ${pincode}`);
     }
@@ -93,6 +95,7 @@ export async function createLeadAction(payload: {
     const isHotLead = leadData.cabling_done === true;
     const slaTimeoutMinutes = isHotLead ? 15 : 60;
     const slaBreachAt = new Date(Date.now() + slaTimeoutMinutes * 60 * 1000);
+    const ttlDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Normalize technology_choice: wizard may send "Analog" but pricing engine needs "HD"
     const rawTechChoice = leadData.technology_choice || "IP";
@@ -138,6 +141,8 @@ export async function createLeadAction(payload: {
       updated_at:            serverTimestamp(),
       follow_up_notes:       arrayUnion("Lead ingested via wizard"),
       is_deleted:            false,
+      is_test:               isTestLead,
+      ttl:                   isTestLead ? ttlDate : null,
     });
 
     if (locationData && !locationData.served) {

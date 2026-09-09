@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Persist Booking
+    const isTestBooking = leadData?.mobile_number === "9999999999" || leadData?.customer_name?.toLowerCase().includes("e2e test");
     const bookingRef = adminDb.collection(COLLECTIONS.SITE_VISIT_BOOKINGS).doc();
     const bookingPromise = bookingRef.set({
       lead_id,
@@ -50,7 +51,9 @@ export async function POST(request: NextRequest) {
       customer_name: leadData?.customer_name,
       customer_mobile: leadData?.mobile_number,
       status: "pending",
-      created_at: serverTimestamp()
+      created_at: serverTimestamp(),
+      is_test: isTestBooking,
+      ttl: isTestBooking ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null
     });
 
     // 3. Update Lead
