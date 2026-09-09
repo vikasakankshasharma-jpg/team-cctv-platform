@@ -254,9 +254,9 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             {!accepted && (
-              <a href={`/quote/${quote.leadId}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors mb-4">
+              <button onClick={() => window.history.back()} className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors mb-4">
                 <ChevronLeft className="w-4 h-4" /> Modify Configuration
-              </a>
+              </button>
             )}
             <div className="flex items-center gap-3">
               <StatusBadge status={accepted ? "accepted" : quote.status} />
@@ -495,6 +495,25 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
         </motion.div>
       </div>
+      {/* Mobile Sticky Payment CTA */}
+      {!accepted && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 backdrop-blur-xl border-t border-zinc-200 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Total</span>
+              <span className="text-xl font-semibold text-zinc-900 tracking-tight">{formatINR(total)}</span>
+            </div>
+            <button
+              onClick={() => handlePayment("advance", "all")}
+              disabled={isPayingAdvance || isPayingFull || isPayingEMI}
+              className="flex-1 max-w-[200px] flex items-center justify-center gap-2 px-6 py-3 bg-[#1d1d1f] hover:bg-[#2d2d2f] text-white rounded-2xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50"
+            >
+              <CreditCard className="w-4 h-4" />
+              Pay {formatINR(advance)} Advance
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

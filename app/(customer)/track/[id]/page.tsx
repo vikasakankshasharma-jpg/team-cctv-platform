@@ -10,9 +10,10 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function CustomerTrackingPage({ params }: { params: { id: string } }) {
+export default async function CustomerTrackingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   // We use the lead_id as the tracking identifier for simplicity
-  const leadDoc = await adminDb.collection("leads").doc(params.id).get();
+  const leadDoc = await adminDb.collection("leads").doc(id).get();
   
   if (!leadDoc.exists) {
     notFound();
@@ -22,7 +23,7 @@ export default async function CustomerTrackingPage({ params }: { params: { id: s
 
   // Find associated job to get dispatch status
   let job = null;
-  const jobsSnap = await adminDb.collection("jobs").where("lead_id", "==", params.id).limit(1).get();
+  const jobsSnap = await adminDb.collection("jobs").where("lead_id", "==", id).limit(1).get();
   if (!jobsSnap.empty) {
     job = { id: jobsSnap.docs[0].id, ...jobsSnap.docs[0].data() };
   }

@@ -77,8 +77,8 @@ export default async function DynamicCityLandingPage({ params }: PageProps) {
   const { city } = await params;
   const { citySlug, brand, intent } = parseSeoSlug(city);
   
-  // Basic validation to prevent extremely long invalid slugs or weird paths
-  if (citySlug.length > 50 || !/^[a-zA-Z0-9\-]+$/.test(citySlug)) {
+  // Reject invalid slugs: too short, too long, or containing invalid characters
+  if (citySlug.length < 2 || citySlug.length > 100 || !/^[a-z0-9-]+$/.test(citySlug)) {
     notFound();
   }
 

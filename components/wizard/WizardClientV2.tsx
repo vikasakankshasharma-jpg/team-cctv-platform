@@ -167,17 +167,13 @@ export function WizardClientV2() {
   
   const [loading, setLoading] = useState(false);
   const [quoteResult, setQuoteResult] = useState<any>(null);
-  const totalSteps = req.installation_type === "new" ? 5 : 6;
+  const totalSteps = req.installation_type === "addon" ? 6 : 5;
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [customizerPlanId, setCustomizerPlanId] = useState<string | null>(null);
 
   const handleNext = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (req.installation_type === "new" && step === 3) {
-      setStep(5);
-    } else {
-      setStep(s => Math.min(s + 1, 5));
-    }
+    setStep(s => Math.min(s + 1, 5));
   };
   const handlePrev = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -186,11 +182,7 @@ export function WizardClientV2() {
       setOtp(["", "", "", "", "", ""]);
       return;
     }
-    if (req.installation_type === "new" && step === 5) {
-      setStep(3);
-    } else {
-      setStep(s => Math.max(s - 1, 1));
-    }
+    setStep(s => Math.max(s - 1, 1));
   };
 
   const generateQuote = async (finalReq: CCTVRequirement) => {
@@ -329,6 +321,7 @@ export function WizardClientV2() {
       const payload = {
         customer_name: req.customer_name || "",
         mobile_number: (req.customer_mobile || "").replace(/\s/g, ""),
+        email: req.customer_email || "",
         wizard_answers: { ...req, pincode, city },
         property_type: req.property_type || "home",
         technology_choice: req.technology_choice || "HD",
@@ -488,13 +481,13 @@ export function WizardClientV2() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button onClick={() => setStep(1)}
                 className="p-8 rounded-2xl border-2 text-left hover:border-blue-500 transition-all group bg-blue-50/50 border-blue-100 shadow-sm hover:shadow-md">
-                <span className="block font-black text-xl text-blue-900 group-hover:text-blue-700 mb-2">? Guided Setup (Recommended)</span>
+                <span className="block font-black text-xl text-blue-900 group-hover:text-blue-700 mb-2"><Sparkles className="w-5 h-5 mr-1.5 inline-block" /> Guided Setup (Recommended)</span>
                 <span className="block text-sm text-blue-800 font-medium leading-relaxed">Answer a few simple questions about your property, and our AI will calculate the perfect, most compatible CCTV package for you instantly.</span>
               </button>
               
               <button onClick={() => window.location.href = '/pro-builder'}
                 className="p-8 rounded-2xl border-2 text-left hover:border-zinc-900 transition-all group bg-white border-zinc-200 shadow-sm hover:shadow-md">
-                <span className="block font-black text-xl text-zinc-900 group-hover:text-black mb-2">?? Custom Build (Advanced)</span>
+                <span className="block font-black text-xl text-zinc-900 group-hover:text-black mb-2"><Wrench className="w-5 h-5 mr-1.5 inline-block" /> Custom Build (Advanced)</span>
                 <span className="block text-sm text-zinc-500 font-medium leading-relaxed">I already know exactly what cameras and technical specifications I need. Let me build my own custom package from the catalog.</span>
               </button>
             </div>
@@ -547,6 +540,15 @@ export function WizardClientV2() {
                 <Button onClick={handleFinishWizard} disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} className="w-full h-12">
                   Request a Free Callback
                 </Button>
+                <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                  <h4 className="font-semibold text-blue-900 mb-2 text-sm">💡 Typical Add-on Pricing</h4>
+                  <ul className="text-sm text-blue-800 space-y-1.5">
+                    <li>• Adding 1-2 cameras: ₹8,000 – ₹15,000</li>
+                    <li>• Adding 3-4 cameras: ₹15,000 – ₹28,000</li>
+                    <li>• DVR upgrade (if needed): ₹4,000 – ₹8,000 extra</li>
+                  </ul>
+                  <p className="text-xs text-blue-600 mt-3">* Exact pricing depends on your existing system compatibility. Our engineer will verify during the callback.</p>
+                </div>
               </div>
             )}
             
@@ -988,6 +990,16 @@ export function WizardClientV2() {
                     className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                  <input 
+                    type="email" 
+                    placeholder="e.g. rahul@email.com" 
+                    value={req.customer_email || ''} 
+                    onChange={(e) => setReq(prev => ({ ...prev, customer_email: e.target.value }))} 
+                    className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                </div>
               </div>
 
               <Button 
@@ -1013,12 +1025,19 @@ export function WizardClientV2() {
       
       <h1 className="sr-only">CCTV Quotation Wizard</h1>
       <div className="bg-white rounded-2xl shadow-sm border p-8">
+        <div className="flex justify-between items-center mb-4">
+          <a href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            Exit
+          </a>
+          <span className="text-xs text-gray-400 font-medium">CCTVQuotation.com</span>
+        </div>
         {step > 0 && (
           <div className="mb-8">
             <div className="h-2 bg-gray-100 rounded-full w-full overflow-hidden">
-              <div className="h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(((req.installation_type === "new" && step === 5 ? (otpSent ? 5 : 4) : Math.min(step, totalSteps))) / totalSteps) * 100}%` }}></div>
+              <div className="h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(Math.min(step, totalSteps) / totalSteps) * 100}%` }}></div>
             </div>
-            <p className="text-sm text-gray-500 mt-2 text-right">Step {req.installation_type === "new" && step === 5 ? (otpSent ? 5 : 4) : step} of {totalSteps}</p>
+            <p className="text-sm text-gray-500 mt-2 text-right">Step {Math.min(step, totalSteps)} of {totalSteps}</p>
           </div>
         )}
 

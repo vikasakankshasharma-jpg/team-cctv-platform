@@ -42,7 +42,7 @@ export default function NotFound() {
             Signal <span className="text-blue-600 dark:text-blue-500">Lost</span>.
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 font-medium text-lg leading-relaxed">
-            The coordinates you requested are outside the mapped command territory.
+            The page you're looking for doesn't exist or has been moved.
           </p>
         </div>
 
@@ -51,14 +51,14 @@ export default function NotFound() {
             href="/"
             className="flex items-center justify-center gap-2 group px-6 py-3 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-xl shadow-zinc-900/20 dark:shadow-blue-500/30"
           >
-            Reconnect to Hub
+            Back to Home
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
         {/* System Signature */}
         <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-40 w-full">
-          <div className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.3em] whitespace-nowrap">CCTV Quotation Intelligence System v2.0</div>
+          <div className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.3em] whitespace-nowrap">CCTVQuotation.com by TEAM</div>
           <div className="flex gap-4">
             <div className="w-1 h-1 rounded-full bg-red-500" />
             <div className="w-1 h-1 rounded-full bg-zinc-800" />

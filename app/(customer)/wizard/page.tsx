@@ -1,4 +1,4 @@
-﻿import { WizardClientV2 } from "@/components/wizard/WizardClientV2";
+import { WizardClientV2 } from "@/components/wizard/WizardClientV2";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default async function WizardPage({ searchParams }: { searchParams: Promi
   const city = params?.city;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50/50">
+    <div className="flex flex-col min-h-screen bg-[#f5f5f7] dark:bg-black transition-colors duration-500">
       {served === 'false' && (
         <div className="bg-amber-100 dark:bg-amber-900/40 border-b border-amber-200 dark:border-amber-800 p-3 text-center text-amber-800 dark:text-amber-200 text-sm font-medium z-10 sticky top-0">
           We are actively expanding to {pincode || 'your area'}. Prices shown are for the nearest active hub ({city || 'Jaipur'}) as a reference.

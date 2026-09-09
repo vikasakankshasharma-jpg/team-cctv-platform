@@ -59,13 +59,19 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
             >
               {t("whatsapp_us", "WhatsApp us")}
             </a>
-            <span>{t("check_expansion", "to check expansion options!")}</span>
+            <span>{t("or", "or")}</span>
+            <button
+              onClick={() => setShowCaptureModal(true)}
+              className="text-blue-600 dark:text-blue-400 font-bold underline hover:text-blue-500"
+            >
+              {t("join_waitlist", "join our waitlist")}
+            </button>
           </span>
         );
+        setLoading(false);
       }
     } catch (err: any) {
       setError(err.message || t("failed_check_availability", "Failed to check service availability."));
-    } finally {
       setLoading(false);
     }
   };
