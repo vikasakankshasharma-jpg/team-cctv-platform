@@ -27,5 +27,5 @@ The `team-cctv-platform` relies on a unified design system powered by **shadcn/u
   - Refactor legacy `/operations` and `/sales` screens that circumvent the standard layout.
 
 ## 5. Specialized Interaction Patterns
-- **Quotation Wizard (Single Card Variation)**: To reduce cognitive load, the system presents users with a *Single Card UI* immediately following OTP verification in the Wizard. This main card contains inline controls to toggle 'Technology' and 'Quality' (MP), updating prices reactively. A 3-card side-by-side grid is only invoked upon explicit 'Compare' intent.
+- **Quotation Wizard (Catalog-First)**: Following OTP verification, users are presented with a full **Catalog Grid** of quotation variants, equipped with filters for Brand, Resolution, and Technology. Users can select a single quote to proceed to Add-ons, or use the `CompareTray` to select 2-3 quotes for a detailed Side-by-Side Comparison (`CompareCards`) before proceeding. The legacy Single Card variation has been deprecated in favor of this e-commerce style browsing experience.
 - **Authentication**: Strict reliance on Firebase Phone Auth invisible reCAPTCHA. Custom backend SMS APIs are deprecated to unify trust boundaries.

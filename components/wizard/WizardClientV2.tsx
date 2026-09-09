@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { RecaptchaVerifier, signInWithPhoneNumber, signInWithCustomToken, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
-import { ShieldCheck, Loader2 } from "lucide-react";
+import { ShieldCheck, Loader2, Sparkles, Wrench } from "lucide-react";
 
 
 
@@ -193,10 +193,19 @@ export function WizardClientV2() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(finalReq)
       });
-      const data = await res.json();
-      if (data.success) {
-        setQuoteResult(data);
-      } else {
+      
+      const text = await res.text();
+      console.log("API RESPONSE TEXT:", text.substring(0, 500));
+      try {
+        const data = JSON.parse(text);
+        if (data.success) {
+          setQuoteResult(data);
+        } else {
+          console.error("API error success:false", data);
+          toast.error("Error generating quote");
+        }
+      } catch (err) {
+        console.error("Failed to parse JSON. Response text was:", text.substring(0, 500));
         toast.error("Error generating quote");
       }
     } catch (e: any) {
@@ -321,7 +330,7 @@ export function WizardClientV2() {
       const payload = {
         customer_name: req.customer_name || "",
         mobile_number: (req.customer_mobile || "").replace(/\s/g, ""),
-        email: req.customer_email || "",
+        email: req.customer_email || undefined,
         wizard_answers: { ...req, pincode, city },
         property_type: req.property_type || "home",
         technology_choice: req.technology_choice || "HD",
@@ -334,11 +343,13 @@ export function WizardClientV2() {
       const newLeadId = await createLeadAction(payload as any);
       if (newLeadId && 'success' in newLeadId && newLeadId.success && newLeadId.id) {
         setLeadId(newLeadId.id);
+        router.push(`/quote/${newLeadId.id}`);
+        return;
       } else {
-        console.error("Failed to save lead: ", (newLeadId as any)?.error);
+        console.error("Failed to save lead: ", (newLeadId as any)?.error, (newLeadId as any)?.details);
+        toast.error("Failed to save lead. Please try again.");
       }
       
-      await generateQuote(req as CCTVRequirement);
       setOtpSent(false);
     } catch (error: any) {
       console.error("OTP verification error:", error);
@@ -820,21 +831,7 @@ export function WizardClientV2() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-3">3. Primary Purpose</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <button onClick={() => updateReq({ focus_point: "quality" })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.focus_point === 'quality' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      Face / Plate Recognition
-                    </button>
-                    <button onClick={() => updateReq({ focus_point: "price" })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.focus_point === 'price' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      General Monitoring
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold mb-3">4. Wiring Type</h3>
+                  <h3 className="font-semibold mb-3">3. Wiring Type</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => updateReq({ wiring_type: "open" })}
                       className={`p-3 rounded-xl border text-sm text-center ${req.wiring_type === 'open' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
@@ -846,34 +843,12 @@ export function WizardClientV2() {
                     </button>
                   </div>
                 </div>
-
-                <div>
-                  <h3 className="font-semibold mb-3">5. Estimated Budget</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => updateReq({ max_budget: 30000 })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.max_budget === 30000 ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      &lt; ₹30k
-                    </button>
-                    <button onClick={() => updateReq({ max_budget: 75000 })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.max_budget === 75000 ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      ₹30k - 75k
-                    </button>
-                    <button onClick={() => updateReq({ max_budget: 150000 })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.max_budget === 150000 ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      ₹75k - 1.5L
-                    </button>
-                    <button onClick={() => updateReq({ max_budget: null })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.max_budget === null ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      No Limit
-                    </button>
-                  </div>
-                </div>
               </div>
 
               <div className="pt-6">
                 <Button 
                   onClick={handleNext} 
-                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || !req.focus_point || !req.wiring_type || req.max_budget === undefined}
+                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || !req.wiring_type}
                   className="w-full h-12 text-lg font-semibold"
                 >
                   Confirm Details

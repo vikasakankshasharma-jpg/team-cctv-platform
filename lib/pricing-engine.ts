@@ -597,7 +597,7 @@ function calculateConnectors(
   }
   
   let wiredCameraCount = selection.camera_count || 1;
-  if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+  if (selection.mixed_camera_requirements && selection.mixed_camera_requirements?.length > 0) {
     wiredCameraCount = selection.mixed_camera_requirements
       .filter(req => {
         const t = req.type.toLowerCase();

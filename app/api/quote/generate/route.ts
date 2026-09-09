@@ -76,6 +76,7 @@ async function getActiveAddons(): Promise<Addon[]> {
 }
 
 export async function POST(request: Request) {
+  console.log("HELLO FROM QUOTE GENERATE API");
   try {
     const req: CCTVRequirement = await request.json();
 

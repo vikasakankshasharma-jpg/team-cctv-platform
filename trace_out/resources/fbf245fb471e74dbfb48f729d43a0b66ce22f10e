@@ -1,0 +1,199 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: quote-booking-flow.spec.ts >> Quote & Booking End-to-End Flow >> Complete Customer Journey: Wizard -> Quote -> Customizer -> Review -> Booking
+- Location: tests\quote-booking-flow.spec.ts:7:7
+
+# Error details
+
+```
+Error: expect(locator).toBeVisible() failed
+
+Locator: locator('h2').filter({ hasText: 'Build Your Quotation' })
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 15000ms
+  - waiting for locator('h2').filter({ hasText: 'Build Your Quotation' })
+
+```
+
+```yaml
+- region "Notifications alt+T"
+- banner:
+  - link "CCTVQuotation by TEAM":
+    - /url: /
+    - img "CCTVQuotation by TEAM"
+  - button "Service Areas"
+  - button "Get Free Quote"
+  - link "Support +91 73576 12865":
+    - /url: tel:+917357612865
+  - button "English"
+  - button "Switch to dark mode"
+  - link "Staff Portal":
+    - /url: /admin/login
+- main:
+  - heading "Your CCTV Options" [level=1]
+  - paragraph: Select the plan that best fits your needs, or edit the configuration to instantly update pricing.
+  - heading "Your Quotation Variants" [level=3]
+  - paragraph: Select Brand and Quality to instantly see your tailored quote.
+  - button "Compare Side-by-Side (0)"
+  - button "Edit Requirement"
+  - heading "1. Technology" [level=4]
+  - button "Standard HD (Analog)"
+  - button "Premium IP (Network)"
+  - heading "2. Brand" [level=4]
+  - text: All Brands Budget CP Plus
+  - heading "3. Camera Quality" [level=4]
+  - text: 2MP 5MP Budget 5MP 6x HD Cameras ₹43,560
+  - list:
+    - listitem: Brand Budget
+    - listitem: Clarity 5MP
+    - listitem: Storage None (15 Days)
+    - listitem: Recorder Existing
+    - listitem: Installation Included
+  - button "Select & Continue"
+  - button "+ Add to Compare"
+  - text: CP Plus 5MP 6x HD Cameras ₹42,150
+  - list:
+    - listitem: Brand CP Plus
+    - listitem: Clarity 5MP
+    - listitem: Storage None (15 Days)
+    - listitem: Recorder Existing
+    - listitem: Installation Included
+  - button "Select & Continue"
+  - button "+ Add to Compare"
+- alert
+```
+
+# Test source
+
+```ts
+  1   | import { test, expect } from '@playwright/test';
+  2   | 
+  3   | test.describe('Quote & Booking End-to-End Flow', () => {
+  4   |   // Increase timeout for this full flow since it tests many screens
+  5   |   test.setTimeout(120000); 
+  6   | 
+  7   |   test('Complete Customer Journey: Wizard -> Quote -> Customizer -> Review -> Booking', async ({ page }) => {
+  8   |     
+  9   |     // ---------------------------------------------------------
+  10  |     // STEP 1: The Wizard
+  11  |     // ---------------------------------------------------------
+  12  |     await test.step('Seed and Fill out the Customer Wizard', async () => {
+  13  |       // Ensure the DB has exactly the structure this test expects
+  14  |       await page.goto('/api/dev/seed-wizard');
+  15  |       await page.waitForTimeout(2000); // Give the DB a moment
+  16  |       
+  17  |       await page.goto('/wizard');
+  18  | 
+  19  |       // Step 0: Guided Setup
+  20  |       await page.getByRole('button', { name: /Guided Setup/i }).click();
+  21  | 
+  22  |       // Step 1: New Installation
+  23  |       await page.getByText(/Completely New System/i, { exact: false }).click();
+  24  | 
+  25  |       // Step 2: Camera Count
+  26  |       await page.getByRole('button', { name: '+' }).first().click(); // outdoor
+  27  |       await page.getByRole('button', { name: '+' }).nth(1).click(); // indoor
+  28  |       
+  29  |       await page.getByRole('button', { name: /Confirm Cameras/i }).click();
+  30  | 
+  31  |       // Step 3: Recording Storage
+  32  |       await page.getByText('15 Days', { exact: true }).click();
+  33  |       await page.getByText('24x7 Continuous', { exact: true }).click();
+  34  |       await page.getByRole('button', { name: /Confirm Recording/i }).click();
+  35  | 
+  36  |       // Step 4: Site overview
+  37  |       await page.getByText('Standard (<10ft)').click();
+  38  |       await page.getByText('Concrete / Brick Wall').click();
+  39  |       await page.getByText('Concealed / Conduit').click();
+  40  |       await page.getByRole('button', { name: /Confirm Details/i }).click();
+  41  | 
+  42  |       // Step 5: Final Contact Info
+  43  |       await page.fill('input[placeholder="e.g. Rahul Kumar"]', 'E2E Test User');
+  44  |       await page.fill('input[placeholder="10-digit mobile number"]', '9999999999');
+  45  |       await page.getByRole('button', { name: /View My CCTV Options/i }).click();
+  46  | 
+  47  |       // Wait for OTP form to appear inline
+  48  |       await expect(page.locator('text=Enter Verification Code')).toBeVisible({ timeout: 15000 });
+  49  |       
+  50  |       // Fill the 6 OTP input boxes (this will auto-submit when the 6th digit is entered)
+  51  |       const otpInputs = page.locator('input[inputmode="numeric"]');
+  52  |       for (let i = 0; i < 6; i++) {
+  53  |         await otpInputs.nth(i).fill(String(i + 1));
+  54  |       }
+  55  | 
+  56  |       // Quote Options appear (DynamicVariantGenerator)
+> 57  |       await expect(page.locator('h2', { hasText: 'Build Your Quotation' })).toBeVisible({ timeout: 15000 });
+      |                                                                             ^ Error: expect(locator).toBeVisible() failed
+  58  | 
+  59  |       // Select first plan to open Add-ons
+  60  |       await page.locator('button:has-text("Select Plan")').first().click();
+  61  | 
+  62  |       // Wait for navigation to the addons page (which is the same URL but different viewMode)
+  63  |       await expect(page.locator('h2', { hasText: 'Enhance your system' })).toBeVisible({ timeout: 15000 });
+  64  |     });
+  65  | 
+  66  |     // ---------------------------------------------------------
+  67  |     // STEP 2: The Customizer (Add-ons)
+  68  |     // ---------------------------------------------------------
+  69  |     await test.step('Enhance your system', async () => {
+  70  |       // The FullCustomizerPanel has tabs like "Cameras", "Recorders", "Accessories"
+  71  |       // Note: We might be directly looking at accessories.
+  72  |       // Click on an Add button if it exists.
+  73  |       const accessoriesTab = page.locator('button', { hasText: 'Accessories' }).first();
+  74  |       if (await accessoriesTab.isVisible()) {
+  75  |           await accessoriesTab.click();
+  76  |       }
+  77  | 
+  78  |       // Wait for add-ons to load
+  79  |       const addBtn = page.locator('button', { hasText: /^Add$/i }).first();
+  80  |       if (await addBtn.isVisible()) {
+  81  |           await addBtn.scrollIntoViewIfNeeded();
+  82  |           await addBtn.click();
+  83  |           await expect(page.locator('button', { hasText: /^Added$/i }).first()).toBeVisible({ timeout: 15000 });
+  84  |       }
+  85  |     });
+  86  | 
+  87  |     // ---------------------------------------------------------
+  88  |     // STEP 3: Review Details & Book Visit
+  89  |     // ---------------------------------------------------------
+  90  |     await test.step('Review & Submit Booking', async () => {
+  91  |       // Click the "Schedule Site Visit" or "Book Site Visit" button from the SmartContextBar
+  92  |       await page.locator('button:has-text("Schedule Site Visit"), button:has-text("Book Site Visit")').first().click();
+  93  | 
+  94  |       // Wait for the SiteDetailsModal to appear
+  95  |       await expect(page.locator('h2', { hasText: 'Pinpoint Your Site' })).toBeVisible({ timeout: 15000 });
+  96  | 
+  97  |       // The pincode might already be filled from the wizard, but let's ensure it's there
+  98  |       // Check if pincode length is 6, if not fill it
+  99  |       const pincodeInput = page.locator('input[placeholder="400001"]');
+  100 |       await pincodeInput.fill('302001');
+  101 | 
+  102 |       // Wait for region fetch
+  103 |       await page.waitForTimeout(2000);
+  104 | 
+  105 |       // Fill in Primary Landmark
+  106 |       await page.fill('input[placeholder="Near Metro, Opp. Temple..."]', 'Test Landmark');
+  107 | 
+  108 |       // Fill in Full Address
+  109 |       await page.fill('textarea[placeholder="Building, Wing, Unit No., Street..."]', '123 E2E Test Street, Automate City');
+  110 | 
+  111 |       // Click Confirm Site
+  112 |       await page.locator('button', { hasText: 'Confirm Site' }).click();
+  113 | 
+  114 |       // Ensure booking toast appears
+  115 |       await expect(page.locator('text=Visit Booked!')).toBeVisible({ timeout: 15000 });
+  116 |     });
+  117 |   });
+  118 | });
+  119 | 
+```

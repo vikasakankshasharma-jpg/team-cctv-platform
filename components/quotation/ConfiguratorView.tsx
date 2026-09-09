@@ -52,7 +52,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
   // Dynamic Compare UX state
   const [selectedCompareItems, setSelectedCompareItems] = useState<PricingResult[]>([]);
-  const [showComparisonMode, setShowComparisonMode] = useState(false);
+  const [viewMode, setViewMode] = useState<"catalog" | "compare" | "addons">("catalog");
 
   // Price Match
   const [showPriceMatchUploader, setShowPriceMatchUploader] = useState(false);
@@ -411,7 +411,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         )}
 
         {/* Dynamic Generator vs Compare Mode */}
-        {!showComparisonMode ? (
+        {viewMode === 'catalog' && (
           <div className="mb-16">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Build Your Quotation</h2>
@@ -428,7 +428,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               activeOffer={lead.active_offer}
               onSelectCheckout={(pricing) => {
                 setActiveCheckoutOption({ technology: pricing.technology as string, option: pricing.plan_type });
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                setViewMode("addons");
+                window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onToggleCompare={handleToggleCompare}
               selectedCompareItems={selectedCompareItems}
@@ -437,19 +438,20 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               selectedItems={selectedCompareItems}
               onRemove={(pricing) => handleToggleCompare(pricing)}
               onCompareNow={() => {
-                setShowComparisonMode(true);
+                setViewMode("compare");
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
             />
           </div>
-        ) : (
+        )}
+        {viewMode === 'compare' && (
           <div className="mb-16">
             <div className="mb-8 flex items-center justify-between">
               <div>
                 <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Quote Comparison</h2>
                 <p className="text-[15px] text-[#86868b] mt-1">Comparing {selectedCompareItems.length} selected variants side by side.</p>
               </div>
-              <Button variant="outline" onClick={() => setShowComparisonMode(false)} className="rounded-full">
+              <Button variant="outline" onClick={() => setViewMode('catalog')} className="rounded-full">
                 <ArrowLeftRight className="w-4 h-4 mr-2" /> Back to Generator
               </Button>
             </div>
@@ -458,7 +460,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             <CompareCards
               compareOptions={selectedCompareItems.map(p => ({ technology: p.technology as string, option: p.plan_type }))}
               activeCheckoutOption={active_checkout_option}
-              onSelectCheckout={setActiveCheckoutOption}
+              onSelectCheckout={(option) => {
+                setActiveCheckoutOption(option);
+                setViewMode("addons");
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               selection={selection}
               products={currentProducts}
               addons={currentAddons}
@@ -544,48 +550,55 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         </div>
       </div>
 
-      <div className="h-px w-full max-w-4xl mx-auto bg-[#d2d2d7] dark:bg-[#424245]" />
-
       {/* FULL CUSTOMIZER - "Build Your Own" */}
-      <div id="build-your-own" className="w-full max-w-7xl mx-auto px-4 scroll-mt-24">
-        <div className="text-center mb-10">
-           <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight"><TranslatedText tKey="build_own_title" defaultText="Build your own system." /></h2>
-           <p className="text-[15px] text-[#86868b] mt-2"><TranslatedText tKey="build_own_desc" defaultText="Adjust every detail of your security setup." /></p>
+      {viewMode === 'addons' && (
+        <div id="build-your-own" className="w-full max-w-7xl mx-auto px-4 scroll-mt-24">
+          <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div>
+              <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight"><TranslatedText tKey="build_own_title" defaultText="Enhance your system" /></h2>
+              <p className="text-[15px] text-[#86868b] mt-1"><TranslatedText tKey="build_own_desc" defaultText="Add optional accessories before final checkout." /></p>
+            </div>
+            <Button variant="outline" onClick={() => setViewMode('catalog')} className="rounded-full shrink-0">
+              <ArrowLeftRight className="w-4 h-4 mr-2" /> Back to Catalog
+            </Button>
+          </div>
+          
+          {is_compare_mode ? (
+            <>
+              {/* Mobile swipe instruction */}
+              <div className="md:hidden flex items-center justify-center gap-2 mb-4 text-xs font-medium text-zinc-500 animate-pulse">
+                <ArrowLeftRight className="w-4 h-4" />
+                <TranslatedText tKey="swipe_cmp" defaultText="Swipe to compare Base vs Custom" />
+              </div>
+              <div className="flex flex-nowrap md:flex-wrap md:flex-row gap-4 md:gap-8 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 no-scrollbar">
+                <div className="w-[90vw] md:w-full lg:w-[35%] shrink-0 snap-center order-1">
+                  <BaseQuoteSummary activePricing={activePricing} />
+                </div>
+                <div className="w-[90vw] md:w-full lg:w-[62%] shrink-0 snap-center order-2">
+                  <FullCustomizerPanel activePricing={activePricing} />
+                </div>
+              </div>
+            </>
+          ) : (
+            <FullCustomizerPanel activePricing={activePricing} />
+          )}
         </div>
-        
-        {is_compare_mode ? (
-          <>
-            {/* Mobile swipe instruction */}
-            <div className="md:hidden flex items-center justify-center gap-2 mb-4 text-xs font-medium text-zinc-500 animate-pulse">
-              <ArrowLeftRight className="w-4 h-4" />
-              <TranslatedText tKey="swipe_cmp" defaultText="Swipe to compare Base vs Custom" />
-            </div>
-            <div className="flex flex-nowrap md:flex-wrap md:flex-row gap-4 md:gap-8 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 no-scrollbar">
-              <div className="w-[90vw] md:w-full lg:w-[35%] shrink-0 snap-center order-1">
-                <BaseQuoteSummary activePricing={activePricing} />
-              </div>
-              <div className="w-[90vw] md:w-full lg:w-[62%] shrink-0 snap-center order-2">
-                <FullCustomizerPanel activePricing={activePricing} />
-              </div>
-            </div>
-          </>
-        ) : (
-          <FullCustomizerPanel activePricing={activePricing} />
-        )}
-      </div>
+      )}
 
       {/* STICKY CHECKOUT BAR (Apple Style) */}
-      <SmartContextBar 
-        totalPrice={activePricing.total_payable}
-        customizationDiff={customizationDiff}
-        baseTierName={baseTierName}
-        isCustomized={isCustomized}
-        onAction={triggerActionWithAddress} 
-        isSaving={isSaving} 
-        lead={lead}
-        quote={activePricing}
-        settings={pricingCache.settings}
-      />
+      {viewMode === 'addons' && (
+        <SmartContextBar 
+          totalPrice={activePricing.total_payable}
+          customizationDiff={customizationDiff}
+          baseTierName={baseTierName}
+          isCustomized={isCustomized}
+          onAction={triggerActionWithAddress} 
+          isSaving={isSaving} 
+          lead={lead}
+          quote={activePricing}
+          settings={pricingCache.settings}
+        />
+      )}
 
       {showAddressModal && (
         <SiteDetailsModal 

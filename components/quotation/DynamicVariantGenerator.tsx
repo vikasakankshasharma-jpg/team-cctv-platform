@@ -93,14 +93,34 @@ export function DynamicVariantGenerator({
       selected_camera_option: 1, // Forces budget/entry tier in pricing engine
     };
     
+    const enrich = (pricing: any) => {
+      if (!pricing || pricing.error) return null;
+      const camId = pricing.items.find((i: any) => products.find(p => p.id === i.product_id)?.category === "cctv_camera")?.product_id;
+      const camera_device = products.find(p => p.id === camId);
+      const strId = pricing.items.find((i: any) => products.find(p => p.id === i.product_id)?.category === "storage")?.product_id;
+      const storage_device = products.find(p => p.id === strId);
+      
+      if (camera_device) {
+        let res = camera_device.resolution_mp ? `${camera_device.resolution_mp}MP` : "2MP";
+        const name = (camera_device.technical_name || "") + (camera_device.display_name || "");
+        if (name.includes("5MP")) res = "5MP";
+        else if (name.includes("4MP")) res = "4MP";
+        else if (name.includes("3MP")) res = "3MP";
+        else if (name.includes("8MP") || name.includes("4K")) res = "8MP";
+        (camera_device as any).derivedResolution = res;
+      }
+      
+      return { ...pricing, camera_device, storage_device, camera_count: selection.camera_count, storage_days: selection.recording_days || 7 };
+    };
+
     const budgetPricing = calculatePricing({
       selection: budgetSelection, products, addons, settings, cablingDone,
       referralDiscountPercent: promoterDiscount?.percent || 0,
       referralDiscountFlat: promoterDiscount?.flat || 0,
       evaluatedAddonRules, activeOffer,
     });
-    
-    if (budgetPricing) results.push(budgetPricing);
+    const enrichedBudget = enrich(budgetPricing);
+    if (enrichedBudget) results.push(enrichedBudget);
 
     // 2. Premium variant (typically 5MP or higher res)
     const premiumSelection: ConfiguratorSelection = {
@@ -117,8 +137,8 @@ export function DynamicVariantGenerator({
       referralDiscountFlat: promoterDiscount?.flat || 0,
       evaluatedAddonRules, activeOffer,
     });
-    
-    if (premiumPricing) results.push(premiumPricing);
+    const enrichedPremium = enrich(premiumPricing);
+    if (enrichedPremium) results.push(enrichedPremium);
 
     return results;
   }, [activeTech, activeBrand, selection, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer]);
@@ -193,7 +213,7 @@ export function DynamicVariantGenerator({
                     {variant.camera_device.derivedResolution || "2MP"} Resolution
                   </h3>
                   <div className="text-4xl font-black tracking-tight text-[#1d1d1f] dark:text-white">
-                    ₹{variant.final_total.toLocaleString('en-IN')}
+                    ₹{variant.total_payable.toLocaleString('en-IN')}
                   </div>
                 </div>
 
