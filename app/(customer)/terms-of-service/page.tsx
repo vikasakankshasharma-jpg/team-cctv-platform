@@ -25,7 +25,7 @@ export default function TermsOfServicePage() {
   const lastUpdated = "20 May 2026";
   const companyName = "TEAM CCTV (Proprietor: Vikash Akansha Sharma)";
   const domain = "cctvquotation.com";
-  const phone = "+91 97726 99395";
+  const phone = "+91 73576 12865";
   const email = "hello@cctvquotation.com";
   const address = "Malviya Nagar, Jaipur, Rajasthan — 302017";
 

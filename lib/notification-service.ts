@@ -18,7 +18,7 @@ export async function sendAdminNotification(message: string) {
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
-          to: process.env.ADMIN_WHATSAPP_NUMBER || "919772699395", // Default to Master Admin
+          to: process.env.ADMIN_WHATSAPP_NUMBER || "917357612865", // Default to Master Admin
           type: "text",
           text: { body: message },
         }),

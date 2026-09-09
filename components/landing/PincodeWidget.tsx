@@ -52,7 +52,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
           <span className="flex items-center gap-1.5 flex-wrap">
             <span>{t("area_not_served", "We don't serve your area yet.")}</span>
             <a
-              href={`https://wa.me/919772699395?text=Hi,%20I'm%20interested%20in%20CCTV%20installation%20for%20pincode%20${pincode}`}
+              href={`https://wa.me/917357612865?text=Hi,%20I'm%20interested%20in%20CCTV%20installation%20for%20pincode%20${pincode}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 dark:text-blue-400 font-bold underline hover:text-blue-500"

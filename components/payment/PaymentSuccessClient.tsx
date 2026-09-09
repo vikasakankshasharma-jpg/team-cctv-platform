@@ -46,7 +46,7 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
   }, [quoteId]);
 
   const invoiceUrl = `/api/invoice/${quoteId}/download`;
-  const whatsappUrl = `https://wa.me/919772699395?text=${encodeURIComponent(`Hi! I just made a payment for my CCTV installation. Quote ID: ${quoteId}, Payment ID: ${paymentId}. Please schedule my installation.`)}`;
+  const whatsappUrl = `https://wa.me/917357612865?text=${encodeURIComponent(`Hi! I just made a payment for my CCTV installation. Quote ID: ${quoteId}, Payment ID: ${paymentId}. Please schedule my installation.`)}`;
 
   return (
     <div className="max-w-3xl mx-auto py-16 px-4 sm:px-6">

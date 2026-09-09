@@ -61,7 +61,7 @@ export default function LandingPage() {
     "image": "https://cctvquotation.com/og-image.jpg",
     "@id": "https://cctvquotation.com",
     "url": "https://cctvquotation.com",
-    "telephone": "+91-9772699395",
+    "telephone": "+91-7357612865",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Malviya Nagar",

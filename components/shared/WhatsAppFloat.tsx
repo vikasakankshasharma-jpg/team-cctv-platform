@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion } from "framer-motion";
 
-const WA_NUMBER = "919772699395";
+const WA_NUMBER = "917357612865";
 
 /**
  * WhatsAppFloat — sticky bottom-right WhatsApp button.

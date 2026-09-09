@@ -8,7 +8,7 @@ import { CameraCustomizer } from "@/components/CameraCustomizer";
 import { EditConfigurationDrawer } from "@/components/EditConfigurationDrawer";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
+import { RecaptchaVerifier, signInWithPhoneNumber, signInWithCustomToken, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
 import { ShieldCheck, Loader2 } from "lucide-react";
@@ -21,6 +21,7 @@ export function WizardClientV2() {
   const [step, setStep] = useState(0);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [otpSent, setOtpSent] = useState(false);
+  const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("sms");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);

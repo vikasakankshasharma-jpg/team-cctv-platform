@@ -605,7 +605,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           propertyType={lead.property_type}
           whatsappTemplate={pricingCache.settings.whatsapp_template}
           pdfUrl={savedPdfUrl || undefined}
-          contactPhone={"+91 97726 99395"}
+          contactPhone={"+91 73576 12865"}
           onClose={() => setShowShareDialog(false)}
         />
       )}

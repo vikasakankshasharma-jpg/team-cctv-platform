@@ -156,15 +156,15 @@ export default function CityLandingPage({
 
             {/* Phone icon on mobile, full button on sm+ */}
             <a
-              href="tel:+919772699395"
+              href="tel:+917357612865"
               aria-label="Call local support"
               className="flex sm:hidden items-center justify-center gap-3 w-full py-4 rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold touch-manipulation"
             >
               <PhoneCall className="w-5 h-5 text-blue-600" />
-              <span>+91 97726 99395</span>
+              <span>+91 73576 12865</span>
             </a>
               <a
-                href="tel:+919772699395"
+                href="tel:+917357612865"
                 className="hidden sm:flex items-center gap-4 px-8 py-5 rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-all text-left group"
               >
                 <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
@@ -172,7 +172,7 @@ export default function CityLandingPage({
                 </div>
                 <div>
                   <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{t('landing_call_support', 'Call Local Support')}</div>
-                  <div className="text-lg font-bold text-zinc-900 dark:text-white">+91 97726 99395</div>
+                  <div className="text-lg font-bold text-zinc-900 dark:text-white">+91 73576 12865</div>
                 </div>
               </a>
           </div>

@@ -922,7 +922,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                   name="admin_notification_phone"
                   value={formData.admin_notification_phone || ""}
                   onChange={(e) => setFormData(prev => ({ ...prev, admin_notification_phone: e.target.value.replace(/\D/g, "") }))}
-                  placeholder="97726 99395"
+                  placeholder="73576 12865"
                   className="w-full bg-background border border-border text-foreground rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-medium shadow-sm" 
                 />
               </div>

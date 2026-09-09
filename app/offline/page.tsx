@@ -22,10 +22,10 @@ export default function OfflinePage() {
           If you need immediate assistance regarding a quote or installation, please call us directly.
         </p>
         <a 
-          href="tel:+919772699395" 
+          href="tel:+917357612865" 
           className="inline-flex w-full items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-black rounded-xl hover:bg-primary/90 transition-colors"
         >
-          Call +91 97726 99395
+          Call +91 73576 12865
         </a>
       </div>
     </div>
