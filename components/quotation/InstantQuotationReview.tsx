@@ -35,6 +35,7 @@ export function InstantQuotationReview({
 }: InstantQuotationReviewProps) {
   const { selection, toggleAddon } = useConfiguratorStore();
   const [showAdvancedCustomizer, setShowAdvancedCustomizer] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
 
   // Derive package header info
   const camItem = activePricing.items?.find((i: any) => 
@@ -132,36 +133,52 @@ export function InstantQuotationReview({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6">
         <div className="space-y-1">
           <button
-            onClick={onBack}
+            onClick={step === 1 ? onBack : () => setStep(1)}
             className="inline-flex items-center text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 gap-1.5 mb-2 group transition-colors"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Back to Package Selection
+            {step === 1 ? "Back to Package Selection" : "Back to System Details"}
           </button>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">
-              Instant Quotation Review
+              {step === 1 ? "Instant Quotation Review" : "Customize & Add-ons"}
             </h1>
             <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
               {brandName} • {techName}
             </span>
           </div>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Review your complete itemized system breakdown below. You can customize accessories and add-ons before generating your final official quotation.
+            {step === 1 
+              ? "Review your complete itemized system breakdown below. You can customize accessories and add-ons in the next step."
+              : "Select any additional accessories needed for your premises. The quotation above recalculates instantly in real time."
+            }
           </p>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <Button
-            onClick={onProceedToActualQuotation}
-            disabled={isSaving}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-600/20 text-sm flex items-center gap-2 group"
-          >
-            {isSaving ? "Finalizing Quote..." : "Proceed to Final Quotation"}
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </Button>
+          {step === 1 ? (
+            <Button
+              onClick={() => setStep(2)}
+              className="bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white font-bold px-6 py-2.5 rounded-full shadow-lg text-sm flex items-center gap-2 group"
+            >
+              Next: Customize & Add-ons
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </Button>
+          ) : (
+            <Button
+              onClick={onProceedToActualQuotation}
+              disabled={isSaving}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-600/20 text-sm flex items-center gap-2 group"
+            >
+              {isSaving ? "Finalizing Quote..." : "Proceed to Final Quotation"}
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </Button>
+          )}
         </div>
       </div>
+
+      {step === 1 && (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* 2. SPECIFICATION HIGHLIGHTS */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
@@ -348,6 +365,16 @@ export function InstantQuotationReview({
         </div>
       </div>
 
+          <div className="flex justify-end pt-2 pb-6">
+            <Button onClick={() => setStep(2)} className="bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-extrabold px-8 py-3.5 rounded-full text-base shadow-xl transition-transform active:scale-95 group">
+              Next: Customize & Add-ons <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
       {/* 4. INTERACTIVE ADD-ONS & ACCESSORIES SECTION */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -479,10 +506,10 @@ export function InstantQuotationReview({
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
           <Button
             variant="secondary"
-            onClick={onBack}
+            onClick={() => setStep(1)}
             className="w-full sm:w-auto rounded-full font-bold text-xs px-5 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/20"
           >
-            ← Back to Packages
+            ← Back to System Details
           </Button>
           <Button
             onClick={onProceedToActualQuotation}
@@ -493,6 +520,8 @@ export function InstantQuotationReview({
           </Button>
         </div>
       </div>
+        </div>
+      )}
     </div>
   );
 }
