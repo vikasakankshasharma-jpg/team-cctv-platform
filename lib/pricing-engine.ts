@@ -164,6 +164,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     const addonCalc = calculateAddons({
       selection,
       addons,
+      products,
       settings,
       baseHardwareCost,
       activeOffer,
@@ -660,12 +661,13 @@ function calculateConnectors(
 function calculateAddons(params: {
   selection: ConfiguratorSelection;
   addons: Addon[];
+  products?: Product[];
   settings: AppSettings;
   baseHardwareCost: number;
   activeOffer?: any;
   selectedAddonIds: string[];
 }) {
-  const { selection, addons, settings, baseHardwareCost, activeOffer, selectedAddonIds } = params;
+  const { selection, addons, products = [], settings, baseHardwareCost, activeOffer, selectedAddonIds } = params;
   const items: QuoteAddon[] = [];
   let totalRetail = 0;
   let totalCost = 0;
@@ -681,6 +683,9 @@ function calculateAddons(params: {
     const router = addons.find(a => {
       const name = (a.technical_name || a.display_name || "").toLowerCase();
       return name.includes("sim router") || name.includes("4g router") || name.includes("4g 4 antenna");
+    }) || products.find(p => {
+      const name = (p.technical_name || p.display_name || "").toLowerCase();
+      return name.includes("sim router") || name.includes("4g router") || name.includes("4g 4 antenna");
     });
     if (router && router.id && !staticAddonIds.includes(router.id)) {
       staticAddonIds.push(router.id);
@@ -688,16 +693,16 @@ function calculateAddons(params: {
   }
 
   staticAddonIds.forEach(id => {
-    const addon = addons.find(a => a.id === id);
+    const addon = addons.find(a => a.id === id) || products.find(p => p.id === id || p.sku === id);
     if (!addon) return;
 
     let qty = 1;
-    if (addon.unit_multiplier === "camera_count") qty = selection.camera_count;
+    if ((addon as any).unit_multiplier === "camera_count") qty = selection.camera_count;
     
     const price = addon.price || 0;
     const lineTotal = price * qty;
     items.push({
-      addon_id: addon.id!,
+      addon_id: addon.id || (addon as any).sku,
       display_name: addon.display_name,
       price: price,
       qty

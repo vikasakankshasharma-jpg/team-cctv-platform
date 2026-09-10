@@ -12,6 +12,7 @@ import { DynamicVariantGenerator } from "./DynamicVariantGenerator";
 import { CompareTray } from "./CompareTray";
 import { Button } from "@/components/ui/button";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
+import { InstantQuotationReview } from "./InstantQuotationReview";
 import { SmartContextBar } from "./SmartContextBar";
 import { BaseQuoteSummary } from "./BaseQuoteSummary";
 import { TranslatedText } from "@/components/shared/TranslatedText";
@@ -380,74 +381,28 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     }
   };
 
-  const [isNavigatingToQuote, setIsNavigatingToQuote] = useState(false);
+  const handleSelectPackageAndReview = (pricing: any) => {
+    const camItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "cctv_camera");
+    const recItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "recorder");
+    const strItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "storage");
 
-  const handleSelectPackageAndReview = async (pricing: any) => {
-    if (isNavigatingToQuote) return;
-    setIsNavigatingToQuote(true);
-    toast.loading("Opening your full detailed quotation...", { id: "quote-nav" });
+    const tech = ((pricing.technology || selection.technology || "HD") as string).toUpperCase() as "HD" | "IP";
 
-    try {
-      const camItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "cctv_camera");
-      const recItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "recorder");
-      const strItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "storage");
+    // 1. Lock selected package configuration into store
+    setActiveCheckoutOption({ technology: tech, option: pricing.plan_type });
+    updateSelection({
+      selected_camera_id: camItem?.product_id,
+      selected_recorder_id: recItem?.product_id,
+      selected_storage_id: strItem?.product_id,
+      technology: tech,
+      brand_preference: pricing.camera_device?.brand || selection.brand_preference,
+      resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
+    });
 
-      const tech = ((pricing.technology || selection.technology || "HD") as string).toUpperCase() as "HD" | "IP";
-
-      // 1. Update store
-      setActiveCheckoutOption({ technology: tech, option: pricing.plan_type });
-      updateSelection({
-        selected_camera_id: camItem?.product_id,
-        selected_recorder_id: recItem?.product_id,
-        selected_storage_id: strItem?.product_id,
-        technology: tech,
-        brand_preference: pricing.camera_device?.brand || selection.brand_preference,
-        resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
-      });
-
-      // 2. Persist quotation to database
-      const payload = {
-        lead_id: lead.id,
-        selection: {
-          lead_id: lead.id,
-          plan_type: pricing.plan_type || "recommended",
-          technology: tech,
-          camera_count: selection.camera_count || 4,
-          mixed_camera_requirements: selection.mixed_camera_requirements,
-          picture_quality: selection.picture_quality || "good",
-          recording_days: selection.recording_days || 7,
-          selected_addons: selection.selected_addons || [],
-          selected_camera_id: camItem?.product_id,
-          selected_recorder_id: recItem?.product_id,
-          selected_storage_id: strItem?.product_id,
-          brand_preference: pricing.camera_device?.brand || selection.brand_preference,
-          resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
-          property_type: selection.property_type || "home",
-          requested_features: selection.requested_features,
-        },
-        address: lead.address,
-        firebase_uid: lead.firebase_uid,
-        status: "draft"
-      };
-
-      const res = await fetch("/api/quotes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || "Failed to generate quotation");
-      }
-
-      const resData = await res.json();
-      toast.success("Detailed Quotation Ready!", { id: "quote-nav" });
-      router.push(`/quote/${lead.id}/review/${resData.data.id}`);
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || "Failed to load quotation. Please try again.", { id: "quote-nav" });
-      setIsNavigatingToQuote(false);
+    // 2. Open Instant Quotation Review & Add-ons view
+    setViewMode("addons");
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -621,38 +576,24 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         </div>
       </div>
 
-      {/* FULL CUSTOMIZER - "Build Your Own" */}
+      {/* FULL INSTANT QUOTATION REVIEW & ADD-ONS */}
       {viewMode === 'addons' && (
-        <div id="build-your-own" className="w-full max-w-7xl mx-auto px-4 scroll-mt-24">
-          <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-            <div>
-              <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight"><TranslatedText tKey="build_own_title" defaultText="Your Itemized Quotation" /></h2>
-              <p className="text-[15px] text-[#86868b] mt-1"><TranslatedText tKey="build_own_desc" defaultText="Review your complete system breakdown and customize accessories." /></p>
-            </div>
-            <Button variant="outline" onClick={() => setViewMode('catalog')} className="rounded-full shrink-0">
-              <ArrowLeftRight className="w-4 h-4 mr-2" /> Back to Packages
-            </Button>
-          </div>
-          
-          {is_compare_mode ? (
-            <>
-              {/* Mobile swipe instruction */}
-              <div className="md:hidden flex items-center justify-center gap-2 mb-4 text-xs font-medium text-zinc-500 animate-pulse">
-                <ArrowLeftRight className="w-4 h-4" />
-                <TranslatedText tKey="swipe_cmp" defaultText="Swipe to compare Base vs Custom" />
-              </div>
-              <div className="flex flex-nowrap md:flex-wrap md:flex-row gap-4 md:gap-8 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 no-scrollbar">
-                <div className="w-[90vw] md:w-full lg:w-[35%] shrink-0 snap-center order-1">
-                  <BaseQuoteSummary activePricing={activePricing} />
-                </div>
-                <div className="w-[90vw] md:w-full lg:w-[62%] shrink-0 snap-center order-2">
-                  <FullCustomizerPanel activePricing={activePricing} />
-                </div>
-              </div>
-            </>
-          ) : (
-            <FullCustomizerPanel activePricing={activePricing} />
-          )}
+        <div id="quotation-review" className="w-full scroll-mt-24">
+          <InstantQuotationReview
+            lead={lead}
+            activePricing={activePricing}
+            products={currentProducts}
+            addons={currentAddons}
+            settings={pricingCache.settings}
+            onBack={() => {
+              setViewMode('catalog');
+              if (typeof window !== "undefined") {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+            onProceedToActualQuotation={() => triggerActionWithAddress("download")}
+            isSaving={isSaving}
+          />
         </div>
       )}
 
@@ -664,6 +605,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           baseTierName={baseTierName}
           isCustomized={isCustomized}
           onAction={triggerActionWithAddress} 
+          onProceedToFinalQuote={() => triggerActionWithAddress("download")}
           isSaving={isSaving} 
           lead={lead}
           quote={activePricing}

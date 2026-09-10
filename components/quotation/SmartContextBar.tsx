@@ -14,13 +14,14 @@ interface SmartContextBarProps {
   baseTierName?: string;
   isCustomized?: boolean;
   onAction?: (action: "download" | "whatsapp" | "booking" | "accept") => void;
+  onProceedToFinalQuote?: () => void;
   isSaving?: boolean;
   lead?: Lead | null;
   quote?: PricingResult | null;
   settings?: AppSettings | null;
 }
 
-export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierName, isCustomized, onAction, isSaving, lead, quote, settings }: SmartContextBarProps) {
+export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierName, isCustomized, onAction, onProceedToFinalQuote, isSaving, lead, quote, settings }: SmartContextBarProps) {
   const { selection } = useConfiguratorStore();
   const { t } = useTranslation();
 
@@ -134,30 +135,42 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
               </div>
             ) : (
               <>
-                {lead && quote ? (
-                  <DownloadQuoteButton 
-                    lead={lead} 
-                    quote={quote} 
-                    settings={settings || null}
-                    className="!px-4 !py-2.5 !text-xs !rounded-full !bg-white dark:!bg-[#2d2d2f] !text-[#1d1d1f] dark:!text-white border border-[#d2d2d7] dark:border-[#424245]"
-                  />
-                ) : (
+                {onProceedToFinalQuote ? (
                   <button 
-                    onClick={() => onAction && onAction("download")}
+                    onClick={onProceedToFinalQuote}
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#2d2d2f] hover:bg-[#f5f5f7] dark:hover:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white border border-[#d2d2d7] dark:border-[#424245] rounded-full text-xs font-medium transition-colors"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full text-sm font-bold transition-all shadow-md shadow-blue-500/20 active:scale-95 disabled:opacity-50"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    {t('quote_download_pdf', 'Save PDF')}
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Proceed to Final Quotation →</>}
                   </button>
+                ) : (
+                  <>
+                    {lead && quote ? (
+                      <DownloadQuoteButton 
+                        lead={lead} 
+                        quote={quote} 
+                        settings={settings || null}
+                        className="!px-4 !py-2.5 !text-xs !rounded-full !bg-white dark:!bg-[#2d2d2f] !text-[#1d1d1f] dark:!text-white border border-[#d2d2d7] dark:border-[#424245]"
+                      />
+                    ) : (
+                      <button 
+                        onClick={() => onAction && onAction("download")}
+                        disabled={isSaving}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#2d2d2f] hover:bg-[#f5f5f7] dark:hover:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white border border-[#d2d2d7] dark:border-[#424245] rounded-full text-xs font-medium transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        {t('quote_download_pdf', 'Save PDF')}
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => onAction && onAction("booking")}
+                      disabled={isSaving}
+                      className="flex items-center gap-2 px-6 py-2.5 bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
+                    >
+                      {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t('quote_schedule_visit', 'Book Site Visit')}</>}
+                    </button>
+                  </>
                 )}
-                <button 
-                  onClick={() => onAction && onAction("booking")}
-                  disabled={isSaving}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
-                >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t('quote_schedule_visit', 'Book Site Visit')}</>}
-                </button>
               </>
             )}
           </div>
