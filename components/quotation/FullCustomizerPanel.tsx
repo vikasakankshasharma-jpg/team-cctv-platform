@@ -736,8 +736,8 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         <AnimatePresence mode="popLayout">
         {activeTab === "cameras" && filteredCameras.map(cam => {
           const isSelected = isMixedCameraMode 
-            ? selection.selected_mixed_camera_ids?.[activeMixedType!] === cam.id
-            : selection.selected_camera_id === cam.id;
+            ? (selection.selected_mixed_camera_ids?.[activeMixedType!] === cam.id || (!selection.selected_mixed_camera_ids?.[activeMixedType!] && activePricing?.items.some((i: any) => i.product_id === cam.id)))
+            : (selection.selected_camera_id === cam.id || (!selection.selected_camera_id && activePricing?.items.some((i: any) => i.product_id === cam.id)));
           
           const isPinned = isMixedCameraMode
             ? !!selection.selected_mixed_camera_ids?.[activeMixedType!]
@@ -793,9 +793,12 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           );
         })}
 
-        {activeTab === "recorders" && filteredRecorders.map(rec => renderProductItem(
-          rec, selection.selected_recorder_id === rec.id, () => { updateSelection({ selected_recorder_id: rec.id }); advanceToNextTab("recorders"); }, !!selection.selected_recorder_id, () => updateSelection({ selected_recorder_id: undefined })
-        ))}
+        {activeTab === "recorders" && filteredRecorders.map(rec => {
+          const isSelected = selection.selected_recorder_id === rec.id || (!selection.selected_recorder_id && activePricing?.items.some((i: any) => i.product_id === rec.id));
+          return renderProductItem(
+            rec, isSelected as boolean, () => { updateSelection({ selected_recorder_id: rec.id }); advanceToNextTab("recorders"); }, !!selection.selected_recorder_id, () => updateSelection({ selected_recorder_id: undefined })
+          );
+        })}
 
         {activeTab === "storage" && (
           <>
@@ -819,8 +822,9 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
             {filteredStorage.map(hdd => {
               const isSdCard = ((hdd as any).storage_type === "Micro SD" || (hdd.display_name && hdd.display_name.toLowerCase().includes("sd card")) || (hdd.display_name && hdd.display_name.toLowerCase().includes("micro sd")));
               const reqQty = (isSdCard && selection.technology === "Wireless") ? (selection.camera_count || 1) : 1;
+              const isSelected = selection.selected_storage_id === hdd.id || (!selection.selected_storage_id && activePricing?.items.some((i: any) => i.product_id === hdd.id));
               return renderProductItem(
-                hdd, selection.selected_storage_id === hdd.id, () => { updateSelection({ selected_storage_id: hdd.id }); advanceToNextTab("storage"); }, !!selection.selected_storage_id, () => updateSelection({ selected_storage_id: undefined }), reqQty
+                hdd, isSelected as boolean, () => { updateSelection({ selected_storage_id: hdd.id }); advanceToNextTab("storage"); }, !!selection.selected_storage_id, () => updateSelection({ selected_storage_id: undefined }), reqQty
               );
             })}
           </>
@@ -828,8 +832,9 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
 
         {activeTab === "power" && filteredPower.map(pwr => {
           const reqQty = Math.ceil((selection.camera_count || 1) / (pwr.max_cameras || 4));
+          const isSelected = selection.selected_power_id === pwr.id || (!selection.selected_power_id && activePricing?.items.some((i: any) => i.product_id === pwr.id));
           return renderProductItem(
-            pwr, selection.selected_power_id === pwr.id, () => { updateSelection({ selected_power_id: pwr.id }); toast.success("Power supply pinned!", { description: "Your system is fully configured. Review your quote below.", duration: 3000 }); }, !!selection.selected_power_id, () => updateSelection({ selected_power_id: undefined }), reqQty
+            pwr, isSelected as boolean, () => { updateSelection({ selected_power_id: pwr.id }); toast.success("Power supply pinned!", { description: "Your system is fully configured. Review your quote below.", duration: 3000 }); }, !!selection.selected_power_id, () => updateSelection({ selected_power_id: undefined }), reqQty
           );
         })}
 
