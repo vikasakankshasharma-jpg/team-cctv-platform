@@ -337,9 +337,28 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
   }, [addons, search, activeFilters, selection.technology, products]);
 
   const filteredPower = useMemo(() => {
-    const keyword = selection.technology === "IP" ? "poe" : "psu";
-    let list = [...products, ...addons].filter(a => (a.category === "power_device" || a.category === "power") && (a.technical_name || a.display_name || "").toLowerCase().includes(keyword) && a.is_active && (a.unit_price || (a as any).price || 0) > 0);
-    list = list.filter(a => (a.max_cameras || 0) >= selection.camera_count);
+    const isIP = selection.technology === "IP";
+    let list = [...products, ...addons].filter(a => {
+      if (!a.is_active || !((a.unit_price || (a as any).price || 0) > 0)) return false;
+      const cat = a.category || "";
+      const name = (a.technical_name || a.display_name || "").toLowerCase();
+      if (isIP) {
+        return (cat === "power_device" || cat === "power" || cat === "network") && (name.includes("poe") || name.includes("switch"));
+      } else {
+        return (cat === "power_device" || cat === "power") && (name.includes("smps") || name.includes("power supply") || name.includes("psu"));
+      }
+    });
+    
+    list = list.filter(a => {
+      let maxCam = a.max_cameras || (a as any).ports || 0;
+      if (!maxCam) {
+        const match = a.display_name.match(/(\d+)\s*(?:Ch|Port)/i);
+        if (match) maxCam = parseInt(match[1]);
+        else maxCam = 999;
+      }
+      return maxCam >= selection.camera_count;
+    });
+
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()) || (a.technical_name || "").toLowerCase().includes(search.toLowerCase()));
     return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
   }, [addons, selection.technology, selection.camera_count, search, products]);
