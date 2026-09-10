@@ -93,7 +93,7 @@ const RAW_PRODUCTS = [
   { sku: "IP-CPP-4MP-NORM-BULLET", brand: "CP Plus", category: "cctv_camera", technology: "IP", resolution: "4MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 4050 },
   { sku: "IP-CPP-6MP-NORM-DOME", brand: "CP Plus", category: "cctv_camera", technology: "IP", resolution: "6MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 5200 },
   { sku: "IP-CPP-6MP-NORM-BULLET", brand: "CP Plus", category: "cctv_camera", technology: "IP", resolution: "6MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 5250 },
-  { sku: "IP-CPP-8MP-PREM-DOME", brand: "CP Plus", category: "cctv_camera", technology: "IP", resolution: "8MP", type: "Dome", feature: "Color Night Vision, Audio IN, Premium", base_cost: 7500 },
+  { sku: "IP-CPP-8MP-PREM-BULLET", brand: "CP Plus", category: "cctv_camera", technology: "IP", resolution: "8MP", type: "Bullet", feature: "Color Night Vision, Audio IN, Premium", base_cost: 7500 },
   { sku: "IP-BUD-5MP-ECO-DOME", brand: "Budget Brand", category: "cctv_camera", technology: "IP", resolution: "5MP", type: "Dome", feature: "Color Night Vision, Audio IN, ECO", base_cost: 1400 },
   { sku: "IP-BUD-5MP-ECO-BULLET", brand: "Budget Brand", category: "cctv_camera", technology: "IP", resolution: "5MP", type: "Bullet", feature: "Color Night Vision, Audio IN, ECO", base_cost: 1450 },
   { sku: "IP-BUD-5MP-PREM-DOME", brand: "Budget Brand", category: "cctv_camera", technology: "IP", resolution: "5MP", type: "Dome", feature: "Color Night Vision, Audio IN, Premium", base_cost: 2000 },
@@ -197,7 +197,8 @@ const RAW_PRODUCTS = [
   // --- Accessories & Displays ---
   { sku: "ACC-JUNCTION-BOX", brand: "Budget Brand", category: "accessories", description: "Junction Box for Camera", base_cost: 20, technology: "Common" },
   { sku: "ACC-2U-RACK-RECORDER", brand: "Budget Brand", category: "rack", description: "2U Rack for Recorder", base_cost: 350, technology: "Common" },
-  { sku: "ACC-2U-RACK-POE", brand: "Budget Brand", category: "rack", description: "2U Rack for PoE Switch", base_cost: 450, technology: "IP" },
+  { sku: "ACC-4U-RACK-RECORDER", brand: "Budget Brand", category: "rack", description: "4U Rack for Recorder", base_cost: 450, technology: "Common" },
+  { sku: "ACC-PVC-RACK-POE", brand: "Budget Brand", category: "rack", description: "PVC Rack for PoE Switch", base_cost: 450, technology: "IP" },
   { sku: "ACC-4G-ROUTER", brand: "Budget Brand", category: "network", description: "4G Router", base_cost: 1450, technology: "Common" },
   { sku: "DISP-19-INCH", brand: "Budget Brand", category: "display", description: "Display 19 inch", base_cost: 2100, technology: "Common" },
 ];
@@ -225,7 +226,8 @@ async function seedDatabase() {
   const batch2 = adminDb.batch();
   let count = 0;
   
-  for (const raw of RAW_PRODUCTS) {
+  const filteredProducts = RAW_PRODUCTS.filter(p => p.brand !== "Hikvision" && p.brand !== "Dahua");
+  for (const raw of filteredProducts) {
     const finalProduct = applyMargin(raw);
     
     // Create a display name for the UI
