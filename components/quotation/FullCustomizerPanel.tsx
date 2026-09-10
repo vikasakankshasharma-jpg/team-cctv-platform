@@ -736,8 +736,8 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         <AnimatePresence mode="popLayout">
         {activeTab === "cameras" && filteredCameras.map(cam => {
           const isSelected = isMixedCameraMode 
-            ? (selection.selected_mixed_camera_ids?.[activeMixedType!] === cam.id || (!selection.selected_mixed_camera_ids?.[activeMixedType!] && activePricing?.items.some((i: any) => i.product_id === cam.id)))
-            : (selection.selected_camera_id === cam.id || (!selection.selected_camera_id && activePricing?.items.some((i: any) => i.product_id === cam.id)));
+            ? (selection.selected_mixed_camera_ids?.[activeMixedType!] === cam.id || (!selection.selected_mixed_camera_ids?.[activeMixedType!] && !!activePricing?.items.some((i: any) => i.product_id === cam.id)))
+            : (selection.selected_camera_id === cam.id || (!selection.selected_camera_id && !!activePricing?.items.some((i: any) => i.product_id === cam.id)));
           
           const isPinned = isMixedCameraMode
             ? !!selection.selected_mixed_camera_ids?.[activeMixedType!]
