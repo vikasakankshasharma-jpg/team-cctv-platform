@@ -31,57 +31,14 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
 
   const getDefaultFilters = (tab: Tab, currentSelection: any, activeMixedType?: string, currentPricing?: PricingResult) => {
     const filters: Record<string, string> = {};
-    if (tab === "recorders") {
-      let defaultCh = "4 Ch";
-      if (currentSelection.camera_count > 4) defaultCh = "8 Ch";
-      if (currentSelection.camera_count > 8) defaultCh = "16 Ch";
-      if (currentSelection.camera_count > 16) defaultCh = "32 Ch";
-      filters.channels = defaultCh;
-      
-      if (currentPricing) {
-        const recItem = currentPricing.items.find(i => i.display_name.toLowerCase().includes("channel") && (i.display_name.toLowerCase().includes("nvr") || i.display_name.toLowerCase().includes("dvr")));
-        if (recItem) {
-          const chMatch = recItem.display_name.match(/(\d+)\s*-?\s*channel/i);
-          if (chMatch) filters.channels = `${chMatch[1]} Ch`;
-        }
-      }
-    } else if (tab === "cameras") {
-      const isMixed = (currentSelection.mixed_camera_requirements || []).length > 0;
-      if (isMixed && activeMixedType) {
-        const tLower = activeMixedType.toLowerCase();
-        if (tLower.includes("indoor") || tLower.includes("dome")) filters.type = "Dome";
-        else if (tLower.includes("outdoor") || tLower.includes("bullet")) filters.type = "Bullet";
-      } else if (currentSelection.property_type === "office") {
-        filters.type = "Dome"; // Default office to dome
-      }
-      
-      if (currentPricing) {
-        const camItem = currentPricing.items.find(i => i.product_id?.startsWith("cam") || i.display_name.toLowerCase().includes("camera"));
-        if (camItem && camItem.brand) {
-          filters.brand = camItem.brand;
-        }
-      }
-    } else if (tab === "storage") {
+    if (tab === "storage") {
       if (currentSelection.technology === "Wireless") {
         filters.type = "Micro SD";
       } else {
         filters.type = "Hard Disk";
       }
-      
-      if (currentPricing) {
-        const storageItem = currentPricing.items.find(i => 
-          i.display_name.match(/(\d+(?:\.\d+)?\s*(?:TB|GB))/i) && 
-          !i.display_name.toLowerCase().includes("nvr") && 
-          !i.display_name.toLowerCase().includes("dvr")
-        );
-        if (storageItem) {
-          const match = storageItem.display_name.match(/(\d+(?:\.\d+)?\s*(?:TB|GB))/i);
-          if (match) {
-            filters.capacity = match[1].toUpperCase().replace(/\s/g, '');
-          }
-        }
-      }
     }
+    // Intentionally do not set default brand/channel filters so the user sees all available products and can spot their selected item easily.
     return filters;
   };
 
@@ -254,7 +211,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
       list = list.filter(p => p.technologies?.includes(proxyTech as any));
     }
     
-    const appliedBrand = activeFilters.brand !== undefined ? activeFilters.brand : selection.brand_preference;
+    const appliedBrand = activeFilters.brand;
     if (appliedBrand && appliedBrand !== "all" && appliedBrand !== "recommend" && appliedBrand !== "unsure") {
       const brandFiltered = list.filter(p => p.brand?.toLowerCase() === appliedBrand.toLowerCase());
       if (brandFiltered.length > 0) {
@@ -262,11 +219,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
       }
     }
     
-    const proxyRes = isMixedCameraMode && activeMixedType
-      ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.resolution || selection.resolution_preference
-      : selection.resolution_preference;
-
-    const appliedRes = activeFilters.mp !== undefined ? activeFilters.mp : proxyRes;
+    const appliedRes = activeFilters.mp;
     if (appliedRes && appliedRes !== "all") {
       const resFiltered = list.filter(p => `${p.resolution_mp}MP` === appliedRes.toUpperCase().trim());
       if (resFiltered.length > 0) {
