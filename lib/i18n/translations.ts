@@ -3,6 +3,10 @@ import { LocaleCode } from "./mapping";
 export type TranslationKey =
   | "build_own_title"
   | "build_own_desc"
+  | "build_page_title"
+  | "build_page_subtitle"
+  | "or"
+  | "join_waitlist"
   | "swipe_cmp"
   | "config_tool"
   | "config_desc"
