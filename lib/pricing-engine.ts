@@ -18,8 +18,8 @@ import type {
   QuoteDelivery,
   ResolvedSystem,
   PlanType
-} from "@/types";
-import { getCatalogCapacity } from "@/lib/catalog-capacity";
+} from "../types";
+import { getCatalogCapacity } from "./catalog-capacity";
 import { MarginEngine, DEFAULT_MARGIN_POLICY } from "./margin-engine";
 
 export interface PricingEngineParams {
@@ -307,9 +307,9 @@ function calculateHardware(
   let totalCost = 0;
 
   // 1. Camera Selection
-  // Synthesize mixed_camera_requirements from indoor/outdoor counts if present
+  // Synthesize mixed_camera_requirements from indoor/outdoor counts if present and no explicit camera chosen
   let mixedReqs = selection.mixed_camera_requirements;
-  if (!mixedReqs && (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined)) {
+  if (!mixedReqs && !selection.selected_camera_id && (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined)) {
     const indoor = selection.indoor_camera_count || 0;
     const outdoor = selection.outdoor_camera_count || 0;
     if (indoor > 0 && outdoor > 0) {

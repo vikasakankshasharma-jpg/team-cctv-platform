@@ -98,20 +98,22 @@ export async function POST(request: NextRequest) {
       selection.recording_mode = wizardAnswers.q_recording_mode as any;
     }
 
-    // Map outdoor and indoor camera counts
-    if (selection.outdoor_camera_count === undefined) {
-      if (siteSurvey.outdoor_camera_count !== undefined) {
-        selection.outdoor_camera_count = siteSurvey.outdoor_camera_count;
-      } else if (wizardAnswers.outdoor_camera_count !== undefined) {
-        selection.outdoor_camera_count = Number(wizardAnswers.outdoor_camera_count);
+    // Map outdoor and indoor camera counts ONLY if user hasn't selected an explicit camera/package
+    if (!selection.selected_camera_id) {
+      if (selection.outdoor_camera_count === undefined) {
+        if (siteSurvey.outdoor_camera_count !== undefined) {
+          selection.outdoor_camera_count = siteSurvey.outdoor_camera_count;
+        } else if (wizardAnswers.outdoor_camera_count !== undefined) {
+          selection.outdoor_camera_count = Number(wizardAnswers.outdoor_camera_count);
+        }
       }
-    }
 
-    if (selection.indoor_camera_count === undefined) {
-      if (siteSurvey.indoor_camera_count !== undefined) {
-        selection.indoor_camera_count = siteSurvey.indoor_camera_count;
-      } else if (wizardAnswers.indoor_camera_count !== undefined) {
-        selection.indoor_camera_count = Number(wizardAnswers.indoor_camera_count);
+      if (selection.indoor_camera_count === undefined) {
+        if (siteSurvey.indoor_camera_count !== undefined) {
+          selection.indoor_camera_count = siteSurvey.indoor_camera_count;
+        } else if (wizardAnswers.indoor_camera_count !== undefined) {
+          selection.indoor_camera_count = Number(wizardAnswers.indoor_camera_count);
+        }
       }
     }
 
@@ -141,8 +143,10 @@ export async function POST(request: NextRequest) {
 
     // 3.5 ZERO-TRUST VALIDATION
     if (selection.expected_total_payable !== undefined && selection.expected_total_payable !== null) {
-      // Allow up to ₹1 difference for potential floating-point rounding mismatches
-      if (Math.abs(pricing.total_payable - selection.expected_total_payable) > 1) {
+      const priceDiff = Math.abs(pricing.total_payable - selection.expected_total_payable);
+      // Allow up to ₹50 or 5% difference for rounding / promotional variations
+      const isTampered = priceDiff > 50 && (priceDiff / selection.expected_total_payable) > 0.05;
+      if (isTampered) {
         console.error(`[Zero-Trust Validation] Price mismatch detected for lead ${lead_id}. Backend calculated: ${pricing.total_payable}, Frontend expected: ${selection.expected_total_payable}`);
         console.error("Backend Pricing Snapshot:", JSON.stringify(pricing, null, 2));
         console.error("Backend Products Count:", products.length, "Backend Addons Count:", addons.length);

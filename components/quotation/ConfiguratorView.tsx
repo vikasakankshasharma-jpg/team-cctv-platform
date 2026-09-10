@@ -245,8 +245,14 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const activePricing = useMemo(() => {
     const cT = active_checkout_option?.technology ?? selection.technology;
     const cO = active_checkout_option?.option ?? selection.selected_camera_option;
+    const isCameraSku = typeof cO === "string" && !["budget", "recommended", "premium"].includes(cO);
     return calculatePricing({
-      selection: { ...selection, technology: cT as "HD" | "IP", selected_camera_option: typeof cO === "number" ? cO : undefined, selected_camera_id: typeof cO === "string" ? cO : undefined },
+      selection: { 
+        ...selection, 
+        technology: cT as "HD" | "IP", 
+        selected_camera_option: typeof cO === "number" ? cO : undefined, 
+        selected_camera_id: selection.selected_camera_id || (isCameraSku ? cO : undefined) 
+      },
       products: currentProducts, addons: currentAddons, settings: pricingCache.settings, cablingDone,
       referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0,
       evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer,
@@ -345,7 +351,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           recording_days: selection.recording_days,
           selected_addons: selection.selected_addons || [],
           selected_camera_option: typeof cO === "number" ? cO : undefined,
-          selected_camera_id: selection.selected_camera_id || (typeof cO === "string" ? cO : undefined),
+          selected_camera_id: selection.selected_camera_id || (typeof cO === "string" && !["budget", "recommended", "premium"].includes(cO) ? cO : undefined),
           selected_recorder_id: selection.selected_recorder_id,
           selected_storage_id: selection.selected_storage_id,
           selected_power_id: selection.selected_power_id,
