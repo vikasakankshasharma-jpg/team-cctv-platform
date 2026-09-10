@@ -250,6 +250,7 @@ async function seedDatabase() {
       display_name: displayName.trim(),
       created_at: new Date().toISOString(),
       is_active: true,
+      is_deleted: false,
       in_stock: true
     });
     count++;

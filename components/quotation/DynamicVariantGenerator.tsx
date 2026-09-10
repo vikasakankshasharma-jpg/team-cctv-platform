@@ -174,6 +174,7 @@ export function DynamicVariantGenerator({
       
       return { 
         ...pricing, 
+        technology: activeTech.toUpperCase(),
         camera_device, 
         storage_device, 
         camera_count: selection.camera_count, 
@@ -228,35 +229,25 @@ export function DynamicVariantGenerator({
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-2 max-w-full no-scrollbar">
-          <Filter className="w-4 h-4 text-[#86868b] shrink-0" />
           <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0">Brand:</span>
           {availableBrands.map(b => (
             <button
               key={b}
               onClick={() => setActiveBrand(b)}
-              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all shrink-0 ${
-                targetBrand === b 
-                  ? "bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30" 
-                  : "bg-white border border-[#d2d2d7] text-[#1d1d1f] hover:bg-[#f5f5f7] dark:bg-[#1c1c1e] dark:border-[#424245] dark:text-[#f5f5f7]"
-              }`}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeBrand === b ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
             >
-              {BRAND_DISPLAY[b] || (b.charAt(0).toUpperCase() + b.slice(1))}
+              {BRAND_DISPLAY[b] || b}
             </button>
           ))}
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-2 max-w-full no-scrollbar">
-          <Filter className="w-4 h-4 text-[#86868b] shrink-0" />
           <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0">Resolution:</span>
           {availableResolutions.map(r => (
             <button
               key={r}
               onClick={() => setActiveResolution(r)}
-              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all shrink-0 ${
-                targetRes === r 
-                  ? "bg-slate-800 text-white shadow-sm ring-2 ring-slate-800/30" 
-                  : "bg-white border border-[#d2d2d7] text-[#1d1d1f] hover:bg-[#f5f5f7] dark:bg-[#1c1c1e] dark:border-[#424245] dark:text-[#f5f5f7]"
-              }`}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeResolution === r ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
             >
               {r === "all" ? "All Resolutions" : r}
             </button>
@@ -277,7 +268,11 @@ export function DynamicVariantGenerator({
           const isSelectedForCompare = selectedCompareItems.some(i => i.camera_device?.id === variant.camera_device?.id && i.plan_type === variant.plan_type);
           
           return (
-            <Card key={idx} className={`relative overflow-hidden transition-all duration-300 ${isSelectedForCompare ? "ring-2 ring-blue-600 shadow-lg" : "hover:shadow-md border-[#d2d2d7] dark:border-[#424245]"}`}>
+            <Card 
+              key={idx} 
+              onClick={() => onSelectCheckout(variant)}
+              className={`group relative overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-xl hover:border-blue-500 hover:-translate-y-1 ${isSelectedForCompare ? "ring-2 ring-blue-600 shadow-lg" : "hover:shadow-md border-[#d2d2d7] dark:border-[#424245]"}`}
+            >
               {idx === Math.floor(variants.length / 2) && variants.length > 1 && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl z-10 flex items-center gap-1 shadow-sm">
                   <Sparkles className="w-3 h-3" /> Recommended
@@ -289,7 +284,7 @@ export function DynamicVariantGenerator({
                   <div className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
                     {variant.camera_device.brand || "Budget"} {variant.plan_type === "budget" ? "Standard" : "Pro"}
                   </div>
-                  <h3 className="text-lg font-bold text-[#1d1d1f] dark:text-white mb-1.5">
+                  <h3 className="text-lg font-bold text-[#1d1d1f] dark:text-white mb-1.5 group-hover:text-blue-600 transition-colors">
                     {variant.camera_device.derivedResolution || "2MP"} Resolution
                   </h3>
                   <div className="text-3xl font-black tracking-tight text-[#1d1d1f] dark:text-white">
@@ -324,14 +319,20 @@ export function DynamicVariantGenerator({
 
                 <div className="space-y-3">
                   <Button 
-                    onClick={() => onSelectCheckout(variant)}
-                    className={`w-full font-bold ${idx === Math.floor(variants.length / 2) && variants.length > 1 ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20" : "bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[#1d1d1f] dark:bg-[#2d2d2f] dark:hover:bg-[#3d3d3f] dark:text-white"}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectCheckout(variant);
+                    }}
+                    className={`w-full font-bold transition-all ${idx === Math.floor(variants.length / 2) && variants.length > 1 ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20" : "bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[#1d1d1f] dark:bg-[#2d2d2f] dark:hover:bg-[#3d3d3f] dark:text-white group-hover:bg-blue-600 group-hover:text-white"}`}
                   >
-                    Select Plan
+                    View Full Quotation
                   </Button>
                   
                   <button 
-                    onClick={() => onToggleCompare(variant)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleCompare(variant);
+                    }}
                     className="w-full py-2 text-sm font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-2 transition-colors"
                   >
                     <div className={`w-4 h-4 rounded border flex items-center justify-center ${isSelectedForCompare ? "bg-blue-600 border-blue-600" : "border-slate-300"}`}>

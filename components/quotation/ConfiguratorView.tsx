@@ -380,6 +380,77 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     }
   };
 
+  const [isNavigatingToQuote, setIsNavigatingToQuote] = useState(false);
+
+  const handleSelectPackageAndReview = async (pricing: any) => {
+    if (isNavigatingToQuote) return;
+    setIsNavigatingToQuote(true);
+    toast.loading("Opening your full detailed quotation...", { id: "quote-nav" });
+
+    try {
+      const camItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "cctv_camera");
+      const recItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "recorder");
+      const strItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "storage");
+
+      const tech = ((pricing.technology || selection.technology || "HD") as string).toUpperCase() as "HD" | "IP";
+
+      // 1. Update store
+      setActiveCheckoutOption({ technology: tech, option: pricing.plan_type });
+      updateSelection({
+        selected_camera_id: camItem?.product_id,
+        selected_recorder_id: recItem?.product_id,
+        selected_storage_id: strItem?.product_id,
+        technology: tech,
+        brand_preference: pricing.camera_device?.brand || selection.brand_preference,
+        resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
+      });
+
+      // 2. Persist quotation to database
+      const payload = {
+        lead_id: lead.id,
+        selection: {
+          lead_id: lead.id,
+          plan_type: pricing.plan_type || "recommended",
+          technology: tech,
+          camera_count: selection.camera_count || 4,
+          mixed_camera_requirements: selection.mixed_camera_requirements,
+          picture_quality: selection.picture_quality || "good",
+          recording_days: selection.recording_days || 7,
+          selected_addons: selection.selected_addons || [],
+          selected_camera_id: camItem?.product_id,
+          selected_recorder_id: recItem?.product_id,
+          selected_storage_id: strItem?.product_id,
+          brand_preference: pricing.camera_device?.brand || selection.brand_preference,
+          resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
+          property_type: selection.property_type || "home",
+          requested_features: selection.requested_features,
+        },
+        address: lead.address,
+        firebase_uid: lead.firebase_uid,
+        status: "draft"
+      };
+
+      const res = await fetch("/api/quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to generate quotation");
+      }
+
+      const resData = await res.json();
+      toast.success("Detailed Quotation Ready!", { id: "quote-nav" });
+      router.push(`/quote/${lead.id}/review/${resData.data.id}`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to load quotation. Please try again.", { id: "quote-nav" });
+      setIsNavigatingToQuote(false);
+    }
+  };
+
   if (!pricing_results.recommended) return <div className="animate-pulse flex space-y-4 flex-col h-96 bg-zinc-200 rounded-xl" />;
 
   return (
@@ -426,25 +497,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               promoterDiscount={promoterDiscount}
               evaluatedAddonRules={evaluatedRules}
               activeOffer={lead.active_offer}
-              onSelectCheckout={(pricing: any) => {
-                setActiveCheckoutOption({ technology: pricing.technology as string, option: pricing.plan_type });
-                
-                // Extract exact hardware from the card they clicked
-                const camItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "cctv_camera");
-                const recItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "recorder");
-                const strItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "storage");
-
-                // Lock those exact choices in global state so the price doesn't change on the next page
-                updateSelection({
-                  selected_camera_id: camItem?.product_id,
-                  selected_recorder_id: recItem?.product_id,
-                  selected_storage_id: strItem?.product_id,
-                  technology: pricing.technology as "HD" | "IP"
-                });
-
-                setViewMode("addons");
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+              onSelectCheckout={handleSelectPackageAndReview}
               onToggleCompare={handleToggleCompare}
               selectedCompareItems={selectedCompareItems}
             />
@@ -458,6 +511,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             />
           </div>
         )}
+
         {viewMode === 'compare' && (
           <div className="mb-16">
             <div className="mb-8 flex items-center justify-between">
@@ -475,9 +529,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               compareOptions={selectedCompareItems.map(p => ({ technology: p.technology as string, option: p.plan_type }))}
               activeCheckoutOption={active_checkout_option}
               onSelectCheckout={(option) => {
-                setActiveCheckoutOption(option);
-                setViewMode("addons");
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const matched = selectedCompareItems.find(p => p.technology === option.technology && p.plan_type === option.option);
+                if (matched) {
+                  handleSelectPackageAndReview(matched);
+                } else {
+                  handleSaveQuote(lead, "draft");
+                }
               }}
               selection={selection}
               products={currentProducts}
