@@ -426,8 +426,22 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               promoterDiscount={promoterDiscount}
               evaluatedAddonRules={evaluatedRules}
               activeOffer={lead.active_offer}
-              onSelectCheckout={(pricing) => {
+              onSelectCheckout={(pricing: any) => {
                 setActiveCheckoutOption({ technology: pricing.technology as string, option: pricing.plan_type });
+                
+                // Extract exact hardware from the card they clicked
+                const camItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "cctv_camera");
+                const recItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "recorder");
+                const strItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "storage");
+
+                // Lock those exact choices in global state so the price doesn't change on the next page
+                updateSelection({
+                  selected_camera_id: camItem?.product_id,
+                  selected_recorder_id: recItem?.product_id,
+                  selected_storage_id: strItem?.product_id,
+                  technology: pricing.technology as "HD" | "IP"
+                });
+
                 setViewMode("addons");
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
@@ -555,11 +569,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         <div id="build-your-own" className="w-full max-w-7xl mx-auto px-4 scroll-mt-24">
           <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <div>
-              <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight"><TranslatedText tKey="build_own_title" defaultText="Enhance your system" /></h2>
-              <p className="text-[15px] text-[#86868b] mt-1"><TranslatedText tKey="build_own_desc" defaultText="Add optional accessories before final checkout." /></p>
+              <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight"><TranslatedText tKey="build_own_title" defaultText="Your Itemized Quotation" /></h2>
+              <p className="text-[15px] text-[#86868b] mt-1"><TranslatedText tKey="build_own_desc" defaultText="Review your complete system breakdown and customize accessories." /></p>
             </div>
             <Button variant="outline" onClick={() => setViewMode('catalog')} className="rounded-full shrink-0">
-              <ArrowLeftRight className="w-4 h-4 mr-2" /> Back to Catalog
+              <ArrowLeftRight className="w-4 h-4 mr-2" /> Back to Packages
             </Button>
           </div>
           
