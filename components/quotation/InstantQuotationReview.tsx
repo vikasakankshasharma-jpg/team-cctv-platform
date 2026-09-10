@@ -234,13 +234,25 @@ export function InstantQuotationReview({
                 <tr key={idx} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors">
                   <td className="py-3 px-4 text-center text-xs text-zinc-400">{idx + 1}</td>
                   <td className="py-3 px-4">
-                    <div className="font-semibold text-zinc-900 dark:text-white">{item.display_name}</div>
+                    <div className="font-semibold text-zinc-900 dark:text-white flex items-center gap-2 flex-wrap">
+                      {item.display_name}
+                      {item.product_id === "labor_install" && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-md">
+                          Installation Service
+                        </span>
+                      )}
+                      {item.product_id === "cabling_material" && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 rounded-md">
+                          Wiring & Cabling
+                        </span>
+                      )}
+                    </div>
                     {item.product_id && (
                       <div className="text-[11px] text-zinc-400 font-mono mt-0.5">{item.product_id}</div>
                     )}
                   </td>
                   <td className="py-3 px-4 hidden sm:table-cell text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    {item.brand || "—"}
+                    {item.product_id === "labor_install" ? "On-Site Service" : item.product_id === "cabling_material" ? "Wiring Material" : (item.brand || "—")}
                   </td>
                   <td className="py-3 px-4 text-center font-bold text-zinc-900 dark:text-white">
                     {item.qty}
@@ -285,15 +297,29 @@ export function InstantQuotationReview({
         {/* FINANCIAL TOTALS SUMMARY BAR */}
         <div className="p-6 bg-zinc-50 dark:bg-zinc-800/40 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
-            <p>• Prices include standard cabling and professional installation.</p>
+            <p>• Prices include standard cabling and professional on-site installation.</p>
             <p>• GST 18% is computed on taxable equipment and labor value.</p>
           </div>
           
-          <div className="w-full sm:w-80 space-y-2 text-sm">
+          <div className="w-full sm:w-84 space-y-2 text-sm">
             <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-              <span>Hardware & Services:</span>
-              <span className="font-medium text-zinc-900 dark:text-white">₹{activePricing.base_hardware_cost?.toLocaleString("en-IN") || activePricing.gross_subtotal.toLocaleString("en-IN")}</span>
+              <span>Equipment & Hardware:</span>
+              <span className="font-medium text-zinc-900 dark:text-white">₹{activePricing.base_hardware_cost?.toLocaleString("en-IN")}</span>
             </div>
+            {activePricing.labor_cost > 0 && (
+              <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
+                <span className="flex items-center gap-1">
+                  Installation Labor ({camCount} cameras):
+                </span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">₹{activePricing.labor_cost.toLocaleString("en-IN")}</span>
+              </div>
+            )}
+            {activePricing.cabling_cost > 0 && (
+              <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
+                <span>Cabling & Wiring:</span>
+                <span className="font-medium text-zinc-900 dark:text-white">₹{activePricing.cabling_cost.toLocaleString("en-IN")}</span>
+              </div>
+            )}
             {activePricing.addons_total > 0 && (
               <div className="flex justify-between text-blue-600 dark:text-blue-400">
                 <span>Accessories & Add-ons:</span>
@@ -306,7 +332,7 @@ export function InstantQuotationReview({
                 <span className="font-semibold">-₹{activePricing.referral_discount.toLocaleString("en-IN")}</span>
               </div>
             )}
-            <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
+            <div className="flex justify-between text-zinc-600 dark:text-zinc-400 pt-1 border-t border-zinc-200 dark:border-zinc-700">
               <span>Taxable Subtotal:</span>
               <span className="font-medium text-zinc-900 dark:text-white">₹{activePricing.net_taxable_amount.toLocaleString("en-IN")}</span>
             </div>
