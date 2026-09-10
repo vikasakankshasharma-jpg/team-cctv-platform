@@ -335,15 +335,31 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       const payload = {
         lead_id: currentLead.id,
         selection: {
-          lead_id: currentLead.id, plan_type: selection.plan_type || "recommended", technology: cT as "HD" | "IP",
-          camera_count: selection.camera_count, mixed_camera_requirements: selection.mixed_camera_requirements,
-          picture_quality: selection.picture_quality || "good", recording_days: selection.recording_days,
-          selected_addons: selection.selected_addons || [], selected_camera_option: typeof cO === "number" ? cO : undefined,
-          selected_camera_id: typeof cO === "string" ? cO : undefined, expected_total_payable: activePricing.total_payable,
-          brand_preference: selection.brand_preference, resolution_preference: selection.resolution_preference,
-          property_type: selection.property_type, requested_features: selection.requested_features, max_budget: selection.max_budget,
+          ...selection,
+          lead_id: currentLead.id,
+          plan_type: selection.plan_type || "recommended",
+          technology: cT as "HD" | "IP",
+          camera_count: selection.camera_count,
+          mixed_camera_requirements: selection.mixed_camera_requirements,
+          picture_quality: selection.picture_quality || "good",
+          recording_days: selection.recording_days,
+          selected_addons: selection.selected_addons || [],
+          selected_camera_option: typeof cO === "number" ? cO : undefined,
+          selected_camera_id: selection.selected_camera_id || (typeof cO === "string" ? cO : undefined),
+          selected_recorder_id: selection.selected_recorder_id,
+          selected_storage_id: selection.selected_storage_id,
+          selected_power_id: selection.selected_power_id,
+          expected_total_payable: activePricing.total_payable,
+          brand_preference: selection.brand_preference,
+          resolution_preference: selection.resolution_preference,
+          property_type: selection.property_type,
+          requested_features: selection.requested_features,
+          max_budget: selection.max_budget,
         },
-        address: currentLead.address, firebase_uid: currentLead.firebase_uid, status, accepted_at: isAccepted ? new Date().toISOString() : null
+        address: currentLead.address,
+        firebase_uid: currentLead.firebase_uid,
+        status,
+        accepted_at: isAccepted ? new Date().toISOString() : null
       };
 
       const res = await fetch("/api/quotes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
