@@ -270,29 +270,27 @@ export default async function QuoteResultPage({
 
   return (
     <main className="min-h-screen bg-[#f5f5f7] dark:bg-black font-sans selection:bg-blue-200 dark:selection:bg-blue-900 transition-colors duration-500 pb-32">
-      
-      {/* MINIMALIST HERO SECTION (Apple Aesthetic) */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 pt-16 sm:pt-24 pb-8 sm:pb-12 text-center">
-          
-          {/* DYNAMIC WAITLIST BANNER WITH DISTANCE */}
-          {unservedCityName && (
-            <WaitlistBanner 
-              leadId={lead.id!} 
-              unservedCityName={unservedCityName} 
-              nearestHubName={nearestHubName}
-              distanceKm={distanceKm}
-            />
-          )}
-           
-           <h1 className="text-4xl sm:text-5xl md:text-7xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight leading-tight mb-4">
-              <TranslatedText tKey="quote_h1" defaultText="Your security," /><br />
-              <span className="text-[#0066cc] dark:text-[#2997ff]"><TranslatedText tKey="quote_h1_span" defaultText="made simple." /></span>
-           </h1>
-           
-           <p className="text-lg sm:text-xl text-[#86868b] dark:text-[#a1a1a6] font-normal leading-relaxed max-w-2xl mx-auto">
-              <TranslatedText tKey="quote_prep" defaultText="Prepared just for " /> <span className="text-[#1d1d1f] dark:text-white font-medium">{lead.customer_name}</span>. <TranslatedText tKey="quote_rec" defaultText="Look at our recommended" /> {(lead.property_type || "").toLowerCase()} <TranslatedText tKey="quote_pkg" defaultText="packages below or build your own." />
-           </p>
-         </div>
+            {/* COMPACT HERO SECTION (Above the Fold Pricing) */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 pt-8 sm:pt-12 pb-6 sm:pb-8 text-center">
+            
+            {/* DYNAMIC WAITLIST BANNER WITH DISTANCE */}
+            {unservedCityName && (
+              <WaitlistBanner 
+                leadId={lead.id!} 
+                unservedCityName={unservedCityName} 
+                nearestHubName={nearestHubName}
+                distanceKm={distanceKm}
+              />
+            )}
+             
+             <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight mb-2">
+                <TranslatedText tKey="quote_h1_compact" defaultText="Your Custom Packages" />
+             </h1>
+             
+             <p className="text-sm sm:text-base text-[#86868b] dark:text-[#a1a1a6] font-medium max-w-2xl mx-auto">
+                <TranslatedText tKey="quote_prep" defaultText="Prepared for " /> <span className="text-[#1d1d1f] dark:text-white font-semibold">{lead.customer_name}</span>
+             </p>
+           </div>
       
       {/* MAIN CONFIGURATOR VIEW */}
       <div className="w-full animate-in fade-in fill-mode-both delay-300 duration-1000">
