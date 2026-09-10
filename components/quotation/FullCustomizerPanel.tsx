@@ -256,7 +256,10 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
     
     const appliedBrand = activeFilters.brand !== undefined ? activeFilters.brand : selection.brand_preference;
     if (appliedBrand && appliedBrand !== "all" && appliedBrand !== "recommend" && appliedBrand !== "unsure") {
-      list = list.filter(p => p.brand?.toLowerCase() === appliedBrand.toLowerCase());
+      const brandFiltered = list.filter(p => p.brand?.toLowerCase() === appliedBrand.toLowerCase());
+      if (brandFiltered.length > 0) {
+        list = brandFiltered;
+      }
     }
     
     const proxyRes = isMixedCameraMode && activeMixedType
@@ -265,7 +268,10 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
 
     const appliedRes = activeFilters.mp !== undefined ? activeFilters.mp : proxyRes;
     if (appliedRes && appliedRes !== "all") {
-      list = list.filter(p => `${p.resolution_mp}MP` === appliedRes.toUpperCase().trim());
+      const resFiltered = list.filter(p => `${p.resolution_mp}MP` === appliedRes.toUpperCase().trim());
+      if (resFiltered.length > 0) {
+        list = resFiltered;
+      }
     }
 
     if (activeFilters.type && activeFilters.type !== "all") {
@@ -328,7 +334,10 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
     list = list.filter(p => (p.max_cameras || p.channels || 0) >= selection.camera_count);
     
     if (activeFilters.brand && activeFilters.brand !== "all") {
-      list = list.filter(p => p.brand === activeFilters.brand);
+      const brandFiltered = list.filter(p => p.brand === activeFilters.brand);
+      if (brandFiltered.length > 0) {
+        list = brandFiltered;
+      }
     }
     if (activeFilters.channels && activeFilters.channels !== "all") {
       list = list.filter(p => `${p.channels} Ch` === activeFilters.channels);
