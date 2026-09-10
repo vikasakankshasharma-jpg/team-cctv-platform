@@ -591,7 +591,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}
-            onProceedToActualQuotation={() => triggerActionWithAddress("download")}
+            onProceedToActualQuotation={() => handleSaveQuote(lead, "draft")}
             isSaving={isSaving}
           />
         </div>
@@ -605,7 +605,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           baseTierName={baseTierName}
           isCustomized={isCustomized}
           onAction={triggerActionWithAddress} 
-          onProceedToFinalQuote={() => triggerActionWithAddress("download")}
+          onProceedToFinalQuote={() => handleSaveQuote(lead, "draft")}
           isSaving={isSaving} 
           lead={lead}
           quote={activePricing}
