@@ -284,7 +284,7 @@ export default async function QuoteResultPage({
             )}
              
              <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight mb-2">
-                <TranslatedText tKey="quote_h1_compact" defaultText="Your Custom Packages" />
+                <TranslatedText tKey="quote_h1" defaultText="Your Custom Packages" />
              </h1>
              
              <p className="text-sm sm:text-base text-[#86868b] dark:text-[#a1a1a6] font-medium max-w-2xl mx-auto">
