@@ -155,9 +155,9 @@ export function DynamicVariantGenerator({
     const enrich = (pricing: any, brandKey: string, res: string) => {
       if (!pricing || pricing.error) return null;
       const camId = pricing.items.find((i: any) => products.find(p => p.id === i.product_id)?.category === "cctv_camera")?.product_id;
-      const camera_device = products.find(p => p.id === camId);
+      const camera_device = products.find(p => p.id === camId) ? { ...products.find(p => p.id === camId) } : undefined;
       const strId = pricing.items.find((i: any) => products.find(p => p.id === i.product_id)?.category === "storage")?.product_id;
-      const storage_device = products.find(p => p.id === strId);
+      const storage_device = products.find(p => p.id === strId) ? { ...products.find(p => p.id === strId) } : undefined;
       
       if (camera_device) {
         (camera_device as any).derivedResolution = res;
@@ -165,8 +165,8 @@ export function DynamicVariantGenerator({
       if (storage_device) {
         let tb = (storage_device as any).storage_capacity_tb;
         if (!tb) {
-          const capStr = ((storage_device as any).capacity || storage_device.display_name || "").toUpperCase();
-          const tbMatch = capStr.match(/(d+)s*TB/);
+          const capStr = ((storage_device as any).capacity || (storage_device as any).display_name || "").toUpperCase();
+          const tbMatch = capStr.match(/(\d+)\s*TB/);
           if (tbMatch) tb = parseInt(tbMatch[1], 10);
         }
         (storage_device as any).derivedCapacity = tb ? `${tb}TB` : "HDD";

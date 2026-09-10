@@ -838,8 +838,8 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     // We expect resolution_preference to be something like "2MP" or "4MP"
     const resPref = selection.resolution_preference.toUpperCase();
     const resFiltered = pool.filter(cam => {
-      // Safely parse resolution_mp (which might be "2MP", "2.4MP", "4MP", etc.)
-      const camRes = String(cam.resolution_mp || "").toUpperCase();
+      // Safely parse resolution_mp or resolution (which might be "2MP", "2.4MP", "4MP", etc.)
+      const camRes = String(cam.resolution_mp || cam.resolution || "").toUpperCase();
       return camRes === resPref || camRes === resPref.replace("MP", "") || camRes + "MP" === resPref;
     });
     // Fallback: If strict resolution matching eliminates ALL cameras, drop the filter
