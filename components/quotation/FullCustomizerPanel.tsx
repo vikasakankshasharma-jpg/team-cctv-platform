@@ -525,7 +525,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           <p className={`text-[15px] font-semibold leading-tight line-clamp-2 ${isSelected ? "text-[#0071e3]" : "text-[#1d1d1f] dark:text-[#f5f5f7]"}`}>
             {addon.display_name}
           </p>
-          <span className="text-[17px] font-semibold text-[#1d1d1f] dark:text-white mt-2 block">₹{(addon.price || 0).toLocaleString()}</span>
+            <span className="text-[17px] font-semibold text-[#1d1d1f] dark:text-white mt-2 block">₹{(addon.unit_price || addon.price || 0).toLocaleString()}</span>
         </div>
         <div className="mt-auto pt-4 border-t border-[#f5f5f7] dark:border-[#2d2d2f] flex flex-row items-center justify-end">
           {isOutOfStock ? (
