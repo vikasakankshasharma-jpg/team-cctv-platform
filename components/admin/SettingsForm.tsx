@@ -36,6 +36,9 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [affordablePincodesText, setAffordablePincodesText] = useState<string>(
     initialSettings.affordable_pincodes ? initialSettings.affordable_pincodes.join(", ") : ""
   );
+  const [brandTabsText, setBrandTabsText] = useState<string>(
+    initialSettings.brand_tabs_order ? initialSettings.brand_tabs_order.join(", ") : "all, budget, cpplus, hikvision, dahua"
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -56,6 +59,11 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       payload.affordable_pincodes = affordablePincodesText
         .split(",")
         .map(p => p.trim())
+        .filter(p => p.length > 0);
+        
+      payload.brand_tabs_order = brandTabsText
+        .split(",")
+        .map(p => p.trim().toLowerCase())
         .filter(p => p.length > 0);
         
       await updateSettings(payload);
@@ -484,6 +492,36 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
               </div>
               <p className="text-[10px] text-muted-foreground">Wall-mount 2U, 4U, 6U DVR and networking racks</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Section: Brand Display Tabs */}
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+              <Settings2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground tracking-tight">Brand Tabs Display</h2>
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Control which brands are shown as tabs and in what order</p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Visible Brands (Comma Separated)</label>
+              <textarea 
+                name="brandTabsText" 
+                value={brandTabsText} 
+                onChange={(e) => setBrandTabsText(e.target.value)}
+                placeholder="all, budget, cpplus, hikvision, dahua"
+                className="w-full h-16 bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm font-mono" 
+              />
+              <p className="text-[10px] text-muted-foreground ml-1">
+                Enter exact brand keys (e.g. <code>all, budget, cpplus, hikvision, dahua, prama, trueview, secureye</code>). 
+                Any brand NOT in this list will be completely hidden from the front-end tabs, even if products exist in the database.
+              </p>
             </div>
           </div>
         </div>

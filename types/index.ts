@@ -464,6 +464,9 @@ export interface AppSettings {
   pricing_cache_ttl_seconds: number;
   otp_provider: "firebase_phone" | "other";
   
+  // Brand Tabs Control
+  brand_tabs_order?: string[];
+  
   // Brand Tier Management
   tier_budget_label: string;
   tier_budget_multiplier: number;

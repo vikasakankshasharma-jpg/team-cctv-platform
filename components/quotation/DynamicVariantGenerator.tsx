@@ -105,25 +105,28 @@ export function DynamicVariantGenerator({
       }
     });
 
-    // Start with "all" (All Brands / Recommended Deal)
-    const result = ["all"];
+    const result: string[] = [];
     
-    // Core brands in logical order: All Brands -> Budget -> CP Plus -> Hikvision -> Dahua -> Prama
-    const orderedKeys = ["budget", "cpplus", "hikvision", "dahua", "prama", "trueview", "secureye"];
+    // Core brands in logical order: Admin Configured or Default Fallback
+    const orderedKeys = settings.brand_tabs_order && settings.brand_tabs_order.length > 0 
+      ? settings.brand_tabs_order 
+      : ["all", "budget", "cpplus", "hikvision", "dahua", "prama", "trueview", "secureye"];
+      
+    // Only push keys that the Admin has explicitly allowed in orderedKeys.
+    // Also, ensure the brand actually exists in brandSet (except for "all", which is always shown if in orderedKeys).
     orderedKeys.forEach(k => {
-      if (brandSet.has(k)) {
-        result.push(k);
+      if (k === "all" || brandSet.has(k)) {
+        if (!result.includes(k)) {
+          result.push(k);
+        }
       }
     });
 
-    brandSet.forEach(k => {
-      if (!result.includes(k)) {
-        result.push(k);
-      }
-    });
+    // We no longer blindly push remaining brandSet items. 
+    // This gives the Admin *full* control to hide brands entirely by omitting them from brand_tabs_order.
 
     return result;
-  }, [products, activeTech]);
+  }, [products, activeTech, settings.brand_tabs_order]);
 
   const [activeBrand, setActiveBrand] = useState<string>("all");
 

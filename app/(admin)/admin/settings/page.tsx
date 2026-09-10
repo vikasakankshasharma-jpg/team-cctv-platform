@@ -28,6 +28,7 @@ export default async function SettingsAdminPage() {
     labor_fitting_only_rate: 500,
     labor_full_installation_rate: 1200,
     wire_cost_per_meter: 25,
+    brand_tabs_order: ["all", "budget", "cpplus", "hikvision", "dahua"],
     tier_budget_label: "VALUE:",
     tier_budget_multiplier: 0.85,
     tier_recommended_label: "PROFESSIONAL:",
