@@ -284,41 +284,41 @@ export function DynamicVariantGenerator({
                 </div>
               )}
               
-              <CardContent className="p-6 pt-10">
-                <div className="text-center mb-6">
-                  <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
+              <CardContent className="p-5 pt-8">
+                <div className="text-center mb-5">
+                  <div className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
                     {variant.camera_device.brand || "Budget"} {variant.plan_type === "budget" ? "Standard" : "Pro"}
                   </div>
-                  <h3 className="text-xl font-bold text-[#1d1d1f] dark:text-white mb-2">
+                  <h3 className="text-lg font-bold text-[#1d1d1f] dark:text-white mb-1.5">
                     {variant.camera_device.derivedResolution || "2MP"} Resolution
                   </h3>
-                  <div className="text-4xl font-black tracking-tight text-[#1d1d1f] dark:text-white">
+                  <div className="text-3xl font-black tracking-tight text-[#1d1d1f] dark:text-white">
                     ₹{variant.total_payable.toLocaleString('en-IN')}
                   </div>
                 </div>
 
-                <div className="space-y-4 mb-8">
+                <div className="mb-6 flex flex-col">
                   <div className="flex justify-between items-center py-2 border-b border-[#f5f5f7] dark:border-[#2d2d2f]">
-                    <span className="text-sm text-[#86868b]">Brand</span>
-                    <span className="text-sm font-bold text-[#1d1d1f] dark:text-white">{variant.camera_device.brand || "Budget"}</span>
+                    <span className="text-[13px] font-medium text-[#86868b]">Brand</span>
+                    <span className="text-[13px] font-bold text-[#1d1d1f] dark:text-white">{variant.camera_device.brand || "Budget"}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#f5f5f7] dark:border-[#2d2d2f]">
-                    <span className="text-sm text-[#86868b]">Cameras</span>
-                    <span className="text-sm font-bold text-[#1d1d1f] dark:text-white">{variant.camera_count}x {activeTech.toUpperCase()}</span>
+                    <span className="text-[13px] font-medium text-[#86868b]">Cameras</span>
+                    <span className="text-[13px] font-bold text-[#1d1d1f] dark:text-white">{variant.camera_count}x {activeTech.toUpperCase()}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#f5f5f7] dark:border-[#2d2d2f]">
-                    <span className="text-sm text-[#86868b]">Clarity</span>
-                    <span className="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{variant.camera_device.derivedResolution || "2MP"}</span>
+                    <span className="text-[13px] font-medium text-[#86868b]">Clarity</span>
+                    <span className="text-[12px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{variant.camera_device.derivedResolution || "2MP"}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#f5f5f7] dark:border-[#2d2d2f]">
-                    <span className="text-sm text-[#86868b]">Storage</span>
-                    <span className="text-sm font-bold text-[#1d1d1f] dark:text-white">
+                    <span className="text-[13px] font-medium text-[#86868b]">Storage</span>
+                    <span className="text-[13px] font-bold text-[#1d1d1f] dark:text-white">
                       {variant.storage_device ? `${variant.storage_device.derivedCapacity || "HDD"}` : "None"} ({variant.storage_days} Days)
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#f5f5f7] dark:border-[#2d2d2f]">
-                    <span className="text-sm text-[#86868b]">Installation</span>
-                    <span className="text-sm font-bold text-emerald-600">Included</span>
+                    <span className="text-[13px] font-medium text-[#86868b]">Installation</span>
+                    <span className="text-[13px] font-bold text-emerald-600">Included</span>
                   </div>
                 </div>
 
