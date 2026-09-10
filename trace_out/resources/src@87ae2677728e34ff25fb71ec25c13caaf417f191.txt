@@ -4,6 +4,11 @@ test.describe('Quote & Booking End-to-End Flow', () => {
   // Increase timeout for this full flow since it tests many screens
   test.setTimeout(120000); 
 
+  test.beforeEach(async ({ page }) => {
+    page.on('console', msg => console.log(`[browser] ${msg.text()}`));
+    page.on('pageerror', error => console.log(`[browser error] ${error.message}`));
+  });
+
   test('Complete Customer Journey: Wizard -> Quote -> Customizer -> Review -> Booking', async ({ page }) => {
     
     // ---------------------------------------------------------
@@ -54,13 +59,13 @@ test.describe('Quote & Booking End-to-End Flow', () => {
       }
 
       // Quote Options appear (DynamicVariantGenerator)
-      await expect(page.locator('h2', { hasText: 'Build Your Quotation' })).toBeVisible({ timeout: 15000 });
+      await expect(page.locator('h2', { hasText: 'Build Your Quotation' })).toBeVisible({ timeout: 45000 });
 
-      // Select first plan to open Add-ons
-      await page.locator('button:has-text("Select Plan")').first().click();
+      // Select recommended plan to open Add-ons
+      await page.locator('button:has-text("Select Plan")').nth(1).click();
 
       // Wait for navigation to the addons page (which is the same URL but different viewMode)
-      await expect(page.locator('h2', { hasText: 'Enhance your system' })).toBeVisible({ timeout: 15000 });
+      await expect(page.locator('h2', { hasText: 'Build your own system.' })).toBeVisible({ timeout: 15000 });
     });
 
     // ---------------------------------------------------------

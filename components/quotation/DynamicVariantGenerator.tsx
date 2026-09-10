@@ -109,6 +109,21 @@ export function DynamicVariantGenerator({
         else if (name.includes("8MP") || name.includes("4K")) res = "8MP";
         (camera_device as any).derivedResolution = res;
       }
+
+      // Derive storage capacity with fallback parsing
+      if (storage_device) {
+        let tb = (storage_device as any).storage_capacity_tb;
+        if (!tb) {
+          const capStr = ((storage_device as any).capacity || storage_device.display_name || "").toUpperCase();
+          const tbMatch = capStr.match(/(\d+)\s*TB/);
+          if (tbMatch) tb = parseInt(tbMatch[1], 10);
+          else {
+            const gbMatch = capStr.match(/(\d+)\s*GB/);
+            if (gbMatch) tb = parseInt(gbMatch[1], 10) / 1024;
+          }
+        }
+        (storage_device as any).derivedCapacity = tb ? `${tb}TB` : "HDD";
+      }
       
       return { ...pricing, camera_device, storage_device, camera_count: selection.camera_count, storage_days: selection.recording_days || 7 };
     };
@@ -239,7 +254,7 @@ export function DynamicVariantGenerator({
                   <div className="flex justify-between items-center py-2 border-b border-[#f5f5f7] dark:border-[#2d2d2f]">
                     <span className="text-sm text-[#86868b]">Storage</span>
                     <span className="text-sm font-bold text-[#1d1d1f] dark:text-white">
-                      {variant.storage_device ? `${variant.storage_device.capacity_tb}TB` : "None"} ({variant.storage_days} Days)
+                      {variant.storage_device ? `${variant.storage_device.derivedCapacity || "HDD"}` : "None"} ({variant.storage_days} Days)
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#f5f5f7] dark:border-[#2d2d2f]">

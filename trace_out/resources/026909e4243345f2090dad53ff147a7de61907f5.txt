@@ -1,0 +1,1 @@
+{"frames":[{"file":"file://C:/Users/hp/Documents/TEAM Website/secure-easy/.next/dev/static/chunks/_0sgxpq0._.js","line1":7703,"column1":50,"methodName":"SiteDetailsModal.useEffect.fetchPincode","arguments":[]}],"isServer":false,"isEdgeServer":false,"isAppDirectory":true}
