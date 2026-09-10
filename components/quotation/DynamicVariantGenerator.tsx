@@ -9,16 +9,56 @@ import { Check, Info, Shield, HardDrive, Wrench, Settings2, Sparkles, AlertCircl
 import { Card, CardContent } from "@/components/ui/card";
 
 const BRAND_DISPLAY: Record<string, string> = {
-  "cpplus": "CP Plus", "cp-plus": "CP Plus", "cp plus": "CP Plus",
-  "wd": "WD",
-  "seagate": "Seagate",
-  "prama": "Prama",
+  "all": "All Brands",
+  "budget": "Budget",
+  "cpplus": "CP Plus",
   "hikvision": "Hikvision",
   "dahua": "Dahua",
+  "prama": "Prama",
   "trueview": "Trueview",
+  "secureye": "Secureye",
+  "wd": "WD",
+  "seagate": "Seagate",
   "d-link": "D-Link",
   "tp-link": "TP-Link",
 };
+
+const BRAND_PREFERENCE_MAP: Record<string, string | undefined> = {
+  "all": undefined,
+  "budget": "Budget Brand",
+  "cpplus": "CP Plus",
+  "hikvision": "Hikvision",
+  "dahua": "Dahua",
+  "prama": "Prama",
+  "trueview": "Trueview",
+  "secureye": "Secureye",
+};
+
+function normalizeBrandKey(brandStr: string): string {
+  const lower = (brandStr || "").toLowerCase().trim();
+  if (lower.includes("budget") || lower.includes("generic") || lower.includes("local") || lower.includes("oem")) {
+    return "budget";
+  }
+  if (lower.includes("cp") || lower.includes("cpplus")) {
+    return "cpplus";
+  }
+  if (lower.includes("hikvision") || lower.includes("hik")) {
+    return "hikvision";
+  }
+  if (lower.includes("dahua") || lower.includes("dah")) {
+    return "dahua";
+  }
+  if (lower.includes("prama")) {
+    return "prama";
+  }
+  if (lower.includes("trueview")) {
+    return "trueview";
+  }
+  if (lower.includes("secureye")) {
+    return "secureye";
+  }
+  return lower;
+}
 
 interface DynamicVariantGeneratorProps {
   products: Product[];
@@ -51,44 +91,56 @@ export function DynamicVariantGenerator({
   
   // Get available brands for the active tech
   const availableBrands = useMemo(() => {
-    const brands = new Set<string>();
-    // Always include Budget
-    brands.add("budget");
+    const brandSet = new Set<string>();
     
     products.forEach(p => {
+      const pTech = (p.technology || "").toUpperCase();
+      const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
       const isTechMatch = activeTech === "hd" ? 
-        (p.category === "cctv_camera" && p.technologies?.includes("HD")) :
-        (p.category === "cctv_camera" && p.technologies?.includes("IP"));
+        (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD"))) :
+        (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")));
         
-      if (isTechMatch && p.brand && p.brand.toLowerCase() !== "generic") {
-        brands.add(p.brand.toLowerCase());
+      if (isTechMatch && p.brand) {
+        brandSet.add(normalizeBrandKey(p.brand));
       }
     });
+
+    // Start with "all" (All Brands / Recommended Deal)
+    const result = ["all"];
     
-    return Array.from(brands).sort((a, b) => {
-      if (a === "budget") return -1;
-      if (b === "budget") return 1;
-      return a.localeCompare(b);
+    // Core brands in logical order: All Brands -> Budget -> CP Plus -> Hikvision -> Dahua -> Prama
+    const orderedKeys = ["budget", "cpplus", "hikvision", "dahua", "prama", "trueview", "secureye"];
+    orderedKeys.forEach(k => {
+      if (brandSet.has(k)) {
+        result.push(k);
+      }
     });
+
+    brandSet.forEach(k => {
+      if (!result.includes(k)) {
+        result.push(k);
+      }
+    });
+
+    return result;
   }, [products, activeTech]);
 
-  const [activeBrand, setActiveBrand] = useState<string>("budget");
+  const [activeBrand, setActiveBrand] = useState<string>("all");
 
-  // Ensure active brand is valid when tech changes
-  if (!availableBrands.includes(activeBrand) && availableBrands.length > 0) {
-    setActiveBrand(availableBrands[0]);
-  }
+  // Keep activeBrand valid when tech changes
+  const targetBrand = availableBrands.includes(activeBrand) ? activeBrand : (availableBrands[0] || "all");
 
   // Generate variants for this tech+brand combo
   const variants = useMemo(() => {
     // We'll generate a 2MP and 5MP (or similar) variant
     const results: PricingResult[] = [];
+    const brandPref = BRAND_PREFERENCE_MAP[targetBrand];
     
     // 1. Budget variant (typically 2MP)
     const budgetSelection: ConfiguratorSelection = {
       ...selection,
       technology: activeTech,
-      brand_preference: activeBrand === "budget" ? undefined : (activeBrand || undefined),
+      brand_preference: brandPref,
       plan_type: "budget",
       selected_camera_option: 1, // Forces budget/entry tier in pricing engine
     };
@@ -141,7 +193,7 @@ export function DynamicVariantGenerator({
     const premiumSelection: ConfiguratorSelection = {
       ...selection,
       technology: activeTech,
-      brand_preference: activeBrand === "budget" ? undefined : (activeBrand || undefined),
+      brand_preference: brandPref,
       plan_type: "premium",
       selected_camera_option: 3, // Forces premium tier in pricing engine
     };
@@ -156,7 +208,7 @@ export function DynamicVariantGenerator({
     if (enrichedPremium) results.push(enrichedPremium);
 
     return results;
-  }, [activeTech, activeBrand, selection, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer]);
+  }, [activeTech, targetBrand, selection, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer]);
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -192,13 +244,13 @@ export function DynamicVariantGenerator({
             <button
               key={b}
               onClick={() => setActiveBrand(b)}
-              className={`px-4 py-1.5 rounded-full text-sm font-bold border transition-colors shrink-0 ${
-                activeBrand === b 
-                  ? "bg-blue-50 border-blue-600 text-blue-700 dark:bg-blue-900/30 dark:border-blue-500 dark:text-blue-400" 
-                  : "bg-white border-[#d2d2d7] text-[#1d1d1f] hover:bg-[#f5f5f7] dark:bg-[#1c1c1e] dark:border-[#424245] dark:text-[#f5f5f7]"
+              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all shrink-0 ${
+                targetBrand === b 
+                  ? "bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30" 
+                  : "bg-white border border-[#d2d2d7] text-[#1d1d1f] hover:bg-[#f5f5f7] dark:bg-[#1c1c1e] dark:border-[#424245] dark:text-[#f5f5f7]"
               }`}
             >
-              {b === "budget" ? "Budget" : BRAND_DISPLAY[b] || b}
+              {BRAND_DISPLAY[b] || (b.charAt(0).toUpperCase() + b.slice(1))}
             </button>
           ))}
         </div>

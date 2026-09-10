@@ -2,8 +2,6 @@ import * as dotenv from "dotenv";
 import { resolve } from "path";
 dotenv.config({ path: resolve(process.cwd(), ".env.local") });
 
-import { adminDb } from "../lib/firebase-admin";
-
 /**
  * 1. WATERFALL MARGIN RULES
  */
@@ -21,6 +19,8 @@ const MARGIN_RULES = {
   BRAND: {
     "Budget Brand": 40,
     "CP Plus": 20,
+    "Hikvision": 20,
+    "Dahua": 20,
     "Seagate": 10,
     "D-Link": 15
   },
@@ -64,7 +64,7 @@ function applyMargin(item: any): any {
  * 2. RAW PRODUCTS FROM EXCEL (GST Paid Cost)
  */
 const RAW_PRODUCTS = [
-  // --- HD Analog Cameras ---
+  // --- HD Analog Cameras (CP Plus & Budget) ---
   { sku: "HDA-CPP-2MP-BW-DOME", brand: "CP Plus", category: "cctv_camera", technology: "HD", resolution: "2MP", type: "Dome", feature: "B&W Night Vision, Audio IN", base_cost: 1000 },
   { sku: "HDA-CPP-2MP-BW-BULLET", brand: "CP Plus", category: "cctv_camera", technology: "HD", resolution: "2MP", type: "Bullet", feature: "B&W Night Vision, Audio IN", base_cost: 1050 },
   { sku: "HDA-CPP-2MP-COL-DOME", brand: "CP Plus", category: "cctv_camera", technology: "HD", resolution: "2MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 1250 },
@@ -74,7 +74,19 @@ const RAW_PRODUCTS = [
   { sku: "HDA-BUD-2MP-COL-DOME", brand: "Budget Brand", category: "cctv_camera", technology: "HD", resolution: "2MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 700 },
   { sku: "HDA-BUD-2MP-COL-BULLET", brand: "Budget Brand", category: "cctv_camera", technology: "HD", resolution: "2MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 750 },
 
-  // --- IP Network Cameras ---
+  // --- HD Analog Cameras (Hikvision) ---
+  { sku: "HDA-HIK-2MP-COL-DOME", brand: "Hikvision", category: "cctv_camera", technology: "HD", resolution: "2MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 1300 },
+  { sku: "HDA-HIK-2MP-COL-BULLET", brand: "Hikvision", category: "cctv_camera", technology: "HD", resolution: "2MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 1350 },
+  { sku: "HDA-HIK-5MP-COL-DOME", brand: "Hikvision", category: "cctv_camera", technology: "HD", resolution: "5MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 1750 },
+  { sku: "HDA-HIK-5MP-COL-BULLET", brand: "Hikvision", category: "cctv_camera", technology: "HD", resolution: "5MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 1800 },
+
+  // --- HD Analog Cameras (Dahua) ---
+  { sku: "HDA-DAH-2MP-COL-DOME", brand: "Dahua", category: "cctv_camera", technology: "HD", resolution: "2MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 1250 },
+  { sku: "HDA-DAH-2MP-COL-BULLET", brand: "Dahua", category: "cctv_camera", technology: "HD", resolution: "2MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 1300 },
+  { sku: "HDA-DAH-5MP-COL-DOME", brand: "Dahua", category: "cctv_camera", technology: "HD", resolution: "5MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 1700 },
+  { sku: "HDA-DAH-5MP-COL-BULLET", brand: "Dahua", category: "cctv_camera", technology: "HD", resolution: "5MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 1750 },
+
+  // --- IP Network Cameras (CP Plus & Budget) ---
   { sku: "IP-CPP-2MP-ECO-DOME", brand: "CP Plus", category: "cctv_camera", technology: "IP", resolution: "2MP", type: "Dome", feature: "Color Night Vision, Audio IN, ECO", base_cost: 3200 },
   { sku: "IP-CPP-2MP-ECO-BULLET", brand: "CP Plus", category: "cctv_camera", technology: "IP", resolution: "2MP", type: "Bullet", feature: "Color Night Vision, Audio IN, ECO", base_cost: 3250 },
   { sku: "IP-CPP-4MP-NORM-DOME", brand: "CP Plus", category: "cctv_camera", technology: "IP", resolution: "4MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 4000 },
@@ -87,7 +99,23 @@ const RAW_PRODUCTS = [
   { sku: "IP-BUD-5MP-PREM-DOME", brand: "Budget Brand", category: "cctv_camera", technology: "IP", resolution: "5MP", type: "Dome", feature: "Color Night Vision, Audio IN, Premium", base_cost: 2000 },
   { sku: "IP-BUD-5MP-PREM-BULLET", brand: "Budget Brand", category: "cctv_camera", technology: "IP", resolution: "5MP", type: "Bullet", feature: "Color Night Vision, Audio IN, Premium", base_cost: 2050 },
 
-  // --- HD DVRs ---
+  // --- IP Network Cameras (Hikvision) ---
+  { sku: "IP-HIK-2MP-ECO-DOME", brand: "Hikvision", category: "cctv_camera", technology: "IP", resolution: "2MP", type: "Dome", feature: "Color Night Vision, Audio IN, ECO", base_cost: 3400 },
+  { sku: "IP-HIK-2MP-ECO-BULLET", brand: "Hikvision", category: "cctv_camera", technology: "IP", resolution: "2MP", type: "Bullet", feature: "Color Night Vision, Audio IN, ECO", base_cost: 3450 },
+  { sku: "IP-HIK-4MP-NORM-DOME", brand: "Hikvision", category: "cctv_camera", technology: "IP", resolution: "4MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 4300 },
+  { sku: "IP-HIK-4MP-NORM-BULLET", brand: "Hikvision", category: "cctv_camera", technology: "IP", resolution: "4MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 4350 },
+  { sku: "IP-HIK-5MP-NORM-DOME", brand: "Hikvision", category: "cctv_camera", technology: "IP", resolution: "5MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 5100 },
+  { sku: "IP-HIK-5MP-NORM-BULLET", brand: "Hikvision", category: "cctv_camera", technology: "IP", resolution: "5MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 5150 },
+
+  // --- IP Network Cameras (Dahua) ---
+  { sku: "IP-DAH-2MP-ECO-DOME", brand: "Dahua", category: "cctv_camera", technology: "IP", resolution: "2MP", type: "Dome", feature: "Color Night Vision, Audio IN, ECO", base_cost: 3300 },
+  { sku: "IP-DAH-2MP-ECO-BULLET", brand: "Dahua", category: "cctv_camera", technology: "IP", resolution: "2MP", type: "Bullet", feature: "Color Night Vision, Audio IN, ECO", base_cost: 3350 },
+  { sku: "IP-DAH-4MP-NORM-DOME", brand: "Dahua", category: "cctv_camera", technology: "IP", resolution: "4MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 4150 },
+  { sku: "IP-DAH-4MP-NORM-BULLET", brand: "Dahua", category: "cctv_camera", technology: "IP", resolution: "4MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 4200 },
+  { sku: "IP-DAH-5MP-NORM-DOME", brand: "Dahua", category: "cctv_camera", technology: "IP", resolution: "5MP", type: "Dome", feature: "Color Night Vision, Audio IN", base_cost: 4950 },
+  { sku: "IP-DAH-5MP-NORM-BULLET", brand: "Dahua", category: "cctv_camera", technology: "IP", resolution: "5MP", type: "Bullet", feature: "Color Night Vision, Audio IN", base_cost: 5000 },
+
+  // --- HD DVRs (CP Plus) ---
   { sku: "DVR-CPP-4CH-2MP", brand: "CP Plus", category: "recorder", technology: "HD", channels: 4, resolution: "2MP Supported", sata: "1SATA", base_cost: 3700 },
   { sku: "DVR-CPP-8CH-2MP", brand: "CP Plus", category: "recorder", technology: "HD", channels: 8, resolution: "2MP Supported", sata: "1SATA", base_cost: 4800 },
   { sku: "DVR-CPP-16CH-2MP", brand: "CP Plus", category: "recorder", technology: "HD", channels: 16, resolution: "2MP Supported", sata: "1SATA", base_cost: 8100 },
@@ -95,11 +123,37 @@ const RAW_PRODUCTS = [
   { sku: "DVR-CPP-8CH-5MP", brand: "CP Plus", category: "recorder", technology: "HD", channels: 8, resolution: "5MP Supported", sata: "1SATA", base_cost: 8100 },
   { sku: "DVR-CPP-16CH-5MP", brand: "CP Plus", category: "recorder", technology: "HD", channels: 16, resolution: "5MP Supported", sata: "1SATA", base_cost: 13300 },
 
-  // --- IP NVRs ---
+  // --- HD DVRs (Hikvision) ---
+  { sku: "DVR-HIK-4CH-2MP", brand: "Hikvision", category: "recorder", technology: "HD", channels: 4, resolution: "2MP Supported", sata: "1SATA", base_cost: 3900 },
+  { sku: "DVR-HIK-8CH-2MP", brand: "Hikvision", category: "recorder", technology: "HD", channels: 8, resolution: "2MP Supported", sata: "1SATA", base_cost: 5100 },
+  { sku: "DVR-HIK-16CH-2MP", brand: "Hikvision", category: "recorder", technology: "HD", channels: 16, resolution: "2MP Supported", sata: "1SATA", base_cost: 8500 },
+  { sku: "DVR-HIK-4CH-5MP", brand: "Hikvision", category: "recorder", technology: "HD", channels: 4, resolution: "5MP Supported", sata: "1SATA", base_cost: 6000 },
+  { sku: "DVR-HIK-8CH-5MP", brand: "Hikvision", category: "recorder", technology: "HD", channels: 8, resolution: "5MP Supported", sata: "1SATA", base_cost: 8500 },
+  { sku: "DVR-HIK-16CH-5MP", brand: "Hikvision", category: "recorder", technology: "HD", channels: 16, resolution: "5MP Supported", sata: "1SATA", base_cost: 14000 },
+
+  // --- HD DVRs (Dahua) ---
+  { sku: "DVR-DAH-4CH-2MP", brand: "Dahua", category: "recorder", technology: "HD", channels: 4, resolution: "2MP Supported", sata: "1SATA", base_cost: 3800 },
+  { sku: "DVR-DAH-8CH-2MP", brand: "Dahua", category: "recorder", technology: "HD", channels: 8, resolution: "2MP Supported", sata: "1SATA", base_cost: 5000 },
+  { sku: "DVR-DAH-16CH-2MP", brand: "Dahua", category: "recorder", technology: "HD", channels: 16, resolution: "2MP Supported", sata: "1SATA", base_cost: 8300 },
+  { sku: "DVR-DAH-4CH-5MP", brand: "Dahua", category: "recorder", technology: "HD", channels: 4, resolution: "5MP Supported", sata: "1SATA", base_cost: 5800 },
+  { sku: "DVR-DAH-8CH-5MP", brand: "Dahua", category: "recorder", technology: "HD", channels: 8, resolution: "5MP Supported", sata: "1SATA", base_cost: 8200 },
+  { sku: "DVR-DAH-16CH-5MP", brand: "Dahua", category: "recorder", technology: "HD", channels: 16, resolution: "5MP Supported", sata: "1SATA", base_cost: 13500 },
+
+  // --- IP NVRs (CP Plus) ---
   { sku: "NVR-CPP-4CH", brand: "CP Plus", category: "recorder", technology: "IP", channels: 4, sata: "1SATA", base_cost: 4900 },
   { sku: "NVR-CPP-8CH", brand: "CP Plus", category: "recorder", technology: "IP", channels: 8, sata: "1SATA", base_cost: 5500 },
   { sku: "NVR-CPP-16CH", brand: "CP Plus", category: "recorder", technology: "IP", channels: 16, sata: "1SATA", base_cost: 8300 },
   { sku: "NVR-CPP-32CH", brand: "CP Plus", category: "recorder", technology: "IP", channels: 32, sata: "2SATA", base_cost: 15000 },
+
+  // --- IP NVRs (Hikvision) ---
+  { sku: "NVR-HIK-4CH", brand: "Hikvision", category: "recorder", technology: "IP", channels: 4, sata: "1SATA", base_cost: 5200 },
+  { sku: "NVR-HIK-8CH", brand: "Hikvision", category: "recorder", technology: "IP", channels: 8, sata: "1SATA", base_cost: 5900 },
+  { sku: "NVR-HIK-16CH", brand: "Hikvision", category: "recorder", technology: "IP", channels: 16, sata: "1SATA", base_cost: 8800 },
+
+  // --- IP NVRs (Dahua) ---
+  { sku: "NVR-DAH-4CH", brand: "Dahua", category: "recorder", technology: "IP", channels: 4, sata: "1SATA", base_cost: 5100 },
+  { sku: "NVR-DAH-8CH", brand: "Dahua", category: "recorder", technology: "IP", channels: 8, sata: "1SATA", base_cost: 5700 },
+  { sku: "NVR-DAH-16CH", brand: "Dahua", category: "recorder", technology: "IP", channels: 16, sata: "1SATA", base_cost: 8500 },
 
   // --- Storage ---
   { sku: "HDD-BUD-500GB", brand: "Budget Brand", category: "storage", capacity: "500GB", base_cost: 1800 },
@@ -149,6 +203,7 @@ const RAW_PRODUCTS = [
 ];
 
 async function seedDatabase() {
+  const { adminDb } = await import("../lib/firebase-admin");
   console.log("🔥 Starting Live Catalog Seed Process...");
   
   // 1. Save Margin Rules to Firestore
