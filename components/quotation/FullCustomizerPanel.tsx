@@ -477,7 +477,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
             <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isSelected ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#86868b]"}`}>
               {item.category === "cctv_camera" ? <Camera className="w-5 h-5" /> : <Server className="w-5 h-5" />}
             </div>
-            {isCustomOverride && isSelected && (
+            {isSelected && (
               <span className="text-[10px] font-medium text-[#1d1d1f] bg-[#f5f5f7] border border-[#d2d2d7] px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Lock className="w-2.5 h-2.5" /> <TranslatedText tKey="pinned" defaultText="Pinned" />
               </span>
