@@ -124,9 +124,10 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
     if (brandFilter) {
       const brandItems = filtered.filter(p => isBrandMatch(p, brandFilter));
       if (brandItems.length > 0) return brandItems.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+      return undefined; // Strictly enforce camera brand
     }
 
-    // Fallback if specific brand items are not found
+    // Fallback if no specific brand was requested
     return filtered.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
   };
 
