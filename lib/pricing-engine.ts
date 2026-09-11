@@ -703,6 +703,7 @@ function calculateAddons(params: {
   staticAddonIds.forEach(id => {
     const addon = addons.find(a => a.id === id) || products.find(p => p.id === id || p.sku === id);
     if (!addon) return;
+    if (addon.category === "connector" || addon.category === "camera_mount") return;
 
     let qty = 1;
     if ((addon as any).unit_multiplier === "camera_count") qty = selection.camera_count;

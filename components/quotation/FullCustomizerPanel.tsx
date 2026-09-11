@@ -503,7 +503,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
     );
   }
 
-  const renderAddonItem = (addon: Addon, isSelected: boolean, onToggle: () => void) => {
+  const renderAddonItem = (addon: Addon, isSelected: boolean, onToggle: () => void, isImplicit?: boolean) => {
     const isOutOfStock = addon.stock_quantity !== undefined && addon.stock_quantity <= 0;
     
     return (
@@ -521,14 +521,23 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
             ? "bg-[#f5f5f7] border-[#d2d2d7] opacity-60 grayscale"
             : "bg-white dark:bg-[#1d1d1f] border-[#d2d2d7] dark:border-[#424245] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:border-[#86868b]"
       }`}>
-        <div className="flex-1 min-w-0 mb-4">
-          <p className={`text-[15px] font-semibold leading-tight line-clamp-2 ${isSelected ? "text-[#0071e3]" : "text-[#1d1d1f] dark:text-[#f5f5f7]"}`}>
-            {addon.display_name}
-          </p>
-            <span className="text-[17px] font-semibold text-[#1d1d1f] dark:text-white mt-2 block">₹{(addon.unit_price || addon.price || 0).toLocaleString()}</span>
+        <div className="flex flex-col gap-4 flex-1">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <p className={`text-[15px] font-semibold leading-tight line-clamp-2 ${isSelected ? "text-[#0071e3]" : "text-[#1d1d1f] dark:text-[#f5f5f7]"}`}>
+                {addon.display_name}
+              </p>
+              <span className="text-[17px] font-semibold text-[#1d1d1f] dark:text-white mt-2 block">₹{(addon.unit_price || addon.price || 0).toLocaleString()}</span>
+            </div>
+            {isImplicit && (
+              <span className="shrink-0 text-[10px] font-medium text-[#1d1d1f] bg-[#f5f5f7] border border-[#d2d2d7] px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Lock className="w-2.5 h-2.5" /> Included
+              </span>
+            )}
+          </div>
         </div>
         <div className="mt-auto pt-4 border-t border-[#f5f5f7] dark:border-[#2d2d2f] flex flex-row items-center justify-end">
-          {isOutOfStock ? (
+          {isOutOfStock && !isImplicit ? (
              <span className="text-[11px] font-semibold text-red-500 tracking-wider">
                <TranslatedText tKey="out_of_stock" defaultText="Out of Stock" />
              </span>
@@ -536,10 +545,16 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
             <button 
               onClick={onToggle}
               className={`px-5 py-2 rounded-full text-xs font-medium transition-colors ${
-                isSelected ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-[#e8e8ed] dark:hover:bg-[#3d3d3f]"
+                isSelected 
+                  ? isImplicit 
+                    ? "bg-[#0071e3]/10 text-[#0071e3]" 
+                    : "bg-[#0071e3] text-white" 
+                  : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-[#e8e8ed] dark:hover:bg-[#3d3d3f]"
               }`}
             >
-              {isSelected ? <TranslatedText tKey="added" defaultText="Added" /> : <TranslatedText tKey="add" defaultText="Add" />}
+              {isSelected 
+                ? isImplicit ? "Auto-Included" : <TranslatedText tKey="added" defaultText="Added" /> 
+                : <TranslatedText tKey="add" defaultText="Add" />}
             </button>
           )}
         </div>
@@ -859,9 +874,34 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                 </div>
               </div>
             )}
-            {filteredAddons.map(addon => renderAddonItem(
-              addon, selection.selected_addons.includes(addon.id!), () => toggleAddon(addon.id!)
-            ))}
+            {filteredAddons.map(addon => {
+              let isImplicitlySelected = false;
+              const isIP = selection.technology === "IP";
+              const useRJ45 = isIP || selection.cable_type === "cat6";
+              
+              if (addon.category === "connector") {
+                const name = (addon.technical_name || addon.display_name || "").toLowerCase();
+                if (useRJ45 && name.includes("rj45")) isImplicitlySelected = true;
+                if (!useRJ45 && (name.includes("bnc") || name.includes("dc"))) isImplicitlySelected = true;
+              }
+              if (addon.category === "camera_mount") {
+                 if (selection.technology !== "Wireless" && (addon.technical_name || addon.display_name || "").toLowerCase().includes("junction box")) {
+                    isImplicitlySelected = true;
+                 }
+              }
+
+              const isSelected = isImplicitlySelected || selection.selected_addons.includes(addon.id!);
+
+              const onToggle = () => {
+                 if (isImplicitlySelected) {
+                    toast.info("This accessory is automatically included with your current hardware setup.");
+                    return;
+                 }
+                 toggleAddon(addon.id!);
+              };
+
+              return renderAddonItem(addon, isSelected, onToggle, isImplicitlySelected);
+            })}
           </>
         )}
         
