@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
 import { Search, Command, Bell, Settings, LogOut, Clock, ChevronRight } from "lucide-react";
 import { useOmniSearchStore } from "@/store/omni-search";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 interface AdminHeaderProps {
   userEmail: string;
@@ -80,6 +81,9 @@ export function AdminHeader({ userEmail, userRole }: AdminHeaderProps) {
           <Bell style={{ width: "15px", height: "15px" }} />
           <span className="dot"></span>
         </div>
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
 
         {/* Settings */}
         <Link href="/admin/settings" className="tb-btn">

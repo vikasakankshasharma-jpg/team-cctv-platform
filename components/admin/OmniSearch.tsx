@@ -80,7 +80,7 @@ export function OmniSearch() {
       label="Global Command Palette"
       className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4 sm:px-6 md:px-0"
     >
-      <div className="fixed inset-0 bg-zinc-900 animate-in fade-in duration-300" onClick={() => setOpen(false)} />
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setOpen(false)} />
       
       <div className="relative w-full max-w-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl shadow-md overflow-hidden animate-in zoom-in-95 duration-300">
         <div className="flex items-center border-b border-zinc-100 dark:border-zinc-800 px-6 py-5">

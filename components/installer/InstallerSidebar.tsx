@@ -43,12 +43,11 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
     <>
       {/* ── BRAND HEADER ── */}
       <div className="h-20 flex items-center px-5 border-b border-zinc-100 dark:border-zinc-800/60 shrink-0 gap-3 relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-indigo-500/10 dark:bg-indigo-500/20 blur-xl rounded-full pointer-events-none" />
-        <div className="w-9 h-9 rounded-[14px] bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 relative z-10 shrink-0">
+        <div className="w-9 h-9 rounded-[14px] bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20 relative z-10 shrink-0">
           <Wrench className="w-5 h-5 text-white" />
         </div>
         <div className="relative z-10 min-w-0 flex-1">
-          <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.3em] leading-none">TEAM CCTV</p>
+          <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] leading-none">TEAM CCTV</p>
           <p className="text-[13px] font-black text-zinc-900 dark:text-white leading-tight tracking-tight mt-0.5 truncate">Field Operations</p>
         </div>
         {/* Mobile close button */}
@@ -76,20 +75,20 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
               key={item.name}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-3 py-3 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all relative group ${
+              className={`flex items-center gap-3 px-3 py-3 rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all relative group ${
                 active
-                  ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-500"
-                  : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black"
+                  : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-900"
               }`}
             >
               {active && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-500 dark:bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
               )}
 
               <div className={`w-8 h-8 rounded-[12px] flex items-center justify-center shrink-0 transition-colors ${
                 active
-                  ? "bg-indigo-500/10 dark:bg-indigo-500/20"
-                  : "bg-zinc-50 dark:bg-zinc-900 group-hover:bg-zinc-100 dark:group-hover:bg-zinc-800"
+                  ? "bg-blue-600 text-white dark:bg-blue-500/20 dark:text-blue-400"
+                  : "bg-zinc-100 dark:bg-zinc-900 text-zinc-500 group-hover:bg-zinc-200/70 dark:group-hover:bg-zinc-800"
               }`}>
                 <Icon className="w-4 h-4" />
               </div>
@@ -97,7 +96,7 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
               <span className="truncate flex-1">{item.name}</span>
 
               {active && (
-                <ChevronRight className="w-3.5 h-3.5 text-indigo-600/60 dark:text-indigo-500/60 shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
               )}
             </Link>
           );
@@ -108,12 +107,12 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
       <div className="p-3 border-t border-zinc-100 dark:border-zinc-800/60 shrink-0">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 w-full text-left rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all text-zinc-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/5 group"
+          className="flex items-center gap-3 px-3 py-2.5 w-full text-left rounded-2xl font-bold text-[11px] uppercase tracking-wider transition-all text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/5 group"
         >
-          <div className="w-8 h-8 rounded-[12px] bg-zinc-50 dark:bg-zinc-900 group-hover:bg-red-50 dark:group-hover:bg-red-500/10 flex items-center justify-center shrink-0 transition-colors">
+          <div className="w-8 h-8 rounded-[12px] bg-zinc-100 dark:bg-zinc-900 group-hover:bg-red-100 dark:group-hover:bg-red-500/10 text-zinc-500 group-hover:text-red-600 flex items-center justify-center shrink-0 transition-colors">
             <LogOut className="w-4 h-4" />
           </div>
-          <span className="font-black">Secure Logout</span>
+          <span className="font-bold">Secure Logout</span>
         </button>
       </div>
     </>
@@ -124,7 +123,7 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
       {/* Mobile header bar with hamburger */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between px-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-[12px] bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+          <div className="w-8 h-8 rounded-[12px] bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20">
             <Wrench className="w-4 h-4 text-white" />
           </div>
           <span className="text-sm font-black text-zinc-900 dark:text-white tracking-tight">Field Ops</span>
@@ -135,7 +134,7 @@ export function InstallerSidebar({ installerName }: { installerName: string }) {
       </div>
 
       {/* Desktop sidebar — hidden on mobile */}
-      <div className="hidden md:flex w-64 bg-white dark:bg-zinc-950 border-r border-zinc-100 dark:border-zinc-800/60 flex-col h-screen sticky top-0 overflow-hidden shadow-sm dark:shadow-none transition-colors duration-500">
+      <div className="hidden md:flex w-64 bg-white dark:bg-zinc-950 border-r border-zinc-100 dark:border-zinc-800/60 flex-col h-screen sticky top-0 overflow-hidden shadow-xs dark:shadow-none transition-colors duration-300">
         {sidebarContent}
       </div>
 

@@ -76,7 +76,7 @@ function NavTooltip({ label, children }: { label: string; children: React.ReactN
   return (
     <div className="relative group/tooltip">
       {children}
-      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 bg-[#212B3F] text-[#E8EDF5] text-xs font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-md border border-[#263550] opacity-0 group-hover/tooltip:opacity-100 scale-95 group-hover/tooltip:scale-100 transition-all duration-200 origin-left">
+      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 bg-[var(--surface)] text-[var(--text)] text-xs font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg border border-[var(--border2)] opacity-0 group-hover/tooltip:opacity-100 scale-95 group-hover/tooltip:scale-100 transition-all duration-200 origin-left">
         {label}
       </div>
     </div>
@@ -215,14 +215,14 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile header bar with hamburger */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4" style={{ background: '#0A0E1A', borderBottom: '1px solid #1E2D45' }}>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(212,149,58,0.12)' }}>
-            <ShieldCheck className="w-4 h-4" style={{ color: '#D4953A' }} />
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--gold-dim)' }}>
+            <ShieldCheck className="w-4 h-4" style={{ color: 'var(--gold)' }} />
           </div>
-          <span className="text-sm font-black" style={{ color: '#E8EDF5' }}>Admin</span>
+          <span className="text-sm font-black" style={{ color: 'var(--text)' }}>Admin</span>
         </div>
-        <button onClick={() => setMobileOpen(true)} className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#111827', color: '#8A98B4' }}>
+        <button onClick={() => setMobileOpen(true)} className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--surface2)', color: 'var(--muted)' }}>
           <Menu className="w-5 h-5" />
         </button>
       </div>
@@ -235,10 +235,10 @@ export function Sidebar() {
       {/* Mobile drawer overlay */}
       {mobileOpen && (
         <>
-          <div className="md:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="md:hidden fixed inset-y-0 left-0 z-50 w-72 shadow-2xl animate-in slide-in-from-left duration-200" style={{ background: '#0A0E1A' }}>
+          <div className="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="md:hidden fixed inset-y-0 left-0 z-50 w-72 shadow-2xl animate-in slide-in-from-left duration-200" style={{ background: 'var(--surface)' }}>
             <div className="absolute top-4 right-4 z-10">
-              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#111827', color: '#8A98B4' }}>
+              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--surface2)', color: 'var(--muted)' }}>
                 <X className="w-4 h-4" />
               </button>
             </div>
