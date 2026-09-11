@@ -617,36 +617,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           </div>
         </div>
 
-        {selection.technology === "HD" && (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Cable className="w-4 h-4 text-[#86868b]" />
-              <span className="text-[12px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">HD Cable Type</span>
-            </div>
-            <div className="flex bg-[#e8e8ed] dark:bg-[#1d1d1f] rounded-lg p-1">
-              <button
-                onClick={() => updateSelection({ cable_type: "coaxial" })}
-                className={`px-3 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  selection.cable_type !== "cat6"
-                    ? "bg-white dark:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white shadow-sm"
-                    : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"
-                }`}
-              >
-                3+1 Coaxial
-              </button>
-              <button
-                onClick={() => updateSelection({ cable_type: "cat6" })}
-                className={`px-3 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                  selection.cable_type === "cat6"
-                    ? "bg-white dark:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white shadow-sm"
-                    : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"
-                }`}
-              >
-                CAT6
-              </button>
-            </div>
-          </div>
-        )}
+
       </div>
 
       {renderTabs()}
@@ -857,6 +828,37 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                 >+</button>
               </div>
             </div>
+
+            {selection.technology === "HD" && (
+              <div className="col-span-full mb-4 p-5 bg-white dark:bg-[#1d1d1f] rounded-[24px] border border-[#d2d2d7] dark:border-[#424245] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white flex items-center gap-2">HD Cable Type</h4>
+                  <p className="text-[13px] text-[#86868b] mt-1">Select the type of cabling you want to use for this HD setup.</p>
+                </div>
+                <div className="flex items-center gap-1 bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1 rounded-lg shrink-0">
+                  <button
+                    onClick={() => updateSelection({ cable_type: "coaxial" })}
+                    className={`px-4 py-2 rounded-md text-[13px] font-semibold transition-colors ${
+                      selection.cable_type !== "cat6"
+                        ? "bg-white dark:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white shadow-sm"
+                        : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"
+                    }`}
+                  >
+                    3+1 Coaxial
+                  </button>
+                  <button
+                    onClick={() => updateSelection({ cable_type: "cat6" })}
+                    className={`px-4 py-2 rounded-md text-[13px] font-semibold transition-colors ${
+                      selection.cable_type === "cat6"
+                        ? "bg-white dark:bg-[#3d3d3f] text-[#1d1d1f] dark:text-white shadow-sm"
+                        : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"
+                    }`}
+                  >
+                    CAT6
+                  </button>
+                </div>
+              </div>
+            )}
             {filteredAddons.map(addon => renderAddonItem(
               addon, selection.selected_addons.includes(addon.id!), () => toggleAddon(addon.id!)
             ))}
