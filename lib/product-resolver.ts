@@ -174,8 +174,10 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
   if (brandFilter) {
     const brandRecs = recs.filter(p => isBrandMatch(p, brandFilter));
     if (brandRecs.length > 0) return brandRecs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+    return undefined; // Strictly enforce recorder brand
   }
 
+  // Fallback if no specific brand was requested
   return recs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
 }
 
