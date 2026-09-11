@@ -111,10 +111,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
   // Initial Setup & State Initialization (Unified to prevent render cascades)
   useEffect(() => {
-    const initialCamCount = parseInt(lead.wizard_answers?.["q_cam_count"] as string) || 4;
-    const initialDays = parseInt(lead.wizard_answers?.["q_storage"] as string) || 15;
+    const initialCamCount = parseInt(lead.wizard_answers?.["camera_count"] as string) || parseInt(lead.wizard_answers?.["q_cam_count"] as string) || 4;
+    const initialDays = parseInt(lead.wizard_answers?.["recording_days"] as string) || parseInt(lead.wizard_answers?.["q_storage"] as string) || 15;
     
-    const wantsAmcRaw = lead.wizard_answers?.["q_amc"];
+    const wantsAmcRaw = lead.wizard_answers?.["wants_amc"] || lead.wizard_answers?.["q_amc"];
     const wantsAmc = typeof wantsAmcRaw === 'string' ? wantsAmcRaw === 'true' : !!wantsAmcRaw;
 
     const reqFeaturesRaw = lead.wizard_answers?.["q_special_features"] || lead.wizard_answers?.["q_features"];

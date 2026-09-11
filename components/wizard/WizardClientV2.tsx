@@ -333,7 +333,7 @@ export function WizardClientV2() {
         email: req.customer_email || undefined,
         wizard_answers: { ...req, pincode, city },
         property_type: req.property_type || "home",
-        technology_choice: req.technology_choice || "HD",
+        technology_choice: req.technology_preference || "HD",
         cabling_done: req.cabling_done || false,
         camera_count: req.camera_count,
         detected_city: city,
