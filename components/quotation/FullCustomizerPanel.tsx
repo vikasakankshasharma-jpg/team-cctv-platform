@@ -556,7 +556,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
             </div>
             {isImplicit && (
               <span className="shrink-0 text-[10px] font-medium text-[#1d1d1f] bg-[#f5f5f7] border border-[#d2d2d7] px-2 py-0.5 rounded-full flex items-center gap-1">
-                <Lock className="w-2.5 h-2.5" /> Included
+                <Lock className="w-2.5 h-2.5" /> <TranslatedText tKey="pinned" defaultText="Pinned" />
               </span>
             )}
           </div>
@@ -578,7 +578,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
               }`}
             >
               {isSelected 
-                ? isImplicit ? "Auto-Included" : <TranslatedText tKey="added" defaultText="Added" /> 
+                ? isImplicit ? <TranslatedText tKey="pinned" defaultText="Pinned" /> : <TranslatedText tKey="added" defaultText="Added" /> 
                 : <TranslatedText tKey="add" defaultText="Add" />}
             </button>
           )}
