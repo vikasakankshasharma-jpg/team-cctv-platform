@@ -16,7 +16,8 @@ interface QuoteComparisonProps {
 
 export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfiguration }: QuoteComparisonProps) {
   const lockedTech = requirement.installation_type === "addon" && requirement.existing_technology ? requirement.existing_technology as "HD" | "IP" : null;
-  const [activeTech, setActiveTech] = useState<"HD" | "IP">(lockedTech || "HD");
+  const defaultTech = (requirement.technology_choice || requirement.technology_preference || "HD") as "HD" | "IP";
+  const [activeTech, setActiveTech] = useState<"HD" | "IP">(lockedTech || defaultTech);
   const [activeBrand, setActiveBrand] = useState<string>("All");
   
   // State for side-by-side comparison mode
