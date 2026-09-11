@@ -364,7 +364,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
   }, [addons, selection.technology, selection.camera_count, search, products]);
 
   const filteredAddons = useMemo(() => {
-    let list = [...products, ...addons].filter(a => !["cctv_camera", "recorder", "storage", "power", "power_device"].includes(a.category || "") && a.is_active && (a.unit_price || (a as any).price || 0) > 0);
+    let list = [...products, ...addons].filter(a => !["cctv_camera", "recorder", "storage", "power", "power_device", "network"].includes(a.category || "") && a.is_active && (a.unit_price || (a as any).price || 0) > 0);
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()));
     return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
   }, [addons, search, products]);
