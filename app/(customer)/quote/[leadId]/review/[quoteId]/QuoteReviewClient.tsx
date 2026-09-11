@@ -148,7 +148,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     try {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        toast.error("Payment SDK failed to load. Please check your internet connection.");
+        toast.error("Payment SDK failed to load. Please check your internet connection or disable any active ad-blockers/shields.");
         return;
       }
 
