@@ -155,7 +155,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     }
 
     // 3c. Connectors Cost
-    const connectors = calculateConnectors(selection, settings, effectiveTech);
+    const connectors = calculateConnectors(selection, settings, effectiveTech, products, addons);
     lineItems.push(...connectors.items);
     baseHardwareCost += connectors.totalRetail;
     totalPurchaseCost += connectors.totalCost;
@@ -597,7 +597,9 @@ function calculateCabling(
 function calculateConnectors(
   selection: ConfiguratorSelection,
   settings: AppSettings,
-  tech: string
+  tech: string,
+  products: Product[],
+  addons: Addon[]
 ) {
   const items: QuoteLineItem[] = [];
   
@@ -622,46 +624,88 @@ function calculateConnectors(
   let totalRetail = 0;
   let totalCost = 0;
 
-  const useRJ45 = tech === "IP" || selection.cable_type === "cat6";
-  if (useRJ45) {
-    const rate = settings.connector_rj45_cost || 25;
+  // Check if user explicitly selected a connector or camera mount
+  const userConnectorId = (selection.selected_addons || []).find(id => {
+    const a = addons.find(x => x.id === id) || products.find(x => x.id === id || x.sku === id);
+    return a && a.category === "connector";
+  });
+  const userConnector = userConnectorId ? (addons.find(x => x.id === userConnectorId) || products.find(x => x.id === userConnectorId || x.sku === userConnectorId)) : null;
+  
+  const userMountId = (selection.selected_addons || []).find(id => {
+    const a = addons.find(x => x.id === id) || products.find(x => x.id === id || x.sku === id);
+    return a && a.category === "camera_mount";
+  });
+  const userMount = userMountId ? (addons.find(x => x.id === userMountId) || products.find(x => x.id === userMountId || x.sku === userMountId)) : null;
+
+  if (userConnector) {
+    const rate = userConnector.unit_price || (userConnector as any).price || 0;
     const lineTotal = rate * wiredCameraCount;
     items.push({
-      product_id: "connector_rj45",
-      display_name: "RJ45 Connectors (Camera & Switch/Balun ends)",
+      product_id: userConnector.id || (userConnector as any).sku,
+      display_name: userConnector.display_name,
+      brand: userConnector.brand || "",
       qty: wiredCameraCount,
       unit_price: rate,
       line_total: lineTotal
     });
     totalRetail += lineTotal;
-    totalCost += Math.round(lineTotal * 0.5);
+    totalCost += (userConnector.base_cost || 0) * wiredCameraCount;
   } else {
-    const rate = settings.connector_bnc_dc_cost || 70;
-    const lineTotal = rate * wiredCameraCount;
-    items.push({
-      product_id: "connector_bnc_dc",
-      display_name: "BNC & DC Connector Set",
-      qty: wiredCameraCount,
-      unit_price: rate,
-      line_total: lineTotal
-    });
-    totalRetail += lineTotal;
-    totalCost += Math.round(lineTotal * 0.5);
+    const useRJ45 = tech === "IP" || selection.cable_type === "cat6";
+    if (useRJ45) {
+      const rate = settings.connector_rj45_cost || 25;
+      const lineTotal = rate * wiredCameraCount;
+      items.push({
+        product_id: "connector_rj45",
+        display_name: "RJ45 Connectors (Camera & Switch/Balun ends)",
+        qty: wiredCameraCount,
+        unit_price: rate,
+        line_total: lineTotal
+      });
+      totalRetail += lineTotal;
+      totalCost += Math.round(lineTotal * 0.5);
+    } else {
+      const rate = settings.connector_bnc_dc_cost || 70;
+      const lineTotal = rate * wiredCameraCount;
+      items.push({
+        product_id: "connector_bnc_dc",
+        display_name: "BNC & DC Connector Set",
+        qty: wiredCameraCount,
+        unit_price: rate,
+        line_total: lineTotal
+      });
+      totalRetail += lineTotal;
+      totalCost += Math.round(lineTotal * 0.5);
+    }
   }
 
-  // Weatherproof PVC Camera Junction Boxes for all wired cameras (1 per camera)
-  const junctionRate = 35;
-  const junctionTotal = junctionRate * wiredCameraCount;
-  items.push({
-    product_id: "acc_junction_box",
-    display_name: "PVC Weatherproof Camera Junction Box",
-    brand: "TEAM CCTV",
-    qty: wiredCameraCount,
-    unit_price: junctionRate,
-    line_total: junctionTotal
-  });
-  totalRetail += junctionTotal;
-  totalCost += 20 * wiredCameraCount;
+  if (userMount) {
+    const rate = userMount.unit_price || (userMount as any).price || 0;
+    const lineTotal = rate * wiredCameraCount;
+    items.push({
+      product_id: userMount.id || (userMount as any).sku,
+      display_name: userMount.display_name,
+      brand: userMount.brand || "",
+      qty: wiredCameraCount,
+      unit_price: rate,
+      line_total: lineTotal
+    });
+    totalRetail += lineTotal;
+    totalCost += (userMount.base_cost || 0) * wiredCameraCount;
+  } else {
+    const junctionRate = 35;
+    const junctionTotal = junctionRate * wiredCameraCount;
+    items.push({
+      product_id: "acc_junction_box",
+      display_name: "PVC Weatherproof Camera Junction Box",
+      brand: "TEAM CCTV",
+      qty: wiredCameraCount,
+      unit_price: junctionRate,
+      line_total: junctionTotal
+    });
+    totalRetail += junctionTotal;
+    totalCost += 20 * wiredCameraCount;
+  }
 
   return { items, totalRetail, totalCost };
 }

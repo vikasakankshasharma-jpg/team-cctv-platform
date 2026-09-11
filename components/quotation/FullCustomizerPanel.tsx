@@ -365,9 +365,34 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
 
   const filteredAddons = useMemo(() => {
     let list = [...products, ...addons].filter(a => !["cctv_camera", "recorder", "storage", "power", "power_device", "network"].includes(a.category || "") && a.is_active && (a.unit_price || (a as any).price || 0) > 0);
+    
+    // Hide unrelated items based on technology and cable type
+    const isIP = selection.technology === "IP";
+    const useRJ45 = isIP || selection.cable_type === "cat6";
+
+    list = list.filter(a => {
+      // If it's a connector, only show ones that match the current cable type
+      if (a.category === "connector") {
+        const name = (a.technical_name || a.display_name || "").toLowerCase();
+        const isRJ45Connector = name.includes("rj45");
+        const isBNC_DC = name.includes("bnc") || name.includes("dc");
+        if (useRJ45 && isBNC_DC) return false;
+        if (!useRJ45 && isRJ45Connector) return false;
+      }
+      
+      // For general addons, filter by technology if defined
+      const techFlags = (a as any).technologies || ((a as any).technology ? [(a as any).technology] : []);
+      if (techFlags.length > 0 && !techFlags.includes("Common") && !techFlags.includes("both" as any)) {
+         if (!techFlags.includes(selection.technology as any)) {
+            return false;
+         }
+      }
+      return true;
+    });
+
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()));
     return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
-  }, [addons, search, products]);
+  }, [addons, search, products, selection.technology, selection.cable_type]);
 
   // Tab bar scroll tracking
   const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -879,12 +904,21 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
               const isIP = selection.technology === "IP";
               const useRJ45 = isIP || selection.cable_type === "cat6";
               
-              if (addon.category === "connector") {
+              const hasExplicitConnector = selection.selected_addons.some(id => {
+                 const x = [...products, ...addons].find(p => p.id === id);
+                 return x && x.category === "connector";
+              });
+              const hasExplicitMount = selection.selected_addons.some(id => {
+                 const x = [...products, ...addons].find(p => p.id === id);
+                 return x && x.category === "camera_mount";
+              });
+
+              if (addon.category === "connector" && !hasExplicitConnector) {
                 const name = (addon.technical_name || addon.display_name || "").toLowerCase();
                 if (useRJ45 && name.includes("rj45")) isImplicitlySelected = true;
                 if (!useRJ45 && (name.includes("bnc") || name.includes("dc"))) isImplicitlySelected = true;
               }
-              if (addon.category === "camera_mount") {
+              if (addon.category === "camera_mount" && !hasExplicitMount) {
                  if (selection.technology !== "Wireless" && (addon.technical_name || addon.display_name || "").toLowerCase().includes("junction box")) {
                     isImplicitlySelected = true;
                  }
