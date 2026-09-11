@@ -842,17 +842,17 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           <>
             <div className="col-span-full mb-2 p-5 bg-white dark:bg-[#1d1d1f] rounded-[24px] border border-[#d2d2d7] dark:border-[#424245] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white">Expected Cable Length</h4>
-                <p className="text-[13px] text-[#86868b] mt-1">Adjust the estimated cable length per camera based on your site visit (default is 20m/camera).</p>
+                <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white">Total Expected Cable Length</h4>
+                <p className="text-[13px] text-[#86868b] mt-1">Adjust the total estimated cable length for all cameras combined (default is {20 * (selection.camera_count || 1)}m total).</p>
               </div>
               <div className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1 rounded-full shrink-0">
                 <button 
-                  onClick={() => updateSelection({ cable_length_meters: Math.max(5, (selection.cable_length_meters || 20) - 5) })}
+                  onClick={() => updateSelection({ total_cable_length_meters: Math.max(10, (selection.total_cable_length_meters || (selection.cable_length_meters ? selection.cable_length_meters * (selection.camera_count || 1) : 20 * (selection.camera_count || 1))) - 10) })}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-[#3d3d3f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
                 >-</button>
-                <span className="text-[14px] font-semibold w-12 text-center">{selection.cable_length_meters || 20}m</span>
+                <span className="text-[14px] font-semibold w-12 text-center">{selection.total_cable_length_meters || (selection.cable_length_meters ? selection.cable_length_meters * (selection.camera_count || 1) : 20 * (selection.camera_count || 1))}m</span>
                 <button 
-                  onClick={() => updateSelection({ cable_length_meters: (selection.cable_length_meters || 20) + 5 })}
+                  onClick={() => updateSelection({ total_cable_length_meters: (selection.total_cable_length_meters || (selection.cable_length_meters ? selection.cable_length_meters * (selection.camera_count || 1) : 20 * (selection.camera_count || 1))) + 10 })}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-[#3d3d3f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
                 >+</button>
               </div>

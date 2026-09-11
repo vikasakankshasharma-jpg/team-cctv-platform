@@ -382,7 +382,8 @@ export interface ConfiguratorSelection {
   focus_point?: "price" | "quality";
   max_budget?: number | null;
   property_type?: "home" | "shop" | "office" | "factory" | "warehouse" | "bungalow" | "residential" | "other"; // Added for smart recommendations
-  cable_length_meters?: number;
+  cable_length_meters?: number; // legacy (per camera)
+  total_cable_length_meters?: number;
   cable_type?: "cat6" | "coaxial";
   wiring_type?: "open" | "conduit";
   lead_pincode?: string;

@@ -121,6 +121,7 @@ export const GenerateQuoteSchema = z.object({
   requested_features: z.array(z.string()).nullable().optional(),
   max_budget: z.number().nullable().optional(),
   cable_length_meters: z.number().nullable().optional(),
+  total_cable_length_meters: z.number().nullable().optional(),
   wiring_type: z.enum(["open", "conduit"]).nullable().optional(),
   recording_mode: z.enum(["continuous", "motion", "smart"]).nullable().optional(),
   indoor_camera_count: z.number().int().nonnegative().nullable().optional(),

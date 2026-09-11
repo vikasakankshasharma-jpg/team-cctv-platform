@@ -537,10 +537,18 @@ function calculateCabling(
     return { items, totalRetail: 0, totalCost: 0 };
   }
 
-  // Use explicitly requested meters per camera, or default to admin configured / 20m per wired camera
+  // Use explicitly requested total meters, or calculate from legacy per-camera meters, or default to admin configured / 20m per wired camera
   const defaultMeters = settings.default_cable_length_per_camera || 20;
-  const metersPerCamera = meters || selection.cable_length_meters || defaultMeters;
-  const totalMeters = metersPerCamera * wiredCameraCount;
+  let totalMeters = 0;
+  if (selection.total_cable_length_meters) {
+     totalMeters = selection.total_cable_length_meters;
+  } else if (meters) {
+     totalMeters = meters * wiredCameraCount;
+  } else if (selection.cable_length_meters) {
+     totalMeters = selection.cable_length_meters * wiredCameraCount;
+  } else {
+     totalMeters = defaultMeters * wiredCameraCount;
+  }
 
   // Base Cable Cost
   let baseCostPerMeter = 12; // fallback
@@ -776,9 +784,16 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
   const laborTotal = laborRate * qty;
 
   const defaultMeters = settings.default_cable_length_per_camera || 20;
-  const cableMeters = selection.cable_length_meters || defaultMeters; // Use explicitly selected meters or default
+  let totalMeters = 0;
+  if (selection.total_cable_length_meters) {
+     totalMeters = selection.total_cable_length_meters;
+  } else if (selection.cable_length_meters) {
+     totalMeters = selection.cable_length_meters * qty;
+  } else {
+     totalMeters = defaultMeters * qty;
+  }
   const cableRate = tech === "IP" ? (settings.cable_copper_coated_ip || 12) : (settings.cable_copper_coated_hd || 8);
-  const cableTotal = cableRate * (cableMeters * qty);
+  const cableTotal = cableRate * totalMeters;
 
   let amcTotal = 0;
   const amcAddonId = (settings as any).amc_addon_id || "amc_1yr";
