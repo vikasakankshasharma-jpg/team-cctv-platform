@@ -64,6 +64,8 @@ export default async function QuoteReviewPage({
         gstPercent: 18,
         advancePercent: 30,
         companyGstin: "08AABCT1234A1ZS",
+        version: 1,
+        isRevision: false,
         notes: "Mock quotation for testing.",
       };
     } else {
@@ -141,8 +143,11 @@ export default async function QuoteReviewPage({
           siteVisitDate: lead?.site_visit_date || "",
           lineItems,
           gstPercent: quote?.gst_rate || 18,
-          advancePercent: 30, 
+          advancePercent: quote?.advance_percent || 30, 
           companyGstin: "08AABCT1234A1ZS",
+          version: quote?.version || 1,
+          isRevision: !!quote?.is_revision,
+          revisionNotes: quote?.revision_notes,
           notes: "This quotation is valid for 14 days from the date of issue. Prices are subject to change after expiry.",
         };
       } else {

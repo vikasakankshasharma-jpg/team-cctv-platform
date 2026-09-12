@@ -117,7 +117,7 @@ const SECTIONS: SpecSection[] = [
         label: "Target Backup",
         key: "storage_days",
         getValue: ({ selection }) => selection.recording_days,
-        formatValue: (v) => `${v} Days`
+        formatValue: (v) => v === 0 ? "None" : `${v} Days`
       },
       {
         label: "Hard Drive Included",

@@ -107,7 +107,7 @@ export const GenerateQuoteSchema = z.object({
     technology: z.string().optional()
   })).optional(),
   picture_quality: z.enum(["good", "very_clear", "crystal_clear"]),
-  recording_days: z.number().int().min(1).max(365),
+  recording_days: z.number().int().min(0).max(365),
   selected_addons: z.array(z.string()).default([]),
   selected_camera_option: z.number().int().optional(),
   selected_camera_id: z.string().optional(),

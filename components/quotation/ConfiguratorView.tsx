@@ -111,10 +111,16 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
   // Initial Setup & State Initialization (Unified to prevent render cascades)
   useEffect(() => {
-    const initialCamCount = parseInt(lead.wizard_answers?.["camera_count"] as string) || parseInt(lead.wizard_answers?.["q_cam_count"] as string) || 4;
-    const initialDays = parseInt(lead.wizard_answers?.["recording_days"] as string) || parseInt(lead.wizard_answers?.["q_storage"] as string) || 15;
+    const getNum = (v1: any, v2: any, fallback: number) => {
+      if (v1 !== undefined && v1 !== null && v1 !== "") { const n = parseInt(String(v1), 10); if (!isNaN(n)) return n; }
+      if (v2 !== undefined && v2 !== null && v2 !== "") { const n = parseInt(String(v2), 10); if (!isNaN(n)) return n; }
+      return fallback;
+    };
     
-    const wantsAmcRaw = lead.wizard_answers?.["wants_amc"] || lead.wizard_answers?.["q_amc"];
+    const initialCamCount = getNum(lead.wizard_answers?.["camera_count"], lead.wizard_answers?.["q_cam_count"], 4);
+    const initialDays = getNum(lead.wizard_answers?.["recording_days"], lead.wizard_answers?.["q_storage"], 15);
+    
+    const wantsAmcRaw = lead.wizard_answers?.["wants_amc"] ?? lead.wizard_answers?.["q_amc"];
     const wantsAmc = typeof wantsAmcRaw === 'string' ? wantsAmcRaw === 'true' : !!wantsAmcRaw;
 
     const reqFeaturesRaw = lead.wizard_answers?.["q_special_features"] || lead.wizard_answers?.["q_features"];

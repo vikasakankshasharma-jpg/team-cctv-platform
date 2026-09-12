@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { RevisionBanner } from "@/components/quote/RevisionBanner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,9 @@ export interface QuoteData {
   id: string;
   leadId: string;
   quoteNumber: string;
+  version?: number;
+  isRevision?: boolean;
+  revisionNotes?: string;
   status: "pending" | "accepted" | "expired" | "rejected";
   issuedAt: string;
   validUntil: string;
@@ -281,6 +285,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
         <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
           
+          <RevisionBanner 
+            version={quote.version || 1} 
+            isRevision={quote.isRevision} 
+            revisionNotes={quote.revisionNotes} 
+          />
+
           {/* Main Quote Document */}
           <motion.div variants={fadeIn} className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 overflow-hidden">
             

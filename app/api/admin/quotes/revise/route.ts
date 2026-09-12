@@ -7,7 +7,7 @@ import { GenerateQuoteSchema } from "@/lib/validators";
 import { Product, Addon, AppSettings, Lead } from "@/types";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { ApiResponse } from "@/lib/api-response";
-// import { requireAdminServer } from "@/lib/auth-server";
+import { requireAdminApi } from "@/lib/auth-server";
 
 /**
  * ADMIN QUOTE REVISION API
@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const session = await requireAdminApi();
+
     const body = await request.json();
     const { lead_id, parent_quote_id, revision_notes, status } = body;
 
@@ -129,7 +131,7 @@ export async function POST(request: NextRequest) {
     const { ip, ua } = getRequestMetadata(request);
     await createAuditLog({
       action: "QUOTE_REVISE",
-      actor_id: "admin_or_installer",
+      actor_id: session.user?.uid || "unknown",
       resource_id: quoteRef.id,
       resource_type: "quote",
       ip_address: ip,
@@ -150,6 +152,9 @@ export async function POST(request: NextRequest) {
     }, 201);
 
   } catch (error: any) {
+    if (error.message === "Unauthorized") {
+      return ApiResponse.unauthorized();
+    }
     console.error("Critical error in quote revision:", error);
     return ApiResponse.error("Internal server error", "INTERNAL_ERROR", 500, error.message);
   }

@@ -38,8 +38,9 @@ test.describe('Quote Flow - Golden Path', () => {
       }
     });
 
-    expect(saveRes.ok()).toBeTruthy();
     const saveData = await saveRes.json();
+    console.log("SAVE RESPONSE:", saveData);
+    expect(saveRes.ok()).toBeTruthy();
     expect(saveData.success).toBeTruthy();
     expect(saveData.quoteId).toMatch(/^QT-202/);
 
