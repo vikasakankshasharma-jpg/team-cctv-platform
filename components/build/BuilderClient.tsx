@@ -173,8 +173,14 @@ export default function BuilderClient() {
       <div className="max-w-3xl mx-auto py-12 text-center">
         <h2 className="text-3xl font-bold mb-4">System Built & Quote Ready!</h2>
         <p className="mb-6">Your Quote ID: {savedQuoteId}</p>
-        <button className="bg-blue-600 text-white px-6 py-3 rounded-full mr-4">Download PDF</button>
-        <button className="bg-green-600 text-white px-6 py-3 rounded-full">Send on WhatsApp</button>
+        <a 
+          href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "917357612865"}?text=${encodeURIComponent(`Hi TEAM CCTV, please send me the official PDF for my Quote ID: ${savedQuoteId}`)}`}
+          target="_blank"
+          rel="noreferrer"
+          className="bg-emerald-600 text-white px-6 py-3 rounded-full shadow-sm hover:bg-emerald-700 transition-colors inline-block"
+        >
+          Get PDF on WhatsApp
+        </a>
       </div>
     );
   }

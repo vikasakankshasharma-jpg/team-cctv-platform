@@ -1048,9 +1048,9 @@ export function ProBuilderClient() {
               <Button 
                 onClick={initiateCheckout} 
                 disabled={isGenerating || items.length === 0} 
-                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-lg font-bold shadow-xl shadow-blue-600/20"
+                className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-lg font-bold shadow-xl shadow-emerald-600/20"
               >
-                Review & Download PDF
+                Review & Get PDF on WhatsApp
               </Button>
             )}
           </div>

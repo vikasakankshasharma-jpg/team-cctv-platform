@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
 import { InventoryEngine } from "@/lib/inventory-engine";
+import { sendCustomerWhatsApp, sendAdminNotification } from "@/lib/notification-service";
 
 export async function POST(req: Request) {
   try {
@@ -187,10 +188,25 @@ export async function POST(req: Request) {
           });
         }
 
-        return { status: "processed", jobId };
+        return { status: "processed", jobId, customerMobile: quoteData.customer_mobile, quoteId };
       });
 
       console.log(`[Razorpay Webhook]: Quote ${quoteId} successfully verified & transitioned.`, txResult);
+
+      if (txResult.status === "processed") {
+        try {
+          const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://cctvquotation.com"}/track/${txResult.quoteId}`;
+          const adminMessage = `💰 New Payment Received!\nQuote ID: ${txResult.quoteId}\nJob ID: ${txResult.jobId}\nCustomer Mobile: ${txResult.customerMobile || "N/A"}\nAmount: ₹${(paymentEntity.amount / 100).toFixed(2)}`;
+          await sendAdminNotification(adminMessage);
+
+          if (txResult.customerMobile) {
+            const customerMessage = `🎉 Payment Received!\n\nYour booking is confirmed.\nQuote ID: ${txResult.quoteId}\nJob ID: ${txResult.jobId}\n\nTrack your booking in real-time here:\n${trackingUrl}\n\nThank you for choosing TEAM CCTV!`;
+            await sendCustomerWhatsApp(txResult.customerMobile, customerMessage);
+          }
+        } catch (notifErr) {
+          console.error("[Razorpay Webhook]: Failed to send notifications", notifErr);
+        }
+      }
     }
 
     return NextResponse.json({ success: true });

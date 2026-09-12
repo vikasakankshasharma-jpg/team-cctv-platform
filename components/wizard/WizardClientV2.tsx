@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { CCTVRequirement } from "@/types";
 import { QuoteComparison } from "@/components/QuoteComparison";
 import { CameraCustomizer } from "@/components/CameraCustomizer";
@@ -1001,10 +1002,10 @@ export function WizardClientV2() {
       <h1 className="sr-only">CCTV Quotation Wizard</h1>
       <div className="bg-white rounded-2xl shadow-sm border p-8">
         <div className="flex justify-between items-center mb-4">
-          <a href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1">
+          <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             Exit
-          </a>
+          </Link>
           <span className="text-xs text-gray-400 font-medium">CCTVQuotation.com</span>
         </div>
         {step > 0 && (

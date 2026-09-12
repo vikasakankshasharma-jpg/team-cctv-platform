@@ -36,13 +36,17 @@ export function ReportFilters({ initialFilters, onFilterChange, onExport, showBr
     technicianId: initialFilters?.technicianId || ""
   });
 
-  // Sync state if URL changes externally
-  useEffect(() => {
-    if (initialFilters) {
+  const [prevInitialFilters, setPrevInitialFilters] = React.useState(initialFilters);
+  
+  // Sync state if URL changes externally (derived state pattern)
+  if (initialFilters && initialFilters !== prevInitialFilters) {
+    const hasChanged = JSON.stringify(initialFilters) !== JSON.stringify(prevInitialFilters);
+    setPrevInitialFilters(initialFilters);
+    
+    if (hasChanged) {
       setFilters(prev => ({ ...prev, ...initialFilters }));
     }
-  }, [initialFilters]);
-
+  }
   const handleApply = () => {
     onFilterChange(filters);
   };

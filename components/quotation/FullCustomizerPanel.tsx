@@ -96,7 +96,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
     setTimeout(() => {
       handleTabChange(nextTab);
     }, 800);
-  }, []);
+  }, [handleTabChange]);
 
   const filterCategories = useMemo(() => {
     if (activeTab === "cameras") {
@@ -279,7 +279,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
       list = list.filter(p => p.display_name.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q));
     }
     return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
-  }, [products, selection.technology, selection.brand_preference, selection.resolution_preference, selection.requested_features, search, activeFilters, isMixedCameraMode, activeMixedType, selection.mixed_camera_requirements]);
+  }, [products, selection.technology, selection.requested_features, search, activeFilters, isMixedCameraMode, activeMixedType, selection.mixed_camera_requirements, selection.camera_count]);
 
   const filteredRecorders = useMemo(() => {
     let list = products.filter(p => p.category === "recorder" && p.is_active && (p.unit_price || 0) > 0);

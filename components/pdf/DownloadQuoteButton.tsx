@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, MessageSquare } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Lead, PricingResult, AppSettings } from '@/types';
 
@@ -10,9 +10,10 @@ interface DownloadQuoteButtonProps {
   quote: PricingResult;
   settings: AppSettings | null;
   className?: string;
+  forceWhatsAppFlow?: boolean;
 }
 
-export function DownloadQuoteButton({ lead, quote, settings, className = "" }: DownloadQuoteButtonProps) {
+export function DownloadQuoteButton({ lead, quote, settings, className = "", forceWhatsAppFlow = false }: DownloadQuoteButtonProps) {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
 
@@ -41,11 +42,30 @@ export function DownloadQuoteButton({ lead, quote, settings, className = "" }: D
     }
   };
 
+  const buttonClasses = `group px-6 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm active:scale-95 ${className}`;
+
+  if (forceWhatsAppFlow) {
+    const adminWhatsApp = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "917357612865";
+    const waText = encodeURIComponent(`Hi TEAM CCTV, please send me the official PDF for my Quote ID: ${quote.id}`);
+    
+    return (
+      <a
+        href={`https://wa.me/${adminWhatsApp}?text=${waText}`}
+        target="_blank"
+        rel="noreferrer"
+        className={buttonClasses}
+      >
+        <MessageSquare className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
+        Get PDF on WhatsApp
+      </a>
+    );
+  }
+
   return (
     <button
       onClick={handleDownload}
       disabled={loading}
-      className={`group px-6 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm active:scale-95 ${className}`}
+      className={buttonClasses}
     >
       {loading ? (
         <>
