@@ -30,6 +30,7 @@ import { ServiceAreaModal } from "@/components/shared/ServiceAreaModal";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import { LanguageWelcomeModal } from "@/components/shared/LanguageWelcomeModal";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
+import { TrackBookingButton } from "@/components/shared/TrackBookingButton";
 
 export default function CustomerLayout({
   children,
@@ -67,7 +68,9 @@ export default function CustomerLayout({
           </div>
 
           {/* Right ?" Support + Portal */}
-          <div className="flex items-center gap-1.5 sm:gap-4 md:gap-6 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
+            <TrackBookingButton />
+            <div className="hidden sm:block w-px h-6 bg-zinc-200 dark:bg-zinc-800"></div>
             {/* Phone icon visible on mobile, full button on desktop */}
             <a
               href="tel:+917357612865"
