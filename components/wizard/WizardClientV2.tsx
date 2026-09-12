@@ -163,8 +163,7 @@ export function WizardClientV2() {
     recording_days: 7,
     recording_mode: "motion",
     technology_preference: "IP",
-    wants_remote_viewing: true,
-    cabling_done: false
+    wants_remote_viewing: true
   });
   
   const [loading, setLoading] = useState(false);
@@ -836,16 +835,16 @@ export function WizardClientV2() {
                   <h3 className="font-semibold mb-3">3. Existing Cabling</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => updateReq({ cabling_done: false })}
-                      className={`p-3 rounded-xl border text-sm text-center ${!req.cabling_done ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      className={`p-3 rounded-xl border text-sm text-center ${req.cabling_done === false ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
                       No, include new cables
                     </button>
                     <button onClick={() => updateReq({ cabling_done: true })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.cabling_done ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      className={`p-3 rounded-xl border text-sm text-center ${req.cabling_done === true ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
                       Yes, cables already installed
                     </button>
                   </div>
 
-                  {!req.cabling_done && (
+                  {req.cabling_done === false && (
                     <div className="mt-4 p-4 rounded-xl bg-blue-50/70 border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
                       <div>
                         <span className="block font-semibold text-gray-900 text-sm">Approx. Total Cable Required</span>
@@ -895,7 +894,7 @@ export function WizardClientV2() {
               <div className="pt-6">
                 <Button 
                   onClick={handleNext} 
-                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0)}
+                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || req.cabling_done === undefined}
                   className="w-full h-12 text-lg font-semibold"
                 >
                   Confirm Details
