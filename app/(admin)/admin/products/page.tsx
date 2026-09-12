@@ -1060,6 +1060,41 @@ export default function AdminProductsPage() {
                 {/* â”€â”€ TAB 4: MARKETING â”€â”€ */}
                 {activeTab === "marketing" && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+
+                    {/* Quotation Eligibility */}
+                    <div className="p-6 bg-green-500/10 border border-green-500/20 rounded-2xl">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h4 className="text-sm font-semibold text-green-700">Quotation Eligible</h4>
+                          <p className="text-xs font-medium text-green-700/70 mt-0.5">Include this product in customer quotes. Must be ON for the engine to select it.</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" checked={editingProduct.is_quotation_eligible !== false} onChange={e => setEditingProduct({...editingProduct, is_quotation_eligible: e.target.checked})} className="sr-only peer" />
+                          <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Stock Status */}
+                    <div className="p-6 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
+                      <div className="mb-4">
+                        <h4 className="text-sm font-semibold text-blue-700">Stock Status</h4>
+                        <p className="text-xs font-medium text-blue-700/70 mt-0.5">Explicitly mark availability. The engine filters out_of_stock, on_order, and discontinued items.</p>
+                      </div>
+                      <select
+                        value={(editingProduct as any).stock_status || "in_stock"}
+                        onChange={e => setEditingProduct({...editingProduct, stock_status: e.target.value as any})}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <option value="in_stock">✅ In Stock</option>
+                        <option value="low_stock">⚠️ Low Stock</option>
+                        <option value="out_of_stock">❌ Out of Stock</option>
+                        <option value="on_order">🚚 On Order (Incoming)</option>
+                        <option value="discontinued">🗑️ Discontinued</option>
+                      </select>
+                    </div>
+
+                    {/* Silent Margin Boost */}
                     <div className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
                       <div className="flex items-center justify-between mb-4">
                         <div>
@@ -1085,6 +1120,15 @@ export default function AdminProductsPage() {
                             />
                           </div>
                           <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-amber-600/80 uppercase tracking-wider ml-1">Boost Expiry Date</label>
+                            <input 
+                              type="date"
+                              value={(editingProduct as any).focus_active_until ? new Date((editingProduct as any).focus_active_until).toISOString().split("T")[0] : ""}
+                              onChange={e => setEditingProduct({...editingProduct, focus_active_until: e.target.value ? new Date(e.target.value).toISOString() : undefined} as any)}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            />
+                          </div>
+                          <div className="space-y-1.5 md:col-span-2">
                             <label className="text-xs font-semibold text-amber-600/80 uppercase tracking-wider ml-1">Internal Reason</label>
                             <input 
                               type="text" 
