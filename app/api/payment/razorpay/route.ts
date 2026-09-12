@@ -5,7 +5,7 @@ import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { quoteId, notes = {} } = body;
+    const { quoteId, leadId, notes = {} } = body;
 
     if (!quoteId || typeof quoteId !== "string") {
       return NextResponse.json(
@@ -14,9 +14,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Fetch Quote Server-Side (Zero Client Trust)
-    const quoteRef = adminDb.collection("quotes").doc(quoteId);
-    const quoteSnap = await quoteRef.get();
+    let quoteRef = adminDb.collection("quotes").doc(quoteId);
+    let quoteSnap = await quoteRef.get();
+
+    if (!quoteSnap.exists && leadId) {
+       quoteRef = adminDb.collection("leads").doc(leadId).collection("quotes").doc(quoteId);
+       quoteSnap = await quoteRef.get();
+    }
 
     if (!quoteSnap.exists) {
       return NextResponse.json(

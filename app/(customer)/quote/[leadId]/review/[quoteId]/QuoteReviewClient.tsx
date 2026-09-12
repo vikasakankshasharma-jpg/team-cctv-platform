@@ -157,6 +157,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           quoteId: quote.id,
+          leadId: quote.leadId,
           paymentType: type,
           notes: {
             customer_name: quote.customer.name,
