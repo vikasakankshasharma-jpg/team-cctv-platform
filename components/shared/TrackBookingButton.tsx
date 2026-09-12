@@ -12,14 +12,11 @@ export function TrackBookingButton() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-500 hover:text-blue-600 transition-colors"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-600 hover:text-blue-600 hover:bg-blue-50 dark:text-zinc-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-all"
       >
-        <PackageSearch className="w-4 h-4" />
+        <PackageSearch className="w-3.5 h-3.5" />
         <span className="hidden sm:inline">
           <TranslatedText tKey="track_booking" defaultText="Track Booking" />
-        </span>
-        <span className="sm:hidden">
-          <TranslatedText tKey="track" defaultText="Track" />
         </span>
       </button>
 
