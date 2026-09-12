@@ -129,8 +129,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
       }
       const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
       if (existing) {
-        resolve(true);
-        return;
+        existing.remove();
       }
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
