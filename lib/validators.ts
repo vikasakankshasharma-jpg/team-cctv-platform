@@ -100,8 +100,6 @@ export const GenerateQuoteSchema = z.object({
   plan_type: z.enum(["budget", "recommended", "premium"]),
   technology: z.enum(["HD", "IP"]),
   camera_count: z.number().int().min(1).max(16),
-  indoor_camera_count: z.number().int().optional(),
-  outdoor_camera_count: z.number().int().optional(),
   mixed_camera_requirements: z.array(z.object({
     type: z.string(),
     count: z.number().int().min(1),
