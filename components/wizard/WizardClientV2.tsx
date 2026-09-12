@@ -833,21 +833,7 @@ export function WizardClientV2() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-3">3. Wiring Type</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => updateReq({ wiring_type: "open" })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.wiring_type === 'open' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      Open / Exposed
-                    </button>
-                    <button onClick={() => updateReq({ wiring_type: "conduit" })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.wiring_type === 'conduit' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      Concealed / Conduit
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold mb-3">4. Existing Cabling</h3>
+                  <h3 className="font-semibold mb-3">3. Existing Cabling</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => updateReq({ cabling_done: false })}
                       className={`p-3 rounded-xl border text-sm text-center ${!req.cabling_done ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
@@ -864,7 +850,7 @@ export function WizardClientV2() {
               <div className="pt-6">
                 <Button 
                   onClick={handleNext} 
-                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || !req.wiring_type}
+                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0)}
                   className="w-full h-12 text-lg font-semibold"
                 >
                   Confirm Details
