@@ -836,11 +836,11 @@ export function WizardClientV2() {
                   <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => updateReq({ cabling_done: false })}
                       className={`p-3 rounded-xl border text-sm text-center ${req.cabling_done === false ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      No, include new cables
+                      No
                     </button>
                     <button onClick={() => updateReq({ cabling_done: true })}
                       className={`p-3 rounded-xl border text-sm text-center ${req.cabling_done === true ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      Yes, cables already installed
+                      Yes
                     </button>
                   </div>
 
