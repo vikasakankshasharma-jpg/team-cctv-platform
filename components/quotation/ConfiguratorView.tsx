@@ -170,6 +170,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       ...selection,
       technology: normalizedTech,
       camera_count: initialCamCount,
+      indoor_camera_count: lead.wizard_answers?.["indoor_camera_count"] !== undefined ? Number(lead.wizard_answers["indoor_camera_count"]) : undefined,
+      outdoor_camera_count: lead.wizard_answers?.["outdoor_camera_count"] !== undefined ? Number(lead.wizard_answers["outdoor_camera_count"]) : undefined,
       mixed_camera_requirements: mixedReqs,
       recording_days: initialDays,
       ceiling_height: (lead.wizard_answers?.["q_height"] as any) || "standard",
