@@ -141,7 +141,8 @@ export interface Lead {
   hub_name?: string | null;
   assigned_installer_name?: string | null;
   completion_pin?: string;             // 6-digit OTP for installation completion
-  payment_status?: "pending" | "paid" | "partial";
+  payment_status?: "pending" | "advance_paid" | "paid" | "partial";
+  advance_payment_amount?: number;
 
   // Follow-Up Engine
   followups_sent?: string[];
@@ -434,6 +435,12 @@ export interface PricingResult {
   total_payable: number;
 
   requiresIndustrialQuote?: boolean; // NEW: Flag for > 16 cameras
+  
+  // Quotation Versioning & Revisions
+  version?: number;
+  parent_quote_id?: string;
+  is_revision?: boolean;
+  revision_notes?: string;
   
   // Margin Intelligence
   total_purchase_cost?: number;

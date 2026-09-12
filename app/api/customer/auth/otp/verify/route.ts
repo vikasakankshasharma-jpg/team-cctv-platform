@@ -17,28 +17,45 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Mobile number and OTP are required." }, { status: 400 });
     }
 
-    const otpDoc = await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(normalized).get();
+    // ──── Test Credential Bypass ────
+    // Allow dummy number 9999999999 with OTP 123456 for pre-launch testing
+    const TEST_MOBILE = "9999999999";
+    const TEST_OTP = "123456";
+    const isTestLogin = normalized === TEST_MOBILE && otp.toString().trim() === TEST_OTP;
 
-    if (!otpDoc.exists) {
-      return NextResponse.json({ error: "OTP not found or expired. Please request a new code." }, { status: 404 });
-    }
+    if (!isTestLogin) {
+      // Real OTP flow — lookup from Firestore
+      const otpDoc = await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(normalized).get();
 
-    const data = otpDoc.data()!;
-    const now = new Date();
-    const expiry = (data?.expiresAt as any)?.toDate?.();
+      if (!otpDoc.exists) {
+        return NextResponse.json({ error: "OTP not found or expired. Please request a new code." }, { status: 404 });
+      }
 
-    if (expiry && now > expiry) {
+      const data = otpDoc.data()!;
+      const now = new Date();
+      const expiry = (data?.expiresAt as any)?.toDate?.();
+
+      if (expiry && now > expiry) {
+        await otpDoc.ref.delete();
+        return NextResponse.json({ error: "OTP has expired. Please request a new code." }, { status: 400 });
+      }
+
+      if (data?.otp !== otp.toString().trim()) {
+        return NextResponse.json({ error: "Invalid OTP code. Please check and try again." }, { status: 400 });
+      }
+
+      // Clean up OTP after successful verification
       await otpDoc.ref.delete();
-      return NextResponse.json({ error: "OTP has expired. Please request a new code." }, { status: 400 });
     }
 
-    // Verify OTP code
-    if (data?.otp !== otp.toString().trim()) {
-      return NextResponse.json({ error: "Invalid OTP code. Please check and try again." }, { status: 400 });
+    // Resolve customer name from leads or test data
+    let customerName = isTestLogin ? "Test Customer" : "Customer";
+    if (!isTestLogin) {
+      const leadSnap = await adminDb.collection("leads").where("mobile_number", "==", normalized).limit(1).get();
+      if (!leadSnap.empty && leadSnap.docs[0].data().customer_name) {
+        customerName = leadSnap.docs[0].data().customer_name;
+      }
     }
-
-    // Clean up OTP after successful verification
-    await otpDoc.ref.delete();
 
     // Resolve or Create Firebase Auth User
     const phoneNumber = `+91${normalized}`;
@@ -49,7 +66,7 @@ export async function POST(req: Request) {
     } catch {
       const newUser = await adminAuth.createUser({
         phoneNumber,
-        displayName: data?.name || "Customer",
+        displayName: customerName,
       });
       uid = newUser.uid;
     }
@@ -100,7 +117,7 @@ export async function POST(req: Request) {
       user: {
         uid,
         mobile: normalized,
-        name: data?.name || "Customer",
+        name: customerName,
       },
     });
 
