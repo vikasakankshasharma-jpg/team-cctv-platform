@@ -421,9 +421,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     // 1. Lock selected package configuration into store
     setActiveCheckoutOption({ technology: tech, option: pricing.plan_type });
     updateSelection({
-      selected_camera_id: camItem?.product_id,
-      selected_recorder_id: recItem?.product_id,
-      selected_storage_id: strItem?.product_id,
+      selected_camera_id: undefined,
+      selected_recorder_id: undefined,
+      selected_storage_id: undefined,
       technology: tech,
       brand_preference: pricing.camera_device?.brand || selection.brand_preference,
       resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
