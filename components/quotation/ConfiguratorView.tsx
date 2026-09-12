@@ -219,6 +219,15 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const cablingDone = lead.cabling_done;
   const propertyType = lead.property_type;
   
+  const cablingMeters = useMemo(() => {
+    if (lead.cabling_done) return 0;
+    const totalMeters = lead.wizard_answers?.total_cable_length_meters;
+    if (typeof totalMeters === "number" && totalMeters > 0) return totalMeters;
+    const perCamMeters = lead.wizard_answers?.cable_length_meters;
+    if (typeof perCamMeters === "number" && perCamMeters > 0) return perCamMeters * (selection.camera_count || 4);
+    return (selection.camera_count || 4) * 20;
+  }, [lead.cabling_done, lead.wizard_answers, selection.camera_count]);
+  
   const requirements = useMemo(() => {
     const reqValues = lead.wizard_answers?.["q_special_features"] || lead.wizard_answers?.["q_features"];
     return Array.isArray(reqValues) ? reqValues : (reqValues ? [reqValues] : []);
@@ -242,13 +251,13 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       
       return calculatePricing({
         selection: variation, products: currentProducts, addons: currentAddons,
-        settings: pricingCache.settings, cablingDone, referralDiscountPercent: promoterDiscount?.percent || 0,
+        settings: pricingCache.settings, cablingDone, cablingMeters, referralDiscountPercent: promoterDiscount?.percent || 0,
         referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer
       });
     };
     
     setPricingResults({ budget: calcTier("budget"), recommended: calcTier("recommended"), premium: calcTier("premium") });
-  }, [selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, propertyType, requirements, setPricingResults, promoterDiscount, lead.active_offer, evaluatedRules]);
+  }, [selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, cablingMeters, propertyType, requirements, setPricingResults, promoterDiscount, lead.active_offer, evaluatedRules]);
 
   const activePricing = useMemo(() => {
     const cT = active_checkout_option?.technology ?? selection.technology;
@@ -261,11 +270,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         selected_camera_option: typeof cO === "number" ? cO : undefined, 
         selected_camera_id: selection.selected_camera_id || (isCameraSku ? cO : undefined) 
       },
-      products: currentProducts, addons: currentAddons, settings: pricingCache.settings, cablingDone,
+      products: currentProducts, addons: currentAddons, settings: pricingCache.settings, cablingDone, cablingMeters,
       referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0,
       evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer,
     });
-  }, [active_checkout_option, selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, promoterDiscount, evaluatedRules, lead.active_offer]);
+  }, [active_checkout_option, selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, cablingMeters, promoterDiscount, evaluatedRules, lead.active_offer]);
 
   const addonsTotal = useMemo(() => {
     if (!activePricing) return 0;
@@ -290,7 +299,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         selected_power_id: undefined,
         selected_addons: []
       },
-      products: currentProducts, addons: currentAddons, settings: pricingCache.settings, cablingDone,
+      products: currentProducts, addons: currentAddons, settings: pricingCache.settings, cablingDone, cablingMeters,
       referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0,
       evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer,
     });

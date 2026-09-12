@@ -105,8 +105,13 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   // Calculate Cable
   let cableMeters = 0;
   if (wiredCameras > 0 && !req.cabling_done) {
-    // Default 20m per wired camera, unless user specified length
-    cableMeters = req.cable_length_meters ? req.cable_length_meters * wiredCameras : 20 * wiredCameras;
+    if (req.total_cable_length_meters && req.total_cable_length_meters > 0) {
+      cableMeters = req.total_cable_length_meters;
+    } else if (req.cable_length_meters) {
+      cableMeters = req.cable_length_meters * wiredCameras;
+    } else {
+      cableMeters = 20 * wiredCameras;
+    }
   }
 
   // Calculate Connectors (RJ45 or BNC)
