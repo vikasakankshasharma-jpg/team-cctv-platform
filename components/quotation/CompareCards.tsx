@@ -273,159 +273,27 @@ export function CompareCards({
               </button>
             )}
 
-            {/* Header */}
-            <div className="text-center mb-6 pt-2">
-              <div className={`flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${isCheckout ? "text-[#0071e3]" : "text-[#86868b]"}`}>
-                {isCustom && <Sparkles className={`w-3 h-3 ${isCheckout ? "text-[#0071e3]" : "text-[#86868b]"}`} />}
-                {tierName}
+            {/* Minimal Info */}
+            <div className="text-center py-4 flex flex-col items-center justify-center min-h-[160px] flex-1">
+              <div className={`text-[11px] font-bold uppercase tracking-widest mb-3 ${isCheckout ? "text-[#4f46e5]" : "text-[#4f46e5]"}`}>
+                {brandName} {tierName}
               </div>
-              <h3 className="text-xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-1">
-                {brandName} {card.isIP ? "IP" : "HD"}
+              <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-4">
+                {card.is5MP ? "5MP" : card.is4MP ? "4MP" : "2MP"} Resolution
               </h3>
-              <p className="text-[13px] text-[#86868b]">
-                {card.is5MP ? "5MP Ultra-HD" : card.is4MP ? "4MP Pro-HD" : "2MP Full-HD"}
-              </p>
-            </div>
-
-            {/* Key Spec Badges — show real extracted specs */}
-            {!card.pricing.error && (
-              <div className="flex flex-wrap justify-center gap-1.5 mb-5">
-                {/* Resolution */}
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-[#f0f7ff] dark:bg-[#1a2332] text-[#0071e3] px-2.5 py-1 rounded-full">
-                  {card.is5MP ? "5MP" : card.is4MP ? "4MP" : "2MP"}
-                </span>
-                {/* Night Vision */}
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-[#f5f5f7] px-2.5 py-1 rounded-full">
-                  {card.isColorNight ? "🌈 Color Night" : "🔴 IR Night"}
-                </span>
-                {/* Form Factor */}
-                {card.camProduct?.form_factor && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-[#f5f5f7] px-2.5 py-1 rounded-full capitalize">
-                    {card.camProduct.form_factor}
-                  </span>
-                )}
-                {/* IP Rating */}
-                {card.camProduct?.ip_rating && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#86868b] px-2.5 py-1 rounded-full">
-                    {card.camProduct.ip_rating}
-                  </span>
-                )}
-                {/* Audio */}
-                {card.hasAudio && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full">
-                    🎙 Audio
-                  </span>
-                )}
-                {/* Certifications */}
-                {card.camProduct?.certifications?.includes("STQC") && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full">
-                    ✓ STQC Ready
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Price */}
-            <div className="text-center mb-6">
+              
               {card.pricing.error ? (
                 <div className="flex flex-col items-center justify-center">
                   <span className="text-xl font-medium text-red-500 mt-1">Unavailable</span>
-                  <span className="text-[11px] text-red-400 mt-1 font-medium px-2 leading-tight">
-                    {card.pricing.error_message || "Required hardware is missing from our catalog."}
-                  </span>
                 </div>
               ) : (
-                <>
-                  <div className="flex items-start justify-center">
-                    <span className="text-xl font-medium text-[#1d1d1f] dark:text-white mt-1 mr-0.5">₹</span>
-                    <span className="text-5xl font-semibold text-[#1d1d1f] dark:text-white tracking-tight">
-                      {card.pricing.total_payable.toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-[#86868b] mt-1 font-medium">
-                    ₹{pricePerCam.toLocaleString("en-IN")} per camera
-                  </div>
-                </>
+                <div className="flex items-start justify-center">
+                  <span className="text-[40px] leading-none font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">
+                    ₹{card.pricing.total_payable.toLocaleString("en-IN")}
+                  </span>
+                </div>
               )}
             </div>
-
-            {/* Inclusions */}
-            <div className="flex-1">
-              <p className="text-[11px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] uppercase tracking-wide mb-3">Includes</p>
-              <div className="space-y-3">
-                {[
-                  // Camera line: prefer model number, fallback to display_name
-                  (() => {
-                    const cam = card.camProduct;
-                    const modelLabel = cam?.camera_model || cam?.technical_name || cam?.display_name || (card.technology + " Camera");
-                    return `${selection.camera_count}× ${modelLabel}`;
-                  })(),
-                  // Recorder line: prefer model number
-                  (() => {
-                    const rec = card.recProduct;
-                    const modelLabel = rec?.recorder_model || rec?.technical_name || rec?.display_name || (card.recType + " Recorder");
-                    return `1× ${modelLabel}`;
-                  })(),
-                  // Storage
-                  (() => {
-                    const storageItem = card.pricing.items.find((i: any) => addons.find((a: any) => a.id === i.product_id)?.category === 'storage');
-                    if (storageItem) return storageItem.display_name;
-                    return selection.recording_days > 0 ? `${selection.recording_days}-Day Storage` : "No Storage";
-                  })(),
-                  // Power Supply
-                  (() => {
-                    const powerItem = card.pricing.items.find((i: any) => {
-                       const n = (i.display_name || "").toLowerCase();
-                       return n.includes("power") || n.includes("poe") || n.includes("smps") || n.includes("psu");
-                    });
-                    if (powerItem) return `1× ${powerItem.display_name}`;
-                    return null;
-                  })(),
-                  // Cabling
-                  card.pricing.items.find((i: any) => i.product_id === "cabling_material")?.display_name?.split(' @ ')[0] ?? "Cabling & Accessories",
-                  // Connectors
-                  (() => {
-                    const connectorItem = card.pricing.items.find((i: any) => i.product_id?.includes("connector"));
-                    if (connectorItem) return `${connectorItem.qty}× Connectors (BNC/DC/RJ45)`;
-                    return null;
-                  })(),
-                  `Professional Installation`
-                ].filter(Boolean).map((item, i) => (
-                  <div key={i} className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-[#0071e3] shrink-0" />
-                    <span className="text-[13px] text-[#1d1d1f] dark:text-[#a1a1a6] leading-tight">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Buttons */}
-            {isCheckout ? (
-              <div className="flex flex-col gap-2 mt-8">
-                <button
-                  className="w-full py-2.5 rounded-xl font-medium text-[13px] transition-colors bg-[#0071e3] text-white cursor-default"
-                >
-                  Selected
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const { startCompareMode } = useConfiguratorStore.getState();
-                    startCompareMode(card.pricing, tierName);
-                    document.getElementById('build-your-own')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="w-full py-2.5 rounded-xl font-medium text-[13px] transition-colors bg-white dark:bg-transparent border border-[#0071e3] text-[#0071e3] hover:bg-blue-50 dark:hover:bg-[#0071e3]/10"
-                >
-                  Customize & Compare
-                </button>
-              </div>
-            ) : (
-              <button
-                className="w-full mt-8 py-3 rounded-xl font-medium text-[13px] transition-colors bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#1d1d1f] dark:text-white hover:bg-[#e8e8ed] dark:hover:bg-[#3d3d3f]"
-              >
-                Select
-              </button>
-            )}
           </div>
         );
       })}
