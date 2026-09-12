@@ -15,8 +15,12 @@ export function TrackBookingButton() {
         className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-500 hover:text-blue-600 transition-colors"
       >
         <PackageSearch className="w-4 h-4" />
-        <span className="hidden sm:inline">Track Booking</span>
-        <span className="sm:hidden">Track</span>
+        <span className="hidden sm:inline">
+          <TranslatedText tKey="track_booking" defaultText="Track Booking" />
+        </span>
+        <span className="sm:hidden">
+          <TranslatedText tKey="track" defaultText="Track" />
+        </span>
       </button>
 
       <TrackBookingModal isOpen={isOpen} onClose={() => setIsOpen(false)} />

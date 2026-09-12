@@ -60,14 +60,18 @@ export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
           <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-6">
             <Search className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Track Booking</h2>
+          <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">
+            <TranslatedText tKey="track_booking" defaultText="Track Booking" />
+          </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-6">
-            Enter your Quote ID (or Booking Reference) and registered mobile number to track your installation progress.
+            <TranslatedText tKey="track_booking_desc" defaultText="Enter your Quote ID (or Booking Reference) and registered mobile number to track your installation progress." />
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Quote ID / Reference</label>
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">
+                <TranslatedText tKey="quote_id_ref" defaultText="Quote ID / Reference" />
+              </label>
               <input
                 type="text"
                 required
@@ -79,7 +83,9 @@ export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
             </div>
             
             <div>
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Registered Mobile</label>
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">
+                <TranslatedText tKey="registered_mobile" defaultText="Registered Mobile" />
+              </label>
               <div className="relative">
                 <span className="absolute left-4 top-3 text-zinc-400 font-bold">+91</span>
                 <input
@@ -110,10 +116,10 @@ export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Searching...
+                  <TranslatedText tKey="searching" defaultText="Searching..." />
                 </>
               ) : (
-                "Track Status"
+                <TranslatedText tKey="track_status" defaultText="Track Status" />
               )}
             </button>
           </form>
