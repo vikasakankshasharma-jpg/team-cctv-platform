@@ -281,7 +281,7 @@ export function DynamicVariantGenerator({
               
               <CardContent className="py-8 px-5 flex flex-col items-center justify-center min-h-[180px]">
                 <div className="text-center w-full">
-                  <div className="text-[13px] font-bold text-[#4f46e5] uppercase tracking-wider mb-2">
+                  <div className="text-base font-black text-[#6366f1] mb-1.5">
                     {variant.camera_device.brand || "Budget"} {variant.plan_type === "budget" ? "Standard" : "Pro"}
                   </div>
                   <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-4 group-hover:text-blue-600 transition-colors">
