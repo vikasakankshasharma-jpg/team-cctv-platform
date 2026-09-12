@@ -43,12 +43,12 @@ export function proxy(request: NextRequest) {
   // CSP Definition
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://maps.googleapis.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://maps.googleapis.com https://checkout.razorpay.com https://*.razorpay.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.googleapis.com https://*.gstatic.com https://*.google.com;
     font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net;
-    frame-src 'self' https://www.google.com;
+    connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://lumberjack-cx.razorpay.com;
+    frame-src 'self' https://www.google.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
