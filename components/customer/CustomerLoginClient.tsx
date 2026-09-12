@@ -25,6 +25,7 @@ export function CustomerLoginClient() {
   const [mobile, setMobile] = useState("");
   const [step, setStep] = useState<1 | 2>(1);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const otpRef = useRef<string[]>(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -84,11 +85,11 @@ export function CustomerLoginClient() {
   };
 
   // Verify OTP
-  const handleVerifyOtp = async (e?: React.FormEvent) => {
+  const handleVerifyOtp = async (e?: React.FormEvent, overrideCode?: string) => {
     e?.preventDefault();
     setError("");
 
-    const code = otp.join("").trim();
+    const code = (overrideCode || otpRef.current.join("") || otp.join("")).trim();
     if (code.length !== 6) {
       setError("Please enter all 6 digits of the OTP.");
       return;
@@ -135,9 +136,10 @@ export function CustomerLoginClient() {
     const cleaned = val.replace(/\D/g, "");
     if (!cleaned && val !== "") return;
 
-    const newOtp = [...otp];
+    const newOtp = [...otpRef.current];
     newOtp[index] = cleaned.slice(-1);
     setOtp(newOtp);
+    otpRef.current = newOtp;
 
     // Auto advance to next box
     if (cleaned && index < 5) {
@@ -146,14 +148,15 @@ export function CustomerLoginClient() {
 
     // Auto trigger verify if 6th box is filled
     if (cleaned && index === 5 && newOtp.every((digit) => digit !== "")) {
+      const fullCode = newOtp.join("");
       setTimeout(() => {
-        handleVerifyOtp();
-      }, 100);
+        handleVerifyOtp(undefined, fullCode);
+      }, 50);
     }
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
+    if (e.key === "Backspace" && !otpRef.current[index] && index > 0) {
       otpInputsRef.current[index - 1]?.focus();
     }
   };
@@ -163,14 +166,15 @@ export function CustomerLoginClient() {
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (!pasted) return;
 
-    const newOtp = [...otp];
+    const newOtp = [...otpRef.current];
     for (let i = 0; i < pasted.length; i++) {
       newOtp[i] = pasted[i];
     }
     setOtp(newOtp);
+    otpRef.current = newOtp;
     if (pasted.length === 6) {
       otpInputsRef.current[5]?.focus();
-      setTimeout(() => handleVerifyOtp(), 100);
+      setTimeout(() => handleVerifyOtp(undefined, pasted), 50);
     } else {
       otpInputsRef.current[pasted.length]?.focus();
     }
@@ -261,6 +265,7 @@ export function CustomerLoginClient() {
               onClick={() => {
                 setStep(1);
                 setOtp(["", "", "", "", "", ""]);
+                otpRef.current = ["", "", "", "", "", ""];
                 setError("");
               }}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors mb-4"

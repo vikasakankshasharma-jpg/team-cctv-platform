@@ -172,6 +172,7 @@ export async function POST(request: NextRequest) {
       addons_snapshot: cleanPricing.addons,
       expected_total_payable: selection.expected_total_payable || cleanPricing.total_payable,
       status: status || "draft",
+      version: 1, // Explicitly set version 1 for original quotes
       accepted_at: accepted_at ? new Date(accepted_at) : null,
       created_at: new Date().toISOString(),
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),

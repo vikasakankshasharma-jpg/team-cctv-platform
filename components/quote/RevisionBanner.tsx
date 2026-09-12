@@ -1,4 +1,4 @@
-import { AlertTriangle, Info } from "lucide-react";
+import { Info } from "lucide-react";
 
 interface RevisionBannerProps {
   version: number;
