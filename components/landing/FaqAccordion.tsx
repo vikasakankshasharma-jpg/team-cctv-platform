@@ -8,7 +8,7 @@ import { TranslatedText } from "@/components/shared/TranslatedText";
 const faqs = [
   { qKey: "faq_1_q", defaultQ: "Is GST included in the quote price?", aKey: "faq_1_a", defaultA: "Yes. All CCTVQuotation quotations include 18% GST with no hidden charges. The price covers cameras, DVR/NVR, HDD, cabling, and professional installation — everything." },
   { qKey: "faq_2_q", defaultQ: "Does the price include installation?", aKey: "faq_2_a", defaultA: "Yes. Every quotation includes full professional installation — camera mounting, cable routing, DVR/NVR setup, mobile app configuration on your phone, and a complete system demonstration." },
-  { qKey: "faq_3_q", defaultQ: "How much does a 4-camera CCTV system cost in Jaipur?", aKey: "faq_3_a", defaultA: "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation." },
+  { qKey: "faq_3_q", defaultQ: "How much does a 4-camera CCTV system cost?", aKey: "faq_3_a", defaultA: "A CP Plus HD 4-camera system starts at ₹18,000–₹28,000. An IP (NVR) system starts at ₹35,000–₹55,000. A 4K system starts at ₹55,000–₹85,000. All prices include GST and installation." },
   { qKey: "faq_4_q", defaultQ: "Are your cameras BIS-ER compliant?", aKey: "faq_4_a", defaultA: "Yes. We install CP Plus and Prama cameras which carry BIS-ER certification — suitable for government tenders, housing societies, and commercial projects." },
 ] as const;
 

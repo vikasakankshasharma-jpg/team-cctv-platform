@@ -33,7 +33,7 @@ export function WaitlistBanner({ leadId, unservedCityName, nearestHubName, dista
             {nearestHubName && distanceKm !== undefined ? (
               <>{t('waitlist_hub_in', 'Our primary installation hub is in')} <span className="font-black">{nearestHubName}</span> (approx. <strong>{distanceKm} km</strong> away). {t('waitlist_priority_for', 'Based on your direct request, we are taking this on priority and expediting our operations in')} <span className="font-black uppercase">{unservedCityName}</span> specifically for you.</>
             ) : (
-              <>{t('waitlist_hubs_active', 'Our primary installation hubs are currently active in Jaipur and surrounding regions. However, based on your direct request, we are taking this on priority and expediting our operations in')} <span className="font-black uppercase">{unservedCityName}</span> specifically for you.</>
+              <>{t('waitlist_hubs_active', 'Our installation teams are expanding rapidly across India. Based on your direct request, we are taking this on priority and expediting our operations in')} <span className="font-black uppercase">{unservedCityName}</span> specifically for you.</>
             )}
           </p>
           {confirmed && (
