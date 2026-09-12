@@ -120,6 +120,10 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   if (wiredCameras > 0) {
     // 2 connectors per camera (one at camera, one at recorder/switch)
     connectorsCount = wiredCameras * 2;
+    // For IP systems with a PoE Switch, we need 2 extra RJ45 connectors for the uplink cable (PoE Switch to NVR)
+    if (connectorType === "RJ45" && req.technology_preference === "IP") {
+      connectorsCount += 2;
+    }
   }
 
   const requiresSimRouter = req.wants_remote_viewing && req.broadband_status === "sim_router";

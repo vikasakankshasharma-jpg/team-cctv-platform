@@ -174,6 +174,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       outdoor_camera_count: lead.wizard_answers?.["outdoor_camera_count"] !== undefined ? Number(lead.wizard_answers["outdoor_camera_count"]) : undefined,
       mixed_camera_requirements: mixedReqs,
       recording_days: initialDays,
+      recording_mode: (lead.wizard_answers?.["recording_mode"] as string) || (lead.wizard_answers?.["q_recording_mode"] as string) || lead.requirement?.recording_mode || "motion",
       ceiling_height: (lead.wizard_answers?.["q_height"] as any) || "standard",
       wants_amc: wantsAmc,
       requested_features: requestedFeatures,

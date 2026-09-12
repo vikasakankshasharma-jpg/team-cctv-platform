@@ -654,11 +654,18 @@ function calculateConnectors(
     const useRJ45 = tech === "IP" || selection.cable_type === "cat6";
     if (useRJ45) {
       const rate = settings.connector_rj45_cost || 25;
-      const lineTotal = rate * wiredCameraCount;
+      let qty = wiredCameraCount;
+      if (tech === "IP") {
+        qty = (wiredCameraCount * 2) + 2; // 2 per camera + 2 for PoE uplink
+      } else {
+        qty = wiredCameraCount * 2; // Cat6 Balun ends
+      }
+      
+      const lineTotal = rate * qty;
       items.push({
         product_id: "connector_rj45",
         display_name: "RJ45 Connectors (Camera & Switch/Balun ends)",
-        qty: wiredCameraCount,
+        qty: qty,
         unit_price: rate,
         line_total: lineTotal
       });
@@ -1201,6 +1208,14 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     }
   });
 
+  const getCapacity = (a: any) => {
+    if (a.max_cameras && a.max_cameras > 0) return a.max_cameras;
+    const name = (a.technical_name || a.display_name || "").toLowerCase();
+    const match = name.match(/(\d+)\s*(ch|port|channels|ports|amp|a)/i);
+    if (match) return parseInt(match[1]);
+    return 999; // If unknown, push it to the end
+  };
+
   if (options.length === 0) {
     // Fallback: If strict filters fail, find ANY power supply that is definitely NOT a router or repair adapter
     const fallbackOptions = addons.filter(a => {
@@ -1212,13 +1227,13 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     
     if (fallbackOptions.length === 0) return undefined;
     
-    fallbackOptions.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
-    return fallbackOptions.find(o => (o.max_cameras || 0) >= selection.camera_count) || fallbackOptions[fallbackOptions.length - 1];
+    fallbackOptions.sort((a, b) => getCapacity(a) - getCapacity(b));
+    return fallbackOptions.find(o => getCapacity(o) >= selection.camera_count) || fallbackOptions[fallbackOptions.length - 1];
   }
 
   if (options.length === 0) return undefined;
-  options.sort((a, b) => (a.max_cameras || 0) - (b.max_cameras || 0));
-  return options.find(o => (o.max_cameras || 0) >= selection.camera_count) || options[options.length - 1];
+  options.sort((a, b) => getCapacity(a) - getCapacity(b));
+  return options.find(o => getCapacity(o) >= selection.camera_count) || options[options.length - 1];
 }
 
 function resolveUnitPrice(product: Product, qty: number) {
