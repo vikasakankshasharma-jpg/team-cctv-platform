@@ -93,15 +93,21 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
 
   const getCameraBySpec = (formFactor: string) => {
     let filtered = cams.filter(p => {
-      // Must match Technology
-      if (p.technology && p.technology !== config.technology) return false;
+      // Must match Technology — handle both legacy `technology` (string) and new `technologies` (array)
+      const techs = Array.isArray(p.technologies) ? p.technologies
+        : (p as any).technology ? [(p as any).technology] : ["Common"];
+      if (!techs.includes("Common") && !techs.includes(config.technology)) return false;
       
-      // Must match Form Factor
-      const pForm = (p.specifications as any)?.formFactor || p.type || (p.display_name?.toLowerCase().includes("bullet") ? "bullet" : (p.display_name?.toLowerCase().includes("dome") ? "dome" : ""));
+      // Must match Form Factor — use form_factor (primary) with multiple fallbacks
+      const pForm = p.form_factor
+        || (p.specifications as any)?.formFactor
+        || (p as any).type
+        || (p.display_name?.toLowerCase().includes("bullet") ? "bullet"
+           : (p.display_name?.toLowerCase().includes("dome") ? "dome" : ""));
       const matchForm = pForm === formFactor || pForm?.toLowerCase() === formFactor.toLowerCase();
       
       // Must match Resolution
-      const pRes = (p.specifications as any)?.resolution || p.resolution;
+      const pRes = (p.specifications as any)?.resolution || (p as any).resolution;
       let matchRes = false;
       if (!pRes) {
          matchRes = p.display_name?.toLowerCase().includes(targetResolution.toLowerCase()) || false;
@@ -159,11 +165,17 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
   
   const recs = pool.filter(p => 
     p.category === "recorder" && 
-    (p.channels || p.max_cameras) === config.recorder_channels &&
-    ((p.technologies || []).includes(config.technology as any) || p.technology === config.technology)
+    (p.channels || p.max_cameras || 0) >= config.recorder_channels &&
+    ((p.technologies || []).includes(config.technology as any) || (p as any).technology === config.technology)
   );
-
   if (recs.length === 0) return undefined;
+  // Sort ascending by channel count (prefer smallest that fits), then by price
+  recs.sort((a, b) => {
+    const aCh = (a.channels || a.max_cameras || 0);
+    const bCh = (b.channels || b.max_cameras || 0);
+    if (aCh !== bCh) return aCh - bCh;
+    return (a.unit_price || 0) - (b.unit_price || 0);
+  });
 
   if (isBudget) {
     const budgetRecs = recs.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));

@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
     // 2. Fetch Authoritative Data (Server-Side Source of Truth)
     const [leadDoc, productsSnap, addonsSnap, settingsSnap, geoRulesSnap] = await Promise.all([
       adminDb.collection("leads").doc(lead_id).get(),
-      adminDb.collection("products").where("is_active", "==", true).where("is_deleted", "==", false).get(),
-      adminDb.collection("addons").where("is_active", "==", true).where("is_deleted", "==", false).get(),
+      adminDb.collection("products").where("is_active", "==", true).get(),
+      adminDb.collection("addons").where("is_active", "==", true).get(),
       adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
       adminDb.collection("geo_pricing_rules").where("is_active", "==", true).get()
     ]);
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
       version: 1, // Explicitly set version 1 for original quotes
       accepted_at: accepted_at ? new Date(accepted_at) : null,
       created_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      expires_at: new Date(Date.now() + ((settings as any).quote_validity_days || 7) * 24 * 60 * 60 * 1000).toISOString(),
       recalculated_on_server: true,
     });
 

@@ -133,15 +133,17 @@ export async function POST(request: Request) {
        lifecycleWarnings.push(...brandRes.lifecycleWarnings);
     });
 
-    // 5. Resolved Hardware -> Pricing
+    // 5. Resolved Hardware → Pricing
     const quotePlans: Record<string, any> = {};
+    // Extract addon IDs from the requirement (wizard selections like monitor, UPS, etc.)
+    const selectedAddonIds: string[] = Array.isArray((req as any).selected_addons) ? (req as any).selected_addons : [];
     for (const [key, resolvedSystem] of Object.entries(allResolvedPlans)) {
        const isBudget = key.startsWith("Budget_");
        quotePlans[key] = generatePricingSnapshot(
          { ...resolvedSystem, plan_type: isBudget ? "budget" : "recommended" },
          req,
          addons,
-         [],
+         selectedAddonIds,
          settings
        );
     }

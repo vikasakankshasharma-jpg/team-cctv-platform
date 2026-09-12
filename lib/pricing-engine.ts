@@ -491,7 +491,21 @@ function calculateLabor(
 
   const baseRate = tech === "IP" ? (settings.labor_ip_per_camera || 500) : (settings.labor_hd_per_camera || 400);
   const rate = Math.round(baseRate * locationMultiplier);
-  const qty = selection.camera_count;
+  // Only charge labor for wired cameras — wireless cameras don't need cable termination work
+  let qty = selection.camera_count;
+  if (tech === "WiFi" || tech === "Wireless") {
+    qty = 0;
+  } else if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+    qty = selection.mixed_camera_requirements
+      .filter(req => {
+        const t = req.type.toLowerCase();
+        return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
+      })
+      .reduce((sum, req) => sum + req.count, 0);
+  } else if (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined) {
+    qty = (selection.indoor_camera_count || 0) + (selection.outdoor_camera_count || 0) || selection.camera_count;
+  }
+  if (qty <= 0) return { items, totalRetail: 0 };
   const lineTotal = rate * qty;
 
   items.push({
@@ -518,7 +532,7 @@ function calculateCabling(
 ) {
   const items: QuoteLineItem[] = [];
   
-  if (tech === "WiFi") {
+  if (tech === "WiFi" || tech === "Wireless") {
     return { items, totalRetail: 0, totalCost: 0 };
   }
 
@@ -700,7 +714,8 @@ function calculateConnectors(
     totalRetail += lineTotal;
     totalCost += (userMount.base_cost || 0) * wiredCameraCount;
   } else {
-    const junctionRate = 35;
+    const junctionRate = (settings as any).junction_box_cost || 35;
+    const junctionPurchaseCost = Math.round(junctionRate * 0.57); // ~57% purchase cost
     const junctionTotal = junctionRate * wiredCameraCount;
     items.push({
       product_id: "acc_junction_box",
@@ -711,7 +726,7 @@ function calculateConnectors(
       line_total: junctionTotal
     });
     totalRetail += junctionTotal;
-    totalCost += 20 * wiredCameraCount;
+    totalCost += junctionPurchaseCost * wiredCameraCount;
   }
 
   return { items, totalRetail, totalCost };
@@ -759,7 +774,7 @@ function calculateAddons(params: {
     let qty = 1;
     if ((addon as any).unit_multiplier === "camera_count") qty = selection.camera_count;
     
-    const price = addon.price || 0;
+    const price = addon.unit_price || addon.price || 0;
     const lineTotal = price * qty;
     items.push({
       addon_id: addon.id || (addon as any).sku,
@@ -1211,7 +1226,7 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
   const getCapacity = (a: any) => {
     if (a.max_cameras && a.max_cameras > 0) return a.max_cameras;
     const name = (a.technical_name || a.display_name || "").toLowerCase();
-    const match = name.match(/(\d+)\s*(ch|port|channels|ports|amp|a)/i);
+    const match = name.match(/(\d+)\s*(ch|port|channels|ports)/i);
     if (match) return parseInt(match[1]);
     return 999; // If unknown, push it to the end
   };
@@ -1280,6 +1295,12 @@ export function generatePricingSnapshot(
     margin_rack: settings?.margin_rack ?? (settings as any)?.margin_policy?.margin_rack ?? DEFAULT_MARGIN_POLICY.margin_rack,
     margin_power_supply: settings?.margin_power_supply ?? (settings as any)?.margin_policy?.margin_power_supply ?? DEFAULT_MARGIN_POLICY.margin_power_supply,
   };
+  // CRITICAL: Settings stores gst_rate as an integer (e.g. 18 for 18%).
+  // The margin engine's calculateDocumentTotals() expects it as a decimal (e.g. 0.18).
+  // Normalize here to prevent 1800% GST calculation bug.
+  if (marginPolicy.gst_rate > 1) {
+    marginPolicy.gst_rate = marginPolicy.gst_rate / 100;
+  }
   const planType = (resolvedSystem.plan_type || "recommended") as PlanType;
 
   // 1. Cameras
@@ -1514,7 +1535,7 @@ export function generatePricingSnapshot(
     gross_subtotal: totals.rawSubtotal,
     referral_discount: 0,
     net_taxable_amount: totals.finalExTax,
-    gst_rate: marginPolicy.gst_rate * 100,
+    gst_rate: marginPolicy.gst_rate < 1 ? Math.round(marginPolicy.gst_rate * 100) : marginPolicy.gst_rate,
     gst_amount: totals.gstAmount,
     total_payable: totals.totalPayable,
     total_purchase_cost: totalPurchaseCost,
