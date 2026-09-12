@@ -29,7 +29,7 @@ export async function verifySession(): Promise<SessionResult> {
     }
 
     const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
-    const role = (decodedToken.role as "super_admin" | "sales_staff" | "installer" | undefined) || null;
+    const role = (decodedToken.role as "super_admin" | "sales_staff" | "installer" | "customer" | "partner" | undefined) || null;
     return { isAuthenticated: true, user: decodedToken, role };
   } catch (error) {
     console.error("Session verification failed:", error);

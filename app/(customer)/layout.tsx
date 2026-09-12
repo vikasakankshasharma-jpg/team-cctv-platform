@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ShieldCheck, PhoneCall, Zap, ArrowRight, ChevronDown } from "lucide-react";
+import { ShieldCheck, PhoneCall, Zap, ArrowRight, ChevronDown, User } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/shared/SiteFooter";
 import { WhatsAppFloat } from "@/components/shared/WhatsAppFloat";
@@ -70,6 +70,16 @@ export default function CustomerLayout({
           {/* Right ?" Support + Portal */}
           <div className="flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
             <TrackBookingButton />
+            <Link
+              href="/customer/dashboard"
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              title="My Account"
+            >
+              <User className="w-4 h-4 text-zinc-400" />
+              <span className="hidden sm:inline">
+                <TranslatedText tKey="my_account" defaultText="My Account" />
+              </span>
+            </Link>
             <div className="hidden sm:block w-px h-6 bg-zinc-200 dark:bg-zinc-800"></div>
             {/* Phone icon visible on mobile, full button on desktop */}
             <a

@@ -7,14 +7,17 @@ export function useTranslation() {
   const locale = useI18nStore((state) => state.locale);
   const setLocale = useI18nStore((state) => state.setLocale);
 
-  const t = (key: TranslationKey, fallback?: string, params?: Record<string, string>): string => {
+  const t = (key: TranslationKey | (string & {}), fallback?: string, params?: Record<string, string>): string => {
     // Try current locale
     let str = "";
-    if (translations[locale] && translations[locale][key]) {
-      str = translations[locale][key]!;
-    } else if (translations['en'] && translations['en'][key]) {
+    const currentDict = translations[locale] as Record<string, string> | undefined;
+    const enDict = translations['en'] as Record<string, string> | undefined;
+
+    if (currentDict && currentDict[key]) {
+      str = currentDict[key]!;
+    } else if (enDict && enDict[key]) {
       // Fallback to English
-      str = translations['en'][key]!;
+      str = enDict[key]!;
     } else {
       // Fallback to provided default or the key itself
       str = fallback || key;

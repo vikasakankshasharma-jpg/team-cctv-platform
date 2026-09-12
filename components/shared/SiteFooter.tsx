@@ -41,6 +41,7 @@ export function SiteFooter() {
              </span>
           </div>
           <div className="flex flex-wrap gap-4 sm:gap-8">
+             <Link href="/customer/login" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"><TranslatedText tKey="footer_customer_portal" defaultText="Customer Portal" /></Link>
              <Link href="/privacy-policy" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"><TranslatedText tKey="footer_privacy" defaultText="Privacy Policy" /></Link>
              <Link href="/terms-of-service" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"><TranslatedText tKey="footer_terms" defaultText="Terms of Service" /></Link>
              <Link href="/partner/login" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"><TranslatedText tKey="footer_partner" defaultText="Partner Login" /></Link>
