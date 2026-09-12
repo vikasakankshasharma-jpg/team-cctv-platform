@@ -279,16 +279,18 @@ export function DynamicVariantGenerator({
                 </div>
               )}
               
-              <CardContent className="p-5 pt-8">
-                <div className="text-center">
-                  <div className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
+              <CardContent className="py-8 px-5 flex flex-col items-center justify-center min-h-[180px]">
+                <div className="text-center w-full">
+                  <div className="text-[11px] font-bold text-[#4f46e5] uppercase tracking-widest mb-3">
                     {variant.camera_device.brand || "Budget"} {variant.plan_type === "budget" ? "Standard" : "Pro"}
                   </div>
-                  <h3 className="text-lg font-bold text-[#1d1d1f] dark:text-white mb-1.5 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-4 group-hover:text-blue-600 transition-colors">
                     {variant.camera_device.derivedResolution || "2MP"} Resolution
                   </h3>
-                  <div className="text-3xl font-black tracking-tight text-[#1d1d1f] dark:text-white">
-                    ₹{variant.total_payable.toLocaleString('en-IN')}
+                  <div className="flex items-start justify-center">
+                    <span className="text-[40px] leading-none font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">
+                      ₹{variant.total_payable.toLocaleString('en-IN')}
+                    </span>
                   </div>
                 </div>
               </CardContent>
