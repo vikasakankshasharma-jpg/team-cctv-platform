@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const advanceAmount = Math.round(totalPayable * ADVANCE_PERCENTAGE);
 
     if (advanceAmount <= 0) {
-      return ApiResponse.error("Invalid quotation amount", "INVALID_AMOUNT", 400);
+      return ApiResponse.badRequest("Invalid quotation amount");
     }
 
     // Save advance amount intent to lead
