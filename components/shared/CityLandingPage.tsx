@@ -120,28 +120,28 @@ export default function CityLandingPage({
       </div>
 
       {/* Hero Hub */}
-      <section className="relative px-4 sm:px-6 pt-16 pb-20 sm:pt-24 sm:pb-32 md:pt-24 md:pb-32 overflow-hidden">
+      <section className="relative px-4 sm:px-6 pt-10 pb-16 sm:pt-16 sm:pb-24 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-zinc-50 dark:bg-zinc-950">
           <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-blue-200/40 dark:bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-200/20 dark:bg-indigo-600/5 blur-[100px] rounded-full" />
         </div>
 
         <div className="max-w-7xl mx-auto flex flex-col items-center text-center relative">
-          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-12 shadow-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8 shadow-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
             <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-500" />
             <span>{derivedTagline}</span>
             <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
             <span className="text-blue-600 dark:text-emerald-500">{t('landing_same_day', 'Same-Day Survey')}</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-6 sm:mb-8 leading-[1.2] md:leading-[1.15] animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-4 sm:mb-6 leading-[1.2] md:leading-[1.15] animate-in fade-in slide-in-from-bottom-8 duration-1000">
             {mainTitle} <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-500 italic mt-2 inline-block">
               {t('landing_hero_highlight', 'Across {city}.').replace('{city}', localizedCityName)}
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-3xl mb-8 sm:mb-12 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
+          <p className="text-base sm:text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 max-w-3xl mb-5 sm:mb-8 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
              {derivedDescription}
           </p>
 
