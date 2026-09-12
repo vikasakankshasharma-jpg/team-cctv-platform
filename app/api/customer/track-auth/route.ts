@@ -10,15 +10,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
     }
 
-    const { referenceId, mobileNumber } = await req.json();
+    const { referenceId } = await req.json();
 
-    if (!referenceId || !mobileNumber) {
-      return NextResponse.json({ error: "Quote/Booking Reference and Mobile Number are required." }, { status: 400 });
-    }
-
-    const normalizedMobile = mobileNumber.toString().replace(/^\+?91/, "").replace(/\D/g, "").trim();
-    if (normalizedMobile.length !== 10) {
-      return NextResponse.json({ error: "Please enter a valid 10-digit mobile number." }, { status: 400 });
+    if (!referenceId) {
+      return NextResponse.json({ error: "Quote/Booking Reference is required." }, { status: 400 });
     }
 
     let leadId = null;
@@ -47,21 +42,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "We couldn't find a booking with that reference. Please check and try again." }, { status: 404 });
     }
 
-    // 3. Verify Mobile Number matches the Lead
-    const targetLeadDoc = await adminDb.collection("leads").doc(leadId).get();
-    if (!targetLeadDoc.exists) {
-      return NextResponse.json({ error: "Booking data is corrupted. Please contact support." }, { status: 500 });
-    }
-
-    const leadData = targetLeadDoc.data();
-    const leadMobile = leadData?.customer_phone?.toString().replace(/^\+?91/, "").replace(/\D/g, "").trim();
-
-    if (leadMobile !== normalizedMobile) {
-      // Security measure: Don't reveal that the quote exists but phone is wrong. Keep it ambiguous.
-      return NextResponse.json({ error: "The mobile number does not match the booking records." }, { status: 403 });
-    }
-
-    // 4. Success! Return leadId for frontend redirection
+    // 3. Success! Return leadId for frontend redirection
     return NextResponse.json({ success: true, leadId });
 
   } catch (error: any) {

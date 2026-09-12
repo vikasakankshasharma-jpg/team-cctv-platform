@@ -13,7 +13,6 @@ interface TrackBookingModalProps {
 export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
   const router = useRouter();
   const [referenceId, setReferenceId] = useState("");
-  const [mobileNumber, setMobileNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -28,7 +27,7 @@ export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
       const res = await fetch("/api/customer/track-auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ referenceId, mobileNumber }),
+        body: JSON.stringify({ referenceId }),
       });
 
       const data = await res.json();
@@ -64,7 +63,7 @@ export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
             <TranslatedText tKey="track_booking" defaultText="Track Booking" />
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-6">
-            <TranslatedText tKey="track_booking_desc" defaultText="Enter your Quote ID (or Booking Reference) and registered mobile number to track your installation progress." />
+            <TranslatedText tKey="track_booking_desc" defaultText="Enter your Quote ID (or Booking Reference) to track your installation progress." />
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -80,25 +79,6 @@ export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
                 placeholder="e.g. pqoxwCJsCfk..."
                 className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono text-sm dark:text-white"
               />
-            </div>
-            
-            <div>
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">
-                <TranslatedText tKey="registered_mobile" defaultText="Registered Mobile" />
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-3 text-zinc-400 font-bold">+91</span>
-                <input
-                  type="tel"
-                  required
-                  maxLength={10}
-                  pattern="[0-9]{10}"
-                  value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
-                  placeholder="9876543210"
-                  className="w-full pl-12 pr-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-bold dark:text-white tracking-widest"
-                />
-              </div>
             </div>
 
             {error && (
