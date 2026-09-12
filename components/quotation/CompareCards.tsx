@@ -275,7 +275,7 @@ export function CompareCards({
 
             {/* Minimal Info */}
             <div className="text-center py-4 flex flex-col items-center justify-center min-h-[160px] flex-1">
-              <div className={`text-[11px] font-bold uppercase tracking-widest mb-3 ${isCheckout ? "text-[#4f46e5]" : "text-[#4f46e5]"}`}>
+              <div className={`text-[13px] font-bold uppercase tracking-wider mb-2 ${isCheckout ? "text-[#4f46e5]" : "text-[#4f46e5]"}`}>
                 {brandName} {tierName}
               </div>
               <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-4">
