@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const locationText = data.name;
   
   let title = `${brandPrefix}CCTV Installation in ${locationText} | Transparent Pricing`;
-  let description = `Professional ${brandPrefix}CCTV installation in ${locationText}. See exact prices, compare IP vs HD packages, and book a same-day survey across ${locationText}.`;
+  let description = `Professional ${brandPrefix}CCTV installation in ${locationText}. See exact prices, compare IP vs HD packages, and book a professional survey across ${locationText}.`;
   
   if (intent === "quotation") {
     title = `Get ${brandPrefix}CCTV Quotation in ${locationText} | Instant Estimator`;

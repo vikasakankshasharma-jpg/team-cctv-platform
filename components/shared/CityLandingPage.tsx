@@ -130,8 +130,6 @@ export default function CityLandingPage({
           <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8 shadow-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
             <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-500" />
             <span>{derivedTagline}</span>
-            <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-            <span className="text-blue-600 dark:text-emerald-500">{t('landing_same_day', 'Same-Day Survey')}</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter max-w-5xl mb-4 sm:mb-6 leading-[1.2] md:leading-[1.15] animate-in fade-in slide-in-from-bottom-8 duration-1000">
