@@ -850,7 +850,7 @@ export function WizardClientV2() {
                       <div>
                         <span className="block font-semibold text-gray-900 text-sm">Approx. Total Cable Required</span>
                         <span className="block text-xs text-gray-500">
-                          Estimated ~20m per camera ({req.camera_count || 4} cameras = {(req.camera_count || 4) * 20}m)
+                          Estimated ~15m per camera ({req.camera_count || 4} cameras = {(req.camera_count || 4) * 15}m)
                         </span>
                       </div>
                       <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm self-start sm:self-auto">
@@ -860,17 +860,17 @@ export function WizardClientV2() {
                           size="icon"
                           className="h-8 w-8 text-gray-700 hover:bg-gray-100"
                           onClick={() => {
-                            const defaultMeters = (req.camera_count || 4) * 20;
+                            const defaultMeters = (req.camera_count || 4) * 15;
                             const current = req.total_cable_length_meters || defaultMeters;
                             const next = Math.max(10, current - 10);
                             updateReq({ total_cable_length_meters: next });
                           }}
-                          disabled={((req.total_cable_length_meters || ((req.camera_count || 4) * 20)) <= 10)}
+                          disabled={((req.total_cable_length_meters || ((req.camera_count || 4) * 15)) <= 10)}
                         >
                           -
                         </Button>
                         <span className="font-bold text-blue-800 min-w-[80px] text-center text-sm">
-                          {req.total_cable_length_meters || ((req.camera_count || 4) * 20)} Meters
+                          {req.total_cable_length_meters || ((req.camera_count || 4) * 15)} Meters
                         </span>
                         <Button
                           type="button"
@@ -878,7 +878,7 @@ export function WizardClientV2() {
                           size="icon"
                           className="h-8 w-8 text-gray-700 hover:bg-gray-100"
                           onClick={() => {
-                            const defaultMeters = (req.camera_count || 4) * 20;
+                            const defaultMeters = (req.camera_count || 4) * 15;
                             const current = req.total_cable_length_meters || defaultMeters;
                             const next = current + 10;
                             updateReq({ total_cable_length_meters: next });

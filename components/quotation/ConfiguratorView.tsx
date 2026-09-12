@@ -225,7 +225,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     if (typeof totalMeters === "number" && totalMeters > 0) return totalMeters;
     const perCamMeters = lead.wizard_answers?.cable_length_meters;
     if (typeof perCamMeters === "number" && perCamMeters > 0) return perCamMeters * (selection.camera_count || 4);
-    return (selection.camera_count || 4) * 20;
+    return (selection.camera_count || 4) * 15;
   }, [lead.cabling_done, lead.wizard_answers, selection.camera_count]);
   
   const requirements = useMemo(() => {

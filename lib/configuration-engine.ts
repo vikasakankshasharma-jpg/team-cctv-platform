@@ -110,7 +110,7 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
     } else if (req.cable_length_meters) {
       cableMeters = req.cable_length_meters * wiredCameras;
     } else {
-      cableMeters = 20 * wiredCameras;
+      cableMeters = 15 * wiredCameras;
     }
   }
 
