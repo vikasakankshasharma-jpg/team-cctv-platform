@@ -1,0 +1,1 @@
+import { POST } from './app/api/payment/razorpay-link/route.ts'; const req = new Request('http://localhost/api/payment/razorpay-link', { method: 'POST', body: JSON.stringify({ quoteId: 'pqoxwCJsCfkYtPjP1Pvn', leadId: 'TlyWxv0ATxfxPyIpsIHG', paymentType: 'advance' }) }); POST(req).then(async (res) => { console.log(await res.json()); });

@@ -143,7 +143,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("[Razorpay Order Error]:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create payment order" },
+      { success: false, error: error.message || "Failed to create payment order", razorpayError: error },
       { status: 500 }
     );
   }
