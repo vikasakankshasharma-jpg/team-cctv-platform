@@ -117,6 +117,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     let actualCablingCost = 0;
   let totalPurchaseCost = 0;
   let addonsTotal = 0;
+  let storageOverflowFlag = false;
+  let storageOverflowData: any = undefined;
   const lineItems: QuoteLineItem[] = [];
   const quoteAddons: QuoteAddon[] = [];
   const marginWarnings: string[] = [];
@@ -136,6 +138,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     lineItems.push(...hardware.items);
     baseHardwareCost += hardware.totalRetail;
     totalPurchaseCost += hardware.totalCost;
+    storageOverflowFlag = hardware.storageOverflow || false;
+    storageOverflowData = hardware.storageOverflowInfo;
 
     // 3. Labor & Equipment Calculation
     const labor = calculateLabor(selection, settings, effectiveTech, effectiveLaborMultiplier);
@@ -284,6 +288,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     gross_profit_value: Math.round(grossProfitValue),
     gross_profit_percent: Number(grossProfitPercent.toFixed(2)),
     margin_warnings: marginWarnings,
+    storage_overflow: storageOverflowFlag,
+    storage_overflow_info: storageOverflowData,
     error,
     error_message: errorMessage
   };
@@ -476,8 +482,11 @@ function calculateHardware(
       totalCost += (transmission.base_cost || 0) * qty;
     }
   }
+  // Surface storage overflow info for auto-lead capture
+  const storageOverflow = hdd && (hdd as any).storage_overflow ? true : false;
+  const storageOverflowInfo = hdd && (hdd as any).storage_overflow_info || undefined;
 
-  return { items, totalRetail, totalCost };
+  return { items, totalRetail, totalCost, storageOverflow, storageOverflowInfo };
 }
 
 function calculateLabor(
@@ -665,9 +674,11 @@ function calculateConnectors(
     totalRetail += lineTotal;
     totalCost += (userConnector.base_cost || 0) * wiredCameraCount;
   } else {
+    const connectorMarginPct = (settings as any).margin_connectors || 50;
     const useRJ45 = tech === "IP" || selection.cable_type === "cat6";
     if (useRJ45) {
-      const rate = settings.connector_rj45_cost || 25;
+      const costPerPiece = settings.connector_rj45_cost || 5;
+      const retailPerPiece = Math.round(costPerPiece * (1 + connectorMarginPct / 100));
       let qty = wiredCameraCount;
       if (tech === "IP") {
         qty = (wiredCameraCount * 2) + 2; // 2 per camera + 2 for PoE uplink
@@ -675,28 +686,30 @@ function calculateConnectors(
         qty = wiredCameraCount * 2; // Cat6 Balun ends
       }
       
-      const lineTotal = rate * qty;
+      const lineTotal = retailPerPiece * qty;
       items.push({
         product_id: "connector_rj45",
         display_name: "RJ45 Connectors (Camera & Switch/Balun ends)",
         qty: qty,
-        unit_price: rate,
+        unit_price: retailPerPiece,
         line_total: lineTotal
       });
       totalRetail += lineTotal;
-      totalCost += Math.round(lineTotal * 0.5);
+      totalCost += costPerPiece * qty;
     } else {
-      const rate = settings.connector_bnc_dc_cost || 70;
-      const lineTotal = rate * wiredCameraCount;
+      // BNC ₹15 + DC ₹5 = ₹20 per camera (purchase cost for a complete set)
+      const costPerSet = settings.connector_bnc_dc_cost || 20;
+      const retailPerSet = Math.round(costPerSet * (1 + connectorMarginPct / 100));
+      const lineTotal = retailPerSet * wiredCameraCount;
       items.push({
         product_id: "connector_bnc_dc",
         display_name: "BNC & DC Connector Set",
         qty: wiredCameraCount,
-        unit_price: rate,
+        unit_price: retailPerSet,
         line_total: lineTotal
       });
       totalRetail += lineTotal;
-      totalCost += Math.round(lineTotal * 0.5);
+      totalCost += costPerSet * wiredCameraCount;
     }
   }
 
@@ -714,8 +727,9 @@ function calculateConnectors(
     totalRetail += lineTotal;
     totalCost += (userMount.base_cost || 0) * wiredCameraCount;
   } else {
-    const junctionRate = (settings as any).junction_box_cost || 35;
-    const junctionPurchaseCost = Math.round(junctionRate * 0.57); // ~57% purchase cost
+    const junctionCost = (settings as any).junction_box_cost || 20; // Purchase cost from price list
+    const junctionMarginPct = (settings as any).margin_junction_box || 50;
+    const junctionRate = Math.round(junctionCost * (1 + junctionMarginPct / 100));
     const junctionTotal = junctionRate * wiredCameraCount;
     items.push({
       product_id: "acc_junction_box",
@@ -726,7 +740,7 @@ function calculateConnectors(
       line_total: junctionTotal
     });
     totalRetail += junctionTotal;
-    totalCost += junctionPurchaseCost * wiredCameraCount;
+    totalCost += junctionCost * wiredCameraCount;
   }
 
   return { items, totalRetail, totalCost };
@@ -1175,10 +1189,26 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
 
   // 6. Find best fit HDD from in-stock options
   let chosenHdd = candidateDisks.find(h => resolveHDDCapacity(h) >= requiredTB);
+  let storageOverflow = false;
+  let storageOverflowInfo: any = undefined;
   if (!chosenHdd) {
-    // If requirement exceeds single drive in stock (e.g. 6TB needed, but max in stock is 4TB for 1-SATA)
-    // Strictly pick the largest available in-stock drive!
+    // Storage requirement exceeds the largest available single drive.
+    // Pick the largest drive as a "downgraded" best-effort quote,
+    // and flag it so the UI can show a warning + auto-capture lead.
     chosenHdd = candidateDisks[candidateDisks.length - 1];
+    storageOverflow = true;
+    const largestCapacityTB = resolveHDDCapacity(chosenHdd);
+    storageOverflowInfo = {
+      required_tb: Number(requiredTB.toFixed(2)),
+      available_tb: largestCapacityTB,
+      shortfall_tb: Number((requiredTB - largestCapacityTB).toFixed(2)),
+      required_gb: requiredGB,
+      camera_count: selection.camera_count,
+      recording_days: recordingDays,
+      recording_mode: recordingMode,
+      daily_gb_per_camera: effectiveDailyGb,
+      message: `Customer requires ${requiredTB.toFixed(1)}TB storage but the largest available HDD is ${largestCapacityTB}TB. A custom configuration is needed. Our team will contact you to arrange the right BOM for your requirement.`
+    };
   }
 
   // 7. Calculate realistic actual backup days based on chosen drive
@@ -1188,13 +1218,17 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
 
   // 8. Return enriched HDD with approx backup days in display name
   const modeLabel = recordingMode === "motion" ? "Motion" : "24×7";
-  const backupNote = `(Approx. ${approxDays} Days Backup · ${modeLabel} @ ${compression})`;
+  const backupNote = storageOverflow
+    ? `(Approx. ${approxDays} Days Backup · ${modeLabel} @ ${compression} · ⚠️ ${recordingDays} Days requires ${requiredTB.toFixed(1)}TB)`
+    : `(Approx. ${approxDays} Days Backup · ${modeLabel} @ ${compression})`;
 
   return {
     ...chosenHdd,
     display_name: `${chosenHdd.display_name} ${backupNote}`,
     approx_days: approxDays,
-    compression_used: compression
+    compression_used: compression,
+    storage_overflow: storageOverflow,
+    storage_overflow_info: storageOverflowInfo
   };
 }
 

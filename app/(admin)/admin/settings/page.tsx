@@ -43,8 +43,8 @@ export default async function SettingsAdminPage() {
     cable_copper_coated_ip: 40,
     cable_copper_coated_hd: 25,
     cable_pure_copper: 65,
-    connector_rj45_cost: 25,
-    connector_bnc_dc_cost: 70,
+    connector_rj45_cost: 5, // Purchase cost per piece (price list)
+    connector_bnc_dc_cost: 20, // BNC ₹15 + DC ₹5 = ₹20 per camera (purchase cost)
     cable_overage_per_mtr: 12,
     conduit_cost_per_meter: 20,
     visit_charge: 300,
