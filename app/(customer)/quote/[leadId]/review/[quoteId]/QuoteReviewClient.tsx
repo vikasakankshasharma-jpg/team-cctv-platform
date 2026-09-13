@@ -156,7 +156,35 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     try {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        toast.error("Payment SDK failed to load. Please check your internet connection or disable any active ad-blockers/shields.");
+        toast.error("Payment SDK blocked by your browser. Generating a direct payment link instead...", { duration: 5000 });
+        
+        // Fallback to Razorpay Payment Link
+        try {
+          const res = await fetch("/api/payment/razorpay-link", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              quoteId: quote.id,
+              leadId: quote.leadId,
+              paymentType: type,
+              notes: {
+                customer_name: quote.customer.name,
+                customer_phone: quote.customer.phone,
+                payment_type: type,
+                payment_method: method
+              }
+            }),
+          });
+          const data = await res.json();
+          if (data.success && data.payment_url) {
+            window.location.href = data.payment_url;
+            return;
+          }
+        } catch (e) {
+          console.error("Payment Link fallback failed", e);
+        }
+
+        toast.error("Could not load payment gateway. Please disable your ad-blocker or try a different browser.");
         return;
       }
 
