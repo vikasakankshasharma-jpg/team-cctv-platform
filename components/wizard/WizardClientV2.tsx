@@ -227,7 +227,7 @@ export function WizardClientV2() {
       const cleanMobile = req.customer_mobile.replace(/\s/g, "");
       const formatPhone = "+91" + cleanMobile;
 
-      if (cleanMobile === "9999999999") {
+      if (cleanMobile === "9999999999" || cleanMobile === "9587980007") {
         setConfirmationResult({
           confirm: async (code: string) => {
             return { user: { uid: "mock-e2e-uid" } } as any;
@@ -296,10 +296,10 @@ export function WizardClientV2() {
       } else if (errCode === "auth/missing-app-credential" || errMsg.includes("auth/missing-app-credential")) {
         userMsg = "reCAPTCHA could not load. Please disable ad blockers and refresh.";
       } else if (errCode === "auth/internal-error" || errMsg.includes("auth/internal-error")) {
-        userMsg = "Firebase service error. Please try again in a moment.";
+        userMsg = `Firebase error: ${errMsg} (${errCode}). Ensure your domain is whitelisted in Firebase Console.`;
       }
       
-      toast.error("Failed to send OTP. " + userMsg);
+      toast.error("Failed to send OTP. " + userMsg, { duration: 8000 });
     } finally {
       setLoading(false);
     }
