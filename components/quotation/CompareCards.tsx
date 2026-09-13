@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useRef, useEffect, useCallback } from "react";
-import { Check, Zap, Monitor, Camera, Network, PlusCircle, ArrowDown, X, Info, Home, Building2, Settings2, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, Zap, Monitor, Camera, Network, PlusCircle, ArrowDown, X, Info, Home, Building2, Settings2, Sparkles, ChevronLeft, ChevronRight, AlertTriangle, Phone } from "lucide-react";
 import type { Product, AppSettings, ConfiguratorSelection, RecommendedOutput, Addon } from "@/types";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { calculateSystemScore } from "@/lib/system-score";
@@ -40,6 +40,9 @@ interface CompareCardsProps {
   promoterDiscount?: { percent: number; flat: number };
   evaluatedAddonRules: any;
   activeOffer?: any;
+  leadId?: string;
+  customerName?: string;
+  customerPhone?: string;
 }
 
 function AddonRow({ name, price, isMandatory }: { name: string; price: number; isMandatory: boolean; }) {
@@ -74,6 +77,9 @@ export function CompareCards({
   promoterDiscount,
   evaluatedAddonRules,
   activeOffer,
+  leadId,
+  customerName,
+  customerPhone,
 }: CompareCardsProps) {
 
   const cardsData = useMemo(() => {
@@ -183,6 +189,43 @@ export function CompareCards({
     const timer = setTimeout(() => setShowSwipeHint(false), 4000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Auto-capture lead when storage overflow is detected
+  const [overflowCaptured, setOverflowCaptured] = useState(false);
+  useEffect(() => {
+    if (overflowCaptured) return;
+    const overflowCard = cardsData.find(c => c.pricing.storage_overflow === true);
+    if (!overflowCard || !leadId) return;
+    
+    const info = overflowCard.pricing.storage_overflow_info;
+    setOverflowCaptured(true);
+    
+    // Fire-and-forget — don't block UI
+    fetch("/api/leads/storage-overflow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lead_id: leadId,
+        phone: customerPhone,
+        customer_name: customerName,
+        required_tb: info?.required_tb,
+        available_tb: info?.available_tb,
+        shortfall_tb: info?.shortfall_tb,
+        camera_count: info?.camera_count || selection.camera_count,
+        recording_days: info?.recording_days,
+        recording_mode: info?.recording_mode,
+        technology: overflowCard.technology,
+        plan_type: overflowCard.option,
+        daily_gb_per_camera: info?.daily_gb_per_camera,
+      }),
+    }).catch(err => console.error("Storage overflow lead capture failed:", err));
+    
+    trackEvent("storage_overflow_detected", {
+      required_tb: info?.required_tb,
+      available_tb: info?.available_tb,
+      camera_count: info?.camera_count,
+    });
+  }, [cardsData, leadId, overflowCaptured, customerName, customerPhone, selection.camera_count]);
 
   const scrollToCard = useCallback((index: number) => {
     const container = scrollRef.current;
@@ -298,6 +341,42 @@ export function CompareCards({
         );
       })}
       </div>
+
+      {/* Storage Overflow Warning Banner */}
+      {(() => {
+        const overflowCard = cardsData.find(c => c.pricing.storage_overflow === true);
+        if (!overflowCard) return null;
+        const info = overflowCard.pricing.storage_overflow_info;
+        const requiredTB = info?.required_tb ?? "?";
+        const availableTB = info?.available_tb ?? "?";
+        const approxDays = overflowCard.pricing.items?.find((i: any) => i.display_name?.includes("Approx."))?.display_name?.match(/Approx\. (\d+) Days/)?.[1] || "—";
+        
+        return (
+          <div className="mx-4 sm:mx-0 mt-6 p-5 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-[15px] font-semibold text-amber-900 dark:text-amber-200 mb-1">
+                  Storage exceeds available capacity
+                </h4>
+                <p className="text-[13px] text-amber-700 dark:text-amber-300/80 leading-relaxed mb-3">
+                  Your requirement needs <strong>{requiredTB}TB</strong> storage, but the largest available hard disk is <strong>{availableTB}TB</strong>. 
+                  The prices shown above are based on the best available {availableTB}TB drive (~{approxDays} days backup). 
+                  For full {info?.recording_days}-day backup, a custom configuration is needed.
+                </p>
+                <div className="flex items-center gap-2 text-[13px]">
+                  <Phone className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span className="text-amber-800 dark:text-amber-200 font-medium">
+                    Our team will contact you to arrange the right setup for your site.
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Mobile Pagination Indicator */}
       {cardsData.length > 1 && (

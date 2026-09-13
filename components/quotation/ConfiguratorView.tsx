@@ -541,6 +541,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               promoterDiscount={promoterDiscount}
               evaluatedAddonRules={evaluatedRules}
               activeOffer={lead.active_offer}
+              leadId={lead.id}
+              customerName={lead.customer_name}
+              customerPhone={lead.mobile_number}
             />
 
             <div className="mb-20 hidden md:block border-t border-[#f5f5f7] dark:border-[#2d2d2f] pt-16 mt-16">
