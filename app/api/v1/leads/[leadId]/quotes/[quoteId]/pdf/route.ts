@@ -73,7 +73,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   // Check if it's an invoice
-  const isInvoice = quote.status === "accepted";
+  const isInvoice = quote.status === "accepted" || quote.status === "PAID";
 
   // ── 3. Check Storage cache ─────────────────────────────────────────────────
   const bucket     = adminStorage.bucket();
