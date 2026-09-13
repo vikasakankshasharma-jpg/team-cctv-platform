@@ -317,8 +317,8 @@ function calculateHardware(
   // Synthesize mixed_camera_requirements from indoor/outdoor counts if present and no explicit camera chosen
   let mixedReqs = selection.mixed_camera_requirements;
   if (!mixedReqs && !selection.selected_camera_id && (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined)) {
-    const indoor = selection.indoor_camera_count || 0;
-    const outdoor = selection.outdoor_camera_count || 0;
+    const indoor = Number(selection.indoor_camera_count) || 0;
+    const outdoor = Number(selection.outdoor_camera_count) || 0;
     if (indoor > 0 && outdoor > 0) {
       mixedReqs = [
         { type: "Outdoor Bullet Camera", count: outdoor, features: ["bullet"] },
@@ -459,14 +459,14 @@ function calculateHardware(
   // 4. Transmission (PoE/PSU)
   const transmission = resolveTransmission(selection, [...products, ...addons] as any[], tech);
   if (transmission) {
-    let wiredCameraCount = selection.camera_count;
+    let wiredCameraCount = Number(selection.camera_count) || 0;
     if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
       wiredCameraCount = selection.mixed_camera_requirements
         .filter(req => {
           const t = req.type.toLowerCase();
           return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
         })
-        .reduce((sum, req) => sum + req.count, 0);
+        .reduce((sum, req) => sum + Number(req.count), 0);
     }
 
     if (wiredCameraCount > 0) {
@@ -501,8 +501,8 @@ function calculateLabor(
 
   const baseRate = tech === "IP" ? (settings.labor_ip_per_camera || 500) : (settings.labor_hd_per_camera || 400);
   const rate = Math.round(baseRate * locationMultiplier);
-  // Only charge labor for wired cameras — wireless cameras don't need cable termination work
-  let qty = selection.camera_count;
+  // Only charge labor for wired cameras - wireless cameras don't need cable termination work
+  let qty = Number(selection.camera_count) || 0;
   if (tech === "WiFi" || tech === "Wireless") {
     qty = 0;
   } else if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
@@ -511,9 +511,9 @@ function calculateLabor(
         const t = req.type.toLowerCase();
         return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
       })
-      .reduce((sum, req) => sum + req.count, 0);
+      .reduce((sum, req) => sum + Number(req.count), 0);
   } else if (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined) {
-    qty = (selection.indoor_camera_count || 0) + (selection.outdoor_camera_count || 0) || selection.camera_count;
+    qty = (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0) || Number(selection.camera_count);
   }
   if (qty <= 0) return { items, totalRetail: 0 };
   const lineTotal = rate * qty;
@@ -549,14 +549,14 @@ function calculateCabling(
   }
 
   // Exclude Wireless/Solar/4G cameras from cabling meter counts
-  let wiredCameraCount = selection.camera_count;
+  let wiredCameraCount = Number(selection.camera_count) || 0;
   if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
     wiredCameraCount = selection.mixed_camera_requirements
       .filter(req => {
         const t = req.type.toLowerCase();
         return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
       })
-      .reduce((sum, req) => sum + req.count, 0);
+      .reduce((sum, req) => sum + Number(req.count), 0);
   }
 
   if (wiredCameraCount <= 0) {
@@ -581,8 +581,12 @@ function calculateCabling(
     effectiveCableTech = "IP";
   }
 
-  // Find cable in products
-  const cables = products.filter(p => p.category === "cable" && (p.technologies || []).includes(effectiveCableTech as any));
+  // Find cable in products (filter out bundled boxes with high base costs)
+  const cables = products.filter(p => 
+    p.category === "cable" && 
+    (p.technologies || []).includes(effectiveCableTech as any) &&
+    ((p.base_cost === undefined || p.base_cost < 100) && (p.unit_price === undefined || p.unit_price < 200))
+  );
   let selectedCable = cables.find(c => (c.brand || "").toLowerCase() === cameraBrand.toLowerCase());
   
   if (!selectedCable && cables.length > 0) {
@@ -642,14 +646,14 @@ function calculateConnectors(
     return { items, totalRetail: 0, totalCost: 0 };
   }
   
-  let wiredCameraCount = selection.camera_count || 1;
+  let wiredCameraCount = Number(selection.camera_count) || 1;
   if (selection.mixed_camera_requirements && selection.mixed_camera_requirements?.length > 0) {
     wiredCameraCount = selection.mixed_camera_requirements
       .filter(req => {
         const t = req.type.toLowerCase();
         return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
       })
-      .reduce((sum, req) => sum + req.count, 0);
+      .reduce((sum, req) => sum + Number(req.count), 0);
   }
   
   if (wiredCameraCount <= 0) {
@@ -1430,7 +1434,11 @@ export function generatePricingSnapshot(
     const effectiveTech = isIP ? "IP" : "HD";
     
     // Find cable product
-    const cables = products.filter(p => p.category === "cable" && (p.technologies || []).includes(effectiveTech as any));
+    const cables = products.filter(p => 
+      p.category === "cable" && 
+      (p.technologies || []).includes(effectiveTech as any) &&
+      ((p.base_cost === undefined || p.base_cost < 100) && (p.unit_price === undefined || p.unit_price < 200))
+    );
     const camBrand = resolvedSystem.cameras.length > 0 ? (resolvedSystem.cameras[0].product.brand || "budget") : "budget";
     
     let selectedCable = cables.find(c => (c.brand || "").toLowerCase() === camBrand.toLowerCase());
@@ -1489,7 +1497,7 @@ export function generatePricingSnapshot(
 
   // 7. Labor & Prep (Derived from Settings rather than hardcoded 500/400)
   const wiredCameraCount = resolvedSystem.cameras.reduce((sum: number, c: any) => {
-    return c.product.technologies?.includes("Wireless") ? sum : (sum + c.qty);
+    return c.product.technologies?.includes("Wireless") ? sum : (sum + Number(c.qty));
   }, 0);
 
   if (wiredCameraCount > 0) {
