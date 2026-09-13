@@ -2,11 +2,12 @@ import { CCTVRequirement, CCTVConfiguration } from "@/types";
 
 export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   const isLiveOnly = req.recording_mode === "live_only" || req.recording_days === 0;
+  const isIndustrial = (req.camera_count && Number(req.camera_count) > 16) || req.property_type === 'industrial';
   
   // Calculate total cameras
-  let totalCameras = req.camera_count || 0;
-  let indoorCameras = req.indoor_camera_count || 0;
-  let outdoorCameras = req.outdoor_camera_count || 0;
+  let totalCameras = Number(req.camera_count) || 0;
+  let indoorCameras = Number(req.indoor_camera_count) || 0;
+  let outdoorCameras = Number(req.outdoor_camera_count) || 0;
   
   // If explicitly provided via indoor/outdoor split
   if (indoorCameras > 0 || outdoorCameras > 0) {
@@ -19,7 +20,12 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   
   // If specific mixed requirements are provided, sum them up
   if (req.mixed_camera_requirements && req.mixed_camera_requirements.length > 0) {
-    totalCameras = req.mixed_camera_requirements.reduce((sum: number, r: any) => sum + r.count, 0);
+    totalCameras = req.mixed_camera_requirements.reduce((sum: number, r: any) => sum + (Number(r.count) || 0), 0);
+    // Rough heuristic to split if we only have mixed specs
+    if (indoorCameras === 0 && outdoorCameras === 0) {
+       indoorCameras = totalCameras;
+       outdoorCameras = 0;
+    }
   }
 
   // Determine Wireless vs Wired
@@ -83,7 +89,7 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
        // Customer explicitly wants to keep their existing HDD, do not quote a new one
        storageGb = 0;
     } else {
-       const days = req.recording_days !== undefined ? req.recording_days : 15;
+       const days = req.recording_days !== undefined ? Number(req.recording_days) : 15;
        // Resolution-aware base GB/day per camera
        const resMP = req.resolution_mp || 2;
        let baseGbPerDay = 18; // 2MP H.264 baseline
@@ -114,10 +120,10 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   // Calculate Cable
   let cableMeters = 0;
   if (wiredCameras > 0 && !req.cabling_done) {
-    if (req.total_cable_length_meters && req.total_cable_length_meters > 0) {
-      cableMeters = req.total_cable_length_meters;
+    if (req.total_cable_length_meters && Number(req.total_cable_length_meters) > 0) {
+      cableMeters = Number(req.total_cable_length_meters);
     } else if (req.cable_length_meters) {
-      cableMeters = req.cable_length_meters * wiredCameras;
+      cableMeters = Number(req.cable_length_meters) * wiredCameras;
     } else {
       cableMeters = 15 * wiredCameras;
     }
