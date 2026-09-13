@@ -125,22 +125,27 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const advance = Math.round(total * (quote.advancePercent / 100));
   const daysLeft = daysUntil(quote.validUntil);
 
-  const loadRazorpayScript = () => {
-    return new Promise<boolean>((resolve) => {
-      if (typeof window !== "undefined" && (window as any).Razorpay) {
-        resolve(true);
-        return;
-      }
-      const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
-      if (existing) {
-        existing.remove();
-      }
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
+  const loadRazorpayScript = async (retries = 3): Promise<boolean> => {
+    for (let i = 0; i < retries; i++) {
+      const success = await new Promise<boolean>((resolve) => {
+        if (typeof window !== "undefined" && (window as any).Razorpay) {
+          resolve(true);
+          return;
+        }
+        const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+        if (existing) existing.remove();
+        
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+      });
+      if (success) return true;
+      // Wait 1 second before retrying
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    return false;
   };
 
   const handlePayment = async (type: "advance" | "full", method: "all" | "emi") => {
