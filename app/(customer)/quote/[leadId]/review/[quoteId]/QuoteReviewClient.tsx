@@ -5,7 +5,7 @@ import Image from "next/image";
 import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check } from "lucide-react";
+import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check, MessageCircle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { RevisionBanner } from "@/components/quote/RevisionBanner";
 
@@ -166,7 +166,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     return false;
   };
 
-  const redirectToPaymentLink = async (type: "advance" | "full", method: "all" | "emi") => {
+  const redirectToPaymentLink = async (type: "advance" | "full", method: "all" | "emi", returnUrlOnly = false) => {
     try {
       const toastId = toast.loading("Generating secure payment page...");
       const res = await fetch("/api/payment/razorpay-link", {
@@ -188,6 +188,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
       toast.dismiss(toastId);
       
       if (data.success && data.payment_url) {
+        if (returnUrlOnly) return data.payment_url;
         window.location.href = data.payment_url;
         return true;
       }
@@ -195,6 +196,14 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     } catch (e) {
       console.error("Payment Link fallback failed", e);
       return false;
+    }
+  };
+
+  const handleWhatsAppShare = async () => {
+    const url = await redirectToPaymentLink("advance", "all", true);
+    if (typeof url === "string") {
+      const message = `Hi! Here is the secure payment link to confirm your CCTV installation booking: ${url}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
     }
   };
 
@@ -554,12 +563,19 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   </motion.button>
                 </div>
 
-                <div className="mt-4 text-center">
+                <div className="mt-4 flex flex-col items-center justify-center gap-3">
                   <button 
                     onClick={() => redirectToPaymentLink("advance", "all")}
                     className="text-xs text-gray-500 hover:text-blue-600 underline underline-offset-2 transition-colors"
                   >
                     Trouble with the payment window? Click here to pay securely.
+                  </button>
+                  <button 
+                    onClick={handleWhatsAppShare}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors flex items-center gap-1"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    Send Payment Link via WhatsApp (Alternate Device)
                   </button>
                 </div>
               </div>
