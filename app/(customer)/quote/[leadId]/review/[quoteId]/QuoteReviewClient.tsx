@@ -125,27 +125,77 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const advance = Math.round(total * (quote.advancePercent / 100));
   const daysLeft = daysUntil(quote.validUntil);
 
-  const loadRazorpayScript = async (retries = 3): Promise<boolean> => {
+  const loadRazorpayScript = async (retries = 2): Promise<boolean> => {
     for (let i = 0; i < retries; i++) {
       const success = await new Promise<boolean>((resolve) => {
         if (typeof window !== "undefined" && (window as any).Razorpay) {
           resolve(true);
           return;
         }
+        
+        let timeout: NodeJS.Timeout;
+        
         const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
         if (existing) existing.remove();
         
         const script = document.createElement("script");
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
+        
+        script.onload = () => {
+          clearTimeout(timeout);
+          resolve(true);
+        };
+        
+        script.onerror = () => {
+          clearTimeout(timeout);
+          resolve(false);
+        };
+        
         document.body.appendChild(script);
+        
+        // Timeout after 4 seconds
+        timeout = setTimeout(() => {
+          resolve(false);
+        }, 4000);
       });
+      
       if (success) return true;
-      // Wait 1 second before retrying
-      await new Promise(r => setTimeout(r, 1000));
+      // Wait briefly before retrying
+      if (i < retries - 1) await new Promise(r => setTimeout(r, 500));
     }
     return false;
+  };
+
+  const redirectToPaymentLink = async (type: "advance" | "full", method: "all" | "emi") => {
+    try {
+      const toastId = toast.loading("Generating secure payment page...");
+      const res = await fetch("/api/payment/razorpay-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quoteId: quote.id,
+          leadId: quote.leadId,
+          paymentType: type,
+          notes: {
+            customer_name: quote.customer.name,
+            customer_phone: quote.customer.phone,
+            payment_type: type,
+            payment_method: method
+          }
+        }),
+      });
+      const data = await res.json();
+      toast.dismiss(toastId);
+      
+      if (data.success && data.payment_url) {
+        window.location.href = data.payment_url;
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Payment Link fallback failed", e);
+      return false;
+    }
   };
 
   const handlePayment = async (type: "advance" | "full", method: "all" | "emi") => {
@@ -156,35 +206,15 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     try {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        toast.error("Payment SDK blocked by your browser. Generating a direct payment link instead...", { duration: 5000 });
+        toast.error("Payment SDK blocked by your browser. Redirecting securely...", { duration: 5000 });
         
-        // Fallback to Razorpay Payment Link
-        try {
-          const res = await fetch("/api/payment/razorpay-link", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              quoteId: quote.id,
-              leadId: quote.leadId,
-              paymentType: type,
-              notes: {
-                customer_name: quote.customer.name,
-                customer_phone: quote.customer.phone,
-                payment_type: type,
-                payment_method: method
-              }
-            }),
-          });
-          const data = await res.json();
-          if (data.success && data.payment_url) {
-            window.location.href = data.payment_url;
-            return;
-          }
-        } catch (e) {
-          console.error("Payment Link fallback failed", e);
-        }
+        const success = await redirectToPaymentLink(type, method);
+        if (success) return;
 
         toast.error("Could not load payment gateway. Please disable your ad-blocker or try a different browser.");
+        if (method === "emi") setIsPayingEMI(false);
+        else if (type === "full") setIsPayingFull(false);
+        else setIsPayingAdvance(false);
         return;
       }
 
@@ -522,6 +552,15 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   >
                     {isPayingFull ? t("processing", "Processing...") : `${t("pay_full_amount", "Pay Full Amount")} (${formatINR(total)})`}
                   </motion.button>
+                </div>
+
+                <div className="mt-4 text-center">
+                  <button 
+                    onClick={() => redirectToPaymentLink("advance", "all")}
+                    className="text-xs text-gray-500 hover:text-blue-600 underline underline-offset-2 transition-colors"
+                  >
+                    Trouble with the payment window? Click here to pay securely.
+                  </button>
                 </div>
               </div>
             ) : (
