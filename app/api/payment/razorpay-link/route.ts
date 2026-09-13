@@ -100,6 +100,12 @@ export async function POST(req: Request) {
       key_secret,
     });
 
+    let customerMobile = quoteData.customer_mobile || quoteData.customer?.phone || "+919999999999";
+    const cleanMobile = customerMobile.replace(/\s+/g, "");
+    if (cleanMobile.length === 10) {
+      customerMobile = `+91${cleanMobile}`;
+    }
+
     const paymentLinkOptions = {
       amount: Math.round(chargeAmount * 100), // paise
       currency: "INR",
@@ -107,7 +113,7 @@ export async function POST(req: Request) {
       description: `Security System Installation (${paymentType === "advance" ? "Advance Booking" : "Full Payment"})`,
       customer: {
         name: quoteData.customer_name || quoteData.customer?.name || "Customer",
-        contact: quoteData.customer_mobile || quoteData.customer?.phone || "+919999999999",
+        contact: customerMobile,
         email: quoteData.customer_email || quoteData.customer?.email || "customer@example.com"
       },
       notify: {
