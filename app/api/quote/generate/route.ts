@@ -144,7 +144,10 @@ export async function POST(request: Request) {
          req,
          addons,
          selectedAddonIds,
-         settings
+         settings,
+         undefined,
+         undefined,
+         catalog
        );
     }
 

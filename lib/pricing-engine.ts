@@ -1315,7 +1315,8 @@ export function generatePricingSnapshot(
   selectedAddonIds: string[] = [],
   settings: AppSettings,
   activeOffer?: any,
-  referralCode?: string
+  referralCode?: string,
+  products: Product[] = []
 ): QuoteDelivery {
   const lineItems: any[] = [];
   const quoteAddons: any[] = [];
@@ -1423,33 +1424,55 @@ export function generatePricingSnapshot(
     totalPurchaseCost += calc.workingCost;
   }
 
-  // 5. Cable (Derived from Catalog/Settings rather than hardcoded 25/15)
+  // 5. Cable (Fetch from DB, fallback to settings)
   if (resolvedSystem.cable_meters > 0) {
     const isIP = resolvedSystem.plan_type?.includes("IP");
-    const cableName = isIP ? "CAT6 IP Camera Cable" : "3+1 HD Camera Cable";
-    const baseCost = isIP 
-      ? (settings.cable_copper_coated_ip || (settings as any).wire_cost_per_meter || 15)
-      : (settings.cable_copper_coated_hd || (settings as any).wire_cost_per_meter || 12);
-    const calc = MarginEngine.calculateUnitPricing(baseCost, 'cable', planType, marginPolicy);
+    const effectiveTech = isIP ? "IP" : "HD";
+    
+    // Find cable product
+    const cables = products.filter(p => p.category === "cable" && (p.technologies || []).includes(effectiveTech as any));
+    const camBrand = resolvedSystem.cameras.length > 0 ? (resolvedSystem.cameras[0].product.brand || "budget") : "budget";
+    
+    let selectedCable = cables.find(c => (c.brand || "").toLowerCase() === camBrand.toLowerCase());
+    if (!selectedCable && cables.length > 0) {
+      selectedCable = cables[0];
+    }
+    
+    let baseCost = 12;
+    let cableName = isIP ? "CAT6 Cable" : "3+1 Coaxial Cable";
+    
+    if (selectedCable) {
+      baseCost = selectedCable.base_cost || 12;
+      cableName = selectedCable.display_name || cableName;
+    } else {
+      baseCost = isIP ? (settings.cable_copper_coated_ip || 12) : (settings.cable_copper_coated_hd || 8);
+    }
+    
+    const cableMarginPct = (settings as any).margin_cable ?? 50;
+    const cableRetailPerMeter = Math.round(baseCost * (1 + cableMarginPct / 100));
+    
     const qty = resolvedSystem.cable_meters;
+    const lineRetail = cableRetailPerMeter * qty;
+    const lineCost = baseCost * qty;
     
     lineItems.push({
-      product_id: isIP ? "cable_cat6" : "cable_3plus1",
-      display_name: cableName,
+      product_id: selectedCable ? selectedCable.id! : "cabling_material",
+      display_name: `${cableName} (~${qty}m) @ ₹${cableRetailPerMeter}/m`,
       qty,
-      unit_price: calc.sellingPriceExTax,
-      line_total: calc.sellingPriceExTax * qty,
+      unit_price: cableRetailPerMeter,
+      line_total: lineRetail,
       base_cost_at_quote: baseCost
     });
-    cablingCost += calc.sellingPriceExTax * qty;
-    totalPurchaseCost += calc.workingCost * qty;
+    cablingCost += lineRetail;
+    totalPurchaseCost += lineCost;
   }
 
   // 6. Connectors (Derived from Settings)
   if (resolvedSystem.connectors_qty > 0) {
     const isIP = resolvedSystem.plan_type?.includes("IP");
-    const baseCost = isIP ? (settings.connector_rj45_cost || 25) : (settings.connector_bnc_dc_cost || 70);
-    const calc = MarginEngine.calculateUnitPricing(baseCost, 'accessory', planType, marginPolicy);
+    const baseCost = isIP ? (settings.connector_rj45_cost || 5) : (settings.connector_bnc_dc_cost || 20);
+    // Use 'connector' so it picks up policy.margin_connectors (usually 50%)
+    const calc = MarginEngine.calculateUnitPricing(baseCost, 'connector', planType, marginPolicy);
     const qty = resolvedSystem.connectors_qty;
 
     lineItems.push({
