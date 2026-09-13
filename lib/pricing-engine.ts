@@ -151,7 +151,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
     // 3b. Cabling Cost (only if customer hasn't already done cabling)
     if (!cablingDone) {
-      const cabling = calculateCabling(selection, settings, effectiveTech, cablingMeters, effectiveLaborMultiplier);
+      const camBrand = hardware.items.find(i => i.display_name?.includes("Dome") || i.display_name?.includes("Bullet"))?.brand || "budget";
+      const cabling = calculateCabling(selection, settings, effectiveTech, cablingMeters, effectiveLaborMultiplier, products, camBrand);
       lineItems.push(...cabling.items);
       baseHardwareCost += cabling.totalRetail;
         actualCablingCost = cabling.totalRetail;
@@ -537,7 +538,9 @@ function calculateCabling(
   settings: AppSettings,
   tech: string,
   meters: number,
-  locationMultiplier = 1.0
+  locationMultiplier = 1.0,
+  products: Product[] = [],
+  cameraBrand: string = "budget"
 ) {
   const items: QuoteLineItem[] = [];
   
@@ -573,48 +576,57 @@ function calculateCabling(
      totalMeters = defaultMeters * wiredCameraCount;
   }
 
-  // Base Cable Cost
-  let baseCostPerMeter = 12; // fallback
-  let cableTypeLabel = "Cable";
+  let effectiveCableTech = tech;
+  if (tech === "HD" && selection.cable_type === "cat6") {
+    effectiveCableTech = "IP";
+  }
 
-  if (tech === "IP") {
-    // IP always uses CAT6
-    baseCostPerMeter = settings.cable_copper_coated_ip || 12;
-    cableTypeLabel = "CAT6 Cable";
+  // Find cable in products
+  const cables = products.filter(p => p.category === "cable" && (p.technologies || []).includes(effectiveCableTech as any));
+  let selectedCable = cables.find(c => (c.brand || "").toLowerCase() === cameraBrand.toLowerCase());
+  
+  if (!selectedCable && cables.length > 0) {
+    selectedCable = cables[0];
+  }
+
+  let baseCostPerMeter = 12;
+  let cableTypeLabel = effectiveCableTech === "IP" ? "CAT6 Cable" : "3+1 Coaxial Cable";
+
+  if (selectedCable) {
+    baseCostPerMeter = selectedCable.base_cost || 12;
+    cableTypeLabel = selectedCable.display_name || cableTypeLabel;
   } else {
-    // HD can use CAT6 or 3+1 Coaxial
-    if (selection.cable_type === "cat6") {
+    // Legacy fallback using legacy settings as COST if no DB items found
+    if (effectiveCableTech === "IP") {
       baseCostPerMeter = settings.cable_copper_coated_ip || 12;
-      cableTypeLabel = "CAT6 Cable";
     } else {
-      // Default to Coaxial for HD
       baseCostPerMeter = settings.cable_copper_coated_hd || 8;
-      cableTypeLabel = "3+1 Coaxial Cable";
     }
   }
     
   // Conduit Cost Addition
   const isConduit = selection.wiring_type === "conduit";
+  let conduitRate = 0;
   if (isConduit) {
-    const conduitRate = settings.conduit_cost_per_meter || 20;
-    baseCostPerMeter += conduitRate;
+    conduitRate = settings.conduit_cost_per_meter || 20;
   }
 
-  const ratePerMeter = Math.round(baseCostPerMeter * locationMultiplier);
-  const lineTotal = ratePerMeter * totalMeters;
+  const cableMarginPct = (settings as any).margin_cable ?? 50;
+  const cableRetailPerMeter = Math.round(baseCostPerMeter * (1 + cableMarginPct / 100));
+  const finalRatePerMeter = Math.round((cableRetailPerMeter + conduitRate) * locationMultiplier);
   const typeLabel = isConduit ? `Conduit Pipe + ${cableTypeLabel}` : `${cableTypeLabel} (Open)`;
+  const lineTotal = finalRatePerMeter * totalMeters;
+  const lineCost = (baseCostPerMeter + (isConduit ? conduitRate * 0.7 : 0)) * totalMeters;
 
   items.push({
-    product_id: "cabling_material",
-    display_name: `${typeLabel} (~${totalMeters}m) @ Rs.${ratePerMeter}/m`,
+    product_id: selectedCable ? selectedCable.id! : "cabling_material",
+    display_name: `${typeLabel} (~${totalMeters}m) @ ₹${finalRatePerMeter}/m`,
     qty: totalMeters,
-    unit_price: ratePerMeter,
+    unit_price: finalRatePerMeter,
     line_total: lineTotal
   });
 
-  // Purchase cost = ~70% of retail (material has lower margin)
-  const totalCost = Math.round(lineTotal * 0.7);
-  return { items, totalRetail: lineTotal, totalCost };
+  return { items, totalRetail: lineTotal, totalCost: lineCost };
 }
 
 function calculateConnectors(
