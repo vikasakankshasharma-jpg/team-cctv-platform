@@ -100,8 +100,8 @@ export async function POST(req: Request) {
       key_secret,
     });
 
-    let customerMobile = quoteData.customer_mobile || quoteData.customer?.phone || "+919999999999";
-    const cleanMobile = customerMobile.replace(/\s+/g, "");
+    let customerMobile = notes.customer_phone || quoteData.customer_mobile || quoteData.customer?.phone || "+919876543210";
+    const cleanMobile = customerMobile.replace(/[^0-9+]/g, "");
     if (cleanMobile.length === 10) {
       customerMobile = `+91${cleanMobile}`;
     }
