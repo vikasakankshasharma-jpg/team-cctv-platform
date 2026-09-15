@@ -1,7 +1,4 @@
-total_payable: quoteData.total_payable || 0,
-          amount_paid: quoteData.amount_paid || 0,
-          amount_due: quoteData.amount_due || quoteData.total_payable || 0,
-          payment_status:import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Invoice, Job, ChangeOrder } from "@/types";
 import { InventoryEngine } from "@/lib/inventory-engine";
