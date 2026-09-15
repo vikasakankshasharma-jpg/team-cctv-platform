@@ -1434,7 +1434,7 @@ export function generatePricingSnapshot(
       const effectiveTech = isIP ? "IP" : "HD";
       const camBrand = resolvedSystem.cameras.length > 0 ? (resolvedSystem.cameras[0].product.brand || "budget") : "budget";
       
-      const cabling = calculateCabling(req as any, settings, effectiveTech, undefined, locationMultiplier, products, camBrand);
+      const cabling = calculateCabling(req as any, settings, effectiveTech, undefined, 1.0, products, camBrand);
       
       lineItems.push(...cabling.items);
       cablingCost += cabling.totalRetail;
