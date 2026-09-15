@@ -22,6 +22,10 @@ export async function GET() {
     total_payable: 20000,
     amount_paid: 5000,
     amount_due: 15000,
+    items: [
+        { product_id: "prod_1", display_name: "Camera", qty: 4, unit_price: 2000, line_total: 8000, base_cost_at_quote: 1000 }
+    ],
+    addons: [],
     pricingSnapshot: {
       total_payable: 20000,
       gross_subtotal: 16949,
@@ -30,9 +34,6 @@ export async function GET() {
         { product_id: "prod_1", display_name: "Camera", qty: 4, unit_price: 2000, line_total: 8000, base_cost_at_quote: 1000 }
       ]
     },
-    lineItems: [
-      { id: "prod_1", name: "Camera", description: "Test", quantity: 4, unitPrice: 2000 }
-    ],
     advancePercent: 25,
     createdAt: new Date().toISOString()
   });

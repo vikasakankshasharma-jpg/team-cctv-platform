@@ -158,8 +158,10 @@ export async function POST(request: Request) {
           subtotal: coData.subtotal,
           gst_amount: coData.gst_amount,
           total_payable: coData.total_payable,
-          payment_status: "paid",
-          payment_references: [transaction_id],
+          amount_paid: coData.total_payable,
+            amount_due: 0,
+            payment_status: "paid",
+            payment_references: [transaction_id],
           is_supplementary: true,
           change_order_id: coData.id,
           created_at: new Date().toISOString()
