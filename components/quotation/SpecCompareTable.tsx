@@ -139,7 +139,7 @@ const SECTIONS: SpecSection[] = [
         key: "cable_len",
         getValue: ({ selection }) => {
           if (selection.total_cable_length_meters) return selection.total_cable_length_meters;
-          const metersPerCam = selection.cable_length_meters || 20;
+          const metersPerCam = selection.cable_length_meters || 15;
           return metersPerCam * selection.camera_count;
         },
         formatValue: (v) => `~${v} Meters`

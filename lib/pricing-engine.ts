@@ -564,7 +564,7 @@ function calculateCabling(
   }
 
   // Use explicitly requested total meters, or calculate from legacy per-camera meters, or default to admin configured / 20m per wired camera
-  const defaultMeters = settings.default_cable_length_per_camera || 15;
+  const defaultMeters = 15;
   let totalMeters = 0;
   if (selection.total_cable_length_meters) {
      totalMeters = selection.total_cable_length_meters;
@@ -880,7 +880,7 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
   const laborRate = tech === "IP" ? (settings.labor_ip_per_camera || 500) : (settings.labor_hd_per_camera || 400);
   const laborTotal = laborRate * qty;
 
-  const defaultMeters = settings.default_cable_length_per_camera || 15;
+  const defaultMeters = 15;
   let totalMeters = 0;
   if (selection.total_cable_length_meters) {
      totalMeters = selection.total_cable_length_meters;
