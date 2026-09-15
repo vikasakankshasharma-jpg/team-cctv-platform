@@ -11,7 +11,7 @@ export async function GET() {
     status: "won"
   });
 
-  await adminDb.collection("quotes").doc(quoteId).set({
+  await adminDb.collection("leads").doc(leadId).collection("quotes").doc(quoteId).set({
     id: quoteId,
     leadId: leadId,
     lead_id: leadId,
