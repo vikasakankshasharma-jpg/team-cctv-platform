@@ -318,8 +318,13 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
     quote?.laborCost || 
     0;
 
+    const amountPaid = quote?.amount_paid ?? quote?.paid_amount ?? 0;
+  const amountDue = quote?.amount_due ?? 0;
+
   const pricing = {
     total_payable: totalPayable,
+    amount_paid: amountPaid,
+    amount_due: amountDue,
     items: rawItems,
     addons: rawAddons,
     labor_cost: laborCost,

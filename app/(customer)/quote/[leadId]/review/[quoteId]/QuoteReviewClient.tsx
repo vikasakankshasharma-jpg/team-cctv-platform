@@ -125,7 +125,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const subtotal = quote.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
   const total = subtotal + (subtotal * quote.gstPercent / 100);
   const halfGst = (subtotal * quote.gstPercent / 100) / 2;
-  const advance = Math.round(total * (quote.advancePercent / 100));
+  const isPartiallyPaid = (quote.amount_paid || 0) > 0 && (quote.amount_due || 0) > 0;
+  const advance = isPartiallyPaid && quote.amount_due ? quote.amount_due : Math.round(total * (quote.advancePercent / 100));
   const daysLeft = daysUntil(quote.validUntil);
 
   const loadRazorpayScript = async (retries = 2): Promise<boolean> => {
@@ -626,7 +627,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           </div>
                           <div className="flex items-center gap-1.5">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            <span>Remaining balance due on site completion</span>
+                            {isPartiallyPaid ? <span>Total Remaining Balance Due</span> : <span>Remaining balance due on site completion</span>}
                           </div>
                         </div>
                       </div>
@@ -638,7 +639,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           className="w-full py-3.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
                         >
                           <CreditCard className="w-4 h-4" />
-                          Pay {formatINR(advance)} Advance
+                          Pay {isPartiallyPaid ? "Balance " : "Advance "}{formatINR(advance)}
                         </button>
 
                         <button

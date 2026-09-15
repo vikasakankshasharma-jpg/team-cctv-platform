@@ -1036,7 +1036,9 @@ export interface Invoice {
   gst_amount: number;
   total_payable: number;
 
-  payment_status: "unpaid" | "paid_advance" | "fully_paid";
+  amount_paid: number;
+  amount_due: number;
+  payment_status: "unpaid" | "partial" | "paid";
   payment_references: string[];
 
   is_supplementary: boolean;

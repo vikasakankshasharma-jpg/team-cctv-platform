@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       if (!invoiceDoc.exists) throw new Error("Base invoice not found");
       const invoiceData = invoiceDoc.data() as Invoice;
 
-      if (invoiceData.payment_status !== "fully_paid") {
+      if (invoiceData.payment_status !== "paid") {
         throw new Error("Cannot create a Change Order against an unpaid invoice.");
       }
 

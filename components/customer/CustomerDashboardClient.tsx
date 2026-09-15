@@ -21,7 +21,7 @@ import {
   MessageSquare, 
   Layers,
   ChevronRight
-} from "lucide-react";
+, CreditCard} from "lucide-react";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 
 export interface CustomerQuoteItem {
@@ -29,6 +29,8 @@ export interface CustomerQuoteItem {
   leadId: string;
   createdAt: string;
   totalPayable: number;
+    amountPaid?: number;
+    amountDue?: number;
   status: string;
   cameraCount?: number;
   propertyType?: string;
@@ -290,8 +292,15 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           })}
                         </span>
                         <span>•</span>
-                        <span className="text-base sm:text-lg font-black text-zinc-900 dark:text-white">
-                          ₹{q.totalPayable?.toLocaleString("en-IN") || "—"}
+                        <span className="flex flex-col items-end">
+                          <span className="text-base sm:text-lg font-black text-zinc-900 dark:text-white">
+                            ₹{q.totalPayable?.toLocaleString("en-IN") || "—"}
+                          </span>
+                          {(q.amountDue ?? 0) > 0 && q.isPaid && (
+                            <span className="text-[10px] text-red-500 font-bold -mt-0.5">
+                              Balance: ₹{(q.amountDue ?? 0).toLocaleString("en-IN")}
+                            </span>
+                          )}
                         </span>
                       </div>
                     </div>
@@ -327,6 +336,15 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                         <Truck className="w-4 h-4" />
                         <span>Track Status</span>
                       </Link>
+                      {(q.amountDue ?? 0) > 0 && q.isPaid && (
+                        <Link
+                          href={`/quote/${q.leadId}/review/${q.quoteId}`}
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 text-xs font-black transition-all"
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          <span>Pay Balance (Rs. {(q.amountDue ?? 0).toLocaleString('en-IN')})</span>
+                        </Link>
+                      )}
 
                       {/* Download Invoice (if paid) */}
                       {q.isPaid && (

@@ -1,4 +1,7 @@
-import { NextResponse } from "next/server";
+total_payable: quoteData.total_payable || 0,
+          amount_paid: quoteData.amount_paid || 0,
+          amount_due: quoteData.amount_due || quoteData.total_payable || 0,
+          payment_status:import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { Invoice, Job, ChangeOrder } from "@/types";
 import { InventoryEngine } from "@/lib/inventory-engine";
@@ -59,7 +62,7 @@ export async function POST(request: Request) {
           return { success: true, message: "Failed payment recorded" };
         }
 
-        if (invoiceData.payment_status === "fully_paid") {
+        if (invoiceData.payment_status === "paid") {
            return { success: true, message: "Invoice already fully paid" };
         }
 
@@ -77,7 +80,7 @@ export async function POST(request: Request) {
 
         const updatedRefs = [...(invoiceData.payment_references || []), transaction_id];
         transaction.update(invoiceRef, {
-          payment_status: "fully_paid",
+          payment_status: "paid",
           payment_references: updatedRefs
         });
 
@@ -158,7 +161,7 @@ export async function POST(request: Request) {
           subtotal: coData.subtotal,
           gst_amount: coData.gst_amount,
           total_payable: coData.total_payable,
-          payment_status: "fully_paid",
+          payment_status: "paid",
           payment_references: [transaction_id],
           is_supplementary: true,
           change_order_id: coData.id,

@@ -60,6 +60,8 @@ export async function POST(request: Request) {
         subtotal: quoteData.pricingSnapshot.net_taxable_amount,
         gst_amount: quoteData.pricingSnapshot.gst_amount,
         total_payable: quoteData.pricingSnapshot.total_payable,
+        amount_paid: 0,
+        amount_due: quoteData.pricingSnapshot.total_payable,
         payment_status: "unpaid",
         payment_references: [],
         is_supplementary: false,

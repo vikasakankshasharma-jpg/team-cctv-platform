@@ -79,6 +79,8 @@ export default async function CustomerDashboardPage() {
           propertyType: qData.requirementSnapshot?.property_type || leadData.property_type || "Commercial / Home",
           isPaid,
           customerName: qData.customer_name || leadData.customer_name,
+          amountPaid: qData.amount_paid || 0,
+          amountDue: qData.amount_due || 0,
         });
       }
     }
