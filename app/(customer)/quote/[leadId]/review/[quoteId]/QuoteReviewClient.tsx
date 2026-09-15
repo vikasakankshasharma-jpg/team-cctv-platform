@@ -29,8 +29,10 @@ export interface QuoteData {
   version?: number;
   isRevision?: boolean;
   revisionNotes?: string;
-  status: "pending" | "accepted" | "expired" | "rejected";
+  status: "pending" | "accepted" | "expired" | "rejected" | "PARTIAL_PAID" | "PAID";
   issuedAt: string;
+    amount_paid?: number;
+    amount_due?: number;
   validUntil: string;
   customer: {
     name: string;
@@ -81,6 +83,8 @@ function StatusBadge({ status }: { status: QuoteData["status"] }) {
     accepted: { label: t("quote_accepted", "Accepted"),          classes: "bg-emerald-100/50 text-emerald-800 border-emerald-200/50" },
     expired:  { label: t("quote_expired", "Expired"),           classes: "bg-rose-100/50 text-rose-800 border-rose-200/50" },
     rejected: { label: t("quote_rejected", "Rejected"),          classes: "bg-zinc-100/50 text-zinc-600 border-zinc-200/50" },
+      PARTIAL_PAID: { label: "Partially Paid", classes: "bg-indigo-100/50 text-indigo-800 border-indigo-200/50" },
+      PAID: { label: "Fully Paid", classes: "bg-emerald-100/50 text-emerald-800 border-emerald-200/50" },
   };
   const s = map[status] || map.pending;
   
