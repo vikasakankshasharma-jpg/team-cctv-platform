@@ -170,12 +170,10 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
               {/* View/Download Tax Invoice PDF */}
               <a 
                 href={invoiceUrl} 
-                target="_blank" 
-                rel="noreferrer" 
                 className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-white py-3.5 px-5 rounded-xl font-bold transition-all shadow-md active:scale-95 text-xs sm:text-sm text-center"
               >
                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                View Full Tax Invoice (PDF)
+                Download Tax Invoice (PDF)
               </a>
 
               {/* Get Invoice on WhatsApp */}
