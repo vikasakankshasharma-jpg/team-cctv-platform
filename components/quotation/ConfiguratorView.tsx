@@ -222,11 +222,17 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   
   const cablingMeters = useMemo(() => {
     if (lead.cabling_done) return 0;
+    
+    // We must pass PER CAMERA meters because calculateCabling multiplies by camera_count
     const totalMeters = lead.wizard_answers?.total_cable_length_meters;
-    if (typeof totalMeters === "number" && totalMeters > 0) return totalMeters;
+    if (typeof totalMeters === "number" && totalMeters > 0) {
+      return totalMeters / (selection.camera_count || 4);
+    }
+    
     const perCamMeters = lead.wizard_answers?.cable_length_meters;
-    if (typeof perCamMeters === "number" && perCamMeters > 0) return perCamMeters * (selection.camera_count || 4);
-    return (selection.camera_count || 4) * 15;
+    if (typeof perCamMeters === "number" && perCamMeters > 0) return perCamMeters;
+    
+    return 15; // default 15m per camera
   }, [lead.cabling_done, lead.wizard_answers, selection.camera_count]);
   
   const requirements = useMemo(() => {
@@ -379,6 +385,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           property_type: selection.property_type,
           requested_features: selection.requested_features,
           max_budget: selection.max_budget,
+          cable_length_meters: lead.wizard_answers?.cable_length_meters,
+          total_cable_length_meters: lead.wizard_answers?.total_cable_length_meters,
         },
         address: currentLead.address,
         firebase_uid: currentLead.firebase_uid,
@@ -489,6 +497,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               settings={pricingCache.settings}
               selection={selection}
               cablingDone={cablingDone}
+              cablingMeters={cablingMeters}
               promoterDiscount={promoterDiscount}
               evaluatedAddonRules={evaluatedRules}
               activeOffer={lead.active_offer}

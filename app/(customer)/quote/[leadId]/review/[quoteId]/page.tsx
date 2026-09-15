@@ -105,25 +105,8 @@ export default async function QuoteReviewPage({
         ];
 
         // Add labor/cabling if present
-        if (quote && quote.labor_cost > 0) {
-          lineItems.push({
-            id: "install",
-            name: "Professional Installation & Configuration",
-            description: "Full wiring · System setup · Remote viewing app config",
-            quantity: 1,
-            unitPrice: quote.labor_cost,
-          });
-        }
-
-        if (quote && quote.cabling_cost > 0) {
-          lineItems.push({
-            id: "cable",
-            name: "Cabling & Conduit (Estimated)",
-            description: "PVC conduit · Junction boxes · Cable ties",
-            quantity: 1,
-            unitPrice: quote.cabling_cost,
-          });
-        }
+        // NOTE: calculatePricing already adds labor and cabling into the `items` array.
+        // We do not need to manually push them again, otherwise we double-count them.
 
         quoteData = {
           id: quoteId,
@@ -133,11 +116,13 @@ export default async function QuoteReviewPage({
           issuedAt: quote?.created_at?.toDate?.().toISOString() || new Date().toISOString(),
           validUntil: quote?.valid_until || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
           customer: {
-            name: lead?.customer_name || "Valued Customer",
-            phone: lead?.mobile_number || "N/A",
-            email: lead?.email || "",
+            name: quote?.billing_details?.customer_name || quote?.customer_name || lead?.customer_name || "Valued Customer",
+            phone: quote?.billing_details?.phone || quote?.customer_mobile || lead?.mobile_number || "N/A",
+            email: quote?.billing_details?.email || quote?.customer_email || lead?.email || "",
           },
-          installationAddress: lead?.address ? `${lead.address.building_no || ''} ${lead.address.street || ''}, ${lead.address.area || ''}, ${lead.address.city || ''} - ${lead.address.pincode || ''}` : "Address pending",
+          installationAddress: quote?.billing_details?.address_line1 
+            ? `${quote.billing_details.address_line1}, ${quote.billing_details.city || ''} ${quote.billing_details.pincode || ''}`
+            : (lead?.address ? `${lead.address.building_no || ''} ${lead.address.street || ''}, ${lead.address.area || ''}, ${lead.address.city || ''} - ${lead.address.pincode || ''}` : (quote?.installationAddress || "Address pending")),
           propertyType: lead?.property_type || "Residential",
           propertyDetail: lead?.wizard_answers ? JSON.stringify(lead.wizard_answers) : "",
           siteVisitDate: lead?.site_visit_date || "",
@@ -145,6 +130,20 @@ export default async function QuoteReviewPage({
           gstPercent: quote?.gst_rate || 18,
           advancePercent: quote?.advance_percent || 30, 
           companyGstin: "08AABCT1234A1ZS",
+          billing_details: quote?.billing_details || lead?.billing_details || {
+            is_business: !!(lead?.is_b2b || quote?.company_name || quote?.gstin || quote?.gst_number || lead?.gst_number),
+            company_name: quote?.company_name || lead?.company_name || "",
+            gstin: quote?.gstin || quote?.gst_number || lead?.gst_number || "",
+            customer_name: lead?.customer_name || quote?.customer_name || "",
+            phone: lead?.mobile_number || quote?.customer_mobile || "",
+            email: lead?.email || "",
+            address_line1: lead?.address?.street || lead?.address?.full_address || "",
+            address_line2: lead?.address?.landmark1 || "",
+            city: lead?.address?.city || "Jaipur",
+            state: lead?.address?.state || "Rajasthan",
+            state_code: "08",
+            pincode: lead?.address?.pincode || "",
+          },
           version: quote?.version || 1,
           isRevision: !!quote?.is_revision,
           revisionNotes: quote?.revision_notes,

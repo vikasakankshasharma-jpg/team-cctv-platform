@@ -6,9 +6,76 @@ import { checkRole } from "@/lib/rbac";
 
 export async function GET(request: Request) {
   try {
-    const snapshot = await adminDb.collection("invoices").orderBy("issueDate", "desc").get();
-    const invoices = snapshot.docs.map(doc => doc.data());
-    return NextResponse.json({ success: true, data: invoices });
+    const [invSnap, quotesSnap] = await Promise.all([
+      adminDb.collection("invoices").orderBy("issueDate", "desc").limit(50).get().catch(() => ({ docs: [] })),
+      adminDb.collection("quotes").where("status", "in", ["PAID", "BOOKED"]).limit(50).get().catch(() => ({ docs: [] }))
+    ]);
+
+    const invoiceList: any[] = [];
+    const seenIds = new Set<string>();
+
+    // 1. Direct Invoice Docs
+    for (const doc of invSnap.docs) {
+      const data = doc.data();
+      seenIds.add(doc.id);
+      if (data.dealId) seenIds.add(data.dealId);
+      invoiceList.push({
+        id: doc.id,
+        dealId: data.dealId || data.quoteId || null,
+        quoteId: data.quoteId || data.dealId || doc.id,
+        customerId: data.customerId || "customer",
+        customerName: data.customerName || data.billing_details?.company_name || "Client",
+        customerMobile: data.customerMobile || data.billing_details?.contact_mobile || "",
+        is_business: !!data.billing_details?.is_business,
+        companyName: data.billing_details?.company_name || null,
+        gstin: data.billing_details?.gstin || null,
+        subTotal: data.subTotal || Math.round(data.grandTotal / 1.18),
+        taxAmount: data.taxAmount || (data.grandTotal - Math.round(data.grandTotal / 1.18)),
+        grandTotal: data.grandTotal || 0,
+        amountPaid: data.amountPaid || data.grandTotal || 0,
+        amountDue: data.amountDue || 0,
+        status: data.status || "PAID",
+        issueDate: data.issueDate || new Date().toISOString()
+      });
+    }
+
+    // 2. Paid Quotes
+    for (const doc of quotesSnap.docs) {
+      const q = doc.data();
+      if (seenIds.has(doc.id)) continue;
+      seenIds.add(doc.id);
+
+      const total = q.total_payable || q.pricingSnapshot?.total_payable || 0;
+      const advance = q.advance_paid || 3000;
+      const due = Math.max(0, total - advance);
+      const subTotal = Math.round(total / 1.18);
+      const tax = total - subTotal;
+      const billing = q.billing_details;
+
+      invoiceList.push({
+        id: `INV-Q-${doc.id.slice(0, 8).toUpperCase()}`,
+        dealId: doc.id,
+        quoteId: doc.id,
+        customerId: q.customer_mobile || "customer",
+        customerName: billing?.company_name || billing?.contact_name || q.customer_name || "Client",
+        customerMobile: q.customer_mobile || billing?.contact_mobile || "",
+        is_business: !!billing?.is_business,
+        companyName: billing?.company_name || null,
+        gstin: billing?.gstin || null,
+        subTotal,
+        taxAmount: tax,
+        grandTotal: total,
+        amountPaid: advance,
+        amountDue: due,
+        status: due === 0 ? "PAID" : "PARTIAL",
+        issueDate: q.paid_at || q.createdAt || q.created_at || new Date().toISOString()
+      });
+    }
+
+    // Sort descending
+    invoiceList.sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
+
+    return NextResponse.json({ success: true, data: invoiceList });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

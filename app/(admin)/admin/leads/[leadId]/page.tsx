@@ -7,7 +7,10 @@ import { FollowUpManager } from "@/components/admin/leads/FollowUpManager";
 import { QuoteVersionHistory } from "@/components/admin/leads/QuoteVersionHistory";
 import LeadIntelligencePanel from "@/components/admin/leads/LeadIntelligencePanel";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileText, Download, Calendar, MapPin, Building2, Phone, MessageSquare, ShieldCheck, CheckCircle2, Clock, Truck } from "lucide-react";
+import { format } from "date-fns";
 import Link from "next/link";
 
 export default function LeadDetailPage() {
@@ -48,61 +51,305 @@ export default function LeadDetailPage() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading lead details...</div>;
-  if (!lead) return <div className="p-8">Lead not found.</div>;
+  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading lead details...</div>;
+  if (!lead) return <div className="p-8 text-center text-muted-foreground">Lead not found.</div>;
+
+  const billing = lead.billing_details;
+  const isB2B = billing?.is_business || !!billing?.gstin || !!billing?.company_name;
+  const isPaid = lead.isPaid || lead.leadStatus === "WON" || lead.status === "PAID" || lead.status === "BOOKED";
+  const hasSiteVisit = !!lead.site_visit_date || lead.leadStatus === "SITE_VISIT" || lead.status === "site_visit";
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-6">
+      
+      {/* Top Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{lead.customer_name || "Unknown Customer"}</h1>
-          <p className="text-muted-foreground mt-1">{lead.customer_mobile} • Source: {lead.source} • ID: {quoteId}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900 dark:text-white">
+              {lead.customer_name || billing?.contact_name || "Unknown Customer"}
+            </h1>
+            {isPaid ? (
+              <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                ✓ WON / PAID
+              </Badge>
+            ) : hasSiteVisit ? (
+              <Badge className="bg-purple-600 hover:bg-purple-700 text-white font-bold">
+                📅 SITE SURVEY
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="font-bold">
+                {lead.leadStatus || "NEW"}
+              </Badge>
+            )}
+            {isB2B && (
+              <Badge variant="outline" className="border-blue-400 bg-blue-50 text-blue-800 font-bold text-xs">
+                🏢 GST Firm (B2B)
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
+            <span>📞 {lead.customer_mobile || "No Mobile"}</span>
+            <span>•</span>
+            <span>Source: <strong className="capitalize">{lead.source}</strong></span>
+            <span>•</span>
+            <span className="font-mono">ID: {quoteId}</span>
+          </p>
         </div>
-        <div className="flex gap-4 items-center">
-          <span className="text-sm font-medium">Status:</span>
-          <Select value={lead.leadStatus || "NEW"} onValueChange={updateLeadStatus}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="NEW">New</SelectItem>
-              <SelectItem value="CONTACTED">Contacted</SelectItem>
-              <SelectItem value="FOLLOW_UP">Follow-up</SelectItem>
-              <SelectItem value="SITE_VISIT">Site Visit</SelectItem>
-              <SelectItem value="QUOTATION_SENT">Quotation Sent</SelectItem>
-              <SelectItem value="NEGOTIATION">Negotiation</SelectItem>
-              <SelectItem value="WON">Won</SelectItem>
-              <SelectItem value="LOST">Lost</SelectItem>
-            </SelectContent>
-          </Select>
+
+        {/* Action Buttons & Status Selector */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+          
+          {/* Quick PDF Actions */}
+          <a
+            href={`/api/quote/${quoteId}/download`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold transition-all"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Quote PDF</span>
+          </a>
+
+          {isPaid && (
+            <a
+              href={`/api/invoice/${quoteId}/download`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Tax Invoice</span>
+            </a>
+          )}
+
+          {lead.customer_mobile && (
+            <a
+              href={`https://wa.me/91${lead.customer_mobile.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.customer_name || "Customer"}, this is regarding your CCTV quotation (ID: ${quoteId}) with TEAM CCTV.`)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-xs font-bold transition-all"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>WhatsApp</span>
+            </a>
+          )}
+
+          {/* Status Dropdown */}
+          <div className="flex items-center gap-2 ml-auto lg:ml-0">
+            <span className="text-xs font-bold text-muted-foreground">Status:</span>
+            <Select value={lead.leadStatus || "NEW"} onValueChange={updateLeadStatus}>
+              <SelectTrigger className="w-[150px] h-9 text-xs font-semibold">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NEW">New</SelectItem>
+                <SelectItem value="CONTACTED">Contacted</SelectItem>
+                <SelectItem value="SITE_VISIT">Site Survey</SelectItem>
+                <SelectItem value="FOLLOW_UP">Follow-up</SelectItem>
+                <SelectItem value="QUOTATION_SENT">Quote Sent</SelectItem>
+                <SelectItem value="NEGOTIATION">Negotiation</SelectItem>
+                <SelectItem value="WON">Won / Paid</SelectItem>
+                <SelectItem value="LOST">Lost</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Main Column */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Site Visit Schedule Card (if booked) */}
+          {hasSiteVisit && (
+            <Card className="border-purple-200 dark:border-purple-900/50 bg-gradient-to-br from-purple-50/60 to-white dark:from-purple-950/20 dark:to-zinc-900 shadow-sm">
+              <CardHeader className="pb-3 border-b border-purple-100 dark:border-purple-900/30">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-black text-purple-900 dark:text-purple-300 flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-purple-600" />
+                    <span>Physical Site Survey Scheduled</span>
+                  </CardTitle>
+                  <Badge className="bg-purple-600 text-white text-[10px] font-black uppercase">
+                    Zero Advance Booking
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="p-3 bg-white dark:bg-zinc-800 rounded-xl border border-purple-100 dark:border-purple-900/30">
+                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[10px] block mb-1">
+                      Preferred Date & Slot
+                    </span>
+                    <p className="font-bold text-zinc-900 dark:text-white text-sm">
+                      {lead.site_visit_date ? format(new Date(lead.site_visit_date), "EEEE, dd MMMM yyyy") : "Date TBD"}
+                    </p>
+                    <p className="text-purple-700 dark:text-purple-400 font-bold mt-0.5">
+                      ⏰ {lead.site_visit_slot || "10:00 AM - 01:00 PM"}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-white dark:bg-zinc-800 rounded-xl border border-purple-100 dark:border-purple-900/30">
+                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[10px] block mb-1">
+                      Survey Location & Address
+                    </span>
+                    <p className="font-medium text-zinc-900 dark:text-white line-clamp-2">
+                      {typeof lead.address === "string" 
+                        ? lead.address 
+                        : lead.address?.full_address || lead.address?.street || billing?.address_line1 || "Customer address on record"}
+                    </p>
+                    {lead.address?.pincode && (
+                      <p className="text-zinc-500 font-bold mt-1">PIN: {lead.address.pincode}</p>
+                    )}
+                  </div>
+                </div>
+
+                {lead.special_notes && (
+                  <div className="p-3 bg-purple-50/80 dark:bg-purple-950/30 rounded-xl border border-purple-200 dark:border-purple-900/50 text-xs">
+                    <span className="font-bold text-purple-900 dark:text-purple-300 block mb-0.5">
+                      Customer Special Instructions:
+                    </span>
+                    <p className="text-purple-800 dark:text-purple-200 italic">"{lead.special_notes}"</p>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <Link href="/admin/dispatch">
+                    <Button size="sm" variant="outline" className="text-xs font-bold border-purple-300 text-purple-800 hover:bg-purple-100 dark:text-purple-300">
+                      <Truck className="w-3.5 h-3.5 mr-1" />
+                      View in Dispatch Center
+                    </Button>
+                  </Link>
+                  <Link href="/admin/bookings">
+                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold">
+                      Manage Bookings
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Billing & GST Firm Information Card */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3 border-b">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-blue-600" />
+                  <span>Billing & Tax Details</span>
+                </CardTitle>
+                {isB2B ? (
+                  <Badge className="bg-blue-600 text-white text-xs font-bold">
+                    🏢 Registered GST Firm (B2B)
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs font-bold text-zinc-600">
+                    👤 Personal Consumer (B2C)
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {billing ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <span className="text-muted-foreground font-semibold block mb-0.5">
+                      {isB2B ? "Company / Firm Legal Name" : "Billed Customer Name"}
+                    </span>
+                    <p className="font-bold text-sm text-foreground">
+                      {billing.company_name || billing.contact_name || lead.customer_name}
+                    </p>
+                  </div>
+
+                  {isB2B && (
+                    <div>
+                      <span className="text-muted-foreground font-semibold block mb-0.5">
+                        GSTIN (Buyer Tax ID)
+                      </span>
+                      <p className="font-mono font-black text-sm text-blue-700 dark:text-blue-400">
+                        {billing.gstin || "—"}
+                      </p>
+                      {billing.state_code && (
+                        <p className="text-[11px] text-zinc-500 font-semibold">
+                          State Code: {billing.state_code} ({billing.state || "Rajasthan"})
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="text-muted-foreground font-semibold block mb-0.5">
+                      Billing Address
+                    </span>
+                    <p className="font-medium text-foreground">
+                      {[billing.address_line1, billing.address_line2, billing.city, billing.state, billing.pincode]
+                        .filter(Boolean)
+                        .join(", ") || "—"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-muted-foreground font-semibold block mb-0.5">
+                      Primary Contact & Mobile
+                    </span>
+                    <p className="font-medium text-foreground">
+                      {billing.contact_name || lead.customer_name} • {billing.contact_mobile || lead.customer_mobile}
+                    </p>
+                    {billing.email && (
+                      <p className="text-zinc-500 font-medium">{billing.email}</p>
+                    )}
+                  </div>
+
+                  {billing.pan && (
+                    <div>
+                      <span className="text-muted-foreground font-semibold block mb-0.5">PAN Number</span>
+                      <p className="font-mono font-bold">{billing.pan}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="py-4 text-center text-xs text-muted-foreground bg-zinc-50 dark:bg-zinc-800/40 rounded-xl border border-dashed">
+                  <p className="font-medium">No formal GST firm details provided yet.</p>
+                  <p className="text-[11px] mt-0.5">Customer will fill B2B/B2C billing overview before final payment checkout.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Lead Intelligence */}
           <LeadIntelligencePanel lead={lead} onUpdate={fetchLead} />
 
+          {/* Requirement Context */}
           <Card>
-            <CardHeader>
-              <CardTitle>Requirement Context</CardTitle>
+            <CardHeader className="pb-3 border-b">
+              <CardTitle className="text-base font-bold">CCTV Requirement Context</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Cameras</p>
-                  <p className="font-medium">{lead.requirementSnapshot?.camera_count || "N/A"}</p>
+            <CardContent className="pt-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                  <p className="text-muted-foreground font-semibold">Cameras</p>
+                  <p className="text-base font-black text-foreground mt-0.5">
+                    {lead.requirementSnapshot?.camera_count || "4"} Units
+                  </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Recording Days</p>
-                  <p className="font-medium">{lead.requirementSnapshot?.recording_days || "N/A"}</p>
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                  <p className="text-muted-foreground font-semibold">Recording Days</p>
+                  <p className="text-base font-black text-foreground mt-0.5">
+                    {lead.requirementSnapshot?.recording_days || "15"} Days
+                  </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Technology</p>
-                  <p className="font-medium">{lead.requirementSnapshot?.technology_preference || lead.requirementSnapshot?.existing_technology || "N/A"}</p>
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                  <p className="text-muted-foreground font-semibold">Technology</p>
+                  <p className="text-base font-black text-foreground mt-0.5">
+                    {lead.requirementSnapshot?.technology_preference || lead.requirementSnapshot?.existing_technology || "IP / HD"}
+                  </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Quote Value</p>
-                  <p className="font-medium">₹{lead.pricingSnapshot?.finalPrice?.toLocaleString("en-IN") || lead.pricingSnapshot?.total_payable?.toLocaleString("en-IN")}</p>
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                  <p className="text-muted-foreground font-semibold">Total Quote Value</p>
+                  <p className="text-base font-black text-emerald-600 mt-0.5">
+                    ₹{(lead.pricingSnapshot?.finalPrice || lead.pricingSnapshot?.total_payable || 0).toLocaleString("en-IN")}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -125,53 +372,73 @@ export default function LeadDetailPage() {
           </Card>
         </div>
 
+        {/* Right Sidebar Column */}
         <div className="space-y-6">
-          {lead.leadStatus === "WON" ? (
-            <Card className="border-green-500 bg-green-50">
-              <CardHeader>
-                <CardTitle className="text-green-700">Deal Ready</CardTitle>
+          {isPaid ? (
+            <Card className="border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/20 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-emerald-800 dark:text-emerald-300 flex items-center gap-2 text-base font-bold">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                  <span>Order Confirmed & Paid</span>
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-green-800 mb-4">This lead has been marked as WON. Proceed to finalize the deal and collect payment.</p>
-                <Link href={`/admin/leads/${quoteId}/deal`}>
-                  <button className="w-full bg-green-600 text-white rounded-md py-2 text-sm font-medium hover:bg-green-700">Finalize Deal</button>
-                </Link>
+              <CardContent className="text-xs text-emerald-900 dark:text-emerald-200 space-y-3">
+                <p>This quotation has been booked with advance payment. Equipment allocation is active.</p>
+                <div className="pt-2 flex flex-col gap-2">
+                  <a
+                    href={`/api/invoice/${quoteId}/download`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl transition-all shadow-sm"
+                  >
+                    Download Tax Invoice PDF
+                  </a>
+                  <Link href={`/track/${lead.leadId || quoteId}`}>
+                    <Button variant="outline" className="w-full text-xs font-bold border-emerald-300">
+                      View Customer Tracker
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-blue-200 bg-blue-50">
-              <CardHeader>
-                <CardTitle className="text-blue-700">Negotiate & Win</CardTitle>
+            <Card className="border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-blue-800 dark:text-blue-300 text-base font-bold">Negotiate & Close Deal</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-blue-800 mb-4">Start formal negotiation to convert this quote into a Deal. Discounts require approval if below margin.</p>
+              <CardContent className="text-xs text-blue-900 dark:text-blue-200 space-y-3">
+                <p>Convert this active quote into a deal with commercial margin controls and custom discounts.</p>
                 <Link href={`/admin/leads/${quoteId}/deal`}>
-                  <button className="w-full bg-blue-600 text-white rounded-md py-2 text-sm font-medium hover:bg-blue-700">Convert to Deal</button>
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">
+                    Convert to Deal
+                  </Button>
                 </Link>
               </CardContent>
             </Card>
           )}
 
           <Card>
-            <CardHeader>
-              <CardTitle>Lifecycle Timeline</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold">Lifecycle Milestone</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3 text-xs">
                 <div className="flex items-center gap-3">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <p className="text-sm">Quote Generated</p>
+                  <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                  <p>Quotation Generated</p>
                 </div>
-                {lead.status === "PDF_GENERATED" && (
+                {hasSiteVisit && (
                   <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-blue-500" />
-                    <p className="text-sm">PDF Downloaded</p>
+                    <div className="h-2 w-2 rounded-full bg-purple-500 shrink-0" />
+                    <p className="font-bold text-purple-700 dark:text-purple-400">
+                      Site Survey Booked ({lead.site_visit_date || "Pending"})
+                    </p>
                   </div>
                 )}
-                {lead.status === "SENT" && (
+                {isPaid && (
                   <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-green-600" />
-                    <p className="text-sm">WhatsApp Sent</p>
+                    <div className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" />
+                    <p className="font-bold text-emerald-700 dark:text-emerald-400">Advance Paid & Invoice Issued</p>
                   </div>
                 )}
               </div>

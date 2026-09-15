@@ -57,7 +57,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     addons,
     settings,
     cablingDone,
-    cablingMeters = 50,
+    cablingMeters,
     referralDiscountPercent = 0,
     referralDiscountFlat = 0,
     activeOffer,
@@ -537,7 +537,7 @@ function calculateCabling(
   selection: ConfiguratorSelection,
   settings: AppSettings,
   tech: string,
-  meters: number,
+  meters?: number,
   locationMultiplier = 1.0,
   products: Product[] = [],
   cameraBrand: string = "budget"
@@ -564,14 +564,14 @@ function calculateCabling(
   }
 
   // Use explicitly requested total meters, or calculate from legacy per-camera meters, or default to admin configured / 20m per wired camera
-  const defaultMeters = settings.default_cable_length_per_camera || 20;
+  const defaultMeters = settings.default_cable_length_per_camera || 15;
   let totalMeters = 0;
   if (selection.total_cable_length_meters) {
      totalMeters = selection.total_cable_length_meters;
-  } else if (meters) {
-     totalMeters = meters * wiredCameraCount;
   } else if (selection.cable_length_meters) {
      totalMeters = selection.cable_length_meters * wiredCameraCount;
+  } else if (meters !== undefined) {
+     totalMeters = meters * wiredCameraCount;
   } else {
      totalMeters = defaultMeters * wiredCameraCount;
   }
@@ -880,7 +880,7 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
   const laborRate = tech === "IP" ? (settings.labor_ip_per_camera || 500) : (settings.labor_hd_per_camera || 400);
   const laborTotal = laborRate * qty;
 
-  const defaultMeters = settings.default_cable_length_per_camera || 20;
+  const defaultMeters = settings.default_cable_length_per_camera || 15;
   let totalMeters = 0;
   if (selection.total_cable_length_meters) {
      totalMeters = selection.total_cable_length_meters;
@@ -1430,52 +1430,18 @@ export function generatePricingSnapshot(
 
   // 5. Cable (Fetch from DB, fallback to settings)
   if (resolvedSystem.cable_meters > 0) {
-    const isIP = resolvedSystem.plan_type?.includes("IP");
-    const effectiveTech = isIP ? "IP" : "HD";
-    
-    // Find cable product
-    const cables = products.filter(p => 
-      p.category === "cable" && 
-      (p.technologies || []).includes(effectiveTech as any) &&
-      ((p.base_cost === undefined || p.base_cost < 100) && (p.unit_price === undefined || p.unit_price < 200))
-    );
-    const camBrand = resolvedSystem.cameras.length > 0 ? (resolvedSystem.cameras[0].product.brand || "budget") : "budget";
-    
-    let selectedCable = cables.find(c => (c.brand || "").toLowerCase() === camBrand.toLowerCase());
-    if (!selectedCable && cables.length > 0) {
-      selectedCable = cables[0];
+      const isIP = resolvedSystem.plan_type?.includes("IP");
+      const effectiveTech = isIP ? "IP" : "HD";
+      const camBrand = resolvedSystem.cameras.length > 0 ? (resolvedSystem.cameras[0].product.brand || "budget") : "budget";
+      
+      const cabling = calculateCabling(req as any, settings, effectiveTech, undefined, locationMultiplier, products, camBrand);
+      
+      lineItems.push(...cabling.items);
+      cablingCost += cabling.totalRetail;
+      totalPurchaseCost += cabling.totalCost;
     }
     
-    let baseCost = 12;
-    let cableName = isIP ? "CAT6 Cable" : "3+1 Coaxial Cable";
-    
-    if (selectedCable) {
-      baseCost = selectedCable.base_cost || 12;
-      cableName = selectedCable.display_name || cableName;
-    } else {
-      baseCost = isIP ? (settings.cable_copper_coated_ip || 12) : (settings.cable_copper_coated_hd || 8);
-    }
-    
-    const cableMarginPct = (settings as any).margin_cable ?? 50;
-    const cableRetailPerMeter = Math.round(baseCost * (1 + cableMarginPct / 100));
-    
-    const qty = resolvedSystem.cable_meters;
-    const lineRetail = cableRetailPerMeter * qty;
-    const lineCost = baseCost * qty;
-    
-    lineItems.push({
-      product_id: selectedCable ? selectedCable.id! : "cabling_material",
-      display_name: `${cableName} (~${qty}m) @ ₹${cableRetailPerMeter}/m`,
-      qty,
-      unit_price: cableRetailPerMeter,
-      line_total: lineRetail,
-      base_cost_at_quote: baseCost
-    });
-    cablingCost += lineRetail;
-    totalPurchaseCost += lineCost;
-  }
-
-  // 6. Connectors (Derived from Settings)
+    // 6. Connectors (Derived from Settings)
   if (resolvedSystem.connectors_qty > 0) {
     const isIP = resolvedSystem.plan_type?.includes("IP");
     const baseCost = isIP ? (settings.connector_rj45_cost || 5) : (settings.connector_bnc_dc_cost || 20);

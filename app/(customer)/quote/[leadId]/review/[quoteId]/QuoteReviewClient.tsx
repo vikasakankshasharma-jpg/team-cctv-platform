@@ -5,9 +5,11 @@ import Image from "next/image";
 import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check, MessageCircle } from "lucide-react";
+import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check, MessageCircle, Building2, Edit3, Calendar, MapPin } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { RevisionBanner } from "@/components/quote/RevisionBanner";
+import { BillingOverviewModal, BillingFormData } from "@/components/checkout/BillingOverviewModal";
+import { SiteVisitBookingModal } from "@/components/checkout/SiteVisitBookingModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,6 +46,7 @@ export interface QuoteData {
   notes?: string;
   advancePercent: number;
   companyGstin: string;
+  billing_details?: Partial<BillingFormData>;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -207,10 +210,56 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     }
   };
 
-  const handlePayment = async (type: "advance" | "full", method: "all" | "emi") => {
+  const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
+  const [selectedPaymentType, setSelectedPaymentType] = useState<"advance" | "full">("advance");
+  const [isSubmittingBilling, setIsSubmittingBilling] = useState(false);
+  const [billingData, setBillingData] = useState<BillingFormData>({
+    is_business: Boolean(quote.billing_details?.is_business || (quote.companyGstin && quote.companyGstin !== "08AABCT1234A1ZS")),
+    company_name: quote.billing_details?.company_name || "",
+    gstin: quote.billing_details?.gstin || (quote.companyGstin && quote.companyGstin !== "08AABCT1234A1ZS" ? quote.companyGstin : ""),
+    customer_name: quote.billing_details?.customer_name || quote.customer.name || "",
+    phone: quote.billing_details?.phone || quote.customer.phone || "",
+    email: quote.billing_details?.email || quote.customer.email || "",
+    address_line1: quote.billing_details?.address_line1 || quote.installationAddress || "",
+    address_line2: quote.billing_details?.address_line2 || "",
+    city: quote.billing_details?.city || "Jaipur",
+    state: quote.billing_details?.state || "Rajasthan",
+    state_code: quote.billing_details?.state_code || "08",
+    pincode: quote.billing_details?.pincode || "",
+  });
+
+  const openBillingModal = (type: "advance" | "full") => {
+    setSelectedPaymentType(type);
+    setIsBillingModalOpen(true);
+  };
+
+  const handleConfirmBilling = async (formData: BillingFormData, pType: "advance" | "full") => {
+    setIsSubmittingBilling(true);
+    try {
+      await fetch(`/api/quote/${quote.id}/billing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ billingDetails: formData }),
+      });
+      setBillingData(formData);
+      setIsBillingModalOpen(false);
+      await handlePayment(pType, "all", formData);
+    } catch (e) {
+      console.error("Billing submit error:", e);
+      toast.error("Failed to save billing details. Proceeding with payment...");
+      setIsBillingModalOpen(false);
+      await handlePayment(pType, "all", formData);
+    } finally {
+      setIsSubmittingBilling(false);
+    }
+  };
+
+  const handlePayment = async (type: "advance" | "full", method: "all" | "emi", billingOverride?: BillingFormData) => {
     if (method === "emi") setIsPayingEMI(true);
     else if (type === "full") setIsPayingFull(true);
     else setIsPayingAdvance(true);
+
+    const activeBilling = billingOverride || billingData;
 
     try {
       const scriptLoaded = await loadRazorpayScript();
@@ -234,9 +283,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           quoteId: quote.id,
           leadId: quote.leadId,
           paymentType: type,
+          billingDetails: activeBilling,
           notes: {
-            customer_name: quote.customer.name,
-            customer_phone: quote.customer.phone,
+            customer_name: activeBilling.customer_name || quote.customer.name,
+            customer_phone: activeBilling.phone || quote.customer.phone,
+            company_name: activeBilling.company_name || "",
+            gstin: activeBilling.gstin || "",
             payment_type: type,
             payment_method: method
           }
@@ -256,9 +308,9 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         description: `Security System Installation (${type === "advance" ? "Advance Booking" : "Full Payment"})`,
         order_id: data.order.id,
         prefill: {
-          name: quote.customer.name,
-          contact: quote.customer.phone,
-          email: quote.customer.email || "",
+          name: activeBilling.customer_name || quote.customer.name,
+          contact: activeBilling.phone || quote.customer.phone,
+          email: activeBilling.email || quote.customer.email || "",
         },
         theme: {
           color: "#0F172A",
@@ -322,23 +374,25 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const fadeIn: any = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } };
   const staggerContainer: any = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 
+  const [isSurveyModalOpen, setIsSurveyModalOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-zinc-900 font-sans pb-24 selection:bg-zinc-200">
+    <div className="min-h-screen bg-[#F5F5F7] text-zinc-900 font-sans pb-36 md:pb-24 selection:bg-zinc-200">
       <div className="max-w-[800px] mx-auto px-4 sm:px-6 pt-12 sm:pt-20">
 
         {/* Top Actions & Status */}
-        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
+        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+          <div className="flex flex-wrap items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
             {!accepted && (
-              <button onClick={() => window.history.back()} className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors mb-4">
+              <button onClick={() => window.history.back()} className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-600 hover:text-zinc-900 bg-white sm:bg-transparent px-3 py-1.5 sm:p-0 rounded-full border sm:border-0 shadow-sm sm:shadow-none transition-colors">
                 <ChevronLeft className="w-4 h-4" /> Modify Configuration
               </button>
             )}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <StatusBadge status={accepted ? "accepted" : quote.status} />
               {!accepted && daysLeft > 0 && (
-                <span className="text-xs font-medium text-zinc-500 tracking-wide">
-                  Valid until {formatDate(quote.validUntil)} ({daysLeft}d left)
+                <span className="text-[11px] sm:text-xs font-medium text-zinc-500 tracking-wide">
+                  ({daysLeft}d left)
                 </span>
               )}
             </div>
@@ -348,9 +402,9 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "917357612865"}?text=${encodeURIComponent(`Hi TEAM CCTV, please send me the official PDF for my Quote ID: ${quote.id}`)}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-700 bg-white border border-emerald-200 rounded-full shadow-sm hover:bg-emerald-50 hover:shadow transition-all"
+            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-50/80 sm:bg-white border border-emerald-200 rounded-xl sm:rounded-full shadow-sm hover:bg-emerald-100 hover:shadow transition-all"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            <MessageCircle className="w-4 h-4 text-emerald-600" />
             Get PDF on WhatsApp
           </a>
         </motion.div>
@@ -364,68 +418,96 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           />
 
           {/* Main Quote Document */}
-          <motion.div variants={fadeIn} className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 overflow-hidden">
+          <motion.div variants={fadeIn} className="bg-white rounded-2xl sm:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 overflow-hidden">
             
             {/* Header */}
-            <div className="px-6 py-8 sm:px-10 sm:py-10 bg-white border-b border-zinc-100">
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
+            <div className="px-5 py-6 sm:px-10 sm:py-10 bg-white border-b border-zinc-100">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-6">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 mb-1">{t("quotation", "Quotation")}</h1>
-                  <p className="text-zinc-400 font-medium tracking-wide text-sm">#{quote.quoteNumber}</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 mb-1">{t("quotation", "Quotation")}</h1>
+                  <p className="text-zinc-400 font-semibold tracking-wide text-xs sm:text-sm">#{quote.quoteNumber}</p>
                 </div>
                 <div className="text-left sm:text-right">
-                  <div className="font-semibold text-zinc-900">TEAM CCTV</div>
-                  <div className="text-zinc-500 text-sm mt-1">Smart Security Solutions</div>
-                  <div className="text-zinc-400 text-xs mt-0.5">Jaipur, Rajasthan</div>
+                  <div className="font-bold text-zinc-900 text-sm sm:text-base">TEAM CCTV</div>
+                  <div className="text-zinc-500 text-xs sm:text-sm mt-0.5">Smart Security Solutions</div>
+                  <div className="text-zinc-400 text-[11px] sm:text-xs">Jaipur, Rajasthan</div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-10">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mt-6 sm:mt-10 pt-4 sm:pt-0 border-t border-zinc-50 sm:border-0">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 mb-1.5">Date</p>
-                  <p className="text-sm font-medium text-zinc-900">{formatDate(quote.issuedAt)}</p>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Date</p>
+                  <p className="text-xs sm:text-sm font-semibold text-zinc-900">{formatDate(quote.issuedAt)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 mb-1.5">Prepared For</p>
-                  <p className="text-sm font-medium text-zinc-900">{quote.customer.name}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Billed To</p>
+                    <button
+                      onClick={() => openBillingModal("advance")}
+                      className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5"
+                    >
+                      <Edit3 className="w-2.5 h-2.5" /> Edit
+                    </button>
+                  </div>
+                  <p className="text-xs sm:text-sm font-semibold text-zinc-900 truncate">
+                    {billingData.is_business && billingData.company_name ? billingData.company_name : (billingData.customer_name || quote.customer.name)}
+                  </p>
+                  {billingData.is_business && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 mt-0.5 rounded text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      GST: {billingData.gstin || 'Registered'}
+                    </span>
+                  )}
                 </div>
                 <div className="col-span-2">
-                  <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 mb-1.5">Site Location</p>
-                  <p className="text-sm font-medium text-zinc-900 truncate">{quote.installationAddress}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Site / Billing Address</p>
+                    <button
+                      onClick={() => openBillingModal("advance")}
+                      className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5"
+                    >
+                      <Edit3 className="w-2.5 h-2.5" /> Change
+                    </button>
+                  </div>
+                  <p className="text-xs sm:text-sm font-semibold text-zinc-900 truncate">
+                    {billingData.address_line1 ? `${billingData.address_line1}, ${billingData.city} ${billingData.pincode}` : quote.installationAddress}
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Bill of Materials */}
-            <div className="px-6 py-8 sm:px-10">
-              <h3 className="text-sm font-semibold text-zinc-900 mb-6">{t("bill_of_materials", "Bill of Materials")}</h3>
+            <div className="px-4 py-6 sm:px-10 sm:py-8">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-900">{t("bill_of_materials", "Bill of Materials")}</h3>
+                <span className="text-[11px] text-zinc-400 sm:hidden">Scroll table horizontally →</span>
+              </div>
               
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+              <div className="overflow-x-auto -mx-2 sm:mx-0 px-2 sm:px-0">
+                <table className="w-full text-left border-collapse min-w-[480px] sm:min-w-0">
                   <thead>
                     <tr className="border-b border-zinc-100">
-                      <th className="pb-4 text-xs font-medium text-zinc-400 w-3/5">Description</th>
-                      <th className="pb-4 text-xs font-medium text-zinc-400 text-center w-1/12">Qty</th>
-                      <th className="pb-4 text-xs font-medium text-zinc-400 text-right w-1/6">Rate</th>
-                      <th className="pb-4 text-xs font-medium text-zinc-400 text-right w-1/6">Amount</th>
+                      <th className="pb-3 text-xs font-semibold text-zinc-400 w-3/5">Description</th>
+                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-center w-1/12">Qty</th>
+                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-right w-1/6">Rate</th>
+                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-right w-1/6">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-50">
                     {quote.lineItems.map((item) => (
                       <tr key={item.id} className="group hover:bg-zinc-50/50 transition-colors">
-                        <td className="py-5 pr-4">
-                          <p className="text-sm font-medium text-zinc-900">{item.name}</p>
-                          <p className="text-xs text-zinc-500 mt-1 leading-relaxed">{item.description}</p>
+                        <td className="py-4 pr-3">
+                          <p className="text-xs sm:text-sm font-semibold text-zinc-900">{item.name}</p>
+                          <p className="text-[11px] sm:text-xs text-zinc-500 mt-0.5 leading-relaxed">{item.description}</p>
                           {item.badge && (
-                            <span className="inline-flex mt-2 items-center px-2 py-0.5 rounded text-[10px] font-medium tracking-wide border"
+                            <span className="inline-flex mt-1.5 items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border"
                                   style={{ backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5', color: item.badge.color || '#52525b', borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7' }}>
                               {item.badge.label}
                             </span>
                           )}
                         </td>
-                        <td className="py-5 text-center text-sm text-zinc-700">{item.quantity}</td>
-                        <td className="py-5 text-right text-sm text-zinc-500">{formatINR(item.unitPrice)}</td>
-                        <td className="py-5 text-right text-sm font-medium text-zinc-900">{formatINR(item.quantity * item.unitPrice)}</td>
+                        <td className="py-4 text-center text-xs sm:text-sm font-medium text-zinc-700">{item.quantity}</td>
+                        <td className="py-4 text-right text-xs sm:text-sm text-zinc-500">{formatINR(item.unitPrice)}</td>
+                        <td className="py-4 text-right text-xs sm:text-sm font-bold text-zinc-900">{formatINR(item.quantity * item.unitPrice)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -433,23 +515,23 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </div>
 
               {/* Totals Section */}
-              <div className="flex justify-end mt-8">
-                <div className="w-full sm:w-64 space-y-3">
-                  <div className="flex justify-between text-sm text-zinc-500">
+              <div className="flex justify-end mt-6 sm:mt-8 pt-4 border-t border-zinc-100">
+                <div className="w-full sm:w-64 space-y-2.5">
+                  <div className="flex justify-between text-xs sm:text-sm text-zinc-600">
                     <span>Subtotal</span>
-                    <span>{formatINR(subtotal)}</span>
+                    <span className="font-semibold text-zinc-900">{formatINR(subtotal)}</span>
                   </div>
-                  <div className="flex justify-between text-xs text-zinc-400">
+                  <div className="flex justify-between text-[11px] sm:text-xs text-zinc-500">
                     <span>CGST ({quote.gstPercent / 2}%)</span>
                     <span>{formatINR(halfGst)}</span>
                   </div>
-                  <div className="flex justify-between text-xs text-zinc-400 pb-4 border-b border-zinc-100">
+                  <div className="flex justify-between text-[11px] sm:text-xs text-zinc-500 pb-3 border-b border-zinc-100">
                     <span>SGST ({quote.gstPercent / 2}%)</span>
                     <span>{formatINR(halfGst)}</span>
                   </div>
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="text-base font-semibold text-zinc-900">{t("total", "Total")}</span>
-                    <span className="text-xl font-semibold tracking-tight text-zinc-900">{formatINR(total)}</span>
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-sm sm:text-base font-bold text-zinc-900">{t("total", "Total")}</span>
+                    <span className="text-lg sm:text-xl font-black tracking-tight text-zinc-900">{formatINR(total)}</span>
                   </div>
                 </div>
               </div>
@@ -457,19 +539,19 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             
             {/* Footer Notes */}
             {quote.notes && (
-              <div className="px-6 py-6 sm:px-10 bg-zinc-50/80 border-t border-zinc-100">
-                <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 mb-1">Notes</p>
-                <p className="text-xs text-zinc-600 leading-relaxed">{quote.notes} {quote.companyGstin && `| GSTIN: ${quote.companyGstin}`}</p>
+              <div className="px-5 py-4 sm:px-10 sm:py-6 bg-zinc-50/80 border-t border-zinc-100">
+                <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Notes</p>
+                <p className="text-[11px] sm:text-xs text-zinc-600 leading-relaxed">{quote.notes} {quote.companyGstin && `| GSTIN: ${quote.companyGstin}`}</p>
               </div>
             )}
           </motion.div>
 
           {/* Visual Comparison */}
-          <motion.div variants={fadeIn} className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 p-6 sm:p-10">
-             <div className="flex items-center gap-3 mb-6">
+          <motion.div variants={fadeIn} className="bg-white rounded-2xl sm:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 p-5 sm:p-10">
+             <div className="flex items-center gap-3 mb-4 sm:mb-6">
                 <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-800"><ImageIcon className="w-4 h-4" /></div>
                 <div>
-                  <h3 className="text-sm font-semibold text-zinc-900">Resolution Clarity Comparison</h3>
+                  <h3 className="text-sm font-bold text-zinc-900">Resolution Clarity Comparison</h3>
                   <p className="text-xs text-zinc-500">Visualizing the difference in detail capture.</p>
                 </div>
              </div>
@@ -478,106 +560,179 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                <div className="relative rounded-2xl overflow-hidden border border-zinc-200 aspect-video group">
                  <Image src="/comparisons/2mp.png" alt="2MP View" width={800} height={450} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                 <div className="absolute bottom-0 left-0 p-4">
-                   <p className="text-white text-sm font-semibold">2MP Full HD</p>
-                   <p className="text-white/70 text-xs mt-0.5">Standard identification (10-15ft)</p>
+                 <div className="absolute bottom-0 left-0 p-3 sm:p-4">
+                   <p className="text-white text-xs sm:text-sm font-bold">2MP Full HD</p>
+                   <p className="text-white/70 text-[10px] sm:text-xs mt-0.5">Standard identification (10-15ft)</p>
                  </div>
                </div>
                
                <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/30 aspect-video group shadow-lg shadow-emerald-500/10">
                  <Image src="/comparisons/5mp.png" alt="5MP View" width={800} height={450} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                 <div className="absolute top-3 right-3 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">Recommended</div>
-                 <div className="absolute bottom-0 left-0 p-4">
-                   <p className="text-white text-sm font-semibold">5MP Ultra 3K HD</p>
-                   <p className="text-white/80 text-xs mt-0.5">Advanced identification (25-30ft)</p>
+                 <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Recommended</div>
+                 <div className="absolute bottom-0 left-0 p-3 sm:p-4">
+                   <p className="text-white text-xs sm:text-sm font-bold">5MP Ultra 3K HD</p>
+                   <p className="text-white/80 text-[10px] sm:text-xs mt-0.5">Advanced identification (25-30ft)</p>
                  </div>
                </div>
              </div>
           </motion.div>
 
           {/* Value Propositions */}
-          <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <TermCard icon={<ShieldCheck className="w-5 h-5" />} title="1-Year Warranty" body="Complete equipment and labour coverage. Free replacement for any defective parts." delay={0.1} />
             <TermCard icon={<CreditCard className="w-5 h-5" />} title={`${quote.advancePercent}% Advance`} body={`${formatINR(advance)} required to initiate the project. Balance upon successful handover.`} delay={0.2} />
             <TermCard icon={<Clock className="w-5 h-5" />} title="Priority Support" body="Free remote assistance for 12 months. Next-business-day on-site support." delay={0.3} />
           </motion.div>
 
-          {/* Action Area */}
-          <motion.div variants={fadeIn} className="pt-8 pb-40 sm:pb-0">
+          {/* Dual Action / Next Steps Section */}
+          <motion.div variants={fadeIn} id="payment-section" className="pt-2 sm:pt-4">
             {!accepted ? (
-              <div className="bg-white rounded-t-3xl sm:rounded-3xl p-6 sm:p-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] sm:shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-t sm:border border-zinc-100 fixed bottom-0 left-0 right-0 z-50 sm:relative overflow-y-auto max-h-[80vh] sm:max-h-none sm:overflow-visible">
-                <h3 className="text-xl font-semibold text-zinc-900 mb-2">{t("complete_your_order", "Complete Your Order")}</h3>
-                <p className="text-sm text-zinc-500 mb-8">{t("complete_your_order_desc", "Choose your preferred payment method to schedule your installation.")}</p>
+              <div className="space-y-6">
+                
+                {/* Main Action Box */}
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-zinc-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-bold text-zinc-900">How Would You Like to Proceed?</h3>
+                      <p className="text-xs sm:text-sm text-zinc-500">Lock your installation immediately with advance or schedule a free physical site survey first.</p>
+                    </div>
+                  </div>
 
-                {/* Cashfree EMI Banner */}
-                <div className="relative bg-zinc-900 rounded-2xl p-6 sm:p-8 overflow-hidden mb-8 group">
-                   <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 transition-transform duration-1000 group-hover:scale-110" />
-                   
-                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                     <div className="max-w-md">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Easy EMI</span>
-                          <span className="text-xs text-zinc-400 font-medium">Credit & Debit Card EMI</span>
+                  {/* 2-Column Decision Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    
+                    {/* Track 1: Online Advance Booking */}
+                    <div className="p-5 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 text-white flex flex-col justify-between border border-slate-800 shadow-md">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 rounded-full">
+                            Fast Track Installation
+                          </span>
+                          <span className="text-xs font-bold text-slate-400">Step 1 of 2</span>
                         </div>
-                       <h4 className="text-lg font-semibold text-white mb-2">Split into manageable instalments</h4>
-                       <p className="text-sm text-zinc-400">No-cost EMI available on major credit cards. Zero foreclosure charges. Instant digital approval.</p>
-                     </div>
+                        <h4 className="text-base font-bold text-white mb-1">Confirm & Pay Advance</h4>
+                        <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                          Pay {formatINR(advance)} advance now. Equipment is locked from warehouse and certified engineer dispatched within 24-48 hours.
+                        </p>
+                        <div className="space-y-1.5 text-[11px] text-slate-300 mb-5">
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Instant GST Tax Invoice</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Priority technician allocation</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Remaining balance due on site completion</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => openBillingModal("advance")}
+                          disabled={isPayingAdvance || isPayingFull}
+                          className="w-full py-3.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          Pay {formatINR(advance)} Advance
+                        </button>
+
+                        <button
+                          onClick={() => openBillingModal("full")}
+                          disabled={isPayingAdvance || isPayingFull}
+                          className="w-full py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl text-[11px] transition-all text-center"
+                        >
+                          Or Pay Full Amount ({formatINR(total)})
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Track 2: Physical Site Survey */}
+                    <div className="p-5 rounded-2xl bg-gradient-to-b from-purple-50/70 to-indigo-50/70 text-slate-900 flex flex-col justify-between border-2 border-purple-200/80 shadow-sm">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-200/70 text-purple-900 border border-purple-300 px-2.5 py-0.5 rounded-full">
+                            100% Free Consultation
+                          </span>
+                          <span className="text-xs font-bold text-purple-600">No Advance</span>
+                        </div>
+                        <h4 className="text-base font-bold text-purple-950 mb-1">Book Free Site Survey</h4>
+                        <p className="text-xs text-purple-900/80 leading-relaxed mb-4">
+                          Want an engineer to inspect your site first? Pick a convenient time slot. Our technician will visit, check blindspots, and measure wiring.
+                        </p>
+                        <div className="space-y-1.5 text-[11px] text-purple-900/90 mb-5">
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                            <span>Physical site inspection by CCTV specialist</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                            <span>Zero obligation / No advance payment today</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                            <span>Pick your preferred Date & Time Slot</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setIsSurveyModalOpen(true)}
+                        className="w-full py-3.5 px-4 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
+                      >
+                        <Calendar className="w-4 h-4" />
+                        📅 Book Free Site Survey
+                      </button>
+                    </div>
+
+                  </div>
+
+                  {/* Cashfree EMI Banner */}
+                  <div className="relative bg-zinc-900 rounded-2xl p-5 sm:p-6 overflow-hidden mb-5 group">
+                     <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 transition-transform duration-1000 group-hover:scale-110" />
                      
-                     <motion.button
-                       whileTap={{ scale: 0.98 }}
-                       onClick={() => handlePayment("full", "emi")}
-                       disabled={isPayingEMI}
-                       className="shrink-0 w-full md:w-auto px-6 py-3.5 bg-white text-zinc-900 text-sm font-semibold rounded-xl shadow-lg hover:bg-zinc-50 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
-                     >
-                       {isPayingEMI ? "Processing..." : "Apply for EMI"}
-                     </motion.button>
-                   </div>
+                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                       <div>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="bg-emerald-500 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Easy EMI</span>
+                            <span className="text-xs text-zinc-400 font-medium">Credit & Debit Card EMI</span>
+                          </div>
+                         <h4 className="text-sm sm:text-base font-bold text-white mb-0.5">Split into Easy Monthly Instalments</h4>
+                         <p className="text-xs text-zinc-400">No-cost EMI available on major cards. Zero foreclosure charges.</p>
+                       </div>
+                       
+                       <motion.button
+                         whileTap={{ scale: 0.98 }}
+                         onClick={() => openBillingModal("full")}
+                         disabled={isPayingEMI}
+                         className="shrink-0 w-full md:w-auto px-5 py-3 bg-white text-zinc-900 text-xs sm:text-sm font-bold rounded-xl shadow-lg hover:bg-zinc-50 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                       >
+                         {isPayingEMI ? "Processing..." : "Apply for EMI"}
+                       </motion.button>
+                     </div>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center gap-2 pt-2">
+                    <button 
+                      onClick={() => redirectToPaymentLink("advance", "all")}
+                      className="text-xs text-zinc-500 hover:text-blue-600 underline underline-offset-2 transition-colors text-center"
+                    >
+                      Trouble with the payment window? Click here to pay securely.
+                    </button>
+                    <button 
+                      onClick={handleWhatsAppShare}
+                      className="text-xs text-emerald-600 hover:text-emerald-700 font-bold transition-colors flex items-center gap-1.5 pt-1"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Send Payment Link via WhatsApp (Alternate Device)
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-4 py-4">
-                  <div className="h-px bg-zinc-200 flex-1" />
-                  <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Or Pay Directly</span>
-                  <div className="h-px bg-zinc-200 flex-1" />
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handlePayment("advance", "all")}
-                    disabled={isPayingAdvance || isPayingFull}
-                    className="flex-1 py-4 px-6 bg-zinc-900 text-white rounded-xl text-sm font-semibold shadow-md hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
-                  >
-                    {isPayingAdvance ? "Processing..." : `Pay Advance (${formatINR(advance)})`}
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handlePayment("full", "all")}
-                    disabled={isPayingAdvance || isPayingFull}
-                    className="flex-1 py-4 px-6 bg-white text-zinc-900 border border-zinc-200 rounded-xl text-sm font-semibold shadow-sm hover:bg-zinc-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
-                  >
-                    {isPayingFull ? t("processing", "Processing...") : `${t("pay_full_amount", "Pay Full Amount")} (${formatINR(total)})`}
-                  </motion.button>
-                </div>
-
-                <div className="mt-4 flex flex-col items-center justify-center gap-3">
-                  <button 
-                    onClick={() => redirectToPaymentLink("advance", "all")}
-                    className="text-xs text-gray-500 hover:text-blue-600 underline underline-offset-2 transition-colors"
-                  >
-                    Trouble with the payment window? Click here to pay securely.
-                  </button>
-                  <button 
-                    onClick={handleWhatsAppShare}
-                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors flex items-center gap-1"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                    Send Payment Link via WhatsApp (Alternate Device)
-                  </button>
-                </div>
               </div>
             ) : (
               <motion.div 
@@ -588,33 +743,82 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
                   <Check className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-semibold mb-2">Quote Accepted & Paid!</h3>
-                <p className="text-emerald-50 font-medium">Thank you for choosing TEAM CCTV. Our dispatch team will contact you shortly to schedule your installation.</p>
+                <h3 className="text-2xl font-bold mb-2">Quote Accepted & Paid!</h3>
+                <p className="text-emerald-50 font-medium text-sm">Thank you for choosing TEAM CCTV. Our dispatch team will contact you shortly to schedule your installation.</p>
               </motion.div>
             )}
           </motion.div>
 
         </motion.div>
       </div>
-      {/* Mobile Sticky Payment CTA */}
+
+      {/* Mobile-Friendly Sticky Bottom Bar (Sleek, Non-Obtrusive) */}
       {!accepted && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 backdrop-blur-xl border-t border-zinc-200 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          <div className="flex items-center justify-between gap-4">
+        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-xl border-t border-zinc-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
             <div className="flex flex-col">
-              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Total</span>
-              <span className="text-xl font-semibold text-zinc-900 tracking-tight">{formatINR(total)}</span>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Total</span>
+              <span className="text-base font-extrabold text-zinc-900 tracking-tight leading-none">{formatINR(total)}</span>
+              <span className="text-[10px] text-zinc-500 mt-0.5">Adv: {formatINR(advance)}</span>
             </div>
-            <button
-              onClick={() => handlePayment("advance", "all")}
-              disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-              className="flex-1 max-w-[200px] flex items-center justify-center gap-2 px-6 py-3 bg-[#1d1d1f] hover:bg-[#2d2d2f] text-white rounded-2xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50"
-            >
-              <CreditCard className="w-4 h-4" />
-              Pay {formatINR(advance)} Advance
-            </button>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setIsSurveyModalOpen(true)}
+                className="flex items-center justify-center gap-1 px-3 py-2.5 bg-purple-100 hover:bg-purple-200 text-purple-900 border border-purple-300 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0"
+              >
+                <Calendar className="w-3.5 h-3.5 text-purple-700" />
+                Free Survey
+              </button>
+
+              <button
+                onClick={() => openBillingModal("advance")}
+                disabled={isPayingAdvance || isPayingFull || isPayingEMI}
+                className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50 shadow-sm shrink-0"
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                Pay {formatINR(advance)}
+              </button>
+
+              <a
+                href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "917357612865"}?text=${encodeURIComponent(`Hi TEAM CCTV, please send me the official PDF for my Quote ID: ${quote.id}`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors shrink-0"
+                title="WhatsApp PDF"
+              >
+                <MessageCircle className="w-5 h-5 text-emerald-600" />
+              </a>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Billing & GST Overview Modal */}
+      <BillingOverviewModal
+        isOpen={isBillingModalOpen}
+        onClose={() => setIsBillingModalOpen(false)}
+        onConfirmPayment={handleConfirmBilling}
+        initialData={billingData}
+        quoteTotal={total}
+        advanceAmount={advance}
+        paymentType={selectedPaymentType}
+        isSubmitting={isSubmittingBilling}
+      />
+
+      {/* Free Site Survey Booking Modal */}
+      <SiteVisitBookingModal
+        isOpen={isSurveyModalOpen}
+        onClose={() => setIsSurveyModalOpen(false)}
+        leadId={quote.leadId}
+        quoteId={quote.id}
+        customerName={billingData.customer_name || quote.customer.name}
+        customerMobile={billingData.phone || quote.customer.phone}
+        initialAddress={billingData.address_line1 || quote.installationAddress}
+        onBookingSuccess={() => {
+          toast.success("Survey request registered! Our team will contact you.");
+        }}
+      />
     </div>
   );
 }

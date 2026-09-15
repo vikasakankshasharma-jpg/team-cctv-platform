@@ -1,3 +1,4 @@
+import { getCachedProducts, getCachedAddons } from "@/lib/cached-catalog";
 import { adminDb } from "@/lib/firebase-admin";
 import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
 import { ConfiguratorView } from "@/components/quotation/ConfiguratorView";
@@ -81,10 +82,13 @@ export default async function QuoteResultPage({
   }
 
   try {
+    const [cachedProducts, cachedAddons] = await Promise.all([
+      getCachedProducts(),
+      getCachedAddons()
+    ]);
+
     const results = await Promise.allSettled([
       lead ? Promise.resolve({ exists: true, id: lead.id, data: () => lead } as any) : adminDb.collection("leads").doc(leadId).get(),
-      adminDb.collection("products").where("is_active", "==", true).get(),
-      adminDb.collection("addons").where("is_active", "==", true).get(),
       adminDb.collection("addon_rules").get(),
       adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
       adminDb.collection("recommendation_rules").orderBy("priority", "asc").get(),
@@ -97,57 +101,51 @@ export default async function QuoteResultPage({
       lead = { id: leadResult.value.id, ...leadResult.value.data() } as Lead;
     }
 
+    products = cachedProducts.map(data => {
+      if ((data as any).is_deleted === true) return null;
+      if (!Array.isArray(data.technologies)) {
+        data.technologies = data.technology ? [data.technology] : ["Common"];
+      }
+      // Strip heavy fields that the client doesn't need for generating the quote
+      const { 
+        base_cost, 
+        margin_percentage, 
+        custom_attributes,
+        focus_reason,
+        focus_active_until,
+        ...publicData 
+      } = data as any;
+      return { id: data.id, ...publicData } as Product;
+    }).filter(Boolean) as Product[];
+
+    addons = cachedAddons.map(data => {
+      if ((data as any).is_deleted === true) return null;
+      const { base_cost, ...publicData } = data as any;
+      return { id: data.id, ...publicData } as Addon;
+    }).filter(Boolean) as Addon[];
+    
     if (results[1].status === "fulfilled" && results[1].value) {
-      products = results[1].value.docs.map(doc => {
-        const data = doc.data() as any;
-        if (data.is_deleted === true) return null;
-        if (!Array.isArray(data.technologies)) {
-          data.technologies = data.technology ? [data.technology] : ["Common"];
-        }
-        // Strip heavy fields that the client doesn't need for generating the quote
-        const { 
-          base_cost, 
-          margin_percentage, 
-          custom_attributes,
-          focus_reason,
-          focus_active_until,
-          ...publicData 
-        } = data;
-        return { id: doc.id, ...publicData } as Product;
-      }).filter(Boolean) as Product[];
-    }
-
-    if (results[2].status === "fulfilled" && results[2].value) {
-      addons = results[2].value.docs.map(doc => {
-        const data = doc.data() as Addon;
-        if ((data as any).is_deleted === true) return null;
-        const { base_cost, ...publicData } = data;
-        return { id: doc.id, ...publicData } as Addon;
-      }).filter(Boolean) as Addon[];
+      addon_rules = results[1].value.docs.map(doc => ({ id: doc.id, ...doc.data() } as AddonRule));
     }
     
+    if (results[2].status === "fulfilled" && results[2].value && results[2].value.exists) {
+      settings = results[2].value.data() as AppSettings;
+    }
+
     if (results[3].status === "fulfilled" && results[3].value) {
-      addon_rules = results[3].value.docs.map(doc => ({ id: doc.id, ...doc.data() } as AddonRule));
-    }
-    
-    if (results[4].status === "fulfilled" && results[4].value && results[4].value.exists) {
-      settings = results[4].value.data() as AppSettings;
-    }
-
-    if (results[5].status === "fulfilled" && results[5].value) {
-      recommendation_rules = results[5].value.docs
+      recommendation_rules = results[3].value.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter((rule: any) => rule.is_active === true);
     }
 
-    if (results[6].status === "fulfilled" && results[6].value) {
-      card_layouts = results[6].value.docs
+    if (results[4].status === "fulfilled" && results[4].value) {
+      card_layouts = results[4].value.docs
         .map((doc: any) => ({ id: doc.id, ...doc.data() }))
         .sort((a: any, b: any) => (a.priority || 0) - (b.priority || 0));
     }
 
-    if (results[7].status === "fulfilled" && results[7].value) {
-      hubs = results[7].value.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+    if (results[5].status === "fulfilled" && results[5].value) {
+      hubs = results[5].value.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
     }
 
     if (lead?.promoter_id) {

@@ -18,7 +18,7 @@ export function WhatsAppFloat() {
   const waHref = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waMessage)}`;
 
   // Hide during wizard and on admin/partner/salesperson portals
-  const hideOn = ["/wizard", "/admin", "/partner", "/salesperson", "/onboarding", "/platform", "/quote", "/installer", "/for-installers"];
+  const hideOn = ["/wizard", "/admin", "/partner", "/salesperson", "/onboarding", "/platform", "/quote", "/installer", "/for-installers", "/payment-success"];
   if (hideOn.some((p) => pathname.startsWith(p))) return null;
 
   return (

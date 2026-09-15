@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { paymentType = "full" } = body;
+    const { paymentType = "full", billingDetails } = body;
     let chargeAmount = serverAmount;
     if (paymentType === "advance") {
       const advancePercent = Number(
@@ -108,22 +108,33 @@ export async function POST(req: Request) {
         ...notes,
         quote_id: quoteId,
         payment_type: paymentType,
-        customer_name: quoteData.customer_name || "",
-        customer_mobile: quoteData.customer_mobile || "",
+        customer_name: billingDetails?.customer_name || quoteData.customer_name || "",
+        customer_mobile: billingDetails?.phone || quoteData.customer_mobile || "",
+        company_name: billingDetails?.company_name || "",
+        gstin: billingDetails?.gstin || "",
       },
     };
 
     const order = await razorpay.orders.create(options);
 
     // 6. Bind Order ID and Expected Amount Back to the Quote Document
-    await quoteRef.update({
+    const updatePayload: any = {
       razorpay_order_id: order.id,
       razorpay_order_amount: chargeAmount,
       payment_type: paymentType,
       currency: "INR",
       payment_status: "ORDER_CREATED",
       updated_at: serverTimestamp(),
-    });
+    };
+
+    if (billingDetails) {
+      updatePayload.billing_details = billingDetails;
+      if (billingDetails.customer_name) updatePayload.customer_name = billingDetails.customer_name;
+      if (billingDetails.company_name) updatePayload.company_name = billingDetails.company_name;
+      if (billingDetails.gstin) updatePayload.gstin = billingDetails.gstin;
+    }
+
+    await quoteRef.update(updatePayload);
 
     return NextResponse.json({
       success: true,

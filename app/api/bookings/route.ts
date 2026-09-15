@@ -41,30 +41,68 @@ export async function POST(request: NextRequest) {
       return ApiResponse.forbidden("You do not have permission to book for this lead.");
     }
 
-    // 2. Persist Booking
-    const isTestBooking = leadData?.mobile_number === "9999999999" || leadData?.customer_name?.toLowerCase().includes("e2e test");
+    // 2. Extract detailed visit data
+    const { 
+      preferred_date = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], 
+      time_slot = "10:00 AM - 01:00 PM", 
+      special_notes = "",
+      customer_name = leadData?.customer_name || "Customer",
+      customer_mobile = leadData?.mobile_number || ""
+    } = body;
+
+    // 3. Persist Booking in site_visit_bookings
+    const isTestBooking = customer_mobile === "9999999999" || customer_name.toLowerCase().includes("e2e test");
     const bookingRef = adminDb.collection(COLLECTIONS.SITE_VISIT_BOOKINGS).doc();
-    const bookingPromise = bookingRef.set({
+    const bookingData = {
+      id: bookingRef.id,
       lead_id,
-      quote_id,
+      quote_id: quote_id || null,
       address,
-      customer_name: leadData?.customer_name,
-      customer_mobile: leadData?.mobile_number,
+      customer_name,
+      customer_mobile,
+      preferred_date,
+      time_slot,
+      special_notes,
       status: "pending",
       created_at: serverTimestamp(),
       is_test: isTestBooking,
       ttl: isTestBooking ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null
-    });
+    };
+    const bookingPromise = bookingRef.set(bookingData);
 
-    // 3. Update Lead
+    // 4. Update Lead to site_visit stage
     const leadPromise = leadRef.update({
-      address,
-      status: "quoted",
+      address: typeof address === "string" ? { full_address: address, pincode: leadData?.address?.pincode || "302001" } : address,
+      status: "site_visit",
+      site_visit_date: preferred_date,
+      site_visit_slot: time_slot,
       last_booking_id: bookingRef.id,
       updated_at: serverTimestamp()
     });
 
-    await Promise.all([bookingPromise, leadPromise]);
+    // 5. Create Survey Job for dispatch
+    const jobId = `SURVEY-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const jobRef = adminDb.collection("jobs").doc(jobId);
+    const jobPromise = jobRef.set({
+      id: jobId,
+      lead_id,
+      quote_id: quote_id || null,
+      booking_id: bookingRef.id,
+      type: "survey",
+      status: "PENDING_DISPATCH",
+      customer: {
+        name: customer_name,
+        mobile: customer_mobile,
+      },
+      address: typeof address === "string" ? { full_address: address, pincode: leadData?.address?.pincode || "302001" } : address,
+      scheduled_at: preferred_date,
+      time_slot: time_slot,
+      special_notes: special_notes,
+      created_at: new Date().toISOString(),
+      server_created_at: serverTimestamp(),
+    });
+
+    await Promise.all([bookingPromise, leadPromise, jobPromise]);
 
     // 4. Audit Log
     const { ip, ua } = getRequestMetadata(request);

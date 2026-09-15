@@ -14,20 +14,52 @@ export async function GET(
     let doc = await adminDb.collection("quotes").doc(quoteId).get();
     
     if (!doc.exists) {
-      return new NextResponse("Quote not found", { status: 404 });
+      // 1. Try finding in collectionGroup quotes
+      try {
+        const quotesSnap = await adminDb.collectionGroup("quotes").get();
+        const found = quotesSnap.docs.find((d: any) => d.id === quoteId);
+        if (found) {
+          doc = found as any;
+        }
+      } catch (cgErr) {
+        console.warn("CollectionGroup lookup failed:", cgErr);
+      }
     }
 
-    const quoteData = doc.data() as any;
-    
-    // Verify the quote is actually paid
-    if (quoteData.status !== "PAID") {
-      return new NextResponse("Invoice not available - payment not confirmed", { status: 403 });
+    if (!doc.exists) {
+      // 2. Try finding in invoices collection
+      const invDoc = await adminDb.collection("invoices").doc(quoteId).get();
+      if (invDoc.exists) {
+        doc = invDoc as any;
+      } else {
+        // 3. Try query by quote_id
+        const invSnap = await adminDb.collection("invoices").where("quote_id", "==", quoteId).limit(1).get();
+        if (!invSnap.empty) {
+          doc = invSnap.docs[0] as any;
+        }
+      }
     }
+
+    let leadData: any = {};
+    if (doc.exists && doc.ref?.parent?.parent) {
+      try {
+        const leadSnap = await doc.ref.parent.parent.get();
+        leadData = leadSnap?.data() || {};
+      } catch (e) {
+        console.warn("Parent lead fetch error", e);
+      }
+    }
+
+    const quoteData = doc.exists ? (doc.data() as any) : {};
+    const billingDetails = quoteData.billing_details || leadData?.billing_details;
 
     const quote = {
       id: quoteId,
-      customer_name: quoteData.customer_name || "Customer",
-      customer_mobile: quoteData.customer_mobile || "N/A",
+      customer_name: billingDetails?.customer_name || quoteData.customer_name || quoteData.customerName || leadData.customer_name || leadData.name || "Customer",
+      customer_mobile: billingDetails?.phone || quoteData.customer_mobile || quoteData.customerMobile || leadData.mobile_number || leadData.phone || "N/A",
+      company_name: billingDetails?.company_name || quoteData.company_name || leadData.company_name || "",
+      gstin: billingDetails?.gstin || quoteData.gstin || quoteData.gst_number || leadData.gst_number || "",
+      billing_details: billingDetails,
       ...quoteData
     };
 
@@ -44,11 +76,12 @@ export async function GET(
     return new NextResponse(readableStream, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="Invoice-${quoteId}.pdf"`
+        'Content-Disposition': `inline; filename="Invoice-${quoteId}.pdf"`,
+        'Cache-Control': 'no-store, max-age=0'
       }
     });
   } catch (error: any) {
     console.error("Invoice PDF generation error:", error);
-    return new NextResponse(error.message, { status: 500 });
+    return new NextResponse(`Error generating invoice: ${error.message}`, { status: 500 });
   }
 }

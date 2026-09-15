@@ -23,23 +23,44 @@ export async function GET(request: Request) {
     const snapshot = await query.get();
     const leads = snapshot.docs.map(doc => {
       const data = doc.data();
+      const isPaid = data.status === "PAID" || data.status === "BOOKED" || !!data.payment_id || !!data.advance_paid;
+      const isSiteVisit = data.status === "site_visit" || data.leadStatus === "SITE_VISIT" || !!data.site_visit_date;
+      
+      let computedLeadStatus = data.leadStatus || "NEW";
+      if (isPaid && computedLeadStatus !== "WON") computedLeadStatus = "WON";
+      else if (isSiteVisit && computedLeadStatus === "NEW") computedLeadStatus = "SITE_VISIT";
+
       return {
         id: data.id || doc.id,
-        customer_name: data.customer_name || "Unknown",
-        customer_mobile: data.customer_mobile,
-        source: data.source || "unknown",
-        total_payable: data.pricingSnapshot?.total_payable || 0,
-        selectedPlan: data.selectedPlan || "none",
-        status: data.status,
-        leadStatus: data.leadStatus || "NEW",
-        createdAt: data.createdAt,
+        leadId: data.leadId || data.lead_id || data.id || doc.id,
+        customer_name: data.customer_name || data.billing_details?.contact_name || data.billing_details?.company_name || "Unknown",
+        customer_mobile: data.customer_mobile || data.billing_details?.contact_mobile || "",
+        source: data.source || "wizard",
+        total_payable: data.pricingSnapshot?.total_payable || data.total_payable || 0,
+        selectedPlan: data.selectedPlan || data.pricingSnapshot?.selectedPlan || "Standard",
+        status: data.status || (isPaid ? "PAID" : "GENERATED"),
+        leadStatus: computedLeadStatus,
+        isPaid,
+        
+        // Billing & GST Details
+        billing_details: data.billing_details || null,
+        is_business: !!data.billing_details?.is_business,
+        company_name: data.billing_details?.company_name || null,
+        gstin: data.billing_details?.gstin || null,
+        
+        // Site Visit Info
+        site_visit_date: data.site_visit_date || null,
+        site_visit_slot: data.site_visit_slot || null,
+        special_notes: data.special_notes || null,
+        
+        createdAt: data.createdAt || data.created_at || new Date().toISOString(),
         
         // Intelligence
-        intentScore: data.intentScore,
-        probabilityPercent: data.probabilityPercent || 0,
-        expectedValue: data.expectedValue || (data.pricingSnapshot?.finalPrice || data.pricingSnapshot?.total_payable || 0),
-        nextActionDate: data.nextActionDate || data.followUpDate,
-        nextActionType: data.nextActionType
+        intentScore: data.intentScore || (isPaid ? "Hot" : isSiteVisit ? "Warm" : "Cold"),
+        probabilityPercent: data.probabilityPercent || (isPaid ? 100 : isSiteVisit ? 75 : 25),
+        expectedValue: data.expectedValue || (data.pricingSnapshot?.finalPrice || data.pricingSnapshot?.total_payable || data.total_payable || 0),
+        nextActionDate: data.nextActionDate || data.followUpDate || data.site_visit_date || null,
+        nextActionType: data.nextActionType || (isSiteVisit ? "Site Visit" : "Follow-up")
       };
     });
 

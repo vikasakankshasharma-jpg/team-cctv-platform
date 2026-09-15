@@ -13,7 +13,14 @@ export function MobileStickyCtaBar() {
   const { openServiceAreaModal } = useUiStore();
   const { t } = useTranslation();
 
-  if (pathname?.startsWith("/wizard") || pathname?.startsWith("/pro-builder") || pathname?.startsWith("/quote")) return null;
+  if (
+    pathname?.startsWith("/wizard") || 
+    pathname?.startsWith("/pro-builder") || 
+    pathname?.startsWith("/quote") ||
+    pathname?.startsWith("/payment-success") ||
+    pathname?.startsWith("/customer") ||
+    pathname?.startsWith("/track")
+  ) return null;
 
   const handleClick = () => {
     if (params?.city) {

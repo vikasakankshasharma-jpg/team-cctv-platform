@@ -61,6 +61,7 @@ interface DynamicVariantGeneratorProps {
   settings: AppSettings;
   selection: ConfiguratorSelection;
   cablingDone: boolean;
+  cablingMeters?: number;
   promoterDiscount?: { percent: number; flat: number };
   evaluatedAddonRules: any;
   activeOffer?: any;
@@ -75,6 +76,7 @@ export function DynamicVariantGenerator({
   settings,
   selection,
   cablingDone,
+  cablingMeters,
   promoterDiscount,
   evaluatedAddonRules,
   activeOffer,
@@ -194,7 +196,7 @@ export function DynamicVariantGenerator({
       };
       
       const rawPricing = calculatePricing({
-        selection: sel, products, addons, settings, cablingDone,
+        selection: sel, products, addons, settings, cablingDone, cablingMeters,
         referralDiscountPercent: promoterDiscount?.percent || 0,
         referralDiscountFlat: promoterDiscount?.flat || 0,
         evaluatedAddonRules, activeOffer,

@@ -256,6 +256,11 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             BOOKED / PAID
                           </span>
+                        ) : q.status === "site_visit" || q.status === "survey_booked" ? (
+                          <span className="inline-flex items-center gap-1 bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-900 text-xs font-black px-2.5 py-0.5 rounded-full">
+                            <Calendar className="w-3.5 h-3.5" />
+                            SITE SURVEY SCHEDULED
+                          </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900 text-xs font-black px-2.5 py-0.5 rounded-full">
                             <Clock className="w-3.5 h-3.5" />

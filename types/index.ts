@@ -55,6 +55,13 @@ export interface Job {
   site_survey?: SiteSurveySnapshot;
   inventory_alert?: string;
   
+  customer?: {
+    name?: string;
+    mobile?: string;
+  };
+  time_slot?: string;
+  special_notes?: string;
+  
   scheduled_at?: unknown;
   sla_deadline?: string | null;
   completed_at?: unknown;
@@ -161,6 +168,24 @@ export interface Lead {
   is_b2b?: boolean;              // true when camera_count > 16
   company_name?: string | null;  // Collected in wizard for B2B leads
   gst_number?: string | null;    // GST number for B2B invoice
+  billing_details?: BillingDetails | null;
+}
+
+export interface BillingDetails {
+  is_business: boolean;
+  company_name?: string;
+  gstin?: string;
+  pan?: string;
+  customer_name: string;
+  phone: string;
+  email?: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  state_code?: string;
+  pincode: string;
+  same_as_installation?: boolean;
 }
 
 
@@ -1001,6 +1026,10 @@ export interface Invoice {
   base_invoice_id?: string;
 
   customer_mobile: string;
+  customer_name?: string;
+  company_name?: string;
+  gstin?: string;
+  billing_details?: BillingDetails;
   items: InvoiceItemSnapshot[];
 
   subtotal: number;
