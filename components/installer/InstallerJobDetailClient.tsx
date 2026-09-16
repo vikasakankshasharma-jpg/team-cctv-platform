@@ -7,6 +7,7 @@ import { storage } from "@/lib/firebase-client";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { MapPin, Phone, User, Package, Camera, CheckCircle2, ArrowLeft, Loader2, UploadCloud, Store } from "lucide-react";
 import Link from "next/link";
+import SubmitOfflinePaymentModal from "./SubmitOfflinePaymentModal";
 import type { Lead } from "@/types";
 
 export default function InstallerJobDetailClient({ 
@@ -31,6 +32,7 @@ export default function InstallerJobDetailClient({
   const [note, setNote] = useState("");
   const [pin, setPin] = useState("");
   const [resending, setResending] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -302,6 +304,18 @@ export default function InstallerJobDetailClient({
               />
             </div>
 
+            {lead?.status !== "won" && (
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4">
+                <label className="block text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Payment Collection</label>
+                <button 
+                  onClick={() => setIsPaymentModalOpen(true)}
+                  className="w-full py-4 bg-blue-600 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                >
+                  Collect Payment (Cash / UPI)
+                </button>
+              </div>
+            )}
+            
             <button 
               onClick={handleUploadAndComplete}
               disabled={!file || uploading || pin.length !== 6}

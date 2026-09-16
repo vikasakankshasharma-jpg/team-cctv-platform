@@ -2,15 +2,18 @@
 
 import { Wallet, ArrowDownToLine, ArrowUpFromLine, AlertCircle, BookOpen } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { LedgerTransaction, Installer } from "@/types";
+import type { LedgerTransaction, Installer, OfflinePaymentVerification } from "@/types";
+import { useState } from "react";
 
 interface LedgerClientProps {
   installer: Installer;
   balance: number;
   transactions: LedgerTransaction[];
+  offlineVerifications: OfflinePaymentVerification[];
 }
 
-export function LedgerClient({ installer, balance, transactions }: LedgerClientProps) {
+export function LedgerClient({ installer, balance, transactions, offlineVerifications }: LedgerClientProps) {
+  const [activeTab, setActiveTab] = useState<"settled" | "pending">("pending");
   return (
     <div className="space-y-6 max-w-4xl animate-in fade-in duration-500">
       <div>

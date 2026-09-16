@@ -119,6 +119,7 @@ export interface Lead {
   // Assigned internal staff
   assigned_salesperson_id?: string | null;
   assigned_installer_id?: string | null;
+  job_level_cash_authority?: boolean;
   
   // Uber-Style Broadcast Claiming
   broadcasted_to_salesperson_ids?: string[];
@@ -837,6 +838,7 @@ export interface Installer {
   firebase_uid?: string;
   kyc_status: "pending" | "verified" | "suspended";
   is_active: boolean;
+  is_trusted_payment_collector?: boolean;
 
   // SLA & Dispatch Routing
   serviceable_pincodes?: string[];        // Standard coverage
@@ -1123,4 +1125,19 @@ export interface FollowUpTask {
   
   created_at: string;
   updated_at: string;
+}
+export interface OfflinePaymentVerification {
+  id: string;
+  lead_id: string;
+  quote_id: string;
+  installer_id: string;
+  installer_name: string;
+  amount: number;
+  method: "cash" | "upi";
+  utr_number?: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: any;
+  resolved_at?: any;
+  resolved_by?: string;
+  admin_notes?: string;
 }

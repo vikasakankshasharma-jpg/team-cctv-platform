@@ -2,6 +2,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { AlertTriangle, CheckCircle } from "lucide-react";
 import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { DashboardClient, type WeeklyBucket, type SourceBreakdown, type RecentActivity } from "@/components/admin/DashboardClient";
 import type { Metadata } from "next";
@@ -36,6 +37,9 @@ export default async function AdminDashboard() {
     adminDb.collection("leads").where("is_escalated", "==", true).count().get(),
     adminDb.collection("leads").where("is_escalated", "==", true).limit(5).get(),
   ]);
+  // Fetch pending offline payments
+  const pendingPaymentsSnap = await adminDb.collection("offline_verifications").where("status", "==", "pending").get();
+  const pendingPaymentsCount = pendingPaymentsSnap.size;
 
   const internalLeadsCount = internalCountRes.data().count;
   const internalLeadsSnap = internalSnap;
