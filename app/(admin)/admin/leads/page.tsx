@@ -1,12 +1,12 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { adminDb } from "@/lib/firebase-admin";
+import { requireAdmin } from "@/lib/auth-server";
 
 type LeadListRow = {
   id: string;
@@ -27,27 +27,38 @@ type LeadListRow = {
   createdAt: string;
 };
 
-export default function LeadsPage() {
-  const [leads, setLeads] = useState<LeadListRow[]>([]);
-  const [loading, setLoading] = useState(true);
+export default async function LeadsPage() {
+  await requireAdmin();
 
-  useEffect(() => {
-    fetchLeads();
-  }, []);
+  const snapshot = await adminDb.collection("quotes").orderBy("createdAt", "desc").limit(50).get();
+  const leads: LeadListRow[] = snapshot.docs.map(doc => {
+    const data = doc.data();
+    const isPaid = data.status === "PAID" || data.status === "BOOKED" || !!data.payment_id || !!data.advance_paid;
+    const isSiteVisit = data.status === "site_visit" || data.leadStatus === "SITE_VISIT" || !!data.site_visit_date;
+    
+    let computedLeadStatus = data.leadStatus || "NEW";
+    if (isPaid && computedLeadStatus !== "WON") computedLeadStatus = "WON";
+    else if (isSiteVisit && computedLeadStatus === "NEW") computedLeadStatus = "SITE_VISIT";
 
-  const fetchLeads = async () => {
-    try {
-      const res = await fetch("/api/crm/quotes");
-      const data = await res.json();
-      if (data.success) {
-        setLeads(data.data);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return {
+      id: data.id || doc.id,
+      leadId: data.leadId || data.lead_id || data.id || doc.id,
+      customer_name: data.customer_name || data.billing_details?.contact_name || data.billing_details?.company_name || "Unknown",
+      customer_mobile: data.customer_mobile || data.billing_details?.contact_mobile || "",
+      source: data.source || "wizard",
+      total_payable: data.pricingSnapshot?.total_payable || data.total_payable || 0,
+      selectedPlan: data.selectedPlan || data.pricingSnapshot?.selectedPlan || "Standard",
+      status: data.status || (isPaid ? "PAID" : "GENERATED"),
+      leadStatus: computedLeadStatus,
+      isPaid,
+      is_business: !!data.billing_details?.is_business,
+      company_name: data.billing_details?.company_name || null,
+      gstin: data.billing_details?.gstin || null,
+      site_visit_date: data.site_visit_date || null,
+      site_visit_slot: data.site_visit_slot || null,
+      createdAt: data.createdAt || data.created_at || new Date().toISOString(),
+    };
+  });
 
   const getStatusBadge = (status: string, isPaid?: boolean) => {
     if (isPaid || status === "WON" || status === "PAID" || status === "BOOKED") {
@@ -71,7 +82,7 @@ export default function LeadsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Lead Management</h1>
           <p className="text-muted-foreground mt-1">Track quotations, site survey bookings, and B2B GST tax invoices</p>
         </div>
-        <Link href="/admin/quote/new">
+        <Link href="/admin/wizard">
           <Button>+ Create Manual Quote</Button>
         </Link>
       </div>
@@ -81,9 +92,7 @@ export default function LeadsPage() {
           <CardTitle>Recent Leads & Inquiries ({leads.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <p className="py-8 text-center text-muted-foreground">Loading leads...</p>
-          ) : leads.length === 0 ? (
+          {leads.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center">No leads found.</p>
           ) : (
             <div className="rounded-md border overflow-x-auto">

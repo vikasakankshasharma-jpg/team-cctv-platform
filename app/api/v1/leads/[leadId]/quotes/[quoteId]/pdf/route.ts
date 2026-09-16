@@ -112,12 +112,45 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     propertyType:        String(quote.property_type        ?? ""),
     propertyDetail:      String(quote.property_detail      ?? ""),
     siteVisitDate:       quote.site_visit_date ? String(quote.site_visit_date) : undefined,
-    lineItems:           Array.isArray(quote.line_items) ? quote.line_items : [],
+    lineItems: [
+      ...(Array.isArray(quote.items) ? quote.items : (Array.isArray(quote.line_items) ? quote.line_items : [])).map((item: any) => {
+        const isService = item.product_id === "labor_install" || item.product_id === "cabling_material" || !item.product_id;
+        const desc = isService 
+          ? (item.description || "Service / Material")
+          : `SKU/Model: ${item.product_id}\nTechnology: ${item.technology || 'Standard'} | Tier: ${item.resolution_tier || 'standard'}`;
+        return {
+          id: item.product_id || item.id || Math.random().toString(36).substr(2, 9),
+          name: item.display_name || item.name,
+          description: desc,
+          badge: item.technology ? { label: item.technology, color: item.technology === "IP" ? "#2C5F8A" : "#0F1F3D" } : undefined,
+          quantity: item.qty || item.quantity || 1,
+          unitPrice: item.unit_price || item.unitPrice || 0,
+        };
+      }),
+      ...(Array.isArray(quote.addons) ? quote.addons : []).map((addon: any) => ({
+        id: addon.addon_id || addon.id || Math.random().toString(36).substr(2, 9),
+        name: addon.display_name || addon.name,
+        description: "Accessory / Add-on",
+        quantity: addon.qty || addon.quantity || 1,
+        unitPrice: addon.price || addon.unit_price || 0,
+      }))
+    ],
     gstPercent:          Number(quote.gst_percent   ?? 18),
     advancePercent:      Number(quote.advance_percent ?? 30),
     companyGstin:        String(quote.company_gstin ?? ""),
     notes:               quote.notes ? String(quote.notes) : undefined,
   };
+
+  if (quote?.negotiated_discount) {
+    quoteData.lineItems.push({
+      id: "negotiated_discount",
+      name: "Special Discount",
+      description: "Salesperson applied discount",
+      badge: { label: "Discount", color: "#EF4444" },
+      quantity: 1,
+      unitPrice: -quote.negotiated_discount
+    });
+  }
 
   // Fetch settings for custom PDF logo and terms
   const settingsSnap = await adminFirestore.collection("settings").doc("app_settings").get();

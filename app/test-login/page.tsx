@@ -32,7 +32,11 @@ export default function TestLoginPage() {
 
         setStatus("Establishing secure HTTP Session...");
         const idToken = await auth.currentUser?.getIdToken(true);
-        const sessionRes = await fetch(role === "dealer" ? "/api/partner/auth/session" : "/api/auth/session", {
+        let endpoint = "/api/auth/session";
+        if (role === "dealer") endpoint = "/api/partner/auth/session";
+        if (role === "installer") endpoint = "/api/installer/auth/session";
+
+        const sessionRes = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken }), 

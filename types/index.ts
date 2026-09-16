@@ -131,9 +131,10 @@ export interface Lead {
   // CRM Features
   next_followup_date?: string | null; // ISO Date String (YYYY-MM-DD)
   
-  status: "new" | "attempted" | "contacted" | "site_visit" | "quoted" | "won" | "lost" | "unreachable" | "busy" | "technical_error";
+  status: "new" | "attempted" | "contacted" | "site_visit" | "quoted" | "won" | "lost" | "unreachable" | "busy" | "technical_error" | "pending_customer_approval";
   created_at: unknown;
   updated_at?: unknown;
+  latest_quote_id?: string;
   site_visit_date?: unknown;
   sla_breached?: boolean;
   sla_deadline?: string | null;
@@ -552,6 +553,10 @@ export interface AppSettings {
   // NEW: Pincode and Cabling Config
   affordable_pincodes?: string[];
   default_cable_length_per_camera?: number;
+
+  // NEW: Referral & Commission System
+  promoter_commission_percent?: number;
+  customer_referral_discount_percent?: number;
 
   updated_at?: unknown;
   updated_by?: string | null;

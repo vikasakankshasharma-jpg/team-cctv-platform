@@ -53,10 +53,13 @@ export default function DealConversionPage() {
   
   const requiresApproval = marginPercent < MIN_MARGIN_PERCENT;
 
-  const handleConvert = async () => {
+  const [approvalLink, setApprovalLink] = useState("");
+
+  const handleSendToCustomer = async () => {
     setSaving(true);
+    setApprovalLink("");
     try {
-      const res = await fetch(`/api/crm/deals`, {
+      const res = await fetch(`/api/crm/request-customer-approval`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -68,24 +71,61 @@ export default function DealConversionPage() {
       });
       const data = await res.json();
       if (data.success) {
-        // Deal created! Redirect to CRM pipeline
-        router.push("/admin/sales");
+        if (data.approvalLink) {
+            setApprovalLink(data.approvalLink);
+        } else {
+            alert("Quote sent to customer for approval!");
+            router.push(`/admin/leads/${data.leadId}`);
+        }
       } else {
-        alert(data.message || "Failed to create deal.");
+        alert(data.message || "Failed to send to customer.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error creating deal.");
+      alert("Error sending to customer.");
     } finally {
       setSaving(false);
     }
   };
 
+  if (approvalLink) {
+      return (
+          <div className="p-8 max-w-4xl mx-auto space-y-6">
+              <Card>
+                  <CardContent className="p-8 text-center space-y-4">
+                      <h2 className="text-2xl font-bold text-green-700">Approval Requested</h2>
+                      <p>The revised quote has been saved and the lead status is updated.</p>
+                      <div className="bg-gray-100 p-4 rounded-md">
+                          <p className="font-mono text-sm break-all">{approvalLink}</p>
+                      </div>
+                      <div className="flex justify-center gap-4 mt-6">
+                        <button 
+                            onClick={() => {
+                                navigator.clipboard.writeText(approvalLink);
+                                alert("Link copied!");
+                            }} 
+                            className="px-6 py-2 bg-blue-600 text-white rounded-md font-bold"
+                        >
+                            Copy Link
+                        </button>
+                        <button 
+                            onClick={() => router.push(`/admin/leads/${lead.leadId}`)} 
+                            className="px-6 py-2 border rounded-md"
+                        >
+                            Back to Lead
+                        </button>
+                      </div>
+                  </CardContent>
+              </Card>
+          </div>
+      );
+  }
+
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
       <div className="mb-8 border-b pb-4">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Convert to Deal</h1>
-        <p className="text-gray-500 mt-1">Review quote financials and finalize negotiation for {lead.customer_name || "Unknown Customer"}.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Prepare Quote for Customer</h1>
+        <p className="text-gray-500 mt-1">Review quote financials, apply any necessary discount, and send it to {lead.customer_name || "Unknown Customer"} for approval.</p>
       </div>
 
       <Card>
@@ -123,7 +163,7 @@ export default function DealConversionPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Margin & Approval</CardTitle>
+          <CardTitle>Margin Status</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
@@ -143,10 +183,10 @@ export default function DealConversionPage() {
             <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md flex items-start gap-3">
               <span className="text-yellow-600 text-xl">⚠️</span>
               <div>
-                <h4 className="font-bold text-yellow-800">Admin Approval Required</h4>
+                <h4 className="font-bold text-yellow-800">Margin Below Target</h4>
                 <p className="text-sm text-yellow-700 mt-1">
-                  The requested discount drops the gross margin below the minimum threshold of {MIN_MARGIN_PERCENT}%. 
-                  You cannot convert this deal directly.
+                  The requested discount drops the gross margin below the target threshold of {MIN_MARGIN_PERCENT}%. 
+                  Make sure you have management clearance for this pricing.
                 </p>
               </div>
             </div>
@@ -161,22 +201,13 @@ export default function DealConversionPage() {
         >
           Cancel
         </button>
-        {requiresApproval ? (
-          <button 
-            disabled={saving}
-            className="px-6 py-2 bg-yellow-500 text-white rounded-md font-bold hover:bg-yellow-600 disabled:opacity-50"
-          >
-            {saving ? "Requesting..." : "Request Discount Approval"}
-          </button>
-        ) : (
-          <button 
-            onClick={handleConvert}
-            disabled={saving}
-            className="px-6 py-2 bg-green-600 text-white rounded-md font-bold hover:bg-green-700 disabled:opacity-50"
-          >
-            {saving ? "Processing..." : "Convert to Deal"}
-          </button>
-        )}
+        <button 
+          onClick={handleSendToCustomer}
+          disabled={saving}
+          className="px-6 py-2 bg-blue-600 text-white rounded-md font-bold hover:bg-blue-700 disabled:opacity-50"
+        >
+          {saving ? "Sending..." : "Send Revised Quote to Customer"}
+        </button>
       </div>
     </div>
   );

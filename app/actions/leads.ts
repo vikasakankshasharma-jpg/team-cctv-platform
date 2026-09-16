@@ -28,6 +28,10 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
       const leadDoc = await transaction.get(leadRef);
       const leadData = leadDoc.data() as Lead | undefined;
 
+      // Fetch global settings for commission rates
+      const settingsDoc = await transaction.get(adminDb.collection("settings").doc("global"));
+      const settings = settingsDoc.data() as any;
+
       // Prepare payload for lead update
       const updatePayload: any = {
         status: validated.status,
@@ -56,8 +60,12 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
               const user = userDoc.data() as import("@/types").Promoter | import("@/types").Salesperson;
               
               let commissionAmount = 0;
-              if (user.use_global_commission && user.commission_slabs) {
-                const slab = user.commission_slabs.find(s => 
+              if (userType === "promoter") {
+                  // Promoters use the global commission percent
+                  const commissionPercent = settings?.promoter_commission_percent ?? 2;
+                  commissionAmount = netTaxable * (commissionPercent / 100);
+              } else if (user.use_global_commission && user.commission_slabs) {
+                const slab = user.commission_slabs.find((s: any) => 
                   netTaxable >= s.from && (s.to === null || netTaxable <= s.to)
                 );
                 if (slab) {

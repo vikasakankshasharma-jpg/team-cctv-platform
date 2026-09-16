@@ -289,6 +289,18 @@ export default async function QuoteResultPage({
                 <TranslatedText tKey="quote_prep" defaultText="Prepared for " /> <span className="text-[#1d1d1f] dark:text-white font-semibold">{lead.customer_name}</span>
              </p>
            </div>
+           
+           {lead.status === "pending_customer_approval" && (
+             <div className="max-w-3xl mx-auto px-4 mb-6">
+               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
+                 <h3 className="text-lg font-bold text-yellow-900 mb-2">Revised Quotation Ready for Review</h3>
+                 <p className="text-yellow-800 text-sm mb-4">Your salesperson has suggested a revised quotation. Please review the changes and approve.</p>
+                 <a href={`/quote/${lead.id}/review/${(lead as any).last_quote_id || lead.latest_quote_id || 'unknown'}`} className="inline-block bg-yellow-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-yellow-700">
+                   Review & Approve
+                 </a>
+               </div>
+             </div>
+           )}
       
       {/* MAIN CONFIGURATOR VIEW */}
       <div className="w-full animate-in fade-in fill-mode-both delay-300 duration-1000">

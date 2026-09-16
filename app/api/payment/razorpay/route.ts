@@ -52,6 +52,7 @@ export async function POST(req: Request) {
 
     // 4. Compute Amount Authoritatively from Quote Snapshot
     const serverAmount = Number(
+      quoteData.negotiated_final_price ??
       quoteData.pricingSnapshot?.total_payable ??
       quoteData.total_payable ??
       quoteData.total ??

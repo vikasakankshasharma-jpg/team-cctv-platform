@@ -68,6 +68,9 @@ export default async function SettingsAdminPage() {
     affordable_pincodes: ["302001", "302002", "302003", "302004", "302005", "302006", "302015", "302016"],
     default_cable_length_per_camera: 20,
 
+    promoter_commission_percent: 2,
+    customer_referral_discount_percent: 3,
+
     system_mode: "LIVE",
     payments_enabled: true,
 

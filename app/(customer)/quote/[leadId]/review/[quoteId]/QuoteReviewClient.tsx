@@ -76,10 +76,11 @@ function formatDate(dateStr: string) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: QuoteData["status"] }) {
+function StatusBadge({ status }: { status: QuoteData["status"] | "pending_customer_approval" }) {
   const { t } = useTranslation();
   const map = {
     pending:  { label: t("quote_awaiting", "Awaiting Approval"), classes: "bg-amber-100/50 text-amber-800 border-amber-200/50" },
+    pending_customer_approval: { label: "Review Requested", classes: "bg-amber-100/50 text-amber-800 border-amber-200/50" },
     accepted: { label: t("quote_accepted", "Accepted"),          classes: "bg-emerald-100/50 text-emerald-800 border-emerald-200/50" },
     expired:  { label: t("quote_expired", "Expired"),           classes: "bg-rose-100/50 text-rose-800 border-rose-200/50" },
     rejected: { label: t("quote_rejected", "Rejected"),          classes: "bg-zinc-100/50 text-zinc-600 border-zinc-200/50" },
@@ -91,7 +92,7 @@ function StatusBadge({ status }: { status: QuoteData["status"] }) {
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide border backdrop-blur-sm ${s.classes}`}>
       {status === 'accepted' && <CheckCircle2 className="w-3.5 h-3.5" />}
-      {status === 'pending' && <Clock className="w-3.5 h-3.5" />}
+      {(status === 'pending' || status === 'pending_customer_approval') && <Clock className="w-3.5 h-3.5" />}
       {s.label}
     </span>
   );
@@ -488,21 +489,24 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </div>
               
               <div className="overflow-x-auto -mx-2 sm:mx-0 px-2 sm:px-0">
-                <table className="w-full text-left border-collapse min-w-[480px] sm:min-w-0">
+                <table className="w-full text-left border-collapse min-w-full">
                   <thead>
                     <tr className="border-b border-zinc-100">
-                      <th className="pb-3 text-xs font-semibold text-zinc-400 w-3/5">Description</th>
-                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-center w-1/12">Qty</th>
-                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-right w-1/6">Rate</th>
-                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-right w-1/6">Amount</th>
+                      <th className="pb-3 text-xs font-semibold text-zinc-400">Description</th>
+                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-center">Qty</th>
+                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-right hidden sm:table-cell">Rate</th>
+                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-right">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-50">
-                    {quote.lineItems.map((item) => (
+                    {quote.lineItems.map((item) => {
+                      // Clean up undefined text from description
+                      const cleanDescription = (item.description || "").replace(/Camera type: undefined \| /g, "");
+                      return (
                       <tr key={item.id} className="group hover:bg-zinc-50/50 transition-colors">
                         <td className="py-4 pr-3">
                           <p className="text-xs sm:text-sm font-semibold text-zinc-900">{item.name}</p>
-                          <p className="text-[11px] sm:text-xs text-zinc-500 mt-0.5 leading-relaxed">{item.description}</p>
+                          <p className="text-[11px] sm:text-xs text-zinc-500 mt-0.5 leading-relaxed">{cleanDescription}</p>
                           {item.badge && (
                             <span className="inline-flex mt-1.5 items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border"
                                   style={{ backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5', color: item.badge.color || '#52525b', borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7' }}>
@@ -511,10 +515,11 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           )}
                         </td>
                         <td className="py-4 text-center text-xs sm:text-sm font-medium text-zinc-700">{item.quantity}</td>
-                        <td className="py-4 text-right text-xs sm:text-sm text-zinc-500">{formatINR(item.unitPrice)}</td>
+                        <td className="py-4 text-right text-xs sm:text-sm text-zinc-500 hidden sm:table-cell">{formatINR(item.unitPrice)}</td>
                         <td className="py-4 text-right text-xs sm:text-sm font-bold text-zinc-900">{formatINR(item.quantity * item.unitPrice)}</td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -79,13 +79,18 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. SERVER-SIDE PRICE RECALCULATION
+    let appliedReferralDiscountPercent = 0;
+    if (leadData.referral_code) {
+      appliedReferralDiscountPercent = settings.customer_referral_discount_percent ?? 3;
+    }
+
     const pricing = calculatePricing({
       selection: selection as any,
       products,
       addons,
       settings,
       cablingDone: leadData.cabling_done || false,
-      referralDiscountPercent: 0,
+      referralDiscountPercent: appliedReferralDiscountPercent,
       referralDiscountFlat: 0,
       activeOffer: leadData.active_offer,
       geoRules,

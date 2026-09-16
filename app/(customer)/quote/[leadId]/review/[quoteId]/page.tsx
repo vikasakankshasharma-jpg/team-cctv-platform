@@ -90,7 +90,7 @@ export default async function QuoteReviewPage({
           ...items.map((item: any) => ({
             id: item.product_id || item.id || Math.random().toString(36).substr(2, 9),
             name: item.display_name || item.name,
-            description: `Camera type: ${item.technology} | Tier: ${item.resolution_tier || 'standard'}`,
+            description: item.technology ? `Camera type: ${item.technology} | Tier: ${item.resolution_tier || 'standard'}` : "",
             badge: item.technology ? { label: item.technology, color: item.technology === "IP" ? "#2C5F8A" : "#0F1F3D" } : undefined,
             quantity: item.qty || item.quantity || 1,
             unitPrice: item.unit_price || 0,
@@ -103,6 +103,17 @@ export default async function QuoteReviewPage({
             unitPrice: addon.price || 0,
           }))
         ];
+
+        if (quote?.negotiated_discount) {
+          lineItems.push({
+            id: "negotiated_discount",
+            name: "Special Discount",
+            description: "Salesperson applied discount",
+            badge: { label: "Discount", color: "#EF4444" },
+            quantity: 1,
+            unitPrice: -quote.negotiated_discount
+          });
+        }
 
         // Add labor/cabling if present
         // NOTE: calculatePricing already adds labor and cabling into the `items` array.

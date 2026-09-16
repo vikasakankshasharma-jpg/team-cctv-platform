@@ -236,16 +236,16 @@ export function InstantQuotationReview({
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Item & Description</th>
-                <th className="py-3 px-4 hidden sm:table-cell">Brand / Tech</th>
-                <th className="py-3 px-4 text-center">Qty</th>
-                <th className="py-3 px-4 text-right">Unit Price (₹)</th>
-                <th className="py-3 px-4 text-right">Line Total (₹)</th>
-              </tr>
-            </thead>
+              <thead>
+                <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  <th className="py-3 px-4 w-12 text-center min-w-[48px]">#</th>
+                  <th className="py-3 px-4 min-w-[220px]">Item & Description</th>
+                  <th className="py-3 px-4 hidden sm:table-cell min-w-[120px]">Brand / Tech</th>
+                  <th className="py-3 px-4 text-center min-w-[60px]">Qty</th>
+                  <th className="py-3 px-4 text-right min-w-[90px]">Unit Price (₹)</th>
+                  <th className="py-3 px-4 text-right min-w-[90px]">Line Total (₹)</th>
+                </tr>
+              </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-300">
               {activePricing.items.map((item, idx) => (
                 <tr key={idx} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors">
