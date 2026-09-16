@@ -446,6 +446,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         brand_preference: pricing.camera_device?.brand || selection.brand_preference,
         resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
         recording_days: pricing.storage_days || selection.recording_days,
+        mixed_camera_requirements: pricing.mixed_camera_requirements || selection.mixed_camera_requirements,
       });
 
     // 2. Open Instant Quotation Review & Add-ons view

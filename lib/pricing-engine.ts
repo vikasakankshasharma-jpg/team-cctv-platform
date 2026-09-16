@@ -420,7 +420,16 @@ function calculateHardware(
   }
 
   // 2. Recorder Selection
-  const recorder = resolveRecorder(selection, products, tech);
+  let recorderSelection = selection;
+  if (mixedReqs && mixedReqs.length > 0) {
+    const resList = mixedReqs.map(r => String(r.resolution || selection.resolution_preference || "").toUpperCase());
+    if (resList.some(r => r.includes("8MP") || r.includes("4K") || r.includes("12MP"))) {
+      recorderSelection = { ...selection, resolution_preference: "8MP" };
+    } else if (resList.some(r => r.includes("5MP") || r.includes("4MP") || r.includes("6MP") || r.includes("3MP"))) {
+      recorderSelection = { ...selection, resolution_preference: "5MP" };
+    }
+  }
+  const recorder = resolveRecorder(recorderSelection, products, tech);
   if (recorder) {
     items.push({
       product_id: recorder.id!,

@@ -86,7 +86,22 @@ export function DynamicVariantGenerator({
 }: DynamicVariantGeneratorProps) {
   const [activeTech, setActiveTech] = useState<"hd" | "ip">("hd");
   const [activeBrand, setActiveBrand] = useState<string>("all");
-  const [activeResolution, setActiveResolution] = useState<string>("2MP");
+  const [activeOutdoorRes, setActiveOutdoorRes] = useState<string>("2MP");
+  const [activeIndoorRes, setActiveIndoorRes] = useState<string>("2MP");
+
+  const outdoorCount = selection.outdoor_camera_count !== undefined 
+    ? selection.outdoor_camera_count 
+    : (selection.indoor_camera_count !== undefined 
+        ? Math.max(0, (selection.camera_count || 4) - selection.indoor_camera_count) 
+        : Math.ceil((selection.camera_count || 4) / 2));
+
+  const indoorCount = selection.indoor_camera_count !== undefined 
+    ? selection.indoor_camera_count 
+    : Math.max(0, (selection.camera_count || 4) - outdoorCount);
+
+  const hasOutdoor = outdoorCount > 0;
+  const hasIndoor = indoorCount > 0;
+  const isMixed = hasOutdoor && hasIndoor;
   
   const { availableBrands, availableResolutions } = useMemo(() => {
     const brandSet = new Set<string>();
@@ -116,8 +131,8 @@ export function DynamicVariantGenerator({
       }
     });
 
-    const resultRes: string[] = ["all"];
     const orderedRes = ["2MP", "3MP", "4MP", "5MP", "6MP", "8MP", "12MP"];
+    const resultRes: string[] = [];
     orderedRes.forEach(r => {
       if (resSet.has(r)) resultRes.push(r);
     });
@@ -126,11 +141,12 @@ export function DynamicVariantGenerator({
   }, [products, activeTech, settings.brand_tabs_order]);
 
   const targetBrand = availableBrands.includes(activeBrand) ? activeBrand : (availableBrands[0] || "all");
-  const targetRes = availableResolutions.includes(activeResolution) ? activeResolution : (availableResolutions[1] || "all");
+  const targetOutdoorRes = availableResolutions.includes(activeOutdoorRes) ? activeOutdoorRes : (availableResolutions[0] || "2MP");
+  const targetIndoorRes = availableResolutions.includes(activeIndoorRes) ? activeIndoorRes : (availableResolutions[0] || "2MP");
 
   const variants = useMemo(() => {
     const results: PricingResult[] = [];
-    const pairsToGenerate: { brand: string, brandKey: string, resolution: string }[] = [];
+    const brandsToGenerate: { brand: string, brandKey: string }[] = [];
     
     products.forEach(p => {
       const pTech = (p.technology || "").toUpperCase();
@@ -141,28 +157,42 @@ export function DynamicVariantGenerator({
         
       if (isTechMatch && p.brand) {
         const pBrandKey = normalizeBrandKey(p.brand);
-        const pRes = getRes(p);
-        
         const brandMatches = targetBrand === "all" || targetBrand === pBrandKey;
-        const resMatches = targetRes === "all" || targetRes === pRes;
         
-        if (brandMatches && resMatches) {
-           if (!pairsToGenerate.some(pair => pair.brandKey === pBrandKey && pair.resolution === pRes)) {
-             pairsToGenerate.push({ brand: p.brand, brandKey: pBrandKey, resolution: pRes });
+        if (brandMatches) {
+           if (!brandsToGenerate.some(b => b.brandKey === pBrandKey)) {
+             brandsToGenerate.push({ brand: p.brand, brandKey: pBrandKey });
            }
         }
       }
     });
 
-    const enrich = (pricing: any, brandKey: string, res: string) => {
+    let mixedReqs: any[] = [];
+    if (isMixed) {
+      mixedReqs = [
+        { type: "Outdoor Bullet Camera", count: outdoorCount, resolution: targetOutdoorRes, features: ["bullet"] },
+        { type: "Indoor Dome Camera", count: indoorCount, resolution: targetIndoorRes, features: ["dome"] }
+      ];
+    } else if (hasOutdoor) {
+      mixedReqs = [
+        { type: "Outdoor Bullet Camera", count: outdoorCount, resolution: targetOutdoorRes, features: ["bullet"] }
+      ];
+    } else {
+      mixedReqs = [
+        { type: "Indoor Dome Camera", count: indoorCount, resolution: targetIndoorRes, features: ["dome"] }
+      ];
+    }
+
+    const enrich = (pricing: any, brandKey: string, brandName: string) => {
       if (!pricing || pricing.error) return null;
-      const camId = pricing.items.find((i: any) => products.find(p => p.id === i.product_id)?.category === "cctv_camera")?.product_id;
-      const camera_device = products.find(p => p.id === camId) ? { ...products.find(p => p.id === camId) } : undefined;
-      const strId = pricing.items.find((i: any) => products.find(p => p.id === i.product_id)?.category === "storage")?.product_id;
+      const camItems = pricing.items?.filter((i: any) => products.find(p => p.id === i.product_id)?.category === "cctv_camera");
+      const firstCamId = camItems?.[0]?.product_id;
+      const camera_device = products.find(p => p.id === firstCamId) ? { ...products.find(p => p.id === firstCamId) } : undefined;
+      const strId = pricing.items?.find((i: any) => products.find(p => p.id === i.product_id)?.category === "storage")?.product_id;
       const storage_device = products.find(p => p.id === strId) ? { ...products.find(p => p.id === strId) } : undefined;
       
       if (camera_device) {
-        (camera_device as any).derivedResolution = res;
+        (camera_device as any).brand = brandName;
       }
       if (storage_device) {
         let tb = (storage_device as any).storage_capacity_tb;
@@ -173,25 +203,42 @@ export function DynamicVariantGenerator({
         }
         (storage_device as any).derivedCapacity = tb ? `${tb}TB` : "HDD";
       }
+
+      const isHybrid = isMixed && targetOutdoorRes !== targetIndoorRes;
+      let displayResolution = "2MP Resolution";
+      if (isHybrid) {
+        displayResolution = `${targetOutdoorRes} Outdoor + ${targetIndoorRes} Indoor`;
+      } else if (hasOutdoor && !hasIndoor) {
+        displayResolution = `${targetOutdoorRes} Resolution (${outdoorCount} Outdoor)`;
+      } else if (hasIndoor && !hasOutdoor) {
+        displayResolution = `${targetIndoorRes} Resolution (${indoorCount} Indoor)`;
+      } else {
+        displayResolution = `${targetOutdoorRes} Resolution`;
+      }
       
       return { 
         ...pricing, 
         technology: activeTech.toUpperCase(),
-        camera_device, 
+        camera_device: camera_device ? { ...camera_device, derivedResolution: displayResolution } : { derivedResolution: displayResolution, brand: brandName }, 
         storage_device, 
         camera_count: selection.camera_count, 
         storage_days: (pricing as any)._calculated_days || selection.recording_days || 7,
-        plan_type: brandKey === "budget" ? "budget" : (res === "8MP" || res === "5MP" ? "premium" : "recommended")
+        plan_type: brandKey === "budget" ? "budget" : (targetOutdoorRes === "8MP" || targetIndoorRes === "8MP" ? "premium" : "recommended"),
+        is_hybrid: isHybrid,
+        mixed_camera_requirements: mixedReqs
       };
     };
 
-    pairsToGenerate.forEach(pair => {
-      const planType = pair.brandKey === "budget" ? "budget" : "recommended";
+    brandsToGenerate.forEach(b => {
+      const planType = b.brandKey === "budget" ? "budget" : "recommended";
       const sel: ConfiguratorSelection = {
         ...selection,
         technology: activeTech,
-        brand_preference: pair.brand,
-        resolution_preference: pair.resolution,
+        brand_preference: b.brand,
+        mixed_camera_requirements: mixedReqs,
+        outdoor_camera_count: outdoorCount,
+        indoor_camera_count: indoorCount,
+        resolution_preference: targetOutdoorRes === targetIndoorRes ? targetOutdoorRes : "5MP",
         plan_type: planType as any,
       };
       
@@ -203,7 +250,7 @@ export function DynamicVariantGenerator({
         evaluatedAddonRules, activeOffer,
       });
       
-      const enriched = enrich(rawPricing, pair.brandKey, pair.resolution);
+      const enriched = enrich(rawPricing, b.brandKey, b.brand);
       if (enriched) {
         enriched.is_economy_storage = false;
         results.push(enriched);
@@ -222,7 +269,7 @@ export function DynamicVariantGenerator({
           evaluatedAddonRules, activeOffer,
         });
         (rawEconomyPricing as any)._calculated_days = 3;
-        const enrichedEconomy = enrich(rawEconomyPricing, pair.brandKey, pair.resolution);
+        const enrichedEconomy = enrich(rawEconomyPricing, b.brandKey, b.brand);
         if (enrichedEconomy && enrichedEconomy.total_payable < (enriched?.total_payable || 0)) {
           enrichedEconomy.is_economy_storage = true;
           results.push(enrichedEconomy);
@@ -232,11 +279,12 @@ export function DynamicVariantGenerator({
 
     results.sort((a, b) => a.total_price_inr - b.total_price_inr);
     return results;
-  }, [activeTech, targetBrand, targetRes, selection, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer]);
+  }, [activeTech, targetBrand, targetOutdoorRes, targetIndoorRes, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer]);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-4 items-center">
+        {/* Technology Selector */}
         <div className="bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1.5 rounded-full inline-flex relative shadow-inner">
           <button
             onClick={() => setActiveTech("hd")}
@@ -254,7 +302,8 @@ export function DynamicVariantGenerator({
           </button>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 max-w-full no-scrollbar">
+        {/* Brand Selector */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
           <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0">Brand:</span>
           {availableBrands.map(b => (
             <button
@@ -267,24 +316,47 @@ export function DynamicVariantGenerator({
           ))}
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 max-w-full no-scrollbar">
-          <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0">Resolution:</span>
-          {availableResolutions.map(r => (
-            <button
-              key={r}
-              onClick={() => setActiveResolution(r)}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeResolution === r ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
-            >
-              {r === "all" ? "All Resolutions" : r}
-            </button>
-          ))}
-        </div>
+        {/* Outdoor Resolution Row (if outdoor cameras exist) */}
+        {hasOutdoor && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
+            <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0 flex items-center gap-1.5">
+              <span>Outdoor {isMixed ? `(${outdoorCount} Cams)` : `(${outdoorCount} Cams)`}:</span>
+            </span>
+            {availableResolutions.map(r => (
+              <button
+                key={`outdoor-${r}`}
+                onClick={() => setActiveOutdoorRes(r)}
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeOutdoorRes === r ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Indoor Resolution Row (if indoor cameras exist) */}
+        {hasIndoor && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
+            <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0 flex items-center gap-1.5">
+              <span>Indoor {isMixed ? `(${indoorCount} Cams)` : `(${indoorCount} Cams)`}:</span>
+            </span>
+            {availableResolutions.map(r => (
+              <button
+                key={`indoor-${r}`}
+                onClick={() => setActiveIndoorRes(r)}
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeIndoorRes === r ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {variants.length === 0 && (
         <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-300">
           <p className="text-slate-500 font-medium">No packages found for these filters.</p>
-          <Button variant="link" onClick={() => { setActiveBrand("all"); setActiveResolution("all"); }}>Clear Filters</Button>
+          <Button variant="link" onClick={() => { setActiveBrand("all"); setActiveOutdoorRes("2MP"); setActiveIndoorRes("2MP"); }}>Clear Filters</Button>
         </div>
       )}
 
@@ -307,12 +379,13 @@ export function DynamicVariantGenerator({
               
               <CardContent className="py-8 px-5 flex flex-col items-center justify-center min-h-[180px]">
                 <div className="text-center w-full">
-                  <div className="text-base font-black text-[#6366f1] mb-1.5 flex items-center justify-center gap-1.5">
-                    {variant.camera_device.brand || "Budget"} {variant.plan_type === "budget" ? "Standard" : "Pro"}
-                    {variant.is_economy_storage && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">ECONOMY</span>}
+                  <div className="text-base font-black text-[#6366f1] mb-1.5 flex items-center justify-center gap-1.5 flex-wrap">
+                    <span>{variant.camera_device?.brand || "Budget"} {variant.plan_type === "budget" ? "Standard" : "Pro"}</span>
+                    {variant.is_economy_storage && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-bold">ECONOMY</span>}
+                    {(variant as any).is_hybrid && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200 font-bold">HYBRID SETUP</span>}
                   </div>
                   <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
-                    {variant.camera_device.derivedResolution || "2MP"} Resolution
+                    {variant.camera_device.derivedResolution || "2MP Resolution"}
                   </h3>
                   {variant.is_economy_storage && (
                     <p className="text-xs text-[#86868b] font-medium mb-3">
