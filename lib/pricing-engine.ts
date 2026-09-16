@@ -349,7 +349,9 @@ function calculateHardware(
         proxySelection.selected_camera_id = undefined;
       }
       
-      const extraFeatures = proxySelection.requested_features ? [...proxySelection.requested_features] : [];
+      const extraFeatures = proxySelection.requested_features 
+        ? proxySelection.requested_features.filter(f => f.toLowerCase() !== "bullet" && f.toLowerCase() !== "dome") 
+        : [];
       if (req.features && req.features.length > 0) {
         extraFeatures.push(...req.features);
       }
@@ -967,7 +969,11 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     const resPref = selection.resolution_preference.toUpperCase();
     const resFiltered = pool.filter(cam => {
       // Safely parse resolution_mp or resolution (which might be "2MP", "2.4MP", "4MP", etc.)
-      const camRes = String(cam.resolution_mp || cam.resolution || "").toUpperCase();
+      let camRes = String(cam.resolution_mp || cam.resolution || "").toUpperCase();
+      if (!camRes) {
+        const match = ((cam.technical_name || "") + " " + (cam.display_name || "")).match(/(\d+)MP/i);
+        if (match) camRes = match[0].toUpperCase();
+      }
       return camRes === resPref || camRes === resPref.replace("MP", "") || camRes + "MP" === resPref;
     });
     // Fallback: If strict resolution matching eliminates ALL cameras, drop the filter
