@@ -697,7 +697,9 @@ function calculateConnectors(
       const retailPerPiece = Math.round(costPerPiece * (1 + connectorMarginPct / 100));
       let qty = wiredCameraCount;
       if (tech === "IP") {
-        qty = (wiredCameraCount * 2) + 2; // 2 per camera + 2 for PoE uplink
+        const transmission = resolveTransmission(selection, [...products, ...addons] as any[], tech);
+        const transQty = transmission ? Math.ceil(wiredCameraCount / (transmission.max_cameras || 4)) : 1;
+        qty = (wiredCameraCount * 2) + (transQty * 2); // 2 per camera + 2 per PoE switch for uplink
       } else {
         qty = wiredCameraCount * 2; // Cat6 Balun ends
       }
@@ -1293,12 +1295,31 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     if (fallbackOptions.length === 0) return undefined;
     
     fallbackOptions.sort((a, b) => getCapacity(a) - getCapacity(b));
-    return fallbackOptions.find(o => getCapacity(o) >= selection.camera_count) || fallbackOptions[fallbackOptions.length - 1];
+    const fallback = fallbackOptions.find(o => getCapacity(o) >= selection.camera_count) || fallbackOptions[fallbackOptions.length - 1];
+    if (fallback) fallback.max_cameras = getCapacity(fallback);
+    return fallback;
   }
 
   if (options.length === 0) return undefined;
   options.sort((a, b) => getCapacity(a) - getCapacity(b));
-  return options.find(o => getCapacity(o) >= selection.camera_count) || options[options.length - 1];
+
+  let finalTrans = undefined;
+
+  if (tech === "IP") {
+    const preferredOptions = options.filter(o => getCapacity(o) <= 8);
+    if (preferredOptions.length > 0) {
+      // Standardize on 4-ch or 8-ch switches to reduce costs through multiples
+      const idealCapacity = selection.camera_count <= 4 ? 4 : 8;
+      finalTrans = preferredOptions.find(o => getCapacity(o) >= idealCapacity) || preferredOptions[preferredOptions.length - 1];
+    }
+  }
+
+  if (!finalTrans) {
+    finalTrans = options.find(o => getCapacity(o) >= selection.camera_count) || options[options.length - 1];
+  }
+
+  if (finalTrans) finalTrans.max_cameras = getCapacity(finalTrans);
+  return finalTrans;
 }
 
 function resolveUnitPrice(product: Product, qty: number) {

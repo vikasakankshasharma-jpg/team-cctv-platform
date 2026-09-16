@@ -438,14 +438,15 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
     // 1. Lock selected package configuration into store
     setActiveCheckoutOption({ technology: tech, option: pricing.plan_type });
-    updateSelection({
-      selected_camera_id: undefined,
-      selected_recorder_id: undefined,
-      selected_storage_id: undefined,
-      technology: tech,
-      brand_preference: pricing.camera_device?.brand || selection.brand_preference,
-      resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
-    });
+      updateSelection({
+        selected_camera_id: undefined,
+        selected_recorder_id: undefined,
+        selected_storage_id: undefined,
+        technology: tech,
+        brand_preference: pricing.camera_device?.brand || selection.brand_preference,
+        resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
+        recording_days: pricing.storage_days || selection.recording_days,
+      });
 
     // 2. Open Instant Quotation Review & Add-ons view
     setViewMode("addons");

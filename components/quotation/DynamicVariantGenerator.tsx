@@ -180,7 +180,7 @@ export function DynamicVariantGenerator({
         camera_device, 
         storage_device, 
         camera_count: selection.camera_count, 
-        storage_days: selection.recording_days || 7,
+        storage_days: (pricing as any)._calculated_days || selection.recording_days || 7,
         plan_type: brandKey === "budget" ? "budget" : (res === "8MP" || res === "5MP" ? "premium" : "recommended")
       };
     };
@@ -195,6 +195,7 @@ export function DynamicVariantGenerator({
         plan_type: planType as any,
       };
       
+      // Standard Quote (Requested Storage)
       const rawPricing = calculatePricing({
         selection: sel, products, addons, settings, cablingDone, cablingMeters,
         referralDiscountPercent: promoterDiscount?.percent || 0,
@@ -203,7 +204,30 @@ export function DynamicVariantGenerator({
       });
       
       const enriched = enrich(rawPricing, pair.brandKey, pair.resolution);
-      if (enriched) results.push(enriched);
+      if (enriched) {
+        enriched.is_economy_storage = false;
+        results.push(enriched);
+      }
+
+      // Economy Storage Quote (If requested > 5 days, generate a low-storage variant)
+      if (selection.recording_days && selection.recording_days > 5) {
+        const economySel: ConfiguratorSelection = {
+          ...sel,
+          recording_days: 3 // Force 3 days to pick the smallest available HDD (usually 500GB)
+        };
+        const rawEconomyPricing = calculatePricing({
+          selection: economySel, products, addons, settings, cablingDone, cablingMeters,
+          referralDiscountPercent: promoterDiscount?.percent || 0,
+          referralDiscountFlat: promoterDiscount?.flat || 0,
+          evaluatedAddonRules, activeOffer,
+        });
+        (rawEconomyPricing as any)._calculated_days = 3;
+        const enrichedEconomy = enrich(rawEconomyPricing, pair.brandKey, pair.resolution);
+        if (enrichedEconomy && enrichedEconomy.total_payable < (enriched?.total_payable || 0)) {
+          enrichedEconomy.is_economy_storage = true;
+          results.push(enrichedEconomy);
+        }
+      }
     });
 
     results.sort((a, b) => a.total_price_inr - b.total_price_inr);
@@ -283,12 +307,23 @@ export function DynamicVariantGenerator({
               
               <CardContent className="py-8 px-5 flex flex-col items-center justify-center min-h-[180px]">
                 <div className="text-center w-full">
-                  <div className="text-base font-black text-[#6366f1] mb-1.5">
+                  <div className="text-base font-black text-[#6366f1] mb-1.5 flex items-center justify-center gap-1.5">
                     {variant.camera_device.brand || "Budget"} {variant.plan_type === "budget" ? "Standard" : "Pro"}
+                    {variant.is_economy_storage && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">ECONOMY</span>}
                   </div>
-                  <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-4 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
                     {variant.camera_device.derivedResolution || "2MP"} Resolution
                   </h3>
+                  {variant.is_economy_storage && (
+                    <p className="text-xs text-[#86868b] font-medium mb-3">
+                      Basic Storage ({variant.storage_device?.derivedCapacity || "500GB"})
+                    </p>
+                  )}
+                  {!variant.is_economy_storage && variant.is_economy_storage !== undefined && (
+                    <p className="text-xs text-emerald-600 font-medium mb-3">
+                      Requested Storage ({variant.storage_device?.derivedCapacity || "2TB"})
+                    </p>
+                  )}
                   <div className="flex items-start justify-center">
                     <span className="text-[40px] leading-none font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">
                       ₹{variant.total_payable.toLocaleString('en-IN')}
