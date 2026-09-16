@@ -124,11 +124,11 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   const marginWarnings: string[] = [];
 
   // 1. Resolve Effective Technology
-  let effectiveTech = selection.technology;
+  let effectiveTech = String(selection.technology || "HD").toUpperCase();
   if (selection.selected_camera_id) {
     const cam = products.find(p => p.id === selection.selected_camera_id);
-    if (cam && ((cam.technologies || []).includes("HD") || (cam.technologies || []).includes("IP"))) {
-      effectiveTech = (cam.technologies || [])[0]; // Or some logic to determine which one it's acting as
+    if (cam && ((cam.technologies || []).some((t: any) => String(t).toUpperCase() === "HD" || String(t).toUpperCase() === "IP"))) {
+      effectiveTech = String((cam.technologies || [])[0] || "HD").toUpperCase();
     }
   }
 
@@ -922,14 +922,20 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
   // Exclude products that are out of stock or on order — they are deactivated from quoting
   const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued" && (p.stock_quantity === undefined || p.stock_quantity > 0);
 
+  const techUpper = String(tech || "HD").toUpperCase();
+
   if (selection.selected_camera_id) {
     const cam = products.find(p => p.id === selection.selected_camera_id);
-    if (cam && isAvailable(cam) && (cam.technologies || []).includes(tech as any)) {
+    if (cam && isAvailable(cam) && (cam.technologies || [cam.technology]).filter(Boolean).some((t: any) => String(t).toUpperCase() === techUpper)) {
       return cam;
     }
   }
 
-  let pool = products.filter(p => p.category === "cctv_camera" && (p.technologies || []).includes(tech as any) && isAvailable(p));
+  let pool = products.filter(p => {
+    if (p.category !== "cctv_camera" || !isAvailable(p)) return false;
+    const techs = (p.technologies || [p.technology]).filter(Boolean).map((t: any) => String(t).toUpperCase());
+    return techs.includes(techUpper);
+  });
 
   // ── Specialty Camera Guardrail ──────────────────────────────
   // Prevent Elite/Premium tiers from accidentally picking highly expensive PTZ/Solar/4G/Wireless cameras
@@ -1099,24 +1105,26 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
 function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: string) {
   const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued" && (p.stock_quantity === undefined || p.stock_quantity > 0);
 
+  const techUpper = String(tech || "HD").toUpperCase();
+
   if (selection.selected_recorder_id) {
     if (selection.selected_recorder_id === "none") return undefined;
     const rec = products.find(p => p.id === selection.selected_recorder_id);
-    if (rec && isAvailable(rec) && (rec.technologies || []).includes(tech as any) && (rec.max_cameras || rec.channels || 0) >= selection.camera_count) {
+    if (rec && isAvailable(rec) && (rec.technologies || [rec.technology]).filter(Boolean).some((t: any) => String(t).toUpperCase() === techUpper) && (rec.max_cameras || rec.channels || 0) >= selection.camera_count) {
       return rec;
     }
   }
 
-  if (tech === "WiFi") return undefined; // WiFi cameras generally use SD Cards and no DVR/NVR
-
+  if (techUpper === "WIFI" || techUpper === "WIRELESS") return undefined; // WiFi cameras generally use SD Cards and no DVR/NVR
 
   const recorders = products.filter(p => {
     if (p.category !== "recorder" || !isAvailable(p)) return false;
-    if (!(p.technologies || []).includes(tech as any)) return false;
+    const techs = (p.technologies || [p.technology]).filter(Boolean).map((t: any) => String(t).toUpperCase());
+    if (!techs.includes(techUpper)) return false;
     if ((p.max_cameras || p.channels || 0) < selection.camera_count) return false;
 
     // Filter HD DVR by resolution if applicable
-    if (tech === "HD" && selection.resolution_preference) {
+    if (techUpper === "HD" && selection.resolution_preference) {
         const resPref = String(selection.resolution_preference).toUpperCase();
         const dvrName = String(p.display_name || "").toUpperCase();
         if ((resPref === "5MP" || resPref === "8MP") && dvrName.includes("2MP SUPPORTED")) {

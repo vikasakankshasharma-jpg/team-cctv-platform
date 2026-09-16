@@ -233,7 +233,7 @@ export function DynamicVariantGenerator({
       const planType = b.brandKey === "budget" ? "budget" : "recommended";
       const sel: ConfiguratorSelection = {
         ...selection,
-        technology: activeTech,
+        technology: (activeTech === "ip" ? "IP" : "HD") as any,
         brand_preference: b.brand,
         mixed_camera_requirements: mixedReqs,
         outdoor_camera_count: outdoorCount,
@@ -260,6 +260,7 @@ export function DynamicVariantGenerator({
       if (selection.recording_days && selection.recording_days > 5) {
         const economySel: ConfiguratorSelection = {
           ...sel,
+          technology: (activeTech === "ip" ? "IP" : "HD") as any,
           recording_days: 3 // Force 3 days to pick the smallest available HDD (usually 500GB)
         };
         const rawEconomyPricing = calculatePricing({
