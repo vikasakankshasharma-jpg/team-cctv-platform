@@ -449,7 +449,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Billed To</p>
                     <button
-                      onClick={() => openBillingModal("advance")}
+                      onClick={() => openBillingModal("advance_500")}
                       className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5"
                     >
                       <Edit3 className="w-2.5 h-2.5" /> Edit
@@ -468,7 +468,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Site / Billing Address</p>
                     <button
-                      onClick={() => openBillingModal("advance")}
+                      onClick={() => openBillingModal("advance_500")}
                       className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5"
                     >
                       <Edit3 className="w-2.5 h-2.5" /> Change
@@ -621,9 +621,9 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           </span>
                           <span className="text-xs font-bold text-slate-400">Step 1 of 2</span>
                         </div>
-                        <h4 className="text-base font-bold text-white mb-1">Confirm & Pay Advance</h4>
+                        <h4 className="text-base font-bold text-white mb-1">Confirm & Pay ₹500 Advance</h4>
                         <p className="text-xs text-slate-300 leading-relaxed mb-4">
-                          Pay {formatINR(advance)} advance now. Equipment is locked from warehouse and certified engineer dispatched within 24-48 hours.
+                          Pay ₹500 booking advance now. 90% is due at material delivery, and the final 10% after installation is complete.
                         </p>
                         <div className="space-y-1.5 text-[11px] text-slate-300 mb-5">
                           <div className="flex items-center gap-1.5">
@@ -643,20 +643,20 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
                       <div className="space-y-2">
                         <button
-                          onClick={() => openBillingModal("advance")}
+                          onClick={() => openBillingModal("advance_500")}
                           disabled={isPayingAdvance || isPayingFull}
                           className="w-full py-3.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
                         >
                           <CreditCard className="w-4 h-4" />
-                          Pay {isPartiallyPaid ? "Balance " : "Advance "}{formatINR(advance)}
+                          Pay {isPartiallyPaid ? "Balance " : "Advance ₹500"}
                         </button>
 
                         <button
-                          onClick={() => openBillingModal("full")}
+                          onClick={() => openBillingModal("full_discount")}
                           disabled={isPayingAdvance || isPayingFull}
                           className="w-full py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl text-[11px] transition-all text-center"
                         >
-                          Or Pay Full Amount ({formatINR(total)})
+                          Or Pay Full Upfront (-2% Discount)
                         </button>
                       </div>
                     </div>
@@ -717,7 +717,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                        
                        <motion.button
                          whileTap={{ scale: 0.98 }}
-                         onClick={() => openBillingModal("full")}
+                         onClick={() => openBillingModal("emi")}
                          disabled={isPayingEMI}
                          className="shrink-0 w-full md:w-auto px-5 py-3 bg-white text-zinc-900 text-xs sm:text-sm font-bold rounded-xl shadow-lg hover:bg-zinc-50 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
                        >
@@ -782,12 +782,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </button>
 
               <button
-                onClick={() => openBillingModal("advance")}
+                onClick={() => openBillingModal("advance_500")}
                 disabled={isPayingAdvance || isPayingFull || isPayingEMI}
                 className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50 shadow-sm shrink-0"
               >
                 <CreditCard className="w-3.5 h-3.5" />
-                Pay {formatINR(advance)}
+                Pay ₹500
               </button>
 
               <a
