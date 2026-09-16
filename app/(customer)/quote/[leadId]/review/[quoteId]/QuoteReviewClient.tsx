@@ -175,7 +175,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     return false;
   };
 
-  const redirectToPaymentLink = async (type: "advance" | "full", method: "all" | "emi", returnUrlOnly = false) => {
+  const redirectToPaymentLink = async (type: "advance" | "advance_500" | "full" | "full_discount" | "emi", method: "all" | "emi", returnUrlOnly = false) => {
     try {
       const toastId = toast.loading("Generating secure payment page...");
       const res = await fetch("/api/payment/razorpay-link", {
@@ -217,7 +217,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   };
 
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
-  const [selectedPaymentType, setSelectedPaymentType] = useState<"advance" | "full">("advance");
+  const [selectedPaymentType, setSelectedPaymentType] = useState<"advance" | "advance_500" | "full" | "full_discount" | "emi">("advance");
   const [isSubmittingBilling, setIsSubmittingBilling] = useState(false);
   const [billingData, setBillingData] = useState<BillingFormData>({
     is_business: Boolean(quote.billing_details?.is_business || (quote.companyGstin && quote.companyGstin !== "08AABCT1234A1ZS")),
@@ -234,12 +234,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     pincode: quote.billing_details?.pincode || "",
   });
 
-  const openBillingModal = (type: "advance" | "full") => {
+  const openBillingModal = (type: "advance" | "advance_500" | "full" | "full_discount" | "emi") => {
     setSelectedPaymentType(type);
     setIsBillingModalOpen(true);
   };
 
-  const handleConfirmBilling = async (formData: BillingFormData, pType: "advance" | "full") => {
+  const handleConfirmBilling = async (formData: BillingFormData, pType: "advance" | "advance_500" | "full" | "full_discount" | "emi") => {
     setIsSubmittingBilling(true);
     try {
       await fetch(`/api/quote/${quote.id}/billing`, {
@@ -260,7 +260,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     }
   };
 
-  const handlePayment = async (type: "advance" | "full", method: "all" | "emi", billingOverride?: BillingFormData) => {
+  const handlePayment = async (type: "advance" | "advance_500" | "full" | "full_discount" | "emi", method: "all" | "emi", billingOverride?: BillingFormData) => {
     if (method === "emi") setIsPayingEMI(true);
     else if (type === "full") setIsPayingFull(true);
     else setIsPayingAdvance(true);
@@ -728,7 +728,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
                   <div className="flex flex-col items-center justify-center gap-2 pt-2">
                     <button 
-                      onClick={() => redirectToPaymentLink("advance", "all")}
+                      onClick={() => redirectToPaymentLink("advance_500", "all")}
                       className="text-xs text-zinc-500 hover:text-blue-600 underline underline-offset-2 transition-colors text-center"
                     >
                       Trouble with the payment window? Click here to pay securely.
@@ -832,4 +832,4 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     </div>
   );
 }
-
+

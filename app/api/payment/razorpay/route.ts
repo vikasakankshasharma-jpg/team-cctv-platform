@@ -68,7 +68,14 @@ export async function POST(req: Request) {
 
     const { paymentType = "full", billingDetails } = body;
     let chargeAmount = serverAmount;
-    if (paymentType === "advance") {
+    let appliedDiscount = 0;
+
+    if (paymentType === "full_discount") {
+      appliedDiscount = Math.round(serverAmount * 0.02);
+      chargeAmount = serverAmount - appliedDiscount;
+    } else if (paymentType === "advance_500") {
+      chargeAmount = 500;
+    } else if (paymentType === "advance") {
       const advancePercent = Number(
         quoteData.advancePercent ??
         quoteData.advance_percent ??
@@ -127,6 +134,11 @@ export async function POST(req: Request) {
       payment_status: "ORDER_CREATED",
       updated_at: serverTimestamp(),
     };
+
+    if (appliedDiscount > 0) {
+      updatePayload.full_payment_discount = appliedDiscount;
+      updatePayload.total_payable_after_discount = chargeAmount;
+    }
 
     if (billingDetails) {
       updatePayload.billing_details = billingDetails;

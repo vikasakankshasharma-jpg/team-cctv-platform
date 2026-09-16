@@ -36,11 +36,11 @@ export interface BillingFormData {
 interface BillingOverviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirmPayment: (data: BillingFormData, paymentType: "advance" | "full") => Promise<void>;
+  onConfirmPayment: (data: BillingFormData, paymentType: "advance" | "advance_500" | "full" | "full_discount" | "emi") => Promise<void>;
   initialData?: Partial<BillingFormData>;
   quoteTotal?: number;
   advanceAmount?: number;
-  paymentType?: "advance" | "full";
+  paymentType?: "advance" | "advance_500" | "full" | "full_discount" | "emi";
   isSubmitting?: boolean;
   mode?: "checkout" | "edit";
 }
@@ -129,7 +129,10 @@ export function BillingOverviewModal({
   };
 
   const gstSavings = quoteTotal > 0 ? Math.round(quoteTotal - (quoteTotal / 1.18)) : 0;
-  const amountToCharge = paymentType === "advance" ? advanceAmount : quoteTotal;
+  let amountToCharge = quoteTotal;
+  if (paymentType === "advance") amountToCharge = advanceAmount;
+  if (paymentType === "advance_500") amountToCharge = 500;
+  if (paymentType === "full_discount") amountToCharge = Math.round(quoteTotal * 0.98);
   const balanceDue = Math.max(0, quoteTotal - amountToCharge);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -450,12 +453,16 @@ export function BillingOverviewModal({
                 {mode === "checkout" ? (
                   <>
                     <div className="flex justify-between text-sm font-bold border-t border-slate-800 pt-2 text-emerald-400">
-                      <span>Amount to Pay Now ({paymentType === "advance" ? "Advance Booking" : "Full Payment"}):</span>
+                      <span>Amount to Pay Now ({
+                        paymentType.includes("advance") ? "Advance Booking" : 
+                        paymentType === "full_discount" ? "Full Payment (2% Off)" : 
+                        paymentType === "emi" ? "EMI Processing" : "Full Payment"
+                      }):</span>
                       <span>₹{amountToCharge.toLocaleString("en-IN")}</span>
                     </div>
-                    {paymentType === "advance" && (
+                    {paymentType.includes("advance") && (
                       <div className="flex justify-between text-xs text-slate-400">
-                        <span>Balance Due on Installation:</span>
+                        <span>Balance Due (Milestones):</span>
                         <span>₹{balanceDue.toLocaleString("en-IN")}</span>
                       </div>
                     )}

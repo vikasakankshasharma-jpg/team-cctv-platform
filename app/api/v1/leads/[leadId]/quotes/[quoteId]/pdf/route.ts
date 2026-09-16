@@ -152,6 +152,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
   }
 
+  if (quote?.full_payment_discount) {
+    quoteData.lineItems.push({
+      id: "full_payment_discount",
+      name: "Full Payment Discount (2%)",
+      description: "Automatic discount applied for paying 100% in advance",
+      badge: { label: "Save 2%", color: "#10B981" },
+      quantity: 1,
+      unitPrice: -quote.full_payment_discount
+    });
+  }
+
   // Fetch settings for custom PDF logo and terms
   const settingsSnap = await adminFirestore.collection("settings").doc("app_settings").get();
   const settings = settingsSnap.exists ? settingsSnap.data() : undefined;
