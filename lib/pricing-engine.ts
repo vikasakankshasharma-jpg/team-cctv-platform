@@ -261,9 +261,9 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       if (powerItem) {
         const pwr = [...products, ...addons].find(p => p.id === powerItem.product_id);
         // Only validate if max_cameras is explicitly defined on the product
-        if (pwr && pwr.max_cameras != null && pwr.max_cameras < selection.camera_count) {
+        if (pwr && pwr.max_cameras != null && (pwr.max_cameras * (powerItem.qty || 1)) < selection.camera_count) {
           error = true;
-          errorMessage = `Selected power supply supports up to ${pwr.max_cameras} cameras, but ${selection.camera_count} are required.`;
+          errorMessage = `Selected power supply supports up to ${pwr.max_cameras * (powerItem.qty || 1)} cameras, but ${selection.camera_count} are required.`;
         }
       }
     }
