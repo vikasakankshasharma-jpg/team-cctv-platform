@@ -63,6 +63,19 @@ export async function POST(req: Request) {
     }
 
     const role = data.role || "customer";
+    const normalized = cleanPhone.length === 12 && cleanPhone.startsWith("91") ? cleanPhone.substring(2) : cleanPhone;
+
+    // Link account UID
+    if (role === "sales_staff") {
+      const spSnap = await adminDb.collection("salespeople").where("mobile_number", "==", normalized).limit(1).get();
+      if (!spSnap.empty) await spSnap.docs[0].ref.update({ firebase_uid: uid });
+    } else if (role === "partner") {
+      const pSnap = await adminDb.collection("promoters").where("mobile_number", "==", normalized).limit(1).get();
+      if (!pSnap.empty) await pSnap.docs[0].ref.update({ firebase_uid: uid });
+    } else if (role === "installer") {
+      const iSnap = await adminDb.collection("installers").where("mobile_number", "==", normalized).limit(1).get();
+      if (!iSnap.empty) await iSnap.docs[0].ref.update({ firebase_uid: uid });
+    }
     
     // Set custom claims and Generate Custom Token
     await adminAuth.setCustomUserClaims(uid, { role });

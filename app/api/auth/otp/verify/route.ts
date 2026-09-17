@@ -111,15 +111,30 @@ export async function POST(req: NextRequest) {
           const uid = decoded.uid;
           const role = data.role || "super_admin";
 
-          // If it's a salesperson, link their account to this UID
+          // Link account to this UID based on role
           if (role === "sales_staff") {
             const spSnap = await adminDb.collection("salespeople")
               .where("mobile_number", "==", normalized)
               .limit(1)
               .get();
-            
             if (!spSnap.empty) {
               await spSnap.docs[0].ref.update({ firebase_uid: uid });
+            }
+          } else if (role === "partner") {
+            const pSnap = await adminDb.collection("promoters")
+              .where("mobile_number", "==", normalized)
+              .limit(1)
+              .get();
+            if (!pSnap.empty) {
+              await pSnap.docs[0].ref.update({ firebase_uid: uid });
+            }
+          } else if (role === "installer") {
+            const iSnap = await adminDb.collection("installers")
+              .where("mobile_number", "==", normalized)
+              .limit(1)
+              .get();
+            if (!iSnap.empty) {
+              await iSnap.docs[0].ref.update({ firebase_uid: uid });
             }
           }
 
@@ -168,6 +183,18 @@ export async function POST(req: NextRequest) {
       }
 
       const role = data.role || "super_admin";
+
+      if (role === "sales_staff") {
+        const spSnap = await adminDb.collection("salespeople").where("mobile_number", "==", normalized).limit(1).get();
+        if (!spSnap.empty) await spSnap.docs[0].ref.update({ firebase_uid: uid });
+      } else if (role === "partner") {
+        const pSnap = await adminDb.collection("promoters").where("mobile_number", "==", normalized).limit(1).get();
+        if (!pSnap.empty) await pSnap.docs[0].ref.update({ firebase_uid: uid });
+      } else if (role === "installer") {
+        const iSnap = await adminDb.collection("installers").where("mobile_number", "==", normalized).limit(1).get();
+        if (!iSnap.empty) await iSnap.docs[0].ref.update({ firebase_uid: uid });
+      }
+
       await adminAuth.setCustomUserClaims(uid, { role });
       const customToken = await adminAuth.createCustomToken(uid, { role });
 

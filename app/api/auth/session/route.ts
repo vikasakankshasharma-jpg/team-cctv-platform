@@ -30,19 +30,28 @@ export async function POST(request: Request) {
     // Create the session cookie. This will also verify the ID token in the process.
     // The session cookie will have the same claims as the ID token.
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    const role = decoded.role;
 
     const response = NextResponse.json({ status: "success" }, { status: 200 });
 
-    // Set the cookie in the response header with HttpOnly and Secure flags
-    response.cookies.set({
-      name: "admin_session",
+    const cookieOptions = {
       value: sessionCookie,
       maxAge: expiresIn / 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      sameSite: "lax",
-    });
+      sameSite: "lax" as const,
+    };
+
+    // Set role-specific cookies
+    if (role === "partner") {
+      response.cookies.set({ name: "partner_session", ...cookieOptions });
+    } else if (role === "installer") {
+      response.cookies.set({ name: "installer_session", ...cookieOptions });
+    } else {
+      response.cookies.set({ name: "admin_session", ...cookieOptions });
+    }
 
     return response;
   } catch (error: unknown) {
@@ -54,13 +63,10 @@ export async function POST(request: Request) {
 export async function DELETE() {
   const response = NextResponse.json({ status: "success" }, { status: 200 });
   
-  // Clear the cookie
-  response.cookies.set({
-    name: "admin_session",
-    value: "",
-    maxAge: 0,
-    path: "/",
-  });
+  // Clear all role session cookies
+  response.cookies.set({ name: "admin_session", value: "", maxAge: 0, path: "/" });
+  response.cookies.set({ name: "partner_session", value: "", maxAge: 0, path: "/" });
+  response.cookies.set({ name: "installer_session", value: "", maxAge: 0, path: "/" });
 
   return response;
 }
