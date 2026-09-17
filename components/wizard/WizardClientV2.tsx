@@ -25,6 +25,19 @@ export function WizardClientV2() {
   const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("sms");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && !(window as any).recaptchaVerifierWizard) {
+      (window as any).recaptchaVerifierWizard = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
+        size: "invisible",
+        callback: () => {},
+        "expired-callback": () => {
+          toast.error("reCAPTCHA expired. Please try again.");
+        },
+      });
+    }
+  }, []);
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [countdown, setCountdown] = useState(0);
 
@@ -240,36 +253,10 @@ export function WizardClientV2() {
         return;
       }
       
-      
-        if ((window as any).recaptchaVerifierWizard) {
-          try {
-            (window as any).recaptchaVerifierWizard.clear();
-          } catch (e) {}
-          (window as any).recaptchaVerifierWizard = null;
-        }
-        
-        const oldContainer = document.getElementById("recaptcha-container-wizard");
-        if (oldContainer) {
-          oldContainer.remove();
-        }
-
-        const recaptchaContainer = document.createElement("div");
-        recaptchaContainer.id = "recaptcha-container-wizard";
-        document.body.appendChild(recaptchaContainer);
-        
-        const verifier = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
-          size: "invisible",
-          callback: () => {},
-          "expired-callback": () => {
-            toast.error("reCAPTCHA expired. Please try again.");
-          },
-        });
-        (window as any).recaptchaVerifierWizard = verifier;
-    
-
-      // Explicitly render reCAPTCHA widget first to catch load errors early
-      await verifier.render();
-      
+      const verifier = (window as any).recaptchaVerifierWizard;
+      if (!verifier) {
+        throw new Error("auth/missing-app-credential");
+      }
       const result = await signInWithPhoneNumber(auth, formatPhone, verifier);
       
       setConfirmationResult(result);
@@ -1043,6 +1030,7 @@ export function WizardClientV2() {
   };
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
+      <div id="recaptcha-container-wizard"></div>
       
       <h1 className="sr-only">CCTV Quotation Wizard</h1>
       <div className="bg-white rounded-2xl shadow-sm border p-8">
