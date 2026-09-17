@@ -86,19 +86,43 @@ export function DynamicVariantGenerator({
 }: DynamicVariantGeneratorProps) {
   const [activeTech, setActiveTech] = useState<"hd" | "ip">("hd");
   const [activeBrand, setActiveBrand] = useState<string>("all");
-  const [activeOutdoorRes, setActiveOutdoorRes] = useState<string>("2MP");
-  const [activeIndoorRes, setActiveIndoorRes] = useState<string>("2MP");
+  
+  const [cameraBuckets, setCameraBuckets] = useState<any[]>(() => {
+    // If we are editing a quote that already has mixed requirements, load them!
+    if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+      return selection.mixed_camera_requirements.map(req => ({
+        id: Math.random().toString(36).substring(7),
+        type: req.type.toLowerCase().includes("outdoor") ? "outdoor" : "indoor",
+        count: req.count,
+        resolution: req.resolution || "2MP"
+      }));
+    }
 
-  const outdoorCount = selection.outdoor_camera_count !== undefined 
-    ? selection.outdoor_camera_count 
-    : (selection.indoor_camera_count !== undefined 
-        ? Math.max(0, (selection.camera_count || 4) - selection.indoor_camera_count) 
-        : Math.ceil((selection.camera_count || 4) / 2));
+    const buckets: any[] = [];
+    const outCount = selection.outdoor_camera_count !== undefined 
+      ? selection.outdoor_camera_count 
+      : (selection.indoor_camera_count !== undefined 
+          ? Math.max(0, (selection.camera_count || 4) - selection.indoor_camera_count) 
+          : Math.ceil((selection.camera_count || 4) / 2));
+          
+    const inCount = selection.indoor_camera_count !== undefined 
+      ? selection.indoor_camera_count 
+      : Math.max(0, (selection.camera_count || 4) - outCount);
 
-  const indoorCount = selection.indoor_camera_count !== undefined 
-    ? selection.indoor_camera_count 
-    : Math.max(0, (selection.camera_count || 4) - outdoorCount);
+    if (outCount > 0) {
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: outCount, resolution: "2MP" });
+    }
+    if (inCount > 0) {
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", count: inCount, resolution: "2MP" });
+    }
+    if (buckets.length === 0 && selection.camera_count) {
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: selection.camera_count, resolution: "2MP" });
+    }
+    return buckets;
+  });
 
+  const outdoorCount = cameraBuckets.filter(b => b.type === "outdoor").reduce((sum, b) => sum + b.count, 0);
+  const indoorCount = cameraBuckets.filter(b => b.type === "indoor").reduce((sum, b) => sum + b.count, 0);
   const hasOutdoor = outdoorCount > 0;
   const hasIndoor = indoorCount > 0;
   const isMixed = hasOutdoor && hasIndoor;
@@ -141,9 +165,6 @@ export function DynamicVariantGenerator({
   }, [products, activeTech, settings.brand_tabs_order]);
 
   const targetBrand = availableBrands.includes(activeBrand) ? activeBrand : (availableBrands[0] || "all");
-  const targetOutdoorRes = availableResolutions.includes(activeOutdoorRes) ? activeOutdoorRes : (availableResolutions[0] || "2MP");
-  const targetIndoorRes = availableResolutions.includes(activeIndoorRes) ? activeIndoorRes : (availableResolutions[0] || "2MP");
-
   const variants = useMemo(() => {
     const results: PricingResult[] = [];
     const brandsToGenerate: { brand: string, brandKey: string }[] = [];
@@ -167,21 +188,15 @@ export function DynamicVariantGenerator({
       }
     });
 
-    let mixedReqs: any[] = [];
-    if (isMixed) {
-      mixedReqs = [
-        { type: "Outdoor Bullet Camera", count: outdoorCount, resolution: targetOutdoorRes, features: ["bullet"] },
-        { type: "Indoor Dome Camera", count: indoorCount, resolution: targetIndoorRes, features: ["dome"] }
-      ];
-    } else if (hasOutdoor) {
-      mixedReqs = [
-        { type: "Outdoor Bullet Camera", count: outdoorCount, resolution: targetOutdoorRes, features: ["bullet"] }
-      ];
-    } else {
-      mixedReqs = [
-        { type: "Indoor Dome Camera", count: indoorCount, resolution: targetIndoorRes, features: ["dome"] }
-      ];
-    }
+    let mixedReqs: any[] = cameraBuckets.filter(b => b.count > 0).map(b => {
+      const res = availableResolutions.includes(b.resolution) ? b.resolution : (availableResolutions.includes("2MP") ? "2MP" : (availableResolutions[0] || "2MP"));
+      return {
+        type: b.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera",
+        count: b.count,
+        resolution: res,
+        features: b.type === "outdoor" ? ["bullet"] : ["dome"]
+      };
+    });
 
     const enrich = (pricing: any, brandKey: string, brandName: string) => {
       if (!pricing || pricing.error) return null;
@@ -204,16 +219,16 @@ export function DynamicVariantGenerator({
         (storage_device as any).derivedCapacity = tb ? `${tb}TB` : "HDD";
       }
 
-      const isHybrid = isMixed && targetOutdoorRes !== targetIndoorRes;
-      let displayResolution = "2MP Resolution";
+      const uniqueRes = Array.from(new Set(mixedReqs.map(r => r.resolution)));
+      const isHybrid = uniqueRes.length > 1;
+      let displayResolution = uniqueRes[0] ? `${uniqueRes[0]} Resolution` : "2MP Resolution";
+      
       if (isHybrid) {
-        displayResolution = `${targetOutdoorRes} Outdoor + ${targetIndoorRes} Indoor`;
+        displayResolution = `Mixed Resolutions (${uniqueRes.join(", ")})`;
       } else if (hasOutdoor && !hasIndoor) {
-        displayResolution = `${targetOutdoorRes} Resolution (${outdoorCount} Outdoor)`;
+        displayResolution = `${uniqueRes[0] || "2MP"} Resolution (${outdoorCount} Outdoor)`;
       } else if (hasIndoor && !hasOutdoor) {
-        displayResolution = `${targetIndoorRes} Resolution (${indoorCount} Indoor)`;
-      } else {
-        displayResolution = `${targetOutdoorRes} Resolution`;
+        displayResolution = `${uniqueRes[0] || "2MP"} Resolution (${indoorCount} Indoor)`;
       }
       
       return { 
@@ -221,16 +236,17 @@ export function DynamicVariantGenerator({
         technology: activeTech.toUpperCase(),
         camera_device: camera_device ? { ...camera_device, derivedResolution: displayResolution } : { derivedResolution: displayResolution, brand: brandName }, 
         storage_device, 
-        camera_count: selection.camera_count, 
+        camera_count: outdoorCount + indoorCount, 
         storage_days: (pricing as any)._calculated_days || selection.recording_days || 7,
-        plan_type: brandKey === "budget" ? "budget" : (targetOutdoorRes === "8MP" || targetIndoorRes === "8MP" ? "premium" : "recommended"),
+        plan_type: brandKey === "budget" ? "budget" : (uniqueRes.includes("8MP") ? "premium" : "recommended"),
         is_hybrid: isHybrid,
         mixed_camera_requirements: mixedReqs
       };
     };
 
     brandsToGenerate.forEach(b => {
-      const planType = b.brandKey === "budget" ? "budget" : "recommended";
+      const uniqueRes = Array.from(new Set(mixedReqs.map(r => r.resolution)));
+      const planType = b.brandKey === "budget" ? "budget" : (uniqueRes.includes("8MP") ? "premium" : "recommended");
       const sel: ConfiguratorSelection = {
         ...selection,
         technology: (activeTech === "ip" ? "IP" : "HD") as any,
@@ -238,7 +254,8 @@ export function DynamicVariantGenerator({
         mixed_camera_requirements: mixedReqs,
         outdoor_camera_count: outdoorCount,
         indoor_camera_count: indoorCount,
-        resolution_preference: targetOutdoorRes === targetIndoorRes ? targetOutdoorRes : "5MP",
+        camera_count: outdoorCount + indoorCount,
+        resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : "5MP",
         plan_type: planType as any,
       };
       
@@ -280,7 +297,7 @@ export function DynamicVariantGenerator({
 
     results.sort((a, b) => a.total_price_inr - b.total_price_inr);
     return results;
-  }, [activeTech, targetBrand, targetOutdoorRes, targetIndoorRes, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer]);
+  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions]);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -317,47 +334,101 @@ export function DynamicVariantGenerator({
           ))}
         </div>
 
-        {/* Outdoor Resolution Row (if outdoor cameras exist) */}
-        {hasOutdoor && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
-            <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0 flex items-center gap-1.5">
-              <span>Outdoor {isMixed ? `(${outdoorCount} Cams)` : `(${outdoorCount} Cams)`}:</span>
-            </span>
-            {availableResolutions.map(r => (
-              <button
-                key={`outdoor-${r}`}
-                onClick={() => setActiveOutdoorRes(r)}
-                className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeOutdoorRes === r ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Camera Buckets UI */}
+        <div className="flex flex-col gap-3 items-center w-full max-w-2xl mx-auto mt-2">
+          {cameraBuckets.map((bucket) => (
+            <div key={bucket.id} className="flex flex-wrap md:flex-nowrap items-center gap-3 w-full bg-white dark:bg-[#1d1d1f] p-3 rounded-2xl border border-[#e5e5ea] dark:border-[#424245] shadow-sm relative transition-all hover:shadow-md">
+              <div className="flex items-center gap-2 w-full md:w-auto md:min-w-[5rem]">
+                <span className="text-[13px] font-bold text-[#1d1d1f] dark:text-white uppercase tracking-wider">
+                  {bucket.type === 'outdoor' ? 'OUTDOOR' : 'INDOOR'}
+                </span>
+              </div>
 
-        {/* Indoor Resolution Row (if indoor cameras exist) */}
-        {hasIndoor && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
-            <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0 flex items-center gap-1.5">
-              <span>Indoor {isMixed ? `(${indoorCount} Cams)` : `(${indoorCount} Cams)`}:</span>
-            </span>
-            {availableResolutions.map(r => (
-              <button
-                key={`indoor-${r}`}
-                onClick={() => setActiveIndoorRes(r)}
-                className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeIndoorRes === r ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
-              >
-                {r}
-              </button>
-            ))}
+              {/* Stepper */}
+              <div className="flex items-center border border-[#d2d2d7] dark:border-[#424245] rounded-full overflow-hidden bg-[#f5f5f7] dark:bg-[#2d2d2f] shrink-0">
+                 <button 
+                   onClick={() => setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, count: Math.max(0, b.count - 1) } : b))}
+                   className="px-3 py-1.5 hover:bg-[#e5e5ea] dark:hover:bg-[#424245] text-[#1d1d1f] dark:text-white font-medium transition-colors"
+                 >
+                   -
+                 </button>
+                 <span className="px-3 py-1.5 text-sm font-semibold min-w-[2.5rem] text-center text-[#1d1d1f] dark:text-white bg-white dark:bg-[#1d1d1f]">
+                   {bucket.count}
+                 </span>
+                 <button 
+                   onClick={() => setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, count: b.count + 1 } : b))}
+                   className="px-3 py-1.5 hover:bg-[#e5e5ea] dark:hover:bg-[#424245] text-[#1d1d1f] dark:text-white font-medium transition-colors"
+                 >
+                   +
+                 </button>
+              </div>
+
+              {/* Resolution Picker */}
+              <div className="flex-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                 {availableResolutions.map(r => (
+                   <button
+                     key={r}
+                     onClick={() => setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, resolution: r } : b))}
+                     className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all shrink-0 ${bucket.resolution === r ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
+                   >
+                     {r}
+                   </button>
+                 ))}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-1 shrink-0 ml-auto md:ml-2 border-l border-[#e5e5ea] dark:border-[#424245] pl-2">
+                 <button 
+                   onClick={() => setCameraBuckets(prev => {
+                     const newBuckets = [...prev];
+                     const index = newBuckets.findIndex(b => b.id === bucket.id);
+                     if (bucket.count > 1) {
+                       newBuckets[index] = { ...bucket, count: Math.ceil(bucket.count / 2) };
+                       newBuckets.splice(index + 1, 0, { id: Math.random().toString(36).substring(7), type: bucket.type, count: Math.floor(bucket.count / 2), resolution: bucket.resolution });
+                     } else {
+                       newBuckets.splice(index + 1, 0, { id: Math.random().toString(36).substring(7), type: bucket.type, count: 1, resolution: bucket.resolution });
+                     }
+                     return newBuckets;
+                   })}
+                   className="px-3 py-1.5 text-xs font-semibold rounded-full bg-[#f5f5f7] hover:bg-[#e5e5ea] dark:bg-[#2d2d2f] dark:hover:bg-[#424245] text-[#1d1d1f] dark:text-white transition-colors"
+                   title="Split into another row"
+                 >
+                   Split
+                 </button>
+                 {cameraBuckets.length > 1 && (
+                   <button 
+                     onClick={() => setCameraBuckets(prev => prev.filter(b => b.id !== bucket.id))}
+                     className="px-3 py-1.5 text-xs font-semibold rounded-full bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400 transition-colors"
+                     title="Remove this row"
+                   >
+                     Remove
+                   </button>
+                 )}
+              </div>
+            </div>
+          ))}
+          
+          <div className="flex gap-3 mt-2">
+             <button 
+               onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "outdoor", count: 1, resolution: "2MP" }])}
+               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-4 py-2 rounded-full transition-colors"
+             >
+               <span>+</span> Add Outdoor
+             </button>
+             <button 
+               onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "indoor", count: 1, resolution: "2MP" }])}
+               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-4 py-2 rounded-full transition-colors"
+             >
+               <span>+</span> Add Indoor
+             </button>
           </div>
-        )}
+        </div>
       </div>
 
       {variants.length === 0 && (
         <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-300">
           <p className="text-slate-500 font-medium">No packages found for these filters.</p>
-          <Button variant="link" onClick={() => { setActiveBrand("all"); setActiveOutdoorRes("2MP"); setActiveIndoorRes("2MP"); }}>Clear Filters</Button>
+          <Button variant="link" onClick={() => { setActiveBrand("all"); setCameraBuckets(prev => prev.map(b => ({ ...b, resolution: "2MP" }))); }}>Clear Filters</Button>
         </div>
       )}
 
