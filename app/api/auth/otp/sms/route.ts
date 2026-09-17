@@ -78,7 +78,9 @@ export async function POST(req: Request) {
       senderid: MTALKZ_SENDER_ID,
       number: formattedPhone,
       message: message,
-      format: "json"
+      format: "json",
+      digit: "6",
+      otptimeout: "120"
     };
 
     const response = await fetch("https://msg.mtalkz.com/V2/http-api-sms.php", {

@@ -287,7 +287,7 @@ export function WizardClientV2() {
       
       if (!res.ok) {
         if (otpMethod === "sms") {
-          toast.error("SMS failed to send. Please try WhatsApp OTP instead.", { duration: 8000 });
+          toast.error(data.error ? `SMS failed: ${data.error}` : "SMS failed to send. Please try WhatsApp OTP instead.", { duration: 8000 });
         } else {
           toast.error(data.error || "Failed to send WhatsApp OTP.");
         }
