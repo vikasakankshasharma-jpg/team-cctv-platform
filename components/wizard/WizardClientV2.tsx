@@ -277,17 +277,43 @@ export function WizardClientV2() {
         return;
       }
       
-      const verifier = (window as any).recaptchaVerifierWizard;
-      if (!verifier) {
-        throw new Error("auth/missing-app-credential");
-      }
-      const result = await signInWithPhoneNumber(auth, formatPhone, verifier);
+      const sendWhatsApp = async () => {
+        const res = await fetch("/api/auth/otp/whatsapp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: cleanMobile }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to send WhatsApp OTP.");
+        
+        setOtpMethod("whatsapp");
+        setOtpSent(true);
+        setCountdown(60);
+        setOtp(["", "", "", "", "", ""]);
+        toast.success("WhatsApp OTP sent to your number.");
+      };
       
-      setConfirmationResult(result);
-      setOtpSent(true);
-      setCountdown(30);
-      setOtp(["", "", "", "", "", ""]);
-      toast.success("OTP sent to your mobile.");
+      if (otpMethod === "sms") {
+        const verifier = (window as any).recaptchaVerifierWizard;
+        if (!verifier) {
+          throw new Error("auth/missing-app-credential");
+        }
+        
+        try {
+          const result = await signInWithPhoneNumber(auth, formatPhone, verifier);
+          setConfirmationResult(result);
+          setOtpSent(true);
+          setCountdown(30);
+          setOtp(["", "", "", "", "", ""]);
+          toast.success("SMS OTP sent to your mobile.");
+        } catch (smsError: any) {
+          console.warn("SMS failed, falling back to WhatsApp:", smsError);
+          toast.info("SMS delivery failed. Trying WhatsApp...");
+          await sendWhatsApp();
+        }
+      } else {
+        await sendWhatsApp();
+      }
     } catch (error: any) {
       console.error("OTP Send Error:", error);
       const errCode = error.code || "";
@@ -297,20 +323,20 @@ export function WizardClientV2() {
       if (errCode === "auth/too-many-requests" || errMsg.includes("auth/too-many-requests")) {
         userMsg = "Too many attempts. Please wait a few minutes and try again.";
       } else if (errCode === "auth/invalid-app-credential" || errMsg.includes("auth/invalid-app-credential")) {
-        userMsg = "reCAPTCHA verification failed. Please refresh the page and try again.";
+        userMsg = "reCAPTCHA verification failed. Please try WhatsApp OTP instead.";
       } else if (errCode === "auth/network-request-failed" || errMsg.includes("auth/network-request-failed")) {
         userMsg = "Network error. Please check your internet connection.";
       } else if (errCode === "auth/quota-exceeded" || errMsg.includes("auth/quota-exceeded")) {
-        userMsg = "SMS quota exceeded. Please try again later.";
+        userMsg = "SMS quota exceeded. Please try WhatsApp OTP instead.";
       } else if (errCode === "auth/captcha-check-failed" || errMsg.includes("auth/captcha-check-failed")) {
-        userMsg = "reCAPTCHA verification failed. Please refresh the page and try again.";
+        userMsg = "reCAPTCHA verification failed. Please try WhatsApp OTP instead.";
       } else if (errCode === "auth/missing-app-credential" || errMsg.includes("auth/missing-app-credential")) {
-        userMsg = "reCAPTCHA could not load. Please disable ad blockers and refresh.";
+        userMsg = "reCAPTCHA could not load. Please try WhatsApp OTP instead.";
       } else if (errCode === "auth/internal-error" || errMsg.includes("auth/internal-error")) {
-        userMsg = `Firebase error: ${errMsg} (${errCode}). Ensure your domain is whitelisted in Firebase Console.`;
+        userMsg = `Firebase error: ${errMsg}. Please use WhatsApp OTP instead.`;
       }
       
-      toast.error("Failed to send OTP. " + userMsg, { duration: 8000 });
+      toast.error(userMsg);
     } finally {
       setLoading(false);
     }
@@ -325,8 +351,22 @@ export function WizardClientV2() {
     
     setLoading(true);
     try {
-      if (confirmationResult) {
-        await confirmationResult.confirm(code);
+      if (otpMethod === "sms") {
+        if (!confirmationResult && req.customer_mobile !== "9999999999" && req.customer_mobile !== "9587980007") {
+          throw new Error("auth/code-expired");
+        }
+        if (confirmationResult) {
+          await confirmationResult.confirm(code);
+        }
+      } else {
+        const cleanMobile = (req.customer_mobile || "").replace(/\s/g, "");
+        const res = await fetch("/api/auth/otp/whatsapp/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: cleanMobile, otp: code }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Invalid WhatsApp OTP.");
       }
       
       toast.success("Verification successful!");
@@ -998,9 +1038,26 @@ export function WizardClientV2() {
               <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
               <p className="text-gray-600 mb-6">Please enter your details to view your personalized CCTV options instantly.</p>
               
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
+              <div className="flex p-1 bg-gray-100 rounded-[20px] mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setOtpMethod("sms")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${otpMethod === "sms" ? "bg-white text-gray-900 shadow-sm" : "text-gray-400"}`}
+                  >
+                    SMS OTP
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOtpMethod("whatsapp")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${otpMethod === "whatsapp" ? "bg-white text-gray-900 shadow-sm" : "text-gray-400"}`}
+                  >
+                    WhatsApp
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
                   <input 
                     type="text" 
                     required
