@@ -101,8 +101,8 @@ export async function POST(req: Request) {
 
     // Mtalkz usually returns something like { "status": "OK", ... }
     if (!response.ok || responseData.status === "ERROR" || responseText.toLowerCase().includes("error")) {
-      console.error("[Mtalkz SMS] API Error:", responseData);
-      return NextResponse.json({ error: "Failed to send SMS via Mtalkz." }, { status: 400 });
+      const errorMsg = responseData?.message || responseData?.msg || responseData?.error || responseData?.description || (typeof responseData?.raw === 'string' ? responseData.raw : "Failed to send SMS via Mtalkz.");
+      return NextResponse.json({ error: errorMsg, details: responseData }, { status: 400 });
     }
 
     return NextResponse.json({ success: true, message: "SMS OTP sent via Mtalkz." });
