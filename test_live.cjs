@@ -52,7 +52,7 @@ const OTP_FILE = 'otp.txt';
   console.log("Step 5: Contact Details");
   await page.waitForTimeout(1000);
   await page.locator('input[placeholder="e.g. Rahul Kumar"]').fill('Vijay');
-  await page.locator('input[placeholder="10-digit mobile number"]').fill('9772699395');
+  await page.locator('input[placeholder="10-digit mobile number"]').fill('9587980007');
 
   console.log("Submitting details to get OTP...");
   await clickText("View My CCTV Options");

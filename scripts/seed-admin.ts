@@ -33,7 +33,7 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 // ─── Credentials ──────────────────────────────────────────────────────────────
-const ADMIN_MOBILE  = "9772699395";
+const ADMIN_MOBILE  = "9587980007";
 const ADMIN_EMAIL   = "team.rajasthan.001@gmail.com";
 const ADMIN_NAME    = "Super Admin";
 const MOBILE_OTP    = "123456";          // static OTP for mobile (localhost)

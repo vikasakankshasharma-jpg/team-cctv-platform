@@ -28,13 +28,7 @@ async function run() {
       name: "Vikas Sharma"
     }, { merge: true });
 
-    // Add secondary admin number just in case
-    await db.collection("admins").doc("vikas_mobile2").set({
-      mobile_number: "9772699395",
-      is_active: true,
-      role: "super_admin",
-      name: "Vikas Sharma (Mobile 2)"
-    }, { merge: true });
+
 
     console.log("Admin phone numbers successfully registered!");
   } catch (e) {

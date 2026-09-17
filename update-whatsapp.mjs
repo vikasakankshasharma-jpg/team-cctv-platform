@@ -24,7 +24,7 @@ const oldStr = `  const handleSendWhatsApp = async () => {
 
 const newStr = `  const handleSendWhatsApp = () => {
     if (!savedQuoteId) return;
-    const salesNumber = "919772699395";
+    const salesNumber = "919587980007";
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://cctvquotation.com';
     const pdfLink = \`\${baseUrl}/api/quote/\${savedQuoteId}/download\`;
     const message = \`Hi team! ??\\n\\nI just generated a CCTV Quotation on your website.\\n*Quote ID:* \${savedQuoteId}\\n\\nHere is my PDF link:\\n\${pdfLink}\\n\\nPlease review it and let me know the next steps.\`;

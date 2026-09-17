@@ -33,7 +33,7 @@ class WhatsAppNotificationProvider {
         // 1. Fetch admin phone number from settings
         const db = admin.firestore();
         const settingsSnap = await db.collection("settings").doc("app_config").get();
-        let adminPhone = settingsSnap.data()?.admin_notification_phone || "919772699395";
+        let adminPhone = settingsSnap.data()?.admin_notification_phone || "919587980007";
         // Ensure phone number has no '+' prefix for WhatsApp API
         if (adminPhone.startsWith('+')) {
             adminPhone = adminPhone.substring(1);
