@@ -47,11 +47,35 @@ export function CustomerLoginClient() {
   }, [step, timeLeft]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !(window as any).recaptchaVerifier) {
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
-      });
-    }
+    if (typeof window === "undefined") return;
+
+    const initRecaptcha = () => {
+      if ((window as any).recaptchaVerifier) {
+        try {
+          (window as any).recaptchaVerifier.clear();
+        } catch (e) {}
+        delete (window as any).recaptchaVerifier;
+      }
+      try {
+        (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+        });
+      } catch (err) {
+        console.error("Recaptcha init error:", err);
+      }
+    };
+
+    const timer = setTimeout(initRecaptcha, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if ((window as any).recaptchaVerifier) {
+        try {
+          (window as any).recaptchaVerifier.clear();
+        } catch (e) {}
+        delete (window as any).recaptchaVerifier;
+      }
+    };
   }, []);
 
   // Request OTP

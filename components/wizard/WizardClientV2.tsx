@@ -27,15 +27,39 @@ export function WizardClientV2() {
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !(window as any).recaptchaVerifierWizard) {
-      (window as any).recaptchaVerifierWizard = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
-        size: "invisible",
-        callback: () => {},
-        "expired-callback": () => {
-          toast.error("reCAPTCHA expired. Please try again.");
-        },
-      });
-    }
+    if (typeof window === "undefined") return;
+
+    const initRecaptcha = () => {
+      if ((window as any).recaptchaVerifierWizard) {
+        try {
+          (window as any).recaptchaVerifierWizard.clear();
+        } catch (e) {}
+        delete (window as any).recaptchaVerifierWizard;
+      }
+      try {
+        (window as any).recaptchaVerifierWizard = new RecaptchaVerifier(auth, "recaptcha-container-wizard", {
+          size: "invisible",
+          callback: () => {},
+          "expired-callback": () => {
+            toast.error("reCAPTCHA expired. Please try again.");
+          },
+        });
+      } catch (err) {
+        console.error("Recaptcha init error:", err);
+      }
+    };
+
+    const timer = setTimeout(initRecaptcha, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if ((window as any).recaptchaVerifierWizard) {
+        try {
+          (window as any).recaptchaVerifierWizard.clear();
+        } catch (e) {}
+        delete (window as any).recaptchaVerifierWizard;
+      }
+    };
   }, []);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
