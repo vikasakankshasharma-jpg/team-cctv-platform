@@ -28,15 +28,37 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid phone number format." }, { status: 400 });
     }
 
+    let role = "customer";
+    let userName = "Valued Customer";
+    const normalized = cleanPhone.length === 12 ? cleanPhone.substring(2) : cleanPhone;
+
+    // RBAC Lookup
+    const adminSnap = await adminDb.collection("admins").where("mobile_number", "==", normalized).where("is_active", "==", true).limit(1).get();
+    if (!adminSnap.empty) { role = "super_admin"; userName = adminSnap.docs[0].data().name || "Administrator"; }
+    else {
+      const spSnap = await adminDb.collection("salespeople").where("mobile_number", "==", normalized).where("is_active", "==", true).limit(1).get();
+      if (!spSnap.empty) { role = "sales_staff"; userName = spSnap.docs[0].data().name || "Sales Professional"; }
+      else {
+        const partnerSnap = await adminDb.collection("promoters").where("mobile_number", "==", normalized).where("status", "==", "approved").limit(1).get();
+        if (!partnerSnap.empty) { role = "partner"; userName = partnerSnap.docs[0].data().name || "Partner"; }
+        else {
+          const instSnap = await adminDb.collection("installers").where("mobile_number", "==", normalized).where("status", "in", ["active", "approved"]).limit(1).get();
+          if (!instSnap.empty) { role = "installer"; userName = instSnap.docs[0].data().name || "Installer"; }
+        }
+      }
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    console.info(`[WhatsApp] Generating OTP for ${formattedPhone}`);
+    console.info(`[WhatsApp] Generating OTP for ${formattedPhone} (Role: ${role})`);
 
     await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(`+${formattedPhone}`).set({
       otp,
       expiresAt,
       type: "whatsapp",
+      role,
+      name: userName,
       createdAt: new Date(),
     });
 

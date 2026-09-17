@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Please enter a valid 10-digit Indian mobile number." }, { status: 400 });
     }
 
-    let role: "super_admin" | "sales_staff" | null = null;
+    let role: "super_admin" | "sales_staff" | "partner" | "installer" | null = null;
     let userName = "";
 
     // 3. Dynamic RBAC Lookup
@@ -53,6 +53,34 @@ export async function POST(req: Request) {
       if (!spSnap.empty) {
         role = "sales_staff";
         userName = spSnap.docs[0].data().name || "Sales Professional";
+      }
+    }
+
+    // C. Check Partners / Promoters
+    if (!role) {
+      const partnerSnap = await adminDb.collection("promoters")
+        .where("mobile_number", "==", normalized)
+        .where("status", "==", "approved")
+        .limit(1)
+        .get();
+      
+      if (!partnerSnap.empty) {
+        role = "partner";
+        userName = partnerSnap.docs[0].data().name || "Partner";
+      }
+    }
+
+    // D. Check Installers
+    if (!role) {
+      const installerSnap = await adminDb.collection("installers")
+        .where("mobile_number", "==", normalized)
+        .where("status", "in", ["active", "approved"])
+        .limit(1)
+        .get();
+      
+      if (!installerSnap.empty) {
+        role = "installer";
+        userName = installerSnap.docs[0].data().name || "Installer";
       }
     }
 

@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
         ...getRequestMetadata(req)
       });
 
-      return NextResponse.json({ success: true, customToken });
+      return NextResponse.json({ success: true, customToken, role });
     }
 
     // ── MOBILE FLOW ───────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
             ...getRequestMetadata(req)
           });
 
-          return NextResponse.json({ success: true, customToken });
+          return NextResponse.json({ success: true, customToken, role });
         } catch {
           await createAuditLog({
             action: "ADMIN_LOGIN_FAILURE",
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
       await adminAuth.setCustomUserClaims(uid, { role });
       const customToken = await adminAuth.createCustomToken(uid, { role });
 
-      return NextResponse.json({ success: true, customToken });
+      return NextResponse.json({ success: true, customToken, role });
     }
 
     return NextResponse.json({ error: "Invalid OTP type." }, { status: 400 });

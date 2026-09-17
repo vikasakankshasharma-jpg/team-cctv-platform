@@ -62,10 +62,13 @@ export async function POST(req: Request) {
       }
     }
 
-    // Generate Custom Token
-    const customToken = await adminAuth.createCustomToken(uid, { role: "customer" });
+    const role = data.role || "customer";
+    
+    // Set custom claims and Generate Custom Token
+    await adminAuth.setCustomUserClaims(uid, { role });
+    const customToken = await adminAuth.createCustomToken(uid, { role });
 
-    return NextResponse.json({ success: true, customToken });
+    return NextResponse.json({ success: true, customToken, role });
   } catch (error: any) {
     console.error("WhatsApp OTP Verify Error:", error);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
