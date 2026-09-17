@@ -9,7 +9,7 @@ import { CameraCustomizer } from "@/components/CameraCustomizer";
 import { EditConfigurationDrawer } from "@/components/EditConfigurationDrawer";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { RecaptchaVerifier, signInWithPhoneNumber, signInWithCustomToken, ConfirmationResult } from "firebase/auth";
+import { RecaptchaVerifier, signInWithCustomToken, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
 import { ShieldCheck, Loader2, Sparkles, Wrench } from "lucide-react";
@@ -262,7 +262,6 @@ export function WizardClientV2() {
     setLoading(true);
     try {
       const cleanMobile = req.customer_mobile.replace(/\s/g, "");
-      const formatPhone = "+91" + cleanMobile;
 
       if (cleanMobile === "9999999999" || cleanMobile === "9587980007") {
         setConfirmationResult({
@@ -277,66 +276,32 @@ export function WizardClientV2() {
         return;
       }
       
-      const sendWhatsApp = async () => {
-        const res = await fetch("/api/auth/otp/whatsapp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: cleanMobile }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to send WhatsApp OTP.");
-        
-        setOtpMethod("whatsapp");
-        setOtpSent(true);
-        setCountdown(60);
-        setOtp(["", "", "", "", "", ""]);
-        toast.success("WhatsApp OTP sent to your number.");
-      };
+      const endpoint = otpMethod === "sms" ? "/api/auth/otp/sms" : "/api/auth/otp/whatsapp";
       
-      if (otpMethod === "sms") {
-        const verifier = (window as any).recaptchaVerifierWizard;
-        if (!verifier) {
-          throw new Error("auth/missing-app-credential");
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanMobile }),
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        if (otpMethod === "sms") {
+          toast.error("SMS failed to send. Please try WhatsApp OTP instead.", { duration: 8000 });
+        } else {
+          toast.error(data.error || "Failed to send WhatsApp OTP.");
         }
-        
-        try {
-          const result = await signInWithPhoneNumber(auth, formatPhone, verifier);
-          setConfirmationResult(result);
-          setOtpSent(true);
-          setCountdown(30);
-          setOtp(["", "", "", "", "", ""]);
-          toast.success("SMS OTP sent to your mobile.");
-        } catch (smsError: any) {
-          console.warn("SMS failed, falling back to WhatsApp:", smsError);
-          toast.info("SMS delivery failed. Trying WhatsApp...");
-          await sendWhatsApp();
-        }
-      } else {
-        await sendWhatsApp();
+        return;
       }
+      
+      setOtpSent(true);
+      setCountdown(otpMethod === "sms" ? 30 : 60);
+      setOtp(["", "", "", "", "", ""]);
+      toast.success(`${otpMethod === "sms" ? "SMS" : "WhatsApp"} OTP sent to your number.`);
+      
     } catch (error: any) {
       console.error("OTP Send Error:", error);
-      const errCode = error.code || "";
-      const errMsg = error.message || "Please check your number.";
-      
-      let userMsg = errMsg;
-      if (errCode === "auth/too-many-requests" || errMsg.includes("auth/too-many-requests")) {
-        userMsg = "Too many attempts. Please wait a few minutes and try again.";
-      } else if (errCode === "auth/invalid-app-credential" || errMsg.includes("auth/invalid-app-credential")) {
-        userMsg = "reCAPTCHA verification failed. Please try WhatsApp OTP instead.";
-      } else if (errCode === "auth/network-request-failed" || errMsg.includes("auth/network-request-failed")) {
-        userMsg = "Network error. Please check your internet connection.";
-      } else if (errCode === "auth/quota-exceeded" || errMsg.includes("auth/quota-exceeded")) {
-        userMsg = "SMS quota exceeded. Please try WhatsApp OTP instead.";
-      } else if (errCode === "auth/captcha-check-failed" || errMsg.includes("auth/captcha-check-failed")) {
-        userMsg = "reCAPTCHA verification failed. Please try WhatsApp OTP instead.";
-      } else if (errCode === "auth/missing-app-credential" || errMsg.includes("auth/missing-app-credential")) {
-        userMsg = "reCAPTCHA could not load. Please try WhatsApp OTP instead.";
-      } else if (errCode === "auth/internal-error" || errMsg.includes("auth/internal-error")) {
-        userMsg = `Firebase error: ${errMsg}. Please use WhatsApp OTP instead.`;
-      }
-      
-      toast.error(userMsg);
+      toast.error("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -351,22 +316,27 @@ export function WizardClientV2() {
     
     setLoading(true);
     try {
-      if (otpMethod === "sms") {
-        if (!confirmationResult && req.customer_mobile !== "9999999999" && req.customer_mobile !== "9587980007") {
-          throw new Error("auth/code-expired");
-        }
-        if (confirmationResult) {
-          await confirmationResult.confirm(code);
-        }
+      const cleanMobile = (req.customer_mobile || "").replace(/\s/g, "");
+      
+      if (cleanMobile === "9999999999" || cleanMobile === "9587980007") {
+        if (confirmationResult) await confirmationResult.confirm(code);
       } else {
-        const cleanMobile = (req.customer_mobile || "").replace(/\s/g, "");
-        const res = await fetch("/api/auth/otp/whatsapp/verify", {
+        const verifyEndpoint = otpMethod === "sms" ? "/api/auth/otp/sms/verify" : "/api/auth/otp/whatsapp/verify";
+        const res = await fetch(verifyEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: cleanMobile, otp: code }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Invalid WhatsApp OTP.");
+        
+        if (!res.ok) {
+          throw new Error(data.error || "Invalid OTP code.");
+        }
+        
+        // We get a custom token back, sign in with it!
+        if (data.customToken) {
+          await signInWithCustomToken(auth, data.customToken);
+        }
       }
       
       toast.success("Verification successful!");
@@ -381,7 +351,7 @@ export function WizardClientV2() {
 
       const payload = {
         customer_name: req.customer_name || "",
-        mobile_number: (req.customer_mobile || "").replace(/\s/g, ""),
+        mobile_number: cleanMobile,
         email: req.customer_email || undefined,
         wizard_answers: { ...req, pincode, city },
         property_type: req.property_type || "home",
@@ -405,17 +375,11 @@ export function WizardClientV2() {
       setOtpSent(false);
     } catch (error: any) {
       console.error("OTP verification error:", error);
-      let errMsg = error.message || "Please check the code and try again.";
-      if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
-      else if (errMsg.includes("auth/code-expired")) errMsg = "The code has expired. Please resend.";
-      else if (errMsg.includes("auth/too-many-requests")) errMsg = "Too many attempts. Please try again later.";
-      toast.error(errMsg);
+      toast.error(error.message || "Please check the code and try again.");
     } finally {
       setLoading(false);
     }
   };
-
-
 
   const handleUpdateQuote = (newReq: CCTVRequirement) => {
     setReq(newReq);
@@ -1111,7 +1075,7 @@ export function WizardClientV2() {
   };
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
-      <div id="recaptcha-container-wizard"></div>
+      
       
       <h1 className="sr-only">CCTV Quotation Wizard</h1>
       <div className="bg-white rounded-2xl shadow-sm border p-8">
