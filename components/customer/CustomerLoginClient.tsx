@@ -7,14 +7,15 @@ import {
   Smartphone, 
   ShieldCheck, 
   ArrowRight, 
-  ArrowLeft, 
-  AlertCircle, 
-  Loader2, 
+  ArrowLeft,
+  Loader2,
+  AlertCircle,
   CheckCircle2, 
-  Lock 
+  Lock,
+  MessageCircle
 } from "lucide-react";
 import { auth } from "@/lib/firebase-client";
-import { signInWithCustomToken } from "firebase/auth";
+import { signInWithCustomToken, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 
 export function CustomerLoginClient() {
@@ -23,6 +24,7 @@ export function CustomerLoginClient() {
   const redirectTo = searchParams.get("redirect") || "/customer/dashboard";
 
   const [mobile, setMobile] = useState("");
+  const [method, setMethod] = useState<"sms" | "whatsapp">("sms");
   const [step, setStep] = useState<1 | 2>(1);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const otpRef = useRef<string[]>(["", "", "", "", "", ""]);
@@ -44,9 +46,17 @@ export function CustomerLoginClient() {
     return () => clearTimeout(timer);
   }, [step, timeLeft]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && !(window as any).recaptchaVerifier) {
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+      });
+    }
+  }, []);
+
   // Request OTP
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setError("");
 
     const cleanMobile = mobile.replace(/\D/g, "");
@@ -57,151 +67,181 @@ export function CustomerLoginClient() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/customer/auth/otp/mobile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: cleanMobile }),
-      });
+      if (method === "sms") {
+        // We use our mobile endpoint to lookup customer name first
+        const res = await fetch("/api/customer/auth/otp/mobile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mobile: cleanMobile }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to initiate SMS OTP.");
+        
+        setCustomerName(data.customerName || "");
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to send OTP. Please try again.");
+        // Trigger Firebase Phone Auth SMS
+        const appVerifier = (window as any).recaptchaVerifier;
+        const confirmationResult = await signInWithPhoneNumber(auth, `+91${cleanMobile}`, appVerifier);
+        (window as any).confirmationResult = confirmationResult;
+
+      } else {
+        // WhatsApp Meta API Flow
+        const res = await fetch("/api/auth/otp/whatsapp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: cleanMobile }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to send WhatsApp OTP.");
       }
 
-      setCustomerName(data.customerName || "");
       setStep(2);
       setTimeLeft(60);
       setCanResend(false);
-
+      
       // Auto focus first OTP input box after render
       setTimeout(() => {
         otpInputsRef.current[0]?.focus();
-      }, 150);
+      }, 100);
     } catch (err: any) {
-      setError(err.message || "Something went wrong.");
+      console.error(err);
+      if (err.code === "auth/invalid-app-credential" || err.message?.includes("invalid-app-credential")) {
+        setError("Mobile SMS OTP unavailable in this environment. Please try WhatsApp.");
+      } else {
+        setError(err.message || "An unexpected error occurred. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Verify OTP
-  const handleVerifyOtp = async (e?: React.FormEvent, overrideCode?: string) => {
+  const handleVerifyOtp = async (e?: React.FormEvent) => {
     e?.preventDefault();
+    const code = otp.join("");
+    if (code.length < 6) return;
+    
     setError("");
-
-    const code = (overrideCode || otpRef.current.join("") || otp.join("")).trim();
-    if (code.length !== 6) {
-      setError("Please enter all 6 digits of the OTP.");
-      return;
-    }
-
     setLoading(true);
     try {
-      const res = await fetch("/api/customer/auth/otp/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: mobile.replace(/\D/g, ""), otp: code }),
-      });
+      let customToken = "";
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Verification failed. Please check your code.");
+      if (method === "sms") {
+        // Firebase Phone Auth Verification
+        const confirmationResult = (window as any).confirmationResult;
+        if (!confirmationResult) throw new Error("Verification session expired. Please resend code.");
+        
+        const result = await confirmationResult.confirm(code);
+        const idToken = await result.user.getIdToken();
+
+        // Pass ID Token to our backend to upgrade claims
+        const res = await fetch("/api/customer/auth/otp/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: mobile.replace(/\D/g, ""), otp: idToken, type: "mobile" }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to verify session.");
+        customToken = data.customToken;
+      } else {
+        // WhatsApp OTP Verification
+        const res = await fetch("/api/auth/otp/whatsapp/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: mobile.replace(/\D/g, ""), otp: code }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Invalid WhatsApp OTP.");
+        customToken = data.customToken;
       }
 
-      // Establish Firebase client authentication if available
-      try {
-        if (data.customToken && auth) {
-          const userCredential = await signInWithCustomToken(auth, data.customToken);
-          const idToken = await userCredential.user.getIdToken();
-          await fetch("/api/auth/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idToken }),
-          });
-        }
-      } catch (authErr) {
-        console.warn("Client Firebase Auth sync note:", authErr);
+      // Final Firebase Custom Token Sign In
+      if (customToken && auth) {
+        const userCredential = await signInWithCustomToken(auth, customToken);
+        const idToken = await userCredential.user.getIdToken();
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken }),
+        });
+        window.location.href = redirectTo;
+      } else {
+        throw new Error("Missing authentication token");
       }
-
-      router.push(redirectTo);
-      router.refresh();
     } catch (err: any) {
-      setError(err.message || "Failed to verify OTP.");
+      console.error(err);
+      setError(err.message || "Invalid OTP code.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOtpChange = (index: number, val: string) => {
-    const cleaned = val.replace(/\D/g, "");
-    if (!cleaned && val !== "") return;
-
-    const newOtp = [...otpRef.current];
-    newOtp[index] = cleaned.slice(-1);
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^[0-9]*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
     setOtp(newOtp);
     otpRef.current = newOtp;
-
-    // Auto advance to next box
-    if (cleaned && index < 5) {
+    if (value !== "" && index < 5) {
       otpInputsRef.current[index + 1]?.focus();
-    }
-
-    // Auto trigger verify if 6th box is filled
-    if (cleaned && index === 5 && newOtp.every((digit) => digit !== "")) {
-      const fullCode = newOtp.join("");
-      setTimeout(() => {
-        handleVerifyOtp(undefined, fullCode);
-      }, 50);
     }
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otpRef.current[index] && index > 0) {
+    if (e.key === "Backspace" && otp[index] === "" && index > 0) {
       otpInputsRef.current[index - 1]?.focus();
     }
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+  const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (!pasted) return;
-
-    const newOtp = [...otpRef.current];
-    for (let i = 0; i < pasted.length; i++) {
-      newOtp[i] = pasted[i];
-    }
-    setOtp(newOtp);
-    otpRef.current = newOtp;
-    if (pasted.length === 6) {
-      otpInputsRef.current[5]?.focus();
-      setTimeout(() => handleVerifyOtp(undefined, pasted), 50);
-    } else {
-      otpInputsRef.current[pasted.length]?.focus();
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pastedData) {
+      const newOtp = [...otp];
+      for (let i = 0; i < pastedData.length; i++) {
+        newOtp[i] = pastedData[i];
+      }
+      setOtp(newOtp);
+      otpRef.current = newOtp;
+      if (pastedData.length === 6) {
+        otpInputsRef.current[5]?.focus();
+      } else {
+        otpInputsRef.current[pastedData.length]?.focus();
+      }
     }
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6">
-      <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-3xl p-8 sm:p-10 relative">
-        
-        {/* Header Icon */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="w-14 h-14 bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
-            {step === 1 ? <Smartphone className="w-7 h-7" /> : <Lock className="w-7 h-7" />}
-          </div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-            <TranslatedText tKey="customer_portal" defaultText="Customer Portal" />
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div id="recaptcha-container"></div>
+      
+      {/* Background decoration */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/5 dark:bg-blue-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/5 dark:bg-indigo-600/10 blur-[120px] pointer-events-none" />
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-[420px] relative z-10">
+        {/* Brand Header */}
+        <div className="flex flex-col items-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-3 active:scale-95 transition-transform">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-600/20 text-white">
+              <ShieldCheck className="w-7 h-7" />
+            </div>
+            <span className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white">
+              Secure<span className="text-blue-600">Easy</span>
+            </span>
+          </Link>
+          <span className="mt-4 px-3 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full text-[10px] font-black tracking-[0.2em] uppercase text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 shadow-sm">
+            <Lock className="w-3 h-3" />
+            <TranslatedText tKey="secure_portal" defaultText="Secure Portal" />
           </span>
         </div>
 
         {/* Step 1: Mobile Input */}
         {step === 1 && (
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight mb-2 text-center">
               <TranslatedText tKey="customer_login_title" defaultText="Welcome to Your Portal" />
             </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8 font-medium">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8 font-medium text-center">
               <TranslatedText 
                 tKey="customer_login_subtitle" 
                 defaultText="Enter your mobile number to view your quotations, download tax invoices, and track live installations." 
@@ -209,6 +249,24 @@ export function CustomerLoginClient() {
             </p>
 
             <form onSubmit={handleSendOtp} className="space-y-5">
+              
+              <div className="flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-[20px]">
+                <button
+                  type="button"
+                  onClick={() => { setMethod("sms"); setError(""); }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${method === "sms" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-400"}`}
+                >
+                  <Smartphone className="w-3.5 h-3.5" /> SMS OTP
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMethod("whatsapp"); setError(""); }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${method === "whatsapp" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-400"}`}
+                >
+                  <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                </button>
+              </div>
+
               <div>
                 <label className="block text-xs font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">
                   <TranslatedText tKey="registered_mobile_number" defaultText="Mobile Number" />
@@ -281,7 +339,7 @@ export function CustomerLoginClient() {
               {customerName && customerName !== "Valued Customer" ? (
                 <>Welcome back, <strong className="text-zinc-900 dark:text-white">{customerName}</strong>! </>
               ) : null}
-              We sent a 6-digit code to <strong className="text-zinc-900 dark:text-white">+91 {mobile}</strong>.
+              We sent a 6-digit code via {method === "sms" ? "SMS" : "WhatsApp"} to <strong className="text-zinc-900 dark:text-white">+91 {mobile}</strong>.
             </p>
 
             <form onSubmit={handleVerifyOtp} className="space-y-6">
