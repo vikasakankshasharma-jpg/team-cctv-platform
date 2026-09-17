@@ -64,22 +64,12 @@ export function PartnerLoginClient() {
         
         if (!res.ok) throw new Error(data.error || "Failed to initiate mobile verification.");
         setPartnerName(data.partnerName);
-
-        // Call Firebase Phone Auth
-        const appVerifier = (window as any).recaptchaVerifier;
-        const confirmationResult = await signInWithPhoneNumber(auth, data.e164Mobile, appVerifier);
-        (window as any).confirmationResult = confirmationResult;
       }
 
       setStep(2);
       setTimeLeft(120);
     } catch (err: any) {
-      console.error(err);
-      if (err.code === "auth/unauthorized-domain") {
-        setError("Mobile login is restricted in the local environment. Please switch to Email login.");
-      } else {
-        setError(err.message || "An unexpected error occurred.");
-      }
+      setError(err.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -96,35 +86,15 @@ export function PartnerLoginClient() {
     try {
       let customToken = "";
 
-      if (method === "email") {
-        const res = await fetch("/api/partner/auth/otp/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier, otp: code, type: "email" }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Invalid verification code.");
-        customToken = data.customToken;
-        await signInWithCustomToken(auth, customToken);
-      } else {
-        // Mobile flow: verify with Firebase client SDK first
-        const confirmationResult = (window as any).confirmationResult;
-        if (!confirmationResult) throw new Error("Verification session expired. Please try again.");
-        
-        const result = await confirmationResult.confirm(code);
-        const idToken = await result.user.getIdToken();
-
-        // Send ID token to our backend to upgrade claims and get customToken
-        const res = await fetch("/api/partner/auth/otp/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier, otp: idToken, type: "mobile" }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to upgrade session.");
-        customToken = data.customToken;
-        await signInWithCustomToken(auth, customToken); // Sign in again with upgraded token
-      }
+      const res = await fetch("/api/partner/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, otp: code, type: method }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Invalid verification code.");
+      customToken = data.customToken;
+      await signInWithCustomToken(auth, customToken); // Sign in again with upgraded token
 
       // Create Server Session
       const finalIdToken = await auth.currentUser?.getIdToken();

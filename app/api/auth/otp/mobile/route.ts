@@ -4,6 +4,7 @@ import { COLLECTIONS } from "@/lib/constants";
 import { generateOtp, otpExpiresAt } from "@/lib/auth-partner";
 import { FieldValue } from "firebase-admin/firestore";
 import { rateLimit } from "@/lib/rate-limit";
+import { sendSmsOtp } from "@/lib/sms-provider";
 
 /**
  * ENTERPRISE AUTHENTICATION: MOBILE LOOKUP
@@ -81,20 +82,18 @@ export async function POST(req: Request) {
         createdAt: FieldValue.serverTimestamp() 
       });
 
-    // NOTE: Sensitive OTP value is NOT logged in production. 
-    // It should be sent via SMS provider (e.g., Twilio/Msg91).
-    if (process.env.NODE_ENV !== "production") {
-      console.log(`[DEV] Auth OTP for ${normalized}: ${otp}`);
-    }
+    // Send real SMS OTP
+    await sendSmsOtp(normalized, otp);
 
     return NextResponse.json({ 
       success: true, 
       e164Mobile,
-      message: "Verification code sent."
+      message: "Verification code sent.",
+      ...(process.env.NODE_ENV !== "production" ? { devOtp: otp } : {}),
     });
 
   } catch (error) {
-    console.error("🔥 [Admin Auth Mobile] Critical Error:", error);
+    console.error("[Admin Auth Mobile] Critical Error:", error);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

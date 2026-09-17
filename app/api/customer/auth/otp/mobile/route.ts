@@ -4,6 +4,7 @@ import { COLLECTIONS } from "@/lib/constants";
 import { generateOtp, otpExpiresAt } from "@/lib/auth-partner";
 import { FieldValue } from "firebase-admin/firestore";
 import { rateLimit } from "@/lib/rate-limit";
+import { sendSmsOtp } from "@/lib/sms-provider";
 
 export async function POST(req: Request) {
   try {
@@ -58,14 +59,13 @@ export async function POST(req: Request) {
         createdAt: FieldValue.serverTimestamp(),
       });
 
-    console.log(`[CUSTOMER OTP] Mobile: +91${normalized} (${customerName}) | OTP: ${otp}`);
+    await sendSmsOtp(normalized, otp);
 
     return NextResponse.json({
       success: true,
       e164Mobile,
       customerName,
       message: "Verification code sent.",
-      // Provide OTP in non-production for fast testing
       ...(process.env.NODE_ENV !== "production" ? { devOtp: otp } : {}),
     });
   } catch (error) {
@@ -73,3 +73,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }
+
