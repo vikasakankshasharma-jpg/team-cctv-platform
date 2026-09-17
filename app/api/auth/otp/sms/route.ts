@@ -73,37 +73,76 @@ export async function POST(req: Request) {
     // Replace {OTP} with actual OTP
     const message = MTALKZ_TEMPLATE.replace("{OTP}", otp).replace("{#var#}", otp);
 
-    const payload = {
-      apikey: MTALKZ_API_KEY,
-      senderid: MTALKZ_SENDER_ID,
-      number: formattedPhone,
-      message: message,
-      format: "json",
-      digit: "6",
-      otptimeout: "120"
-    };
+    const recipientNumber = cleanPhone.length === 12 ? cleanPhone.substring(2) : cleanPhone;
 
-    const response = await fetch("https://msg.mtalkz.com/V2/http-api-sms.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const responseText = await response.text();
-    let responseData;
+    // 1. Try modern Mtalkz Omni API (api.mtalkz.com)
+    let omniData: any = null;
     try {
-      responseData = JSON.parse(responseText);
-    } catch(e) {
-      responseData = { raw: responseText };
+      const omniResponse = await fetch("https://api.mtalkz.com/v1/sms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": MTALKZ_API_KEY
+        },
+        body: JSON.stringify({
+          sender: MTALKZ_SENDER_ID,
+          to: recipientNumber,
+          text: message
+        })
+      });
+
+      const omniText = await omniResponse.text();
+      try {
+        omniData = JSON.parse(omniText);
+      } catch {
+        omniData = { raw: omniText };
+      }
+
+      if (omniResponse.ok && !omniData.error && omniData.status !== "ERROR" && omniData.Status !== "Error") {
+        return NextResponse.json({ success: true, message: "SMS OTP sent via Mtalkz." });
+      }
+    } catch (omniErr) {
+      console.warn("[Mtalkz Omni] Request failed:", omniErr);
     }
 
-    // Mtalkz usually returns something like { "status": "OK", ... }
-    if (!response.ok || responseData.status === "ERROR" || responseText.toLowerCase().includes("error")) {
-      const errorMsg = responseData?.message || responseData?.msg || responseData?.error || responseData?.description || (typeof responseData?.raw === 'string' ? responseData.raw : "Failed to send SMS via Mtalkz.");
-      return NextResponse.json({ error: errorMsg, details: responseData }, { status: 400 });
+    // 2. Fallback: try legacy endpoint (msg.mtalkz.com)
+    let legacyData: any = null;
+    try {
+      const legacyPayload = {
+        apikey: MTALKZ_API_KEY,
+        senderid: MTALKZ_SENDER_ID,
+        number: formattedPhone,
+        message: message,
+        format: "json",
+        digit: "6",
+        otptimeout: "120"
+      };
+
+      const legacyResponse = await fetch("https://msg.mtalkz.com/V2/http-api-sms.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(legacyPayload)
+      });
+
+      const legacyText = await legacyResponse.text();
+      try {
+        legacyData = JSON.parse(legacyText);
+      } catch {
+        legacyData = { raw: legacyText };
+      }
+
+      if (legacyResponse.ok && legacyData.status !== "ERROR" && legacyData.Status !== "Error" && !legacyText.toLowerCase().includes("invalid api key")) {
+        return NextResponse.json({ success: true, message: "SMS OTP sent via Mtalkz." });
+      }
+    } catch (legacyErr) {
+      console.warn("[Mtalkz Legacy] Request failed:", legacyErr);
     }
+
+    // Return the descriptive error
+    const errorMsg = omniData?.message || legacyData?.Details || legacyData?.message || legacyData?.error || "Failed to send SMS via Mtalkz.";
+    return NextResponse.json({ error: errorMsg, details: { omni: omniData, legacy: legacyData } }, { status: 400 });
 
     return NextResponse.json({ success: true, message: "SMS OTP sent via Mtalkz." });
   } catch (error: any) {
