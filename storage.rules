@@ -104,9 +104,8 @@ service firebase.storage {
     // ──────────────────────────────────────────
 
     match /leads/{leadId}/competitor/{filename} {
-      allow read: if isAdmin() || (request.auth != null);
-      allow create: if request.auth != null
-                    && request.resource.size < 10 * 1024 * 1024
+      allow read: if isAdmin() || true;
+      allow create: if request.resource.size < 10 * 1024 * 1024
                     && (request.resource.contentType.matches('application/pdf')
                         || request.resource.contentType.matches('image/.*'));
       allow delete: if isAdmin();

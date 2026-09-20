@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import Image from "next/image";
 import { useTranslation } from "@/hooks/useTranslation";
+import imageCompression from "browser-image-compression";
 
 interface CompetitorQuoteUploaderProps {
   leadId: string;
@@ -80,14 +81,30 @@ export function CompetitorQuoteUploader({
         setIsUploading(true);
         setUploadProgress(0);
 
-        const fileExtension = file.name.split(".").pop();
+        let fileToUpload = file;
+        
+        // Compress images if they are larger than 1MB
+        if (file.type.startsWith("image/") && file.size > 1024 * 1024) {
+          try {
+            const options = {
+              maxSizeMB: 1,
+              maxWidthOrHeight: 1920,
+              useWebWorker: true,
+            };
+            fileToUpload = await imageCompression(file, options) as File;
+          } catch (compError) {
+            console.error("Image compression failed, falling back to original:", compError);
+          }
+        }
+
+        const fileExtension = fileToUpload.name.split(".").pop() || "jpg";
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 9);
         const fileName = `${timestamp}-${random}.${fileExtension}`;
         const storagePath = `leads/${leadId}/competitor/${fileName}`;
         const storageRef = ref(storage, storagePath);
 
-        const uploadTask = uploadBytesResumable(storageRef, file);
+        const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
 
         uploadTask.on(
           "state_changed",
