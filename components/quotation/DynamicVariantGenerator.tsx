@@ -257,11 +257,37 @@ export function DynamicVariantGenerator({
 
       // Extract actual resolutions delivered in the quote (to handle fallbacks, e.g. when a brand lacks 2MP IP)
       let actualResolutions: string[] = [];
+      let outdoorProvided: string | null = null;
+      let indoorProvided: string | null = null;
+
       pricing.items.forEach((item: any) => {
-        // Items typically look like: "Budget Brand 5MP IP Dome..."
+        // Items typically look like: "Outdoor Bullet Camera: Budget Brand 5MP IP Dome..."
         const match = item.display_name.match(/(\d+(?:\.\d+)?)MP/i);
-        if (match) actualResolutions.push(match[0].toUpperCase());
+        if (match) {
+          const res = match[0].toUpperCase();
+          actualResolutions.push(res);
+          const lowerName = item.display_name.toLowerCase();
+          if (lowerName.includes("outdoor")) outdoorProvided = res;
+          if (lowerName.includes("indoor")) indoorProvided = res;
+        }
       });
+      
+      let outdoorRequested = mixedReqs.find(r => r.type === "Outdoor Bullet Camera")?.resolution;
+      let indoorRequested = mixedReqs.find(r => r.type === "Indoor Dome Camera")?.resolution;
+      
+      let substitutionNotes: string[] = [];
+      if (outdoorRequested && outdoorProvided && outdoorRequested !== outdoorProvided) {
+        substitutionNotes.push(`${outdoorProvided} Outdoor`);
+      }
+      if (indoorRequested && indoorProvided && indoorRequested !== indoorProvided) {
+        substitutionNotes.push(`${indoorProvided} Indoor`);
+      }
+
+      let substitutionMessage = "";
+      if (substitutionNotes.length > 0) {
+        substitutionMessage = `💡 Includes ${substitutionNotes.join(" and ")} upgrade based on brand availability.`;
+      }
+
       // Deduplicate
       const uniqueActualRes = Array.from(new Set(actualResolutions));
       
@@ -287,7 +313,8 @@ export function DynamicVariantGenerator({
         storage_days: (pricing as any)._calculated_days || selection.recording_days || 7,
         plan_type: brandKey === "budget" ? "budget" : (Array.from(new Set(mixedReqs.map(r => r.resolution))).includes("8MP") ? "premium" : "recommended"),
         is_hybrid: isHybrid,
-        mixed_camera_requirements: mixedReqs
+        mixed_camera_requirements: mixedReqs,
+        substitution_message: substitutionMessage
       };
     };
 
@@ -547,6 +574,11 @@ export function DynamicVariantGenerator({
                   <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
                     {variant.camera_device.derivedResolution || "2MP Resolution"}
                   </h3>
+                  {(variant as any).substitution_message && (
+                    <p className="text-[11px] text-amber-700 font-medium mb-3 max-w-[95%] mx-auto bg-amber-50 px-2 py-1 rounded-md border border-amber-200 leading-tight">
+                      {(variant as any).substitution_message}
+                    </p>
+                  )}
                   {variant.is_economy_storage && (
                     <div className="flex flex-col items-center justify-center mb-3 gap-1">
                       <p className="text-xs text-[#86868b] font-medium">
