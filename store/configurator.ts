@@ -43,7 +43,7 @@ interface ConfiguratorStore {
 
   // ── Compare State (New 3-Tier SaaS Layout) ──────────────────────────────
   compare_options: Array<{ technology: string; option: number | string }>;
-  active_checkout_option: { technology: string; option: number | string } | null;
+  active_checkout_option: { technology: string; option: number | string; storage_days?: number } | null;
 
   // ── Compare Mode (2-Quotation Layout) ──────────────────────────────────────
   is_compare_mode: boolean;
@@ -73,7 +73,7 @@ interface ConfiguratorStore {
   setCompareOptions: (options: Array<{ technology: string; option: number | string }>) => void;
 
   /** Set the active checkout option (when clicking a card) */
-  setActiveCheckoutOption: (option: { technology: string; option: number | string }) => void;
+  setActiveCheckoutOption: (option: { technology: string; option: number | string; storage_days?: number }) => void;
 
   /** Enter 2-Quotation comparison mode */
   startCompareMode: (basePricing: PricingResult, tierName: string) => void;

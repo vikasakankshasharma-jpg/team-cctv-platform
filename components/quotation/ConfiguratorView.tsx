@@ -275,7 +275,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         ...selection, 
         technology: cT as "HD" | "IP", 
         selected_camera_option: typeof cO === "number" ? cO : undefined, 
-        selected_camera_id: selection.selected_camera_id || (isCameraSku ? cO : undefined) 
+        selected_camera_id: selection.selected_camera_id || (isCameraSku ? cO : undefined),
+        recording_days: active_checkout_option?.storage_days ?? selection.recording_days
       },
       products: currentProducts, addons: currentAddons, settings: pricingCache.settings, cablingDone, cablingMeters,
       referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0,
@@ -437,7 +438,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     const tech = ((pricing.technology || selection.technology || "HD") as string).toUpperCase() as "HD" | "IP";
 
     // 1. Lock selected package configuration into store
-    setActiveCheckoutOption({ technology: tech, option: pricing.plan_type });
+    setActiveCheckoutOption({ technology: tech, option: pricing.plan_type, storage_days: pricing.storage_days });
       updateSelection({
         selected_camera_id: undefined,
         selected_recorder_id: undefined,
@@ -445,7 +446,6 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         technology: tech,
         brand_preference: pricing.camera_device?.brand || selection.brand_preference,
         resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
-        recording_days: pricing.storage_days || selection.recording_days,
         mixed_camera_requirements: pricing.mixed_camera_requirements || selection.mixed_camera_requirements,
       });
 
