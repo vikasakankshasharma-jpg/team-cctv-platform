@@ -105,7 +105,7 @@ export function DynamicVariantGenerator({
 }: DynamicVariantGeneratorProps) {
   const [activeTech, setActiveTech] = useState<"hd" | "ip">("hd");
   const [activeBrand, setActiveBrand] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("recommended");
+  const [sortBy, setSortBy] = useState<string>("price_asc");
   
   const [cameraBuckets, setCameraBuckets] = useState<any[]>(() => {
     // If we are editing a quote that already has mixed requirements, load them!
@@ -350,12 +350,6 @@ export function DynamicVariantGenerator({
       results.sort((a, b) => b.total_payable - a.total_payable);
     } else if (sortBy === "brand") {
       results.sort((a, b) => (a.camera_device?.brand || "").localeCompare(b.camera_device?.brand || ""));
-    } else if (sortBy === "recommended") {
-      results.sort((a, b) => {
-        if ((a as any).is_recommended) return -1;
-        if ((b as any).is_recommended) return 1;
-        return a.total_payable - b.total_payable;
-      });
     }
 
     return results;
@@ -504,7 +498,6 @@ export function DynamicVariantGenerator({
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
-              <option value="recommended">Recommended First</option>
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>
               <option value="brand">Brand</option>
