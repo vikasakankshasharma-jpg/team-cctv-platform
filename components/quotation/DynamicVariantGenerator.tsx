@@ -3,7 +3,7 @@ import { Product, Addon, AppSettings, ConfiguratorSelection, PricingResult } fro
 import { calculatePricing } from "@/lib/pricing-engine";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Check, Filter } from "lucide-react";
+import { Sparkles, Check, Filter, Tag } from "lucide-react";
 
 const BRAND_DISPLAY: Record<string, string> = {
   "all": "All Brands",
@@ -486,12 +486,16 @@ export function DynamicVariantGenerator({
                   <Sparkles className="w-3 h-3" /> Recommended
                 </div>
               )}
+              {variant.is_economy_storage && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl z-10 flex items-center gap-1 shadow-sm">
+                  <Tag className="w-3 h-3" /> Economy Match
+                </div>
+              )}
               
               <CardContent className="py-8 px-5 flex flex-col items-center justify-center min-h-[180px]">
                 <div className="text-center w-full">
                   <div className="text-base font-black text-[#6366f1] mb-1.5 flex items-center justify-center gap-1.5 flex-wrap">
                     <span>{variant.camera_device?.brand || "Budget"} {variant.plan_type === "budget" ? "Standard" : "Pro"}</span>
-                    {variant.is_economy_storage && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-bold">ECONOMY MATCH</span>}
                   </div>
                   <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
                     {variant.camera_device.derivedResolution || "2MP Resolution"}
