@@ -288,8 +288,10 @@ export function DynamicVariantGenerator({
         });
         (rawEconomyPricing as any)._calculated_days = 3;
         const enrichedEconomy = enrich(rawEconomyPricing, b.brandKey, b.brand);
-        if (enrichedEconomy && enrichedEconomy.total_payable < (enriched?.total_payable || 0)) {
+        if (enrichedEconomy && enriched && enrichedEconomy.total_payable < enriched.total_payable) {
           enrichedEconomy.is_economy_storage = true;
+          (enrichedEconomy as any).original_payable = enriched.total_payable;
+          (enrichedEconomy as any).requested_days = selection.recording_days;
           results.push(enrichedEconomy);
         }
       }
@@ -453,20 +455,25 @@ export function DynamicVariantGenerator({
                 <div className="text-center w-full">
                   <div className="text-base font-black text-[#6366f1] mb-1.5 flex items-center justify-center gap-1.5 flex-wrap">
                     <span>{variant.camera_device?.brand || "Budget"} {variant.plan_type === "budget" ? "Standard" : "Pro"}</span>
-                    {variant.is_economy_storage && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-bold">ECONOMY</span>}
+                    {variant.is_economy_storage && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-bold">ECONOMY MATCH</span>}
                     {(variant as any).is_hybrid && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200 font-bold">HYBRID SETUP</span>}
                   </div>
                   <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
                     {variant.camera_device.derivedResolution || "2MP Resolution"}
                   </h3>
                   {variant.is_economy_storage && (
-                    <p className="text-xs text-[#86868b] font-medium mb-3">
-                      Basic Storage ({variant.storage_device?.derivedCapacity || "500GB"})
-                    </p>
+                    <div className="flex flex-col items-center justify-center mb-3 gap-1">
+                      <p className="text-xs text-[#86868b] font-medium">
+                        Basic Storage ({variant.storage_device?.derivedCapacity || "500GB"})
+                      </p>
+                      <p className="text-[11px] bg-green-50 text-green-700 px-2.5 py-1 rounded-md border border-green-200 font-bold inline-block">
+                        Save ₹{((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN')} (3 Days vs {(variant as any).requested_days} Days)
+                      </p>
+                    </div>
                   )}
                   {!variant.is_economy_storage && variant.is_economy_storage !== undefined && (
                     <p className="text-xs text-emerald-600 font-medium mb-3">
-                      Requested Storage ({variant.storage_device?.derivedCapacity || "2TB"})
+                      Requested Storage ({variant.storage_device?.derivedCapacity || "2TB"}) - {variant.storage_days} Days
                     </p>
                   )}
                   <div className="flex items-start justify-center">

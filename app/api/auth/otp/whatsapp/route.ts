@@ -62,49 +62,48 @@ export async function POST(req: Request) {
       createdAt: new Date(),
     });
 
-    const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-    const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
+    const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
+    const MSG91_WHATSAPP_NUMBER = process.env.MSG91_WHATSAPP_NUMBER;
 
-    if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_ID) {
-      return NextResponse.json({ error: "WhatsApp service is not configured correctly." }, { status: 500 });
+    if (!MSG91_AUTH_KEY || !MSG91_WHATSAPP_NUMBER) {
+      return NextResponse.json({ error: "MSG91 WhatsApp service is not configured correctly." }, { status: 500 });
     }
 
     const payload = {
-      messaging_product: "whatsapp",
-      to: formattedPhone,
-      type: "template",
-      template: {
-        name: "team_cctv_otp",
-        language: { code: "en" },
-        components: [
-          {
-            type: "body",
-            parameters: [{ type: "text", text: otp }]
-          },
-          {
-            type: "button",
-            sub_type: "url",
-            index: "0",
-            parameters: [{ type: "text", text: otp }]
-          }
-        ]
+      integrated_number: MSG91_WHATSAPP_NUMBER,
+      content_type: "template",
+      payload: {
+        messaging_product: "whatsapp",
+        to: formattedPhone,
+        type: "template",
+        template: {
+          name: "cctv_update",
+          language: { code: "en" },
+          components: [
+            {
+              type: "body",
+              parameters: [{ type: "text", text: otp }]
+            }
+          ]
+        }
       }
     };
 
-    const response = await fetch(`https://graph.facebook.com/v19.0/${WHATSAPP_PHONE_ID}/messages`, {
+    const response = await fetch("https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
-        "Content-Type": "application/json"
+        "authkey": MSG91_AUTH_KEY,
+        "Content-Type": "application/json",
+        "accept": "application/json"
       },
       body: JSON.stringify(payload)
     });
 
     const responseData = await response.json();
 
-    if (!response.ok) {
-      console.error("[WhatsApp] API Error:", responseData);
-      return NextResponse.json({ error: "Template does not exist or failed to send." }, { status: 400 });
+    if (!response.ok || responseData.hasError) {
+      console.error("[MSG91 WhatsApp] API Error:", responseData);
+      return NextResponse.json({ error: "Failed to send WhatsApp OTP via MSG91." }, { status: 400 });
     }
 
     return NextResponse.json({ success: true, message: "WhatsApp OTP sent." });

@@ -1141,3 +1141,4 @@ export interface OfflinePaymentVerification {
   resolved_by?: string;
   admin_notes?: string;
 }
+export * from "./whatsapp";

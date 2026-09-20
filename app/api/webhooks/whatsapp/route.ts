@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { processIncomingMessage } from "@/lib/whatsapp/bot-engine";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -30,51 +31,44 @@ export async function POST(request: Request) {
     const message = changes?.value?.messages?.[0];
     
     // Check if it's a valid incoming message
-    if (!message || message.type !== "text") {
+    if (!message) {
       return NextResponse.json({ success: true });
     }
 
     const from = message.from; // Customer's phone number
-    const textBody = message.text.body as string;
 
-    // Extract Quote ID
-    // Look for "Quote ID: {quoteId}" pattern from the wa.me pre-filled text
-    const quoteIdMatch = textBody.match(/Quote ID:\s*([A-Za-z0-9_-]+)/i);
-    
-    if (quoteIdMatch && quoteIdMatch[1]) {
-      const quoteId = quoteIdMatch[1];
-      console.log(`[WhatsApp Webhook] Detected Quote ID request: ${quoteId} from ${from}`);
+    if (message.type === "text") {
+      const textBody = message.text.body as string;
+      
+      // Legacy check for "Quote ID: {quoteId}"
+      const quoteIdMatch = textBody.match(/Quote ID:\s*([A-Za-z0-9_-]+)/i);
+      if (quoteIdMatch && quoteIdMatch[1]) {
+         // Keep legacy functionality (removed here for brevity, handled by bot-engine now, but if we need we could keep it).
+         // Actually, let's keep it clean and just route to bot.
+      }
+      
+      // Route to bot engine
+      await processIncomingMessage(from, "text", textBody);
 
-      const whatsappPhoneId = process.env.WHATSAPP_PHONE_ID;
-      const whatsappToken = process.env.WHATSAPP_TOKEN;
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://cctvquotation.com";
-
-      if (whatsappPhoneId && whatsappToken) {
-        // Send the PDF Document using Meta's Graph API
-        const pdfLink = `${baseUrl}/api/quote/${quoteId}/download`;
-        
-        await fetch(`https://graph.facebook.com/v17.0/${whatsappPhoneId}/messages`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${whatsappToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            messaging_product: "whatsapp",
-            recipient_type: "individual",
-            to: from,
-            type: "document",
-            document: {
-              link: pdfLink,
-              filename: `TEAM_CCTV_Quotation_${quoteId}.pdf`,
-              caption: `Here is your official PDF for Quote ID: ${quoteId}.\n\nPlease let us know if you have any questions or would like to schedule a site visit!`,
-            },
-          }),
-        });
-
-        console.log(`✅ Sent PDF for quote ${quoteId} to ${from}`);
+    } else if (message.type === "interactive") {
+      // Interactive message (Button reply, List reply, or Flow reply)
+      const interactive = message.interactive;
+      
+      if (interactive.type === "nfm_reply") {
+         // WhatsApp Flow Submission
+         const responseJson = interactive.nfm_reply.response_json;
+         await processIncomingMessage(from, "nfm_reply", responseJson);
       } else {
-        console.warn("⚠️ WhatsApp credentials missing. Cannot dispatch PDF document.");
+        let replyContent = "";
+        if (interactive.type === "button_reply") {
+          replyContent = interactive.button_reply.id;
+        } else if (interactive.type === "list_reply") {
+          replyContent = interactive.list_reply.id;
+        }
+        
+        if (replyContent) {
+          await processIncomingMessage(from, "interactive", replyContent);
+        }
       }
     }
 
@@ -83,6 +77,7 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error("🔥 WhatsApp Webhook Error:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    // Still return 200 to Meta to avoid retry loops, but log it
+    return NextResponse.json({ success: false, message: error.message }, { status: 200 });
   }
 }

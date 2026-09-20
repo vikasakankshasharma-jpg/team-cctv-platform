@@ -22,7 +22,7 @@ export function WizardClientV2() {
   const [step, setStep] = useState(0);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [otpSent, setOtpSent] = useState(false);
-  const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("sms");
+  const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("whatsapp");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
@@ -1002,26 +1002,9 @@ export function WizardClientV2() {
               <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
               <p className="text-gray-600 mb-6">Please enter your details to view your personalized CCTV options instantly.</p>
               
-              <div className="flex p-1 bg-gray-100 rounded-[20px] mb-6">
-                  <button
-                    type="button"
-                    onClick={() => setOtpMethod("sms")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${otpMethod === "sms" ? "bg-white text-gray-900 shadow-sm" : "text-gray-400"}`}
-                  >
-                    SMS OTP
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOtpMethod("whatsapp")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${otpMethod === "whatsapp" ? "bg-white text-gray-900 shadow-sm" : "text-gray-400"}`}
-                  >
-                    WhatsApp
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
                   <input 
                     type="text" 
                     required

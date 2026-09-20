@@ -25,7 +25,7 @@ export function UnifiedLoginClient() {
   const redirectTo = searchParams.get("redirect");
 
   const [mobile, setMobile] = useState("");
-  const [method, setMethod] = useState<"sms" | "whatsapp">("sms");
+  const [method, setMethod] = useState<"sms" | "whatsapp">("whatsapp");
   const [step, setStep] = useState<1 | 2>(1);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const otpRef = useRef<string[]>(["", "", "", "", "", ""]);
