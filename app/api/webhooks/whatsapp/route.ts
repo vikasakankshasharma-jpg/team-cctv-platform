@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     }
 
     const from = message.from; // Customer's phone number
+    const referral = message.referral; // CTWA referral object
 
     if (message.type === "text") {
       const textBody = message.text.body as string;
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
       }
       
       // Route to bot engine
-      await processIncomingMessage(from, "text", textBody);
+      await processIncomingMessage(from, "text", textBody, referral);
 
     } else if (message.type === "interactive") {
       // Interactive message (Button reply, List reply, or Flow reply)
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
       if (interactive.type === "nfm_reply") {
          // WhatsApp Flow Submission
          const responseJson = interactive.nfm_reply.response_json;
-         await processIncomingMessage(from, "nfm_reply", responseJson);
+         await processIncomingMessage(from, "nfm_reply", responseJson, referral);
       } else {
         let replyContent = "";
         if (interactive.type === "button_reply") {
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
         }
         
         if (replyContent) {
-          await processIncomingMessage(from, "interactive", replyContent);
+          await processIncomingMessage(from, "interactive", replyContent, referral);
         }
       }
     }

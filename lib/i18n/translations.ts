@@ -440,7 +440,7 @@ export const translations: Record<
     "wz_2_surface_type": "2. Surface Type",
     "wz_very_high_15ft": "Very High (15ft+)",
     "wz_high_1015ft": "High (10-15ft)",
-    "wz_standard_lt10ft": "Standard (&lt;10ft)",
+    "wz_standard_lt10ft": "Standard (<10ft)",
     "wz_1_approximate_mounting_height": "1. Approximate Mounting Height",
     "wz_help_us_finetune_your_quote_wi": "Help us fine-tune your quote with a few site details.",
     "wz_site__preferences": "Site & Preferences",

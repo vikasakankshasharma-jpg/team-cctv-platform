@@ -4,7 +4,12 @@ import { WhatsAppBotState, WhatsAppSession } from "../../types/whatsapp";
 import { MessageBuilder, WhatsAppMessagePayload } from "./message-builder";
 
 // Process incoming WhatsApp messages
-export async function processIncomingMessage(from: string, incomingType: "text" | "interactive" | "nfm_reply", content: string) {
+export async function processIncomingMessage(
+  from: string, 
+  incomingType: "text" | "interactive" | "nfm_reply", 
+  content: string,
+  referral?: any
+) {
   const sessionRef = adminDb.collection(COLLECTIONS.WHATSAPP_SESSIONS).doc(from);
   const doc = await sessionRef.get();
   
@@ -21,6 +26,15 @@ export async function processIncomingMessage(from: string, incomingType: "text" 
     };
   } else {
     session = doc.data() as WhatsAppSession;
+  }
+
+  // If this is from a CTWA (Click-to-WhatsApp) ad, ensure we reset state and track the ad source
+  if (referral) {
+     session.state = "IDLE"; 
+     session.wizard_answers = {};
+     // Save referral info into wizard_answers so the Lead gets it later
+     session.wizard_answers.utm_source = "facebook_ad";
+     session.wizard_answers.utm_campaign = referral.headline || referral.source_id;
   }
 
   // Handle restart/reset explicitly
