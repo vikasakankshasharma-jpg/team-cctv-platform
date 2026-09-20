@@ -49,9 +49,9 @@ export default function CustomerLayout({
               <Image 
                 src="/logo-horizontal.jpg"
                 alt="CCTVQuotation by TEAM"
-                width={300}
-                height={90}
-                className="h-12 sm:h-[60px] md:h-[64px] w-auto max-w-[240px] sm:max-w-[300px] object-contain mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1 dark:rounded-lg transition-transform hover:scale-105 origin-left"
+                width={250}
+                height={60}
+                className="h-10 sm:h-12 md:h-[52px] w-auto object-contain mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1 dark:rounded-lg transition-transform hover:scale-105 origin-left"
                 priority
               />
             </Link>
