@@ -1138,19 +1138,31 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
 }
 
 /** Safely resolves storage capacity in TB from a product.
- *  Prefers the dedicated `storage_tb` field, falls back to name parsing.
+ *  Prefers dedicated storage fields, falls back to TB/GB name parsing.
  */
-function resolveHDDCapacity(product: Addon & { storage_tb?: number }): number {
+function resolveHDDCapacity(product: Addon & { storage_tb?: number; storage_capacity_tb?: number; capacity?: string }): number {
   if (typeof product.storage_tb === "number" && product.storage_tb > 0) {
     return product.storage_tb;
   }
-  // Fallback: extract first number from name (e.g. "Seagate 2TB HDD" → 2)
-  const match = (product.technical_name || product.display_name || "").match(/(\d+(?:\.\d+)?)\s*TB/i);
-  if (match) return parseFloat(match[1]);
+  if (typeof product.storage_capacity_tb === "number" && product.storage_capacity_tb > 0) {
+    return product.storage_capacity_tb;
+  }
+
+  const text = (product.technical_name || "") + " " + (product.display_name || "") + " " + (product.capacity || "");
+  const tbMatch = text.match(/(\d+(?:\.\d+)?)\s*TB/i);
+  if (tbMatch) return parseFloat(tbMatch[1]);
+
+  const gbMatch = text.match(/(\d+(?:\.\d+)?)\s*GB/i);
+  if (gbMatch) {
+    const gb = parseFloat(gbMatch[1]);
+    return gb >= 100 ? gb / 1000 : gb;
+  }
+
   // Last resort: any leading number, only if TB or GB is in the name
-  const numMatch = (product.technical_name || product.display_name || "").match(/^(\d+)/);
-  if (numMatch && (product.technical_name || product.display_name || "").match(/TB|GB/i)) {
-     return parseFloat(numMatch[1]);
+  const numMatch = text.match(/(\d+)/);
+  if (numMatch && text.match(/TB|GB/i)) {
+    const val = parseFloat(numMatch[1]);
+    return val >= 100 ? val / 1000 : val;
   }
   return 0;
 }

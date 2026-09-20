@@ -55,6 +55,25 @@ function getRes(p: Product): string {
   return res;
 }
 
+const DEFAULT_500GB_HDD: Product = {
+  id: "budget_hdd_500gb",
+  display_name: "Budget Brand 500GB HDD",
+  technical_name: "Budget Brand 500GB Surveillance HDD",
+  brand: "Budget Brand",
+  category: "storage",
+  storage_type: "Surveillance HDD",
+  storage_capacity_tb: 0.5,
+  storage_tb: 0.5,
+  capacity: "500GB",
+  technologies: ["Common", "HD", "IP"],
+  technology: "Common",
+  unit_price: 2646,
+  base_cost: 1800,
+  is_active: true,
+  is_quotation_eligible: true,
+  stock_status: "in_stock"
+};
+
 interface DynamicVariantGeneratorProps {
   products: Product[];
   addons: Addon[];
@@ -168,8 +187,18 @@ export function DynamicVariantGenerator({
   const variants = useMemo(() => {
     const results: PricingResult[] = [];
     const brandsToGenerate: { brand: string, brandKey: string }[] = [];
+
+    // Ensure 500GB HDD is present in effectiveProducts so low-storage quotes can always calculate
+    const effectiveProducts = [...products];
+    const has500GB = effectiveProducts.some(p => {
+      const text = ((p.display_name || "") + " " + (p.technical_name || "") + " " + (p.capacity || "")).toLowerCase();
+      return p.category === "storage" && (text.includes("500gb") || p.storage_capacity_tb === 0.5 || p.storage_tb === 0.5);
+    });
+    if (!has500GB) {
+      effectiveProducts.push(DEFAULT_500GB_HDD);
+    }
     
-    products.forEach(p => {
+    effectiveProducts.forEach(p => {
       const pTech = (p.technology || "").toUpperCase();
       const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
       const isTechMatch = activeTech === "hd" ? 
@@ -200,23 +229,29 @@ export function DynamicVariantGenerator({
 
     const enrich = (pricing: any, brandKey: string, brandName: string) => {
       if (!pricing || pricing.error) return null;
-      const camItems = pricing.items?.filter((i: any) => products.find(p => p.id === i.product_id)?.category === "cctv_camera");
+      const camItems = pricing.items?.filter((i: any) => effectiveProducts.find(p => p.id === i.product_id)?.category === "cctv_camera");
       const firstCamId = camItems?.[0]?.product_id;
-      const camera_device = products.find(p => p.id === firstCamId) ? { ...products.find(p => p.id === firstCamId) } : undefined;
-      const strId = pricing.items?.find((i: any) => products.find(p => p.id === i.product_id)?.category === "storage")?.product_id;
-      const storage_device = products.find(p => p.id === strId) ? { ...products.find(p => p.id === strId) } : undefined;
+      const camera_device = effectiveProducts.find(p => p.id === firstCamId) ? { ...effectiveProducts.find(p => p.id === firstCamId) } : undefined;
+      const strId = pricing.items?.find((i: any) => effectiveProducts.find(p => p.id === i.product_id)?.category === "storage")?.product_id;
+      const storage_device = effectiveProducts.find(p => p.id === strId) ? { ...effectiveProducts.find(p => p.id === strId) } : undefined;
       
       if (camera_device) {
         (camera_device as any).brand = brandName;
       }
       if (storage_device) {
-        let tb = (storage_device as any).storage_capacity_tb;
-        if (!tb) {
-          const capStr = ((storage_device as any).capacity || (storage_device as any).display_name || "").toUpperCase();
-          const tbMatch = capStr.match(/(\d+)\s*TB/);
-          if (tbMatch) tb = parseInt(tbMatch[1], 10);
+        let cap = (storage_device as any).capacity;
+        if (!cap) {
+          const capStr = ((storage_device as any).technical_name || (storage_device as any).display_name || "").toUpperCase();
+          const gbMatch = capStr.match(/(\d+)\s*GB/i);
+          const tbMatch = capStr.match(/(\d+)\s*TB/i);
+          if (gbMatch) cap = `${gbMatch[1]}GB`;
+          else if (tbMatch) cap = `${tbMatch[1]}TB`;
+          else if ((storage_device as any).storage_capacity_tb) {
+            const tbVal = (storage_device as any).storage_capacity_tb;
+            cap = tbVal < 1 ? `${Math.round(tbVal * 1000)}GB` : `${tbVal}TB`;
+          }
         }
-        (storage_device as any).derivedCapacity = tb ? `${tb}TB` : "HDD";
+        (storage_device as any).derivedCapacity = cap || "HDD";
       }
 
       const uniqueRes = Array.from(new Set(mixedReqs.map(r => r.resolution)));
@@ -261,7 +296,7 @@ export function DynamicVariantGenerator({
       
       // Standard Quote (Requested Storage)
       const rawPricing = calculatePricing({
-        selection: sel, products, addons, settings, cablingDone, cablingMeters,
+        selection: sel, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
         referralDiscountPercent: promoterDiscount?.percent || 0,
         referralDiscountFlat: promoterDiscount?.flat || 0,
         evaluatedAddonRules, activeOffer,
@@ -273,15 +308,16 @@ export function DynamicVariantGenerator({
         results.push(enriched);
       }
 
-      // Economy Storage Quote (If requested > 5 days, generate a low-storage variant)
-      if (selection.recording_days && selection.recording_days > 5) {
+      // Economy Storage Quote (If requested > 3 days, generate a low-storage variant)
+      const reqDays = selection.recording_days ?? 7;
+      if (reqDays > 3) {
         const economySel: ConfiguratorSelection = {
           ...sel,
           technology: (activeTech === "ip" ? "IP" : "HD") as any,
           recording_days: 3 // Force 3 days to pick the smallest available HDD (usually 500GB)
         };
         const rawEconomyPricing = calculatePricing({
-          selection: economySel, products, addons, settings, cablingDone, cablingMeters,
+          selection: economySel, products: effectiveProducts, addons, settings, cablingDone, cablingMeters,
           referralDiscountPercent: promoterDiscount?.percent || 0,
           referralDiscountFlat: promoterDiscount?.flat || 0,
           evaluatedAddonRules, activeOffer,
@@ -291,7 +327,7 @@ export function DynamicVariantGenerator({
         if (enrichedEconomy && enriched && enrichedEconomy.total_payable < enriched.total_payable) {
           enrichedEconomy.is_economy_storage = true;
           (enrichedEconomy as any).original_payable = enriched.total_payable;
-          (enrichedEconomy as any).requested_days = selection.recording_days;
+          (enrichedEconomy as any).requested_days = reqDays;
           results.push(enrichedEconomy);
         }
       }
@@ -445,7 +481,7 @@ export function DynamicVariantGenerator({
               onClick={() => onSelectCheckout(variant)}
               className={`group relative overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-xl hover:border-blue-500 hover:-translate-y-1 ${isSelectedForCompare ? "ring-2 ring-blue-600 shadow-lg" : "hover:shadow-md border-[#d2d2d7] dark:border-[#424245]"}`}
             >
-              {idx === Math.floor(variants.length / 2) && variants.length > 1 && (
+              {idx === Math.floor(variants.length / 2) && variants.length > 1 && !variant.is_economy_storage && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl z-10 flex items-center gap-1 shadow-sm">
                   <Sparkles className="w-3 h-3" /> Recommended
                 </div>
