@@ -41,7 +41,7 @@ export default function CustomerLayout({
     <div className="flex flex-col min-h-screen bg-white dark:bg-zinc-950 font-sans transition-colors duration-500 selection:bg-blue-600 selection:text-white">
       {/* Premium Public Header */}
       <header className="sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 shadow-sm transition-all">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-18 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-[72px] sm:h-[80px] flex items-center justify-between">
 
           {/* Left — Logo & Service Areas */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -51,7 +51,7 @@ export default function CustomerLayout({
                 alt="CCTVQuotation by TEAM"
                 width={300}
                 height={90}
-                className="h-8 sm:h-10 w-auto mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1 dark:rounded-lg transition-transform hover:scale-105 origin-left"
+                className="h-10 sm:h-[48px] w-auto mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1 dark:rounded-lg transition-transform hover:scale-105 origin-left"
                 priority
               />
             </Link>
