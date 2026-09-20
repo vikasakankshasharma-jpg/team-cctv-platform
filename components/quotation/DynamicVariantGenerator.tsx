@@ -103,8 +103,10 @@ export function DynamicVariantGenerator({
   onToggleCompare,
   selectedCompareItems
 }: DynamicVariantGeneratorProps) {
-  const [activeTech, setActiveTech] = useState<"hd" | "ip">("hd");
-  const [activeBrand, setActiveBrand] = useState<string>("all");
+  const initialTech = (selection.technology?.toLowerCase() === "ip") ? "ip" : "hd";
+  const [activeTech, setActiveTech] = useState<"hd" | "ip">(initialTech);
+  const initialBrand = selection.brand_preference ? normalizeBrandKey(selection.brand_preference) : "all";
+  const [activeBrand, setActiveBrand] = useState<string>(initialBrand);
   const [sortBy, setSortBy] = useState<string>("price_asc");
   
   const [cameraBuckets, setCameraBuckets] = useState<any[]>(() => {
