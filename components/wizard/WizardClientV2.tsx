@@ -13,10 +13,10 @@ import { RecaptchaVerifier, signInWithCustomToken, ConfirmationResult } from "fi
 import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
 import { ShieldCheck, Loader2, Sparkles, Wrench } from "lucide-react";
-
-
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function WizardClientV2() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [sessionId] = useState(() => crypto.randomUUID());
   const [step, setStep] = useState(0);
@@ -474,8 +474,8 @@ export function WizardClientV2() {
     return (
       <div className="max-w-6xl mx-auto py-12 px-4 sm:px-6">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Your CCTV Options</h1>
-          <p className="text-gray-600">Select the plan that best fits your needs, or edit the configuration to instantly update pricing.</p>
+          <h1 className="text-4xl font-bold mb-4">{t("wz_your_cctv_options")}</h1>
+          <p className="text-gray-600">{t("wz_select_the_plan_that_best_fits")}</p>
         </div>
         
         <QuoteComparison 
@@ -502,20 +502,20 @@ export function WizardClientV2() {
       case 0:
         return (
           <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2 text-center text-slate-900">How would you like to build your quote?</h2>
-            <p className="text-center text-slate-500 mb-8 max-w-lg mx-auto">Choose between our easy guided setup or our advanced professional builder for custom configurations.</p>
+            <h2 className="text-3xl font-semibold mb-2 text-center text-slate-900">{t("wz_how_would_you_like_to_build_yo")}</h2>
+            <p className="text-center text-slate-500 mb-8 max-w-lg mx-auto">{t("wz_choose_between_our_easy_guided")}</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button onClick={() => setStep(1)}
                 className="p-8 rounded-2xl border-2 text-left hover:border-blue-500 transition-all group bg-blue-50/50 border-blue-100 shadow-sm hover:shadow-md">
-                <span className="block font-black text-xl text-blue-900 group-hover:text-blue-700 mb-2"><Sparkles className="w-5 h-5 mr-1.5 inline-block" /> Guided Setup (Recommended)</span>
-                <span className="block text-sm text-blue-800 font-medium leading-relaxed">Answer a few simple questions about your property, and our AI will calculate the perfect, most compatible CCTV package for you instantly.</span>
+                <span className="block font-black text-xl text-blue-900 group-hover:text-blue-700 mb-2"><Sparkles className="w-5 h-5 mr-1.5 inline-block" />  {t("wz_guided_setup_recommended")}</span>
+                <span className="block text-sm text-blue-800 font-medium leading-relaxed">{t("wz_answer_a_few_simple_questions_")}</span>
               </button>
               
               <button onClick={() => window.location.href = '/pro-builder'}
                 className="p-8 rounded-2xl border-2 text-left hover:border-zinc-900 transition-all group bg-white border-zinc-200 shadow-sm hover:shadow-md">
-                <span className="block font-black text-xl text-zinc-900 group-hover:text-black mb-2"><Wrench className="w-5 h-5 mr-1.5 inline-block" /> Custom Build (Advanced)</span>
-                <span className="block text-sm text-zinc-500 font-medium leading-relaxed">I already know exactly what cameras and technical specifications I need. Let me build my own custom package from the catalog.</span>
+                <span className="block font-black text-xl text-zinc-900 group-hover:text-black mb-2"><Wrench className="w-5 h-5 mr-1.5 inline-block" />  {t("wz_custom_build_advanced")}</span>
+                <span className="block text-sm text-zinc-500 font-medium leading-relaxed">{t("wz_i_already_know_exactly_what_ca")}</span>
               </button>
             </div>
           </div>
@@ -523,34 +523,34 @@ export function WizardClientV2() {
       case 1:
         return (
           <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2">What kind of installation do you need?</h2>
+            <h2 className="text-3xl font-semibold mb-2">{t("wz_what_kind_of_installation_do_y")}</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button onClick={() => { updateReq({ installation_type: "new", property_type: "home" }); handleNext(); }}
                 className={`p-6 rounded-xl border-2 text-left hover:border-blue-500 transition-all group ${req.installation_type === "new" ? "border-blue-500 bg-blue-50" : "bg-white"}`}>
-                <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">Completely New System</span>
-                <span className="block text-sm text-gray-500 mt-1">I don't have any CCTV cameras installed right now.</span>
+                <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">{t("wz_completely_new_system")}</span>
+                <span className="block text-sm text-gray-500 mt-1">{t("wz_i_dont_have_any_cctv_cameras_i")}</span>
               </button>
               <button onClick={() => { updateReq({ installation_type: "addon", existing_system_known: undefined }); }}
                 className={`p-6 rounded-xl border-2 text-left hover:border-blue-500 transition-all group ${req.installation_type === "addon" ? "border-blue-500 bg-blue-50" : "bg-white"}`}>
-                <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">Add to Existing System</span>
-                <span className="block text-sm text-gray-500 mt-1">I already have a CCTV system and want to add more cameras.</span>
+                <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">{t("wz_add_to_existing_system")}</span>
+                <span className="block text-sm text-gray-500 mt-1">{t("wz_i_already_have_a_cctv_system_a")}</span>
               </button>
             </div>
             
             {req.installation_type === "addon" && (
               <div className="mt-8 p-6 bg-yellow-50 rounded-xl border border-yellow-200 animate-in fade-in">
-                <h3 className="font-semibold text-lg text-yellow-900 mb-4">Do you know the technical specifications of your existing system?</h3>
+                <h3 className="font-semibold text-lg text-yellow-900 mb-4">{t("wz_do_you_know_the_technical_spec")}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button onClick={() => handleNext()}
                     className="p-4 rounded-xl border border-yellow-300 bg-white hover:bg-yellow-100 text-left transition-all">
-                    <span className="block font-bold text-gray-900">Yes, I know</span>
-                    <span className="block text-xs text-gray-500 mt-1">I know my DVR channels and technology.</span>
+                    <span className="block font-bold text-gray-900">{t("wz_yes_i_know")}</span>
+                    <span className="block text-xs text-gray-500 mt-1">{t("wz_i_know_my_dvr_channels_and_tec")}</span>
                   </button>
                   <button onClick={() => updateReq({ existing_system_known: false })}
                     className="p-4 rounded-xl border border-yellow-300 bg-white hover:bg-yellow-100 text-left transition-all">
-                    <span className="block font-bold text-gray-900">No, I don't know</span>
-                    <span className="block text-xs text-gray-500 mt-1">Help me check compatibility.</span>
+                    <span className="block font-bold text-gray-900">{t("wz_no_i_dont_know")}</span>
+                    <span className="block text-xs text-gray-500 mt-1">{t("wz_help_me_check_compatibility")}</span>
                   </button>
                 </div>
               </div>
@@ -558,23 +558,24 @@ export function WizardClientV2() {
             
             {req.installation_type === "addon" && req.existing_system_known === false && (
               <div className="mt-6 p-6 border rounded-xl bg-white shadow-sm animate-in fade-in">
-                <h3 className="font-bold text-xl mb-2 text-blue-900">We need to check your system's compatibility!</h3>
-                <p className="text-gray-600 mb-4">Since you already have a system, our engineer needs to check your existing DVR compatibility before adding new cameras.</p>
+                <h3 className="font-bold text-xl mb-2 text-blue-900">{t("wz_we_need_to_check_your_systems_")}</h3>
+                <p className="text-gray-600 mb-4">{t("wz_since_you_already_have_a_syste")}</p>
                 <div className="space-y-4 mb-4">
                   <input type="text" placeholder="Your Name" value={req.customer_name || ''} onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))} className="w-full p-3 border rounded-xl" />
                   <input type="tel" placeholder="Mobile Number" value={req.customer_mobile || ''} onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))} className="w-full p-3 border rounded-xl" maxLength={10} />
                 </div>
                 <Button onClick={handleFinishWizard} disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} className="w-full h-12">
-                  Request a Free Callback
-                </Button>
+                  
+                                              {t("wz_request_a_free_callback")}
+                                            </Button>
                 <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                  <h4 className="font-semibold text-blue-900 mb-2 text-sm">💡 Typical Add-on Pricing</h4>
+                  <h4 className="font-semibold text-blue-900 mb-2 text-sm">{t("wz__typical_addon_pricing")}</h4>
                   <ul className="text-sm text-blue-800 space-y-1.5">
-                    <li>• Adding 1-2 cameras: ₹8,000 – ₹15,000</li>
-                    <li>• Adding 3-4 cameras: ₹15,000 – ₹28,000</li>
-                    <li>• DVR upgrade (if needed): ₹4,000 – ₹8,000 extra</li>
+                    <li>{t("wz__adding_12_cameras_8000__15000")}</li>
+                    <li>{t("wz__adding_34_cameras_15000__2800")}</li>
+                    <li>{t("wz__dvr_upgrade_if_needed_4000__8")}</li>
                   </ul>
-                  <p className="text-xs text-blue-600 mt-3">* Exact pricing depends on your existing system compatibility. Our engineer will verify during the callback.</p>
+                  <p className="text-xs text-blue-600 mt-3">{t("wz__exact_pricing_depends_on_your")}</p>
                 </div>
               </div>
             )}
@@ -586,23 +587,23 @@ export function WizardClientV2() {
         if (req.installation_type === "addon") {
            return (
              <div className="space-y-6 animate-in fade-in">
-               <h2 className="text-3xl font-semibold mb-2">Existing System Details</h2>
-               <p className="text-gray-600 mb-6">Tell us about your current recorder so we can calculate compatibility.</p>
+               <h2 className="text-3xl font-semibold mb-2">{t("wz_existing_system_details")}</h2>
+               <p className="text-gray-600 mb-6">{t("wz_tell_us_about_your_current_rec")}</p>
                
-               <h3 className="font-semibold text-lg">1. Technology</h3>
+               <h3 className="font-semibold text-lg">{t("wz_1_technology")}</h3>
                <div className="grid grid-cols-2 gap-4">
-                  <button onClick={() => setReq(prev => ({ ...prev, existing_technology: "HD" }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_technology === 'HD' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white'}`}>Analog HD (BNC Wire)</button>
-                  <button onClick={() => setReq(prev => ({ ...prev, existing_technology: "IP" }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_technology === 'IP' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white'}`}>IP / Network (CAT6 Wire)</button>
+                  <button onClick={() => setReq(prev => ({ ...prev, existing_technology: "HD" }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_technology === 'HD' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white'}`}>{t("wz_analog_hd_bnc_wire")}</button>
+                  <button onClick={() => setReq(prev => ({ ...prev, existing_technology: "IP" }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_technology === 'IP' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white'}`}>{t("wz_ip__network_cat6_wire")}</button>
                </div>
                
-               <h3 className="font-semibold text-lg mt-6">2. Existing Recorder Channels</h3>
+               <h3 className="font-semibold text-lg mt-6">{t("wz_2_existing_recorder_channels")}</h3>
                <div className="grid grid-cols-4 gap-2">
                   {[4, 8, 16, 32].map(ch => (
                     <button key={ch} onClick={() => setReq(prev => ({ ...prev, existing_recorder_channels: ch }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_recorder_channels === ch ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white hover:border-blue-300'}`}>{ch} Ch</button>
                   ))}
                </div>
                
-               <h3 className="font-semibold text-lg mt-6">3. Currently Working Cameras</h3>
+               <h3 className="font-semibold text-lg mt-6">{t("wz_3_currently_working_cameras")}</h3>
                <div className="flex items-center gap-4">
                   <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, existing_working_cameras: Math.max(0, (prev.existing_working_cameras || 0) - 1) }))}>-</Button>
                   <span className="text-2xl font-bold w-12 text-center">{req.existing_working_cameras || 0}</span>
@@ -610,7 +611,7 @@ export function WizardClientV2() {
                </div>
                
                <div className="pt-6">
-                 <Button onClick={handleNext} disabled={!req.existing_technology || !req.existing_recorder_channels} className="w-full h-12">Next Step</Button>
+                 <Button onClick={handleNext} disabled={!req.existing_technology || !req.existing_recorder_channels} className="w-full h-12">{t("wz_next_step")}</Button>
                </div>
              </div>
            );
@@ -621,14 +622,14 @@ export function WizardClientV2() {
 
            return (
             <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-3xl font-semibold mb-2">How many cameras do you need?</h2>
+              <h2 className="text-3xl font-semibold mb-2">{t("wz_how_many_cameras_do_you_need")}</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="p-5 rounded-2xl border-2 border-gray-200 bg-white">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="font-bold text-lg text-gray-900">Outdoor Cameras</h3>
-                      <p className="text-xs text-gray-500">Weatherproof Bullet</p>
+                      <h3 className="font-bold text-lg text-gray-900">{t("wz_outdoor_cameras")}</h3>
+                      <p className="text-xs text-gray-500">{t("wz_weatherproof_bullet")}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
@@ -641,8 +642,8 @@ export function WizardClientV2() {
                 <div className="p-5 rounded-2xl border-2 border-gray-200 bg-white">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="font-bold text-lg text-gray-900">Indoor Cameras</h3>
-                      <p className="text-xs text-gray-500">Ceiling Dome</p>
+                      <h3 className="font-bold text-lg text-gray-900">{t("wz_indoor_cameras")}</h3>
+                      <p className="text-xs text-gray-500">{t("wz_ceiling_dome")}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
@@ -654,12 +655,12 @@ export function WizardClientV2() {
               </div>
 
               <div className="bg-blue-50 p-4 rounded-xl flex justify-between items-center border border-blue-100">
-                <span className="font-semibold text-blue-900">Total Cameras:</span>
+                <span className="font-semibold text-blue-900">{t("wz_total_cameras")}</span>
                 <span className="text-2xl font-black text-blue-700">{totalCams}</span>
               </div>
   
               <div className="pt-2">
-                <Button onClick={handleNext} disabled={totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined} className="w-full h-12 text-sm font-semibold">Confirm Cameras</Button>
+                <Button onClick={handleNext} disabled={totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined} className="w-full h-12 text-sm font-semibold">{t("wz_confirm_cameras")}</Button>
               </div>
             </div>
           );
@@ -677,12 +678,12 @@ export function WizardClientV2() {
 
            return (
              <div className="space-y-6 animate-in fade-in">
-               <h2 className="text-3xl font-semibold mb-2">Add New Cameras</h2>
-               <p className="text-gray-600 mb-6">Select how many cameras you want to add.</p>
+               <h2 className="text-3xl font-semibold mb-2">{t("wz_add_new_cameras")}</h2>
+               <p className="text-gray-600 mb-6">{t("wz_select_how_many_cameras_you_wa")}</p>
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                  <div className="p-4 rounded-xl border-2 bg-white">
-                   <h3 className="font-bold mb-3">New Outdoor</h3>
+                   <h3 className="font-bold mb-3">{t("wz_new_outdoor")}</h3>
                    <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
                      <Button variant="outline" size="icon" className="bg-white border-2" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1), camera_count: Math.max(0, currentOutdoor - 1) + currentIndoor }))}>-</Button>
                      <span className="text-2xl font-bold w-12 text-center text-blue-800">{currentOutdoor}</span>
@@ -690,7 +691,7 @@ export function WizardClientV2() {
                    </div>
                  </div>
                  <div className="p-4 rounded-xl border-2 bg-white">
-                   <h3 className="font-bold mb-3">New Indoor</h3>
+                   <h3 className="font-bold mb-3">{t("wz_new_indoor")}</h3>
                    <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
                      <Button variant="outline" size="icon" className="bg-white border-2" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, currentIndoor - 1), camera_count: currentOutdoor + Math.max(0, currentIndoor - 1) }))}>-</Button>
                      <span className="text-2xl font-bold w-12 text-center text-blue-800">{currentIndoor}</span>
@@ -703,28 +704,28 @@ export function WizardClientV2() {
                  <div className={`p-4 rounded-xl border ${needsNewRecorder ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
                    {needsNewRecorder ? (
                      <>
-                       <h4 className="font-bold text-red-800 mb-1">Recorder Upgrade Required</h4>
-                       <p className="text-sm text-red-700">Your total active cameras ({combinedTotal}) exceed your {maxChannels}-channel DVR limit. We will automatically quote a new upgraded DVR.</p>
+                       <h4 className="font-bold text-red-800 mb-1">{t("wz_recorder_upgrade_required")}</h4>
+                       <p className="text-sm text-red-700">{t("wz_your_total_active_cameras_")}{combinedTotal}{t("wz__exceed_your")} {maxChannels}{t("wz_channel_dvr_limit_we_will_auto")}</p>
                      </>
                    ) : (
                      <>
-                       <h4 className="font-bold text-green-800 mb-1">DVR Compatible!</h4>
-                       <p className="text-sm text-green-700">Your total active cameras ({combinedTotal}) fit perfectly within your {maxChannels}-channel DVR limit. You save money!</p>
+                       <h4 className="font-bold text-green-800 mb-1">{t("wz_dvr_compatible")}</h4>
+                       <p className="text-sm text-green-700">{t("wz_your_total_active_cameras_")}{combinedTotal}{t("wz__fit_perfectly_within_your")} {maxChannels}{t("wz_channel_dvr_limit_you_save_mon")}</p>
                      </>
                    )}
                  </div>
                )}
                
                <div className="pt-4">
-                 <Button onClick={handleNext} disabled={newTotal === 0} className="w-full h-12">Next Step</Button>
+                 <Button onClick={handleNext} disabled={newTotal === 0} className="w-full h-12">{t("wz_next_step")}</Button>
                </div>
              </div>
            );
         } else {
            return (
             <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-3xl font-semibold mb-2">Recording & Storage Backup</h2>
-              <p className="text-gray-600 mb-6">How long do you want to keep the CCTV recordings?</p>
+              <h2 className="text-3xl font-semibold mb-2">{t("wz_recording__storage_backup")}</h2>
+              <p className="text-gray-600 mb-6">{t("wz_how_long_do_you_want_to_keep_t")}</p>
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                 {[0, 7, 15, 30, 45, 60].map(days => (
@@ -735,24 +736,25 @@ export function WizardClientV2() {
                 ))}
               </div>
 
-              <h3 className="text-xl font-semibold mb-3">Recording Mode</h3>
+              <h3 className="text-xl font-semibold mb-3">{t("wz_recording_mode")}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))}
                   className={`p-5 rounded-xl border-2 text-left transition-all ${req.recording_mode === 'continuous' ? 'border-blue-600 bg-blue-50' : 'hover:border-gray-300'}`}>
-                  <span className="block font-bold text-gray-900 text-lg">24x7 Continuous</span>
-                  <span className="block text-sm text-gray-500 mt-1">Records everything non-stop. Requires standard hard disk capacity.</span>
+                  <span className="block font-bold text-gray-900 text-lg">{t("wz_24x7_continuous")}</span>
+                  <span className="block text-sm text-gray-500 mt-1">{t("wz_records_everything_nonstop_req")}</span>
                 </button>
                 <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))}
                   className={`p-5 rounded-xl border-2 text-left transition-all ${req.recording_mode === 'motion' ? 'border-green-500 bg-green-50 shadow-sm' : 'hover:border-gray-300'}`}>
-                  <span className="block font-bold text-gray-900 text-lg flex items-center">Smart Motion</span>
-                  <span className="block text-sm text-gray-500 mt-1">Records only when movement is detected. <strong className="text-green-700">Saves up to 50% hard disk cost!</strong></span>
+                  <span className="block font-bold text-gray-900 text-lg flex items-center">{t("wz_smart_motion")}</span>
+                  <span className="block text-sm text-gray-500 mt-1">{t("wz_records_only_when_movement_is_")} <strong className="text-green-700">{t("wz_saves_up_to_50_hard_disk_cost")}</strong></span>
                 </button>
               </div>
               
               <div className="pt-6">
                 <Button onClick={handleNext} className="w-full h-12 text-lg font-semibold">
-                  Confirm Recording
-                </Button>
+                  
+                                             {t("wz_confirm_recording")}
+                                           </Button>
               </div>
             </div>
           );
@@ -761,38 +763,38 @@ export function WizardClientV2() {
         if (req.installation_type === "addon") {
            return (
              <div className="space-y-6 animate-in fade-in">
-               <h2 className="text-3xl font-semibold mb-2">Storage Update</h2>
-               <p className="text-gray-600 mb-6">Adding new cameras will reduce how many days your existing Hard Disk can store recordings.</p>
+               <h2 className="text-3xl font-semibold mb-2">{t("wz_storage_update")}</h2>
+               <p className="text-gray-600 mb-6">{t("wz_adding_new_cameras_will_reduce")}</p>
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                  <button onClick={() => setReq(prev => ({ ...prev, retain_existing_storage: true, recording_days: 7 }))} className={`p-5 rounded-xl border-2 text-left ${req.retain_existing_storage ? 'border-blue-600 bg-blue-50' : 'bg-white hover:border-blue-300'}`}>
-                   <span className="block font-bold text-lg text-gray-900">Keep Existing Hard Disk</span>
-                   <span className="block text-sm text-gray-500 mt-1">Don't buy a new one. (Saves money)</span>
+                   <span className="block font-bold text-lg text-gray-900">{t("wz_keep_existing_hard_disk")}</span>
+                   <span className="block text-sm text-gray-500 mt-1">{t("wz_dont_buy_a_new_one_saves_money")}</span>
                  </button>
                  <button onClick={() => setReq(prev => ({ ...prev, retain_existing_storage: false }))} className={`p-5 rounded-xl border-2 text-left ${!req.retain_existing_storage ? 'border-blue-600 bg-blue-50' : 'bg-white hover:border-blue-300'}`}>
-                   <span className="block font-bold text-lg text-gray-900">Buy New Hard Disk</span>
-                   <span className="block text-sm text-gray-500 mt-1">Upgrade storage capacity.</span>
+                   <span className="block font-bold text-lg text-gray-900">{t("wz_buy_new_hard_disk")}</span>
+                   <span className="block text-sm text-gray-500 mt-1">{t("wz_upgrade_storage_capacity")}</span>
                  </button>
                </div>
                
                {!req.retain_existing_storage && (
                  <div className="animate-in fade-in bg-gray-50 p-6 rounded-xl border">
-                   <h3 className="font-semibold mb-4 text-gray-900">Target Recording Days</h3>
+                   <h3 className="font-semibold mb-4 text-gray-900">{t("wz_target_recording_days")}</h3>
                    <div className="grid grid-cols-3 gap-3 mb-4">
                      {[7, 15, 30].map(days => (
-                       <button key={days} onClick={() => setReq(prev => ({ ...prev, recording_days: days }))} className={`p-3 rounded-xl border-2 text-center font-bold ${req.recording_days === days ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white hover:border-blue-300'}`}>{days} Days</button>
+                       <button key={days} onClick={() => setReq(prev => ({ ...prev, recording_days: days }))} className={`p-3 rounded-xl border-2 text-center font-bold ${req.recording_days === days ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white hover:border-blue-300'}`}>{days}  {t("wz_days")}</button>
                      ))}
                    </div>
-                   <h3 className="font-semibold mb-3 text-gray-900 mt-4">Recording Mode</h3>
+                   <h3 className="font-semibold mb-3 text-gray-900 mt-4">{t("wz_recording_mode")}</h3>
                    <div className="grid grid-cols-2 gap-4">
-                     <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))} className={`p-3 rounded-xl border-2 ${req.recording_mode === 'continuous' ? 'border-blue-600 bg-blue-50' : 'bg-white'}`}>24x7 Continuous</button>
-                     <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))} className={`p-3 rounded-xl border-2 ${req.recording_mode === 'motion' ? 'border-green-500 bg-green-50' : 'bg-white'}`}>Smart Motion</button>
+                     <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))} className={`p-3 rounded-xl border-2 ${req.recording_mode === 'continuous' ? 'border-blue-600 bg-blue-50' : 'bg-white'}`}>{t("wz_24x7_continuous")}</button>
+                     <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))} className={`p-3 rounded-xl border-2 ${req.recording_mode === 'motion' ? 'border-green-500 bg-green-50' : 'bg-white'}`}>{t("wz_smart_motion")}</button>
                    </div>
                  </div>
                )}
                
                <div className="pt-6">
-                 <Button onClick={handleNext} className="w-full h-12">Confirm & Proceed</Button>
+                 <Button onClick={handleNext} className="w-full h-12">{t("wz_confirm__proceed")}</Button>
                </div>
              </div>
            );
@@ -802,30 +804,33 @@ export function WizardClientV2() {
       case 4:
           return (
             <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-3xl font-semibold mb-2">Site & Preferences</h2>
-              <p className="text-gray-600 mb-6">Help us fine-tune your quote with a few site details.</p>
+              <h2 className="text-3xl font-semibold mb-2">{t("wz_site__preferences")}</h2>
+              <p className="text-gray-600 mb-6">{t("wz_help_us_finetune_your_quote_wi")}</p>
               
               <div className="space-y-6">
                 <div>
-                  <h3 className="font-semibold mb-3">1. Approximate Mounting Height</h3>
+                  <h3 className="font-semibold mb-3">{t("wz_1_approximate_mounting_height")}</h3>
                   <div className="grid grid-cols-3 gap-3">
                     <button onClick={() => updateReq({ ceiling_height: "standard" })}
                       className={`p-3 rounded-xl border text-sm text-center ${req.ceiling_height === 'standard' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      Standard (&lt;10ft)
-                    </button>
+                      
+                                                        {t("wz_standard_lt10ft")}
+                                                      </button>
                     <button onClick={() => updateReq({ ceiling_height: "high" })}
                       className={`p-3 rounded-xl border text-sm text-center ${req.ceiling_height === 'high' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      High (10-15ft)
-                    </button>
+                      
+                                                        {t("wz_high_1015ft")}
+                                                      </button>
                     <button onClick={() => updateReq({ ceiling_height: "very_high" })}
                       className={`p-3 rounded-xl border text-sm text-center ${req.ceiling_height === 'very_high' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      Very High (15ft+)
-                    </button>
+                      
+                                                        {t("wz_very_high_15ft")}
+                                                      </button>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-3">2. Surface Type</h3>
+                  <h3 className="font-semibold mb-3">{t("wz_2_surface_type")}</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => {
                         const types = req.surface_types || [];
@@ -833,21 +838,23 @@ export function WizardClientV2() {
                         updateReq({ surface_types: newTypes });
                       }}
                       className={`p-3 rounded-xl border text-sm text-center ${(req.surface_types || []).includes('brick') ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      Concrete / Brick Wall
-                    </button>
+                      
+                                                        {t("wz_concrete__brick_wall")}
+                                                      </button>
                     <button onClick={() => {
                         const types = req.surface_types || [];
                         const newTypes = types.includes('false_ceiling') ? types.filter((t: string) => t !== 'false_ceiling') : [...types, 'false_ceiling'];
                         updateReq({ surface_types: newTypes });
                       }}
                       className={`p-3 rounded-xl border text-sm text-center ${(req.surface_types || []).includes('false_ceiling') ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      False Ceiling
-                    </button>
+                      
+                                                        {t("wz_false_ceiling")}
+                                                      </button>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-3">3. Existing Cabling</h3>
+                  <h3 className="font-semibold mb-3">{t("wz_3_existing_cabling")}</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => updateReq({ cabling_done: false })}
                       className={`p-3 rounded-xl border text-sm text-center ${req.cabling_done === false ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
@@ -855,16 +862,18 @@ export function WizardClientV2() {
                     </button>
                     <button onClick={() => updateReq({ cabling_done: true })}
                       className={`p-3 rounded-xl border text-sm text-center ${req.cabling_done === true ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      Yes
-                    </button>
+                      
+                                                        {t("wz_yes")}
+                                                      </button>
                   </div>
 
                   {req.cabling_done === false && (
                     <div className="mt-4 p-4 rounded-xl bg-blue-50/70 border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
                       <div>
-                        <span className="block font-semibold text-gray-900 text-sm">Approx. Total Cable Required</span>
+                        <span className="block font-semibold text-gray-900 text-sm">{t("wz_approx_total_cable_required")}</span>
                         <span className="block text-xs text-gray-500">
-                          Estimated ~15m per camera ({req.camera_count || 4} cameras = {(req.camera_count || 4) * 15}m)
+                          
+                                                                    {t("wz_estimated_15m_per_camera_")}{req.camera_count || 4}  {t("wz_cameras_")} {(req.camera_count || 4) * 15}m)
                         </span>
                       </div>
                       <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm self-start sm:self-auto">
@@ -884,8 +893,8 @@ export function WizardClientV2() {
                           -
                         </Button>
                         <span className="font-bold text-blue-800 min-w-[80px] text-center text-sm">
-                          {req.total_cable_length_meters || ((req.camera_count || 4) * 15)} Meters
-                        </span>
+                          {req.total_cable_length_meters || ((req.camera_count || 4) * 15)}  {t("wz_meters")}
+                                                                  </span>
                         <Button
                           type="button"
                           variant="outline"
@@ -912,8 +921,9 @@ export function WizardClientV2() {
                   disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || req.cabling_done === undefined}
                   className="w-full h-12 text-lg font-semibold"
                 >
-                  Confirm Details
-                </Button>
+                  
+                                            {t("wz_confirm_details")}
+                                          </Button>
               </div>
             </div>
           );
@@ -926,9 +936,10 @@ export function WizardClientV2() {
                   <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 text-blue-600 mb-3 mx-auto">
                     <ShieldCheck className="w-7 h-7" />
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-slate-900">Enter Verification Code</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-slate-900">{t("wz_enter_verification_code")}</h2>
                   <p className="text-gray-600 text-sm">
-                    We've sent a 6-digit verification code to{" "}
+                    
+                                                {t("wz_weve_sent_a_6digit_verificatio")}{" "}
                     <span className="font-semibold text-slate-900">+91 {req.customer_mobile}</span>
                   </p>
                 </div>
@@ -961,8 +972,8 @@ export function WizardClientV2() {
                 >
                   {loading ? (
                     <span className="flex items-center gap-2 justify-center">
-                      <Loader2 className="w-5 h-5 animate-spin" /> Verifying OTP...
-                    </span>
+                      <Loader2 className="w-5 h-5 animate-spin" />  {t("wz_verifying_otp")}
+                                                    </span>
                   ) : (
                     "Submit OTP & View Quotation"
                   )}
@@ -977,8 +988,9 @@ export function WizardClientV2() {
                     }}
                     className="text-gray-500 hover:text-gray-800 font-medium transition-colors"
                   >
-                    ← Change Mobile Number
-                  </button>
+                    
+                                                {t("wz__change_mobile_number")}
+                                              </button>
 
                   <button
                     type="button"
@@ -999,12 +1011,12 @@ export function WizardClientV2() {
 
           return (
             <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-3xl font-semibold mb-2">Final Step: Get Your Quotation</h2>
-              <p className="text-gray-600 mb-6">Please enter your details to view your personalized CCTV options instantly.</p>
+              <h2 className="text-3xl font-semibold mb-2">{t("wz_final_step_get_your_quotation")}</h2>
+              <p className="text-gray-600 mb-6">{t("wz_please_enter_your_details_to_v")}</p>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("wz_your_name_")}</label>
                   <input 
                     type="text" 
                     required
@@ -1015,7 +1027,7 @@ export function WizardClientV2() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("wz_mobile_number_")}</label>
                   <input 
                     type="tel" 
                     required
@@ -1027,7 +1039,7 @@ export function WizardClientV2() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("wz_email_optional")}</label>
                   <input 
                     type="email" 
                     placeholder="e.g. rahul@email.com" 
@@ -1046,8 +1058,8 @@ export function WizardClientV2() {
               >
                 {loading ? (
                   <span className="flex items-center gap-2 justify-center">
-                    <Loader2 className="w-5 h-5 animate-spin" /> Sending OTP...
-                  </span>
+                    <Loader2 className="w-5 h-5 animate-spin" />  {t("wz_sending_otp")}
+                                                </span>
                 ) : (
                   "View My CCTV Options"
                 )}
@@ -1060,21 +1072,22 @@ export function WizardClientV2() {
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
       
       
-      <h1 className="sr-only">CCTV Quotation Wizard</h1>
+      <h1 className="sr-only">{t("wz_cctv_quotation_wizard")}</h1>
       <div className="bg-white rounded-2xl shadow-sm border p-8">
         <div className="flex justify-between items-center mb-4">
           <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            Exit
-          </Link>
-          <span className="text-xs text-gray-400 font-medium">CCTVQuotation.com</span>
+            
+                                  {t("wz_exit")}
+                                </Link>
+          <span className="text-xs text-gray-400 font-medium">{t("wz_cctvquotationcom")}</span>
         </div>
         {step > 0 && (
           <div className="mb-8">
             <div className="h-2 bg-gray-100 rounded-full w-full overflow-hidden">
               <div className="h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(Math.min(step, totalSteps) / totalSteps) * 100}%` }}></div>
             </div>
-            <p className="text-sm text-gray-500 mt-2 text-right">Step {Math.min(step, totalSteps)} of {totalSteps}</p>
+            <p className="text-sm text-gray-500 mt-2 text-right">{t("wz_step")} {Math.min(step, totalSteps)} of {totalSteps}</p>
           </div>
         )}
 
@@ -1083,8 +1096,9 @@ export function WizardClientV2() {
         {step > 0 && !otpSent && (
           <div className="mt-12 flex justify-between">
             <Button variant="outline" onClick={handlePrev} disabled={step <= 1 || loading}>
-              Back
-            </Button>
+              
+                                        {t("wz_back")}
+                                      </Button>
           </div>
         )}
       </div>

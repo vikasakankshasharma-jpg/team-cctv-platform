@@ -1,6 +1,141 @@
 import { LocaleCode } from "./mapping";
 
 export type TranslationKey =
+  | "wz_back"
+  | "wz_step"
+  | "wz_cctvquotationcom"
+  | "wz_exit"
+  | "wz_cctv_quotation_wizard"
+  | "wz_sending_otp"
+  | "wz_email_optional"
+  | "wz_mobile_number_"
+  | "wz_your_name_"
+  | "wz_please_enter_your_details_to_v"
+  | "wz_final_step_get_your_quotation"
+  | "wz__change_mobile_number"
+  | "wz_verifying_otp"
+  | "wz_weve_sent_a_6digit_verificatio"
+  | "wz_enter_verification_code"
+  | "wz_confirm_details"
+  | "wz_meters"
+  | "wz_cameras_"
+  | "wz_estimated_15m_per_camera_"
+  | "wz_approx_total_cable_required"
+  | "wz_yes"
+  | "wz_3_existing_cabling"
+  | "wz_false_ceiling"
+  | "wz_concrete__brick_wall"
+  | "wz_2_surface_type"
+  | "wz_very_high_15ft"
+  | "wz_high_1015ft"
+  | "wz_standard_lt10ft"
+  | "wz_1_approximate_mounting_height"
+  | "wz_help_us_finetune_your_quote_wi"
+  | "wz_site__preferences"
+  | "wz_confirm__proceed"
+  | "wz_smart_motion"
+  | "wz_24x7_continuous"
+  | "wz_recording_mode"
+  | "wz_days"
+  | "wz_target_recording_days"
+  | "wz_upgrade_storage_capacity"
+  | "wz_buy_new_hard_disk"
+  | "wz_dont_buy_a_new_one_saves_money"
+  | "wz_keep_existing_hard_disk"
+  | "wz_adding_new_cameras_will_reduce"
+  | "wz_storage_update"
+  | "wz_confirm_recording"
+  | "wz_saves_up_to_50_hard_disk_cost"
+  | "wz_records_only_when_movement_is_"
+  | "wz_records_everything_nonstop_req"
+  | "wz_how_long_do_you_want_to_keep_t"
+  | "wz_recording__storage_backup"
+  | "wz_next_step"
+  | "wz_channel_dvr_limit_you_save_mon"
+  | "wz__fit_perfectly_within_your"
+  | "wz_your_total_active_cameras_"
+  | "wz_dvr_compatible"
+  | "wz_channel_dvr_limit_we_will_auto"
+  | "wz__exceed_your"
+  | "wz_recorder_upgrade_required"
+  | "wz_new_indoor"
+  | "wz_new_outdoor"
+  | "wz_select_how_many_cameras_you_wa"
+  | "wz_add_new_cameras"
+  | "wz_confirm_cameras"
+  | "wz_total_cameras"
+  | "wz_ceiling_dome"
+  | "wz_indoor_cameras"
+  | "wz_weatherproof_bullet"
+  | "wz_outdoor_cameras"
+  | "wz_how_many_cameras_do_you_need"
+  | "wz_3_currently_working_cameras"
+  | "wz_2_existing_recorder_channels"
+  | "wz_ip__network_cat6_wire"
+  | "wz_analog_hd_bnc_wire"
+  | "wz_1_technology"
+  | "wz_tell_us_about_your_current_rec"
+  | "wz_existing_system_details"
+  | "wz__exact_pricing_depends_on_your"
+  | "wz__dvr_upgrade_if_needed_4000__8"
+  | "wz__adding_34_cameras_15000__2800"
+  | "wz__adding_12_cameras_8000__15000"
+  | "wz__typical_addon_pricing"
+  | "wz_request_a_free_callback"
+  | "wz_since_you_already_have_a_syste"
+  | "wz_we_need_to_check_your_systems_"
+  | "wz_help_me_check_compatibility"
+  | "wz_no_i_dont_know"
+  | "wz_i_know_my_dvr_channels_and_tec"
+  | "wz_yes_i_know"
+  | "wz_do_you_know_the_technical_spec"
+  | "wz_i_already_have_a_cctv_system_a"
+  | "wz_add_to_existing_system"
+  | "wz_i_dont_have_any_cctv_cameras_i"
+  | "wz_completely_new_system"
+  | "wz_what_kind_of_installation_do_y"
+  | "wz_i_already_know_exactly_what_ca"
+  | "wz_custom_build_advanced"
+  | "wz_answer_a_few_simple_questions_"
+  | "wz_guided_setup_recommended"
+  | "wz_choose_between_our_easy_guided"
+  | "wz_how_would_you_like_to_build_yo"
+  | "wz_select_the_plan_that_best_fits"
+  | "wz_your_cctv_options"
+  | "wz_upload_it_for_a_guaranteed_bes"
+  | "wz_already_have_a_quote_from_anot"
+  | "wz_weaposve_received_your_quote_o"
+  | "wz_quote_received"
+  | "wz_compare_camera_details"
+  | "wz_back_to_generator"
+  | "wz_selected_variants_side_by_side"
+  | "wz_comparing"
+  | "wz_quote_comparison"
+  | "wz_select_your_preferred_technolo"
+  | "wz_build_your_quotation"
+  | "wz_cameras"
+  | "wz_this_is_a_businessgrade_instal"
+  | "wz_gst"
+  | "wz_corporate_quote"
+  | "wz_requested_storage_"
+  | "wz_3_days_vs"
+  | "wz_save_"
+  | "wz_basic_storage_"
+  | "wz_economy_match"
+  | "wz_recommended"
+  | "wz_brand"
+  | "wz_price_high_to_low"
+  | "wz_price_low_to_high"
+  | "wz_sort_by"
+  | "wz_available_packages"
+  | "wz_clear_filters"
+  | "wz_no_packages_found_for_these_fi"
+  | "wz_add_indoor"
+  | "wz_add_outdoor"
+  | "wz_remove"
+  | "wz_split"
+  | "wz_premium_ip_network"
+  | "wz_standard_hd_analog"
   | "build_own_title"
   | "build_own_desc"
   | "build_page_title"
@@ -278,6 +413,141 @@ export const translations: Record<
   Partial<Record<TranslationKey, string>>
 > = {
   en: {
+    "wz_back": "Back",
+    "wz_step": "Step",
+    "wz_cctvquotationcom": "CCTVQuotation.com",
+    "wz_exit": "Exit",
+    "wz_cctv_quotation_wizard": "CCTV Quotation Wizard",
+    "wz_sending_otp": "Sending OTP...",
+    "wz_email_optional": "Email (Optional)",
+    "wz_mobile_number_": "Mobile Number *",
+    "wz_your_name_": "Your Name *",
+    "wz_please_enter_your_details_to_v": "Please enter your details to view your personalized CCTV options instantly.",
+    "wz_final_step_get_your_quotation": "Final Step: Get Your Quotation",
+    "wz__change_mobile_number": "← Change Mobile Number",
+    "wz_verifying_otp": "Verifying OTP...",
+    "wz_weve_sent_a_6digit_verificatio": "We've sent a 6-digit verification code to",
+    "wz_enter_verification_code": "Enter Verification Code",
+    "wz_confirm_details": "Confirm Details",
+    "wz_meters": "Meters",
+    "wz_cameras_": "cameras =",
+    "wz_estimated_15m_per_camera_": "Estimated ~15m per camera (",
+    "wz_approx_total_cable_required": "Approx. Total Cable Required",
+    "wz_yes": "Yes",
+    "wz_3_existing_cabling": "3. Existing Cabling",
+    "wz_false_ceiling": "False Ceiling",
+    "wz_concrete__brick_wall": "Concrete / Brick Wall",
+    "wz_2_surface_type": "2. Surface Type",
+    "wz_very_high_15ft": "Very High (15ft+)",
+    "wz_high_1015ft": "High (10-15ft)",
+    "wz_standard_lt10ft": "Standard (&lt;10ft)",
+    "wz_1_approximate_mounting_height": "1. Approximate Mounting Height",
+    "wz_help_us_finetune_your_quote_wi": "Help us fine-tune your quote with a few site details.",
+    "wz_site__preferences": "Site & Preferences",
+    "wz_confirm__proceed": "Confirm & Proceed",
+    "wz_smart_motion": "Smart Motion",
+    "wz_24x7_continuous": "24x7 Continuous",
+    "wz_recording_mode": "Recording Mode",
+    "wz_days": "Days)",
+    "wz_target_recording_days": "Target Recording Days",
+    "wz_upgrade_storage_capacity": "Upgrade storage capacity.",
+    "wz_buy_new_hard_disk": "Buy New Hard Disk",
+    "wz_dont_buy_a_new_one_saves_money": "Don't buy a new one. (Saves money)",
+    "wz_keep_existing_hard_disk": "Keep Existing Hard Disk",
+    "wz_adding_new_cameras_will_reduce": "Adding new cameras will reduce how many days your existing Hard Disk can store recordings.",
+    "wz_storage_update": "Storage Update",
+    "wz_confirm_recording": "Confirm Recording",
+    "wz_saves_up_to_50_hard_disk_cost": "Saves up to 50% hard disk cost!",
+    "wz_records_only_when_movement_is_": "Records only when movement is detected.",
+    "wz_records_everything_nonstop_req": "Records everything non-stop. Requires standard hard disk capacity.",
+    "wz_how_long_do_you_want_to_keep_t": "How long do you want to keep the CCTV recordings?",
+    "wz_recording__storage_backup": "Recording & Storage Backup",
+    "wz_next_step": "Next Step",
+    "wz_channel_dvr_limit_you_save_mon": "-channel DVR limit. You save money!",
+    "wz__fit_perfectly_within_your": ") fit perfectly within your",
+    "wz_your_total_active_cameras_": "Your total active cameras (",
+    "wz_dvr_compatible": "DVR Compatible!",
+    "wz_channel_dvr_limit_we_will_auto": "-channel DVR limit. We will automatically quote a new upgraded DVR.",
+    "wz__exceed_your": ") exceed your",
+    "wz_recorder_upgrade_required": "Recorder Upgrade Required",
+    "wz_new_indoor": "New Indoor",
+    "wz_new_outdoor": "New Outdoor",
+    "wz_select_how_many_cameras_you_wa": "Select how many cameras you want to add.",
+    "wz_add_new_cameras": "Add New Cameras",
+    "wz_confirm_cameras": "Confirm Cameras",
+    "wz_total_cameras": "Total Cameras:",
+    "wz_ceiling_dome": "Ceiling Dome",
+    "wz_indoor_cameras": "Indoor Cameras",
+    "wz_weatherproof_bullet": "Weatherproof Bullet",
+    "wz_outdoor_cameras": "Outdoor Cameras",
+    "wz_how_many_cameras_do_you_need": "How many cameras do you need?",
+    "wz_3_currently_working_cameras": "3. Currently Working Cameras",
+    "wz_2_existing_recorder_channels": "2. Existing Recorder Channels",
+    "wz_ip__network_cat6_wire": "IP / Network (CAT6 Wire)",
+    "wz_analog_hd_bnc_wire": "Analog HD (BNC Wire)",
+    "wz_1_technology": "1. Technology",
+    "wz_tell_us_about_your_current_rec": "Tell us about your current recorder so we can calculate compatibility.",
+    "wz_existing_system_details": "Existing System Details",
+    "wz__exact_pricing_depends_on_your": "* Exact pricing depends on your existing system compatibility. Our engineer will verify during the callback.",
+    "wz__dvr_upgrade_if_needed_4000__8": "• DVR upgrade (if needed): ₹4,000 – ₹8,000 extra",
+    "wz__adding_34_cameras_15000__2800": "• Adding 3-4 cameras: ₹15,000 – ₹28,000",
+    "wz__adding_12_cameras_8000__15000": "• Adding 1-2 cameras: ₹8,000 – ₹15,000",
+    "wz__typical_addon_pricing": "💡 Typical Add-on Pricing",
+    "wz_request_a_free_callback": "Request a Free Callback",
+    "wz_since_you_already_have_a_syste": "Since you already have a system, our engineer needs to check your existing DVR compatibility before adding new cameras.",
+    "wz_we_need_to_check_your_systems_": "We need to check your system's compatibility!",
+    "wz_help_me_check_compatibility": "Help me check compatibility.",
+    "wz_no_i_dont_know": "No, I don't know",
+    "wz_i_know_my_dvr_channels_and_tec": "I know my DVR channels and technology.",
+    "wz_yes_i_know": "Yes, I know",
+    "wz_do_you_know_the_technical_spec": "Do you know the technical specifications of your existing system?",
+    "wz_i_already_have_a_cctv_system_a": "I already have a CCTV system and want to add more cameras.",
+    "wz_add_to_existing_system": "Add to Existing System",
+    "wz_i_dont_have_any_cctv_cameras_i": "I don't have any CCTV cameras installed right now.",
+    "wz_completely_new_system": "Completely New System",
+    "wz_what_kind_of_installation_do_y": "What kind of installation do you need?",
+    "wz_i_already_know_exactly_what_ca": "I already know exactly what cameras and technical specifications I need. Let me build my own custom package from the catalog.",
+    "wz_custom_build_advanced": "Custom Build (Advanced)",
+    "wz_answer_a_few_simple_questions_": "Answer a few simple questions about your property, and our AI will calculate the perfect, most compatible CCTV package for you instantly.",
+    "wz_guided_setup_recommended": "Guided Setup (Recommended)",
+    "wz_choose_between_our_easy_guided": "Choose between our easy guided setup or our advanced professional builder for custom configurations.",
+    "wz_how_would_you_like_to_build_yo": "How would you like to build your quote?",
+    "wz_select_the_plan_that_best_fits": "Select the plan that best fits your needs, or edit the configuration to instantly update pricing.",
+    "wz_your_cctv_options": "Your CCTV Options",
+    "wz_upload_it_for_a_guaranteed_bes": "Upload it for a guaranteed best price",
+    "wz_already_have_a_quote_from_anot": "Already have a quote from another company?",
+    "wz_weaposve_received_your_quote_o": "We&apos;ve received your quote. Our team will review it and get back to you within 24 hours with a guaranteed best price.",
+    "wz_quote_received": "Quote Received",
+    "wz_compare_camera_details": "Compare camera details.",
+    "wz_back_to_generator": "Back to Generator",
+    "wz_selected_variants_side_by_side": "selected variants side by side.",
+    "wz_comparing": "Comparing",
+    "wz_quote_comparison": "Quote Comparison",
+    "wz_select_your_preferred_technolo": "Select your preferred technology and brand to see matching variants.",
+    "wz_build_your_quotation": "Build Your Quotation",
+    "wz_cameras": "cameras.",
+    "wz_this_is_a_businessgrade_instal": "This is a business-grade installation quote for",
+    "wz_gst": "GST:",
+    "wz_corporate_quote": "Corporate Quote",
+    "wz_requested_storage_": "Requested Storage (",
+    "wz_3_days_vs": "(3 Days vs",
+    "wz_save_": "Save ₹",
+    "wz_basic_storage_": "Basic Storage (",
+    "wz_economy_match": "Economy Match",
+    "wz_recommended": "Recommended",
+    "wz_brand": "Brand:",
+    "wz_price_high_to_low": "Price: High to Low",
+    "wz_price_low_to_high": "Price: Low to High",
+    "wz_sort_by": "Sort By:",
+    "wz_available_packages": "Available Packages",
+    "wz_clear_filters": "Clear Filters",
+    "wz_no_packages_found_for_these_fi": "No packages found for these filters.",
+    "wz_add_indoor": "Add Indoor",
+    "wz_add_outdoor": "Add Outdoor",
+    "wz_remove": "Remove",
+    "wz_split": "Split",
+    "wz_premium_ip_network": "Premium IP (Network)",
+    "wz_standard_hd_analog": "Standard HD (Analog)",
     welcome: "Welcome to CCTV Quotation",
     get_quote: "Get Free Quote",
     next: "Next",

@@ -4,6 +4,7 @@ import { calculatePricing } from "@/lib/pricing-engine";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Check, Filter, Tag } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const BRAND_DISPLAY: Record<string, string> = {
   "all": "All Brands",
@@ -103,6 +104,7 @@ export function DynamicVariantGenerator({
   onToggleCompare,
   selectedCompareItems
 }: DynamicVariantGeneratorProps) {
+  const { t } = useTranslation();
   const initialTech = (selection.technology?.toLowerCase() === "ip") ? "ip" : "hd";
   const [activeTech, setActiveTech] = useState<"hd" | "ip">(initialTech);
   const initialBrand = selection.brand_preference ? normalizeBrandKey(selection.brand_preference) : "all";
@@ -405,20 +407,22 @@ export function DynamicVariantGenerator({
             className={`relative z-10 px-6 py-2.5 text-sm font-bold rounded-full transition-all duration-300 ${activeTech === "hd" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
           >
             {activeTech === "hd" && <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full -z-10" />}
-            Standard HD (Analog)
-          </button>
+            
+                                  {t("wz_standard_hd_analog")}
+                                </button>
           <button
             onClick={() => setActiveTech("ip")}
             className={`relative z-10 px-6 py-2.5 text-sm font-bold rounded-full transition-all duration-300 ${activeTech === "ip" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
           >
             {activeTech === "ip" && <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full -z-10" />}
-            Premium IP (Network)
-          </button>
+            
+                                  {t("wz_premium_ip_network")}
+                                </button>
         </div>
 
         {/* Brand Selector */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
-          <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0">Brand:</span>
+          <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0">{t("wz_brand")}</span>
           {availableBrands.map(b => (
             <button
               key={b}
@@ -489,16 +493,18 @@ export function DynamicVariantGenerator({
                    className="px-3 py-1.5 text-xs font-semibold rounded-full bg-[#f5f5f7] hover:bg-[#e5e5ea] dark:bg-[#2d2d2f] dark:hover:bg-[#424245] text-[#1d1d1f] dark:text-white transition-colors"
                    title="Split into another row"
                  >
-                   Split
-                 </button>
+                   
+                                             {t("wz_split")}
+                                           </button>
                  {cameraBuckets.length > 1 && (
                    <button 
                      onClick={() => setCameraBuckets(prev => prev.filter(b => b.id !== bucket.id))}
                      className="px-3 py-1.5 text-xs font-semibold rounded-full bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400 transition-colors"
                      title="Remove this row"
                    >
-                     Remove
-                   </button>
+                     
+                                                   {t("wz_remove")}
+                                                 </button>
                  )}
               </div>
             </div>
@@ -509,38 +515,38 @@ export function DynamicVariantGenerator({
                onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "outdoor", count: 1, resolution: "2MP" }])}
                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-4 py-2 rounded-full transition-colors"
              >
-               <span>+</span> Add Outdoor
-             </button>
+               <span>+</span>  {t("wz_add_outdoor")}
+                                       </button>
              <button 
                onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "indoor", count: 1, resolution: "2MP" }])}
                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-4 py-2 rounded-full transition-colors"
              >
-               <span>+</span> Add Indoor
-             </button>
+               <span>+</span>  {t("wz_add_indoor")}
+                                       </button>
           </div>
         </div>
       </div>
 
       {variants.length === 0 && (
         <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-300">
-          <p className="text-slate-500 font-medium">No packages found for these filters.</p>
-          <Button variant="link" onClick={() => { setActiveBrand("all"); setCameraBuckets(prev => prev.map(b => ({ ...b, resolution: "2MP" }))); }}>Clear Filters</Button>
+          <p className="text-slate-500 font-medium">{t("wz_no_packages_found_for_these_fi")}</p>
+          <Button variant="link" onClick={() => { setActiveBrand("all"); setCameraBuckets(prev => prev.map(b => ({ ...b, resolution: "2MP" }))); }}>{t("wz_clear_filters")}</Button>
         </div>
       )}
 
       {variants.length > 0 && (
         <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4">
-          <h2 className="text-xl font-bold text-[#1d1d1f] dark:text-white">Available Packages</h2>
+          <h2 className="text-xl font-bold text-[#1d1d1f] dark:text-white">{t("wz_available_packages")}</h2>
           <div className="flex items-center gap-2 mt-3 sm:mt-0">
-            <label className="text-sm font-medium text-slate-500">Sort By:</label>
+            <label className="text-sm font-medium text-slate-500">{t("wz_sort_by")}</label>
             <select 
               className="text-sm bg-white border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="brand">Brand</option>
+              <option value="price_asc">{t("wz_price_low_to_high")}</option>
+              <option value="price_desc">{t("wz_price_high_to_low")}</option>
+              <option value="brand">{t("wz_brand")}</option>
             </select>
           </div>
         </div>
@@ -559,13 +565,13 @@ export function DynamicVariantGenerator({
             >
               {(variant as any).is_recommended && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl z-10 flex items-center gap-1 shadow-sm">
-                  <Sparkles className="w-3 h-3" /> Recommended
-                </div>
+                  <Sparkles className="w-3 h-3" />  {t("wz_recommended")}
+                                          </div>
               )}
               {variant.is_economy_storage && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl z-10 flex items-center gap-1 shadow-sm">
-                  <Tag className="w-3 h-3" /> Economy Match
-                </div>
+                  <Tag className="w-3 h-3" />  {t("wz_economy_match")}
+                                          </div>
               )}
               
               <CardContent className="py-8 px-5 flex flex-col items-center justify-center min-h-[180px]">
@@ -584,17 +590,20 @@ export function DynamicVariantGenerator({
                   {variant.is_economy_storage && (
                     <div className="flex flex-col items-center justify-center mb-3 gap-1">
                       <p className="text-xs text-[#86868b] font-medium">
-                        Basic Storage ({variant.storage_device?.derivedCapacity || "500GB"})
+                        
+                                                              {t("wz_basic_storage_")}{variant.storage_device?.derivedCapacity || "500GB"})
                       </p>
                       <p className="text-[11px] bg-green-50 text-green-700 px-2.5 py-1 rounded-md border border-green-200 font-bold inline-block">
-                        Save ₹{((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN')} (3 Days vs {(variant as any).requested_days} Days)
-                      </p>
+                        
+                                                              {t("wz_save_")}{((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN')}  {t("wz_3_days_vs")} {(variant as any).requested_days}  {t("wz_days")}
+                                                            </p>
                     </div>
                   )}
                   {!variant.is_economy_storage && variant.is_economy_storage !== undefined && (
                     <p className="text-xs text-emerald-600 font-medium mb-3">
-                      Requested Storage ({variant.storage_device?.derivedCapacity || "2TB"}) - {variant.storage_days} Days
-                    </p>
+                      
+                                                        {t("wz_requested_storage_")}{variant.storage_device?.derivedCapacity || "2TB"}) - {variant.storage_days}  {t("wz_days")}
+                                                      </p>
                   )}
                   <div className="flex items-start justify-center">
                     <span className="text-[40px] leading-none font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">

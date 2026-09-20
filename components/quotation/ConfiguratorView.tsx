@@ -27,6 +27,7 @@ import { useRealtimeInventory } from "@/hooks/useRealtimeInventory";
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, CardLayoutRule } from "@/types";
 import { useRouter } from "next/navigation";
 import { trackEvent } from "@/components/shared/TrackingProvider";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ConfiguratorViewProps {
   lead: Lead;
@@ -44,6 +45,7 @@ interface ConfiguratorViewProps {
 
 export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDiscount, customLayoutId }: ConfiguratorViewProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [lead, setLead] = useState<Lead>(initialLead);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<"download" | "whatsapp" | "booking" | "accept" | null>(null);
@@ -474,13 +476,14 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-black text-blue-700 uppercase tracking-widest bg-blue-100 px-2.5 py-1 rounded-full">Corporate Quote</span>
+                <span className="text-[11px] font-black text-blue-700 uppercase tracking-widest bg-blue-100 px-2.5 py-1 rounded-full">{t("wz_corporate_quote")}</span>
                 {lead.company_name && <span className="text-[13px] font-semibold text-zinc-700">{lead.company_name}</span>}
-                {lead.gst_number && <span className="text-[12px] font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded">GST: {lead.gst_number}</span>}
+                {lead.gst_number && <span className="text-[12px] font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded">{t("wz_gst")} {lead.gst_number}</span>}
               </div>
               <p className="text-[13px] text-zinc-600 mt-1 font-medium">
-                This is a business-grade installation quote for {selection.camera_count} cameras.
-                {lead.gst_number ? " GST invoice will be generated upon booking." : " Add your GST number when booking for a GST invoice."}
+                
+                                              {t("wz_this_is_a_businessgrade_instal")} {selection.camera_count}  {t("wz_cameras")}
+                                              {lead.gst_number ? " GST invoice will be generated upon booking." : " Add your GST number when booking for a GST invoice."}
               </p>
             </div>
           </div>
@@ -490,8 +493,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         {viewMode === 'catalog' && (
           <div className="mb-16">
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Build Your Quotation</h2>
-              <p className="text-[15px] text-[#86868b] mt-2">Select your preferred technology and brand to see matching variants.</p>
+              <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">{t("wz_build_your_quotation")}</h2>
+              <p className="text-[15px] text-[#86868b] mt-2">{t("wz_select_your_preferred_technolo")}</p>
             </div>
             <DynamicVariantGenerator
               products={currentProducts}
@@ -522,12 +525,12 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           <div className="mb-16">
             <div className="mb-8 flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Quote Comparison</h2>
-                <p className="text-[15px] text-[#86868b] mt-1">Comparing {selectedCompareItems.length} selected variants side by side.</p>
+                <h2 className="text-3xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">{t("wz_quote_comparison")}</h2>
+                <p className="text-[15px] text-[#86868b] mt-1">{t("wz_comparing")} {selectedCompareItems.length}  {t("wz_selected_variants_side_by_side")}</p>
               </div>
               <Button variant="outline" onClick={() => setViewMode('catalog')} className="rounded-full">
-                <ArrowLeftRight className="w-4 h-4 mr-2" /> Back to Generator
-              </Button>
+                <ArrowLeftRight className="w-4 h-4 mr-2" />  {t("wz_back_to_generator")}
+                                            </Button>
             </div>
             
             {/* Reuse existing CompareCards with the compare_options format it expects */}
@@ -559,7 +562,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
             <div className="mb-20 hidden md:block border-t border-[#f5f5f7] dark:border-[#2d2d2f] pt-16 mt-16">
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">Compare camera details.</h3>
+                <h3 className="text-2xl font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">{t("wz_compare_camera_details")}</h3>
               </div>
               <SpecCompareTable
                 compareOptions={selectedCompareItems.map(p => ({ technology: p.technology as string, option: p.plan_type }))}
@@ -579,10 +582,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h4 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">Quote Received</h4>
+              <h4 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">{t("wz_quote_received")}</h4>
               <p className="text-[15px] text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-                We&apos;ve received your quote. Our team will review it and get back to you within 24 hours with a guaranteed best price.
-              </p>
+                
+                                              {t("wz_weaposve_received_your_quote_o")}
+                                            </p>
             </div>
           ) : showPriceMatchUploader ? (
             <div className="max-w-xl mx-auto animate-in slide-in-from-top-4 fade-in duration-400">
@@ -616,14 +620,16 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                 <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
               <span className="text-[13px] text-zinc-500 dark:text-zinc-400">
-                Already have a quote from another company?
-              </span>
+                
+                                                      {t("wz_already_have_a_quote_from_anot")}
+                                                    </span>
               <button
                 onClick={() => setShowPriceMatchUploader(true)}
                 className="group inline-flex items-center gap-1 text-[13px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
               >
-                Upload it for a guaranteed best price
-                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                
+                                                      {t("wz_upload_it_for_a_guaranteed_bes")}
+                                                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
           )}
