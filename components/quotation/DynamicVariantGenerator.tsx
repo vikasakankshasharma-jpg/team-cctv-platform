@@ -105,6 +105,7 @@ export function DynamicVariantGenerator({
 }: DynamicVariantGeneratorProps) {
   const [activeTech, setActiveTech] = useState<"hd" | "ip">("hd");
   const [activeBrand, setActiveBrand] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("recommended");
   
   const [cameraBuckets, setCameraBuckets] = useState<any[]>(() => {
     // If we are editing a quote that already has mixed requirements, load them!
@@ -333,9 +334,32 @@ export function DynamicVariantGenerator({
       }
     });
 
+    // Default sorting (price ascending) to determine 'recommended' baseline
     results.sort((a, b) => a.total_price_inr - b.total_price_inr);
+    
+    // Tag the recommended item (middle item of default sort, non-economy)
+    const recIndex = Math.floor(results.length / 2);
+    results.forEach((v, idx) => {
+      (v as any).is_recommended = (idx === recIndex && results.length > 1 && !v.is_economy_storage);
+    });
+
+    // Apply active sort
+    if (sortBy === "price_asc") {
+      results.sort((a, b) => a.total_payable - b.total_payable);
+    } else if (sortBy === "price_desc") {
+      results.sort((a, b) => b.total_payable - a.total_payable);
+    } else if (sortBy === "brand") {
+      results.sort((a, b) => (a.camera_device?.brand || "").localeCompare(b.camera_device?.brand || ""));
+    } else if (sortBy === "recommended") {
+      results.sort((a, b) => {
+        if ((a as any).is_recommended) return -1;
+        if ((b as any).is_recommended) return 1;
+        return a.total_payable - b.total_payable;
+      });
+    }
+
     return results;
-  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions]);
+  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, sortBy]);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -470,7 +494,26 @@ export function DynamicVariantGenerator({
         </div>
       )}
 
-      <div className={`grid gap-6 mt-8 ${variants.length === 1 ? "max-w-md mx-auto" : variants.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-2 lg:grid-cols-3"}`}>
+      {variants.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4">
+          <h2 className="text-xl font-bold text-[#1d1d1f] dark:text-white">Available Packages</h2>
+          <div className="flex items-center gap-2 mt-3 sm:mt-0">
+            <label className="text-sm font-medium text-slate-500">Sort By:</label>
+            <select 
+              className="text-sm bg-white border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="recommended">Recommended First</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="brand">Brand</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      <div className={`grid gap-6 ${variants.length === 1 ? "max-w-md mx-auto" : variants.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-2 lg:grid-cols-3"}`}>
         {variants.map((variant, idx) => {
           if (!variant.camera_device) return null;
           const isSelectedForCompare = selectedCompareItems.some(i => i.camera_device?.id === variant.camera_device?.id && i.plan_type === variant.plan_type);
@@ -481,7 +524,7 @@ export function DynamicVariantGenerator({
               onClick={() => onSelectCheckout(variant)}
               className={`group relative overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-xl hover:border-blue-500 hover:-translate-y-1 ${isSelectedForCompare ? "ring-2 ring-blue-600 shadow-lg" : "hover:shadow-md border-[#d2d2d7] dark:border-[#424245]"}`}
             >
-              {idx === Math.floor(variants.length / 2) && variants.length > 1 && !variant.is_economy_storage && (
+              {(variant as any).is_recommended && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl z-10 flex items-center gap-1 shadow-sm">
                   <Sparkles className="w-3 h-3" /> Recommended
                 </div>
