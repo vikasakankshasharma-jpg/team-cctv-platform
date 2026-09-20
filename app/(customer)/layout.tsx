@@ -51,7 +51,7 @@ export default function CustomerLayout({
                 alt="CCTVQuotation by TEAM"
                 width={300}
                 height={90}
-                className="h-10 sm:h-[48px] w-auto mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1 dark:rounded-lg transition-transform hover:scale-105 origin-left"
+                className="h-12 sm:h-[60px] md:h-[64px] w-auto max-w-[240px] sm:max-w-[300px] object-contain mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1 dark:rounded-lg transition-transform hover:scale-105 origin-left"
                 priority
               />
             </Link>
