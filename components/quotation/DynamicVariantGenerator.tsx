@@ -255,16 +255,27 @@ export function DynamicVariantGenerator({
         (storage_device as any).derivedCapacity = cap || "HDD";
       }
 
-      const uniqueRes = Array.from(new Set(mixedReqs.map(r => r.resolution)));
-      const isHybrid = uniqueRes.length > 1;
-      let displayResolution = uniqueRes[0] ? `${uniqueRes[0]} Resolution` : "2MP Resolution";
+      // Extract actual resolutions delivered in the quote (to handle fallbacks, e.g. when a brand lacks 2MP IP)
+      let actualResolutions: string[] = [];
+      pricing.items.forEach((item: any) => {
+        // Items typically look like: "Budget Brand 5MP IP Dome..."
+        const match = item.display_name.match(/(\d+(?:\.\d+)?)MP/i);
+        if (match) actualResolutions.push(match[0].toUpperCase());
+      });
+      // Deduplicate
+      const uniqueActualRes = Array.from(new Set(actualResolutions));
+      
+      // If we couldn't find any resolutions in the items, fallback to the requested ones
+      const resolvedRes = uniqueActualRes.length > 0 ? uniqueActualRes : Array.from(new Set(mixedReqs.map(r => r.resolution)));
+      const isHybrid = resolvedRes.length > 1;
+      let displayResolution = resolvedRes[0] ? `${resolvedRes[0]} Resolution` : "2MP Resolution";
       
       if (isHybrid) {
-        displayResolution = `Mixed Resolutions (${uniqueRes.join(", ")})`;
+        displayResolution = `Mixed Resolutions (${resolvedRes.join(", ")})`;
       } else if (hasOutdoor && !hasIndoor) {
-        displayResolution = `${uniqueRes[0] || "2MP"} Resolution (${outdoorCount} Outdoor)`;
+        displayResolution = `${resolvedRes[0] || "2MP"} Resolution (${outdoorCount} Outdoor)`;
       } else if (hasIndoor && !hasOutdoor) {
-        displayResolution = `${uniqueRes[0] || "2MP"} Resolution (${indoorCount} Indoor)`;
+        displayResolution = `${resolvedRes[0] || "2MP"} Resolution (${indoorCount} Indoor)`;
       }
       
       return { 
@@ -274,7 +285,7 @@ export function DynamicVariantGenerator({
         storage_device, 
         camera_count: outdoorCount + indoorCount, 
         storage_days: (pricing as any)._calculated_days || selection.recording_days || 7,
-        plan_type: brandKey === "budget" ? "budget" : (uniqueRes.includes("8MP") ? "premium" : "recommended"),
+        plan_type: brandKey === "budget" ? "budget" : (Array.from(new Set(mixedReqs.map(r => r.resolution))).includes("8MP") ? "premium" : "recommended"),
         is_hybrid: isHybrid,
         mixed_camera_requirements: mixedReqs
       };
