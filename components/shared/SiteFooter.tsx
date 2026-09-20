@@ -21,8 +21,8 @@ export function SiteFooter() {
               src="/logo-horizontal.jpg"
               alt="CCTVQuotation by TEAM"
               width={200}
-              height={60}
-              className="h-8 md:h-10 w-auto mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1.5 dark:rounded-xl transition-all"
+              height={48}
+              className="h-9 md:h-11 w-auto mix-blend-multiply dark:mix-blend-normal dark:bg-white dark:p-1.5 dark:rounded-xl transition-all"
             />
           </div>
           <p className="text-zinc-500 dark:text-zinc-500 text-sm font-medium max-w-sm leading-relaxed">
