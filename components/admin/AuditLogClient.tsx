@@ -65,7 +65,7 @@ export function AuditLogClient({ initialLogs }: AuditLogClientProps) {
                   
                   return (
                     <tr key={log.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all group/row">
-                      <td className="px-8 py-6">
+                      <td className="px-4 md:px-8 py-6">
                         <div className="flex items-center gap-4">
                            <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-950 flex items-center justify-center text-zinc-400 dark:text-zinc-600 border border-zinc-200 dark:border-zinc-800 shadow-inner">
                               <Package className="w-5 h-5" />
@@ -78,22 +78,22 @@ export function AuditLogClient({ initialLogs }: AuditLogClientProps) {
                            </div>
                         </div>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-4 md:px-8 py-6">
                         <div className="flex items-center gap-2 text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
                            <User className="w-3.5 h-3.5 text-blue-500/50" />
                            {log.changed_by}
                         </div>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-4 md:px-8 py-6">
                         <span className="text-zinc-400 dark:text-zinc-600 font-bold text-lg">₹{log.old_price.toLocaleString('en-IN')}</span>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-4 md:px-8 py-6">
                         <div className="flex items-center gap-3">
                            <ArrowRight className="w-4 h-4 text-zinc-300 dark:text-zinc-800" />
                            <span className="text-zinc-900 dark:text-white font-black text-xl tracking-tighter">₹{log.new_price.toLocaleString('en-IN')}</span>
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-right">
+                      <td className="px-4 md:px-8 py-6 text-right">
                         <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${isIncrease ? 'bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 border-emerald-100 dark:border-emerald-500/20' : 'bg-red-50 dark:bg-red-500/5 text-red-600 border-red-100 dark:border-red-500/20'}`}>
                            {isIncrease ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                            {isIncrease ? "+" : ""}{diff.toLocaleString('en-IN')}

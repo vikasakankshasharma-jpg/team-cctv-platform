@@ -253,7 +253,7 @@ export function CompatibilityMatrix({ initialProducts }: { initialProducts: Prod
           </div>
           <div className="p-4 overflow-y-auto flex-1 custom-scrollbar space-y-1">
             {treePaths.length === 0 ? (
-              <div className="text-center py-10">
+              <div className="text-center py-4 md:py-10">
                 <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-3 opacity-50" />
                 <p className="text-xs font-semibold text-muted-foreground">No Paths Defined</p>
                 <p className="text-[11px] text-muted-foreground/70 mt-1 px-4">Edit a product and assign it a Catalog Path (e.g., CCTV/Cameras/IP).</p>

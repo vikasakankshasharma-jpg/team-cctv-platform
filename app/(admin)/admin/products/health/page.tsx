@@ -111,7 +111,7 @@ export default async function CatalogHealthPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Health Score Card */}
-        <div className="lg:col-span-1 bg-zinc-900 rounded-2xl border border-zinc-800 p-8 relative overflow-hidden shadow-md">
+        <div className="lg:col-span-1 bg-zinc-900 rounded-2xl border border-zinc-800 p-4 md:p-8 relative overflow-hidden shadow-md">
            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-32 h-32 bg-blue-500/20 blur-[40px] rounded-full" />
            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Overall Data Integrity</p>
            <div className="text-6xl font-black text-white tracking-tighter mb-4">{Math.round(healthScore)}%</div>
@@ -190,7 +190,7 @@ export default async function CatalogHealthPage() {
             </div>
             <div className="flex-1 overflow-y-auto max-h-[300px] p-4 space-y-2 custom-scrollbar">
               {list.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 opacity-40">
+                <div className="flex flex-col items-center justify-center py-4 md:py-10 opacity-40">
                   <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2" />
                   <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Perfect Health</p>
                 </div>

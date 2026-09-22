@@ -29,10 +29,10 @@ export default function ExceptionsDashboard() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading Exceptions...</div>;
+  if (loading) return <div className="p-4 md:p-8">Loading Exceptions...</div>;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-red-900">Inventory Exceptions Queue</h1>
         <p className="text-muted-foreground mt-1">High-priority audits for negative stock balances and reconciliation drift.</p>

@@ -324,7 +324,8 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas, ini
           {/* CRM Leads Table / Scroll Area */}
           <div className="panel flex-1 overflow-hidden flex flex-col">
             <div className="overflow-y-auto flex-1">
-              <table className="lead-table w-full">
+              <div className="overflow-x-auto w-full">
+<table className="lead-table w-full">
                 <thead className="sticky top-0 z-10">
                   <tr>
                     <th>Prospect</th>
@@ -377,6 +378,7 @@ export default function ExpansionClient({ initialLeads, initialServiceAreas, ini
                   )}
                 </tbody>
               </table>
+</div>
             </div>
           </div>
         </div>

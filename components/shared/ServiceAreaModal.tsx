@@ -122,7 +122,7 @@ export function ServiceAreaModal() {
             onClick={closeServiceAreaModal}
           />
           
-          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-[32px] p-8 shadow-2xl border border-zinc-100 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-[32px] p-4 md:p-8 shadow-2xl border border-zinc-100 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
             <div className="flex justify-between items-center mb-6 shrink-0">
               <div>
                 <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">
@@ -139,7 +139,7 @@ export function ServiceAreaModal() {
             </div>
 
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 text-zinc-400 space-y-4 shrink-0">
+              <div className="flex flex-col items-center justify-center py-6 md:py-12 text-zinc-400 space-y-4 shrink-0">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
                 <p className="text-sm font-bold uppercase tracking-widest">{t('sam_loading', 'Loading...')}</p>
               </div>

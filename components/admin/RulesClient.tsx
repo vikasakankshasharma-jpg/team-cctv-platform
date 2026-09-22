@@ -203,7 +203,8 @@ export default function RulesClient({ initialRules }: RulesClientProps) {
 
       {/* ─── RULES LIST ─────────────────────────────────────────────── */}
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto w-full">
+<table className="w-full text-left text-sm">
           <thead className="bg-secondary/30 border-b border-border text-muted-foreground uppercase text-[11px] tracking-wider font-semibold">
             <tr>
               <th className="px-6 py-4 w-16">Prio</th>
@@ -272,6 +273,7 @@ export default function RulesClient({ initialRules }: RulesClientProps) {
             ))}
           </tbody>
         </table>
+</div>
       </div>
 
       <RuleModal 

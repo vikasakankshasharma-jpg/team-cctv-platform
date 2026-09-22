@@ -69,7 +69,7 @@ export function WizardQuestionModal({ isOpen, onClose, stepId, question, onSave 
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 md:p-8 space-y-6">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">
               Query Text <span className="text-red-500">*</span>
@@ -138,7 +138,7 @@ export function WizardQuestionModal({ isOpen, onClose, stepId, question, onSave 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center gap-2 disabled:opacity-50"
+              className="px-4 md:px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center gap-2 disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {question?.id ? "Synchronize Query" : "Append Query"}

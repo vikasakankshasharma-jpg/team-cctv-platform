@@ -26,7 +26,7 @@ export function LedgerClient({ installer, balance, transactions, offlineVerifica
         </p>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[28px] p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[28px] p-4 md:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
           <p className="text-sm font-semibold text-zinc-500 mb-1">Current Ledger Balance</p>
           <div className="flex items-baseline gap-2">
@@ -56,7 +56,7 @@ export function LedgerClient({ installer, balance, transactions, offlineVerifica
           <h3 className="font-black tracking-tight text-zinc-900 dark:text-white">Recent Transactions</h3>
         </div>
         {transactions.length === 0 ? (
-          <div className="p-12 text-center text-zinc-500 text-sm font-medium">
+          <div className="p-5 md:p-12 text-center text-zinc-500 text-sm font-medium">
             No transactions found yet.
           </div>
         ) : (

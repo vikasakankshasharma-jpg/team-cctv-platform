@@ -37,7 +37,7 @@ export default function QuoteError({
 
   if (autoSyncing) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-zinc-50 dark:bg-zinc-950 transition-colors">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 text-center bg-zinc-50 dark:bg-zinc-950 transition-colors">
         <div className="w-24 h-24 bg-blue-50 dark:bg-blue-600/10 rounded-[32px] flex items-center justify-center text-blue-600 dark:text-blue-500 mb-10 shadow-2xl">
           <Loader2 className="w-10 h-10 animate-spin" />
         </div>
@@ -54,7 +54,7 @@ export default function QuoteError({
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-zinc-50 dark:bg-zinc-950 transition-colors">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 text-center bg-zinc-50 dark:bg-zinc-950 transition-colors">
       <div className="w-24 h-24 bg-blue-50 dark:bg-blue-600/10 rounded-[32px] flex items-center justify-center text-blue-600 dark:text-blue-500 mb-10 shadow-2xl">
         <ShieldAlert className="w-12 h-12" />
       </div>
@@ -73,7 +73,7 @@ export default function QuoteError({
             sessionStorage.removeItem("quote_error_retries"); // Reset counter for manual retry
             reset();
           }}
-          className="flex-1 flex items-center justify-center gap-4 bg-blue-600 hover:bg-blue-500 text-white px-10 py-5 rounded-[24px] font-black uppercase text-sm tracking-widest shadow-xl shadow-blue-500/20 transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-4 bg-blue-600 hover:bg-blue-500 text-white px-4 md:px-10 py-5 rounded-[24px] font-black uppercase text-sm tracking-widest shadow-xl shadow-blue-500/20 transition-all active:scale-95"
         >
           <RefreshCw className="w-5 h-5" />
           Re-Sync Data
@@ -81,7 +81,7 @@ export default function QuoteError({
         
         <Link
           href="/wizard"
-          className="flex-1 flex items-center justify-center gap-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white px-10 py-5 rounded-[24px] font-black uppercase text-sm tracking-widest shadow-lg transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white px-4 md:px-10 py-5 rounded-[24px] font-black uppercase text-sm tracking-widest shadow-lg transition-all active:scale-95"
         >
           <FileQuestion className="w-5 h-5" />
           New Quote

@@ -38,6 +38,7 @@ interface ConfiguratorViewProps {
     settings: AppSettings;
     recommendation_rules: RecommendationRule[];
     card_layouts: CardLayoutRule[];
+    geoRules?: any[];
   };
   promoterDiscount?: { percent: number; flat: number; };
   customLayoutId?: string | null;
@@ -261,8 +262,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       return calculatePricing({
         selection: variation, products: currentProducts, addons: currentAddons,
         settings: pricingCache.settings, cablingDone, cablingMeters, referralDiscountPercent: promoterDiscount?.percent || 0,
-        referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer
-      });
+        referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer, geoRules: pricingCache.geoRules, locationParams: { pincode: lead.address?.pincode || lead.wizard_answers?.lead_pincode || lead.wizard_answers?.pincode } });
     };
     
     setPricingResults({ budget: calcTier("budget"), recommended: calcTier("recommended"), premium: calcTier("premium") });
@@ -282,8 +282,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       },
       products: currentProducts, addons: currentAddons, settings: pricingCache.settings, cablingDone, cablingMeters,
       referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0,
-      evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer,
-    });
+      evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer, geoRules: pricingCache.geoRules, locationParams: { pincode: lead.address?.pincode || lead.wizard_answers?.lead_pincode || lead.wizard_answers?.pincode } });
   }, [active_checkout_option, selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, cablingMeters, promoterDiscount, evaluatedRules, lead.active_offer]);
 
   const addonsTotal = useMemo(() => {
@@ -311,8 +310,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       },
       products: currentProducts, addons: currentAddons, settings: pricingCache.settings, cablingDone, cablingMeters,
       referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0,
-      evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer,
-    });
+      evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer, geoRules: pricingCache.geoRules, locationParams: { pincode: lead.address?.pincode || lead.wizard_answers?.lead_pincode || lead.wizard_answers?.pincode } });
   }, [active_checkout_option, selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, promoterDiscount, evaluatedRules, lead.active_offer, is_compare_mode, base_quote_pricing]);
 
   const customizationDiff = activePricing.total_payable - basePricing.total_payable;
@@ -578,7 +576,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         {/* PRICE MATCH — Subtle inline link (main UX is via the smart popup) */}
         <div className="mb-16">
           {priceMatchSubmitted ? (
-            <div className="max-w-xl mx-auto rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 sm:p-12 text-center shadow-sm animate-in fade-in zoom-in-95 duration-500">
+            <div className="max-w-xl mx-auto rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 md:p-8 sm:p-12 text-center shadow-sm animate-in fade-in zoom-in-95 duration-500">
               <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               </div>

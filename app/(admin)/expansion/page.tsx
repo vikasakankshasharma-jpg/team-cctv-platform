@@ -108,7 +108,7 @@ export default function ExpansionDashboard() {
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {areas.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-zinc-500 text-sm font-medium">
+                  <td colSpan={7} className="px-6 py-6 md:py-12 text-center text-zinc-500 text-sm font-medium">
                     No expansion data available yet.
                   </td>
                 </tr>

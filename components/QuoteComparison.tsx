@@ -171,7 +171,7 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
           </Button>
         </div>
         {comparePlans.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">No quotes selected for comparison. Select options from the main card to compare.</div>
+          <div className="text-center py-4 md:py-10 text-gray-500">No quotes selected for comparison. Select options from the main card to compare.</div>
         ) : (
           <div className="overflow-x-auto border border-zinc-200 rounded-xl bg-white shadow-sm">
             <table className="w-full text-left border-collapse min-w-[600px]">
@@ -341,7 +341,7 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
                 )}
               </div>
             ) : (
-              <div className="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-10 text-center text-gray-500">
+              <div className="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-4 md:p-10 text-center text-gray-500">
                 No matching configuration found for selected options.
               </div>
             )}

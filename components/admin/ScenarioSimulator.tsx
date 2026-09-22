@@ -34,7 +34,7 @@ export function ScenarioSimulator({ products, settings, addons }: ScenarioSimula
   }, [selection, products, settings, addons]);
 
   return (
-    <div className="bg-zinc-900 rounded-2xl border border-zinc-800 p-8 shadow-md relative overflow-hidden">
+    <div className="bg-zinc-900 rounded-2xl border border-zinc-800 p-4 md:p-8 shadow-md relative overflow-hidden">
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
           <Calculator className="w-6 h-6 text-indigo-400" />
@@ -45,7 +45,7 @@ export function ScenarioSimulator({ products, settings, addons }: ScenarioSimula
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         <div className="space-y-2">
           <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Technology</label>
           <select 
@@ -116,7 +116,7 @@ export function ScenarioSimulator({ products, settings, addons }: ScenarioSimula
           <span className="text-xl font-black text-white">₹{result.total_payable.toLocaleString('en-IN')}</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800">
             <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Purchase Cost</div>
             <div className="text-lg font-bold text-zinc-300">₹{result.total_purchase_cost?.toLocaleString('en-IN') || 0}</div>

@@ -205,9 +205,9 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
             {/* Timeline */}
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
               {loading ? (
-                <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                <div className="flex justify-center p-4 md:p-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
               ) : activities.length === 0 ? (
-                <div className="text-center p-8 text-sm text-muted-foreground">No activities recorded yet.</div>
+                <div className="text-center p-4 md:p-8 text-sm text-muted-foreground">No activities recorded yet.</div>
               ) : (
                 activities.map(act => (
                   <div key={act.id} className="relative pl-6 pb-2 border-l-2 border-border last:border-transparent last:pb-0">

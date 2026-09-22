@@ -72,17 +72,17 @@ export function PromotersClient({ initialPromoters, availableLayouts = [] }: Pro
           <table className="w-full text-left text-sm text-zinc-300">
             <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.2em] font-black">
               <tr>
-                <th className="px-8 py-6">Promoter</th>
-                <th className="px-8 py-6 text-center">Referral Code</th>
-                <th className="px-8 py-6 text-right">Total Business</th>
-                <th className="px-8 py-6 text-center">Status</th>
-                <th className="px-8 py-6 text-center">Actions</th>
+                <th className="px-4 md:px-8 py-6">Promoter</th>
+                <th className="px-4 md:px-8 py-6 text-center">Referral Code</th>
+                <th className="px-4 md:px-8 py-6 text-right">Total Business</th>
+                <th className="px-4 md:px-8 py-6 text-center">Status</th>
+                <th className="px-4 md:px-8 py-6 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40 text-zinc-500 dark:text-zinc-400 font-medium">
               {initialPromoters.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center">
+                  <td colSpan={5} className="px-4 md:px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-4">
                       <div className="w-16 h-16 rounded-[24px] bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center shadow-inner">
                         <BadgeDollarSign className="w-8 h-8 text-zinc-300 dark:text-zinc-700" />
@@ -97,7 +97,7 @@ export function PromotersClient({ initialPromoters, availableLayouts = [] }: Pro
               ) : (
                 initialPromoters.map((agent) => (
                   <tr key={agent.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all group/row">
-                    <td className="px-8 py-6">
+                    <td className="px-4 md:px-8 py-6">
                       <div className="font-black text-zinc-900 dark:text-white text-base leading-tight group-hover/row:text-amber-600 dark:group-hover/row:text-amber-500 transition-colors uppercase tracking-tight">{agent.name}</div>
                       {agent.mobile_number && (
                         <div className="flex items-center gap-2 text-[10px] text-zinc-400 dark:text-zinc-600 font-bold mt-2 uppercase tracking-widest">
@@ -106,18 +106,18 @@ export function PromotersClient({ initialPromoters, availableLayouts = [] }: Pro
                         </div>
                       )}
                     </td>
-                    <td className="px-8 py-6 text-center">
+                    <td className="px-4 md:px-8 py-6 text-center">
                       <span className="bg-amber-50 dark:bg-amber-500/5 text-amber-700 dark:text-amber-500 px-5 py-2 rounded-2xl font-mono font-black text-xs tracking-[0.3em] border border-amber-100 dark:border-amber-500/10 shadow-inner group-hover/row:bg-amber-100 dark:group-hover/row:bg-amber-500/10 transition-colors">
                         {agent.referral_code}
                       </span>
                     </td>
-                    <td className="px-8 py-6 text-right">
+                    <td className="px-4 md:px-8 py-6 text-right">
                       <div className="flex flex-col items-end">
                         <span className="font-black text-zinc-900 dark:text-white text-base">₹{(agent.total_ex_tax_business || 0).toLocaleString('en-IN')}</span>
                         <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-1 italic">Total ex-tax business</span>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-center">
+                    <td className="px-4 md:px-8 py-6 text-center">
                       {agent.is_active ? (
                         <span className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/20 shadow-inner">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -130,7 +130,7 @@ export function PromotersClient({ initialPromoters, availableLayouts = [] }: Pro
                         </span>
                       )}
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-4 md:px-8 py-6">
                       <div className="flex items-center justify-center gap-3">
                         <button
                           onClick={() => handleEdit(agent)}

@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     // 🚀🚀🚀🚀 Test Credential Bypass 🚀🚀🚀🚀
     const TEST_MOBILE = "9999999999";
     const TEST_OTP = "123456";
-    const isTestLogin = normalized === TEST_MOBILE && otpValue.toString().trim() === TEST_OTP;
+    const isTestLogin = false;
 
     if (!isTestLogin) {
       if (type === "mobile") {

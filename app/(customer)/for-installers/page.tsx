@@ -53,13 +53,13 @@ export default function ForInstallersPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link 
               href="/onboarding" 
-              className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-500 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-4 md:px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-500 transition-all flex items-center justify-center gap-2"
             >
               Apply to Join <ArrowRight className="w-4 h-4" />
             </Link>
             <Link 
               href="/installer/login" 
-              className="w-full sm:w-auto px-8 py-4 bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
+              className="w-full sm:w-auto px-4 md:px-8 py-4 bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
             >
               Installer Login
             </Link>
@@ -68,7 +68,7 @@ export default function ForInstallersPage() {
       </section>
 
       {/* Benefits Grid */}
-      <section className="py-20 bg-zinc-50 dark:bg-zinc-900/50">
+      <section className="py-10 md:py-20 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-black mb-4">Why Partner With CCTVQuotation?</h2>
@@ -77,7 +77,7 @@ export default function ForInstallersPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {benefits.map((b, i) => (
-              <div key={i} className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all">
+              <div key={i} className="bg-white dark:bg-zinc-900 p-4 md:p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all">
                 <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-6">
                   {b.icon}
                 </div>
@@ -90,16 +90,16 @@ export default function ForInstallersPage() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-20">
+      <section className="py-10 md:py-20">
         <div className="max-w-4xl mx-auto px-6">
-          <div className="bg-zinc-900 dark:bg-blue-600 rounded-[3rem] p-12 text-center text-white relative overflow-hidden">
+          <div className="bg-zinc-900 dark:bg-blue-600 rounded-[3rem] p-5 md:p-12 text-center text-white relative overflow-hidden">
             <h2 className="text-3xl font-black mb-6">Ready to claim your territory?</h2>
             <p className="text-blue-100/70 mb-10 font-medium max-w-lg mx-auto">
               We are currently selecting exclusive installers for major cities across India. Apply today to secure your area.
             </p>
             <Link 
               href="/onboarding" 
-              className="inline-flex px-10 py-5 bg-white text-zinc-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-zinc-100 transition-all gap-2 items-center"
+              className="inline-flex px-4 md:px-10 py-5 bg-white text-zinc-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-zinc-100 transition-all gap-2 items-center"
             >
               Start Application <ArrowRight className="w-4 h-4" />
             </Link>
@@ -108,7 +108,7 @@ export default function ForInstallersPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-zinc-100 dark:border-zinc-800">
+      <footer className="py-6 md:py-12 border-t border-zinc-100 dark:border-zinc-800">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm">CQ</div>

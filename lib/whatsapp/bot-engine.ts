@@ -37,10 +37,27 @@ export async function processIncomingMessage(
      session.wizard_answers.utm_campaign = referral.headline || referral.source_id;
   }
 
-  // Handle restart/reset explicitly
-  if (incomingType === "text" && content.toLowerCase() === "hi") {
-    session.state = "GREETING";
-    session.wizard_answers = {};
+  // Handle restart/reset explicitly and parse offline UTM tracking
+  if (incomingType === "text") {
+    const textLower = content.toLowerCase().trim();
+    if (textLower.startsWith("hi")) {
+      session.state = "GREETING";
+      session.wizard_answers = {};
+      
+      // If they sent something like "Hi Newspaper" or "Hi P102" from an offline QR code
+      const parts = textLower.split(" ");
+      if (parts.length > 1) {
+        const keyword = parts[1].toLowerCase();
+        // If it starts with P followed by numbers, treat it as a Partner/Shop referral
+        if (/^p\d+$/.test(keyword)) {
+           session.wizard_answers.partner_id = keyword.toUpperCase();
+           session.wizard_answers.utm_source = "shop_partner";
+        } else {
+           session.wizard_answers.utm_source = "offline_qr";
+           session.wizard_answers.utm_campaign = keyword;
+        }
+      }
+    }
   }
   
   // If we receive a flow submission, jump straight to GENERATING

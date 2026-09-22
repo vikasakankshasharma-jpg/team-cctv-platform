@@ -49,6 +49,13 @@ export interface QuoteData {
   advancePercent: number;
   companyGstin: string;
   billing_details?: Partial<BillingFormData>;
+  payment_preference?: "online_all" | "cash_on_delivery";
+  delivery_otp?: string;
+  delivery_status?: "PENDING" | "DISPATCHED" | "DELIVERED";
+  assigned_delivery_staff?: { name: string; phone: string; role: "internal" | "third_party" };
+  cash_collection_status?: "PENDING" | "COLLECTED_BY_STAFF" | "SETTLED_WITH_ADMIN";
+  cash_collected_amount?: number;
+  assigned_installer?: { name: string; phone: string };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -126,12 +133,26 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const [isPayingEMI, setIsPayingEMI] = useState(false);
   const [isPayingFull, setIsPayingFull] = useState(false);
   const [isPayingAdvance, setIsPayingAdvance] = useState(false);
+  const [isRequestingPdf, setIsRequestingPdf] = useState(false);
+
+  const handleRequestPdf = async () => {
+    try {
+      setIsRequestingPdf(true);
+      const res = await fetch(`/api/quote/${quote.id}/whatsapp`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to send WhatsApp");
+      toast.success("Quote PDF sent to your WhatsApp successfully!");
+    } catch (e) {
+      toast.error("Could not send PDF right now. Please try again.");
+    } finally {
+      setIsRequestingPdf(false);
+    }
+  };
 
   const subtotal = quote.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
   const total = subtotal + (subtotal * quote.gstPercent / 100);
   const halfGst = (subtotal * quote.gstPercent / 100) / 2;
   const isPartiallyPaid = (quote.amount_paid || 0) > 0 && (quote.amount_due || 0) > 0;
-  const advance = isPartiallyPaid && quote.amount_due ? quote.amount_due : Math.round(total * (quote.advancePercent / 100));
+  const advance = isPartiallyPaid && quote.amount_due ? quote.amount_due : 500;
   const daysLeft = daysUntil(quote.validUntil);
 
   const loadRazorpayScript = async (retries = 2): Promise<boolean> => {
@@ -175,7 +196,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     return false;
   };
 
-  const redirectToPaymentLink = async (type: "advance" | "advance_500" | "full" | "full_discount" | "emi", method: "all" | "emi", returnUrlOnly = false) => {
+  const redirectToPaymentLink = async (type: "advance" | "advance_500" | "advance_500_cod" | "full" | "full_discount" | "emi", method: "all" | "emi", returnUrlOnly = false) => {
     try {
       const toastId = toast.loading("Generating secure payment page...");
       const res = await fetch("/api/payment/razorpay-link", {
@@ -209,7 +230,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   };
 
   const handleWhatsAppShare = async () => {
-    const url = await redirectToPaymentLink("advance", "all", true);
+    const url = await redirectToPaymentLink("advance_500", "all", true);
     if (typeof url === "string") {
       const message = `Hi! Here is the secure payment link to confirm your CCTV installation booking: ${url}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
@@ -217,7 +238,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   };
 
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
-  const [selectedPaymentType, setSelectedPaymentType] = useState<"advance" | "advance_500" | "full" | "full_discount" | "emi">("advance");
+  const [selectedPaymentType, setSelectedPaymentType] = useState<"advance" | "advance_500" | "advance_500_cod" | "full" | "full_discount" | "emi">("advance_500");
   const [isSubmittingBilling, setIsSubmittingBilling] = useState(false);
   const [billingData, setBillingData] = useState<BillingFormData>({
     is_business: Boolean(quote.billing_details?.is_business || (quote.companyGstin && quote.companyGstin !== "08AABCT1234A1ZS")),
@@ -234,12 +255,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     pincode: quote.billing_details?.pincode || "",
   });
 
-  const openBillingModal = (type: "advance" | "advance_500" | "full" | "full_discount" | "emi") => {
+  const openBillingModal = (type: "advance" | "advance_500" | "advance_500_cod" | "full" | "full_discount" | "emi") => {
     setSelectedPaymentType(type);
     setIsBillingModalOpen(true);
   };
 
-  const handleConfirmBilling = async (formData: BillingFormData, pType: "advance" | "advance_500" | "full" | "full_discount" | "emi") => {
+  const handleConfirmBilling = async (formData: BillingFormData, pType: "advance" | "advance_500" | "advance_500_cod" | "full" | "full_discount" | "emi") => {
     setIsSubmittingBilling(true);
     try {
       await fetch(`/api/quote/${quote.id}/billing`, {
@@ -260,7 +281,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
     }
   };
 
-  const handlePayment = async (type: "advance" | "advance_500" | "full" | "full_discount" | "emi", method: "all" | "emi", billingOverride?: BillingFormData) => {
+  const handlePayment = async (type: "advance" | "advance_500" | "advance_500_cod" | "full" | "full_discount" | "emi", method: "all" | "emi", billingOverride?: BillingFormData) => {
     if (method === "emi") setIsPayingEMI(true);
     else if (type === "full") setIsPayingFull(true);
     else setIsPayingAdvance(true);
@@ -404,15 +425,14 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             </div>
           </div>
           
-          <a 
-            href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "917357612865"}?text=${encodeURIComponent(`Hi TEAM CCTV, please send me the official PDF for my Quote ID: ${quote.id}`)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-50/80 sm:bg-white border border-emerald-200 rounded-xl sm:rounded-full shadow-sm hover:bg-emerald-100 hover:shadow transition-all"
+          <button
+            onClick={handleRequestPdf}
+            disabled={isRequestingPdf}
+            className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-50/80 sm:bg-white border border-emerald-200 rounded-xl sm:rounded-full shadow-sm hover:bg-emerald-100 hover:shadow transition-all ${isRequestingPdf ? "opacity-70 cursor-not-allowed" : ""}`}
           >
             <MessageCircle className="w-4 h-4 text-emerald-600" />
-            Get PDF on WhatsApp
-          </a>
+            {isRequestingPdf ? "Sending..." : "Get PDF on WhatsApp"}
+          </button>
         </motion.div>
 
         <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
@@ -591,7 +611,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           {/* Value Propositions */}
           <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <TermCard icon={<ShieldCheck className="w-5 h-5" />} title="1-Year Warranty" body="Complete equipment and labour coverage. Free replacement for any defective parts." delay={0.1} />
-            <TermCard icon={<CreditCard className="w-5 h-5" />} title={`${quote.advancePercent}% Advance`} body={`${formatINR(advance)} required to initiate the project. Balance upon successful handover.`} delay={0.2} />
+            <TermCard icon={<CreditCard className="w-5 h-5" />} title={`Flat ₹500 Advance`} body={`${formatINR(advance)} required to initiate the project. 90% on delivery, 10% after completion.`} delay={0.2} />
             <TermCard icon={<Clock className="w-5 h-5" />} title="Priority Support" body="Free remote assistance for 12 months. Next-business-day on-site support." delay={0.3} />
           </motion.div>
 
@@ -645,16 +665,31 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                         <button
                           onClick={() => openBillingModal("advance_500")}
                           disabled={isPayingAdvance || isPayingFull}
-                          className="w-full py-3.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
+                          className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95"
                         >
-                          <CreditCard className="w-4 h-4" />
-                          Pay {isPartiallyPaid ? "Balance " : "Advance ₹500"}
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" />
+                            Pay {isPartiallyPaid ? "Balance " : "Advance ₹500"}
+                          </div>
+                          <span className="text-[10px] font-medium opacity-80">(Pay Remaining Balance Online at Delivery)</span>
+                        </button>
+
+                        <button
+                          onClick={() => openBillingModal("advance_500_cod")}
+                          disabled={isPayingAdvance || isPayingFull}
+                          className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs sm:text-sm border border-slate-700 shadow-sm transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95"
+                        >
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" />
+                            Pay {isPartiallyPaid ? "Balance " : "Advance ₹500"}
+                          </div>
+                          <span className="text-[10px] font-medium opacity-80 text-emerald-400">(Pay Remaining Balance via Cash at Delivery)</span>
                         </button>
 
                         <button
                           onClick={() => openBillingModal("full_discount")}
                           disabled={isPayingAdvance || isPayingFull}
-                          className="w-full py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl text-[11px] transition-all text-center"
+                          className="w-full py-2.5 px-3 bg-white/5 hover:bg-white/10 text-slate-300 font-medium rounded-xl text-[11px] transition-all text-center mt-1"
                         >
                           Or Pay Full Upfront (-2% Discount)
                         </button>
@@ -748,7 +783,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               <motion.div 
                 initial={{ scale: 0.95, opacity: 0 }} 
                 animate={{ scale: 1, opacity: 1 }} 
-                className="bg-emerald-500 text-white rounded-3xl p-8 sm:p-10 text-center shadow-xl shadow-emerald-500/20"
+                className="bg-emerald-500 text-white rounded-3xl p-4 md:p-8 sm:p-10 text-center shadow-xl shadow-emerald-500/20"
               >
                 <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
                   <Check className="w-8 h-8 text-white" />
@@ -790,15 +825,14 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 Pay ₹500
               </button>
 
-              <a
-                href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "917357612865"}?text=${encodeURIComponent(`Hi TEAM CCTV, please send me the official PDF for my Quote ID: ${quote.id}`)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors shrink-0"
-                title="WhatsApp PDF"
-              >
-                <MessageCircle className="w-5 h-5 text-emerald-600" />
-              </a>
+                <button
+                  onClick={handleRequestPdf}
+                  disabled={isRequestingPdf}
+                  className={`flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors shrink-0 ${isRequestingPdf ? "opacity-70 cursor-not-allowed" : ""}`}
+                  title="WhatsApp PDF"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </button>
             </div>
           </div>
         </div>

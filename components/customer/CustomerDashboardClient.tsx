@@ -81,7 +81,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
   const paidQuotesCount = quotes.filter((q) => q.isPaid).length;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-4 md:py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Top Bar: Profile & Logout */}
@@ -211,7 +211,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
 
           {/* Quotations List */}
           {filteredQuotes.length === 0 ? (
-            <div className="p-12 text-center">
+            <div className="p-5 md:p-12 text-center">
               <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 rounded-3xl flex items-center justify-center mx-auto mb-4">
                 <FileText className="w-8 h-8" />
               </div>

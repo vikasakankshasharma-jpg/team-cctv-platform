@@ -101,7 +101,7 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
         <p className="text-muted-foreground mb-8 text-center px-4 max-w-sm">
           No urgent follow-ups or unattended leads for today. You are completely caught up.
         </p>
-        <Button onClick={onClose} size="lg" className="rounded-full px-8 font-bold">
+        <Button onClick={onClose} size="lg" className="rounded-full px-4 md:px-8 font-bold">
           Return to Dashboard
         </Button>
       </div>
@@ -178,7 +178,7 @@ export function ProgressiveDialer({ leads, currentUser, isOpen, onClose }: Progr
               className="w-full h-32 p-4 bg-background border border-border rounded-xl resize-none outline-none focus:ring-2 focus:ring-primary/50 text-sm font-medium"
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5"/> Next Follow-up</label>
                 <input 

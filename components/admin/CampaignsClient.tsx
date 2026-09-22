@@ -137,7 +137,7 @@ export default function CampaignsClient({ initialCampaigns }: CampaignsClientPro
           </Card>
         ))}
         {campaigns.length === 0 && (
-          <div className="col-span-full py-12 text-center text-muted-foreground font-medium text-xs border border-dashed border-border rounded-xl">
+          <div className="col-span-full py-6 md:py-12 text-center text-muted-foreground font-medium text-xs border border-dashed border-border rounded-xl">
             No campaigns found. Create one to get started.
           </div>
         )}

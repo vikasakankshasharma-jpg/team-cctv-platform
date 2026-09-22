@@ -195,7 +195,7 @@ export function CompetitorQuoteUploader({
   // ─── Success State ───────────────────────────────────────────────
   if (isSubmitted) {
     return (
-      <div className="rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 sm:p-12 text-center shadow-sm transition-all duration-500 animate-in fade-in zoom-in-95">
+      <div className="rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 md:p-8 sm:p-12 text-center shadow-sm transition-all duration-500 animate-in fade-in zoom-in-95">
         <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
           <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
         </div>

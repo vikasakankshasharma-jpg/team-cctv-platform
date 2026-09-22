@@ -26,9 +26,9 @@ export default function QuoteLoading() {
       </div>
 
       {/* Action buttons skeleton */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-4 pb-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-4 pb-6 md:pb-12">
         <div className="h-14 sm:h-16 bg-blue-100/60 dark:bg-blue-900/30 rounded-[28px] w-full" />
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="h-14 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl" />
           <div className="h-14 bg-zinc-50 dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700" />
         </div>

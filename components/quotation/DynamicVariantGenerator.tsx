@@ -528,7 +528,7 @@ export function DynamicVariantGenerator({
       </div>
 
       {variants.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-300">
+        <div className="text-center py-6 md:py-12 bg-white rounded-2xl border border-dashed border-slate-300">
           <p className="text-slate-500 font-medium">{t("wz_no_packages_found_for_these_fi")}</p>
           <Button variant="link" onClick={() => { setActiveBrand("all"); setCameraBuckets(prev => prev.map(b => ({ ...b, resolution: "2MP" }))); }}>{t("wz_clear_filters")}</Button>
         </div>
@@ -574,7 +574,7 @@ export function DynamicVariantGenerator({
                                           </div>
               )}
               
-              <CardContent className="py-8 px-5 flex flex-col items-center justify-center min-h-[180px]">
+              <CardContent className="py-4 md:py-8 px-5 flex flex-col items-center justify-center min-h-[180px]">
                 <div className="text-center w-full">
                   <div className="text-base font-black text-[#6366f1] mb-1.5 flex items-center justify-center gap-1.5 flex-wrap">
                     <span>{variant.camera_device?.brand || "Budget"}</span>

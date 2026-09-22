@@ -97,8 +97,8 @@ export default function PriceMatchHubClient() {
     }
   };
 
-  if (loading) return <div className="text-center py-20 animate-pulse text-muted-foreground font-bold text-lg">Loading Requests...</div>;
-  if (error) return <div className="text-center py-20 text-destructive font-bold">{error}</div>;
+  if (loading) return <div className="text-center py-10 md:py-20 animate-pulse text-muted-foreground font-bold text-lg">Loading Requests...</div>;
+  if (error) return <div className="text-center py-10 md:py-20 text-destructive font-bold">{error}</div>;
 
   return (
     <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm flex flex-col md:flex-row min-h-[600px] relative">
@@ -126,7 +126,7 @@ export default function PriceMatchHubClient() {
         {/* List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/10">
           {filteredReqs.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground text-sm">No requests found.</div>
+            <div className="text-center py-4 md:py-10 text-muted-foreground text-sm">No requests found.</div>
           ) : (
             filteredReqs.map(req => (
               <div 
@@ -181,7 +181,7 @@ export default function PriceMatchHubClient() {
               </a>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                <div className="bg-muted/30 border border-border p-5 rounded-2xl">
                  <p className="text-sm font-bold text-muted-foreground uppercase mb-1">Competitor Price</p>
                  <p className="text-3xl font-black text-destructive">
@@ -294,7 +294,7 @@ export default function PriceMatchHubClient() {
           </div>
         </div>
       ) : (
-        <div className="hidden md:flex flex-1 flex-col items-center justify-center text-muted-foreground p-10">
+        <div className="hidden md:flex flex-1 flex-col items-center justify-center text-muted-foreground p-4 md:p-10">
           <FileText className="w-16 h-16 mb-4 opacity-20" />
           <p className="text-lg font-medium">Select a request from the list to review it.</p>
         </div>

@@ -517,7 +517,7 @@ export default function VendorImportClient() {
 
       <main className="max-w-[1600px] mx-auto p-6 space-y-6">
         {isLoading ? (
-          <div className="text-center text-muted-foreground py-20">Loading...</div>
+          <div className="text-center text-muted-foreground py-10 md:py-20">Loading...</div>
         ) : activeTab === "discovery" ? (
           <div className="border rounded-xl p-6 bg-card">
                <div className="flex justify-between items-center mb-4">
@@ -610,7 +610,7 @@ export default function VendorImportClient() {
                  </div>
                </div>
                <div 
-                 className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${
+                 className={`border-2 border-dashed rounded-xl p-4 md:p-10 text-center transition-colors ${
                    progress.status !== 'idle' ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10" : "border-border hover:border-indigo-500/50 hover:bg-muted/30"
                  }`}
                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -794,11 +794,11 @@ export default function VendorImportClient() {
              
              <div className="grid grid-cols-1 gap-6">
              {stagedProducts.length === 0 ? (
-                 <div className="text-center py-20 text-muted-foreground bg-muted/30 rounded-xl border border-dashed">
+                 <div className="text-center py-10 md:py-20 text-muted-foreground bg-muted/30 rounded-xl border border-dashed">
                     Staging area is empty. Scrape products to see them here.
                  </div>
                ) : paginatedProducts.length === 0 ? (
-                 <div className="text-center py-20 text-muted-foreground bg-muted/30 rounded-xl border border-dashed">
+                 <div className="text-center py-10 md:py-20 text-muted-foreground bg-muted/30 rounded-xl border border-dashed">
                     No products found matching your filters.
                  </div>
                ) : (

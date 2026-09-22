@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 
-import { TwilioWhatsAppProvider } from "@/lib/whatsapp/twilio-provider";
+import { Msg91WhatsAppProvider } from "@/lib/whatsapp/msg91-provider";
 
 export async function POST(
   request: Request,
@@ -40,29 +40,22 @@ export async function POST(
     }
 
     // 3. Send via WhatsApp Provider
-    let deliveryResult = { success: false, messageId: "", error: "" };
+    let deliveryResult: { success: boolean; messageId?: string; error?: string } = { success: false, messageId: "", error: "" };
     
     if (testMode) {
       console.log(`[TEST MODE] Mock WhatsApp sending to ${quote.customer_mobile}`);
       deliveryResult = { success: true, messageId: `mock_${Date.now()}`, error: "" };
     } else {
-      const waProvider = new TwilioWhatsAppProvider();
+      const waProvider = new Msg91WhatsAppProvider();
       
       let phone = quote.customer_mobile;
 
-      deliveryResult = (await waProvider.sendQuote({
+      deliveryResult = await waProvider.sendQuote({
         phone,
         customerName: quote.customer_name || 'Customer',
         quoteId,
-        totalAmount: quote.pricingSnapshot.total_payable,
-        pdfUrl,
-        selectedPlan: quote.selectedPlan,
-        planDetails: {
-          cameras: quote.requirementSnapshot.camera_count || 4,
-          days: quote.requirementSnapshot.recording_days || 0,
-          remote: !!quote.requirementSnapshot.wants_remote_viewing
-        }
-      })) as any;
+        pdfUrl
+      });
     }
 
     // 4. Save Delivery Record

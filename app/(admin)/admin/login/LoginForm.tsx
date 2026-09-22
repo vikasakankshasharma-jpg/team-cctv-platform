@@ -233,7 +233,7 @@ export default function AdminLoginForm() {
       <div className="min-h-screen flex bg-[var(--bg)] overflow-hidden transition-colors duration-500">
 
         {/* ── LEFT BRANDING PANEL ──────────────────────────────────────────── */}
-        <div className="hidden lg:flex lg:w-[52%] relative flex-col justify-between p-14 overflow-hidden bg-gradient-to-br from-[var(--bg)] to-[var(--surface2)] z-20">
+        <div className="hidden lg:flex lg:w-[52%] relative flex-col justify-between p-6 md:p-14 overflow-hidden bg-gradient-to-br from-[var(--bg)] to-[var(--surface2)] z-20">
 
           {/* Orbs */}
           <div className="absolute inset-0 pointer-events-none">
@@ -295,7 +295,7 @@ export default function AdminLoginForm() {
         </div>
 
         {/* ── RIGHT FORM PANEL ─────────────────────────────────────────────── */}
-        <div className="flex-1 flex items-center justify-center p-8 relative bg-[var(--bg)]">
+        <div className="flex-1 flex items-center justify-center p-4 md:p-8 relative bg-[var(--bg)]">
           <BackgroundOrbs />
           <DotGrid />
 

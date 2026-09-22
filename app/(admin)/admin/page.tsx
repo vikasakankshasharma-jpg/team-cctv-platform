@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import { Users, FileText, Percent, BadgeIndianRupee, LayoutDashboard, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { DashboardClient, type WeeklyBucket, type SourceBreakdown, type RecentActivity } from "@/components/admin/DashboardClient";
+import ActionCenterWidget from "@/components/admin/ActionCenterWidget";
 import type { Metadata } from "next";
 import type { Promoter, Lead } from "@/types";
 
@@ -122,11 +123,12 @@ export default async function AdminDashboard() {
   });
 
   const internalLeads: RecentActivity[] = internalLeadsSnap.docs.map((doc: any) => {
-    const d = doc.data() as Lead;
+    const d = doc.data() as Lead & { escalation_reason?: string };
     return {
       id: doc.id,
       customer_name: d.customer_name ?? "Unknown",
       status: d.status ?? "new",
+      escalation_reason: d.escalation_reason,
       created_at: (d.created_at as any)?.toDate?.()?.toISOString() ?? "",
     };
   });
@@ -187,7 +189,7 @@ export default async function AdminDashboard() {
   ];
 
   return (
-    <div className="animate-in fade-in duration-700 pb-12">
+    <div className="animate-in fade-in duration-700 pb-6 md:pb-12">
       {/* KPI Grid */}
       <div className="kpi-grid">
         {KPIS.map((kpi, idx) => (
@@ -206,6 +208,10 @@ export default async function AdminDashboard() {
             <div className="kpi-bar" style={{ background: kpi.colorVar, width: kpi.progress }}></div>
           </Link>
         ))}
+      </div>
+
+      <div className="mb-6 w-full">
+        <ActionCenterWidget />
       </div>
 
       {/* Two-Column Grid for live charts/tables */}

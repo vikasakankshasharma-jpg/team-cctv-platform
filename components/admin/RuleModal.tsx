@@ -76,7 +76,7 @@ export function RuleModal({ isOpen, onClose, onSave, initialData }: RuleModalPro
           <div className="p-6 overflow-y-auto space-y-8 custom-scrollbar">
             
             {/* Basic Config */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Execution Priority</label>
                 <input 
@@ -129,7 +129,7 @@ export function RuleModal({ isOpen, onClose, onSave, initialData }: RuleModalPro
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
                 <div className="space-y-2">
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Technology</label>
                   <select 
@@ -172,7 +172,7 @@ export function RuleModal({ isOpen, onClose, onSave, initialData }: RuleModalPro
                 <h4 className="text-[12px] font-semibold text-foreground tracking-wider uppercase">Recommended Output</h4>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Camera Option (1-5)</label>
                   <select 

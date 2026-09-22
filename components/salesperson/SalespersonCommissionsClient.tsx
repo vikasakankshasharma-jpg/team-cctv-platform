@@ -91,7 +91,7 @@ export function SalespersonCommissionsClient({ records, summary }: SalespersonCo
             <TableBody>
               {filteredRecords.length === 0 ? (
                 <TableRow className="border-zinc-800 hover:bg-zinc-800/50">
-                  <TableCell colSpan={5} className="text-center py-8 text-zinc-500">
+                  <TableCell colSpan={5} className="text-center py-4 md:py-8 text-zinc-500">
                     No commission records found.
                   </TableCell>
                 </TableRow>

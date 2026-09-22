@@ -27,6 +27,7 @@ export const COLLECTIONS = {
   INSTALLER_OTP_VERIFICATIONS: "installer_otp_verifications",
   LEDGER_TRANSACTIONS: "ledger_transactions",
   WHATSAPP_SESSIONS: "whatsapp_sessions",
+  MARKETING_CAMPAIGNS: "marketing_campaigns",
 } as const;
 
 

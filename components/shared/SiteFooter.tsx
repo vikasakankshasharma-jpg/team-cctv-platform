@@ -14,7 +14,7 @@ export function SiteFooter() {
   if (pathname?.startsWith("/wizard")) return null;
 
   return (
-    <footer className="border-t border-zinc-100 dark:border-zinc-900 bg-white dark:bg-zinc-950/50 py-10 sm:py-16 px-4 sm:px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] md:pb-10 transition-colors">
+    <footer className="border-t border-zinc-100 dark:border-zinc-900 bg-white dark:bg-zinc-950/50 py-4 md:py-10 sm:py-16 px-4 sm:px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] md:pb-10 transition-colors">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
         <div className="text-left space-y-6">
           <div className="flex items-center gap-2">

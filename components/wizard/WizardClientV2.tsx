@@ -203,6 +203,17 @@ export function WizardClientV2() {
     wants_remote_viewing: true
   });
   
+  // Auto-capture referral code from URL parameters
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ref = urlParams.get("ref") || urlParams.get("partner_id") || urlParams.get("promo");
+      if (ref) {
+        setReq(prev => ({ ...prev, partner_id: ref.toUpperCase() }));
+      }
+    }
+  }, []);
+
   const [loading, setLoading] = useState(false);
   const [quoteResult, setQuoteResult] = useState<any>(null);
   const totalSteps = req.installation_type === "addon" ? 6 : 5;
@@ -263,7 +274,7 @@ export function WizardClientV2() {
     try {
       const cleanMobile = req.customer_mobile.replace(/\s/g, "");
 
-      if (cleanMobile === "9999999999" || cleanMobile === "9587980007") {
+      if (false) {
         setConfirmationResult({
           confirm: async (code: string) => {
             return { user: { uid: "mock-e2e-uid" } } as any;
@@ -318,25 +329,21 @@ export function WizardClientV2() {
     try {
       const cleanMobile = (req.customer_mobile || "").replace(/\s/g, "");
       
-      if (cleanMobile === "9999999999" || cleanMobile === "9587980007") {
-        if (confirmationResult) await confirmationResult.confirm(code);
-      } else {
-        const verifyEndpoint = otpMethod === "sms" ? "/api/auth/otp/sms/verify" : "/api/auth/otp/whatsapp/verify";
-        const res = await fetch(verifyEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: cleanMobile, otp: code }),
-        });
-        const data = await res.json();
-        
-        if (!res.ok) {
-          throw new Error(data.error || "Invalid OTP code.");
-        }
-        
-        // We get a custom token back, sign in with it!
-        if (data.customToken) {
-          await signInWithCustomToken(auth, data.customToken);
-        }
+      const verifyEndpoint = otpMethod === "sms" ? "/api/auth/otp/sms/verify" : "/api/auth/otp/whatsapp/verify";
+      const res = await fetch(verifyEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanMobile, otp: code }),
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Invalid OTP code.");
+      }
+      
+      // We get a custom token back, sign in with it!
+      if (data.customToken) {
+        await signInWithCustomToken(auth, data.customToken);
       }
       
       toast.success("Verification successful!");
@@ -472,7 +479,7 @@ export function WizardClientV2() {
   if (quoteResult) {
 
     return (
-      <div className="max-w-6xl mx-auto py-12 px-4 sm:px-6">
+      <div className="max-w-6xl mx-auto py-6 md:py-12 px-4 sm:px-6">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">{t("wz_your_cctv_options")}</h1>
           <p className="text-gray-600">{t("wz_select_the_plan_that_best_fits")}</p>
@@ -507,13 +514,13 @@ export function WizardClientV2() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button onClick={() => setStep(1)}
-                className="p-8 rounded-2xl border-2 text-left hover:border-blue-500 transition-all group bg-blue-50/50 border-blue-100 shadow-sm hover:shadow-md">
+                className="p-4 md:p-8 rounded-2xl border-2 text-left hover:border-blue-500 transition-all group bg-blue-50/50 border-blue-100 shadow-sm hover:shadow-md">
                 <span className="block font-black text-xl text-blue-900 group-hover:text-blue-700 mb-2"><Sparkles className="w-5 h-5 mr-1.5 inline-block" />  {t("wz_guided_setup_recommended")}</span>
                 <span className="block text-sm text-blue-800 font-medium leading-relaxed">{t("wz_answer_a_few_simple_questions_")}</span>
               </button>
               
               <button onClick={() => window.location.href = '/pro-builder'}
-                className="p-8 rounded-2xl border-2 text-left hover:border-zinc-900 transition-all group bg-white border-zinc-200 shadow-sm hover:shadow-md">
+                className="p-4 md:p-8 rounded-2xl border-2 text-left hover:border-zinc-900 transition-all group bg-white border-zinc-200 shadow-sm hover:shadow-md">
                 <span className="block font-black text-xl text-zinc-900 group-hover:text-black mb-2"><Wrench className="w-5 h-5 mr-1.5 inline-block" />  {t("wz_custom_build_advanced")}</span>
                 <span className="block text-sm text-zinc-500 font-medium leading-relaxed">{t("wz_i_already_know_exactly_what_ca")}</span>
               </button>
@@ -591,13 +598,13 @@ export function WizardClientV2() {
                <p className="text-gray-600 mb-6">{t("wz_tell_us_about_your_current_rec")}</p>
                
                <h3 className="font-semibold text-lg">{t("wz_1_technology")}</h3>
-               <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button onClick={() => setReq(prev => ({ ...prev, existing_technology: "HD" }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_technology === 'HD' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white'}`}>{t("wz_analog_hd_bnc_wire")}</button>
                   <button onClick={() => setReq(prev => ({ ...prev, existing_technology: "IP" }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_technology === 'IP' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white'}`}>{t("wz_ip__network_cat6_wire")}</button>
                </div>
                
                <h3 className="font-semibold text-lg mt-6">{t("wz_2_existing_recorder_channels")}</h3>
-               <div className="grid grid-cols-4 gap-2">
+               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[4, 8, 16, 32].map(ch => (
                     <button key={ch} onClick={() => setReq(prev => ({ ...prev, existing_recorder_channels: ch }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_recorder_channels === ch ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white hover:border-blue-300'}`}>{ch} Ch</button>
                   ))}
@@ -780,13 +787,13 @@ export function WizardClientV2() {
                {!req.retain_existing_storage && (
                  <div className="animate-in fade-in bg-gray-50 p-6 rounded-xl border">
                    <h3 className="font-semibold mb-4 text-gray-900">{t("wz_target_recording_days")}</h3>
-                   <div className="grid grid-cols-3 gap-3 mb-4">
+                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                      {[7, 15, 30].map(days => (
                        <button key={days} onClick={() => setReq(prev => ({ ...prev, recording_days: days }))} className={`p-3 rounded-xl border-2 text-center font-bold ${req.recording_days === days ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white hover:border-blue-300'}`}>{days}  {t("wz_days")}</button>
                      ))}
                    </div>
                    <h3 className="font-semibold mb-3 text-gray-900 mt-4">{t("wz_recording_mode")}</h3>
-                   <div className="grid grid-cols-2 gap-4">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                      <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))} className={`p-3 rounded-xl border-2 ${req.recording_mode === 'continuous' ? 'border-blue-600 bg-blue-50' : 'bg-white'}`}>{t("wz_24x7_continuous")}</button>
                      <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))} className={`p-3 rounded-xl border-2 ${req.recording_mode === 'motion' ? 'border-green-500 bg-green-50' : 'bg-white'}`}>{t("wz_smart_motion")}</button>
                    </div>
@@ -810,7 +817,7 @@ export function WizardClientV2() {
               <div className="space-y-6">
                 <div>
                   <h3 className="font-semibold mb-3">{t("wz_1_approximate_mounting_height")}</h3>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <button onClick={() => updateReq({ ceiling_height: "standard" })}
                       className={`p-3 rounded-xl border text-sm text-center ${req.ceiling_height === 'standard' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
                       
@@ -831,7 +838,7 @@ export function WizardClientV2() {
 
                 <div>
                   <h3 className="font-semibold mb-3">{t("wz_2_surface_type")}</h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button onClick={() => {
                         const types = req.surface_types || [];
                         const newTypes = types.includes('brick') ? types.filter((t: string) => t !== 'brick') : [...types, 'brick'];
@@ -855,7 +862,7 @@ export function WizardClientV2() {
 
                 <div>
                   <h3 className="font-semibold mb-3">{t("wz_3_existing_cabling")}</h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button onClick={() => updateReq({ cabling_done: false })}
                       className={`p-3 rounded-xl border text-sm text-center ${req.cabling_done === false ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
                       No
@@ -1048,6 +1055,17 @@ export function WizardClientV2() {
                     className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   />
                 </div>
+                <div className="p-4 bg-green-50 rounded-xl border border-green-100">
+                  <label className="block text-sm font-bold text-green-900 mb-1">Referral Code (Optional)</label>
+                  <p className="text-xs text-green-700 mb-2">Submit Referral Code to get discount</p>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. P102" 
+                    value={req.partner_id || ''} 
+                    onChange={(e) => setReq(prev => ({ ...prev, partner_id: e.target.value.toUpperCase() }))} 
+                    className="w-full p-3.5 border border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all uppercase placeholder-normal bg-white"
+                  />
+                </div>
               </div>
 
               <Button 
@@ -1069,11 +1087,11 @@ export function WizardClientV2() {
     }
   };
   return (
-    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
+    <div className="max-w-3xl mx-auto py-6 md:py-12 px-4 sm:px-6">
       
       
       <h1 className="sr-only">{t("wz_cctv_quotation_wizard")}</h1>
-      <div className="bg-white rounded-2xl shadow-sm border p-8">
+      <div className="bg-white rounded-2xl shadow-sm border p-4 md:p-8">
         <div className="flex justify-between items-center mb-4">
           <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>

@@ -120,7 +120,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Section: Company Profile */}
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all">
+        <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
               <Settings2 className="w-5 h-5" />
@@ -178,7 +178,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
 
         {/* Section: Pricing & Taxes */}
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-success/20 transition-all">
+        <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-success/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success border border-success/20">
               <BadgePercent className="w-5 h-5" />
@@ -189,7 +189,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">GST Compliance (%)</label>
               <div className="relative">
@@ -319,7 +319,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
 
         {/* Section: Component Margins & Hardware Markups (%) */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all">
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
@@ -529,7 +529,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
 
         {/* Section: Brand Display Tabs */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all">
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
               <Settings2 className="w-5 h-5" />
@@ -559,7 +559,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
 
         {/* Section: Brand Tier Management */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all">
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
               <Zap className="w-5 h-5" />
@@ -664,7 +664,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
 
         {/* Section: High-Fidelity Logic (PDF Alignment) */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-warning/20 transition-all">
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-warning/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning border border-warning/20">
               <Ruler className="w-5 h-5" />
@@ -790,7 +790,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
 
         {/* Section: Service Level Agreements (SLA) */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-destructive/20 transition-all">
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-destructive/20 transition-all">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive border border-destructive/20">
               <Zap className="w-5 h-5" />
@@ -854,7 +854,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </div>
 
         {/* Section: Operational Mode & Emergency Kill Switch */}
-        <div className="lg:col-span-2 bg-card border-2 border-primary/30 rounded-2xl p-8 shadow-sm">
+        <div className="lg:col-span-2 bg-card border-2 border-primary/30 rounded-2xl p-4 md:p-8 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
               <Zap className="w-5 h-5" />
@@ -898,7 +898,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       </div>
 
       {/* Section: PDF Generation */}
-      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all mt-6">
+      <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all mt-6">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
             <Settings2 className="w-5 h-5" />
@@ -958,7 +958,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       </div>
 
       {/* Section: Communications */}
-      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all">
+      <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
             <MessageSquare className="w-5 h-5" />
@@ -1018,7 +1018,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       </div>
 
       {/* Section: AI & Enrichment */}
-      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm group hover:border-primary/20 transition-all mt-6">
+      <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all mt-6">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
             <Zap className="w-5 h-5" />

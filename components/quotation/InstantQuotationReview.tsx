@@ -366,7 +366,7 @@ export function InstantQuotationReview({
       </div>
 
           <div className="flex justify-end pt-2 pb-6">
-            <Button onClick={() => setStep(2)} className="bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-extrabold px-8 py-3.5 rounded-full text-base shadow-xl transition-transform active:scale-95 group">
+            <Button onClick={() => setStep(2)} className="bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-extrabold px-4 md:px-8 py-3.5 rounded-full text-base shadow-xl transition-transform active:scale-95 group">
               Next: Customize & Add-ons <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
@@ -514,7 +514,7 @@ export function InstantQuotationReview({
           <Button
             onClick={onProceedToActualQuotation}
             disabled={isSaving}
-            className="w-full sm:w-auto bg-white hover:bg-zinc-100 text-blue-700 font-extrabold text-sm px-8 py-3 rounded-full shadow-lg transition-transform active:scale-95"
+            className="w-full sm:w-auto bg-white hover:bg-zinc-100 text-blue-700 font-extrabold text-sm px-4 md:px-8 py-3 rounded-full shadow-lg transition-transform active:scale-95"
           >
             {isSaving ? "Finalizing Quote..." : "Proceed to Final Quotation →"}
           </Button>

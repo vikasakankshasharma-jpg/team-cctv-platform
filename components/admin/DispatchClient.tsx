@@ -68,7 +68,7 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
           <TableBody>
             {displayJobs.length === 0 ? (
               <TableRow className="border-border/50">
-                <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-6 md:py-12 text-muted-foreground">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Workflow className="w-8 h-8 opacity-20" />
                     <p>No jobs found in this view.</p>

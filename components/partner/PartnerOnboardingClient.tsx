@@ -42,7 +42,7 @@ export default function PartnerOnboardingClient() {
 
   if (successData) {
     return (
-      <div className="bg-card border border-border rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-xl animate-in zoom-in-95 duration-500">
+      <div className="bg-card border border-border rounded-3xl p-4 md:p-8 max-w-md w-full text-center space-y-6 shadow-xl animate-in zoom-in-95 duration-500">
         <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-4">
           <CheckCircle2 className="w-8 h-8 text-success" />
         </div>
@@ -62,10 +62,10 @@ export default function PartnerOnboardingClient() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-card border border-border rounded-3xl p-8 max-w-md w-full space-y-6 shadow-xl animate-in fade-in duration-500">
+    <form onSubmit={handleSubmit} className="bg-card border border-border rounded-3xl p-4 md:p-8 max-w-md w-full space-y-6 shadow-xl animate-in fade-in duration-500">
       
       {/* Partner Type Selection */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <button 
           type="button" 
           onClick={() => setForm(f => ({...f, partner_type: "promoter"}))}
@@ -109,7 +109,7 @@ export default function PartnerOnboardingClient() {
         </div>
       )}
 
-      <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
+      <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground px-4 md:px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><ShieldCheck className="w-5 h-5" /> Register Now</>}
       </button>
 

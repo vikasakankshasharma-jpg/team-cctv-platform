@@ -246,17 +246,17 @@ export function ReportsClient({ data: allData, products, promoters }: ReportsCli
       {reportType === "sales" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-300">
            {/* Same style blocks as old sales report */}
-           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg">
+           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 shadow-lg">
              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4">Total Revenue Generated</p>
              <p className="text-4xl font-black text-zinc-900 dark:text-white">₹{salesAggregates.totalQuoteValue.toLocaleString('en-IN')}</p>
              <p className="text-[10px] font-bold text-blue-500 mt-2">{wonData.length} Closed Deals</p>
            </div>
-           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg">
+           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 shadow-lg">
              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4">Average Deal Size</p>
              <p className="text-4xl font-black text-zinc-900 dark:text-white">₹{salesAggregates.avgQuoteValue.toLocaleString('en-IN')}</p>
              <p className="text-[10px] font-bold text-indigo-500 mt-2">IP: {salesAggregates.ipCount} | HD: {salesAggregates.hdCount}</p>
            </div>
-           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg">
+           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 shadow-lg">
              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4">Top Add-on Catalyst</p>
              <p className="text-2xl font-black text-amber-600 leading-tight uppercase tracking-tighter">{salesAggregates.topAddon.name}</p>
              <p className="text-[10px] font-bold text-amber-500 mt-2">Attached to {salesAggregates.topAddon.percentage} of won deals</p>
@@ -269,20 +269,20 @@ export function ReportsClient({ data: allData, products, promoters }: ReportsCli
 
       {reportType === "leads" && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-in fade-in zoom-in-95 duration-300">
-           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg">
+           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 shadow-lg">
              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4">Total Acquired Leads</p>
              <p className="text-5xl font-black text-zinc-900 dark:text-white">{leadsAggregates.total}</p>
            </div>
-           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg">
+           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 shadow-lg">
              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4">Proceeded to Quote</p>
              <p className="text-5xl font-black text-blue-500">{leadsAggregates.quotedRate}%</p>
              <p className="text-[10px] font-bold text-blue-400 mt-2">{leadsAggregates.quoted} out of {leadsAggregates.total}</p>
            </div>
-           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg">
+           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 shadow-lg">
              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4">Deals Won</p>
              <p className="text-5xl font-black text-emerald-500">{leadsAggregates.won}</p>
            </div>
-           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg">
+           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 shadow-lg">
              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4">Global Conversion Rate</p>
              <p className="text-5xl font-black text-emerald-600">{leadsAggregates.conversionRate}%</p>
            </div>
@@ -291,17 +291,17 @@ export function ReportsClient({ data: allData, products, promoters }: ReportsCli
 
       {reportType === "products" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-300">
-           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg">
+           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 shadow-lg">
              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4">Total Catalog Size</p>
              <p className="text-5xl font-black text-zinc-900 dark:text-white">{productAggregates.total}</p>
              <p className="text-[10px] font-bold text-blue-500 mt-2">{productAggregates.active} Active SKUs</p>
            </div>
-           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-lg">
+           <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 shadow-lg">
              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4">Average Gross Margin</p>
              <p className="text-5xl font-black text-emerald-500">{productAggregates.avgMargin}%</p>
              <p className="text-[10px] font-bold text-emerald-400 mt-2">Across all products</p>
            </div>
-           <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-8 shadow-inner flex flex-col justify-center items-center text-center">
+           <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 md:p-8 shadow-inner flex flex-col justify-center items-center text-center">
              <Package className="w-12 h-12 text-amber-500 mb-4" />
              <p className="text-sm font-black text-amber-600 uppercase tracking-widest">To edit products, use the Export/Import functionality in Data Management.</p>
            </div>
@@ -314,26 +314,26 @@ export function ReportsClient({ data: allData, products, promoters }: ReportsCli
              <table className="w-full text-left text-sm">
                <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 uppercase text-[10px] tracking-[0.2em] font-black">
                  <tr>
-                   <th className="px-8 py-6">Promoter / Source</th>
-                   <th className="px-8 py-6 text-center">Total Leads</th>
-                   <th className="px-8 py-6 text-center">Deals Won</th>
-                   <th className="px-8 py-6 text-center">Conversion</th>
-                   <th className="px-8 py-6 text-right">Revenue Generated</th>
+                   <th className="px-4 md:px-8 py-6">Promoter / Source</th>
+                   <th className="px-4 md:px-8 py-6 text-center">Total Leads</th>
+                   <th className="px-4 md:px-8 py-6 text-center">Deals Won</th>
+                   <th className="px-4 md:px-8 py-6 text-center">Conversion</th>
+                   <th className="px-4 md:px-8 py-6 text-right">Revenue Generated</th>
                  </tr>
                </thead>
                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40 font-medium text-zinc-600 dark:text-zinc-300">
                  {promoterAggregates.map((p, idx) => (
                    <tr key={idx} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20">
-                     <td className="px-8 py-6 font-black text-zinc-900 dark:text-white uppercase tracking-wider">{p.name}</td>
-                     <td className="px-8 py-6 text-center">{p.leads}</td>
-                     <td className="px-8 py-6 text-center text-blue-600 dark:text-blue-400 font-bold">{p.won}</td>
-                     <td className="px-8 py-6 text-center text-emerald-600 dark:text-emerald-400 font-bold">{p.leads > 0 ? Math.round((p.won/p.leads)*100) : 0}%</td>
-                     <td className="px-8 py-6 text-right font-black text-zinc-900 dark:text-white">₹{p.revenue.toLocaleString('en-IN')}</td>
+                     <td className="px-4 md:px-8 py-6 font-black text-zinc-900 dark:text-white uppercase tracking-wider">{p.name}</td>
+                     <td className="px-4 md:px-8 py-6 text-center">{p.leads}</td>
+                     <td className="px-4 md:px-8 py-6 text-center text-blue-600 dark:text-blue-400 font-bold">{p.won}</td>
+                     <td className="px-4 md:px-8 py-6 text-center text-emerald-600 dark:text-emerald-400 font-bold">{p.leads > 0 ? Math.round((p.won/p.leads)*100) : 0}%</td>
+                     <td className="px-4 md:px-8 py-6 text-right font-black text-zinc-900 dark:text-white">₹{p.revenue.toLocaleString('en-IN')}</td>
                    </tr>
                  ))}
                  {promoterAggregates.length === 0 && (
                    <tr>
-                     <td colSpan={5} className="px-8 py-16 text-center text-zinc-400 font-black uppercase tracking-widest">No Promoter Activity in Range</td>
+                     <td colSpan={5} className="px-4 md:px-8 py-8 md:py-16 text-center text-zinc-400 font-black uppercase tracking-widest">No Promoter Activity in Range</td>
                    </tr>
                  )}
                </tbody>

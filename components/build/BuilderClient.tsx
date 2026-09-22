@@ -170,7 +170,7 @@ export default function BuilderClient() {
 
   if (savedQuoteId) {
     return (
-      <div className="max-w-3xl mx-auto py-12 text-center">
+      <div className="max-w-3xl mx-auto py-6 md:py-12 text-center">
         <h2 className="text-3xl font-bold mb-4">System Built & Quote Ready!</h2>
         <p className="mb-6">Your Quote ID: {savedQuoteId}</p>
         <a 
@@ -202,12 +202,12 @@ export default function BuilderClient() {
         ) : (
           <div>
             {step === 0 && (
-              <div className="text-center py-12">
+              <div className="text-center py-6 md:py-12">
                 <h2 className="text-3xl font-bold mb-8">What are you looking to build?</h2>
                 <div className="flex flex-col sm:flex-row gap-6 justify-center">
                   <div 
                     onClick={() => setStep(2)}
-                    className="border-2 border-gray-200 hover:border-blue-600 rounded-2xl p-8 cursor-pointer transition-all hover:shadow-lg w-full max-w-sm"
+                    className="border-2 border-gray-200 hover:border-blue-600 rounded-2xl p-4 md:p-8 cursor-pointer transition-all hover:shadow-lg w-full max-w-sm"
                   >
                     <div className="text-4xl mb-4">🆕</div>
                     <h3 className="text-xl font-bold mb-2">New Installation</h3>
@@ -215,7 +215,7 @@ export default function BuilderClient() {
                   </div>
                   <div 
                     onClick={() => setStep(1)}
-                    className="border-2 border-gray-200 hover:border-blue-600 rounded-2xl p-8 cursor-pointer transition-all hover:shadow-lg w-full max-w-sm"
+                    className="border-2 border-gray-200 hover:border-blue-600 rounded-2xl p-4 md:p-8 cursor-pointer transition-all hover:shadow-lg w-full max-w-sm"
                   >
                     <div className="text-4xl mb-4">🔄</div>
                     <h3 className="text-xl font-bold mb-2">Existing System / Upgrade</h3>

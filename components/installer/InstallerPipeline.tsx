@@ -105,7 +105,7 @@ export function InstallerPipeline({ leads, partnerId, partnerName, role = "sales
 
   if (leads.length === 0) {
     return (
-      <div className="bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-300 dark:border-white/20 rounded-[32px] py-20 text-center">
+      <div className="bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-300 dark:border-white/20 rounded-[32px] py-10 md:py-20 text-center">
         <p className="text-zinc-400 dark:text-zinc-400 font-bold italic">No active leads requiring immediate attention.</p>
       </div>
     );

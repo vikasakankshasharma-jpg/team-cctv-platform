@@ -17,7 +17,7 @@ export default async function QuoteReviewPage({ params, searchParams }: PageProp
 
   if (!lead_id) {
     return (
-      <div className="p-8 text-center text-red-500">
+      <div className="p-4 md:p-8 text-center text-red-500">
         Missing lead reference. Please use the link provided in your email/SMS.
       </div>
     );
@@ -32,7 +32,7 @@ export default async function QuoteReviewPage({ params, searchParams }: PageProp
   const quote = { id: quoteDoc.id, ...quoteDoc.data() } as Quote;
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-4xl mx-auto py-4 md:py-10 px-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold mb-8">Review Your Quotation</h1>
       
       <RevisionBanner 
@@ -70,7 +70,7 @@ export default async function QuoteReviewPage({ params, searchParams }: PageProp
           <input type="hidden" name="quote_id" value={quoteId} />
           <button 
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 md:px-8 rounded-full shadow-lg transition-transform transform hover:scale-105"
           >
             Approve & Pay Advance
           </button>

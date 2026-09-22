@@ -52,7 +52,7 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
     <div className="space-y-8 animate-in fade-in duration-500">
       
       {/* ── WELCOME BANNER ──────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-8 lg:p-10 shadow-xl dark:shadow-2xl">
+      <div className="relative overflow-hidden rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-4 md:p-8 lg:p-10 shadow-xl dark:shadow-2xl">
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px]" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -69,36 +69,71 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
             </p>
           </div>
 
-          <div className="flex flex-col items-start md:items-end gap-2">
-            <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Your Referral Code</span>
+          <div className="flex flex-col items-start md:items-end gap-2 w-full md:w-auto">
+            <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Share to Earn</span>
             
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={handleCopy}
-                className="group flex flex-col items-center justify-center bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 border border-amber-200 dark:border-amber-500/20 px-6 py-4 rounded-[20px] transition-all active:scale-95 h-[100px]"
-              >
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+              {/* WhatsApp Share Card */}
+              <div className="group flex flex-col items-center bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-4 rounded-[20px] transition-all w-full sm:w-auto">
+                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-widest mb-3">Share on WhatsApp</span>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-2xl font-black text-amber-700 dark:text-amber-500 tracking-[0.2em]">{referralCode}</span>
-                  <div className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 flex items-center justify-center shadow-sm">
-                    <Copy className={`w-4 h-4 transition-colors ${copied ? "text-emerald-500" : "text-amber-500 dark:text-amber-400"}`} />
+                  <div className="w-[80px] h-[80px] bg-white rounded-xl p-1.5 shadow-sm border border-emerald-100 shrink-0">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919024097475"}?text=Hi ${referralCode}`)}`} 
+                      alt="WhatsApp QR Code" 
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919024097475"}?text=Hi ${referralCode}`);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-transform flex items-center gap-2"
+                    >
+                      <Copy className="w-3.5 h-3.5" /> Copy Link
+                    </button>
+                    <a 
+                      href={`https://wa.me/?text=Get an instant quote from TEAM CCTV using my link: https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919024097475"}?text=Hi%20${referralCode}`}
+                      target="_blank"
+                      className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-transform text-center"
+                    >
+                      Forward 🚀
+                    </a>
                   </div>
                 </div>
-                {copied && <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-2 animate-in slide-in-from-top-1">Copied Link!</span>}
-              </button>
-
-              <div className="w-[100px] h-[100px] bg-white rounded-[20px] p-2 shadow-inner border border-zinc-200 shrink-0 flex items-center justify-center">
-                {typeof window !== "undefined" ? (
-                  <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/?ref=' + referralCode)}`} 
-                    alt="Referral QR Code" 
-                    className="w-full h-full object-contain rounded-xl"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-zinc-100 rounded-xl animate-pulse" />
-                )}
               </div>
+
+              {/* Website Share Card */}
+              <div className="group flex flex-col items-center bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-4 rounded-[20px] transition-all w-full sm:w-auto">
+                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-500 uppercase tracking-widest mb-3">Share Website</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-[80px] h-[80px] bg-white rounded-xl p-1.5 shadow-sm border border-amber-100 shrink-0">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin + '/?ref=' + referralCode : '')}`} 
+                      alt="Website QR Code" 
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/?ref=${referralCode}`);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-transform flex items-center gap-2"
+                    >
+                      <Copy className="w-3.5 h-3.5" /> Copy Link
+                    </button>
+                  </div>
+                </div>
+              </div>
+
             </div>
-            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest text-right mt-1">Scan to open referral link</span>
+            {copied && <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest text-right mt-1 w-full animate-in slide-in-from-top-1">Link Copied!</span>}
           </div>
         </div>
       </div>
@@ -126,7 +161,7 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
 
       {/* ── PIPELINE TRACKER ──────────────────────────────────────────────── */}
       {pipeline && (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-8 shadow-xl dark:shadow-2xl">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 rounded-[32px] p-4 md:p-8 shadow-xl dark:shadow-2xl">
           <div className="mb-6">
             <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Referral Pipeline</h2>
             <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Real-time status of your referred leads</p>
@@ -237,16 +272,16 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
           <table className="w-full text-left text-sm">
             <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-100 dark:border-zinc-800/60 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-600">
               <tr>
-                <th className="px-8 py-5">Date</th>
-                <th className="px-8 py-5">Customer</th>
-                <th className="px-8 py-5 text-right">Commission Earned</th>
-                <th className="px-8 py-5 text-center">Status</th>
+                <th className="px-4 md:px-8 py-5">Date</th>
+                <th className="px-4 md:px-8 py-5">Customer</th>
+                <th className="px-4 md:px-8 py-5 text-right">Commission Earned</th>
+                <th className="px-4 md:px-8 py-5 text-center">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40 font-medium">
               {recentWins.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-8 py-20 text-center">
+                  <td colSpan={4} className="px-4 md:px-8 py-10 md:py-20 text-center">
                     <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">No captured leads yet</p>
                     <p className="text-zinc-500 text-sm mt-2">Share your code to start generating commissions.</p>
                   </td>
@@ -254,18 +289,18 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
               ) : (
                 recentWins.map((win) => (
                   <tr key={win.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-colors">
-                    <td className="px-8 py-5 text-zinc-500 dark:text-zinc-400 font-bold text-[11px] tracking-widest uppercase">
+                    <td className="px-4 md:px-8 py-5 text-zinc-500 dark:text-zinc-400 font-bold text-[11px] tracking-widest uppercase">
                       {new Date(win.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 md:px-8 py-5">
                       <span className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">{win.customer_name}</span>
                     </td>
-                    <td className="px-8 py-5 text-right">
+                    <td className="px-4 md:px-8 py-5 text-right">
                       <span className="font-black text-emerald-600 dark:text-emerald-500 text-base">
                         ₹{win.commission_amount.toLocaleString("en-IN")}
                       </span>
                     </td>
-                    <td className="px-8 py-5 text-center">
+                    <td className="px-4 md:px-8 py-5 text-center">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
                         win.status === "paid" 
                           ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20"

@@ -166,7 +166,7 @@ export function InstallersClient({ data }: { data: Installer[] }) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="border-border/50">
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-4 md:py-8 text-muted-foreground">
                   No installers found.
                 </TableCell>
               </TableRow>

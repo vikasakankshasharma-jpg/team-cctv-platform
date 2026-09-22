@@ -63,9 +63,9 @@ export default function Lead360Page({ params }: { params: Promise<{ id: string }
     }
   };
 
-  if (loading) return <div className="p-12 text-center animate-pulse">Loading Lead 360...</div>;
-  if (error) return <div className="p-8 text-red-600 bg-red-50 rounded-lg">{error}</div>;
-  if (!data) return <div className="p-8">Lead not found</div>;
+  if (loading) return <div className="p-5 md:p-12 text-center animate-pulse">Loading Lead 360...</div>;
+  if (error) return <div className="p-4 md:p-8 text-red-600 bg-red-50 rounded-lg">{error}</div>;
+  if (!data) return <div className="p-4 md:p-8">Lead not found</div>;
 
   const { lead, tasks, quotes, invoices, jobs } = data;
 

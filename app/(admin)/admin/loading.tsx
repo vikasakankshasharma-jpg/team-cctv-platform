@@ -28,7 +28,7 @@ export default function DashboardLoading() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trend Chart Skeleton */}
-        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 min-h-[480px]">
+        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 min-h-[480px]">
           <div className="mb-8 space-y-2">
             <div className="h-3 w-28 bg-zinc-100 dark:bg-zinc-800 rounded-full" />
             <div className="h-7 w-40 bg-zinc-200 dark:bg-zinc-700 rounded-xl" />
@@ -47,7 +47,7 @@ export default function DashboardLoading() {
         </div>
 
         {/* Source Panel Skeleton */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 min-h-[480px] space-y-6">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 min-h-[480px] space-y-6">
           <div className="space-y-2">
             <div className="h-3 w-24 bg-zinc-100 dark:bg-zinc-800 rounded-full" />
             <div className="h-7 w-36 bg-zinc-200 dark:bg-zinc-700 rounded-xl" />

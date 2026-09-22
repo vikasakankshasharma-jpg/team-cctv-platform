@@ -83,7 +83,7 @@ function SlotEditor({
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Technology */}
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Technology</label>
@@ -120,7 +120,7 @@ function SlotEditor({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Badge */}
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Badge (optional)</label>
@@ -398,7 +398,7 @@ export function CardLayoutClient({ initialLayouts, cameras }: {
 
       {/* Layout list */}
       {layouts.length === 0 ? (
-        <div className="text-center py-16 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[24px]">
+        <div className="text-center py-8 md:py-16 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[24px]">
           <Monitor className="w-10 h-10 text-zinc-300 dark:text-zinc-700 mx-auto mb-4" />
           <p className="text-sm font-black text-zinc-400 uppercase tracking-wide">No Layouts Configured</p>
           <p className="text-xs text-zinc-400 mt-1 mb-6">Smart defaults apply — create a layout to take full control</p>

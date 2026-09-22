@@ -19,7 +19,7 @@ export default async function SalespersonCommissionsPage() {
   // Find the salesperson document linked to this UID
   const spSnap = await adminDb.collection("salespersons").where("firebase_uid", "==", salespersonUid).limit(1).get();
   if (spSnap.empty) {
-    return <div className="p-8 text-red-400">Salesperson profile not linked correctly. Please contact admin.</div>;
+    return <div className="p-4 md:p-8 text-red-400">Salesperson profile not linked correctly. Please contact admin.</div>;
   }
   
   const salespersonId = spSnap.docs[0].id;

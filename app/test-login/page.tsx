@@ -60,7 +60,7 @@ export default function TestLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-green-400 font-mono text-sm">
-      <div className="p-8 border border-green-500/30 rounded bg-green-950/20">
+      <div className="p-4 md:p-8 border border-green-500/30 rounded bg-green-950/20">
         <h1 className="text-xl font-bold mb-4 text-white">E2E Automation Login</h1>
         <p data-testid="e2e-status">{status}</p>
       </div>

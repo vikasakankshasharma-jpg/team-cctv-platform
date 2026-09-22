@@ -24,7 +24,7 @@ export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: nu
           <Skeleton className="h-4 w-[200px]" />
         </div>
       </div>
-      <div className="border border-zinc-100 dark:border-zinc-800 rounded-[32px] overflow-hidden bg-white dark:bg-zinc-950/40 backdrop-blur-xl p-8">
+      <div className="border border-zinc-100 dark:border-zinc-800 rounded-[32px] overflow-hidden bg-white dark:bg-zinc-950/40 backdrop-blur-xl p-4 md:p-8">
         <div className="space-y-6">
           {Array.from({ length: rows }).map((_, i) => (
             <div key={i} className="flex items-center justify-between gap-4">
@@ -47,7 +47,7 @@ export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: nu
 
 export function CardSkeleton() {
   return (
-    <div className="bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800 rounded-[40px] p-8 space-y-6">
+    <div className="bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800 rounded-[40px] p-4 md:p-8 space-y-6">
       <div className="flex items-center gap-4">
         <Skeleton className="h-14 w-14 rounded-2xl" />
         <div className="space-y-2">

@@ -54,7 +54,7 @@ export default function SettlementsClient({ initialData }: { initialData: Offlin
 
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
         {filteredData.length === 0 ? (
-          <div className="p-12 text-center text-zinc-500 text-sm">No {filter} settlements found.</div>
+          <div className="p-5 md:p-12 text-center text-zinc-500 text-sm">No {filter} settlements found.</div>
         ) : (
           <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {filteredData.map(v => (

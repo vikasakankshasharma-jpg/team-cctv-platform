@@ -38,7 +38,7 @@ export default async function PriceLogsPage() {
         badge={`${logs.length} Recorded Shifts`}
       />
       
-      <div className="pb-20">
+      <div className="pb-10 md:pb-20">
         <AuditLogClient initialLogs={logs as any[]} />
       </div>
     </div>

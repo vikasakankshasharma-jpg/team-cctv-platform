@@ -120,7 +120,7 @@ export default function CityLandingPage({
       </div>
 
       {/* Hero Hub */}
-      <section className="relative px-4 sm:px-6 pt-4 pb-12 sm:pt-8 sm:pb-20 overflow-hidden">
+      <section className="relative px-4 sm:px-6 pt-4 pb-6 md:pb-12 sm:pt-8 sm:pb-20 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-zinc-50 dark:bg-zinc-950">
           <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-blue-200/40 dark:bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-200/20 dark:bg-indigo-600/5 blur-[100px] rounded-full" />
@@ -146,7 +146,7 @@ export default function CityLandingPage({
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-center w-full sm:w-auto animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
             <Link
               href={wizardUrl}
-              className="group relative inline-flex justify-center items-center gap-4 sm:gap-5 px-8 sm:px-12 py-4 sm:py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[28px] sm:rounded-[32px] font-black text-lg sm:text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-1 sm:hover:-translate-y-2 active:scale-95 touch-manipulation"
+              className="group relative inline-flex justify-center items-center gap-4 sm:gap-5 px-4 md:px-8 sm:px-12 py-4 sm:py-6 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white rounded-[28px] sm:rounded-[32px] font-black text-lg sm:text-xl transition-all shadow-2xl shadow-zinc-900/30 dark:shadow-blue-500/40 hover:-translate-y-1 sm:hover:-translate-y-2 active:scale-95 touch-manipulation"
             >
               {derivedCtaText}
               <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-2 transition-transform duration-300" />
@@ -163,7 +163,7 @@ export default function CityLandingPage({
             </a>
               <a
                 href="tel:+917357612865"
-                className="hidden sm:flex items-center gap-4 px-8 py-5 rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-all text-left group"
+                className="hidden sm:flex items-center gap-4 px-4 md:px-8 py-5 rounded-[32px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-all text-left group"
               >
                 <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
                   <PhoneCall className="w-5 h-5" />
@@ -289,7 +289,7 @@ export default function CityLandingPage({
             
             <Link
               href="/wizard"
-              className="group relative flex items-center gap-4 sm:gap-6 bg-blue-600 hover:bg-blue-500 text-white px-8 sm:px-14 py-5 sm:py-8 rounded-[28px] sm:rounded-[36px] font-black text-lg sm:text-2xl transition-all shadow-[0_32px_64px_rgba(0,0,0,0.15)] shadow-blue-500/30 hover:-translate-y-1 sm:hover:-translate-y-2 touch-manipulation"
+              className="group relative flex items-center gap-4 sm:gap-6 bg-blue-600 hover:bg-blue-500 text-white px-4 md:px-8 sm:px-14 py-5 sm:py-8 rounded-[28px] sm:rounded-[36px] font-black text-lg sm:text-2xl transition-all shadow-[0_32px_64px_rgba(0,0,0,0.15)] shadow-blue-500/30 hover:-translate-y-1 sm:hover:-translate-y-2 touch-manipulation"
             >
               {t('get_quote', 'Get Free Quote')}
               <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 group-hover:translate-x-2 transition-transform duration-300" />

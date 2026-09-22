@@ -105,7 +105,7 @@ export function ActivePipeline({ leads, partnerId, partnerName, role = "salesper
 
   if (leads.length === 0) {
     return (
-      <div className="bg-white/5 border border-dashed border-white/20 rounded-[32px] py-20 text-center">
+      <div className="bg-white/5 border border-dashed border-white/20 rounded-[32px] py-10 md:py-20 text-center">
         <p className="text-zinc-400 font-bold italic">No active leads requiring immediate attention.</p>
       </div>
     );

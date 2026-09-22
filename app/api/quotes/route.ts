@@ -167,9 +167,11 @@ export async function POST(request: NextRequest) {
     const cleanPricing = JSON.parse(JSON.stringify(pricing));
     
     // 4. PERSIST QUOTE TO DATABASE
-    const quoteRef = adminDb.collection("leads").doc(lead_id).collection("quotes").doc();
+    const quoteId = adminDb.collection("quotes").doc().id;
+    const subQuoteRef = adminDb.collection("leads").doc(lead_id).collection("quotes").doc(quoteId);
+    const rootQuoteRef = adminDb.collection("quotes").doc(quoteId);
 
-    const quotePromise = quoteRef.set({
+    const quoteData = {
       ...cleanPricing,
       plan_type: selection.plan_type,
       technology: selection.technology,
@@ -182,26 +184,30 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString(),
       expires_at: new Date(Date.now() + ((settings as any).quote_validity_days || 7) * 24 * 60 * 60 * 1000).toISOString(),
       recalculated_on_server: true,
-    });
+      lead_id: lead_id // Ensure lead_id is present for root collection queries
+    };
+
+    const quotePromise1 = subQuoteRef.set(quoteData);
+    const quotePromise2 = rootQuoteRef.set(quoteData);
 
     // 5. Update Lead Status
     const updatePayload: Record<string, any> = { 
       status: status === "accepted" ? "accepted" : "quoted",
-      last_quote_id: quoteRef.id,
+      last_quote_id: quoteId,
       updated_at: serverTimestamp()
     };
     if (address) updatePayload.address = address;
     
     const leadPromise = adminDb.collection("leads").doc(lead_id).update(updatePayload);
 
-    await Promise.all([quotePromise, leadPromise]);
+    await Promise.all([quotePromise1, quotePromise2, leadPromise]);
 
     // 6. Enterprise Audit Logging
     const { ip, ua } = getRequestMetadata(request);
     await createAuditLog({
       action: status === "accepted" ? "QUOTE_ACCEPT" : "QUOTE_RECALCULATE",
       actor_id: firebase_uid || "guest",
-      resource_id: quoteRef.id,
+      resource_id: quoteId,
       resource_type: "quote",
       ip_address: ip,
       user_agent: ua,
@@ -213,7 +219,7 @@ export async function POST(request: NextRequest) {
     });
 
     return ApiResponse.success({ 
-      id: quoteRef.id, 
+      id: quoteId, 
       message: "Quote recalculated and saved successfully",
       total_payable: pricing.total_payable 
     }, 201);
@@ -223,3 +229,4 @@ export async function POST(request: NextRequest) {
     return ApiResponse.error("Internal server error", "INTERNAL_ERROR", 500, error.message);
   }
 }
+

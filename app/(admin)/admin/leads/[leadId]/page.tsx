@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FollowUpManager } from "@/components/admin/leads/FollowUpManager";
 import { QuoteVersionHistory } from "@/components/admin/leads/QuoteVersionHistory";
 import LeadIntelligencePanel from "@/components/admin/leads/LeadIntelligencePanel";
+import DispatchPanel from "@/components/admin/leads/DispatchPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -51,8 +52,8 @@ export default function LeadDetailPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading lead details...</div>;
-  if (!lead) return <div className="p-8 text-center text-muted-foreground">Lead not found.</div>;
+  if (loading) return <div className="p-4 md:p-8 text-center text-muted-foreground">Loading lead details...</div>;
+  if (!lead) return <div className="p-4 md:p-8 text-center text-muted-foreground">Lead not found.</div>;
 
   const billing = lead.billing_details;
   const isB2B = billing?.is_business || !!billing?.gstin || !!billing?.company_name;
@@ -415,6 +416,10 @@ export default function LeadDetailPage() {
                 </Link>
               </CardContent>
             </Card>
+          )}
+
+          {isPaid && (
+            <DispatchPanel lead={lead} onUpdate={fetchLead} />
           )}
 
           <Card>

@@ -76,7 +76,7 @@ export default async function LeadsPage() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Lead Management</h1>
@@ -93,7 +93,7 @@ export default async function LeadsPage() {
         </CardHeader>
         <CardContent>
           {leads.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center">No leads found.</p>
+            <p className="text-muted-foreground py-4 md:py-8 text-center">No leads found.</p>
           ) : (
             <div className="rounded-md border overflow-x-auto">
               <Table>

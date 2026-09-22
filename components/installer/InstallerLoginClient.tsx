@@ -178,7 +178,7 @@ export function InstallerLoginClient() {
     <div className="min-h-screen flex bg-zinc-50 dark:bg-zinc-950 overflow-hidden transition-colors duration-500">
       
       {/* ── LEFT BRANDING PANEL ─────────────────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[52%] relative flex-col justify-between p-14 overflow-hidden bg-white dark:bg-zinc-950 border-r border-zinc-100 dark:border-zinc-900/50 shadow-2xl z-20">
+      <div className="hidden lg:flex lg:w-[52%] relative flex-col justify-between p-6 md:p-14 overflow-hidden bg-white dark:bg-zinc-950 border-r border-zinc-100 dark:border-zinc-900/50 shadow-2xl z-20">
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
           <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/5 dark:bg-indigo-600/10 rounded-full blur-[130px] animate-pulse" />
           <div className="absolute bottom-[-30%] right-[-20%] w-[500px] h-[500px] bg-orange-600/5 dark:bg-orange-600/10 rounded-full blur-[120px] animate-pulse [animation-delay:2s]" />
@@ -227,7 +227,7 @@ export function InstallerLoginClient() {
       </div>
 
       {/* ── RIGHT FORM PANEL ────────────────────────────────────────────────── */}
-      <div className="flex-1 flex items-center justify-center p-8 relative">
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8 relative">
         <div id="recaptcha-container"></div>
         <div className="w-full max-w-sm relative z-10">
           

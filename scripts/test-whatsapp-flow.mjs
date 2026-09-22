@@ -1,7 +1,7 @@
 // Run this script to test the webhook endpoint locally with WhatsApp Flows
 // node scripts/test-whatsapp-flow.mjs
 
-const WEBHOOK_URL = "http://localhost:3000/api/webhooks/whatsapp";
+const WEBHOOK_URL = "http://127.0.0.1:3000/api/webhooks/whatsapp";
 const PHONE = "919999999999";
 
 async function sendWebhook(messageObj) {

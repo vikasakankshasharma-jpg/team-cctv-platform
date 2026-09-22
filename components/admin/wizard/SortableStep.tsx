@@ -48,7 +48,7 @@ export function SortableStep({
       className="group/step bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-md dark:shadow-md transition-all hover:border-blue-500/20"
     >
       {/* Step Header */}
-      <div className="bg-zinc-50 dark:bg-zinc-900 p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+      <div className="bg-zinc-50 dark:bg-zinc-900 p-4 md:p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div 
             {...attributes} 
@@ -88,7 +88,7 @@ export function SortableStep({
       </div>
 
       {/* Questions Area */}
-      <div className="p-8 space-y-10">
+      <div className="p-4 md:p-8 space-y-10">
         {step.questions?.map((q) => (
           <SortableQuestion 
             key={q.id} 
@@ -101,7 +101,7 @@ export function SortableStep({
         
         <button 
           onClick={() => step.id && onCreateQuestion(step.id)}
-          className="w-full py-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 hover:text-zinc-950 dark:hover:text-white hover:border-zinc-400 dark:hover:border-zinc-600 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center gap-3 group/addq shadow-lg"
+          className="w-full py-4 md:py-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 hover:text-zinc-950 dark:hover:text-white hover:border-zinc-400 dark:hover:border-zinc-600 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center gap-3 group/addq shadow-lg"
         >
           <Plus className="w-5 h-5 group-hover/addq:rotate-90 transition-all" />
           Orchestrate New Query

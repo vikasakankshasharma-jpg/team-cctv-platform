@@ -39,8 +39,8 @@ export default function DealConversionPage() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading quote details...</div>;
-  if (!lead) return <div className="p-8">Quote not found.</div>;
+  if (loading) return <div className="p-4 md:p-8">Loading quote details...</div>;
+  if (!lead) return <div className="p-4 md:p-8">Quote not found.</div>;
 
   // Derive financials
   // Assuming pricingSnapshot contains base_cost and total_payable
@@ -90,9 +90,9 @@ export default function DealConversionPage() {
 
   if (approvalLink) {
       return (
-          <div className="p-8 max-w-4xl mx-auto space-y-6">
+          <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
               <Card>
-                  <CardContent className="p-8 text-center space-y-4">
+                  <CardContent className="p-4 md:p-8 text-center space-y-4">
                       <h2 className="text-2xl font-bold text-green-700">Approval Requested</h2>
                       <p>The revised quote has been saved and the lead status is updated.</p>
                       <div className="bg-gray-100 p-4 rounded-md">
@@ -122,7 +122,7 @@ export default function DealConversionPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
       <div className="mb-8 border-b pb-4">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Prepare Quote for Customer</h1>
         <p className="text-gray-500 mt-1">Review quote financials, apply any necessary discount, and send it to {lead.customer_name || "Unknown Customer"} for approval.</p>
@@ -133,7 +133,7 @@ export default function DealConversionPage() {
           <CardTitle>Financial Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
             <div className="flex justify-between border-b pb-2">
               <span className="text-gray-500">Base Cost (Hardware + Installation):</span>
               <span className="font-medium text-gray-900">₹{baseCost.toLocaleString("en-IN")}</span>
@@ -166,7 +166,7 @@ export default function DealConversionPage() {
           <CardTitle>Margin Status</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 border rounded-md text-center">
               <div className="text-sm text-gray-500 mb-1">Gross Profit (₹)</div>
               <div className="text-xl font-bold text-green-600">₹{grossProfit.toLocaleString("en-IN")}</div>

@@ -69,10 +69,10 @@ export default function PurchaseOrdersPage() {
      }
   };
 
-  if (loading) return <div className="p-8">Loading Procurement...</div>;
+  if (loading) return <div className="p-4 md:p-8">Loading Procurement...</div>;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Procurement</h1>
@@ -97,7 +97,8 @@ export default function PurchaseOrdersPage() {
                   }>{po.status}</Badge>
                </CardHeader>
                <CardContent>
-                  <table className="w-full text-sm text-left mb-4">
+                  <div className="overflow-x-auto w-full">
+<table className="w-full text-sm text-left mb-4">
                      <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b">
                         <tr>
                            <th className="px-4 py-2">Item</th>
@@ -117,6 +118,7 @@ export default function PurchaseOrdersPage() {
                         ))}
                      </tbody>
                   </table>
+</div>
                   
                   {po.status !== "RECEIVED" && (
                      <div className="flex justify-end">

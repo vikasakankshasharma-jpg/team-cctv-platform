@@ -94,7 +94,7 @@ export function ShareDialog({
       <div className="bg-white dark:bg-zinc-900 rounded-[32px] w-full max-w-md shadow-[0_40px_100px_rgba(0,0,0,0.25)] border border-zinc-100 dark:border-zinc-800 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
 
         {/* Header */}
-        <div className="bg-emerald-500 px-8 pt-8 pb-6 relative">
+        <div className="bg-emerald-500 px-4 md:px-8 pt-8 pb-6 relative">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-emerald-100 hover:text-white transition-colors"

@@ -149,7 +149,7 @@ export default function LandingPage() {
       </section>
 
       {/* 2. Architecture Philosophy Section */}
-      <section className="bg-white dark:bg-zinc-950 transition-colors duration-500 py-16 sm:py-24 md:py-24 px-4 sm:px-6 relative overflow-hidden">
+      <section className="bg-white dark:bg-zinc-950 transition-colors duration-500 py-8 md:py-16 sm:py-24 md:py-24 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/20 dark:via-blue-900 to-transparent" />
         <div className="max-w-7xl mx-auto">
           <div className="space-y-12 sm:space-y-16">
@@ -164,7 +164,7 @@ export default function LandingPage() {
                 { icon: Cpu, title: "right_cameras", defaultTitle: "Right Cameras", desc: "right_cameras_desc", defaultDesc: "We'll suggest the best camera technology for your specific needs, whether it's a small home or a large warehouse." },
                 { icon: Layers, title: "clear_pricing", defaultTitle: "Clear Pricing", desc: "clear_pricing_desc", defaultDesc: "Get three easy-to-understand price options (Value, Professional, and Elite) so you can choose what fits your budget." },
               ].map((item, i) => (
-                <div key={i} className="flex flex-col items-center text-center p-8 rounded-[32px] bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 shadow-sm hover:-translate-y-1.5 transition-all duration-300 group hover:shadow-lg dark:hover:shadow-none hover:border-blue-500/30">
+                <div key={i} className="flex flex-col items-center text-center p-4 md:p-8 rounded-[32px] bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 shadow-sm hover:-translate-y-1.5 transition-all duration-300 group hover:shadow-lg dark:hover:shadow-none hover:border-blue-500/30">
                   <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 flex items-center justify-center text-blue-600 dark:text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-md shrink-0 mb-6">
                     <item.icon className="w-6 h-6" />
                   </div>
@@ -178,7 +178,7 @@ export default function LandingPage() {
       </section>
 
       {/* 3. Final Deployment CTA */}
-      <section className="py-16 sm:py-24 md:py-20 px-4 sm:px-6 relative overflow-hidden text-center bg-slate-50 dark:bg-[#050B14] transition-colors duration-500">
+      <section className="py-8 md:py-16 sm:py-24 md:py-20 px-4 sm:px-6 relative overflow-hidden text-center bg-slate-50 dark:bg-[#050B14] transition-colors duration-500">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
           <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 dark:bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-500 mb-8 sm:mb-12 animate-bounce shadow-[0_0_20px_rgba(59,130,246,0.3)]">
             <Zap className="w-7 h-7 sm:w-10 sm:h-10 fill-current" />

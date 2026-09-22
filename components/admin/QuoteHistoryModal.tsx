@@ -40,7 +40,7 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
       
       <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-md animate-in zoom-in-95 fade-in duration-500 max-h-[80vh] flex flex-col">
         
-        <div className="p-10 pb-6 shrink-0 border-b border-zinc-800">
+        <div className="p-4 md:p-10 pb-6 shrink-0 border-b border-zinc-800">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
@@ -60,14 +60,14 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-10 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-10 space-y-6">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-zinc-600 gap-4">
+            <div className="flex flex-col items-center justify-center py-10 md:py-20 text-zinc-600 gap-4">
               <Loader2 className="w-8 h-8 animate-spin" />
               <p className="text-[10px] font-black uppercase tracking-widest">Retrieving Manifest History...</p>
             </div>
           ) : quotes.length === 0 ? (
-            <div className="text-center py-20 text-zinc-600">
+            <div className="text-center py-10 md:py-20 text-zinc-600">
                <p className="text-[10px] font-black uppercase tracking-widest">No Previous Quotes Found</p>
             </div>
           ) : (

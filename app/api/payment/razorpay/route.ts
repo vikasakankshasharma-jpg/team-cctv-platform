@@ -73,16 +73,8 @@ export async function POST(req: Request) {
     if (paymentType === "full_discount") {
       appliedDiscount = Math.round(serverAmount * 0.02);
       chargeAmount = serverAmount - appliedDiscount;
-    } else if (paymentType === "advance_500") {
+    } else if (paymentType === "advance" || paymentType === "advance_500" || paymentType === "advance_500_cod") {
       chargeAmount = 500;
-    } else if (paymentType === "advance") {
-      const advancePercent = Number(
-        quoteData.advancePercent ??
-        quoteData.advance_percent ??
-        quoteData.pricingSnapshot?.advance_percent ??
-        30
-      );
-      chargeAmount = Math.round(serverAmount * (advancePercent / 100));
     }
 
     if (isNaN(chargeAmount) || chargeAmount <= 0) {

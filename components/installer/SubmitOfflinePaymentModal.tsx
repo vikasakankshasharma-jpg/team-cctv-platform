@@ -84,7 +84,7 @@ export default function SubmitOfflinePaymentModal({ isOpen, onClose, leadId, quo
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
             <div className="space-y-3">
               <label className="text-sm font-semibold">Payment Method</label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className={"flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all " + (method === "upi" ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "border-zinc-200 dark:border-zinc-800")}>
                   <input type="radio" value="upi" {...register("method")} className="hidden" />
                   <CreditCard className={"w-5 h-5 " + (method === "upi" ? "text-blue-500" : "text-zinc-400")} />

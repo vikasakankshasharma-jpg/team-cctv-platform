@@ -69,17 +69,17 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
           <table className="w-full text-left text-sm text-zinc-300">
             <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 uppercase text-[10px] tracking-[0.2em] font-black">
               <tr>
-                <th className="px-8 py-6">Add-on Name</th>
-                <th className="px-8 py-6 text-right">Price</th>
-                <th className="px-8 py-6 text-center">Pricing Type</th>
-                <th className="px-8 py-6 text-center">Status</th>
-                <th className="px-8 py-6 text-center">Actions</th>
+                <th className="px-4 md:px-8 py-6">Add-on Name</th>
+                <th className="px-4 md:px-8 py-6 text-right">Price</th>
+                <th className="px-4 md:px-8 py-6 text-center">Pricing Type</th>
+                <th className="px-4 md:px-8 py-6 text-center">Status</th>
+                <th className="px-4 md:px-8 py-6 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40 text-zinc-500 dark:text-zinc-400 font-medium">
               {initialAddons.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center">
+                  <td colSpan={5} className="px-4 md:px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-4">
                       <div className="w-16 h-16 rounded-[24px] bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center shadow-inner">
                         <Blocks className="w-8 h-8 text-zinc-300 dark:text-zinc-800" />
@@ -94,7 +94,7 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
               ) : (
                 initialAddons.map((item) => (
                   <tr key={item.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all group/row">
-                    <td className="px-8 py-6">
+                    <td className="px-4 md:px-8 py-6">
                       <div className="font-black text-zinc-900 dark:text-white text-base leading-tight group-hover/row:text-blue-600 dark:group-hover/row:text-blue-400 transition-colors uppercase tracking-tight">{item.display_name}</div>
                       <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                         {item.category && (
@@ -114,13 +114,13 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
                         )}
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-right">
+                    <td className="px-4 md:px-8 py-6 text-right">
                       <div className="flex flex-col items-end">
                         <span className="font-black text-zinc-900 dark:text-white text-base">₹{(item.price || item.unit_price || 0).toLocaleString('en-IN')}</span>
                         <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-1">Net Base</span>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-center">
+                    <td className="px-4 md:px-8 py-6 text-center">
                       {item.unit_multiplier === "camera_count" ? (
                         <span className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-500/5 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-500/10 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner">
                           Per Camera
@@ -129,7 +129,7 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
                         <span className="text-zinc-400 dark:text-zinc-700 text-[10px] font-black uppercase tracking-widest">Fixed Price</span>
                       )}
                     </td>
-                    <td className="px-8 py-6 text-center">
+                    <td className="px-4 md:px-8 py-6 text-center">
                       {item.is_active ? (
                         <span className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-500/10 shadow-inner">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -142,7 +142,7 @@ export function AddonsClient({ initialAddons }: AddonsClientProps) {
                         </span>
                       )}
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-4 md:px-8 py-6">
                       <div className="flex items-center justify-center gap-3">
                         <button
                           onClick={() => handleEdit(item)}

@@ -264,7 +264,7 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
               ))}
 
               {items.length === 0 && (
-                <div className="text-center py-10 border border-dashed border-border rounded-xl">
+                <div className="text-center py-4 md:py-10 border border-dashed border-border rounded-xl">
                   <FileText className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No items added to the quote yet.</p>
                 </div>
@@ -303,7 +303,7 @@ export function QuotationBuilderClient({ leadId, leadName, catalog, userRole }: 
           
           <div className="bg-card rounded-xl border border-border p-4">
             <h3 className="font-semibold text-sm text-foreground mb-3">Quote Settings & Notes</h3>
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">GST %</label>
                 <input 

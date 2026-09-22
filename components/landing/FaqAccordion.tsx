@@ -21,7 +21,7 @@ export function FaqAccordion() {
   };
 
   return (
-    <section className="py-20 px-4 sm:px-6 bg-slate-100 dark:bg-[#0F1F3D] w-full mt-16 transition-colors duration-500 rounded-[40px] sm:rounded-[60px] mx-auto max-w-[95%] xl:max-w-7xl">
+    <section className="py-10 md:py-20 px-4 sm:px-6 bg-slate-100 dark:bg-[#0F1F3D] w-full mt-16 transition-colors duration-500 rounded-[40px] sm:rounded-[60px] mx-auto max-w-[95%] xl:max-w-7xl">
       <div className="max-w-3xl mx-auto text-left">
         <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 dark:text-blue-400 mb-2"><TranslatedText tKey="faq_subtitle" defaultText="Support & Clarification" /></p>
         <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-10 tracking-tight"><TranslatedText tKey="faq_title" defaultText="Frequently Asked Questions" /></h2>

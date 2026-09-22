@@ -98,7 +98,7 @@ export default function SpecOptimizerClient() {
 
   if (isLoading && suggestions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
+      <div className="flex flex-col items-center justify-center py-10 md:py-20">
         <Sparkles className="w-12 h-12 text-indigo-500 animate-pulse mb-4" />
         <h2 className="text-xl font-bold text-foreground">AI Knowledge Base Scanning...</h2>
         <p className="text-muted-foreground mt-2">Checking your live catalog against newly learned specifications.</p>
@@ -156,7 +156,7 @@ export default function SpecOptimizerClient() {
         </div>
 
         {suggestions.length === 0 && !isLoading ? (
-          <div className="text-center py-20 text-muted-foreground">
+          <div className="text-center py-10 md:py-20 text-muted-foreground">
             <Sparkles className="w-12 h-12 mx-auto mb-4 text-emerald-500 opacity-50" />
             <p className="font-medium text-foreground">Your catalog is perfectly optimized!</p>
             <p className="text-sm mt-1">The AI couldn't find any missing specifications on existing products.</p>

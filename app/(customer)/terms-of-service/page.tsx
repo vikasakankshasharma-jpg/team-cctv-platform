@@ -31,7 +31,7 @@ export default function TermsOfServicePage() {
 
   return (
     <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950">
-      <div className="max-w-4xl mx-auto px-6 py-16 md:py-28 w-full">
+      <div className="max-w-4xl mx-auto px-6 py-8 md:py-16 md:py-28 w-full">
         {/* Back Link */}
         <Link
           href="/"

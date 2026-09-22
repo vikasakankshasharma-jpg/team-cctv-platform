@@ -74,7 +74,7 @@ export default async function CardLayoutsPage() {
         badge={fetchError ? "Error" : `${layouts.length} Layouts`}
       />
       {fetchError ? (
-        <div className="rounded-[24px] border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 p-10 text-center">
+        <div className="rounded-[24px] border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 p-4 md:p-10 text-center">
           <p className="text-red-600 dark:text-red-400 font-bold text-sm">
             Failed to load card layout data. Check Firestore indexes for
             <code className="mx-1 px-1 bg-zinc-100 dark:bg-zinc-800 rounded">comparison_card_layouts</code>.

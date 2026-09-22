@@ -144,6 +144,9 @@ export interface Lead {
   promoter_business?: string | null;  // NEW: Virtual field for UI
   assigned_to_salesperson_id?: string | null;
   assigned_to_salesperson_name?: string | null;
+  
+  source?: string;
+  utm_campaign?: string | null;
 
   // Hub & Spoke execution mapping
   hub_id?: string | null;
@@ -423,6 +426,9 @@ export interface ConfiguratorSelection {
   power_socket_near_dvr?: boolean;
   router_near_dvr?: boolean;
   include_junction_boxes?: boolean;
+  partner_id?: string;
+  utm_source?: string;
+  utm_campaign?: string;
 }
 
 export interface QuoteLineItem {

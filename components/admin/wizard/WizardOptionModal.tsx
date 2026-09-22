@@ -82,7 +82,7 @@ export function WizardOptionModal({ isOpen, onClose, stepId, questionId, option,
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 md:p-8 space-y-6">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-400 uppercase tracking-[0.2em] ml-1">
               Option Label <span className="text-red-500">*</span>

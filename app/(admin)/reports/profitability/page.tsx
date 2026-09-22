@@ -192,7 +192,7 @@ export default function ProfitabilityDashboard() {
 
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         {loading ? (
-           <div className="p-8 text-center text-gray-500 animate-pulse">Calculating Profitability Engine...</div>
+           <div className="p-4 md:p-8 text-center text-gray-500 animate-pulse">Calculating Profitability Engine...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
@@ -219,8 +219,8 @@ export default function ProfitabilityDashboard() {
                     </tr>
                     {row.getIsExpanded() && (
                       <tr className="bg-gray-50/50">
-                        <td colSpan={columns.length} className="px-10 py-4 border-b">
-                          <div className="grid grid-cols-2 gap-8">
+                        <td colSpan={columns.length} className="px-4 md:px-10 py-4 border-b">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                              {/* Cost Breakdown */}
                              <div>
                                 <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
@@ -259,7 +259,7 @@ export default function ProfitabilityDashboard() {
                 ))}
                 {data.length === 0 && (
                    <tr>
-                      <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={columns.length} className="px-4 py-4 md:py-8 text-center text-gray-500">
                          No deals found in this period.
                       </td>
                    </tr>

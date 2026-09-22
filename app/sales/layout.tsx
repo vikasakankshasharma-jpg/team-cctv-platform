@@ -25,7 +25,7 @@ export default async function SalesLayout({ children }: { children: React.ReactN
           </div>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-4 md:py-8">
         {children}
       </main>
     </div>

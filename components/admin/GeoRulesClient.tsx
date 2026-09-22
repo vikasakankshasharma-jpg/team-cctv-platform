@@ -51,7 +51,7 @@ export function GeoRulesClient({ data }: { data: GeoPricingRule[] }) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="border-border/50">
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-4 md:py-8 text-muted-foreground">
                   No pricing rules found.
                 </TableCell>
               </TableRow>

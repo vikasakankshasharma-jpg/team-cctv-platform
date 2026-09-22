@@ -86,6 +86,13 @@ export async function POST(request: Request) {
       return invoice;
     });
 
+    // Fire and forget the WhatsApp Invoice Delivery
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/invoice/${quoteId}/whatsapp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({})
+    }).catch(err => console.error("Failed to trigger WhatsApp invoice delivery:", err));
+
     return NextResponse.json({ success: true, invoice: result });
   } catch (error: any) {
     console.error("Invoice generation error:", error);

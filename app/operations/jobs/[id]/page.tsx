@@ -66,9 +66,9 @@ export default function JobCardPage({ params }: { params: Promise<{ id: string }
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-teal-400">Loading Job Card...</div>;
-  if (error) return <div className="p-8 text-red-400">{error}</div>;
-  if (!job) return <div className="p-8">Job not found</div>;
+  if (loading) return <div className="p-4 md:p-8 text-center text-teal-400">Loading Job Card...</div>;
+  if (error) return <div className="p-4 md:p-8 text-red-400">{error}</div>;
+  if (!job) return <div className="p-4 md:p-8">Job not found</div>;
 
   const isAlert = job.status === "BACKORDERED" || job.status === "MATERIAL_SHORTAGE";
 
@@ -88,7 +88,7 @@ export default function JobCardPage({ params }: { params: Promise<{ id: string }
         <div className="bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-700 space-y-4">
           <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">Site Survey Snapshot</h3>
           {job.site_survey ? (
-            <dl className="grid grid-cols-2 gap-4 text-sm">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <dt className="text-gray-400 text-xs">Mounting Height</dt>
                 <dd className="font-medium text-gray-200">{job.site_survey.mounting_height}</dd>

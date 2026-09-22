@@ -24,8 +24,8 @@ export default function AnalyticsClient() {
     fetchAnalytics();
   }, [range]);
 
-  if (loading) return <div className="p-12 text-center text-gray-500">Loading Intelligence...</div>;
-  if (!data) return <div className="p-12 text-center text-red-500">Failed to load data</div>;
+  if (loading) return <div className="p-5 md:p-12 text-center text-gray-500">Loading Intelligence...</div>;
+  if (!data) return <div className="p-5 md:p-12 text-center text-red-500">Failed to load data</div>;
 
   const { overview, sources, plans, intelligence, whatsapp } = data;
 
@@ -76,7 +76,8 @@ export default function AnalyticsClient() {
         <section>
           <h2 className="text-xl font-bold mb-4">Wizard vs Direct Builder</h2>
           <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-            <table className="w-full text-left">
+            <div className="overflow-x-auto w-full">
+<table className="w-full text-left">
               <thead className="bg-gray-50 text-gray-500 text-sm">
                 <tr>
                   <th className="p-4 font-medium">Metric</th>
@@ -102,13 +103,14 @@ export default function AnalyticsClient() {
                 </tr>
               </tbody>
             </table>
+</div>
           </div>
         </section>
 
         {/* 3. Product Intelligence */}
         <section>
           <h2 className="text-xl font-bold mb-4">Customer Intent</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-white p-4 rounded-xl border shadow-sm">
               <h3 className="font-bold text-gray-500 text-sm mb-3 uppercase tracking-wider">Installation Type</h3>
               <div className="space-y-2">

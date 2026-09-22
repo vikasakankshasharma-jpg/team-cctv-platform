@@ -20,7 +20,7 @@ export function AnalyticsChart({ data, title, color = "bg-blue-600" }: Analytics
   }, [data]);
 
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-8 shadow-md overflow-hidden group">
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 md:p-8 shadow-md overflow-hidden group">
       <div className="flex items-center justify-between mb-10">
          <div>
             <h3 className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.4em] mb-1">{title}</h3>

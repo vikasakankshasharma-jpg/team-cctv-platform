@@ -512,7 +512,7 @@ export function ProBuilderClient() {
           </div>
 
           {activeStepIndex === 0 ? (
-            <div className="py-12">
+            <div className="py-6 md:py-12">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-black text-slate-900">Choose Your Base Technology</h2>
                 <p className="text-slate-500 mt-2">This will automatically filter all compatible cameras and recorders.</p>
@@ -520,7 +520,7 @@ export function ProBuilderClient() {
               <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 <button 
                   onClick={() => { setTechnology("IP"); handleStepChange(1, "IP"); }}
-                  className={`p-8 rounded-3xl border-2 text-left transition-all ${technology === "IP" ? "border-blue-600 ring-4 ring-blue-50 bg-blue-50" : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-lg"}`}
+                  className={`p-4 md:p-8 rounded-3xl border-2 text-left transition-all ${technology === "IP" ? "border-blue-600 ring-4 ring-blue-50 bg-blue-50" : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-lg"}`}
                 >
                   <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                     <Sparkles className="w-8 h-8" />
@@ -536,7 +536,7 @@ export function ProBuilderClient() {
 
                 <button 
                   onClick={() => { setTechnology("HD"); handleStepChange(1, "HD"); }}
-                  className={`p-8 rounded-3xl border-2 text-left transition-all ${technology === "HD" ? "border-blue-600 ring-4 ring-blue-50 bg-blue-50" : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-lg"}`}
+                  className={`p-4 md:p-8 rounded-3xl border-2 text-left transition-all ${technology === "HD" ? "border-blue-600 ring-4 ring-blue-50 bg-blue-50" : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-lg"}`}
                 >
                   <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6">
                     <Sparkles className="w-8 h-8" />
@@ -883,7 +883,7 @@ export function ProBuilderClient() {
                 })}
                 
                 {filteredProducts.length === 0 && (
-                  <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-dashed border-slate-200 p-8">
+                  <div className="col-span-full py-6 md:py-12 text-center bg-white rounded-2xl border border-dashed border-slate-200 p-4 md:p-8">
                     <Filter className="w-10 h-10 text-slate-300 mx-auto mb-3" />
                     <p className="text-slate-600 font-bold">No products match your filters</p>
                     <p className="text-xs text-slate-400 mt-1">Try clearing or adjusting your search and filter options.</p>
@@ -941,7 +941,7 @@ export function ProBuilderClient() {
 
         <div className="flex-1 p-6 space-y-4 overflow-y-auto">
           {items.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
+            <div className="text-center py-6 md:py-12 text-slate-400">
               <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-20" />
               <p className="font-medium">Your cart is empty.</p>
               <p className="text-sm mt-1">Select items to build a quote.</p>

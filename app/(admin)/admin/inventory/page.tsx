@@ -30,7 +30,7 @@ export default function InventoryDashboard() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading Warehouse...</div>;
+  if (loading) return <div className="p-4 md:p-8">Loading Warehouse...</div>;
 
   const lowStockItems = inventory.filter(i => i.availableQty <= i.minStockLevel);
   const outOfStockItems = inventory.filter(i => i.availableQty === 0);
@@ -43,7 +43,7 @@ export default function InventoryDashboard() {
   );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Inventory Master</h1>

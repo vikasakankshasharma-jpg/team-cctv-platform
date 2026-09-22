@@ -199,7 +199,7 @@ export function MatricesClient({ products, settings, addons }: MatricesClientPro
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         <div className="xl:col-span-8 space-y-6">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-md overflow-hidden">
-            <div className="bg-zinc-50 dark:bg-zinc-900 px-8 py-6 border-b border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-zinc-50 dark:bg-zinc-900 px-4 md:px-8 py-6 border-b border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-[0.2em] text-[10px] mb-1 flex items-center gap-2">
                   <TrendingUp className="w-3.5 h-3.5 text-blue-500" /> Dynamic Quotation Matrix
@@ -272,7 +272,7 @@ export function MatricesClient({ products, settings, addons }: MatricesClientPro
               </table>
             </div>
 
-            <div className="px-8 py-4 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-6">
+            <div className="px-4 md:px-8 py-4 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-6">
               <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-zinc-500">
                 <div className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30" /> Healthy (&gt;25%)
               </div>

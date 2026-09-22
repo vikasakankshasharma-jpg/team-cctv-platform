@@ -77,7 +77,7 @@ export default function InstallerOnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-20 px-6 font-sans">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-10 md:py-20 px-6 font-sans">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-100 dark:border-blue-800/40 mb-6">
@@ -91,7 +91,7 @@ export default function InstallerOnboardingPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 rounded-3xl p-4 md:p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-6">
           {serverError && (
             <div className="bg-rose-50 text-rose-600 p-4 rounded-xl text-sm font-medium border border-rose-100">
               {serverError}

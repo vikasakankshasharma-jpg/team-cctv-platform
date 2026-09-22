@@ -200,7 +200,7 @@ export function CategoryGroupSelector({ value, onChange, label = "Catalog Group"
               {/* Group List */}
               <div className="flex-1 overflow-y-auto py-2">
                 {filteredGroups.length === 0 ? (
-                  <div className="px-6 py-8 text-center text-zinc-400 text-xs font-bold">
+                  <div className="px-6 py-4 md:py-8 text-center text-zinc-400 text-xs font-bold">
                     No groups found matching "{search}"
                   </div>
                 ) : (

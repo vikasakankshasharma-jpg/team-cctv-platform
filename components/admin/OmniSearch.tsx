@@ -98,7 +98,7 @@ export function OmniSearch() {
         </div>
 
         <Command.List className="max-h-[60vh] overflow-y-auto p-4 space-y-4">
-          <Command.Empty className="py-12 text-center">
+          <Command.Empty className="py-6 md:py-12 text-center">
             <Zap className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-3" />
             <p className="text-sm font-black text-zinc-400 uppercase tracking-widest">No results found for &quot;{query}&quot;</p>
           </Command.Empty>

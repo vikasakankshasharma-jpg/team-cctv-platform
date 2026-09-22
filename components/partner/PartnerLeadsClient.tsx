@@ -112,17 +112,17 @@ export function PartnerLeadsClient({ initialLeads }: PartnerLeadsClientProps) {
           <table className="w-full text-left text-sm">
             <thead className="bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-100 dark:border-zinc-800/60 text-zinc-400 dark:text-zinc-600 font-black uppercase text-[10px] tracking-[0.25em]">
               <tr>
-                <th className="px-8 py-6">Date</th>
-                <th className="px-8 py-6">Customer</th>
-                <th className="px-8 py-6">Details</th>
-                <th className="px-8 py-6 text-center">Status</th>
-                <th className="px-8 py-6 text-right">Value / Commission</th>
+                <th className="px-4 md:px-8 py-6">Date</th>
+                <th className="px-4 md:px-8 py-6">Customer</th>
+                <th className="px-4 md:px-8 py-6">Details</th>
+                <th className="px-4 md:px-8 py-6 text-center">Status</th>
+                <th className="px-4 md:px-8 py-6 text-right">Value / Commission</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/40 font-medium">
               {filteredLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center">
+                  <td colSpan={5} className="px-4 md:px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-4">
                        <div className="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-300 dark:text-zinc-700 shadow-inner">
                          <Users className="w-8 h-8" />
@@ -137,15 +137,15 @@ export function PartnerLeadsClient({ initialLeads }: PartnerLeadsClientProps) {
               ) : (
                 filteredLeads.map((lead) => (
                   <tr key={lead.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all group/row">
-                    <td className="px-8 py-6 text-zinc-500 dark:text-zinc-400 font-bold text-[11px] tracking-widest uppercase whitespace-nowrap">
+                    <td className="px-4 md:px-8 py-6 text-zinc-500 dark:text-zinc-400 font-bold text-[11px] tracking-widest uppercase whitespace-nowrap">
                       {new Date(lead.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-4 md:px-8 py-6">
                       <span className="font-black text-zinc-900 dark:text-white text-base tracking-tight uppercase">
                         {lead.customer_name}
                       </span>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-4 md:px-8 py-6">
                       <div className="flex items-center gap-3">
                         <span className="capitalize font-black text-[9px] text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/5 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-500/10 tracking-widest shadow-inner">
                            {lead.property_type}
@@ -155,12 +155,12 @@ export function PartnerLeadsClient({ initialLeads }: PartnerLeadsClientProps) {
                         </span>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-center">
+                    <td className="px-4 md:px-8 py-6 text-center">
                       <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${getStatusColor(lead.status)}`}>
                         {getStatusLabel(lead.status)}
                       </span>
                     </td>
-                    <td className="px-8 py-6 text-right">
+                    <td className="px-4 md:px-8 py-6 text-right">
                       {lead.status === "won" ? (
                         <div className="flex flex-col items-end">
                            <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded border border-emerald-100 dark:border-emerald-500/20">

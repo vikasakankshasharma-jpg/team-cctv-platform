@@ -361,7 +361,7 @@ export default function AdminProductsPage() {
       </header>
 
       {/* â”€â”€ Main Content Area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <main className="max-w-[1600px] mx-auto px-6 py-8">
+      <main className="max-w-[1600px] mx-auto px-6 py-4 md:py-8">
         {isLoading ? (
           <ProductsSkeleton />
         ) : (
@@ -902,7 +902,7 @@ export default function AdminProductsPage() {
                     )}
 
                     {!["cctv_camera", "recorder", "rack", "cable", "storage", "network"].includes(editingProduct.category || "") && (
-                      <div className="p-10 border border-dashed border-border rounded-2xl text-center">
+                      <div className="p-4 md:p-10 border border-dashed border-border rounded-2xl text-center">
                         <p className="text-muted-foreground text-sm font-medium">No specific technical attributes for this category.</p>
                       </div>
                     )}

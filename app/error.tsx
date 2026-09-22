@@ -50,7 +50,7 @@ export default function ErrorBoundary({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-8 transition-colors duration-500 overflow-hidden relative">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-4 md:p-8 transition-colors duration-500 overflow-hidden relative">
       
       {/* Decorative Orbs */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
@@ -102,7 +102,7 @@ export default function ErrorBoundary({
         <div className="flex flex-col gap-4">
           <button 
             onClick={() => reset()}
-            className="group relative flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 px-10 py-5 rounded-[24px] font-black uppercase text-[11px] tracking-[0.3em] transition-all shadow-2xl hover:scale-105 active:scale-95"
+            className="group relative flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 px-4 md:px-10 py-5 rounded-[24px] font-black uppercase text-[11px] tracking-[0.3em] transition-all shadow-2xl hover:scale-105 active:scale-95"
           >
             <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
             Refresh Page

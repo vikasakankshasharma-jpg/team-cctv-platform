@@ -67,7 +67,7 @@ export function FollowUpManager({ quoteId, followUps = [], onAdded }: { quoteId:
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
-        <div className="grid grid-cols-3 gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
           <div className="col-span-1">
             <label className="text-xs text-muted-foreground block mb-1">Schedule Next Action</label>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-white" />

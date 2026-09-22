@@ -433,7 +433,8 @@ export function ManualEnrichmentClient({ products }: ManualEnrichmentClientProps
 
       {/* Data Grid */}
       <div className="flex-1 overflow-auto">
-        <table className="w-full text-left text-sm whitespace-nowrap">
+        <div className="overflow-x-auto w-full">
+<table className="w-full text-left text-sm whitespace-nowrap">
           <thead className="bg-muted/50 sticky top-0 z-10 backdrop-blur-md shadow-sm">
             <tr>
               <th className="p-3 border-b border-border w-12 text-center">
@@ -454,7 +455,7 @@ export function ManualEnrichmentClient({ products }: ManualEnrichmentClientProps
           <tbody className="divide-y divide-border">
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                <td colSpan={9} className="p-4 md:p-8 text-center text-muted-foreground">
                   No products match the current filters.
                 </td>
               </tr>
@@ -574,6 +575,7 @@ export function ManualEnrichmentClient({ products }: ManualEnrichmentClientProps
             )}
           </tbody>
         </table>
+</div>
       </div>
     </div>
   );

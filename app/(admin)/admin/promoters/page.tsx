@@ -61,7 +61,7 @@ export default async function PromotersAdminPage() {
           title="Promoter Network"
           description="Manage your referral partner network and commissions."
         />
-        <div className="rounded-[24px] border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 p-10 text-center">
+        <div className="rounded-[24px] border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 p-4 md:p-10 text-center">
           <p className="text-red-600 dark:text-red-400 font-bold text-sm">
             Failed to load promoter data. This may be a Firestore index issue.
           </p>

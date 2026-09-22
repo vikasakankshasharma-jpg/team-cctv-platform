@@ -159,7 +159,7 @@ export function WizardBuilderClient({ initialSteps }: WizardBuilderClientProps) 
             )}
             <button
               onClick={handleCreateStep}
-              className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-md shadow-blue-500/20 active:scale-95"
+              className="group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-4 md:px-8 py-3.5 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-md shadow-blue-500/20 active:scale-95"
             >
               <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
               New Step
@@ -181,14 +181,14 @@ export function WizardBuilderClient({ initialSteps }: WizardBuilderClientProps) 
             <div className="flex items-center justify-center gap-4 flex-wrap">
               <button 
                 onClick={handleCreateStep}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-md shadow-blue-500/20 active:scale-95"
+                className="bg-blue-600 hover:bg-blue-500 text-white px-4 md:px-10 py-4 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-md shadow-blue-500/20 active:scale-95"
               >
                 Create First Step
               </button>
               <button 
                 onClick={handleSeedTemplate}
                 disabled={isSaving}
-                className="bg-zinc-800 hover:bg-zinc-700 text-white px-10 py-4 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-md active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 md:px-10 py-4 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-md active:scale-95 flex items-center gap-2 disabled:opacity-50"
               >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 Load Default Template

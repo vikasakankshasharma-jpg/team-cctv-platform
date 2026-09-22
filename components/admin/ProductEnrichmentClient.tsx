@@ -497,7 +497,7 @@ export function ProductEnrichmentClient({ products, settings }: ProductEnrichmen
         {/* Product Cards */}
         <div className="space-y-3">
           {filteredRows.length === 0 && (
-            <div className="text-center py-16 text-muted-foreground">
+            <div className="text-center py-8 md:py-16 text-muted-foreground">
               <BarChart3 className="w-10 h-10 mx-auto mb-3 opacity-30" />
               <p className="font-medium">No fields found for this filter</p>
             </div>
@@ -591,7 +591,7 @@ export function ProductEnrichmentClient({ products, settings }: ProductEnrichmen
           <button
             onClick={handleApply}
             disabled={selectedCount === 0}
-            className="h-14 px-10 bg-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground font-black uppercase text-[12px] tracking-[0.15em] rounded-2xl shadow-lg flex items-center gap-3 transition-all hover:scale-[1.01] active:scale-[0.99]"
+            className="h-14 px-4 md:px-10 bg-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground font-black uppercase text-[12px] tracking-[0.15em] rounded-2xl shadow-lg flex items-center gap-3 transition-all hover:scale-[1.01] active:scale-[0.99]"
           >
             <Check className="w-5 h-5" />
             Apply {selectedCount} Selected Update{selectedCount !== 1 ? "s" : ""}

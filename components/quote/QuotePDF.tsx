@@ -472,9 +472,9 @@ const s = StyleSheet.create({
 
 export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, settings?: any, isInvoice?: boolean }) {
   const subtotal  = quote.lineItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
-  const halfGst   = (subtotal * quote.gstPercent) / 200;
-  const total     = subtotal + halfGst * 2;
-  const advance   = Math.round(total * quote.advancePercent / 100);
+  const total     = subtotal + (subtotal * quote.gstPercent / 100);
+  const halfGst   = (subtotal * quote.gstPercent / 100) / 2;
+  const advance   = 500;
   
   const docTitle = isInvoice ? "TAX INVOICE" : "QUOTATION";
 
@@ -622,8 +622,8 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
               {
                 bg: C.greenBg,
                 icon: "✓",
-                title: `${quote.advancePercent}% Advance`,
-                body: `${formatINR(advance)} to confirm booking. Balance on completion.`,
+                title: `Flat ₹500 Advance`,
+                body: `${formatINR(advance)} required to initiate the project. 90% on delivery, 10% after completion.`,
               },
               {
                 bg: C.navyBg,

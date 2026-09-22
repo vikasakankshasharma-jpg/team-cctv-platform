@@ -32,7 +32,7 @@ export default function WizardError({
       <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
         <button
           onClick={() => reset()}
-          className="flex-1 flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 md:px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all active:scale-95"
         >
           <RotateCcw className="w-4 h-4" />
           Try Again
@@ -40,7 +40,7 @@ export default function WizardError({
         
         <Link
           href="/"
-          className="flex-1 flex items-center justify-center gap-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-4 md:px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all active:scale-95"
         >
           <Home className="w-4 h-4" />
           Go Home

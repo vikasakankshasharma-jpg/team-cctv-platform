@@ -52,6 +52,7 @@ export default async function QuoteResultPage({
   let recommendation_rules: any[] = [];
   let card_layouts: any[] = [];
   let hubs: HubWithCoordinates[] = [];
+  let geo_pricing_rules: any[] = [];
 
   if (leadId === "mock-lead" || leadId === "mock-e2e-lead") {
     lead = {
@@ -93,7 +94,8 @@ export default async function QuoteResultPage({
       adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
       adminDb.collection("recommendation_rules").orderBy("priority", "asc").get(),
       adminDb.collection("comparison_card_layouts").where("is_active", "==", true).get(),
-      adminDb.collection("hubs").where("is_active", "==", true).get()
+      adminDb.collection("hubs").where("is_active", "==", true).get(),
+      adminDb.collection("geo_pricing_rules").where("is_active", "==", true).get()
     ]);
 
     const leadResult = results[0];
@@ -164,6 +166,7 @@ export default async function QuoteResultPage({
     promoter = serializeDoc(promoter);
     recommendation_rules = serializeDoc(recommendation_rules);
     card_layouts = serializeDoc(card_layouts);
+    geo_pricing_rules = serializeDoc(geo_pricing_rules);
 
     // If lead not found directly, check if leadId is actually a quoteId
     if (!lead) {
@@ -305,14 +308,14 @@ export default async function QuoteResultPage({
       {/* MAIN CONFIGURATOR VIEW */}
       <div className="w-full animate-in fade-in fill-mode-both delay-300 duration-1000">
          {isExpired ? (
-           <div className="max-w-2xl mx-auto bg-white dark:bg-[#1d1d1f] rounded-3xl p-8 sm:p-12 text-center shadow-sm">
+           <div className="max-w-2xl mx-auto bg-white dark:bg-[#1d1d1f] rounded-3xl p-4 md:p-8 sm:p-12 text-center shadow-sm">
              <h2 className="text-2xl sm:text-4xl font-semibold text-[#1d1d1f] dark:text-white tracking-tight mb-4"><TranslatedText tKey="quote_exp" defaultText="Quotation Expired" /></h2>
              <p className="text-[#86868b] font-normal mb-8">
                <TranslatedText tKey="quote_exp_desc" defaultText="This quote is over 7 days old. Prices for camera parts change, so we need to make a new one for you." />
              </p>
              <a 
                href={`/wizard?requote=${lead.id}`}
-               className="inline-flex items-center justify-center bg-[#0071e3] hover:bg-[#0077ED] text-white px-8 py-3.5 rounded-full font-medium text-[15px] transition-colors"
+               className="inline-flex items-center justify-center bg-[#0071e3] hover:bg-[#0077ED] text-white px-4 md:px-8 py-3.5 rounded-full font-medium text-[15px] transition-colors"
              >
                <TranslatedText tKey="quote_req_new" defaultText="Request Re-quote" />
              </a>
@@ -332,3 +335,4 @@ export default async function QuoteResultPage({
     </main>
   );
 }
+

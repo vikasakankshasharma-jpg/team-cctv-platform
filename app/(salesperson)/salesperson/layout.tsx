@@ -25,7 +25,7 @@ export default async function SalespersonLayout({
       <Sidebar />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="hidden md:flex h-16 border-b border-zinc-200/80 dark:border-white/10 bg-white/90 dark:bg-black/40 backdrop-blur-xl items-center justify-between px-8 z-20 shrink-0">
+        <header className="hidden md:flex h-16 border-b border-zinc-200/80 dark:border-white/10 bg-white/90 dark:bg-black/40 backdrop-blur-xl items-center justify-between px-4 md:px-8 z-20 shrink-0">
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 shadow-xs">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

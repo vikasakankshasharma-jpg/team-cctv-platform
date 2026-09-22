@@ -29,7 +29,7 @@ export default function PriceSimulator({ currentRules }: { currentRules: any }) 
       <h2 className="font-semibold text-lg mb-4 text-gray-800 border-b pb-2">Price Simulator</h2>
       <p className="text-sm text-gray-500 mb-4">Preview how waterfall rules apply to a specific item.</p>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Cost (₹)</label>
           <input 

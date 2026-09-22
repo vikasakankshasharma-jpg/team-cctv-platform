@@ -235,7 +235,7 @@ export function CustomerLoginClient() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col justify-center py-6 md:py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div id="recaptcha-container"></div>
       
       {/* Background decoration */}

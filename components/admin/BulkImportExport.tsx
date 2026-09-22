@@ -346,7 +346,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
             <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-[0_40px_80px_rgba(0,0,0,0.12)] dark:shadow-black/60 w-full max-w-2xl max-h-[90vh] border border-zinc-200/50 dark:border-zinc-800 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
 
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center justify-between px-4 md:px-8 py-6 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-4">
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${modalState === "done" ? "bg-emerald-100 dark:bg-emerald-500/10" : "bg-blue-100 dark:bg-blue-500/10"}`}>
                   {modalState === "done"
@@ -378,14 +378,14 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
             </div>
 
             {modalState === "upload" && (
-              <div className="p-8 space-y-6 overflow-y-auto min-h-0 flex-1 scrollbar-none">
+              <div className="p-4 md:p-8 space-y-6 overflow-y-auto min-h-0 flex-1 scrollbar-none">
                 {/* Drag & Drop zone */}
                 <div
                   onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleDrop}
                   onClick={() => fileRef.current?.click()}
-                  className={`relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200 ${
+                  className={`relative border-2 border-dashed rounded-2xl p-5 md:p-12 text-center cursor-pointer transition-all duration-200 ${
                     isDragging
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10 scale-[1.01]"
                       : "border-zinc-200 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -408,7 +408,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                 {/* CSV format guide */}
                 <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-5 space-y-3">
                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">CSV Format Guide</p>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                     <div className="space-y-1">
                       <p className="font-bold text-zinc-600 dark:text-zinc-300">Required Columns</p>
                       {REQUIRED_FIELDS.map(f => (
@@ -431,9 +431,9 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
 
             {/* ── State: Preview ─────────────────────────────────────────────── */}
             {modalState === "preview" && preview && (
-              <div className="p-8 space-y-5 overflow-y-auto max-h-[60vh] scrollbar-none">
+              <div className="p-4 md:p-8 space-y-5 overflow-y-auto max-h-[60vh] scrollbar-none">
                 {/* Summary Cards */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-4 border border-emerald-100 dark:border-emerald-500/20">
                     <div className="flex items-center gap-2 mb-1">
                       <FilePlus2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -469,7 +469,8 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                       </p>
                     </div>
                     <div className="max-h-48 overflow-y-auto scrollbar-none">
-                      <table className="w-full text-xs">
+                      <div className="overflow-x-auto w-full">
+<table className="w-full text-xs">
                         <thead className="bg-zinc-50 dark:bg-zinc-800">
                           <tr>
                             <th className="text-left px-5 py-2 font-black text-zinc-400 uppercase tracking-widest text-[10px]">Row</th>
@@ -487,6 +488,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                           ))}
                         </tbody>
                       </table>
+</div>
                     </div>
                   </div>
                 )}
@@ -498,7 +500,8 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                       <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Valid Rows Preview (first 10)</p>
                     </div>
                     <div className="max-h-44 overflow-y-auto scrollbar-none">
-                      <table className="w-full text-xs">
+                      <div className="overflow-x-auto w-full">
+<table className="w-full text-xs">
                         <thead className="bg-white dark:bg-zinc-900 sticky top-0">
                           <tr>
                             <th className="text-left px-5 py-2 font-black text-zinc-400 text-[10px] uppercase tracking-widest">Action</th>
@@ -525,6 +528,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
                           })}
                         </tbody>
                       </table>
+</div>
                     </div>
                   </div>
                 )}
@@ -550,7 +554,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
 
             {/* ── State: Done ───────────────────────────────────────────────── */}
             {modalState === "done" && importResult && (
-              <div className="p-10 flex flex-col items-center gap-6 text-center">
+              <div className="p-4 md:p-10 flex flex-col items-center gap-6 text-center">
                 <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shadow-md shadow-emerald-500/10">
                   <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                 </div>
@@ -573,7 +577,7 @@ export function BulkImportExport({ activeFilters, onImportSuccess }: BulkImportE
             )}
 
             {/* ── Modal Footer ─────────────────────────────────────────────── */}
-            <div className="px-8 py-5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900">
+            <div className="px-4 md:px-8 py-5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900">
               <button
                 onClick={handleClose}
                 disabled={modalState === "importing"}

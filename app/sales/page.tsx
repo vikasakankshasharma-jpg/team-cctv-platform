@@ -67,11 +67,11 @@ export default function SalesDashboard() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12">
+        <div className="flex justify-center py-6 md:py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       ) : tasks.length === 0 ? (
-        <div className="bg-white p-12 text-center rounded-lg shadow-sm border border-gray-200 text-gray-500">
+        <div className="bg-white p-5 md:p-12 text-center rounded-lg shadow-sm border border-gray-200 text-gray-500">
           No active tasks in this queue. You're all caught up!
         </div>
       ) : (

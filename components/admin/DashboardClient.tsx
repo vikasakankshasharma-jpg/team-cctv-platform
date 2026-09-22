@@ -26,6 +26,7 @@ export interface RecentActivity {
   customer_name: string;
   status: string;
   created_at: unknown;
+  escalation_reason?: string;
 }
 
 export interface DashboardClientProps {

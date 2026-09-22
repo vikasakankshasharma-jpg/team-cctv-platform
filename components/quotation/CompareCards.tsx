@@ -244,7 +244,7 @@ export function CompareCards({
   // Early return AFTER all hooks have been declared
   if (cardsData.length === 0) {
     return (
-      <div className="w-full p-12 rounded-3xl border border-[#d2d2d7] dark:border-[#424245] flex flex-col items-center text-center">
+      <div className="w-full p-5 md:p-12 rounded-3xl border border-[#d2d2d7] dark:border-[#424245] flex flex-col items-center text-center">
         <Camera className="w-8 h-8 text-[#86868b] mb-4" />
         <p className="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">No Packages Selected</p>
         <p className="text-[#86868b] mt-1">Please select an option to compare.</p>

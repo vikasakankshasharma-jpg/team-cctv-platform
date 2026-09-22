@@ -56,6 +56,10 @@ export async function generateAndSendWhatsAppQuote(phone: string, session: Whats
         status: "quoted",
         created_at: new Date(),
         updated_at: new Date(),
+        // Capture tracking details directly on the lead for easy reporting
+        partner_id: selection.partner_id || null,
+        utm_source: selection.utm_source || null,
+        utm_campaign: selection.utm_campaign || null,
       };
       const leadRef = await adminDb.collection(COLLECTIONS.LEADS).add(newLead);
       leadId = leadRef.id;

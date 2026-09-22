@@ -41,7 +41,7 @@ export default async function CompatibilityPage() {
   products.sort((a, b) => a.category.localeCompare(b.category) || a.display_name.localeCompare(b.display_name));
 
   return (
-    <div className="p-8 max-w-screen-2xl mx-auto">
+    <div className="p-4 md:p-8 max-w-screen-2xl mx-auto">
       <CompatibilityMatrix initialProducts={products} />
     </div>
   );

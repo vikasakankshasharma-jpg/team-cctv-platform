@@ -95,7 +95,7 @@ export function CommissionLedgerClient({ initialRecords, nameMap, stats }: Commi
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="relative bg-card border border-border hover:border-warning/30 rounded-2xl p-8 overflow-hidden group transition-all shadow-sm">
+        <div className="relative bg-card border border-border hover:border-warning/30 rounded-2xl p-4 md:p-8 overflow-hidden group transition-all shadow-sm">
           <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-110">
             <AlertCircle className="w-40 h-40 text-warning" />
           </div>
@@ -109,7 +109,7 @@ export function CommissionLedgerClient({ initialRecords, nameMap, stats }: Commi
           </div>
         </div>
 
-        <div className="relative bg-card border border-border hover:border-success/30 rounded-2xl p-8 overflow-hidden group transition-all shadow-sm">
+        <div className="relative bg-card border border-border hover:border-success/30 rounded-2xl p-4 md:p-8 overflow-hidden group transition-all shadow-sm">
           <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-110">
             <CheckCircle2 className="w-40 h-40 text-success" />
           </div>

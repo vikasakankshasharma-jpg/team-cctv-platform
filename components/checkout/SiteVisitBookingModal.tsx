@@ -217,7 +217,7 @@ export function SiteVisitBookingModal({
             <form onSubmit={handleSubmit} className="flex-1 min-h-0 p-5 sm:p-6 overflow-y-auto space-y-4 text-slate-800">
               
               {/* Trust Value Badges */}
-              <div className="grid grid-cols-3 gap-2 p-3 bg-purple-50/80 rounded-2xl border border-purple-100 text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 bg-purple-50/80 rounded-2xl border border-purple-100 text-center">
                 <div className="text-[11px] font-bold text-purple-900">
                   ✨ Zero Charges
                   <p className="text-[10px] text-purple-600 font-normal">100% Free Visit</p>
@@ -237,7 +237,7 @@ export function SiteVisitBookingModal({
                 <label className="text-xs font-bold text-slate-700 block mb-2">
                   Select Preferred Date <span className="text-rose-500">*</span>
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => setSelectedDate(getTomorrowDate())}

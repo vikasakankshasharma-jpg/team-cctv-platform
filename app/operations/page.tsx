@@ -37,11 +37,11 @@ export default function OperationsDashboard() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12">
+        <div className="flex justify-center py-6 md:py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
         </div>
       ) : jobs.length === 0 ? (
-        <div className="bg-gray-800 p-8 text-center rounded-lg shadow-sm border border-gray-700 text-gray-400 mx-2">
+        <div className="bg-gray-800 p-4 md:p-8 text-center rounded-lg shadow-sm border border-gray-700 text-gray-400 mx-2">
           No jobs currently assigned to you.
         </div>
       ) : (

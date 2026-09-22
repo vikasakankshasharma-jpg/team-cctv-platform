@@ -177,7 +177,7 @@ export function CameraCustomizer({ basePlanId, basePlan, requirement, availableA
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-4">
           {UPGRADES.length === 0 && (
-             <div className="p-8 text-center border-2 border-dashed rounded-xl text-gray-500">
+             <div className="p-4 md:p-8 text-center border-2 border-dashed rounded-xl text-gray-500">
                No camera upgrades are currently in stock.
              </div>
           )}

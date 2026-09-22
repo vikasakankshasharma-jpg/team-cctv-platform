@@ -95,7 +95,8 @@ export function ReviewImportModal({ isOpen, onClose, onConfirm, isImporting, row
             <div>
               <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4">Preview (First 10 Valid Rows)</h3>
               <div className="border border-zinc-800 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-sm whitespace-nowrap">
+                <div className="overflow-x-auto w-full">
+<table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-zinc-900/50 border-b border-zinc-800 text-zinc-400 font-medium">
                     <tr>
                       <th className="px-4 py-3">Action</th>
@@ -160,6 +161,7 @@ export function ReviewImportModal({ isOpen, onClose, onConfirm, isImporting, row
                     })}
                   </tbody>
                 </table>
+</div>
               </div>
             </div>
           )}
@@ -172,7 +174,8 @@ export function ReviewImportModal({ isOpen, onClose, onConfirm, isImporting, row
                 Errors ({errorCount}) - Will be skipped
               </h3>
               <div className="border border-amber-500/20 rounded-xl overflow-hidden bg-amber-500/5">
-                <table className="w-full text-left text-sm whitespace-nowrap">
+                <div className="overflow-x-auto w-full">
+<table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-amber-500/10 border-b border-amber-500/20 text-amber-500/70 font-medium">
                     <tr>
                       <th className="px-4 py-3 w-1/3">Row Display Name</th>
@@ -197,6 +200,7 @@ export function ReviewImportModal({ isOpen, onClose, onConfirm, isImporting, row
                     ))}
                   </tbody>
                 </table>
+</div>
               </div>
             </div>
           )}
@@ -216,7 +220,7 @@ export function ReviewImportModal({ isOpen, onClose, onConfirm, isImporting, row
           <button
             onClick={onConfirm}
             disabled={isImporting || validCount === 0}
-            className="flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-8 py-3 rounded-xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 active:scale-95 disabled:opacity-50 disabled:grayscale"
+            className="flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 md:px-8 py-3 rounded-xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 active:scale-95 disabled:opacity-50 disabled:grayscale"
           >
             {isImporting ? (
               <RefreshCw className="w-5 h-5 animate-spin" />

@@ -167,6 +167,8 @@ export async function POST(req: Request) {
         transaction.update(quoteRef, {
           status: "PAID",
           payment_status: "captured",
+          payment_preference: paymentEntity.notes?.payment_type === "advance_500_cod" ? "cash_on_delivery" : "online_all",
+          delivery_status: "PENDING",
           razorpay_payment_id: paymentId,
           razorpay_order_id: orderId,
           payment_method: paymentEntity.method,

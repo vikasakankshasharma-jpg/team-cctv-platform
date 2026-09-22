@@ -944,7 +944,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           (activeTab === "storage" && filteredStorage.length === 0) ||
           (activeTab === "power" && filteredPower.length === 0) ||
           (activeTab === "addons" && filteredAddons.length === 0)) && (
-          <div className="py-12 text-center col-span-full">
+          <div className="py-6 md:py-12 text-center col-span-full">
             <p className="text-sm font-medium text-[#86868b]"><TranslatedText tKey="no_components_match" defaultText="No components match your search." /></p>
           </div>
         )}

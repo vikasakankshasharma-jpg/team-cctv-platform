@@ -35,11 +35,11 @@ export default function AnalyticsDashboard() {
   }, []);
 
   if (loading) {
-    return <div className="p-8 text-center">Loading Analytics...</div>;
+    return <div className="p-4 md:p-8 text-center">Loading Analytics...</div>;
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Quotation Intelligence Dashboard</h1>
         <Badge variant="outline" className="text-sm">Last 30 Days</Badge>

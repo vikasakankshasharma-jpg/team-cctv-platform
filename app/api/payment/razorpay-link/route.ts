@@ -67,14 +67,8 @@ export async function POST(req: Request) {
 
     const { paymentType = "full" } = body;
     let chargeAmount = serverAmount;
-    if (paymentType === "advance") {
-      const advancePercent = Number(
-        quoteData.advancePercent ??
-        quoteData.advance_percent ??
-        quoteData.pricingSnapshot?.advance_percent ??
-        30
-      );
-      chargeAmount = Math.round(serverAmount * (advancePercent / 100));
+    if (paymentType === "advance" || paymentType === "advance_500" || paymentType === "advance_500_cod") {
+      chargeAmount = 500;
     }
 
     if (isNaN(chargeAmount) || chargeAmount <= 0) {

@@ -46,7 +46,7 @@ export default async function AuditLogsPage() {
             <tbody className="divide-y divide-border">
               {logs.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-20 text-center text-muted-foreground font-medium italic">
+                  <td colSpan={4} className="px-6 py-10 md:py-20 text-center text-muted-foreground font-medium italic">
                     No security events recorded in this period.
                   </td>
                 </tr>

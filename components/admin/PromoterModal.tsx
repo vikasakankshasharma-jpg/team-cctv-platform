@@ -92,7 +92,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
       <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-md animate-in zoom-in-95 fade-in duration-500">
         
         {/* Header Section */}
-        <div className="p-10 pb-6">
+        <div className="p-4 md:p-10 pb-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-inner">
@@ -114,7 +114,7 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-10 pt-4 space-y-8">
+        <form onSubmit={handleSubmit} className="p-4 md:p-10 pt-4 space-y-8">
           
           <div className="space-y-6">
             <div className="space-y-2">
@@ -259,14 +259,14 @@ export function PromoterModal({ isOpen, onClose, promoter, onSave, availableLayo
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-8 py-4 text-xs font-black text-zinc-500 hover:text-white uppercase tracking-[0.2em] transition-all disabled:opacity-50"
+              className="px-4 md:px-8 py-4 text-xs font-black text-zinc-500 hover:text-white uppercase tracking-[0.2em] transition-all disabled:opacity-50"
             >
               Abort
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative flex items-center gap-3 bg-amber-600 hover:bg-amber-500 text-white px-10 py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-md shadow-amber-500/20 active:scale-95 disabled:opacity-50"
+              className="group relative flex items-center gap-3 bg-amber-600 hover:bg-amber-500 text-white px-4 md:px-10 py-5 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-md shadow-amber-500/20 active:scale-95 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

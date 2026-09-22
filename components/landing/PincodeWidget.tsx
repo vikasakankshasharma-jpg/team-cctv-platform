@@ -122,7 +122,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
           disabled={loading || pincode.length !== 6}
           className={`flex items-center justify-center gap-2 font-black uppercase text-xs tracking-widest text-white rounded-2xl transition-all shadow-xl disabled:opacity-50 touch-manipulation shrink-0 ${
             isHero
-              ? "px-8 py-4 sm:py-5.5 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 shadow-zinc-900/10 dark:shadow-blue-500/20 hover:shadow-blue-500/30"
+              ? "px-4 md:px-8 py-4 sm:py-5.5 bg-zinc-900 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 shadow-zinc-900/10 dark:shadow-blue-500/20 hover:shadow-blue-500/30"
               : "px-6 py-3.5 bg-zinc-900 dark:bg-indigo-600 hover:bg-zinc-800 dark:hover:bg-indigo-500 shadow-zinc-900/10 dark:shadow-indigo-500/20 hover:shadow-indigo-500/30"
           }`}
         >

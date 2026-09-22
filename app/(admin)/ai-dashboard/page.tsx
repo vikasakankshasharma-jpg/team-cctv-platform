@@ -32,7 +32,7 @@ export default async function AIDashboardPage() {
   const tableItems = dashboardItems.filter((item: any) => !item.approvedByAdmin || item.autoCorrected || item.userRating !== 0);
 
   return (
-    <div className="p-8 font-sans">
+    <div className="p-4 md:p-8 font-sans">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">AI Knowledge Brain (Admin)</h1>
@@ -43,7 +43,8 @@ export default async function AIDashboardPage() {
       <AIPerformanceChart dashboardItems={dashboardItems} />
 
       <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto w-full">
+<table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Question</th>
@@ -55,7 +56,7 @@ export default async function AIDashboardPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {tableItems.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={4} className="px-6 py-6 md:py-12 text-center text-gray-500">
                   No pending knowledge items or recent feedback to review.
                 </td>
               </tr>
@@ -105,6 +106,7 @@ export default async function AIDashboardPage() {
             )}
           </tbody>
         </table>
+</div>
       </div>
     </div>
   );

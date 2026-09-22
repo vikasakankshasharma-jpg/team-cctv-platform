@@ -83,7 +83,7 @@ export default function PricingControlCenter() {
     setSaving(false);
   };
 
-  if (loading) return <div className="p-8">Loading Pricing Rules...</div>;
+  if (loading) return <div className="p-4 md:p-8">Loading Pricing Rules...</div>;
 
   return (
     <div className="space-y-6">
@@ -114,9 +114,10 @@ export default function PricingControlCenter() {
             
             <div className="p-6 overflow-y-auto flex-1">
               {previewData.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No products will be affected by this change. Their effective markups remain the same.</p>
+                <p className="text-gray-500 text-center py-4 md:py-8">No products will be affected by this change. Their effective markups remain the same.</p>
               ) : (
-                <table className="w-full text-sm text-left">
+                <div className="overflow-x-auto w-full">
+<table className="w-full text-sm text-left">
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       <th className="p-3">SKU</th>
@@ -144,6 +145,7 @@ export default function PricingControlCenter() {
                     ))}
                   </tbody>
                 </table>
+</div>
               )}
             </div>
             

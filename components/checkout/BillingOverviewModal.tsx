@@ -36,11 +36,11 @@ export interface BillingFormData {
 interface BillingOverviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirmPayment: (data: BillingFormData, paymentType: "advance" | "advance_500" | "full" | "full_discount" | "emi") => Promise<void>;
+  onConfirmPayment: (data: BillingFormData, paymentType: "advance" | "advance_500" | "advance_500_cod" | "full" | "full_discount" | "emi") => Promise<void>;
   initialData?: Partial<BillingFormData>;
   quoteTotal?: number;
   advanceAmount?: number;
-  paymentType?: "advance" | "advance_500" | "full" | "full_discount" | "emi";
+  paymentType?: "advance" | "advance_500" | "advance_500_cod" | "full" | "full_discount" | "emi";
   isSubmitting?: boolean;
   mode?: "checkout" | "edit";
 }
@@ -233,7 +233,7 @@ export function BillingOverviewModal({
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">
                 Invoice Type
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setIsBusiness(false)}

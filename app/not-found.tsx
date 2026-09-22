@@ -3,7 +3,7 @@ import { ArrowRight, Radio } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-8 transition-colors duration-500 overflow-hidden relative">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-4 md:p-8 transition-colors duration-500 overflow-hidden relative">
 
       {/* Decorative Orbs */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">

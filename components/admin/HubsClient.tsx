@@ -49,7 +49,7 @@ export function HubsClient({ data }: { data: Hub[] }) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="border-border/50">
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-4 md:py-8 text-muted-foreground">
                   No City Hubs found.
                 </TableCell>
               </TableRow>

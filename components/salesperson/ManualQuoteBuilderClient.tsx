@@ -223,7 +223,7 @@ export default function ManualQuoteBuilderClient() {
       {/* STEP 1: LEAD INFO */}
       {step === "lead" && (
         <div className="max-w-2xl mx-auto">
-          <form onSubmit={handleCreateLead} className="bg-card border border-border rounded-3xl p-8 space-y-6 shadow-sm">
+          <form onSubmit={handleCreateLead} className="bg-card border border-border rounded-3xl p-4 md:p-8 space-y-6 shadow-sm">
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-1">Customer Walk-In</h2>
               <p className="text-sm text-muted-foreground">Register the lead to start building their custom quote.</p>
@@ -238,7 +238,7 @@ export default function ManualQuoteBuilderClient() {
                 <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><Phone className="w-3 h-3"/> Mobile</label>
                 <input required type="tel" pattern="[0-9]{10}" value={leadForm.mobile} onChange={e => setLeadForm(f => ({...f, mobile: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground" placeholder="10-digit number" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <div>
                     <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><MapPin className="w-3 h-3"/> City</label>
                     <input required value={leadForm.city} onChange={e => setLeadForm(f => ({...f, city: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground" placeholder="Jaipur" />
@@ -348,7 +348,7 @@ export default function ManualQuoteBuilderClient() {
             {/* Cart Items List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background">
               {cart.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground text-sm flex flex-col items-center">
+                <div className="text-center py-4 md:py-10 text-muted-foreground text-sm flex flex-col items-center">
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-3">
                     <Search className="w-6 h-6 text-muted-foreground/50" />
                   </div>
@@ -440,7 +440,7 @@ export default function ManualQuoteBuilderClient() {
       {/* STEP 3: DONE */}
       {step === "done" && (
         <div className="max-w-2xl mx-auto">
-          <div className="bg-card border border-border rounded-3xl p-8 space-y-6 shadow-sm text-center">
+          <div className="bg-card border border-border rounded-3xl p-4 md:p-8 space-y-6 shadow-sm text-center">
             <div className="w-20 h-20 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-4 animate-in zoom-in">
               <Check className="w-10 h-10 text-success" />
             </div>
@@ -454,7 +454,7 @@ export default function ManualQuoteBuilderClient() {
                </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                <button onClick={handleWhatsApp} className="flex items-center justify-center gap-2 py-4 bg-[#25D366] text-white font-bold rounded-2xl hover:bg-[#20bd5a] transition-colors shadow-lg shadow-[#25D366]/20">
                  <MessageSquare className="w-5 h-5" /> Send via WhatsApp
                </button>

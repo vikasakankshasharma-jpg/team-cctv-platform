@@ -101,11 +101,11 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
     : (billingData?.customer_name || "Valued Customer");
 
   return (
-    <div className="max-w-3xl mx-auto py-10 sm:py-16 px-4 sm:px-6 pb-20">
+    <div className="max-w-3xl mx-auto py-4 md:py-10 sm:py-16 px-4 sm:px-6 pb-20">
       <div className="bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden">
         
         {/* Success Header */}
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 p-8 sm:p-10 text-center text-white">
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 p-4 md:p-8 sm:p-10 text-center text-white">
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 backdrop-blur-md">
             <svg className="w-8 h-8 sm:w-10 sm:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
           </div>

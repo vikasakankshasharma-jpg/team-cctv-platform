@@ -21,7 +21,7 @@ export default function TrackingClient({ lead, job, quote }: { lead: any, job: a
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-blue-500/30">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-6 md:py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-blue-500/30">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -44,7 +44,7 @@ export default function TrackingClient({ lead, job, quote }: { lead: any, job: a
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-zinc-900 border-2 border-emerald-500/20 dark:border-emerald-500/10 rounded-[2rem] p-8 text-center shadow-2xl shadow-emerald-500/5 relative overflow-hidden"
+            className="bg-white dark:bg-zinc-900 border-2 border-emerald-500/20 dark:border-emerald-500/10 rounded-[2rem] p-4 md:p-8 text-center shadow-2xl shadow-emerald-500/5 relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-600" />
             <h2 className="text-sm font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-3">{t("track_secret_pin", "Secret Completion PIN")}</h2>
