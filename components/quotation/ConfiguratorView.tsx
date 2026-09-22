@@ -262,7 +262,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       return calculatePricing({
         selection: variation, products: currentProducts, addons: currentAddons,
         settings: pricingCache.settings, cablingDone, cablingMeters, referralDiscountPercent: promoterDiscount?.percent || 0,
-        referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer, geoRules: pricingCache.geoRules, locationParams: { pincode: lead.address?.pincode || lead.wizard_answers?.lead_pincode || lead.wizard_answers?.pincode } });
+        referralDiscountFlat: promoterDiscount?.flat || 0, evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer, geoRules: pricingCache.geoRules, locationParams: { pincode: (lead.address?.pincode || lead.wizard_answers?.lead_pincode || lead.wizard_answers?.pincode) as string | undefined } });
     };
     
     setPricingResults({ budget: calcTier("budget"), recommended: calcTier("recommended"), premium: calcTier("premium") });
@@ -282,7 +282,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       },
       products: currentProducts, addons: currentAddons, settings: pricingCache.settings, cablingDone, cablingMeters,
       referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0,
-      evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer, geoRules: pricingCache.geoRules, locationParams: { pincode: lead.address?.pincode || lead.wizard_answers?.lead_pincode || lead.wizard_answers?.pincode } });
+      evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer, geoRules: pricingCache.geoRules, locationParams: { pincode: (lead.address?.pincode || lead.wizard_answers?.lead_pincode || lead.wizard_answers?.pincode) as string | undefined } });
   }, [active_checkout_option, selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, cablingMeters, promoterDiscount, evaluatedRules, lead.active_offer]);
 
   const addonsTotal = useMemo(() => {
@@ -310,7 +310,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       },
       products: currentProducts, addons: currentAddons, settings: pricingCache.settings, cablingDone, cablingMeters,
       referralDiscountPercent: promoterDiscount?.percent || 0, referralDiscountFlat: promoterDiscount?.flat || 0,
-      evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer, geoRules: pricingCache.geoRules, locationParams: { pincode: lead.address?.pincode || lead.wizard_answers?.lead_pincode || lead.wizard_answers?.pincode } });
+      evaluatedAddonRules: evaluatedRules, activeOffer: lead.active_offer, geoRules: pricingCache.geoRules, locationParams: { pincode: (lead.address?.pincode || lead.wizard_answers?.lead_pincode || lead.wizard_answers?.pincode) as string | undefined } });
   }, [active_checkout_option, selection, currentProducts, currentAddons, pricingCache.settings, cablingDone, promoterDiscount, evaluatedRules, lead.active_offer, is_compare_mode, base_quote_pricing]);
 
   const customizationDiff = activePricing.total_payable - basePricing.total_payable;

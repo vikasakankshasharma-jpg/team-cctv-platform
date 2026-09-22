@@ -4,6 +4,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { ApiResponse } from "@/lib/api-response";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { COLLECTIONS } from "@/lib/constants";
+import { Msg91WhatsAppProvider } from "@/lib/whatsapp/msg91-provider";
 
 /**
  * ENTERPRISE BOOKING SYSTEM
@@ -115,6 +116,22 @@ export async function POST(request: NextRequest) {
       user_agent: ua,
       metadata: { action: "SITE_VISIT_BOOKED", booking_id: bookingRef.id }
     });
+
+    // 5. Send WhatsApp Notification
+    if (customer_mobile && !isTestBooking) {
+      try {
+        const msg91 = new Msg91WhatsAppProvider();
+        await msg91.sendSurveyConfirm({
+          phone: customer_mobile,
+          customerName: customer_name,
+          date: preferred_date,
+          timeSlot: time_slot
+        });
+      } catch (waError) {
+        console.error("Failed to send WhatsApp survey confirmation:", waError);
+        // Do not fail the booking if WhatsApp fails
+      }
+    }
 
     return ApiResponse.success({ 
       id: bookingRef.id, 
