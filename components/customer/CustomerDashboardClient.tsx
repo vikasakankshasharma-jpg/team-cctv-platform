@@ -516,12 +516,25 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                     </div>
 
                   </div>
-                  {/* Payment Stages Timeline */}
-                  {q.rawLead && q.rawQuote && (
-                    <div className="mt-6 border-t border-zinc-100 dark:border-zinc-800 pt-6">
-                      <PaymentStagesWidget quoteId={q.quoteId} lead={q.rawLead} quote={q.rawQuote} />
+                  
+                  {/* Unbooked Teaser Banner */}
+                  <div className="mt-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 sm:p-5 border border-blue-100 dark:border-blue-900/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm">
+                          Special Offer 🎉
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Get 2% Instant Discount on Full Payment, or choose Easy EMIs!</h4>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Select a payment plan that fits your budget.</p>
                     </div>
-                  )}
+                    <Link
+                      href={`/quote/${q.leadId}/review/${q.quoteId}`}
+                      className="shrink-0 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-100 px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
+                    >
+                      Select Payment Plan <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

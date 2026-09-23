@@ -5,7 +5,7 @@ import Image from "next/image";
 import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check, MessageCircle, Building2, Edit3, Calendar, MapPin } from "lucide-react";
+import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check, MessageCircle, Building2, Edit3, Calendar, MapPin, RefreshCw } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { RevisionBanner } from "@/components/quote/RevisionBanner";
 import { BillingOverviewModal, BillingFormData } from "@/components/checkout/BillingOverviewModal";
@@ -629,139 +629,137 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                     </div>
                   </div>
 
-                  {/* 2-Column Decision Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    
-                    {/* Track 1: Online Advance Booking */}
-                    <div className="p-5 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 text-white flex flex-col justify-between border border-slate-800 shadow-md">
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 rounded-full">
-                            Fast Track Installation
-                          </span>
-                          <span className="text-xs font-bold text-slate-400">Step 1 of 2</span>
-                        </div>
-                        <h4 className="text-base font-bold text-white mb-1">Confirm & Pay ₹500 Advance</h4>
-                        <p className="text-xs text-slate-300 leading-relaxed mb-4">
-                          Pay ₹500 booking advance now. 90% is due at material delivery, and the final 10% after installation is complete.
-                        </p>
-                        <div className="space-y-1.5 text-[11px] text-slate-300 mb-5">
-                          <div className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            <span>Instant GST Tax Invoice</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            <span>Priority technician allocation</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            {isPartiallyPaid ? <span>Total Remaining Balance Due</span> : <span>Remaining balance due on site completion</span>}
-                          </div>
-                        </div>
+                  
+                    {/* 3-Plan Checkout Experience */}
+                    <div className="mb-8">
+                      <div className="text-center mb-6">
+                         <h3 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white mb-2">Choose Your Payment Plan</h3>
+                         <p className="text-sm text-zinc-500 dark:text-zinc-400">Select how you'd like to pay for your security system.</p>
                       </div>
-
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => openBillingModal("advance_500")}
-                          disabled={isPayingAdvance || isPayingFull}
-                          className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95"
-                        >
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="w-4 h-4" />
-                            Pay {isPartiallyPaid ? "Balance " : "Advance ₹500"}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        
+                        {/* Option A: Smart Pay (Full Discount) */}
+                        <div className="relative p-6 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border-2 border-indigo-200 dark:border-indigo-800 flex flex-col justify-between shadow-sm group hover:shadow-md transition-all">
+                          <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2">
+                            <span className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
+                              Most Popular 🌟
+                            </span>
                           </div>
-                          <span className="text-[10px] font-medium opacity-80">(Pay Remaining Balance Online at Delivery)</span>
-                        </button>
-
-                        <button
-                          onClick={() => openBillingModal("advance_500_cod")}
-                          disabled={isPayingAdvance || isPayingFull}
-                          className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs sm:text-sm border border-slate-700 shadow-sm transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95"
-                        >
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="w-4 h-4" />
-                            Pay {isPartiallyPaid ? "Balance " : "Advance ₹500"}
+                          
+                          <div>
+                            <h4 className="text-lg font-black text-indigo-950 dark:text-indigo-100 mb-1">Smart Pay</h4>
+                            <p className="text-xs text-indigo-800/70 dark:text-indigo-200/70 leading-relaxed mb-4">
+                              Pay 100% upfront securely online and get a flat 2% instant discount on your total quote value.
+                            </p>
+                            
+                            <div className="bg-white/60 dark:bg-black/20 rounded-xl p-3 mb-5 border border-indigo-100 dark:border-indigo-900/50">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs font-medium text-indigo-900/60 dark:text-indigo-300">Total:</span>
+                                <span className="text-xs font-medium text-indigo-900/60 dark:text-indigo-300 line-through">₹{total.toLocaleString('en-IN')}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-bold text-indigo-900 dark:text-indigo-100">Discounted:</span>
+                                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">₹{Math.round(total * 0.98).toLocaleString('en-IN')}</span>
+                              </div>
+                              <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 text-right mt-0.5">
+                                (Save ₹{Math.round(total * 0.02).toLocaleString('en-IN')})
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-[10px] font-medium opacity-80 text-emerald-400">(Pay Remaining Balance via Cash at Delivery)</span>
-                        </button>
+                          
+                          <button
+                            onClick={() => openBillingModal("full_discount")}
+                            disabled={isPayingAdvance || isPayingFull || isPayingEMI}
+                            className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                          >
+                            <CreditCard className="w-4 h-4" />
+                            Pay Full Amount
+                          </button>
+                        </div>
+                        
+                        {/* Option B: Flexi EMI */}
+                        <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
+                          <div>
+                            <h4 className="text-lg font-black text-zinc-900 dark:text-white mb-1">Flexi EMI 💳</h4>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-4">
+                              Convert your payment into easy monthly instalments. No Cost EMI available on select major credit cards.
+                            </p>
+                            
+                            <div className="space-y-2 text-xs text-zinc-600 dark:text-zinc-400 mb-5">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
+                                <span>Zero foreclosure charges</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
+                                <span>Instant approval online</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
+                                <span>Up to 12 months tenure</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={() => openBillingModal("emi")}
+                            disabled={isPayingAdvance || isPayingFull || isPayingEMI}
+                            className="w-full py-3.5 px-4 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                          >
+                            {isPayingEMI ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
+                            View EMI Options
+                          </button>
+                        </div>
+                        
+                        {/* Option C: Standard Milestone */}
+                        <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
+                          <div>
+                            <h4 className="text-lg font-black text-zinc-900 dark:text-white mb-1">Milestone Plan 🛠️</h4>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-4">
+                              Standard installation flow. Pay ₹500 advance now, 90% at material delivery, and 10% after setup.
+                            </p>
+                            
+                            <div className="space-y-2 text-xs text-zinc-600 dark:text-zinc-400 mb-5">
+                              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1">
+                                <span>1. Booking:</span>
+                                <span className="font-bold text-zinc-900 dark:text-white">₹500</span>
+                              </div>
+                              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1">
+                                <span>2. Delivery (90%):</span>
+                                <span className="font-bold text-zinc-900 dark:text-white">₹{Math.round((total - 500) * 0.90).toLocaleString('en-IN')}</span>
+                              </div>
+                              <div className="flex items-center justify-between border-zinc-200 dark:border-zinc-800 pb-1">
+                                <span>3. Install (10%):</span>
+                                <span className="font-bold text-zinc-900 dark:text-white">₹{Math.round((total - 500) * 0.10).toLocaleString('en-IN')}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={() => openBillingModal("advance_500")}
+                            disabled={isPayingAdvance || isPayingFull || isPayingEMI}
+                            className="w-full py-3.5 px-4 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-700 dark:border-zinc-600 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                          >
+                            <ShieldCheck className="w-4 h-4 text-zinc-400" />
+                            Pay ₹500 Booking
+                          </button>
+                        </div>
 
-                        <button
-                          onClick={() => openBillingModal("full_discount")}
-                          disabled={isPayingAdvance || isPayingFull}
-                          className="w-full py-2.5 px-3 bg-white/5 hover:bg-white/10 text-slate-300 font-medium rounded-xl text-[11px] transition-all text-center mt-1"
+                      </div>
+                      
+                      <div className="mt-6 text-center">
+                        <button 
+                          onClick={() => setIsSurveyModalOpen(true)}
+                          className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 underline underline-offset-2 transition-colors inline-flex items-center gap-1.5"
                         >
-                          Or Pay Full Upfront (-2% Discount)
+                          <MapPin className="w-3.5 h-3.5" />
+                          Not ready to pay? Book a 100% Free Physical Site Survey instead
                         </button>
                       </div>
                     </div>
 
-                    {/* Track 2: Physical Site Survey */}
-                    <div className="p-5 rounded-2xl bg-gradient-to-b from-purple-50/70 to-indigo-50/70 text-slate-900 flex flex-col justify-between border-2 border-purple-200/80 shadow-sm">
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-200/70 text-purple-900 border border-purple-300 px-2.5 py-0.5 rounded-full">
-                            100% Free Consultation
-                          </span>
-                          <span className="text-xs font-bold text-purple-600">No Advance</span>
-                        </div>
-                        <h4 className="text-base font-bold text-purple-950 mb-1">Book Free Site Survey</h4>
-                        <p className="text-xs text-purple-900/80 leading-relaxed mb-4">
-                          Want an engineer to inspect your site first? Pick a convenient time slot. Our technician will visit, check blindspots, and measure wiring.
-                        </p>
-                        <div className="space-y-1.5 text-[11px] text-purple-900/90 mb-5">
-                          <div className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                            <span>Physical site inspection by CCTV specialist</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                            <span>Zero obligation / No advance payment today</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                            <span>Pick your preferred Date & Time Slot</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => setIsSurveyModalOpen(true)}
-                        className="w-full py-3.5 px-4 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
-                      >
-                        <Calendar className="w-4 h-4" />
-                        📅 Book Free Site Survey
-                      </button>
-                    </div>
-
-                  </div>
-
-                  {/* Cashfree EMI Banner */}
-                  <div className="relative bg-zinc-900 rounded-2xl p-5 sm:p-6 overflow-hidden mb-5 group">
-                     <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 transition-transform duration-1000 group-hover:scale-110" />
-                     
-                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                       <div>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className="bg-emerald-500 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Easy EMI</span>
-                            <span className="text-xs text-zinc-400 font-medium">Credit & Debit Card EMI</span>
-                          </div>
-                         <h4 className="text-sm sm:text-base font-bold text-white mb-0.5">Split into Easy Monthly Instalments</h4>
-                         <p className="text-xs text-zinc-400">No-cost EMI available on major cards. Zero foreclosure charges.</p>
-                       </div>
-                       
-                       <motion.button
-                         whileTap={{ scale: 0.98 }}
-                         onClick={() => openBillingModal("emi")}
-                         disabled={isPayingEMI}
-                         className="shrink-0 w-full md:w-auto px-5 py-3 bg-white text-zinc-900 text-xs sm:text-sm font-bold rounded-xl shadow-lg hover:bg-zinc-50 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
-                       >
-                         {isPayingEMI ? "Processing..." : "Apply for EMI"}
-                       </motion.button>
-                     </div>
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center gap-2 pt-2">
+                    <div className="flex flex-col items-center justify-center gap-2 pt-2">
                     <button 
                       onClick={() => redirectToPaymentLink("advance_500", "all")}
                       className="text-xs text-zinc-500 hover:text-blue-600 underline underline-offset-2 transition-colors text-center"

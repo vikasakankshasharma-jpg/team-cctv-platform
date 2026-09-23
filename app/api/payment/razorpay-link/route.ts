@@ -67,7 +67,11 @@ export async function POST(req: Request) {
 
     const { paymentType = "full" } = body;
     let chargeAmount = serverAmount;
-    if (paymentType === "advance" || paymentType === "advance_500" || paymentType === "advance_500_cod") {
+    
+    if (paymentType === "full_discount" || paymentType === "full_discounted") {
+      // 2% discount on full upfront payment
+      chargeAmount = Math.round(serverAmount * 0.98);
+    } else if (paymentType === "advance" || paymentType === "advance_500" || paymentType === "advance_500_cod") {
       chargeAmount = 500;
     } else if (paymentType === "delivery_90") {
       // 90% of remaining balance after ₹500 booking
