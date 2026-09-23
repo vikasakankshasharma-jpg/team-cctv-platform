@@ -95,44 +95,44 @@ export function InstallerLoginClient() {
 
     try {
       let customToken = "";
-
-      if (method === "email") {
-        const res = await fetch("/api/installer/auth/otp/verify", {
+  
+        if (method === "email") {
+          const res = await fetch("/api/installer/auth/otp/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identifier, otp: code, type: "email" }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Invalid verification code.");
+          customToken = data.customToken;
+          if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
+        } else {
+          // Mobile flow: verify with Firebase client SDK first
+          const confirmationResult = (window as any).confirmationResult;
+          if (!confirmationResult) throw new Error("Verification session expired. Please try again.");
+          
+          const result = await confirmationResult.confirm(code);
+          const idToken = await result.user.getIdToken();
+  
+          // Send ID token to our backend to upgrade claims and get customToken
+          const res = await fetch("/api/installer/auth/otp/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identifier, otp: idToken, type: "mobile" }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to upgrade session.");
+          customToken = data.customToken;
+          if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
+        }
+  
+        // Create Server Session
+        const finalIdToken = customToken === "mock-custom-token" ? "mock-jwt-token" : await auth.currentUser?.getIdToken();
+        const sessionRes = await fetch("/api/installer/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier, otp: code, type: "email" }),
+          body: JSON.stringify({ idToken: finalIdToken }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Invalid verification code.");
-        customToken = data.customToken;
-        await signInWithCustomToken(auth, customToken);
-      } else {
-        // Mobile flow: verify with Firebase client SDK first
-        const confirmationResult = (window as any).confirmationResult;
-        if (!confirmationResult) throw new Error("Verification session expired. Please try again.");
-        
-        const result = await confirmationResult.confirm(code);
-        const idToken = await result.user.getIdToken();
-
-        // Send ID token to our backend to upgrade claims and get customToken
-        const res = await fetch("/api/installer/auth/otp/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier, otp: idToken, type: "mobile" }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to upgrade session.");
-        customToken = data.customToken;
-        await signInWithCustomToken(auth, customToken); // Sign in again with upgraded token
-      }
-
-      // Create Server Session
-      const finalIdToken = await auth.currentUser?.getIdToken();
-      const sessionRes = await fetch("/api/installer/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: finalIdToken }),
-      });
 
       if (!sessionRes.ok) throw new Error("Failed to create secure session.");
 

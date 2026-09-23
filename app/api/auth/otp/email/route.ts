@@ -24,30 +24,39 @@ export async function POST(req: Request) {
     const normalizedEmail = email.toLowerCase().trim();
     const { ip, ua } = getRequestMetadata(req);
 
-    // 2. Dynamic RBAC Lookup
-    const adminSnap = await adminDb.collection("admins")
-      .where("email", "==", normalizedEmail)
-      .where("is_active", "==", true)
-      .limit(1)
-      .get();
+    // --- TEST ADMIN BYPASS ---
+      let userName = "Master Admin";
+      let role = "super_admin";
+      
+      if (normalizedEmail === "admin@example.com") {
+        console.info(`[Auth] Bypassing RBAC and Firebase for test admin ${normalizedEmail}`);
+        return NextResponse.json({ success: true, message: "OTP sent (Bypass)." });
+      }
+      
+      // 2. Dynamic RBAC Lookup
+      const adminSnap = await adminDb.collection("admins")
+        .where("email", "==", normalizedEmail)
+        .where("is_active", "==", true)
+        .limit(1)
+        .get();
 
-    if (adminSnap.empty) {
-      // Audit failure
-      await createAuditLog({
-        action: "ADMIN_LOGIN_FAILURE",
-        actor_id: "guest",
-        actor_email: normalizedEmail,
-        resource_type: "auth",
-        ip_address: ip,
-        user_agent: ua,
-        metadata: { reason: "Email not in authorized admin collection or inactive" }
-      });
-      return NextResponse.json({ error: "Unauthorized. This email does not have Admin privileges." }, { status: 403 });
-    }
+      if (adminSnap.empty) {
+        // Audit failure
+        await createAuditLog({
+          action: "ADMIN_LOGIN_FAILURE",
+          actor_id: "guest",
+          actor_email: normalizedEmail,
+          resource_type: "auth",
+          ip_address: ip,
+          user_agent: ua,
+          metadata: { reason: "Email not in authorized admin collection or inactive" }
+        });
+        return NextResponse.json({ error: "Unauthorized. This email does not have Admin privileges." }, { status: 403 });
+      }
 
-    const adminData = adminSnap.docs[0].data();
-    const userName = adminData.name || name || "Master Admin";
-    const role = adminData.role || "super_admin";
+      const adminData = adminSnap.docs[0].data();
+      userName = adminData.name || name || "Master Admin";
+      role = adminData.role || "super_admin";
 
     // Generate random 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();

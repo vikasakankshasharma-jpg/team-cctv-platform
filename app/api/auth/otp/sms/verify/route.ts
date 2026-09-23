@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
       data = otpDoc.data()!;
       
-      if (data.type !== "whatsapp") {
+      if (data.type !== "sms") {
         return NextResponse.json({ error: "Invalid verification method." }, { status: 400 });
       }
 

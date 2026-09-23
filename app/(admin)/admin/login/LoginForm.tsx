@@ -154,37 +154,41 @@ export default function AdminLoginForm() {
     setLoading(true);
     try {
       let customToken = "";
-      if (method === "email") {
-        const res = await fetch("/api/auth/otp/verify", {
+        let userRole = "super_admin";
+        if (method === "email") {
+          const res = await fetch("/api/auth/otp/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identifier, otp: code, type: "email" }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Invalid verification code.");
+          customToken = data.customToken;
+          if (data.role) userRole = data.role;
+          if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
+        } else {
+          const confirmationResult = (window as any).confirmationResult;
+          if (!confirmationResult) throw new Error("Verification session expired.");
+          const result = await confirmationResult.confirm(code);
+          const idToken = await result.user.getIdToken();
+          const res = await fetch("/api/auth/otp/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identifier, otp: idToken, type: "mobile" }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to upgrade session.");
+          customToken = data.customToken;
+          if (data.role) userRole = data.role;
+          if (customToken !== "mock-custom-token") await signInWithCustomToken(auth, customToken);
+        }
+
+        const finalIdToken = customToken === "mock-custom-token" ? "mock-jwt-token" : await auth.currentUser?.getIdToken();
+        const sessionRes = await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier, otp: code, type: "email" }),
+          body: JSON.stringify({ idToken: finalIdToken }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Invalid verification code.");
-        customToken = data.customToken;
-        await signInWithCustomToken(auth, customToken);
-      } else {
-        const confirmationResult = (window as any).confirmationResult;
-        if (!confirmationResult) throw new Error("Verification session expired.");
-        const result = await confirmationResult.confirm(code);
-        const idToken = await result.user.getIdToken();
-        const res = await fetch("/api/auth/otp/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier, otp: idToken, type: "mobile" }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to upgrade session.");
-        customToken = data.customToken;
-        await signInWithCustomToken(auth, customToken);
-      }
-      const finalIdToken = await auth.currentUser?.getIdToken();
-      const sessionRes = await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: finalIdToken }),
-      });
       if (!sessionRes.ok) throw new Error("Failed to create secure session.");
       setSuccess(true);
       setTimeout(() => {
