@@ -23,6 +23,7 @@ import {
   ChevronRight
 , CreditCard} from "lucide-react";
 import { TranslatedText } from "@/components/shared/TranslatedText";
+import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
 
 export interface CustomerQuoteItem {
   quoteId: string;
@@ -36,6 +37,8 @@ export interface CustomerQuoteItem {
   propertyType?: string;
   isPaid: boolean;
   customerName?: string;
+  rawLead?: any;
+  rawQuote?: any;
 }
 
 interface CustomerDashboardProps {
@@ -361,6 +364,12 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                     </div>
 
                   </div>
+                  {/* Payment Stages Timeline (Only if it's booked/paid) */}
+                  {q.isPaid && q.rawLead && q.rawQuote && (
+                    <div className="mt-6 border-t border-zinc-100 dark:border-zinc-800 pt-6">
+                      <PaymentStagesWidget quoteId={q.quoteId} lead={q.rawLead} quote={q.rawQuote} />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

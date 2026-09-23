@@ -81,6 +81,8 @@ export default async function CustomerDashboardPage() {
           customerName: qData.customer_name || leadData.customer_name,
           amountPaid: qData.amount_paid || 0,
           amountDue: qData.amount_due || 0,
+          rawLead: leadData,
+          rawQuote: qData,
         });
       }
     }

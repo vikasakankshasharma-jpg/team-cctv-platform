@@ -3,6 +3,7 @@
 import { CheckCircle2, CircleDashed, MapPin, Package, Phone, ShieldCheck, Truck, Wrench } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion } from "framer-motion";
+import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
 
 export default function TrackingClient({ lead, job, quote }: { lead: any, job: any, quote: any }) {
   const { t } = useTranslation();
@@ -66,6 +67,9 @@ export default function TrackingClient({ lead, job, quote }: { lead: any, job: a
             )}
           </motion.div>
         )}
+
+        {/* Payment Stages Timeline */}
+        <PaymentStagesWidget quoteId={quote?.id || lead?.id || quote?.lead_id} lead={lead} quote={quote} />
 
         {/* Progress Stepper */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 sm:p-10 shadow-xl shadow-zinc-200/20 dark:shadow-none">
