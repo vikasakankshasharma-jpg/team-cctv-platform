@@ -2,8 +2,10 @@ import { JobStatus } from "@/types";
 
 export class JobEngine {
   private static validTransitions: Record<JobStatus, JobStatus[]> = {
-    "PENDING_DISPATCH": ["ASSIGNED", "CANCELLED"],
+    "PENDING_DISPATCH": ["DISPATCHED", "ASSIGNED", "CANCELLED"],
     "BACKORDERED": ["PENDING_DISPATCH", "CANCELLED"],
+    "DISPATCHED": ["DELIVERED", "CANCELLED"],
+    "DELIVERED": ["ASSIGNED", "IN_PROGRESS", "CANCELLED"],
     "ASSIGNED": ["IN_PROGRESS", "CANCELLED"],
     "IN_PROGRESS": ["MATERIAL_SHORTAGE", "COMPLETED", "CANCELLED"],
     "MATERIAL_SHORTAGE": ["IN_PROGRESS", "CANCELLED"],

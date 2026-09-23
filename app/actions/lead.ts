@@ -70,7 +70,17 @@ export async function createLeadAction(payload: {
       assigned_salesperson_id = eligibleSalespersons[0];
       const spDoc = allSalespersons.find((s: any) => s.id === assigned_salesperson_id);
       if (spDoc?.mobile_number && !isTestLead) {
-        await sendCustomerWhatsApp(spDoc.mobile_number, `🎯 *New Lead!*\nCustomer: ${leadData.customer_name}\nPincode: ${pincode}`);
+        try {
+          const { msg91 } = await import("@/lib/whatsapp/msg91-provider");
+          const configStr = leadData.wizard_answers?.cameras ? `${leadData.wizard_answers.cameras} Cameras` : "CCTV System";
+          await msg91.sendSalesLeadAlert({
+            phone: spDoc.mobile_number,
+            customerName: leadData.customer_name,
+            configDetails: configStr
+          });
+        } catch (err) {
+          console.error("Failed to send MSG91 Sales Lead Alert:", err);
+        }
       }
     } else if (eligibleSalespersons.length > 1) {
       broadcasted_to_salesperson_ids = eligibleSalespersons;
@@ -154,6 +164,20 @@ export async function createLeadAction(payload: {
             adminDb.collection("service_areas").doc(locationData.slug).set({ waitlist_count: 1 });
           }
         });
+    }
+
+    // Send MSG91 Lead Welcome
+    try {
+      const { msg91 } = await import("@/lib/whatsapp/msg91-provider");
+      const phone = payload.mobile_number || "Customer";
+      const configStr = leadData.wizard_answers?.cameras ? `${leadData.wizard_answers.cameras} Cameras` : "CCTV System";
+      await msg91.sendLeadWelcome({
+        phone: payload.mobile_number,
+        customerName: payload.customer_name,
+        configDetails: configStr
+      });
+    } catch (e) {
+      console.error("Failed to send Lead Welcome:", e);
     }
 
     return { success: true, id: newLeadRef.id };

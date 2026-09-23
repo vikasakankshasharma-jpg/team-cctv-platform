@@ -31,10 +31,10 @@ export async function POST(req: Request) {
 
     const quoteData = quoteSnap.data() as any;
 
-    // 2. Prevent Double Payments
-    if (quoteData.status === "PAID" || quoteData.payment_status === "captured") {
+    // 2. Prevent Double Payments (but allow BOOKED quotes to pay delivery/installation stages)
+    if (quoteData.status === "PAID" || quoteData.payment_status === "captured" || quoteData.payment_status === "paid") {
       return NextResponse.json(
-        { success: false, error: "Quote has already been paid" },
+        { success: false, error: "Quote has already been fully paid" },
         { status: 400 }
       );
     }
@@ -69,6 +69,14 @@ export async function POST(req: Request) {
     let chargeAmount = serverAmount;
     if (paymentType === "advance" || paymentType === "advance_500" || paymentType === "advance_500_cod") {
       chargeAmount = 500;
+    } else if (paymentType === "delivery_90") {
+      // 90% of remaining balance after ₹500 booking
+      const remaining = serverAmount - 500;
+      chargeAmount = Math.round(remaining * 0.90);
+    } else if (paymentType === "installation_final") {
+      // Final 10% of remaining balance after ₹500 booking
+      const remaining = serverAmount - 500;
+      chargeAmount = Math.round(remaining * 0.10);
     }
 
     if (isNaN(chargeAmount) || chargeAmount <= 0) {

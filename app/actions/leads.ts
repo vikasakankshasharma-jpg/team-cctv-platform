@@ -17,6 +17,8 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
   // Enforce schema validation
   const validated = UpdateLeadStatusSchema.parse({ lead_id: leadId, status, note });
 
+  let generatedCommissions: any[] = [];
+
   if (validated.status === "won") {
     await adminDb.runTransaction(async (transaction) => {
       // 1. Check existing comms
@@ -98,6 +100,14 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
                   total_ex_tax_business: (user.total_ex_tax_business || 0) + netTaxable,
                   total_won_leads: (user.total_won_leads || 0) + 1
                 });
+
+                if (userType === "promoter") {
+                  generatedCommissions.push({
+                    phone: user.mobile_number,
+                    customerName: user.name,
+                    amount: Math.round(commissionAmount)
+                  });
+                }
               }
             }
           };
@@ -118,6 +128,24 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
       // Always update lead status within the transaction
       transaction.update(leadRef, updatePayload);
     });
+
+    // Send WhatsApp Alert outside of transaction
+    if (generatedCommissions.length > 0) {
+      try {
+        const { msg91 } = await import("@/lib/whatsapp/msg91-provider");
+        for (const comm of generatedCommissions) {
+          if (comm.phone) {
+            await msg91.sendPromoterEarned({
+              phone: comm.phone,
+              amount: comm.amount,
+              customerName: comm.customerName || "Promoter"
+            });
+          }
+        }
+      } catch (waErr) {
+        console.error("Failed to send MSG91 Promoter Earned Alert:", waErr);
+      }
+    }
   } else {
     // If not "won", just do a standard update
     const updatePayload: any = {
@@ -147,7 +175,14 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
  * Updates the lead status and adds a proof of installation photo (for Installers)
  * Requires the customer's Completion PIN for verification.
  */
-export async function updateLeadInstallationProof(leadId: string, photoUrl: string, status: string, note?: string, pin?: string) {
+export async function updateLeadInstallationProof(
+  leadId: string, 
+  photoUrl: string, 
+  status: string, 
+  note?: string, 
+  pin?: string,
+  scannedAssets?: any[]
+) {
   const { verifySession } = await import("@/lib/auth-server");
   const { verifyInstallerSession } = await import("@/lib/auth-installer");
   
@@ -192,6 +227,77 @@ export async function updateLeadInstallationProof(leadId: string, photoUrl: stri
       status: "completed",
       completed_at: new Date()
     });
+
+    if (scannedAssets && scannedAssets.length > 0) {
+      const batch = adminDb.batch();
+      
+      // 1. Save Serial Assets
+      const immutableAssetsList = [];
+      const installationDate = new Date();
+      
+      for (const asset of scannedAssets) {
+        const assetRef = adminDb.collection("serial_assets").doc();
+        batch.set(assetRef, {
+          jobId: job.id,
+          leadId,
+          customerId: leadData?.customer_id || leadId,
+          skuId: asset.skuId || "",
+          productName: asset.productName || "",
+          serialNumber: asset.serialNumber || "",
+          hasSerialNumber: asset.hasSerialNumber || false,
+          warrantyMonths: asset.warrantyMonths || 0,
+          scannedAt: installationDate.toISOString(),
+          installerId: installerSession.isAuthenticated ? installerSession.installerId : "admin"
+        });
+
+        const endDate = new Date(installationDate);
+        const months = asset.warrantyMonths || 12; // Fallback to 12 if undefined
+        endDate.setMonth(endDate.getMonth() + months);
+
+        immutableAssetsList.push({
+          serialNumber: asset.serialNumber || "N/A",
+          skuId: asset.skuId || "",
+          productName: asset.productName || "",
+          warrantyMonths: months,
+          warrantyEndDate: endDate.toISOString()
+        });
+      }
+
+      // 2. Generate Warranty Certificate instantly
+      const certRef = adminDb.collection("warranty_certificates").doc();
+      const certNumber = `WARR-${installationDate.getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+      
+      batch.set(certRef, {
+        id: certRef.id,
+        certNumber,
+        jobId: job.id,
+        dealId: leadId,
+        customerId: leadData?.customer_id || leadId,
+        issuedAt: installationDate.toISOString(),
+        installationDate: installationDate.toISOString(),
+        assets: immutableAssetsList,
+        terms: "1. Warranty covers manufacturing defects only. 2. Physical damage voids warranty.",
+        status: "ACTIVE"
+      });
+
+      await batch.commit();
+
+      // OPTIONAL: We can trigger the Msg91 WhatsApp message here directly!
+      try {
+        const { sendWarrantyActiveAlert } = await import("@/lib/whatsapp/msg91-provider");
+        const customerName = leadData?.customer_name || "Customer";
+        const customerPhone = leadData?.customer_phone;
+        const pdfLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://cctvquotation.com"}/api/warranty/${certRef.id}/download`;
+        
+        if (customerPhone) {
+          // Assuming max warranty is what we highlight in SMS
+          const maxYears = Math.ceil(Math.max(...immutableAssetsList.map(a => a.warrantyMonths)) / 12) || 1;
+          await sendWarrantyActiveAlert(customerPhone, customerName, maxYears.toString(), pdfLink);
+        }
+      } catch (err) {
+        console.error("Failed to send WhatsApp warranty alert:", err);
+      }
+    }
   }
   
   revalidatePath("/admin/dispatch");

@@ -73,12 +73,27 @@ export async function assignJob(
         }
 
         const mobile = installerDoc.data()?.mobile_number;
-        // Mock sending WhatsApp to installer
+        
         if (mobile) {
-          await sendCustomerWhatsApp(
-            mobile, 
-            `🚨 *New Job Assigned!*\nJob ID: ${jobId.substring(0,8).toUpperCase()}\nPlease check your dashboard.`
-          );
+          const { msg91 } = await import("@/lib/whatsapp/msg91-provider");
+          const jobData = jobDoc.data();
+          let address = "Customer Address";
+          let custPhone = "Customer Phone";
+          if (jobData?.lead_id) {
+            const leadSnap = await adminDb.collection("leads").doc(jobData.lead_id).get();
+            const lData = leadSnap.data();
+            if (lData) {
+              address = lData.installation_address || "Customer Address";
+              custPhone = lData.mobile_number || "Customer Phone";
+            }
+          }
+          
+          await msg91.sendJobAlert({
+            phone: mobile,
+            installerName,
+            customerAddress: address,
+            customerPhone: custPhone
+          });
         }
         await sendAdminNotification(`📦 Job ${jobId.substring(0,8).toUpperCase()} dispatched to ${installerName}.`);
       }

@@ -17,6 +17,8 @@ export interface Address {
 export type JobStatus = 
   | "PENDING_DISPATCH" 
   | "BACKORDERED" 
+  | "DISPATCHED"        // Material sent out for delivery
+  | "DELIVERED"         // Material OTP verified, handed over to customer
   | "ASSIGNED" 
   | "IN_PROGRESS" 
   | "MATERIAL_SHORTAGE" 
@@ -153,8 +155,21 @@ export interface Lead {
   hub_name?: string | null;
   assigned_installer_name?: string | null;
   completion_pin?: string;             // 6-digit OTP for installation completion
-  payment_status?: "pending" | "advance_paid" | "paid" | "partial";
+  payment_status?: "pending" | "advance_paid" | "delivery_paid" | "paid" | "partial" | "refunded";
   advance_payment_amount?: number;
+  amount_paid?: number;                // Running total of all payments received
+  booking_amount?: number;             // ₹500 fixed
+  delivery_amount?: number;            // 90% of remaining at material handover
+  installation_amount?: number;        // Final 10% after installation
+
+  // Material Delivery Tracking (Chain of Custody)
+  delivery_method?: "installer" | "salesperson" | "internal_staff" | "third_party";
+  delivery_person_name?: string;
+  delivery_person_phone?: string;
+  delivery_otp?: string;               // 4-digit OTP sent to customer after 90% payment
+  delivery_token?: string;             // Unique token for public /d/[token] link
+  delivery_status?: "PENDING" | "DISPATCHED" | "DELIVERED";
+  delivered_at?: unknown;
 
   // Follow-Up Engine
   followups_sent?: string[];
@@ -309,7 +324,10 @@ export interface Product {
   network_speed?: string;            // e.g. "10/100", "10/100/1000", "1Gbps"
   custom_attributes?: { key: string; value: string }[];
   ai_features?: string[];            // e.g., ["person_detect", "vehicle_detect", "face_detect", "line_crossing"]
-  warranty_years?: number;           // 1, 2, 3, 5
+    // Warranty & Operations Tracking
+    has_serial_number?: boolean;   // Whether the product requires a serial number scan
+    warranty_months?: number;      // Warranty length in months
+    warranty_years?: number;       // Legacy: 1, 2, 3, 5
 
   // ── Focus Product (Silent Margin Boost) ─────────────────────────────
   // Admin marks high-margin products for priority placement in the "Recommended" slot.

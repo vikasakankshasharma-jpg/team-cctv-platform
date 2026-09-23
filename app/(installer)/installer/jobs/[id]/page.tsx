@@ -41,7 +41,26 @@ export default async function InstallerJobDetailPage({ params }: { params: { id:
   if (lead?.last_quote_id) {
      const quoteDoc = await adminDb.collection("leads").doc(params.id).collection("quotes").doc(lead.last_quote_id).get();
      if (quoteDoc.exists) {
-        hardware = quoteDoc.data()?.configuration_snapshot || [];
+        const snapshot = quoteDoc.data()?.configuration_snapshot || [];
+        
+        // Enrich snapshot with live product metadata for scanner ops
+        const enrichedHardware = await Promise.all(snapshot.map(async (item: any) => {
+          if (item.product_id) {
+            const pDoc = await adminDb.collection("products").doc(item.product_id).get();
+            if (pDoc.exists) {
+              const pData = pDoc.data();
+              return {
+                ...item,
+                has_serial_number: pData?.has_serial_number ?? false,
+                warranty_months: pData?.warranty_months ?? null,
+                sku: pData?.sku || pData?.internal_sku || item.sku
+              };
+            }
+          }
+          return { ...item, has_serial_number: false };
+        }));
+
+        hardware = enrichedHardware;
      }
   }
 

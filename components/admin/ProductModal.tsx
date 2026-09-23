@@ -27,6 +27,8 @@ const productSchema = z.object({
   max_cameras: z.number().optional().nullable(),
   min_cameras: z.number().optional().nullable(),
   brand: z.string().optional().nullable(),
+  has_serial_number: z.boolean().optional().default(false),
+  warranty_months: z.number().min(0).optional().nullable(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -43,7 +45,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
   const [newCompatiblePath, setNewCompatiblePath] = useState("");
 
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productSchema) as any,
     defaultValues: {
       display_name: "",
       technical_name: "",
@@ -86,6 +88,8 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         max_cameras: product.max_cameras,
         min_cameras: product.min_cameras,
         brand: product.brand,
+        has_serial_number: product.has_serial_number ?? false,
+        warranty_months: product.warranty_months,
       } as any);
     } else {
       form.reset({
@@ -101,6 +105,8 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
         stock_status: "in_stock",
         catalog_path: "",
         compatible_paths: [],
+        has_serial_number: false,
+        warranty_months: null,
       } as any);
     }
     setNewCompatiblePath("");
@@ -280,6 +286,46 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
                 <option value="Wireless">Wireless (WiFi/4G/Solar)</option>
                 <option value="Common">Common (Fits All)</option>
               </select>
+            </div>
+          </div>
+
+          {/* Warranty & Operations Section */}
+          <div className="bg-secondary/20 p-6 rounded-2xl border border-border space-y-6">
+            <h3 className="text-[11px] font-semibold text-primary uppercase tracking-wider flex items-center gap-2">
+               <Package className="w-3.5 h-3.5" /> Hardware & Warranty Ops
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">
+                  Serial Number Tracking
+                </label>
+                <div className="flex items-center gap-3 mt-2">
+                  <input
+                    type="checkbox"
+                    {...register("has_serial_number")}
+                    className="w-5 h-5 rounded text-primary focus:ring-primary accent-primary cursor-pointer"
+                  />
+                  <span className="text-sm font-medium">Requires Barcode Scan</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground ml-1 mt-1">Check for cameras, DVRs, HDDs. Installers MUST scan this barcode.</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">
+                  Warranty Duration
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 24"
+                    {...register("warranty_months", { valueAsNumber: true })}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">Months</span>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, History, BadgeIndianRupee, Calendar, ExternalLink, Loader2 } from "lucide-react";
+import { X, History, BadgeIndianRupee, Calendar, ExternalLink, Loader2, RefreshCcw } from "lucide-react";
 import { getLeadQuotes } from "@/app/actions/leads";
+import { RefundDialog } from "./RefundDialog";
+
 
 interface QuoteHistoryModalProps {
   isOpen: boolean;
@@ -14,21 +16,23 @@ interface QuoteHistoryModalProps {
 export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: QuoteHistoryModalProps) {
   const [quotes, setQuotes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refundingQuote, setRefundingQuote] = useState<{ id: string; amount: number; paymentId?: string } | null>(null);
+
+  const fetchQuotes = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getLeadQuotes(leadId);
+      setQuotes(data);
+    } catch (error) {
+      console.error("Failed to load quote history:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen && leadId) {
-      const loadQuotes = async () => {
-        setIsLoading(true);
-        try {
-          const data = await getLeadQuotes(leadId);
-          setQuotes(data);
-        } catch (error) {
-          console.error("Failed to load quote history:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      loadQuotes();
+      fetchQuotes();
     }
   }, [isOpen, leadId]);
 
@@ -86,18 +90,45 @@ export function QuoteHistoryModal({ isOpen, onClose, leadId, customerName }: Quo
                    </div>
                 </div>
                 
-                <a
-                  href={`/quote/${leadId}?quoteId=${quote.id}`}
-                  target="_blank"
-                  className="w-12 h-12 flex items-center justify-center bg-zinc-900 hover:bg-blue-600 text-zinc-500 hover:text-white rounded-2xl transition-all shadow-inner"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+                <div className="flex items-center gap-2">
+                  {quote.status === "PAID" && (
+                     <button
+                       onClick={() => setRefundingQuote({
+                         id: quote.id,
+                         amount: quote.quoteData?.total_payable || 0,
+                         paymentId: quote.razorpay_payment_id || undefined
+                       })}
+                       className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors border border-rose-500/20 flex items-center gap-1.5"
+                     >
+                       <RefreshCcw className="w-3 h-3" /> Refund
+                     </button>
+                  )}
+                  <a
+                    href={`/quote/${leadId}?quoteId=${quote.id}`}
+                    target="_blank"
+                    className="w-10 h-10 flex items-center justify-center bg-zinc-900 hover:bg-blue-600 text-zinc-500 hover:text-white rounded-2xl transition-all shadow-inner"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {refundingQuote && (
+        <RefundDialog
+          quoteId={refundingQuote.id}
+          amount={refundingQuote.amount}
+          paymentId={refundingQuote.paymentId}
+          onClose={() => setRefundingQuote(null)}
+          onSuccess={() => {
+            setRefundingQuote(null);
+            fetchQuotes(); // Refresh the list
+          }}
+        />
+      )}
     </div>
   );
 }

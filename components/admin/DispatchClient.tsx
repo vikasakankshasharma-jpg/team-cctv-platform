@@ -5,14 +5,17 @@ import type { Job, Hub, Installer } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Workflow, AlertCircle } from "lucide-react";
+import { MapPin, Workflow, AlertCircle, Truck, Package } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { assignJob } from "@/app/actions/dispatch";
 import { toast } from "sonner";
+import { MaterialDispatchModal } from "@/components/admin/MaterialDispatchModal";
 
 export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: Hub[], installers: Installer[] }) {
   const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
   const [isAssigning, setIsAssigning] = useState<string | null>(null);
+  const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<{id: string; customerName: string; totalPayable: number} | null>(null);
 
   const activeJobs = jobs.filter(j => !["completed", "audited", "cancelled"].includes(j.status));
   const completedJobs = jobs.filter(j => ["completed", "audited", "cancelled"].includes(j.status));
@@ -160,7 +163,25 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right flex items-center justify-end gap-2">
+                      {(job.status === "PENDING_DISPATCH" || job.status === "ASSIGNED") && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 text-xs bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20"
+                          onClick={() => {
+                            setSelectedQuote({
+                              id: job.quote_id || job.id || "",
+                              customerName: job.customer?.name || "Customer",
+                              totalPayable: 0
+                            });
+                            setDispatchModalOpen(true);
+                          }}
+                        >
+                          <Truck className="w-3.5 h-3.5 mr-1" />
+                          Dispatch Material
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" className="h-8 text-xs">Manage</Button>
                     </TableCell>
                   </TableRow>
@@ -170,6 +191,24 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
           </TableBody>
         </Table>
       </div>
+
+      {selectedQuote && (
+        <MaterialDispatchModal 
+          open={dispatchModalOpen}
+          onOpenChange={(open) => {
+            setDispatchModalOpen(open);
+            if (!open) {
+              // Wait a bit to let the dialog close animation finish before refreshing
+              setTimeout(() => {
+                window.location.reload();
+              }, 300);
+            }
+          }}
+          quoteId={selectedQuote.id}
+          customerName={selectedQuote.customerName}
+          totalPayable={selectedQuote.totalPayable}
+        />
+      )}
     </div>
   );
 }

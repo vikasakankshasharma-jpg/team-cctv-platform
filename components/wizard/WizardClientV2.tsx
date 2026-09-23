@@ -25,8 +25,10 @@ export function WizardClientV2() {
   const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("whatsapp");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     if (typeof window === "undefined") return;
 
     const initRecaptcha = () => {
@@ -503,6 +505,10 @@ export function WizardClientV2() {
     );
   }
 
+
+  if (!isMounted) {
+    return <div className="max-w-3xl mx-auto py-6 md:py-12 px-4 sm:px-6 animate-pulse bg-gray-100 rounded-2xl h-[400px]"></div>;
+  }
 
   const renderStep = () => {
     switch (step) {

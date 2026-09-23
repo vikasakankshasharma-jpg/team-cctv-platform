@@ -1,132 +1,233 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+
+// Register fonts for a more formal certificate look
+Font.register({
+  family: 'Times-Roman',
+  src: 'https://fonts.cdnfonts.com/s/15392/TimesNewRoman.woff'
+});
+
+const emerald = '#047857';
+const lightEmerald = '#d1fae5';
 
 // Create styles
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 0,
     fontFamily: 'Helvetica',
     fontSize: 10,
-    color: '#1d1d1f',
-    position: 'relative',
+    color: '#1f2937',
     backgroundColor: '#ffffff'
+  },
+  topBar: {
+    height: 15,
+    backgroundColor: emerald,
+    width: '100%',
+  },
+  contentWrap: {
+    padding: 40,
+    paddingTop: 30,
+    flex: 1,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 20,
-    borderBottomWidth: 2,
-    borderBottomColor: '#10b981',
-    paddingBottom: 20,
+    marginBottom: 40,
+  },
+  logoSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoShield: {
+    width: 24,
+    height: 28,
+    backgroundColor: emerald,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    marginRight: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   logoText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 4,
-    color: '#047857',
-  },
-  titleText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    textAlign: 'center',
-    marginBottom: 30,
+    color: emerald,
     letterSpacing: 1,
   },
+  certInfo: {
+    alignItems: 'flex-end',
+  },
+  titleWrap: {
+    alignItems: 'center',
+    marginBottom: 40,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    paddingBottom: 20,
+    position: 'relative',
+  },
+  titleText: {
+    fontSize: 28,
+    fontFamily: 'Times-Roman',
+    color: '#111827',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  subtitleText: {
+    fontSize: 12,
+    fontFamily: 'Times-Roman',
+    color: '#6b7280',
+    marginTop: 5,
+    letterSpacing: 4,
+    textTransform: 'uppercase',
+  },
+  
+  // Simulated Gold/Green Seal
+  sealBox: {
+    position: 'absolute',
+    right: 0,
+    top: -20,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fbbf24', // Gold
+    borderWidth: 4,
+    borderColor: emerald,
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: 'rotate(-10deg)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+  },
+  sealText1: { fontSize: 8, color: emerald, fontWeight: 'bold' },
+  sealText2: { fontSize: 16, color: emerald, fontWeight: 'bold', marginVertical: 2 },
+  sealText3: { fontSize: 7, color: emerald, fontWeight: 'bold' },
+
   infoSection: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 30,
   },
   infoCol: {
-    width: '45%',
+    width: '50%',
   },
-  infoLabel: {
-    fontSize: 9,
-    color: '#6b7280',
-    marginBottom: 4,
-    textTransform: 'uppercase',
+  labelLine: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginBottom: 12,
   },
-  infoValue: {
+  label: {
+    width: 100,
+    fontSize: 10,
+    color: '#4b5563',
+  },
+  valueLine: {
+    flex: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: '#d1d5db',
+    paddingBottom: 2,
+  },
+  valueText: {
     fontSize: 11,
     color: '#111827',
     fontWeight: 'bold',
+  },
+
+  // Table
+  tableContainer: {
+    marginTop: 20,
+  },
+  tableTitle: {
+    fontSize: 12,
+    fontFamily: 'Times-Roman',
+    fontWeight: 'bold',
     marginBottom: 10,
+    color: emerald,
   },
   table: {
     width: '100%',
-    marginBottom: 30,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   tableHeader: {
     flexDirection: 'row',
+    backgroundColor: lightEmerald,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
-    backgroundColor: '#f3f4f6',
-    padding: 8,
+    padding: 10,
   },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-    padding: 8,
+    borderBottomColor: '#e5e7eb',
+    padding: 10,
+    backgroundColor: '#ffffff',
   },
-  colProduct: { width: '40%' },
+  colProduct: { width: '45%' },
   colSerial: { width: '30%' },
-  colTerm: { width: '15%', textAlign: 'center' },
+  colTerm: { width: '10%', textAlign: 'center' },
   colExpiry: { width: '15%', textAlign: 'right' },
   headerText: {
     fontSize: 9,
     fontWeight: 'bold',
-    color: '#4b5563',
+    color: emerald,
+    textTransform: 'uppercase',
   },
   cellText: {
     fontSize: 9,
-    color: '#1f2937',
+    color: '#374151',
   },
+  
+  // Terms
   termsBox: {
-    marginTop: 40,
-    padding: 15,
-    backgroundColor: '#f9fafb',
-    borderRadius: 4,
+    marginTop: 30,
+    paddingTop: 15,
   },
   termsTitle: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
-    color: '#374151',
+    color: '#111827',
     marginBottom: 8,
+    textTransform: 'uppercase',
   },
   termsText: {
     fontSize: 8,
     color: '#6b7280',
-    lineHeight: 1.5,
+    lineHeight: 1.6,
   },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
+
+  // Footer Signatures
+  signatureRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    paddingTop: 10,
+    marginTop: 60,
+    paddingHorizontal: 20,
   },
-  footerText: {
-    fontSize: 8,
-    color: '#9ca3af',
+  sigBlock: {
+    width: 150,
+    alignItems: 'center',
   },
-  sealBox: {
+  sigLine: {
+    width: '100%',
+    borderBottomWidth: 1,
+    borderBottomColor: '#111827',
+    marginBottom: 5,
+  },
+  sigText: {
+    fontSize: 9,
+    color: '#374151',
+  },
+
+  pageBorder: {
     position: 'absolute',
-    right: 40,
-    top: 150,
-    opacity: 0.1,
-    transform: 'rotate(-15deg)'
-  },
-  sealText: {
-    fontSize: 60,
-    fontWeight: 'bold',
-    color: '#10b981',
+    top: 15,
+    left: 15,
+    right: 15,
+    bottom: 15,
+    borderWidth: 1,
+    borderColor: emerald,
+    opacity: 0.2,
+    pointerEvents: 'none',
   }
 });
 
@@ -147,86 +248,127 @@ export const WarrantyPDF = ({ certificate, customerName, customerPhone, customer
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Background Seal */}
-        <View style={styles.sealBox}>
-          <Text style={styles.sealText}>WARRANTY</Text>
-        </View>
+        <View style={styles.topBar} />
+        <View style={styles.pageBorder} />
 
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.logoText}>TEAM CCTV</Text>
-            <Text style={{ fontSize: 9, color: '#4b5563' }}>Professional Security Solutions</Text>
-          </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ fontSize: 10, fontWeight: 'bold' }}>Certificate: {certificate.certNumber}</Text>
-            <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 4 }}>Date: {formatDate(certificate.issuedAt)}</Text>
-          </View>
-        </View>
-
-        <Text style={styles.titleText}>OFFICIAL WARRANTY CERTIFICATE</Text>
-
-        <View style={styles.infoSection}>
-          <View style={styles.infoCol}>
-            <Text style={styles.infoLabel}>Issued To</Text>
-            <Text style={styles.infoValue}>{customerName}</Text>
-            <Text style={{ fontSize: 9, color: '#4b5563', marginBottom: 2 }}>{customerPhone}</Text>
-            <Text style={{ fontSize: 9, color: '#4b5563' }}>{customerAddress}</Text>
-          </View>
-          <View style={styles.infoCol}>
-            <Text style={styles.infoLabel}>Installation Details</Text>
-            <Text style={styles.infoValue}>Job ID: {certificate.jobId}</Text>
-            <Text style={{ fontSize: 9, color: '#4b5563', marginBottom: 2 }}>
-              Installation Date: {formatDate(certificate.installationDate)}
-            </Text>
-            <Text style={{ fontSize: 9, color: '#4b5563' }}>
-              Status: {certificate.status}
-            </Text>
-          </View>
-        </View>
-
-        {/* Annexure A: Schedule of Equipment */}
-        <Text style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 10, color: '#111827' }}>
-          Annexure A - Covered Equipment Schedule
-        </Text>
-        <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.colProduct, styles.headerText]}>Product Name / SKU</Text>
-            <Text style={[styles.colSerial, styles.headerText]}>Serial Number</Text>
-            <Text style={[styles.colTerm, styles.headerText]}>Term</Text>
-            <Text style={[styles.colExpiry, styles.headerText]}>Expiry Date</Text>
-          </View>
+        <View style={styles.contentWrap}>
           
-          {certificate.assets.map((asset: any, idx: number) => (
-            <View key={idx} style={styles.tableRow}>
-              <Text style={[styles.colProduct, styles.cellText]}>
-                {asset.productName || asset.skuId || "CCTV Equipment"}
-              </Text>
-              <Text style={[styles.colSerial, styles.cellText]}>
-                {asset.serialNumber || "N/A"}
-              </Text>
-              <Text style={[styles.colTerm, styles.cellText]}>
-                {asset.warrantyMonths} Mo
-              </Text>
-              <Text style={[styles.colExpiry, styles.cellText]}>
-                {formatDate(asset.warrantyEndDate)}
-              </Text>
+          <View style={styles.headerRow}>
+            <View style={styles.logoSection}>
+              <View style={styles.logoShield}>
+                <Text style={{color: '#fff', fontSize: 18, fontWeight: 'bold'}}></Text>
+              </View>
+              <Text style={styles.logoText}>TEAM CCTV</Text>
             </View>
-          ))}
-        </View>
+            <View style={styles.certInfo}>
+              <Text style={{ fontSize: 9, color: '#6b7280' }}>Certificate No.</Text>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: emerald }}>{certificate.certNumber}</Text>
+            </View>
+          </View>
 
-        <View style={styles.termsBox}>
-          <Text style={styles.termsTitle}>Terms & Conditions of Warranty</Text>
-          <Text style={styles.termsText}>
-            1. This warranty covers manufacturing defects and hardware failures under normal use.{"\n"}
-            2. Warranty does not cover damage caused by lightning, physical damage, water ingress (for indoor rated equipment), or unauthorized tampering.{"\n"}
-            3. To claim warranty service, please present this certificate or quote the Certificate Number to our support team.{"\n"}
-            4. Service visits after the initial 1-year free service period may incur standard visiting charges, even if the hardware replacement is covered under this extended warranty.
-          </Text>
-        </View>
+          <View style={styles.titleWrap}>
+            <Text style={styles.titleText}>Official Warranty</Text>
+            <Text style={styles.subtitleText}>Certificate of Coverage</Text>
+            
+            <View style={styles.sealBox}>
+              <Text style={styles.sealText1}>FULL</Text>
+              <Text style={styles.sealText2}>100%</Text>
+              <Text style={styles.sealText3}>COVERAGE</Text>
+            </View>
+          </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>TEAM CCTV - Authorized Warranty Document</Text>
-          <Text style={styles.footerText}>Generated Automatically</Text>
+          <View style={styles.infoSection}>
+            <View style={styles.infoCol}>
+              <View style={styles.labelLine}>
+                <Text style={styles.label}>Customer Name</Text>
+                <View style={styles.valueLine}>
+                  <Text style={styles.valueText}>{customerName}</Text>
+                </View>
+              </View>
+              <View style={styles.labelLine}>
+                <Text style={styles.label}>Contact No.</Text>
+                <View style={styles.valueLine}>
+                  <Text style={styles.valueText}>{customerPhone}</Text>
+                </View>
+              </View>
+              <View style={styles.labelLine}>
+                <Text style={styles.label}>Installation Address</Text>
+                <View style={styles.valueLine}>
+                  <Text style={styles.valueText}>{customerAddress || "N/A"}</Text>
+                </View>
+              </View>
+            </View>
+            <View style={[styles.infoCol, { paddingLeft: 20 }]}>
+              <View style={styles.labelLine}>
+                <Text style={styles.label}>Date of Issue</Text>
+                <View style={styles.valueLine}>
+                  <Text style={styles.valueText}>{formatDate(certificate.issuedAt)}</Text>
+                </View>
+              </View>
+              <View style={styles.labelLine}>
+                <Text style={styles.label}>Installation Date</Text>
+                <View style={styles.valueLine}>
+                  <Text style={styles.valueText}>{formatDate(certificate.installationDate)}</Text>
+                </View>
+              </View>
+              <View style={styles.labelLine}>
+                <Text style={styles.label}>Job Reference</Text>
+                <View style={styles.valueLine}>
+                  <Text style={styles.valueText}>{certificate.jobId}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.tableContainer}>
+            <Text style={styles.tableTitle}>Equipment Covered</Text>
+            <View style={styles.table}>
+              <View style={styles.tableHeader}>
+                <Text style={[styles.colProduct, styles.headerText]}>Product Details</Text>
+                <Text style={[styles.colSerial, styles.headerText]}>Serial Number</Text>
+                <Text style={[styles.colTerm, styles.headerText]}>Term</Text>
+                <Text style={[styles.colExpiry, styles.headerText]}>Expiry Date</Text>
+              </View>
+              
+              {certificate.assets.map((asset: any, idx: number) => (
+                <View key={idx} style={styles.tableRow}>
+                  <Text style={[styles.colProduct, styles.cellText]}>
+                    {asset.productName || asset.skuId || "CCTV Equipment"}
+                  </Text>
+                  <Text style={[styles.colSerial, styles.cellText]}>
+                    {asset.serialNumber || "N/A"}
+                  </Text>
+                  <Text style={[styles.colTerm, styles.cellText]}>
+                    {asset.warrantyMonths} Mo
+                  </Text>
+                  <Text style={[styles.colExpiry, styles.cellText, { fontWeight: 'bold' }]}>
+                    {formatDate(asset.warrantyEndDate)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.termsBox}>
+            <Text style={styles.termsTitle}>Terms & Conditions</Text>
+            <Text style={styles.termsText}>
+              1. Warranty Coverage: This certificate warrants that the equipment listed above is free from manufacturing defects in material and workmanship.{"\n"}
+              2. Exclusions: Warranty does not cover damages caused by lightning strikes, power surges, water ingress (for non-waterproof items), physical damage, or unauthorized tampering.{"\n"}
+              3. Claims Process: To claim warranty service, present this certificate or quote the Certificate Number. On-site visits after the initial free service period may incur standard visiting charges.
+            </Text>
+          </View>
+
+          <View style={styles.signatureRow}>
+            <View style={styles.sigBlock}>
+              <View style={styles.sigLine} />
+              <Text style={styles.sigText}>Authorized Signature</Text>
+            </View>
+            <View style={styles.sigBlock}>
+              <Text style={[styles.sigText, { fontWeight: 'bold', fontSize: 11, marginBottom: 5, color: emerald }]}>TEAM CCTV SEAL</Text>
+              <Text style={styles.sigText}>Certified Secure</Text>
+            </View>
+          </View>
+
         </View>
       </Page>
     </Document>

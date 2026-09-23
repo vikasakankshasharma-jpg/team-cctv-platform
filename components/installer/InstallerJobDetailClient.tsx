@@ -5,9 +5,10 @@ import { updateLeadInstallationProof } from "@/app/actions/leads";
 import { toast } from "sonner";
 import { storage } from "@/lib/firebase-client";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { MapPin, Phone, User, Package, Camera, CheckCircle2, ArrowLeft, Loader2, UploadCloud, Store } from "lucide-react";
+import { MapPin, Phone, User, Package, Camera, CheckCircle2, ArrowLeft, Loader2, UploadCloud, Store, ScanBarcode } from "lucide-react";
 import Link from "next/link";
 import SubmitOfflinePaymentModal from "./SubmitOfflinePaymentModal";
+import BarcodeScanner from "./BarcodeScanner";
 import type { Lead } from "@/types";
 
 export default function InstallerJobDetailClient({ 
@@ -33,6 +34,21 @@ export default function InstallerJobDetailClient({
   const [pin, setPin] = useState("");
   const [resending, setResending] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  
+  // Scanning State
+  const [scannedAssets, setScannedAssets] = useState<any[]>([]);
+  const [activeScannerIndex, setActiveScannerIndex] = useState<number | null>(null);
+  
+  // Flatten hardware based on quantity
+  const flatHardware = hardware.flatMap((item, idx) => {
+    const qty = item.quantity || item.qty || 1;
+    return Array.from({ length: qty }).map((_, i) => ({
+      ...item,
+      _checklistId: `${idx}-${i}`
+    }));
+  });
+
+  const allItemsScanned = flatHardware.length > 0 && scannedAssets.length === flatHardware.length;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -58,6 +74,10 @@ export default function InstallerJobDetailClient({
   const handleUploadAndComplete = async () => {
     if (!file) {
       toast.error("Please select a photo as proof of installation.");
+      return;
+    }
+    if (flatHardware.length > 0 && !allItemsScanned) {
+      toast.error("Please scan or mark all hardware items as installed.");
       return;
     }
     if (pin.length !== 6) {
@@ -87,7 +107,7 @@ export default function InstallerJobDetailClient({
           
           try {
             const { updateLeadInstallationProof } = await import("@/app/actions/leads");
-            await updateLeadInstallationProof(leadId, downloadURL, "completed", note, pin);
+            await updateLeadInstallationProof(leadId, downloadURL, "completed", note, pin, scannedAssets);
             toast.success("Job successfully marked as Completed!");
           } catch (serverError: any) {
              toast.error(serverError.message || "Failed to update job status. Please check the PIN.");
@@ -191,20 +211,105 @@ export default function InstallerJobDetailClient({
         )}
       </div>
 
-      {/* Hardware Requirements */}
+      {/* Hardware Requirements & Scanning */}
       <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-4">
         <h3 className="font-bold text-foreground flex items-center gap-2">
-          <Package className="w-5 h-5 text-primary" /> Hardware Required
+          <Package className="w-5 h-5 text-primary" /> Hardware Tracking
         </h3>
+        <p className="text-sm text-muted-foreground">Scan or mark all items to generate the customer's warranty certificate.</p>
         
-        {hardware && hardware.length > 0 ? (
-          <div className="divide-y divide-border/50">
-            {hardware.map((item, idx) => (
-              <div key={idx} className="py-3 flex justify-between items-center">
-                <span className="text-sm font-medium text-foreground">{item.name || item.display_name}</span>
-                <span className="font-bold text-sm bg-muted px-2 py-1 rounded-lg">x {item.quantity || item.qty}</span>
-              </div>
-            ))}
+        {flatHardware.length > 0 ? (
+          <div className="space-y-4">
+            {flatHardware.map((item, idx) => {
+              const isScanned = scannedAssets.some(a => a._checklistId === item._checklistId);
+              const asset = scannedAssets.find(a => a._checklistId === item._checklistId);
+
+              return (
+                <div key={item._checklistId} className={`p-4 border rounded-xl flex flex-col gap-3 transition-all ${isScanned ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-background border-border'}`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-semibold text-sm">{item.name || item.display_name}</h4>
+                      <p className="text-xs text-muted-foreground">{item.sku || "N/A"}</p>
+                    </div>
+                    {isScanned ? (
+                      <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-md">
+                        <CheckCircle2 className="w-3 h-3" /> {item.has_serial_number ? "Scanned" : "Installed"}
+                      </span>
+                    ) : (
+                      <span className="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-md">
+                        Pending
+                      </span>
+                    )}
+                  </div>
+
+                  {!isScanned && (
+                    <div className="flex gap-2">
+                      {item.has_serial_number ? (
+                        <button
+                          type="button"
+                          onClick={() => setActiveScannerIndex(idx)}
+                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all"
+                        >
+                          <ScanBarcode className="w-4 h-4" /> Scan Barcode
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setScannedAssets(prev => [...prev, {
+                              _checklistId: item._checklistId,
+                              product_id: item.product_id || item.id,
+                              productName: item.name || item.display_name,
+                              skuId: item.sku,
+                              serialNumber: "",
+                              warrantyMonths: item.warranty_months || 0,
+                              hasSerialNumber: false
+                            }]);
+                          }}
+                          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all"
+                        >
+                          <CheckCircle2 className="w-4 h-4" /> Mark Installed
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {isScanned && item.has_serial_number && (
+                    <div className="bg-white dark:bg-black p-2 rounded border border-border text-xs font-mono">
+                      S/N: {asset?.serialNumber}
+                    </div>
+                  )}
+
+                  {/* Scanner UI */}
+                  {activeScannerIndex === idx && !isScanned && item.has_serial_number && (
+                    <div className="mt-2 border-t pt-2 border-border/50">
+                      <BarcodeScanner 
+                        onScan={(decodedText) => {
+                          setScannedAssets(prev => [...prev, {
+                            _checklistId: item._checklistId,
+                            product_id: item.product_id || item.id,
+                            productName: item.name || item.display_name,
+                            skuId: item.sku,
+                            serialNumber: decodedText,
+                            warrantyMonths: item.warranty_months || 0,
+                            hasSerialNumber: true
+                          }]);
+                          setActiveScannerIndex(null);
+                          toast.success(`Scanned: ${decodedText}`);
+                        }}
+                        onError={() => {}}
+                      />
+                      <button 
+                        onClick={() => setActiveScannerIndex(null)}
+                        className="mt-2 text-xs text-muted-foreground underline w-full text-center"
+                      >
+                        Cancel Scan
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="text-sm text-muted-foreground italic py-4">No specific hardware configuration linked yet. Check dispatch notes or contact Admin.</div>

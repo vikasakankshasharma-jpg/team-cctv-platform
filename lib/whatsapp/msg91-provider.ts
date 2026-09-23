@@ -182,4 +182,110 @@ export class Msg91WhatsAppProvider {
 
     return this.sendMessage(msg91Payload);
   }
+  async sendJobAlert(payload: { phone: string, installerName: string, customerAddress: string, customerPhone: string }) {
+    console.log(`[MSG91] Sending job alert to installer ${payload.phone}`);
+    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (to.length === 10) to = `91${to}`;
+    return this.sendMessage({
+      to, type: "template", template: {
+        name: "cctv_job_alert", language: { code: "en", policy: "deterministic" },
+        components: [{ type: "body", parameters: [
+          { type: "text", text: payload.installerName },
+          { type: "text", text: payload.customerAddress },
+          { type: "text", text: payload.customerPhone }
+        ]}]
+      }
+    });
+  }
+
+  async sendLeadWelcome(payload: { phone: string, customerName: string, configDetails: string }) {
+    console.log(`[MSG91] Sending lead welcome to ${payload.phone}`);
+    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (to.length === 10) to = `91${to}`;
+    return this.sendMessage({
+      to, type: "template", template: {
+        name: "cctv_lead_welcome", language: { code: "en", policy: "deterministic" },
+        components: [{ type: "body", parameters: [
+          { type: "text", text: payload.customerName },
+          { type: "text", text: payload.configDetails }
+        ]}]
+      }
+    });
+  }
+
+  async sendRefundInitiated(payload: { phone: string, customerName: string, amount: number, orderId: string }) {
+    console.log(`[MSG91] Sending refund alert to ${payload.phone}`);
+    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (to.length === 10) to = `91${to}`;
+    return this.sendMessage({
+      to, type: "template", template: {
+        name: "cctv_refund_initiated", language: { code: "en", policy: "deterministic" },
+        components: [{ type: "body", parameters: [
+          { type: "text", text: payload.customerName },
+          { type: "text", text: payload.amount.toString() },
+          { type: "text", text: payload.orderId }
+        ]}]
+      }
+    });
+  }
+
+  async sendSalesLeadAlert(payload: { phone: string, customerName: string, configDetails: string }) {
+    console.log(`[MSG91] Sending sales lead alert to ${payload.phone}`);
+    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (to.length === 10) to = `91${to}`;
+    return this.sendMessage({
+      to, type: "template", template: {
+        name: "cctv_sales_lead", language: { code: "en", policy: "deterministic" },
+        components: [{ type: "body", parameters: [
+          { type: "text", text: payload.customerName },
+          { type: "text", text: payload.configDetails }
+        ]}]
+      }
+    });
+  }
+
+  async sendPromoterEarned(payload: { phone: string, amount: number, customerName: string }) {
+    console.log(`[MSG91] Sending promoter earned alert to ${payload.phone}`);
+    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (to.length === 10) to = `91${to}`;
+    return this.sendMessage({
+      to, type: "template", template: {
+        name: "cctv_promoter_earned", language: { code: "en", policy: "deterministic" },
+        components: [{ type: "body", parameters: [
+          { type: "text", text: payload.amount.toString() },
+          { type: "text", text: payload.customerName }
+        ]}]
+      }
+    });
+  }
+}
+
+export const msg91 = new Msg91WhatsAppProvider();
+
+export async function sendWarrantyActiveAlert(phone: string, name: string, years: string, link: string) {
+  const provider = new Msg91WhatsAppProvider();
+  
+  let to = phone.replace(/[^0-9]/g, '');
+  if (to.length === 10) to = `91${to}`;
+
+  const msg91Payload = {
+    to,
+    type: "template",
+    template: {
+      name: "cctv_warranty_active",
+      language: { code: "en", policy: "deterministic" },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: name },
+            { type: "text", text: years },
+            { type: "text", text: link }
+          ]
+        }
+      ]
+    }
+  };
+
+  return provider["sendMessage"](msg91Payload);
 }
