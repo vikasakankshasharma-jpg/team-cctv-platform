@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "quoteId is required" }, { status: 400 });
     }
 
-    if (!paymentType || !["delivery_90", "installation_final"].includes(paymentType)) {
+    if (!paymentType || !["delivery_90", "installation_final", "advance_500_cod", "advance_500", "advance"].includes(paymentType)) {
       return NextResponse.json({ success: false, error: "Invalid paymentType" }, { status: 400 });
     }
 
@@ -68,11 +68,16 @@ export async function POST(req: Request) {
     );
     const remaining = serverAmount - 500;
     
-    const amount = paymentType === "delivery_90" 
-      ? Math.round(remaining * 0.90) 
-      : Math.round(remaining * 0.10);
+    let amount = 500;
+    let stageName = "Booking Amount (₹500)";
 
-    const stageName = paymentType === "delivery_90" ? "Material Delivery (90%)" : "Installation Final (10%)";
+    if (paymentType === "delivery_90") {
+      amount = Math.round(remaining * 0.90);
+      stageName = "Material Delivery (90%)";
+    } else if (paymentType === "installation_final") {
+      amount = Math.round(remaining * 0.10);
+      stageName = "Installation Final (10%)";
+    }
     const customerPhone = quoteData.mobile_number || quoteData.phone;
     const customerName = quoteData.customer_name || "Customer";
 

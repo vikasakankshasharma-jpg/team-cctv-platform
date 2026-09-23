@@ -77,6 +77,7 @@ export default async function CustomerDashboardPage() {
           status,
           cameraCount: qData.requirementSnapshot?.camera_count || leadData.camera_count || 0,
           propertyType: qData.requirementSnapshot?.property_type || leadData.property_type || "Commercial / Home",
+          siteAddress: leadData.address?.full_address || leadData.detected_city || "",
           isPaid,
           customerName: qData.customer_name || leadData.customer_name,
           amountPaid: qData.amount_paid || 0,

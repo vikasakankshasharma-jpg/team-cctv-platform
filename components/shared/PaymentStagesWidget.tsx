@@ -161,19 +161,44 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
           <div className="flex justify-between items-start mb-2">
             <div>
               <div className="flex items-center gap-2">
-                {isStage1Paid ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <div className="w-5 h-5 rounded-full border-2 border-zinc-300" />}
-                <h3 className="font-semibold text-zinc-900 dark:text-white">Stage 1: Booking Amount</h3>
+                {isStage1Paid ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <div className="w-5 h-5 rounded-full border-2 border-blue-400" />}
+                <h3 className={`font-semibold ${!isStage1Paid ? 'text-zinc-900 dark:text-white' : 'text-zinc-900 dark:text-white'}`}>Stage 1: Booking Amount</h3>
               </div>
               <p className="text-sm text-zinc-500 dark:text-zinc-400 ml-7 mt-0.5">Locks your price and initiates dispatch.</p>
             </div>
             <div className="text-right">
               <span className="font-bold text-zinc-900 dark:text-white">{formatCurrency(stage1Amount)}</span>
-              {isStage1Paid && <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">PAID</div>}
+              {isStage1Paid ? (
+                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">PAID</div>
+              ) : (
+                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1 uppercase tracking-wide">Due Now</div>
+              )}
             </div>
           </div>
           {isStage1Paid && stage1History?.razorpay_payment_id && (
             <div className="ml-7 mt-2 text-xs text-zinc-500 bg-white dark:bg-zinc-950 px-3 py-1.5 rounded-lg inline-block border border-zinc-100 dark:border-zinc-800">
               Txn: {stage1History.razorpay_payment_id}
+            </div>
+          )}
+          
+          {!isStage1Paid && (
+            <div className="ml-7 mt-3 flex flex-wrap items-center gap-2">
+              <button 
+                onClick={() => handlePayNow('advance_500_cod')}
+                disabled={loadingType !== null}
+                className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                {loadingType === 'pay_advance_500_cod' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                Pay {formatCurrency(stage1Amount)} Now
+              </button>
+              <button 
+                onClick={() => handleResendLink('advance_500_cod')}
+                disabled={loadingType !== null}
+                className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                {loadingType === 'resend_advance_500_cod' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {isAdmin ? "Send Link to Customer" : "Resend Link"}
+              </button>
             </div>
           )}
         </div>
