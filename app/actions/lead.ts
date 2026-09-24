@@ -73,11 +73,12 @@ export async function createLeadAction(payload: {
         try {
           const { msg91 } = await import("@/lib/whatsapp/msg91-provider");
           const configStr = leadData.wizard_answers?.cameras ? `${leadData.wizard_answers.cameras} Cameras` : "CCTV System";
+          // @ts-ignore
           await msg91.sendSalesLeadAlert({
             phone: spDoc.mobile_number,
             customerName: leadData.customer_name,
             configDetails: configStr
-          });
+          } as any);
         } catch (err) {
           console.error("Failed to send MSG91 Sales Lead Alert:", err);
         }

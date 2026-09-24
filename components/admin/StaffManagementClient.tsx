@@ -41,6 +41,7 @@ const ROLE_TEMPLATES: Record<string, PermissionGroup> = {
   "inventory_admin": {
     ...DEFAULT_PERMISSIONS,
     catalog: { edit_catalog: true, run_imports: true, manage_compatibility: false },
+  },
   "internal_accountant": {
     ...DEFAULT_PERMISSIONS,
     financial: { edit_global_pricing: false, view_financials: true, process_refunds: true, approve_payouts: true, reconcile_cash: true, export_tax_reports: true },
@@ -48,8 +49,6 @@ const ROLE_TEMPLATES: Record<string, PermissionGroup> = {
   "external_ca": {
     ...DEFAULT_PERMISSIONS,
     financial: { edit_global_pricing: false, view_financials: true, process_refunds: false, approve_payouts: false, reconcile_cash: false, export_tax_reports: true },
-  },
-
   }
 };
 
@@ -313,7 +312,7 @@ export function StaffManagementClient() {
                     <div className="grid grid-cols-2 gap-3 px-2">
                       {Object.keys(permissions.crm_sales).map(key => (
                         <label key={key} className="flex items-center gap-3 cursor-pointer group">
-                          <div className={\`w-5 h-5 rounded border flex items-center justify-center transition-colors \${permissions.crm_sales[key] ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300 group-hover:border-blue-400'}\`}>
+                          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${permissions.crm_sales[key] ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300 group-hover:border-blue-400'}`}>
                             {permissions.crm_sales[key] && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
                           <input type="checkbox" className="hidden" checked={permissions.crm_sales[key]} onChange={() => togglePermission("crm_sales", key)} />
@@ -329,7 +328,7 @@ export function StaffManagementClient() {
                     <div className="grid grid-cols-2 gap-3 px-2">
                       {Object.keys(permissions.operations).map(key => (
                         <label key={key} className="flex items-center gap-3 cursor-pointer group">
-                          <div className={\`w-5 h-5 rounded border flex items-center justify-center transition-colors \${permissions.operations[key] ? 'bg-orange-600 border-orange-600' : 'bg-white border-gray-300 group-hover:border-orange-400'}\`}>
+                          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${permissions.operations[key] ? 'bg-orange-600 border-orange-600' : 'bg-white border-gray-300 group-hover:border-orange-400'}`}>
                             {permissions.operations[key] && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
                           <input type="checkbox" className="hidden" checked={permissions.operations[key]} onChange={() => togglePermission("operations", key)} />
@@ -345,7 +344,7 @@ export function StaffManagementClient() {
                     <div className="grid grid-cols-2 gap-3 px-2">
                       {Object.keys(permissions.catalog).map(key => (
                         <label key={key} className="flex items-center gap-3 cursor-pointer group">
-                          <div className={\`w-5 h-5 rounded border flex items-center justify-center transition-colors \${permissions.catalog[key] ? 'bg-purple-600 border-purple-600' : 'bg-white border-gray-300 group-hover:border-purple-400'}\`}>
+                          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${permissions.catalog[key] ? 'bg-purple-600 border-purple-600' : 'bg-white border-gray-300 group-hover:border-purple-400'}`}>
                             {permissions.catalog[key] && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
                           <input type="checkbox" className="hidden" checked={permissions.catalog[key]} onChange={() => togglePermission("catalog", key)} />
@@ -361,7 +360,7 @@ export function StaffManagementClient() {
                     <div className="grid grid-cols-2 gap-3 px-2">
                       {Object.keys(permissions.financial).map(key => (
                         <label key={key} className="flex items-center gap-3 cursor-pointer group">
-                          <div className={\`w-5 h-5 rounded border flex items-center justify-center transition-colors \${permissions.financial[key] ? 'bg-red-600 border-red-600' : 'bg-white border-gray-300 group-hover:border-red-400'}\`}>
+                          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${permissions.financial[key] ? 'bg-red-600 border-red-600' : 'bg-white border-gray-300 group-hover:border-red-400'}`}>
                             {permissions.financial[key] && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
                           <input type="checkbox" className="hidden" checked={permissions.financial[key]} onChange={() => togglePermission("financial", key)} />
@@ -377,7 +376,7 @@ export function StaffManagementClient() {
                     <div className="grid grid-cols-2 gap-3 px-2">
                       {Object.keys(permissions.system).map(key => (
                         <label key={key} className="flex items-center gap-3 cursor-pointer group">
-                          <div className={\`w-5 h-5 rounded border flex items-center justify-center transition-colors \${permissions.system[key] ? 'bg-gray-800 border-gray-800' : 'bg-white border-gray-300 group-hover:border-gray-500'}\`}>
+                          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${permissions.system[key] ? 'bg-gray-800 border-gray-800' : 'bg-white border-gray-300 group-hover:border-gray-500'}`}>
                             {permissions.system[key] && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
                           <input type="checkbox" className="hidden" checked={permissions.system[key]} onChange={() => togglePermission("system", key)} />

@@ -25,7 +25,7 @@ for (const [lang, val] of Object.entries(newTranslations)) {
   // We added them at the end. We'll search for them near feat_4g and remove them.
   // The line is: `q_cam_count: "..."`
   // We'll replace the second occurrence or just find the one we added.
-  const regex = new RegExp(`\\s*q_cam_count:\\s*"${val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}",`, 'g');
+  const regex = new RegExp(`\\s*q_cam_count:\\s*"${val.replace(/[.*+?^${}()|[\]\\]/g, '\$&')}",`, 'g');
   content = content.replace(regex, '');
 }
 

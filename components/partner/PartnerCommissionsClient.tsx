@@ -111,8 +111,8 @@ export function PartnerCommissionsClient({ records, summary }: PartnerCommission
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {STATS.map((stat, idx) => (
           <div key={idx} className="bg-white rounded-[24px] p-6 border shadow-sm flex items-center gap-4">
-            <div className={\`w-14 h-14 rounded-2xl \${stat.bg} flex items-center justify-center shrink-0\`}>
-              <stat.icon className={\`w-7 h-7 \${stat.color}\`} />
+            <div className={`w-14 h-14 rounded-2xl ${stat.bg} flex items-center justify-center shrink-0`}>
+              <stat.icon className={`w-7 h-7 ${stat.color}`} />
             </div>
             <div>
               <p className="text-sm font-bold text-gray-500">{stat.label}</p>
@@ -134,7 +134,7 @@ export function PartnerCommissionsClient({ records, summary }: PartnerCommission
               <button 
                 key={status} 
                 onClick={() => setStatusFilter(status)}
-                className={\`px-4 py-1.5 rounded-lg text-sm font-bold capitalize transition-all \${statusFilter === status ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}\`}
+                className={`px-4 py-1.5 rounded-lg text-sm font-bold capitalize transition-all ${statusFilter === status ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
               >
                 {status}
               </button>
@@ -171,7 +171,7 @@ export function PartnerCommissionsClient({ records, summary }: PartnerCommission
                     <td className="px-6 py-4 font-medium text-gray-600">₹{record.ex_tax_amount.toLocaleString()}</td>
                     <td className="px-6 py-4 font-black text-gray-900">₹{record.commission_amount.toLocaleString()}</td>
                     <td className="px-6 py-4 text-right">
-                      <span className={\`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold capitalize tracking-wide \${record.status === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}\`}>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold capitalize tracking-wide ${record.status === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
                         {record.status}
                       </span>
                     </td>

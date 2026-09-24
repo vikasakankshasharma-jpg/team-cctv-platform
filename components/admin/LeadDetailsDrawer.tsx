@@ -6,6 +6,8 @@ import type { Lead, LeadActivity } from "@/types";
 import { getLeadActivities, addLeadActivity, updateNextFollowUp } from "@/app/actions/leads";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
+
 
 interface LeadDetailsDrawerProps {
   lead: Lead | null;

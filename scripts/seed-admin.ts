@@ -81,7 +81,7 @@ async function seedAdmin() {
   // ── 3. Email OTP is handled live by Resend (no pre-seed needed) ──────────────
   console.log(`\n  ℹ️   [email] No pre-seed needed for email OTP.`);
   console.log(`      The login page will call /api/auth/otp/email which:`);
-  console.log(`        • Verifies ${ADMIN_EMAIL} exists in \`admins\` collection ✅`);
+  console.log(`        • Verifies ${ADMIN_EMAIL} exists in `admins` collection ✅`);
   console.log(`        • Generates a real random OTP`);
   console.log(`        • Sends it to your inbox via Resend ✅`);
 

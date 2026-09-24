@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/lib/firebase-client";
 import { GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { Loader2, Phone, Mail, UserCircle2, Briefcase } from "lucide-react";
 import { toast } from "sonner";
@@ -102,13 +102,13 @@ export function UnifiedLoginClient() {
       <div className="flex border-b">
         <button 
           onClick={() => { setActiveTab("customer"); setOtpSent(false); }}
-          className={\`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 transition-colors \${activeTab === "customer" ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50" : "text-gray-500 hover:bg-gray-50"}\`}
+          className={`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 transition-colors ${activeTab === "customer" ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50" : "text-gray-500 hover:bg-gray-50"}`}
         >
           <UserCircle2 className="w-4 h-4" /> Customer
         </button>
         <button 
           onClick={() => { setActiveTab("staff"); setOtpSent(false); }}
-          className={\`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 transition-colors \${activeTab === "staff" ? "text-gray-900 border-b-2 border-gray-900 bg-gray-50" : "text-gray-500 hover:bg-gray-50"}\`}
+          className={`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 transition-colors ${activeTab === "staff" ? "text-gray-900 border-b-2 border-gray-900 bg-gray-50" : "text-gray-500 hover:bg-gray-50"}`}
         >
           <Briefcase className="w-4 h-4" /> Staff & Partner
         </button>
@@ -157,7 +157,7 @@ export function UnifiedLoginClient() {
             <button 
               type="submit" 
               disabled={isLoading}
-              className={\`w-full font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 \${activeTab === "customer" ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30" : "bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-900/20"} disabled:opacity-50\`}
+              className={`w-full font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === "customer" ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30" : "bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-900/20"} disabled:opacity-50`}
             >
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Send Login Code"}
             </button>
@@ -185,7 +185,7 @@ export function UnifiedLoginClient() {
             <button 
               type="submit" 
               disabled={isLoading || otpCode.length < 6}
-              className={\`w-full font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 \${activeTab === "customer" ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-900 text-white hover:bg-gray-800"} disabled:opacity-50\`}
+              className={`w-full font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === "customer" ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-900 text-white hover:bg-gray-800"} disabled:opacity-50`}
             >
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Sign In"}
             </button>

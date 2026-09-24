@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const validatedData = CreatePOSchema.parse(body);
 
-    const poNumber = \`PO-\${Date.now()}\`; // Simple generation
+    const poNumber = `PO-${Date.now()}`; // Simple generation
 
     const docRef = await adminDb.collection("purchase_orders").add({
       ...validatedData,

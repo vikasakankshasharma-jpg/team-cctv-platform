@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
       // B. Check Installers (if not admin)
       if (!assignedRole && (email || phoneNumber)) {
-        let installerQuery = adminDb.collection("installers");
+        let installerQuery: any = adminDb.collection("installers");
         if (email) installerQuery = installerQuery.where("email", "==", email);
         else installerQuery = installerQuery.where("mobile_number", "==", phoneNumber);
 
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
 
       // C. Check Promoters (if not admin/installer)
       if (!assignedRole && (email || phoneNumber)) {
-        let promoterQuery = adminDb.collection("promoters");
+        let promoterQuery: any = adminDb.collection("promoters");
         if (email) promoterQuery = promoterQuery.where("email", "==", email);
         else promoterQuery = promoterQuery.where("mobile_number", "==", phoneNumber);
 

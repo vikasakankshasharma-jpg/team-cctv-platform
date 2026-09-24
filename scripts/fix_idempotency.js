@@ -9,7 +9,7 @@ const stage2Replacement = `const dQuoteData = dQuoteDoc.data() as any;
         // IDEMPOTENCY CHECK: Ensure we haven't already processed this exact payment
         const hasProcessed = dQuoteData.payment_history?.some((p: any) => p.payment_id === paymentId);
         if (hasProcessed) {
-          console.log(\`[Razorpay Webhook]: Idempotency caught duplicate delivery webhook for \${paymentId}\`);
+          console.log(`[Razorpay Webhook]: Idempotency caught duplicate delivery webhook for ${paymentId}`);
           return NextResponse.json({ success: true, note: "Already processed" });
         }
 
@@ -23,7 +23,7 @@ const stage3Replacement = `const iQuoteData = iQuoteDoc.data() as any;
         // IDEMPOTENCY CHECK: Ensure we haven't already processed this exact payment
         const hasProcessed = iQuoteData.payment_history?.some((p: any) => p.payment_id === paymentId);
         if (hasProcessed) {
-          console.log(\`[Razorpay Webhook]: Idempotency caught duplicate installation webhook for \${paymentId}\`);
+          console.log(`[Razorpay Webhook]: Idempotency caught duplicate installation webhook for ${paymentId}`);
           return NextResponse.json({ success: true, note: "Already processed" });
         }
 
@@ -37,7 +37,7 @@ const stage1Replacement = `const bQuoteData = bQuoteDoc.data() as any;
         // IDEMPOTENCY CHECK: Ensure we haven't already processed this exact payment
         const hasProcessed = bQuoteData.payment_history?.some((p: any) => p.payment_id === paymentId);
         if (hasProcessed) {
-          console.log(\`[Razorpay Webhook]: Idempotency caught duplicate booking webhook for \${paymentId}\`);
+          console.log(`[Razorpay Webhook]: Idempotency caught duplicate booking webhook for ${paymentId}`);
           return NextResponse.json({ success: true, note: "Already processed" });
         }
 

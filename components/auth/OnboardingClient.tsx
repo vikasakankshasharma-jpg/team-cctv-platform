@@ -116,10 +116,10 @@ export function OnboardingClient() {
               value={panNumber}
               onChange={handlePanChange}
               placeholder="ABCDE1234F"
-              className={\`w-full px-4 py-3 rounded-xl border-2 font-bold tracking-widest uppercase transition-all outline-none 
-                \${kycData?.valid ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 
+              className={`w-full px-4 py-3 rounded-xl border-2 font-bold tracking-widest uppercase transition-all outline-none 
+                ${kycData?.valid ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 
                   kycData?.valid === false ? 'border-red-500 bg-red-50 text-red-900' : 
-                  'border-gray-200 focus:border-zinc-900'}\`}
+                  'border-gray-200 focus:border-zinc-900'}`}
               disabled={kycData?.valid} // Lock it if successful!
             />
             {kycData?.valid && (

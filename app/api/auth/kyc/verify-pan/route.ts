@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifySession } from "@/lib/auth"; // The generic session verifier
+import { verifySession } from "@/lib/auth-server"; // The generic session verifier
 import { KycService } from "@/lib/kyc-service";
 
 export async function POST(req: Request) {

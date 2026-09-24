@@ -46,19 +46,19 @@ export function LogisticsDashboardClient() {
       <div className="flex gap-2 border-b">
         <button 
           onClick={() => setActiveTab("inventory")}
-          className={\`px-6 py-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-colors \${activeTab === "inventory" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-900"}\`}
+          className={`px-6 py-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === "inventory" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-900"}`}
         >
           <PackageSearch className="w-4 h-4" /> Live Inventory
         </button>
         <button 
           onClick={() => setActiveTab("po")}
-          className={\`px-6 py-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-colors \${activeTab === "po" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-900"}\`}
+          className={`px-6 py-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === "po" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-900"}`}
         >
           <ShoppingCart className="w-4 h-4" /> Purchase Orders (PO)
         </button>
         <button 
           onClick={() => setActiveTab("vendors")}
-          className={\`px-6 py-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-colors \${activeTab === "vendors" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-900"}\`}
+          className={`px-6 py-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === "vendors" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-900"}`}
         >
           <Store className="w-4 h-4" /> Vendors & Suppliers
         </button>

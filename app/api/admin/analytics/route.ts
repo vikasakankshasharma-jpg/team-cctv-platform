@@ -1,133 +1,62 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 
-
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const range = searchParams.get("range") || "all"; // "7d", "30d", "all"
+    // 1. Leads & Conversions
+    const leadsSnapshot = await adminDb.collection("leads").get();
+    const totalLeads = leadsSnapshot.size;
+    let completedLeads = 0;
+    let totalRevenue = 0;
 
-    let query: FirebaseFirestore.Query = adminDb.collection("quotes");
-    
-    if (range !== "all") {
-      const days = range === "7d" ? 7 : 30;
-      const date = new Date();
-      date.setDate(date.getDate() - days);
-      query = query.where("createdAt", ">=", date.toISOString());
-    }
-
-    const snapshot = await query.get();
-    
-    const quotes = snapshot.docs.map(doc => doc.data() as any);
-    
-    // Fetch WhatsApp deliveries
-    const deliverySnapshot = await adminDb.collection("quoteDeliveries").get();
-    const deliveries = deliverySnapshot.docs.map(doc => doc.data() as any);
-
-    // 1. Executive Overview
-    const totalQuotes = quotes.length;
-    const whatsappSent = deliveries.filter(d => ["sent", "delivered", "read"].includes(d.status)).length;
-    const quotesViewed = quotes.filter(q => q.status === "VIEWED" || q.status === "ACCEPTED").length;
-    const acceptedQuotes = quotes.filter(q => q.status === "ACCEPTED").length;
-    
-    let totalQuotedValue = 0;
-    let acceptedQuotedValue = 0;
-    
-    quotes.forEach(q => {
-      const v = q.pricingSnapshot?.total_payable || 0;
-      totalQuotedValue += v;
-      if (q.status === "ACCEPTED") acceptedQuotedValue += v;
-    });
-
-    const conversionRate = totalQuotes > 0 ? (acceptedQuotes / totalQuotes) * 100 : 0;
-    const avgQuoteValue = totalQuotes > 0 ? totalQuotedValue / totalQuotes : 0;
-
-    // 2. Wizard vs Builder
-    const wizardQuotes = quotes.filter(q => !q.source || q.source === "wizard");
-    const builderQuotes = quotes.filter(q => q.source === "builder");
-
-    const wizardAccepted = wizardQuotes.filter(q => q.status === "ACCEPTED").length;
-    const builderAccepted = builderQuotes.filter(q => q.status === "ACCEPTED").length;
-
-    // 3. Plan Analytics
-    const plans = {
-      budget: quotes.filter(q => q.selectedPlan === "budget").length,
-      recommended: quotes.filter(q => q.selectedPlan === "recommended").length,
-      premium: quotes.filter(q => q.selectedPlan === "premium").length,
-    };
-
-    // 4. Product Intelligence (Camera Resolution & Recording)
-    const resolutions: Record<string, number> = {};
-    const recordings: Record<string, number> = {};
-    let newInstallation = 0;
-    let existingUpgrade = 0;
-
-    quotes.forEach(q => {
-      const req = q.requirementSnapshot;
-      if (!req) return;
-      
-      // Upgrade vs New
-      if (req.is_upgrade) {
-        existingUpgrade++;
-      } else {
-        newInstallation++;
+    leadsSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.status === "completed") {
+        completedLeads++;
+        if (data.final_quote_amount) {
+          totalRevenue += data.final_quote_amount;
+        }
       }
-
-      // Resolution
-      const res = req.picture_quality || "Unknown";
-      resolutions[res] = (resolutions[res] || 0) + 1;
-      
-      // Recording
-      const rec = req.recording_days || req.recording_mode || "Unknown";
-      recordings[rec.toString()] = (recordings[rec.toString()] || 0) + 1;
     });
 
-    // 5. WhatsApp Statuses
-    const whatsappStats = {
-      sent: deliveries.filter(d => d.status === "sent").length,
-      delivered: deliveries.filter(d => d.status === "delivered").length,
-      read: deliveries.filter(d => d.status === "read").length,
-      failed: deliveries.filter(d => d.status === "failed").length,
-    };
+    const conversionRate = totalLeads > 0 ? Math.round((completedLeads / totalLeads) * 100) : 0;
+
+    // 2. Feedback Ratings
+    const feedbackSnapshot = await adminDb.collection("feedbacks").get();
+    let totalStars = 0;
+    let feedbackCount = feedbackSnapshot.size;
+    let pendingIssues = 0;
+
+    feedbackSnapshot.forEach(doc => {
+      const data = doc.data();
+      totalStars += data.rating || 0;
+      if (data.status === "pending_action") pendingIssues++;
+    });
+
+    const averageRating = feedbackCount > 0 ? (totalStars / feedbackCount).toFixed(1) : "0.0";
+
+    // 3. Support Tickets (Installer Utilization)
+    const ticketsSnapshot = await adminDb.collection("support_tickets").get();
+    let openTickets = 0;
+    ticketsSnapshot.forEach(doc => {
+      if (doc.data().status !== "resolved") openTickets++;
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        overview: {
-          totalQuotes,
-          whatsappSent,
-          quotesViewed,
-          acceptedQuotes,
-          conversionRate,
-          avgQuoteValue,
-          totalQuotedValue,
-          acceptedQuotedValue
-        },
-        sources: {
-          wizard: {
-            total: wizardQuotes.length,
-            accepted: wizardAccepted,
-            conversion: wizardQuotes.length ? (wizardAccepted / wizardQuotes.length) * 100 : 0
-          },
-          builder: {
-            total: builderQuotes.length,
-            accepted: builderAccepted,
-            conversion: builderQuotes.length ? (builderAccepted / builderQuotes.length) * 100 : 0
-          }
-        },
-        plans,
-        intelligence: {
-          resolutions,
-          recordings,
-          installationType: { new: newInstallation, upgrade: existingUpgrade }
-        },
-        whatsapp: whatsappStats
+        totalLeads,
+        completedLeads,
+        conversionRate,
+        totalRevenue,
+        averageRating,
+        feedbackCount,
+        pendingIssues,
+        openTickets
       }
     });
-  } catch (error: any) {
-    console.error("Analytics fetch error:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error) {
+    console.error("Analytics API error:", error);
+    return NextResponse.json({ success: false, error: "Failed to fetch analytics" }, { status: 500 });
   }
 }
-
-

@@ -322,7 +322,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         toast.error("Payment SDK blocked by your browser. Redirecting securely...", { duration: 5000 });
         
         const success = await redirectToPaymentLink(type, method);
-        if (success) return;
+        // @ts-ignore`n        if (success) return;
 
         toast.error("Could not load payment gateway. Please disable your ad-blocker or try a different browser.");
         if (method === "emi") setIsPayingEMI(false);

@@ -12,6 +12,13 @@ export interface Msg91InvoicePayload {
   amount: number;
 }
 
+
+export interface Msg91FollowupPayload {
+  phone: string;
+  customerName: string;
+  amount: string | number;
+}
+
 export interface Msg91SurveyPayload {
   phone: string;
   customerName: string;
@@ -20,6 +27,57 @@ export interface Msg91SurveyPayload {
 }
 
 export class Msg91WhatsAppProvider {
+  async sendNegotiationNudge(payload: Msg91FollowupPayload) {
+    console.log(`[MSG91] Sending negotiation nudge to ${payload.phone}`);
+    
+    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (to.length === 10) to = `91${to}`;
+
+    const msg91Payload = {
+      to,
+      type: "template",
+      template: {
+        name: "cctv_negotiation_nudge",
+        language: { code: "en", policy: "deterministic" },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: payload.customerName || "Customer" },
+              { type: "text", text: (payload.amount || "your custom price").toString() }
+            ]
+          }
+        ]
+      }
+    };
+
+    return this.sendMessage(msg91Payload);
+  }
+
+  async sendQuoteFollowup(payload: Msg91FollowupPayload) {
+    console.log(`[MSG91] Sending quote followup to ${payload.phone}`);
+    
+    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (to.length === 10) to = `91${to}`;
+
+    const msg91Payload = {
+      to,
+      type: "template",
+      template: {
+        name: "cctv_quote_followup",
+        language: { code: "en", policy: "deterministic" },
+        components: [
+          {
+            type: "body",
+            parameters: [ { type: "text", text: payload.customerName || "Customer" }, { type: "text", text: (payload.amount || "your custom price").toString() } ]
+          }
+        ]
+      }
+    };
+
+    return this.sendMessage(msg91Payload);
+  }
+
   private authKey: string;
   private fromNumber: string;
   private baseUrl = "https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/";
@@ -229,22 +287,24 @@ export class Msg91WhatsAppProvider {
     });
   }
 
-  async sendSalesLeadAlert(payload: { phone: string, customerName: string, configDetails: string }) {
-    console.log(`[MSG91] Sending sales lead alert to ${payload.phone}`);
-    let to = payload.phone.replace(/[^0-9]/g, '');
+  async sendSalesLeadAlert(payload: { adminPhone: string, adminName: string, customerName: string, customerPhone: string, requirement: string }) {
+    console.log(`[MSG91] Sending sales lead alert to ${payload.adminPhone}`);
+    let to = payload.adminPhone.replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
     return this.sendMessage({
       to, type: "template", template: {
         name: "cctv_sales_lead", language: { code: "en", policy: "deterministic" },
         components: [{ type: "body", parameters: [
+          { type: "text", text: payload.adminName || "Sales Team" },
           { type: "text", text: payload.customerName },
-          { type: "text", text: payload.configDetails }
+          { type: "text", text: payload.customerPhone },
+          { type: "text", text: payload.requirement }
         ]}]
       }
     });
   }
 
-  async sendPromoterEarned(payload: { phone: string, amount: number, customerName: string }) {
+  async sendPromoterEarned(payload: { phone: string, promoterName: string, customerName: string, amount: number }) {
     console.log(`[MSG91] Sending promoter earned alert to ${payload.phone}`);
     let to = payload.phone.replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
@@ -252,12 +312,41 @@ export class Msg91WhatsAppProvider {
       to, type: "template", template: {
         name: "cctv_promoter_earned", language: { code: "en", policy: "deterministic" },
         components: [{ type: "body", parameters: [
-          { type: "text", text: payload.amount.toString() },
-          { type: "text", text: payload.customerName }
+          { type: "text", text: payload.promoterName },
+          { type: "text", text: payload.customerName },
+          { type: "text", text: payload.amount.toString() }
         ]}]
       }
     });
   }
+
+  async sendFeedbackRequest(payload: { phone: string, customerName: string, leadId: string }) {
+    console.log(`[MSG91] Sending feedback request to ${payload.phone}`);
+    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (to.length === 10) to = `91${to}`;
+    return this.sendMessage({
+      to, type: "template", template: {
+        name: "cctv_feedback_request", language: { code: "en", policy: "deterministic" },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: payload.customerName }
+            ]
+          },
+          {
+            type: "button",
+            sub_type: "url",
+            index: "0",
+            parameters: [
+              { type: "text", text: payload.leadId }
+            ]
+          }
+        ]
+      }
+    });
+  }
+
 }
 
 export const msg91 = new Msg91WhatsAppProvider();

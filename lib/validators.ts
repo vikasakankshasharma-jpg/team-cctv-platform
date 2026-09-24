@@ -491,3 +491,92 @@ export const ApiErrorSchema = z.object({
   error: z.string(),
   details: z.any().optional(),
 });
+
+// ==============================================================================
+// WARRANTY & SUPPORT TICKETS
+// ==============================================================================
+
+export const WarrantySchema = z.object({
+  id: z.string().optional(),
+  quote_id: z.string(),
+  lead_id: z.string(),
+  customer_id: z.string().optional(),
+  customer_phone: z.string().optional(),
+  status: z.enum(["active", "expired", "voided"]).default("active"),
+  starts_at: z.string(), // ISO Date
+  expires_at: z.string(), // ISO Date
+  total_amc_visits_allowed: z.number().default(2),
+  amc_visits_used: z.number().default(0),
+  hardware_coverage_months: z.number().default(12),
+  created_at: z.any().optional(),
+  updated_at: z.any().optional(),
+});
+
+export type Warranty = z.infer<typeof WarrantySchema>;
+
+export const SupportTicketSchema = z.object({
+  id: z.string().optional(),
+  ticket_number: z.string().optional(),
+  warranty_id: z.string().optional(), // Can be null if out of warranty
+  quote_id: z.string(),
+  lead_id: z.string(),
+  customer_name: z.string(),
+  customer_phone: z.string(),
+  issue_category: z.enum(["camera_offline", "dvr_beeping", "app_not_working", "wiring_issue", "other"]),
+  issue_description: z.string().min(10, "Please provide more detail"),
+  media_urls: z.array(z.string().url()).optional(),
+  status: z.enum(["open", "assigned", "in_progress", "resolved", "cancelled"]).default("open"),
+  payment_status: z.enum(["free_amc", "chargeable_labor", "fully_chargeable", "paid"]).default("free_amc"),
+  assigned_installer_id: z.string().optional(),
+  is_third_party: z.boolean().default(false).optional(),
+  third_party_name: z.string().optional(),
+  third_party_phone: z.string().optional(),
+  resolution_notes: z.string().optional(),
+  created_at: z.any().optional(),
+  updated_at: z.any().optional(),
+});
+
+export type SupportTicket = z.infer<typeof SupportTicketSchema>;
+
+// ==============================================================================
+// SITE SURVEYS / CALENDAR BOOKING
+// ==============================================================================
+
+export const SiteSurveySchema = z.object({
+  id: z.string().optional(),
+  lead_id: z.string().optional(),
+  customer_name: z.string().min(2, "Name is required"),
+  customer_phone: z.string().min(10, "Valid phone number required"),
+  address: z.string().min(10, "Please provide full address"),
+  pincode: z.string().min(6, "Valid pincode required"),
+  date: z.string(), // YYYY-MM-DD
+  time_slot: z.enum(["morning_10_1", "afternoon_2_5", "evening_5_7"]),
+  status: z.enum(["pending", "assigned", "completed", "cancelled"]).default("pending"),
+  assigned_installer_id: z.string().optional(),
+  is_third_party: z.boolean().default(false).optional(),
+  third_party_name: z.string().optional(),
+  third_party_phone: z.string().optional(),
+  notes: z.string().optional(),
+  created_at: z.any().optional(),
+  updated_at: z.any().optional(),
+});
+
+export type SiteSurvey = z.infer<typeof SiteSurveySchema>;
+
+// ==============================================================================
+// CUSTOMER FEEDBACK (REVIEW GATING)
+// ==============================================================================
+
+export const CustomerFeedbackSchema = z.object({
+  id: z.string().optional(),
+  lead_id: z.string(),
+  rating: z.number().min(1).max(5),
+  comment: z.string().optional(),
+  status: z.enum(["resolved", "pending_action", "published"]).default("pending_action"),
+  created_at: z.any().optional(),
+});
+
+export type CustomerFeedback = z.infer<typeof CustomerFeedbackSchema>;
+
+export const CreatePOSchema = z.any();
+export const CreateVendorSchema = z.any();

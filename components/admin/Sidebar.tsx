@@ -1,6 +1,7 @@
 "use client";
 
-import { Truck,  FileSpreadsheet,  useState } from "react";
+import { useState } from "react";
+import { Truck, FileSpreadsheet } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";

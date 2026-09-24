@@ -50,7 +50,7 @@ const newLogic = `
         handler: function (response: any) {
           toast.success("Payment Successful! Verifying...");
           // We can optionally verify here, but Webhooks will handle the database update
-          window.location.href = \`/payment-success?quoteId=\${quote.id}&payment_id=\${response.razorpay_payment_id}\`;
+          window.location.href = `/payment-success?quoteId=${quote.id}&payment_id=${response.razorpay_payment_id}`;
         },
         prefill: {
           name: quote.customer.name,
@@ -84,7 +84,7 @@ const startIdx = content.indexOf('const redirectToPaymentLink = async');
 const endIdx = content.indexOf('const handleAccept = async', startIdx);
 
 if (startIdx !== -1 && endIdx !== -1) {
-  const replacement = \`${newLogic}\`;
+  const replacement = `${newLogic}`;
   
   // We need to just stitch it safely. Let's find the 'catch (e: any) {' right before handleAccept
   // Actually, replacing the whole function is safer.

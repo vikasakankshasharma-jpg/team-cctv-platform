@@ -18,7 +18,7 @@ export function FinanceExportsClient() {
     try {
       // In production, this hits an API that streams a massive CSV/Excel via exceljs
       await new Promise(r => setTimeout(r, 2000)); 
-      toast.success(\`GSTR-1 Data for \${dateRange.month}/\${dateRange.year} downloaded successfully!\`);
+      toast.success(`GSTR-1 Data for ${dateRange.month}/${dateRange.year} downloaded successfully!`);
     } catch (e) {
       toast.error("Failed to export GSTR-1");
     } finally {
@@ -31,7 +31,7 @@ export function FinanceExportsClient() {
     try {
       // In production, this hits an API that streams the 26Q FVU map
       await new Promise(r => setTimeout(r, 2000)); 
-      toast.success(\`Form 26Q TDS Data for \${dateRange.month}/\${dateRange.year} downloaded successfully!\`);
+      toast.success(`Form 26Q TDS Data for ${dateRange.month}/${dateRange.year} downloaded successfully!`);
     } catch (e) {
       toast.error("Failed to export TDS Data");
     } finally {

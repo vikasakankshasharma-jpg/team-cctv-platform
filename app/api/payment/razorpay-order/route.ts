@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     const options = {
       amount: chargeAmount * 100, // paise
       currency: "INR",
-      receipt: \`rcpt_\${quoteId.substring(0, 8)}_\${Date.now()}\`,
+      receipt: `rcpt_${quoteId.substring(0, 8)}_${Date.now()}`,
       notes: {
         quote_id: quoteId,
         lead_id: leadId,

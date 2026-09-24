@@ -31,7 +31,7 @@ export async function PATCH(
       return ApiResponse.unauthorized("Authentication required");
     }
 
-    const reviewerUid = session.user.uid;
+    const reviewerUid = session.user!.uid;
     const reviewerRole = session.role;
 
     // Validate input

@@ -29,7 +29,7 @@ export async function POST(req: Request) {
        // In real life, Razorpay provides a Name Match Score (e.g., 90%). 
        const matches = regName.includes(expName) || expName.includes(regName);
        if (!matches) {
-          result.message = \`Warning: Registered PAN name (\${result.registeredName}) differs from provided name.\`;
+          result.message = `Warning: Registered PAN name (${result.registeredName}) differs from provided name.`;
        }
     }
 

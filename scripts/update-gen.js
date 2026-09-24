@@ -45,7 +45,7 @@ function normalizeBrandKey(brandStr: string): string {
 }
 
 function getRes(p: Product): string {
-  let res = p.resolution_mp ? \`\${p.resolution_mp}MP\` : "2MP";
+  let res = p.resolution_mp ? `${p.resolution_mp}MP` : "2MP";
   const name = ((p.technical_name || "") + " " + (p.display_name || "")).toUpperCase();
   if (name.includes("8MP") || name.includes("4K")) return "8MP";
   if (name.includes("6MP")) return "6MP";
@@ -170,7 +170,7 @@ export function DynamicVariantGenerator({
           const tbMatch = capStr.match(/(\d+)\s*TB/);
           if (tbMatch) tb = parseInt(tbMatch[1], 10);
         }
-        (storage_device as any).derivedCapacity = tb ? \`\${tb}TB\` : "HDD";
+        (storage_device as any).derivedCapacity = tb ? `${tb}TB` : "HDD";
       }
       
       return { 
@@ -214,14 +214,14 @@ export function DynamicVariantGenerator({
         <div className="bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1.5 rounded-full inline-flex relative shadow-inner">
           <button
             onClick={() => setActiveTech("hd")}
-            className={\`relative z-10 px-6 py-2.5 text-sm font-bold rounded-full transition-all duration-300 \${activeTech === "hd" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}\`}
+            className={`relative z-10 px-6 py-2.5 text-sm font-bold rounded-full transition-all duration-300 ${activeTech === "hd" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
           >
             {activeTech === "hd" && <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full -z-10" />}
             Standard HD (Analog)
           </button>
           <button
             onClick={() => setActiveTech("ip")}
-            className={\`relative z-10 px-6 py-2.5 text-sm font-bold rounded-full transition-all duration-300 \${activeTech === "ip" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}\`}
+            className={`relative z-10 px-6 py-2.5 text-sm font-bold rounded-full transition-all duration-300 ${activeTech === "ip" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
           >
             {activeTech === "ip" && <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full -z-10" />}
             Premium IP (Network)
@@ -235,11 +235,11 @@ export function DynamicVariantGenerator({
             <button
               key={b}
               onClick={() => setActiveBrand(b)}
-              className={\`px-4 py-1.5 rounded-full text-sm font-bold transition-all shrink-0 \${
+              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all shrink-0 ${
                 targetBrand === b 
                   ? "bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30" 
                   : "bg-white border border-[#d2d2d7] text-[#1d1d1f] hover:bg-[#f5f5f7] dark:bg-[#1c1c1e] dark:border-[#424245] dark:text-[#f5f5f7]"
-              }\`}
+              }`}
             >
               {BRAND_DISPLAY[b] || (b.charAt(0).toUpperCase() + b.slice(1))}
             </button>
@@ -253,11 +253,11 @@ export function DynamicVariantGenerator({
             <button
               key={r}
               onClick={() => setActiveResolution(r)}
-              className={\`px-4 py-1.5 rounded-full text-sm font-bold transition-all shrink-0 \${
+              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all shrink-0 ${
                 targetRes === r 
                   ? "bg-slate-800 text-white shadow-sm ring-2 ring-slate-800/30" 
                   : "bg-white border border-[#d2d2d7] text-[#1d1d1f] hover:bg-[#f5f5f7] dark:bg-[#1c1c1e] dark:border-[#424245] dark:text-[#f5f5f7]"
-              }\`}
+              }`}
             >
               {r === "all" ? "All Resolutions" : r}
             </button>
@@ -272,13 +272,13 @@ export function DynamicVariantGenerator({
         </div>
       )}
 
-      <div className={\`grid gap-6 mt-8 \${variants.length === 1 ? "max-w-md mx-auto" : variants.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-2 lg:grid-cols-3"}\`}>
+      <div className={`grid gap-6 mt-8 ${variants.length === 1 ? "max-w-md mx-auto" : variants.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-2 lg:grid-cols-3"}`}>
         {variants.map((variant, idx) => {
           if (!variant.camera_device) return null;
           const isSelectedForCompare = selectedCompareItems.some(i => i.camera_device?.id === variant.camera_device?.id && i.plan_type === variant.plan_type);
           
           return (
-            <Card key={idx} className={\`relative overflow-hidden transition-all duration-300 \${isSelectedForCompare ? "ring-2 ring-blue-600 shadow-lg" : "hover:shadow-md border-[#d2d2d7] dark:border-[#424245]"}\`}>
+            <Card key={idx} className={`relative overflow-hidden transition-all duration-300 ${isSelectedForCompare ? "ring-2 ring-blue-600 shadow-lg" : "hover:shadow-md border-[#d2d2d7] dark:border-[#424245]"}`}>
               {idx === Math.floor(variants.length / 2) && variants.length > 1 && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl z-10 flex items-center gap-1 shadow-sm">
                   <Sparkles className="w-3 h-3" /> Recommended
@@ -314,7 +314,7 @@ export function DynamicVariantGenerator({
                   <div className="flex justify-between items-center py-2 border-b border-[#f5f5f7] dark:border-[#2d2d2f]">
                     <span className="text-sm text-[#86868b]">Storage</span>
                     <span className="text-sm font-bold text-[#1d1d1f] dark:text-white">
-                      {variant.storage_device ? \`\${variant.storage_device.derivedCapacity || "HDD"}\` : "None"} ({variant.storage_days} Days)
+                      {variant.storage_device ? `${variant.storage_device.derivedCapacity || "HDD"}` : "None"} ({variant.storage_days} Days)
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#f5f5f7] dark:border-[#2d2d2f]">
@@ -326,7 +326,7 @@ export function DynamicVariantGenerator({
                 <div className="space-y-3">
                   <Button 
                     onClick={() => onSelectCheckout(variant)}
-                    className={\`w-full font-bold \${idx === Math.floor(variants.length / 2) && variants.length > 1 ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20" : "bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[#1d1d1f] dark:bg-[#2d2d2f] dark:hover:bg-[#3d3d3f] dark:text-white"}\`}
+                    className={`w-full font-bold ${idx === Math.floor(variants.length / 2) && variants.length > 1 ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20" : "bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[#1d1d1f] dark:bg-[#2d2d2f] dark:hover:bg-[#3d3d3f] dark:text-white"}`}
                   >
                     Select Plan
                   </Button>
@@ -335,7 +335,7 @@ export function DynamicVariantGenerator({
                     onClick={() => onToggleCompare(variant)}
                     className="w-full py-2 text-sm font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-2 transition-colors"
                   >
-                    <div className={\`w-4 h-4 rounded border flex items-center justify-center \${isSelectedForCompare ? "bg-blue-600 border-blue-600" : "border-slate-300"}\`}>
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center ${isSelectedForCompare ? "bg-blue-600 border-blue-600" : "border-slate-300"}`}>
                       {isSelectedForCompare && <Check className="w-3 h-3 text-white" />}
                     </div>
                     {isSelectedForCompare ? "Added to Compare" : "Add to Compare"}

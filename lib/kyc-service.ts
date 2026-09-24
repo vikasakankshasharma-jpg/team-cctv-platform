@@ -13,10 +13,10 @@ export class KycService {
       throw new Error("Razorpay credentials missing");
     }
 
-    const auth = Buffer.from(\`\${keyId}:\${keySecret}\`).toString("base64");
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
     return {
       "Content-Type": "application/json",
-      "Authorization": \`Basic \${auth}\`
+      "Authorization": `Basic ${auth}`
     };
   }
 

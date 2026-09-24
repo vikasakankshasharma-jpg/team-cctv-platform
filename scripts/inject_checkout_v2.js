@@ -45,7 +45,7 @@ if (startIdx !== -1 && endIdx !== -1) {
         order_id: data.orderId,
         handler: function (response: any) {
           toast.success("Payment Successful! Verifying...");
-          window.location.href = \`/payment-success?quoteId=\${quote.id}&payment_id=\${response.razorpay_payment_id}\`;
+          window.location.href = `/payment-success?quoteId=${quote.id}&payment_id=${response.razorpay_payment_id}`;
         },
         prefill: {
           name: quote.customer.name,

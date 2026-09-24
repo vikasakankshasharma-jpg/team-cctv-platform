@@ -6,6 +6,8 @@ export interface SessionResult {
   isAuthenticated: boolean;
   user: DecodedIdToken | null;
   role: string | null;
+  permissions?: any;
+  uid?: string;
 }
 
 /**
