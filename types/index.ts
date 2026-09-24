@@ -523,6 +523,15 @@ export interface AppSettings {
   pricing_cache_ttl_seconds: number;
   otp_provider: "firebase_phone" | "other";
   
+  // Taxation & TDS Engine
+  tds_194c_individual_rate?: number;
+  tds_194c_firm_rate?: number;
+  tds_194c_single_threshold?: number;
+  tds_194c_annual_threshold?: number;
+  tds_194h_rate?: number;
+  tds_194h_annual_threshold?: number;
+  tds_penal_rate?: number;
+  
   // Brand Tabs Control
   brand_tabs_order?: string[];
   

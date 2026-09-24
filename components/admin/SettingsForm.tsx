@@ -24,6 +24,13 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     margin_hdmi_cable: initialSettings.margin_hdmi_cable ?? 20,
     margin_rack: initialSettings.margin_rack ?? 30,
     margin_power_supply: initialSettings.margin_power_supply ?? 25,
+    tds_194c_individual_rate: initialSettings.tds_194c_individual_rate ?? 1,
+    tds_194c_firm_rate: initialSettings.tds_194c_firm_rate ?? 2,
+    tds_194c_single_threshold: initialSettings.tds_194c_single_threshold ?? 30000,
+    tds_194c_annual_threshold: initialSettings.tds_194c_annual_threshold ?? 100000,
+    tds_194h_rate: initialSettings.tds_194h_rate ?? 5,
+    tds_194h_annual_threshold: initialSettings.tds_194h_annual_threshold ?? 15000,
+    tds_penal_rate: initialSettings.tds_penal_rate ?? 20,
     default_sla_operating_hours: initialSettings.default_sla_operating_hours || {
       start_time: "10:00",
       end_time: "18:00",

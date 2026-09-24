@@ -279,11 +279,14 @@ export const CreateHubSchema = z.object({
 export type CreateHubInput = z.infer<typeof CreateHubSchema>;
 
 export const CreateInstallerSchema = z.object({
-  name: z.string().min(2, "Name is required").max(100),
-  mobile_number: MobileSchema,
-  email: z.string().email().optional().nullable(),
-  serviceable_pincodes: z.array(z.string()).min(1, "At least one pincode is required"),
-  skills: z.array(z.string()).default([]),
+    name: z.string().min(2, "Name is required").max(100),
+    mobile_number: MobileSchema,
+    email: z.string().email().optional().nullable(),
+    serviceable_pincodes: z.array(z.string()).min(1, "At least one pincode is required"),
+    skills: z.array(z.string()).default([]),
+    pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format").optional(),
+    gst_number: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GST format").optional().nullable(),
+    entity_type: z.enum(["individual", "firm"]).default("individual"),
 });
 
 export type CreateInstallerInput = z.infer<typeof CreateInstallerSchema>;
@@ -310,14 +313,17 @@ export type ApplyInstallerInput = z.infer<typeof ApplyInstallerSchema>;
 // ─────────────────────────────────────────────
 
 export const CreatePromoterSchema = z.object({
-  name: z.string().min(2).max(100),
-  business_name: z.string().min(2).max(200),
-  mobile_number: MobileSchema,
-  email: z.string().email("Enter a valid email address"),
-  discount_type: z.enum(["flat", "percent"]),
-  discount_value: z.number().positive(),
-  commission_slabs: z.array(CommissionSlabSchema).default([]),
-  use_global_commission: z.boolean().default(true),
+    name: z.string().min(2).max(100),
+    business_name: z.string().min(2).max(200),
+    mobile_number: MobileSchema,
+    email: z.string().email("Enter a valid email address"),
+    discount_type: z.enum(["flat", "percent"]),
+    discount_value: z.number().positive(),
+    commission_slabs: z.array(CommissionSlabSchema).default([]),
+    use_global_commission: z.boolean().default(true),
+    pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format").optional(),
+    gst_number: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GST format").optional().nullable(),
+    entity_type: z.enum(["individual", "firm"]).default("individual"),
 });
 
 export type CreatePromoterInput = z.infer<typeof CreatePromoterSchema>;

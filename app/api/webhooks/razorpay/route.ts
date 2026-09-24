@@ -93,6 +93,14 @@ export async function POST(req: Request) {
         }
 
         const dQuoteData = dQuoteDoc.data() as any;
+
+        // IDEMPOTENCY CHECK: Ensure we haven't already processed this exact payment
+        const hasProcessed = dQuoteData.payment_history?.some((p: any) => p.payment_id === paymentId);
+        if (hasProcessed) {
+          console.log(`[Razorpay Webhook]: Idempotency caught duplicate delivery webhook for ${paymentId}`);
+          return NextResponse.json({ success: true, note: "Already processed" });
+        }
+
         const paidAmount = paymentEntity.amount / 100;
         const prevPaid = dQuoteData.amount_paid || 0;
 
@@ -138,6 +146,14 @@ export async function POST(req: Request) {
         }
 
         const iQuoteData = iQuoteDoc.data() as any;
+
+        // IDEMPOTENCY CHECK: Ensure we haven't already processed this exact payment
+        const hasProcessed = iQuoteData.payment_history?.some((p: any) => p.payment_id === paymentId);
+        if (hasProcessed) {
+          console.log(`[Razorpay Webhook]: Idempotency caught duplicate installation webhook for ${paymentId}`);
+          return NextResponse.json({ success: true, note: "Already processed" });
+        }
+
         const iPaidAmount = paymentEntity.amount / 100;
         const iPrevPaid = iQuoteData.amount_paid || 0;
 

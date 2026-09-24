@@ -4,6 +4,8 @@ import { adminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
 import { PartnerCommissionsClient } from "@/components/partner/PartnerCommissionsClient";
 import type { CommissionRecord, Lead } from "@/types";
+import { TaxationEngine } from "@/lib/taxation-engine";
+
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,11 @@ export default async function PartnerCommissionsPage() {
   const promoterId = session.promoterId!;
 
   // Fetch commission records for partner
+  
+  const promoterDoc = await adminDb.collection(COLLECTIONS.PROMOTERS).doc(promoterId).get();
+  const promoterData = promoterDoc.data();
+  const hasValidPan = !!(promoterData?.pan_number && promoterData.pan_number.length === 10);
+
   const commsSnap = await adminDb
     .collection(COLLECTIONS.COMMISSION_RECORDS)
     .where("promoter_id", "==", promoterId)
@@ -42,11 +49,30 @@ export default async function PartnerCommissionsPage() {
 
   const records = await Promise.all(recordsPromises);
 
-  const summary = records.reduce((acc, rec) => ({
-    totalEarned: acc.totalEarned + rec.commission_amount,
-    totalPending: acc.totalPending + (rec.status === 'pending' ? rec.commission_amount : 0),
-    totalPaid: acc.totalPaid + (rec.status === 'paid' ? rec.commission_amount : 0),
-  }), { totalEarned: 0, totalPending: 0, totalPaid: 0 });
+  
+  let totalEarned = 0;
+  let totalPending = 0;
+  let totalPaid = 0;
+
+  for (const rec of records) {
+    totalEarned += rec.commission_amount;
+    if (rec.status === 'pending') totalPending += rec.commission_amount;
+    if (rec.status === 'paid') totalPaid += rec.commission_amount;
+  }
+
+  // Calculate strict TDS via the engine for the pending amount (or total year depending on design, but let's just do it over totalEarned to show their net liability)
+  const tdsCalculation = await TaxationEngine.calculate194H(totalEarned, 0, hasValidPan);
+  
+  const summary = {
+    totalEarned,
+    totalPending,
+    totalPaid,
+    tdsDeducted: tdsCalculation.tdsAmount,
+    netPayable: tdsCalculation.netPayable,
+    tdsRatePercent: tdsCalculation.tdsRatePercent,
+    hasValidPan
+  };
+
 
   return (
     <PartnerCommissionsClient 

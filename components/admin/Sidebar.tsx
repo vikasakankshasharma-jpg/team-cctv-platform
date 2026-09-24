@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Truck,  FileSpreadsheet,  useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
@@ -10,7 +10,7 @@ import {
   ChevronRight, Calendar, IndianRupee, Zap, Link2, Megaphone,
   Grid3x3, PanelLeftClose, PanelLeftOpen, Database, Building2,
   HeartPulse, MapPin, Bell, Menu, X, Sparkles, FileEdit,
-} from "lucide-react";
+  } from "lucide-react";
 
 // ─── NAVIGATION STRUCTURE ─────────────────────────────────────────────────────
 
@@ -73,7 +73,8 @@ const NAV_GROUPS = [
   },
   {
     label: "System",
-    items: [
+      items: [
+        { name: "Staff & Roles", href: "/admin/staff", icon: ShieldCheck },
       { name: "Settings",   href: "/admin/settings",     icon: Settings },
       { name: "Audit Logs", href: "/admin/reports/logs", icon: ShieldCheck },
     ],
