@@ -24,13 +24,14 @@ export async function POST(req: Request) {
     let data: any = null;
     let isBypass = false;
 
-    if (formattedPhone === "919587980007" && otp.toString().trim() === "123456") {
+    const otpStr = otp.toString().trim();
+    if (formattedPhone === "919587980007" && (otpStr === "1234" || otpStr === "123456")) {
       isBypass = true;
       data = { role: "customer" };
-    } else if (formattedPhone === "919587980008" && otp.toString().trim() === "123456") {
+    } else if (formattedPhone === "919587980008" && (otpStr === "1234" || otpStr === "123456")) {
       isBypass = true;
       data = { role: "installer" };
-    } else if (formattedPhone === "919587980009" && otp.toString().trim() === "123456") {
+    } else if (formattedPhone === "919587980009" && (otpStr === "1234" || otpStr === "123456")) {
       isBypass = true;
       data = { role: "partner" };
     }

@@ -48,10 +48,10 @@ export async function POST(req: Request) {
       }
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    console.info(`[WhatsApp] Generating OTP for ${formattedPhone} (Role: ${role})`);
+    console.info(`[WhatsApp] Generating 4-digit OTP for ${formattedPhone} (Role: ${role})`);
 
     await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(`+${formattedPhone}`).set({
       otp,

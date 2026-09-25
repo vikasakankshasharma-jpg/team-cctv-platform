@@ -12,7 +12,8 @@ import {
   AlertCircle,
   CheckCircle2, 
   Lock,
-  MessageCircle
+  MessageCircle,
+  Clipboard
 } from "lucide-react";
 import { auth } from "@/lib/firebase-client";
 import { signInWithCustomToken, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
@@ -26,8 +27,8 @@ export function CustomerLoginClient() {
   const [mobile, setMobile] = useState("");
   const [method, setMethod] = useState<"sms" | "whatsapp">("whatsapp");
   const [step, setStep] = useState<1 | 2>(1);
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const otpRef = useRef<string[]>(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", ""]);
+  const otpRef = useRef<string[]>(["", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -141,8 +142,8 @@ export function CustomerLoginClient() {
 
   const handleVerifyOtp = async (e?: React.FormEvent, explicitCode?: string) => {
     e?.preventDefault();
-    const code = (typeof explicitCode === "string" && explicitCode.length === 6) ? explicitCode : otp.join("");
-    if (code.length < 6) return;
+    const code = (typeof explicitCode === "string" && explicitCode.length === 4) ? explicitCode : otp.join("");
+    if (code.length < 4) return;
     
     setError("");
     setLoading(true);
@@ -214,10 +215,10 @@ export function CustomerLoginClient() {
     newOtp[index] = value;
     setOtp(newOtp);
     otpRef.current = newOtp;
-    if (value !== "" && index < 5) {
+    if (value !== "" && index < 3) {
       otpInputsRef.current[index + 1]?.focus();
     }
-    if (value !== "" && index === 5 && newOtp.every((v) => v !== "")) {
+    if (value !== "" && index === 3 && newOtp.every((v) => v !== "")) {
       const fullCode = newOtp.join("");
       setTimeout(() => {
         handleVerifyOtp(undefined, fullCode);
@@ -233,7 +234,7 @@ export function CustomerLoginClient() {
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
     if (pastedData) {
       const newOtp = [...otp];
       for (let i = 0; i < pastedData.length; i++) {
@@ -241,8 +242,8 @@ export function CustomerLoginClient() {
       }
       setOtp(newOtp);
       otpRef.current = newOtp;
-      if (pastedData.length === 6) {
-        otpInputsRef.current[5]?.focus();
+      if (pastedData.length === 4) {
+        otpInputsRef.current[3]?.focus();
         setTimeout(() => {
           handleVerifyOtp(undefined, pastedData);
         }, 50);
@@ -364,8 +365,8 @@ export function CustomerLoginClient() {
             <button
               onClick={() => {
                 setStep(1);
-                setOtp(["", "", "", "", "", ""]);
-                otpRef.current = ["", "", "", "", "", ""];
+                setOtp(["", "", "", ""]);
+                otpRef.current = ["", "", "", ""];
                 setError("");
               }}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors mb-4"
@@ -381,12 +382,12 @@ export function CustomerLoginClient() {
               {customerName && customerName !== "Valued Customer" ? (
                 <>Welcome back, <strong className="text-zinc-900 dark:text-white">{customerName}</strong>! </>
               ) : null}
-              We sent a 6-digit code via {method === "sms" ? "SMS" : "WhatsApp"} to <strong className="text-zinc-900 dark:text-white">+91 {mobile}</strong>.
+              We sent a 4-digit code via {method === "sms" ? "SMS" : "WhatsApp"} to <strong className="text-zinc-900 dark:text-white">+91 {mobile}</strong>.
             </p>
 
             <form onSubmit={handleVerifyOtp} className="space-y-6">
-              {/* 6 Digit Input boxes */}
-              <div className="flex justify-between gap-2 sm:gap-2.5">
+              {/* 4 Digit Input boxes */}
+              <div className="flex justify-center gap-3 sm:gap-4">
                 {otp.map((digit, idx) => (
                   <input
                     key={idx}
@@ -398,9 +399,33 @@ export function CustomerLoginClient() {
                     onChange={(e) => handleOtpChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     onPaste={handlePaste}
-                    className="w-11 sm:w-13 h-14 sm:h-16 text-center text-xl sm:text-2xl font-black bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-2xl text-zinc-900 dark:text-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none transition-all"
+                    className="w-14 sm:w-16 h-16 sm:h-18 text-center text-2xl sm:text-3xl font-black bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-2xl text-zinc-900 dark:text-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none transition-all shadow-sm"
                   />
                 ))}
+              </div>
+
+              <div className="flex justify-center -mt-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      const clean = text.replace(/\D/g, "").slice(0, 4);
+                      if (clean.length === 4) {
+                        const arr = clean.split("");
+                        setOtp(arr);
+                        otpRef.current = arr;
+                        handleVerifyOtp(undefined, clean);
+                      }
+                    } catch (e) {
+                      console.warn("Clipboard read not supported:", e);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-3.5 py-1.5 rounded-full transition-colors cursor-pointer"
+                >
+                  <Clipboard className="w-3.5 h-3.5" />
+                  Paste 4-Digit Code
+                </button>
               </div>
 
               {error && (
