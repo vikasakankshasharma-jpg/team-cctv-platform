@@ -128,246 +128,260 @@ export function InstantQuotationReview({
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-4 space-y-8 animate-in fade-in duration-300">
-      {/* 1. TOP NAVIGATION & PACKAGE SUMMARY */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6">
-        <div className="space-y-1">
-          <button
-            onClick={step === 1 ? onBack : () => setStep(1)}
-            className="inline-flex items-center text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 gap-1.5 mb-2 group transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            {step === 1 ? "Back to Package Selection" : "Back to System Details"}
-          </button>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">
-              {step === 1 ? "Instant Quotation Review" : "Customize & Add-ons"}
-            </h1>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-              {brandName} • {techName}
-            </span>
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 space-y-4 sm:space-y-6 animate-in fade-in duration-300">
+      {/* 1. TOP NAVIGATION & BADGES */}
+      <div className="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <button
+          onClick={step === 1 ? onBack : () => setStep(1)}
+          className="inline-flex items-center text-xs font-bold text-gray-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 gap-1.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 px-3 py-1.5 rounded-full shadow-xs transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>{step === 1 ? "Back to Packages" : "Back to Summary"}</span>
+        </button>
+
+        <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+          {brandName} • {techName === "HD" ? "Standard HD" : "Premium IP"}
+        </span>
+      </div>
+
+      {/* 2. HERO QUOTATION CARD — Above The Fold Instant Price Clarity */}
+      <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] sm:text-xs uppercase font-black text-blue-300 tracking-wider">Confirmed Quotation</span>
+              <span className="text-[9px] sm:text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">Best Value</span>
+            </div>
+            <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white">
+              {brandName} {techName === "HD" ? "Standard HD" : "Premium IP"} Setup
+            </h2>
+            <p className="text-[11px] sm:text-xs text-blue-200/80 mt-0.5">
+              Complete system for {camCount} Cameras with {selection.recording_days || 7} Days Storage
+            </p>
           </div>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {step === 1 
-              ? "Review your complete itemized system breakdown below. You can customize accessories and add-ons in the next step."
-              : "Select any additional accessories needed for your premises. The quotation above recalculates instantly in real time."
-            }
-          </p>
+
+          <div className="flex items-center justify-between sm:flex-col sm:items-end bg-white/10 backdrop-blur-md px-3.5 py-2 sm:p-4 rounded-xl border border-white/10 shrink-0">
+            <span className="text-[10px] uppercase font-semibold text-blue-200">Total All-Inclusive Price</span>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-xl sm:text-3xl font-black text-white">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
+            </div>
+            <span className="hidden sm:block text-[9px] text-emerald-300 font-semibold mt-0.5">✓ Includes Hardware + Wiring + Installation</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          {step === 1 ? (
-            <Button
-              onClick={() => setStep(2)}
-              className="bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white font-bold px-6 py-2.5 rounded-full shadow-lg text-sm flex items-center gap-2 group"
-            >
-              Next: Customize & Add-ons
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </Button>
-          ) : (
-            <Button
-              onClick={onProceedToActualQuotation}
-              disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-600/20 text-sm flex items-center gap-2 group"
-            >
-              {isSaving ? "Finalizing Quote..." : "Proceed to Final Quotation"}
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </Button>
-          )}
+        {/* Value Badges Strip */}
+        <div className="mt-3.5 pt-3 border-t border-white/10 grid grid-cols-3 gap-2 text-center text-[10px] sm:text-xs font-semibold text-blue-100">
+          <div className="flex items-center justify-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="truncate">100% Genuine</span>
+          </div>
+          <div className="flex items-center justify-center gap-1">
+            <Wrench className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate">Free On-Site Install</span>
+          </div>
+          <div className="flex items-center justify-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <span className="truncate">1 Year Warranty</span>
+          </div>
         </div>
+      </div>
+
+      {/* 3. COMPACT SPECIFICATIONS — 3x2 on mobile, 6x1 on desktop */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
+          <Camera className="w-4 h-4 text-blue-600 mx-auto mb-1" />
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Cameras</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{camCount}x {techName}</div>
+        </div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
+          <Server className="w-4 h-4 text-indigo-600 mx-auto mb-1" />
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Recorder</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{brandName} {techName === "IP" ? "NVR" : "DVR"}</div>
+        </div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
+          <HardDrive className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Storage</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{selection.recording_days || 7} Days</div>
+        </div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
+          <Cable className="w-4 h-4 text-amber-600 mx-auto mb-1" />
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Cabling</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">Copper Wire</div>
+        </div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
+          <Wrench className="w-4 h-4 text-purple-600 mx-auto mb-1" />
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Installation</div>
+          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">Included</div>
+        </div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
+          <ShieldCheck className="w-4 h-4 text-rose-600 mx-auto mb-1" />
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Warranty</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">1 Year Brand</div>
+        </div>
+      </div>
+
+      {/* 4. TAB TOGGLE: BREAKDOWN VS ADD-ONS */}
+      <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl max-w-md mx-auto">
+        <button
+          onClick={() => setStep(1)}
+          className={`flex-1 py-2 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
+            step === 1 ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          📋 Itemized Breakdown
+        </button>
+        <button
+          onClick={() => setStep(2)}
+          className={`flex-1 py-2 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            step === 2 ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          <span>🎁 Add-ons & Extras</span>
+          {(selection.selected_addons || []).length > 0 && (
+            <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">
+              {(selection.selected_addons || []).length}
+            </span>
+          )}
+        </button>
       </div>
 
       {step === 1 && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-
-      {/* 2. SPECIFICATION HIGHLIGHTS */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-center shadow-xs">
-          <Camera className="w-5 h-5 text-blue-600 mx-auto mb-1.5" />
-          <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Cameras</div>
-          <div className="text-sm font-bold text-zinc-900 dark:text-white mt-0.5">{camCount}x {techName}</div>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-center shadow-xs">
-          <Server className="w-5 h-5 text-indigo-600 mx-auto mb-1.5" />
-          <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Recorder</div>
-          <div className="text-sm font-bold text-zinc-900 dark:text-white mt-0.5">{brandName} {techName === "IP" ? "NVR" : "DVR"}</div>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-center shadow-xs">
-          <HardDrive className="w-5 h-5 text-emerald-600 mx-auto mb-1.5" />
-          <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Recording Days</div>
-          <div className="text-sm font-bold text-zinc-900 dark:text-white mt-0.5">{selection.recording_days || 7} Days Storage</div>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-center shadow-xs">
-          <Cable className="w-5 h-5 text-amber-600 mx-auto mb-1.5" />
-          <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Cabling</div>
-          <div className="text-sm font-bold text-zinc-900 dark:text-white mt-0.5">Heavy Copper Wire</div>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-center shadow-xs">
-          <Wrench className="w-5 h-5 text-purple-600 mx-auto mb-1.5" />
-          <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Installation</div>
-          <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">Included</div>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-center shadow-xs">
-          <ShieldCheck className="w-5 h-5 text-rose-600 mx-auto mb-1.5" />
-          <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Warranty</div>
-          <div className="text-sm font-bold text-zinc-900 dark:text-white mt-0.5">1 Year Brand</div>
-        </div>
-      </div>
-
-      {/* 3. ITEMIZED BILL OF MATERIALS (BOM) */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden">
-        <div className="px-6 py-4 bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-600" />
-            <h2 className="text-base font-bold text-zinc-900 dark:text-white">
-              Itemized Bill of Materials (Complete Quotation)
-            </h2>
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* MOBILE ITEM CARDS (sm:hidden) */}
+          <div className="sm:hidden space-y-2">
+            {activePricing.items.map((item, idx) => (
+              <div key={idx} className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-between gap-2 shadow-xs">
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{item.display_name}</div>
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    Qty: {item.qty} {item.unit_price > 0 ? `• ₹${item.unit_price.toLocaleString("en-IN")} each` : '• Free Included'}
+                  </div>
+                </div>
+                <div className="text-xs font-black text-zinc-900 dark:text-white shrink-0">
+                  {item.line_total > 0 ? `₹${item.line_total.toLocaleString("en-IN")}` : <span className="text-emerald-600 text-[11px]">FREE</span>}
+                </div>
+              </div>
+            ))}
+            {activePricing.addons && activePricing.addons.length > 0 && activePricing.addons.map((addon, idx) => (
+              <div key={`addon-${idx}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between gap-2 shadow-xs">
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-blue-950 dark:text-blue-200 truncate">{addon.display_name}</div>
+                  <div className="text-[11px] text-blue-700/80 dark:text-blue-400">Add-on • Qty: {addon.qty || 1}</div>
+                </div>
+                <div className="text-xs font-black text-blue-900 dark:text-blue-200 shrink-0">
+                  +₹{((addon.price || 0) * (addon.qty || 1)).toLocaleString("en-IN")}
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center gap-3 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="w-3.5 h-3.5" /> 100% Genuine Products
-            </span>
-            <span className="hidden sm:inline">•</span>
-            <span className="inline-flex items-center gap-1">
-              <Shield className="w-3.5 h-3.5" /> GST Invoice Available
-            </span>
-          </div>
-        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                  <th className="py-3 px-4 w-12 text-center min-w-[48px]">#</th>
-                  <th className="py-3 px-4 min-w-[220px]">Item & Description</th>
-                  <th className="py-3 px-4 hidden sm:table-cell min-w-[120px]">Brand / Tech</th>
-                  <th className="py-3 px-4 text-center min-w-[60px]">Qty</th>
-                  <th className="py-3 px-4 text-right min-w-[90px]">Unit Price (₹)</th>
-                  <th className="py-3 px-4 text-right min-w-[90px]">Line Total (₹)</th>
-                </tr>
-              </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-300">
-              {activePricing.items.map((item, idx) => (
-                <tr key={idx} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors">
-                  <td className="py-3 px-4 text-center text-xs text-zinc-400">{idx + 1}</td>
-                  <td className="py-3 px-4">
-                    <div className="font-semibold text-zinc-900 dark:text-white flex items-center gap-2 flex-wrap">
-                      {item.display_name}
-                      {item.product_id === "labor_install" && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-md">
-                          Installation Service
-                        </span>
-                      )}
-                      {item.product_id === "cabling_material" && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 rounded-md">
-                          Wiring & Cabling
-                        </span>
-                      )}
-                    </div>
-                    {item.product_id && (
-                      <div className="text-[11px] text-zinc-400 font-mono mt-0.5">{item.product_id}</div>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 hidden sm:table-cell text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    {item.product_id === "labor_install" ? "On-Site Service" : item.product_id === "cabling_material" ? "Wiring Material" : (item.brand || "—")}
-                  </td>
-                  <td className="py-3 px-4 text-center font-bold text-zinc-900 dark:text-white">
-                    {item.qty}
-                  </td>
-                  <td className="py-3 px-4 text-right text-zinc-600 dark:text-zinc-400">
-                    ₹{item.unit_price.toLocaleString("en-IN")}
-                  </td>
-                  <td className="py-3 px-4 text-right font-bold text-zinc-900 dark:text-white">
-                    ₹{item.line_total.toLocaleString("en-IN")}
-                  </td>
-                </tr>
-              ))}
-
-              {/* Selected Add-ons Line Items */}
-              {activePricing.addons && activePricing.addons.length > 0 && activePricing.addons.map((addon, idx) => (
-                <tr key={`addon-${idx}`} className="bg-blue-50/40 dark:bg-blue-950/20 hover:bg-blue-50/60 dark:hover:bg-blue-950/40 transition-colors">
-                  <td className="py-3 px-4 text-center text-xs text-blue-500 font-bold">+</td>
-                  <td className="py-3 px-4">
-                    <div className="font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
-                      {addon.display_name}
-                      <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 rounded">Add-on</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 hidden sm:table-cell text-xs text-blue-600 dark:text-blue-300">
-                    Accessory
-                  </td>
-                  <td className="py-3 px-4 text-center font-bold text-blue-900 dark:text-blue-200">
-                    {addon.qty || 1}
-                  </td>
-                  <td className="py-3 px-4 text-right text-blue-700 dark:text-blue-300">
-                    ₹{addon.price.toLocaleString("en-IN")}
-                  </td>
-                  <td className="py-3 px-4 text-right font-bold text-blue-900 dark:text-blue-200">
-                    ₹{(addon.price * (addon.qty || 1)).toLocaleString("en-IN")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* FINANCIAL TOTALS SUMMARY BAR */}
-        <div className="p-6 bg-zinc-50 dark:bg-zinc-800/40 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
-            <p>• Prices include standard cabling and professional on-site installation.</p>
-            <p>• GST 18% is computed on taxable equipment and labor value.</p>
-          </div>
-          
-          <div className="w-full sm:w-84 space-y-2 text-sm">
-            <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-              <span>Equipment & Hardware:</span>
-              <span className="font-medium text-zinc-900 dark:text-white">₹{activePricing.base_hardware_cost?.toLocaleString("en-IN")}</span>
+          {/* DESKTOP BOM TABLE (hidden sm:block) */}
+          <div className="hidden sm:block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden">
+            <div className="px-6 py-3 bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-blue-600" />
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Itemized Bill of Materials</h3>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-3.5 h-3.5" /> 100% Genuine Brand Products
+              </div>
             </div>
-            {activePricing.labor_cost > 0 && (
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                    <th className="py-2.5 px-4 w-12 text-center">#</th>
+                    <th className="py-2.5 px-4">Item & Description</th>
+                    <th className="py-2.5 px-4 text-center">Qty</th>
+                    <th className="py-2.5 px-4 text-right">Unit Price</th>
+                    <th className="py-2.5 px-4 text-right">Line Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-300">
+                  {activePricing.items.map((item, idx) => (
+                    <tr key={idx} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
+                      <td className="py-2.5 px-4 text-center text-xs text-zinc-400">{idx + 1}</td>
+                      <td className="py-2.5 px-4 font-medium text-zinc-900 dark:text-white">{item.display_name}</td>
+                      <td className="py-2.5 px-4 text-center font-bold">{item.qty}</td>
+                      <td className="py-2.5 px-4 text-right text-zinc-600 dark:text-zinc-400">₹{item.unit_price.toLocaleString("en-IN")}</td>
+                      <td className="py-2.5 px-4 text-right font-bold text-zinc-900 dark:text-white">₹{item.line_total.toLocaleString("en-IN")}</td>
+                    </tr>
+                  ))}
+                  {activePricing.addons && activePricing.addons.length > 0 && activePricing.addons.map((addon, idx) => (
+                    <tr key={`addon-${idx}`} className="bg-blue-50/40 dark:bg-blue-950/20">
+                      <td className="py-2.5 px-4 text-center text-xs text-blue-500 font-bold">+</td>
+                      <td className="py-2.5 px-4 font-semibold text-blue-900 dark:text-blue-200">{addon.display_name}</td>
+                      <td className="py-2.5 px-4 text-center font-bold text-blue-900 dark:text-blue-200">{addon.qty || 1}</td>
+                      <td className="py-2.5 px-4 text-right text-blue-700 dark:text-blue-300">₹{addon.price.toLocaleString("en-IN")}</td>
+                      <td className="py-2.5 px-4 text-right font-bold text-blue-900 dark:text-blue-200">₹{((addon.price || 0) * (addon.qty || 1)).toLocaleString("en-IN")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* FINANCIAL TOTALS SUMMARY BAR */}
+          <div className="p-4 sm:p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xs">
+            <div className="w-full max-w-sm ml-auto space-y-2 text-xs sm:text-sm">
               <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-                <span className="flex items-center gap-1">
-                  Installation Labor ({camCount} cameras):
-                </span>
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">₹{activePricing.labor_cost.toLocaleString("en-IN")}</span>
+                <span>Equipment & Hardware:</span>
+                <span className="font-semibold text-zinc-900 dark:text-white">₹{activePricing.base_hardware_cost?.toLocaleString("en-IN")}</span>
               </div>
-            )}
-            {activePricing.cabling_cost > 0 && (
+              {activePricing.labor_cost > 0 && (
+                <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
+                  <span>Installation Labor ({camCount} cameras):</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">₹{activePricing.labor_cost.toLocaleString("en-IN")}</span>
+                </div>
+              )}
+              {activePricing.cabling_cost > 0 && (
+                <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
+                  <span>Cabling & Wiring:</span>
+                  <span className="font-semibold text-zinc-900 dark:text-white">₹{activePricing.cabling_cost.toLocaleString("en-IN")}</span>
+                </div>
+              )}
+              {activePricing.addons_total > 0 && (
+                <div className="flex justify-between text-blue-600 dark:text-blue-400">
+                  <span>Accessories & Add-ons:</span>
+                  <span className="font-bold">+₹{activePricing.addons_total.toLocaleString("en-IN")}</span>
+                </div>
+              )}
+              {activePricing.referral_discount > 0 && (
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                  <span>Discount / Promo:</span>
+                  <span className="font-bold">-₹{activePricing.referral_discount.toLocaleString("en-IN")}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-zinc-600 dark:text-zinc-400 pt-1.5 border-t border-zinc-200 dark:border-zinc-700">
+                <span>Taxable Subtotal:</span>
+                <span className="font-semibold text-zinc-900 dark:text-white">₹{activePricing.net_taxable_amount.toLocaleString("en-IN")}</span>
+              </div>
               <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-                <span>Cabling & Wiring:</span>
-                <span className="font-medium text-zinc-900 dark:text-white">₹{activePricing.cabling_cost.toLocaleString("en-IN")}</span>
+                <span>GST ({activePricing.gst_rate}%):</span>
+                <span className="font-semibold text-zinc-900 dark:text-white">₹{activePricing.gst_amount.toLocaleString("en-IN")}</span>
               </div>
-            )}
-            {activePricing.addons_total > 0 && (
-              <div className="flex justify-between text-blue-600 dark:text-blue-400">
-                <span>Accessories & Add-ons:</span>
-                <span className="font-semibold">+₹{activePricing.addons_total.toLocaleString("en-IN")}</span>
+              <div className="border-t border-zinc-200 dark:border-zinc-700 pt-2 flex justify-between text-sm sm:text-base font-black text-zinc-900 dark:text-white">
+                <span>Total Amount Payable:</span>
+                <span className="text-lg sm:text-2xl font-black text-blue-600 dark:text-blue-400">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
               </div>
-            )}
-            {activePricing.referral_discount > 0 && (
-              <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-                <span>Discount / Promo:</span>
-                <span className="font-semibold">-₹{activePricing.referral_discount.toLocaleString("en-IN")}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-zinc-600 dark:text-zinc-400 pt-1 border-t border-zinc-200 dark:border-zinc-700">
-              <span>Taxable Subtotal:</span>
-              <span className="font-medium text-zinc-900 dark:text-white">₹{activePricing.net_taxable_amount.toLocaleString("en-IN")}</span>
-            </div>
-            <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-              <span>GST ({activePricing.gst_rate}%):</span>
-              <span className="font-medium text-zinc-900 dark:text-white">₹{activePricing.gst_amount.toLocaleString("en-IN")}</span>
-            </div>
-            <div className="border-t border-zinc-200 dark:border-zinc-700 pt-2 flex justify-between text-base font-extrabold text-zinc-900 dark:text-white">
-              <span>Grand Total Payable:</span>
-              <span className="text-xl font-black text-blue-600 dark:text-blue-400">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
             </div>
           </div>
-        </div>
-      </div>
 
-          <div className="flex justify-end pt-2 pb-6">
-            <Button onClick={() => setStep(2)} className="bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-extrabold px-4 md:px-8 py-3.5 rounded-full text-base shadow-xl transition-transform active:scale-95 group">
-              Next: Customize & Add-ons <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+          {/* ACTION BUTTONS ROW */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 pb-6">
+            <button 
+              onClick={() => setStep(2)} 
+              className="w-full sm:w-auto px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+            >
+              ➕ Customize Accessories & Add-ons
+            </button>
+            <Button
+              onClick={onProceedToActualQuotation}
+              disabled={isSaving}
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm flex items-center justify-center gap-2 group cursor-pointer"
+            >
+              {isSaving ? "Finalizing Quote..." : "Proceed to Final Quotation →"}
             </Button>
           </div>
         </div>

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check, MessageCircle, Building2, Edit3, Calendar, MapPin, RefreshCw } from "lucide-react";
+import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check, MessageCircle, Building2, Edit3, Calendar, MapPin, RefreshCw, Download, Sparkles, CheckCircle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { RevisionBanner } from "@/components/quote/RevisionBanner";
 import { BillingOverviewModal, BillingFormData } from "@/components/checkout/BillingOverviewModal";
@@ -432,38 +432,40 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const [isSurveyModalOpen, setIsSurveyModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-zinc-900 font-sans pb-36 md:pb-24 selection:bg-zinc-200">
-      <div className="max-w-[800px] mx-auto px-4 sm:px-6 pt-12 sm:pt-20">
+    <div className="min-h-screen bg-[#F8FAFC] text-zinc-900 font-sans pb-36 md:pb-24 selection:bg-zinc-200">
+      <div className="max-w-[840px] mx-auto px-3 sm:px-6 pt-3 sm:pt-8">
 
-        {/* Top Actions & Status */}
-        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-          <div className="flex flex-wrap items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
-            {!accepted && (
-              <button onClick={() => window.history.back()} className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-600 hover:text-zinc-900 bg-white sm:bg-transparent px-3 py-1.5 sm:p-0 rounded-full border sm:border-0 shadow-sm sm:shadow-none transition-colors">
-                <ChevronLeft className="w-4 h-4" /> Modify Configuration
-              </button>
+        {/* Top Navigation & Status Bar */}
+        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex items-center justify-between gap-2 mb-4">
+          {!accepted ? (
+            <button
+              onClick={() => window.history.back()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-full shadow-xs hover:bg-zinc-50 active:scale-95 transition-all"
+            >
+              <ChevronLeft className="w-4 h-4 text-zinc-500" /> Modify Setup
+            </button>
+          ) : <div />}
+
+          <div className="flex items-center gap-2">
+            <StatusBadge status={accepted ? "accepted" : quote.status} />
+            {!accepted && daysLeft > 0 && (
+              <span className="text-[11px] font-semibold text-zinc-500 hidden sm:inline">
+                ({daysLeft}d validity)
+              </span>
             )}
-            <div className="flex items-center gap-2">
-              <StatusBadge status={accepted ? "accepted" : quote.status} />
-              {!accepted && daysLeft > 0 && (
-                <span className="text-[11px] sm:text-xs font-medium text-zinc-500 tracking-wide">
-                  ({daysLeft}d left)
-                </span>
-              )}
-            </div>
+            <button
+              onClick={handleRequestPdf}
+              disabled={isRequestingPdf}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full shadow-xs hover:bg-emerald-100 transition-all ${isRequestingPdf ? "opacity-70 cursor-not-allowed" : ""}`}
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden xs:inline">{isRequestingPdf ? "Sending..." : "PDF on WhatsApp"}</span>
+              <span className="xs:hidden">WhatsApp</span>
+            </button>
           </div>
-          
-          <button
-            onClick={handleRequestPdf}
-            disabled={isRequestingPdf}
-            className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-50/80 sm:bg-white border border-emerald-200 rounded-xl sm:rounded-full shadow-sm hover:bg-emerald-100 hover:shadow transition-all ${isRequestingPdf ? "opacity-70 cursor-not-allowed" : ""}`}
-          >
-            <MessageCircle className="w-4 h-4 text-emerald-600" />
-            {isRequestingPdf ? "Sending..." : "Get PDF on WhatsApp"}
-          </button>
         </motion.div>
 
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-4 sm:space-y-6">
           
           <RevisionBanner 
             version={quote.version || 1} 
@@ -471,137 +473,220 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             revisionNotes={quote.revisionNotes} 
           />
 
-          {/* Main Quote Document */}
-          <motion.div variants={fadeIn} className="bg-white rounded-2xl sm:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 overflow-hidden">
+          {/* High-Impact Hero Quotation Card */}
+          <motion.div variants={fadeIn} className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-5 sm:p-7 shadow-xl border border-blue-900/40 overflow-hidden">
+            {/* Ambient Backlight */}
+            <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
             
-            {/* Header */}
-            <div className="px-5 py-6 sm:px-10 sm:py-10 bg-white border-b border-zinc-100">
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-6">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 mb-1">{t("quotation", "Quotation")}</h1>
-                  <p className="text-zinc-400 font-semibold tracking-wide text-xs sm:text-sm">#{quote.quoteNumber}</p>
+            <div className="relative z-10">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3.5 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <ShieldCheck className="w-3 h-3" /> Official Quotation
+                  </span>
+                  <span className="text-xs text-blue-200 font-mono font-medium">#{quote.quoteNumber}</span>
                 </div>
-                <div className="text-left sm:text-right">
-                  <div className="font-bold text-zinc-900 text-sm sm:text-base">TEAM CCTV</div>
-                  <div className="text-zinc-500 text-xs sm:text-sm mt-0.5">Smart Security Solutions</div>
-                  <div className="text-zinc-400 text-[11px] sm:text-xs">Jaipur, Rajasthan</div>
+                <div className="text-[11px] text-slate-300 flex items-center gap-1 font-medium">
+                  <Clock className="w-3.5 h-3.5 text-amber-400" /> 14-Day Price Lock
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mt-6 sm:mt-10 pt-4 sm:pt-0 border-t border-zinc-50 sm:border-0">
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Date</p>
-                  <p className="text-xs sm:text-sm font-semibold text-zinc-900">{formatDate(quote.issuedAt)}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200/80">Total All-Inclusive Estimate</p>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-3xl sm:text-4xl font-black tracking-tight text-white">{formatINR(total)}</span>
+                    <span className="text-xs text-emerald-400 font-semibold">Incl. 18% GST</span>
+                  </div>
+                  <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Pay token of <strong>₹500</strong> to book installation slot</span>
+                  </div>
                 </div>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Billed To</p>
+
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 text-xs min-w-[210px]">
+                  <div className="flex items-center justify-between text-slate-300 text-[10px] uppercase tracking-wider font-semibold">
+                    <span>Customer Details</span>
                     <button
                       onClick={() => openBillingModal("advance_500")}
-                      className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5"
+                      className="text-emerald-400 hover:text-emerald-300 flex items-center gap-0.5 font-bold"
                     >
                       <Edit3 className="w-2.5 h-2.5" /> Edit
                     </button>
                   </div>
-                  <p className="text-xs sm:text-sm font-semibold text-zinc-900 truncate">
+                  <p className="font-bold text-white text-sm mt-0.5 truncate">
                     {billingData.is_business && billingData.company_name ? billingData.company_name : (billingData.customer_name || quote.customer.name)}
                   </p>
+                  <p className="text-slate-300 text-[11px] truncate mt-0.5">
+                    {billingData.address_line1 ? `${billingData.address_line1}, ${billingData.city}` : quote.installationAddress}
+                  </p>
                   {billingData.is_business && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 mt-0.5 rounded text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                    <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-200 border border-blue-400/30">
                       GST: {billingData.gstin || 'Registered'}
                     </span>
                   )}
                 </div>
-                <div className="col-span-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Site / Billing Address</p>
-                    <button
-                      onClick={() => openBillingModal("advance_500")}
-                      className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5"
-                    >
-                      <Edit3 className="w-2.5 h-2.5" /> Change
-                    </button>
-                  </div>
-                  <p className="text-xs sm:text-sm font-semibold text-zinc-900 truncate">
-                    {billingData.address_line1 ? `${billingData.address_line1}, ${billingData.city} ${billingData.pincode}` : quote.installationAddress}
-                  </p>
+              </div>
+
+              {/* Trust Badges */}
+              <div className="mt-5 pt-3.5 border-t border-white/10 grid grid-cols-3 gap-2 text-center text-[10px] sm:text-xs text-slate-200">
+                <div className="flex items-center justify-center gap-1 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>100% Genuine</span>
+                </div>
+                <div className="flex items-center justify-center gap-1 font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <span>1-Yr Warranty</span>
+                </div>
+                <div className="flex items-center justify-center gap-1 font-medium">
+                  <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>Next-Day Setup</span>
                 </div>
               </div>
             </div>
+          </motion.div>
 
-            {/* Bill of Materials */}
-            <div className="px-4 py-6 sm:px-10 sm:py-8">
-              <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-900">{t("bill_of_materials", "Bill of Materials")}</h3>
-                <span className="text-[11px] text-zinc-400 sm:hidden">Scroll table horizontally →</span>
+          {/* Itemized Bill of Materials */}
+          <motion.div variants={fadeIn} className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-zinc-200/80 p-4 sm:p-7">
+            <div className="flex items-center justify-between pb-3.5 border-b border-zinc-100 mb-4">
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  {t("bill_of_materials", "Itemized Bill of Materials")}
+                </h3>
+                <p className="text-[11px] text-zinc-500">{quote.lineItems.length} verified components & services</p>
               </div>
-              
-              <div className="overflow-x-auto -mx-2 sm:mx-0 px-2 sm:px-0">
-                <table className="w-full text-left border-collapse min-w-full">
-                  <thead>
-                    <tr className="border-b border-zinc-100">
-                      <th className="pb-3 text-xs font-semibold text-zinc-400">Description</th>
-                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-center">Qty</th>
-                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-right hidden sm:table-cell">Rate</th>
-                      <th className="pb-3 text-xs font-semibold text-zinc-400 text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-50">
-                    {quote.lineItems.map((item) => {
-                      // Clean up undefined text from description
-                      const cleanDescription = (item.description || "").replace(/Camera type: undefined \| /g, "");
-                      return (
-                      <tr key={item.id} className="group hover:bg-zinc-50/50 transition-colors">
-                        <td className="py-4 pr-3">
-                          <p className="text-xs sm:text-sm font-semibold text-zinc-900">{item.name}</p>
-                          <p className="text-[11px] sm:text-xs text-zinc-500 mt-0.5 leading-relaxed">{cleanDescription}</p>
+              <button
+                onClick={handleDownloadPDF}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors"
+              >
+                <Download className="w-3 h-3 text-zinc-600" />
+                <span>PDF</span>
+              </button>
+            </div>
+
+            {/* Mobile View: Clean Card List */}
+            <div className="sm:hidden space-y-2">
+              {quote.lineItems.map((item, idx) => {
+                const cleanDescription = (item.description || "").replace(/Camera type: undefined \| /g, "");
+                return (
+                  <div key={item.id || idx} className="bg-zinc-50/80 rounded-xl p-3 border border-zinc-200/70 flex items-start justify-between gap-2.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-bold text-zinc-500 bg-white px-1.5 py-0.5 rounded border border-zinc-200">
+                          #{idx + 1}
+                        </span>
+                        <p className="text-xs font-bold text-zinc-900 leading-snug">{item.name}</p>
+                      </div>
+                      {cleanDescription && (
+                        <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed line-clamp-2">{cleanDescription}</p>
+                      )}
+                      {item.badge && (
+                        <span
+                          className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide border"
+                          style={{
+                            backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5',
+                            color: item.badge.color || '#52525b',
+                            borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7'
+                          }}
+                        >
+                          {item.badge.label}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="inline-block text-[10px] font-bold text-zinc-700 bg-white px-2 py-0.5 rounded-full border border-zinc-200">
+                        Qty: {item.quantity}
+                      </span>
+                      <p className="text-xs font-black text-zinc-900 mt-1">{formatINR(item.quantity * item.unitPrice)}</p>
+                      {item.quantity > 1 && (
+                        <p className="text-[9px] text-zinc-400">@{formatINR(item.unitPrice)}/ea</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop View: Full Spacious Table */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                    <th className="pb-3 pr-2 w-8">#</th>
+                    <th className="pb-3 pr-4">Description</th>
+                    <th className="pb-3 text-center px-4 w-16">Qty</th>
+                    <th className="pb-3 text-right px-4 w-28">Unit Rate</th>
+                    <th className="pb-3 text-right pl-4 w-32">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 text-sm">
+                  {quote.lineItems.map((item, idx) => {
+                    const cleanDescription = (item.description || "").replace(/Camera type: undefined \| /g, "");
+                    return (
+                      <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
+                        <td className="py-3.5 pr-2 text-xs font-semibold text-zinc-400">{idx + 1}</td>
+                        <td className="py-3.5 pr-4">
+                          <p className="font-semibold text-zinc-900 text-xs sm:text-sm">{item.name}</p>
+                          {cleanDescription && (
+                            <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{cleanDescription}</p>
+                          )}
                           {item.badge && (
-                            <span className="inline-flex mt-1.5 items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border"
-                                  style={{ backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5', color: item.badge.color || '#52525b', borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7' }}>
+                            <span
+                              className="inline-flex mt-1 items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border"
+                              style={{
+                                backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5',
+                                color: item.badge.color || '#52525b',
+                                borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7'
+                              }}
+                            >
                               {item.badge.label}
                             </span>
                           )}
                         </td>
-                        <td className="py-4 text-center text-xs sm:text-sm font-medium text-zinc-700">{item.quantity}</td>
-                        <td className="py-4 text-right text-xs sm:text-sm text-zinc-500 hidden sm:table-cell">{formatINR(item.unitPrice)}</td>
-                        <td className="py-4 text-right text-xs sm:text-sm font-bold text-zinc-900">{formatINR(item.quantity * item.unitPrice)}</td>
+                        <td className="py-3.5 text-center font-medium text-zinc-700">{item.quantity}</td>
+                        <td className="py-3.5 text-right text-zinc-500">{formatINR(item.unitPrice)}</td>
+                        <td className="py-3.5 text-right font-bold text-zinc-900">{formatINR(item.quantity * item.unitPrice)}</td>
                       </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Financial Breakdown Card */}
+            <div className="mt-5 pt-4 border-t border-zinc-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="text-[11px] text-zinc-500 space-y-1">
+                <p>• Prices include standard cabling and professional on-site installation.</p>
+                <p>• GST 18% computed on taxable equipment and labor value.</p>
+                {quote.notes && (
+                  <p className="text-zinc-600 font-medium">Note: {quote.notes} {quote.companyGstin && `| GSTIN: ${quote.companyGstin}`}</p>
+                )}
               </div>
 
-              {/* Totals Section */}
-              <div className="flex justify-end mt-6 sm:mt-8 pt-4 border-t border-zinc-100">
-                <div className="w-full sm:w-64 space-y-2.5">
-                  <div className="flex justify-between text-xs sm:text-sm text-zinc-600">
-                    <span>Subtotal</span>
-                    <span className="font-semibold text-zinc-900">{formatINR(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-[11px] sm:text-xs text-zinc-500">
-                    <span>CGST ({quote.gstPercent / 2}%)</span>
-                    <span>{formatINR(halfGst)}</span>
-                  </div>
-                  <div className="flex justify-between text-[11px] sm:text-xs text-zinc-500 pb-3 border-b border-zinc-100">
-                    <span>SGST ({quote.gstPercent / 2}%)</span>
-                    <span>{formatINR(halfGst)}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-1">
-                    <span className="text-sm sm:text-base font-bold text-zinc-900">{t("total", "Total")}</span>
-                    <span className="text-lg sm:text-xl font-black tracking-tight text-zinc-900">{formatINR(total)}</span>
-                  </div>
+              <div className="w-full sm:w-72 bg-zinc-50 rounded-xl p-3.5 border border-zinc-200/80 space-y-2 text-xs">
+                <div className="flex justify-between text-zinc-600">
+                  <span>Taxable Subtotal</span>
+                  <span className="font-semibold text-zinc-900">{formatINR(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-[11px] text-zinc-500">
+                  <span>CGST ({quote.gstPercent / 2}%)</span>
+                  <span>{formatINR(halfGst)}</span>
+                </div>
+                <div className="flex justify-between text-[11px] text-zinc-500 pb-2 border-b border-zinc-200">
+                  <span>SGST ({quote.gstPercent / 2}%)</span>
+                  <span>{formatINR(halfGst)}</span>
+                </div>
+                <div className="flex justify-between items-baseline pt-1">
+                  <span className="text-sm font-bold text-zinc-900">{t("total", "Grand Total")}</span>
+                  <span className="text-lg font-black tracking-tight text-blue-950">{formatINR(total)}</span>
+                </div>
+                <div className="flex justify-between items-center pt-1.5 border-t border-dashed border-zinc-200 text-emerald-700 font-bold text-[11px]">
+                  <span>Booking Advance Due</span>
+                  <span className="text-xs font-black">{formatINR(advance)}</span>
                 </div>
               </div>
             </div>
-            
-            {/* Footer Notes */}
-            {quote.notes && (
-              <div className="px-5 py-4 sm:px-10 sm:py-6 bg-zinc-50/80 border-t border-zinc-100">
-                <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Notes</p>
-                <p className="text-[11px] sm:text-xs text-zinc-600 leading-relaxed">{quote.notes} {quote.companyGstin && `| GSTIN: ${quote.companyGstin}`}</p>
-              </div>
-            )}
           </motion.div>
 
           {/* Visual Comparison */}
@@ -667,31 +752,71 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         
-                        {/* Option A: Smart Pay (Full Discount) */}
-                        <div className="relative p-6 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border-2 border-indigo-200 dark:border-indigo-800 flex flex-col justify-between shadow-sm group hover:shadow-md transition-all">
+                        {/* Option 1: Standard Milestone (Recommended / Lowest Upfront) */}
+                        <div className="relative p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 flex flex-col justify-between shadow-sm group hover:shadow-md transition-all">
                           <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2">
-                            <span className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
-                              Most Popular 🌟
+                            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
+                              Recommended 🌟
                             </span>
                           </div>
                           
                           <div>
-                            <h4 className="text-lg font-black text-indigo-950 dark:text-indigo-100 mb-1">Smart Pay</h4>
-                            <p className="text-xs text-indigo-800/70 dark:text-indigo-200/70 leading-relaxed mb-4">
-                              Pay 100% upfront securely online and get a flat 2% instant discount on your total quote value.
+                            <div className="flex items-baseline justify-between mb-1">
+                              <h4 className="text-lg font-black text-emerald-950">Milestone Plan</h4>
+                              <span className="text-xs font-bold text-emerald-700">₹500 Today</span>
+                            </div>
+                            <p className="text-xs text-emerald-900/70 leading-relaxed mb-4">
+                              Lowest upfront friction. Pay just ₹500 booking token now, 90% at material delivery, and 10% after successful installation.
                             </p>
                             
-                            <div className="bg-white/60 dark:bg-black/20 rounded-xl p-3 mb-5 border border-indigo-100 dark:border-indigo-900/50">
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-xs font-medium text-indigo-900/60 dark:text-indigo-300">Total:</span>
-                                <span className="text-xs font-medium text-indigo-900/60 dark:text-indigo-300 line-through">₹{total.toLocaleString('en-IN')}</span>
+                            <div className="space-y-2 text-xs text-zinc-700 bg-white/70 rounded-xl p-3 mb-5 border border-emerald-100">
+                              <div className="flex items-center justify-between border-b border-emerald-100/70 pb-1">
+                                <span className="font-medium">1. Booking Token:</span>
+                                <span className="font-black text-emerald-700">₹500</span>
                               </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-bold text-indigo-900 dark:text-indigo-100">Discounted:</span>
-                                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">₹{Math.round(total * 0.98).toLocaleString('en-IN')}</span>
+                              <div className="flex items-center justify-between border-b border-emerald-100/70 pb-1">
+                                <span className="font-medium">2. At Delivery (90%):</span>
+                                <span className="font-bold text-zinc-900">₹{Math.round((total - 500) * 0.90).toLocaleString('en-IN')}</span>
                               </div>
-                              <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 text-right mt-0.5">
-                                (Save ₹{Math.round(total * 0.02).toLocaleString('en-IN')})
+                              <div className="flex items-center justify-between pt-0.5">
+                                <span className="font-medium">3. Post-Setup (10%):</span>
+                                <span className="font-bold text-zinc-900">₹{Math.round((total - 500) * 0.10).toLocaleString('en-IN')}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={() => openBillingModal("advance_500")}
+                            disabled={isPayingAdvance || isPayingFull || isPayingEMI}
+                            className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                          >
+                            <ShieldCheck className="w-4 h-4 text-emerald-200" />
+                            Book with ₹500 Advance
+                          </button>
+                        </div>
+
+                        {/* Option 2: Smart Pay (Full Discount) */}
+                        <div className="p-6 rounded-2xl bg-zinc-50 border border-zinc-200 flex flex-col justify-between hover:border-zinc-300 transition-all">
+                          <div>
+                            <div className="flex items-baseline justify-between mb-1">
+                              <h4 className="text-lg font-black text-zinc-900">Smart Pay</h4>
+                              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">Save 2%</span>
+                            </div>
+                            <p className="text-xs text-zinc-500 leading-relaxed mb-4">
+                              Pay 100% upfront securely online and get a flat 2% instant discount on your total quotation.
+                            </p>
+                            
+                            <div className="bg-white rounded-xl p-3 mb-5 border border-zinc-200/80 space-y-1">
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-zinc-500">Regular Total:</span>
+                                <span className="text-zinc-400 line-through">₹{total.toLocaleString('en-IN')}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="font-bold text-zinc-900">Discounted:</span>
+                                <span className="text-sm font-black text-emerald-600">₹{Math.round(total * 0.98).toLocaleString('en-IN')}</span>
+                              </div>
+                              <div className="text-[10px] font-bold text-emerald-600 text-right">
+                                Instant Savings: ₹{Math.round(total * 0.02).toLocaleString('en-IN')}
                               </div>
                             </div>
                           </div>
@@ -699,32 +824,35 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           <button
                             onClick={() => openBillingModal("full_discount")}
                             disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                            className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                            className="w-full py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl text-sm shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                           >
-                            <CreditCard className="w-4 h-4" />
-                            Pay Full Amount
+                            <CreditCard className="w-4 h-4 text-zinc-300" />
+                            Pay ₹{Math.round(total * 0.98).toLocaleString('en-IN')}
                           </button>
                         </div>
                         
-                        {/* Option B: Flexi EMI */}
-                        <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
+                        {/* Option 3: Flexi EMI */}
+                        <div className="p-6 rounded-2xl bg-zinc-50 border border-zinc-200 flex flex-col justify-between hover:border-zinc-300 transition-all">
                           <div>
-                            <h4 className="text-lg font-black text-zinc-900 dark:text-white mb-1">Flexi EMI 💳</h4>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-4">
-                              Convert your payment into easy monthly instalments. No Cost EMI available on select major credit cards.
+                            <div className="flex items-baseline justify-between mb-1">
+                              <h4 className="text-lg font-black text-zinc-900">Flexi EMI</h4>
+                              <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full">Easy EMIs</span>
+                            </div>
+                            <p className="text-xs text-zinc-500 leading-relaxed mb-4">
+                              Convert your payment into easy monthly instalments. No Cost EMI available on major credit cards.
                             </p>
                             
-                            <div className="space-y-2 text-xs text-zinc-600 dark:text-zinc-400 mb-5">
+                            <div className="space-y-2 text-xs text-zinc-600 mb-5 bg-white rounded-xl p-3 border border-zinc-200/80">
                               <div className="flex items-center gap-2">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                 <span>Zero foreclosure charges</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
-                                <span>Instant approval online</span>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Instant bank approval</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                 <span>Up to 12 months tenure</span>
                               </div>
                             </div>
@@ -733,56 +861,31 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           <button
                             onClick={() => openBillingModal("emi")}
                             disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                            className="w-full py-3.5 px-4 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                            className="w-full py-3.5 px-4 bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-bold rounded-xl text-sm shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                           >
-                            {isPayingEMI ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
+                            {isPayingEMI ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4 text-zinc-600" />}
                             View EMI Options
-                          </button>
-                        </div>
-                        
-                        {/* Option C: Standard Milestone */}
-                        <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
-                          <div>
-                            <h4 className="text-lg font-black text-zinc-900 dark:text-white mb-1">Milestone Plan 🛠️</h4>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-4">
-                              Standard installation flow. Pay ₹500 advance now, 90% at material delivery, and 10% after setup.
-                            </p>
-                            
-                            <div className="space-y-2 text-xs text-zinc-600 dark:text-zinc-400 mb-5">
-                              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1">
-                                <span>1. Booking:</span>
-                                <span className="font-bold text-zinc-900 dark:text-white">₹500</span>
-                              </div>
-                              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1">
-                                <span>2. Delivery (90%):</span>
-                                <span className="font-bold text-zinc-900 dark:text-white">₹{Math.round((total - 500) * 0.90).toLocaleString('en-IN')}</span>
-                              </div>
-                              <div className="flex items-center justify-between border-zinc-200 dark:border-zinc-800 pb-1">
-                                <span>3. Install (10%):</span>
-                                <span className="font-bold text-zinc-900 dark:text-white">₹{Math.round((total - 500) * 0.10).toLocaleString('en-IN')}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <button
-                            onClick={() => openBillingModal("advance_500")}
-                            disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                            className="w-full py-3.5 px-4 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-700 dark:border-zinc-600 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
-                          >
-                            <ShieldCheck className="w-4 h-4 text-zinc-400" />
-                            Pay ₹500 Booking
                           </button>
                         </div>
 
                       </div>
                       
-                      <div className="mt-6 text-center">
-                        <button 
+                      {/* Free Physical Site Survey Banner */}
+                      <div className="mt-6 p-4 rounded-2xl bg-purple-50/70 border border-purple-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                            <MapPin className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-xs sm:text-sm font-bold text-purple-950">Want an engineer to inspect your premises first?</p>
+                            <p className="text-[11px] text-purple-700">Schedule a 100% Free Physical Site Survey with zero obligations before paying anything.</p>
+                          </div>
+                        </div>
+                        <button
                           onClick={() => setIsSurveyModalOpen(true)}
-                          className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 underline underline-offset-2 transition-colors inline-flex items-center gap-1.5"
+                          className="px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs transition-all shrink-0 active:scale-95 shadow-xs"
                         >
-                          <MapPin className="w-3.5 h-3.5" />
-                          Not ready to pay? Book a 100% Free Physical Site Survey instead
+                          Book Free Survey
                         </button>
                       </div>
                     </div>
@@ -823,42 +926,43 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         </motion.div>
       </div>
 
-      {/* Mobile-Friendly Sticky Bottom Bar (Sleek, Non-Obtrusive) */}
+      {/* Mobile-Friendly Sticky Bottom Bar */}
       {!accepted && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-xl border-t border-zinc-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Total</span>
-              <span className="text-base font-extrabold text-zinc-900 tracking-tight leading-none">{formatINR(total)}</span>
-              <span className="text-[10px] text-zinc-500 mt-0.5">Adv: {formatINR(advance)}</span>
+        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-xl border-t border-zinc-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-3 py-2 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
+          <div className="flex items-center justify-between gap-1.5 max-w-lg mx-auto">
+            <div className="flex flex-col min-w-0 pr-1">
+              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Booking Token</span>
+              <span className="text-base font-black text-emerald-600 tracking-tight leading-none">{formatINR(advance)}</span>
+              <span className="text-[10px] text-zinc-500 mt-0.5 truncate">Total: {formatINR(total)}</span>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => setIsSurveyModalOpen(true)}
-                className="flex items-center justify-center gap-1 px-3 py-2.5 bg-purple-100 hover:bg-purple-200 text-purple-900 border border-purple-300 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0"
+                className="flex items-center justify-center gap-1 px-2.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-xl text-xs font-bold transition-all active:scale-95"
+                title="Schedule Free Physical Survey"
               >
                 <Calendar className="w-3.5 h-3.5 text-purple-700" />
-                Free Survey
+                <span className="hidden xs:inline">Survey</span>
               </button>
 
               <button
                 onClick={() => openBillingModal("advance_500")}
                 disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50 shadow-sm shrink-0"
+                className="flex items-center justify-center gap-1 px-3 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50 shadow-sm"
               >
-                <CreditCard className="w-3.5 h-3.5" />
-                Pay ₹500
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Pay ₹500</span>
               </button>
 
-                <button
-                  onClick={handleRequestPdf}
-                  disabled={isRequestingPdf}
-                  className={`flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors shrink-0 ${isRequestingPdf ? "opacity-70 cursor-not-allowed" : ""}`}
-                  title="WhatsApp PDF"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                </button>
+              <button
+                onClick={handleRequestPdf}
+                disabled={isRequestingPdf}
+                className={`flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors shrink-0 ${isRequestingPdf ? "opacity-70 cursor-not-allowed" : ""}`}
+                title="Send Quote to WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4 text-emerald-600" />
+              </button>
             </div>
           </div>
         </div>

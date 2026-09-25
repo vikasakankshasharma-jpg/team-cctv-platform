@@ -573,65 +573,64 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           </div>
         )}
 
-        {/* PRICE MATCH — Subtle inline link (main UX is via the smart popup) */}
-        <div className="mb-16">
-          {priceMatchSubmitted ? (
-            <div className="max-w-xl mx-auto rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 md:p-8 sm:p-12 text-center shadow-sm animate-in fade-in zoom-in-95 duration-500">
-              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+        {/* PRICE MATCH — Subtle inline link (Only in catalog view) */}
+        {viewMode === 'catalog' && (
+          <div className="mb-16">
+            {priceMatchSubmitted ? (
+              <div className="max-w-xl mx-auto rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 md:p-8 sm:p-12 text-center shadow-sm animate-in fade-in zoom-in-95 duration-500">
+                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <h4 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">{t("wz_quote_received")}</h4>
+                <p className="text-[15px] text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
+                  {t("wz_weaposve_received_your_quote_o")}
+                </p>
               </div>
-              <h4 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">{t("wz_quote_received")}</h4>
-              <p className="text-[15px] text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-                
-                                              {t("wz_weaposve_received_your_quote_o")}
-                                            </p>
-            </div>
-          ) : showPriceMatchUploader ? (
-            <div className="max-w-xl mx-auto animate-in slide-in-from-top-4 fade-in duration-400">
-              <CompetitorQuoteUploader
-                leadId={lead.id!}
-                customerName={lead.customer_name}
-                onSubmit={async (data) => {
-                  setIsPriceMatchSubmitting(true);
-                  try {
-                    const res = await fetch(`/api/leads/${lead.id}/price-match`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(data),
-                    });
-                    if (!res.ok) throw new Error("Failed to submit price match");
-                    setPriceMatchSubmitted(true);
-                    setShowPriceMatchUploader(false);
-                  } catch (err) {
-                    console.error(err);
-                    throw err;
-                  } finally {
-                    setIsPriceMatchSubmitting(false);
-                  }
-                }}
-                onCancel={() => setShowPriceMatchUploader(false)}
-              />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-3 py-4">
-              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center">
-                <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            ) : showPriceMatchUploader ? (
+              <div className="max-w-xl mx-auto animate-in slide-in-from-top-4 fade-in duration-400">
+                <CompetitorQuoteUploader
+                  leadId={lead.id!}
+                  customerName={lead.customer_name}
+                  onSubmit={async (data) => {
+                    setIsPriceMatchSubmitting(true);
+                    try {
+                      const res = await fetch(`/api/leads/${lead.id}/price-match`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(data),
+                      });
+                      if (!res.ok) throw new Error("Failed to submit price match");
+                      setPriceMatchSubmitted(true);
+                      setShowPriceMatchUploader(false);
+                    } catch (err) {
+                      console.error(err);
+                      throw err;
+                    } finally {
+                      setIsPriceMatchSubmitting(false);
+                    }
+                  }}
+                  onCancel={() => setShowPriceMatchUploader(false)}
+                />
               </div>
-              <span className="text-[13px] text-zinc-500 dark:text-zinc-400">
-                
-                                                      {t("wz_already_have_a_quote_from_anot")}
-                                                    </span>
-              <button
-                onClick={() => setShowPriceMatchUploader(true)}
-                className="group inline-flex items-center gap-1 text-[13px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-              >
-                
-                                                      {t("wz_upload_it_for_a_guaranteed_bes")}
-                                                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="flex items-center justify-center gap-3 py-4">
+                <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <span className="text-[13px] text-zinc-500 dark:text-zinc-400">
+                  {t("wz_already_have_a_quote_from_anot")}
+                </span>
+                <button
+                  onClick={() => setShowPriceMatchUploader(true)}
+                  className="group inline-flex items-center gap-1 text-[13px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer"
+                >
+                  {t("wz_upload_it_for_a_guaranteed_bes")}
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* FULL INSTANT QUOTATION REVIEW & ADD-ONS */}
