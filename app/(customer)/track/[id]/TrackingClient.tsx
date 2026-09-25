@@ -1,25 +1,54 @@
 "use client";
 
-import { CheckCircle2, CircleDashed, MapPin, Package, Phone, ShieldCheck, Truck, Wrench } from "lucide-react";
+import { 
+  CheckCircle2, 
+  MapPin, 
+  Package, 
+  Phone, 
+  ShieldCheck, 
+  Truck, 
+  Wrench, 
+  Download, 
+  FileText, 
+  ExternalLink,
+  Receipt,
+  IndianRupee,
+  Clock
+} from "lucide-react";
+import Link from "next/link";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion } from "framer-motion";
 import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
 
-export default function TrackingClient({ lead, job, quote }: { lead: any, job: any, quote: any }) {
+interface TrackingClientProps {
+  lead: any;
+  job: any;
+  quote: any;
+  invoice?: any;
+}
+
+export default function TrackingClient({ lead, job, quote, invoice }: TrackingClientProps) {
   const { t } = useTranslation();
 
   // Determine current step index
   let currentStep = 1; // 1: Order Confirmed
-  if (job) currentStep = 2; // 2: Dispatching
-  if (job?.status === "dispatched" || job?.status === "in_progress" || lead.assigned_to_installer_id) currentStep = 3; // 3: Installer En-Route
-  if (lead.status === "won" && lead.installation_proof_url) currentStep = 4; // 4: Completed
+  if (job) currentStep = 2; // 2: Equipment Ready / Dispatching
+  if (job?.status === "dispatched" || job?.status === "in_progress" || lead.assigned_to_installer_id || lead.status === "site_visit") currentStep = 3; // 3: Installer En-Route
+  if (lead.status === "won" && (lead.installation_proof_url || lead.install_status === "COMPLETED")) currentStep = 4; // 4: Completed
 
   const steps = [
-    { num: 1, label: t("track_step_1", "Order Confirmed"), desc: t("track_step_1_desc", "Payment received & verified."), icon: ShieldCheck },
-    { num: 2, label: t("track_step_2", "Equipment Ready"), desc: t("track_step_2_desc", "Your cameras are ready to be sent."), icon: Package },
-    { num: 3, label: t("track_step_3", "Installer on the Way"), desc: t("track_step_3_desc", "An installer is assigned to you."), icon: Truck },
-    { num: 4, label: t("track_step_4", "Installation Complete"), desc: t("track_step_4_desc", "Your installation is done."), icon: Wrench },
+    { num: 1, label: t("track_step_1", "Order Confirmed"), desc: t("track_step_1_desc", "Booking verified & hardware mapped."), icon: ShieldCheck },
+    { num: 2, label: t("track_step_2", "Equipment Ready"), desc: t("track_step_2_desc", "Hardware packaged & dispatched from hub."), icon: Package },
+    { num: 3, label: t("track_step_3", "Installer on the Way"), desc: t("track_step_3_desc", "Field technician scheduled for your site."), icon: Truck },
+    { num: 4, label: t("track_step_4", "Installation Complete"), desc: t("track_step_4_desc", "Cameras mounted & testing verified."), icon: Wrench },
   ];
+
+  const targetQuoteId = quote?.id || lead?.latest_quote_id || lead?.won_quote_id || lead?.id;
+  const totalAmount = quote?.total_payable || quote?.pricingSnapshot?.total_payable || lead?.total_payable || 0;
+  const isAdvancePaid = (quote?.amount_paid || 0) >= 500 || lead?.booking_amount > 0 || lead?.payment_status === "advance_paid" || quote?.status === "BOOKED";
+  const isFullyPaid = quote?.status === "PAID" || quote?.payment_status === "paid" || lead?.payment_status === "paid";
+  const amountPaid = quote?.amount_paid || (isAdvancePaid ? 500 : 0);
+  const amountDue = isFullyPaid ? 0 : Math.max(0, totalAmount - amountPaid);
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-6 md:py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-blue-500/30">
@@ -27,16 +56,85 @@ export default function TrackingClient({ lead, job, quote }: { lead: any, job: a
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="max-w-2xl mx-auto space-y-8"
+        className="max-w-2xl mx-auto space-y-6 sm:space-y-8"
       >
         
         {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center p-4 bg-blue-600/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full mb-2">
-            <ShieldCheck className="w-10 h-10" />
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center justify-center p-3.5 bg-blue-600/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl mb-1">
+            <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white">{t("track_installation", "Track Your Installation")}</h1>
-          <p className="text-zinc-500 dark:text-zinc-400 font-medium text-lg">{t("track_order_num", "Order")} #{lead.id?.substring(0,8).toUpperCase()}</p>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-white">
+            {t("track_installation", "Track Your Installation")}
+          </h1>
+          <p className="text-zinc-500 dark:text-zinc-400 font-mono text-xs sm:text-sm font-bold">
+            Order Reference: #{lead.id?.substring(0, 10).toUpperCase()}
+          </p>
+        </div>
+
+        {/* ── FINANCIAL & DOCUMENT ACTIONS BAR ── */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Total Setup Cost</p>
+              <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100">
+                ₹{totalAmount.toLocaleString("en-IN")}
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-2">
+              {isAdvancePaid && !isFullyPaid && (
+                <div className="px-3 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-400 text-xs font-bold">
+                  ₹{amountPaid.toLocaleString("en-IN")} Advance Paid • Balance Due: ₹{amountDue.toLocaleString("en-IN")}
+                </div>
+              )}
+              {isFullyPaid && (
+                <div className="px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Fully Paid
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Document Download Buttons */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {/* Tax Invoice / Booking Receipt Download */}
+            {(isAdvancePaid || isFullyPaid || invoice) && targetQuoteId && (
+              <a
+                href={`/api/invoice/${targetQuoteId}/download`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs transition-all active:scale-98"
+              >
+                <Download className="w-4 h-4" />
+                <span>{isFullyPaid ? "Download Tax Invoice" : "Download Advance Receipt"}</span>
+              </a>
+            )}
+
+            {/* View Full Quotation */}
+            {targetQuoteId && (
+              <Link
+                href={`/quote/${lead.id}/review/${targetQuoteId}`}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold transition-all"
+              >
+                <FileText className="w-4 h-4 text-zinc-400" />
+                <span>View Full Quotation</span>
+              </Link>
+            )}
+
+            {/* Download Quote PDF */}
+            {targetQuoteId && (
+              <a
+                href={`/api/quote/${targetQuoteId}/download`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold transition-all"
+              >
+                <Download className="w-4 h-4 text-zinc-400" />
+                <span>Quote PDF</span>
+              </a>
+            )}
+          </div>
         </div>
 
         {/* OTP Secure Box (Only visible when active & installer assigned, but not yet completed) */}
@@ -69,7 +167,7 @@ export default function TrackingClient({ lead, job, quote }: { lead: any, job: a
         )}
 
         {/* Payment Stages Timeline */}
-        <PaymentStagesWidget quoteId={quote?.id || lead?.id || quote?.lead_id} lead={lead} quote={quote} />
+        <PaymentStagesWidget quoteId={targetQuoteId} lead={lead} quote={quote} />
 
         {/* Progress Stepper */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 sm:p-10 shadow-xl shadow-zinc-200/20 dark:shadow-none">
@@ -108,15 +206,15 @@ export default function TrackingClient({ lead, job, quote }: { lead: any, job: a
           <div>
             <h4 className="font-black text-xs text-zinc-900 dark:text-white uppercase tracking-widest mb-2">{t("track_service_address", "Service Address")}</h4>
             <p className="text-base text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
-              <span className="text-zinc-900 dark:text-white">{lead.customer_name}</span><br/>
-              {lead.address?.full_address || lead.detected_city || t("track_address_not_provided", "Address not provided")}<br/>
+              <span className="text-zinc-900 dark:text-white font-bold">{lead.customer_name}</span><br/>
+              {lead.address?.full_address || lead.address?.street || lead.detected_city || t("track_address_not_provided", "Address not provided")}<br/>
               {lead.mobile_number}
             </p>
           </div>
         </div>
         
         {/* Help */}
-        <div className="text-center pt-8">
+        <div className="text-center pt-4">
           <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
             {t("track_need_help", "Need help? Contact support at")} <a href="tel:18001234567" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-bold hover:underline transition-all">1800-123-4567</a>
           </p>

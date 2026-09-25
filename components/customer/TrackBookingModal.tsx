@@ -63,20 +63,20 @@ export function TrackBookingModal({ isOpen, onClose }: TrackBookingModalProps) {
             <TranslatedText tKey="track_booking" defaultText="Track Booking" />
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-6">
-            <TranslatedText tKey="track_booking_desc" defaultText="Enter your Quote ID (or Booking Reference) to track your installation progress." />
+            <TranslatedText tKey="track_booking_desc" defaultText="Enter your 10-digit Mobile Number or Quote ID to track your order and download invoices." />
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">
-                <TranslatedText tKey="quote_id_ref" defaultText="Quote ID / Reference" />
+                <TranslatedText tKey="quote_id_ref" defaultText="Mobile Number or Quote ID" />
               </label>
               <input
                 type="text"
                 required
                 value={referenceId}
                 onChange={(e) => setReferenceId(e.target.value)}
-                placeholder="e.g. pqoxwCJsCfk..."
+                placeholder="e.g. 9876543210 or QT-2026-..."
                 className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono text-sm dark:text-white"
               />
             </div>

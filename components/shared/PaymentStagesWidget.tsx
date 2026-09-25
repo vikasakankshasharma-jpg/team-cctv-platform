@@ -29,36 +29,46 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
   const stage3Amount = Math.round(remaining * 0.10);
 
   // Status Logic
-  // Stage 1 (Booking) is paid if payment_status is any of these or if booking_amount > 0
+  // Stage 1 (Booking) is paid if payment_status is any of these or if booking_amount > 0 or amount_paid >= 500
   const isStage1Paid = 
-    lead?.booking_amount > 0 || 
+    (lead?.booking_amount > 0 || quote?.booking_amount > 0 || (quote?.amount_paid || 0) >= 500 || (lead?.amount_paid || 0) >= 500) || 
     ["advance_paid", "delivery_paid", "paid", "captured"].includes(lead?.payment_status) ||
-    lead?.status === "booked" || 
-    lead?.status === "won" ||
-    lead?.status === "dispatched" ||
-    lead?.status === "delivered";
+    ["advance_paid", "delivery_paid", "paid", "captured"].includes(quote?.payment_status) ||
+    ["booked", "won", "dispatched", "delivered"].includes(String(lead?.status || "").toLowerCase()) || 
+    ["booked", "paid"].includes(String(quote?.status || "").toLowerCase());
 
   // Stage 2 (Delivery) is unlocked if dispatched or delivered
   const isStage2Unlocked = 
     lead?.delivery_status === "DISPATCHED" || 
     lead?.delivery_status === "DELIVERED" || 
-    ["delivery_paid", "paid"].includes(lead?.payment_status);
+    quote?.delivery_status === "DISPATCHED" ||
+    quote?.delivery_status === "DELIVERED" ||
+    ["delivery_paid", "paid"].includes(lead?.payment_status) ||
+    ["delivery_paid", "paid"].includes(quote?.payment_status);
 
   // Stage 2 is paid if delivery_paid or fully paid
   const isStage2Paid = 
     lead?.delivery_amount > 0 || 
-    ["delivery_paid", "paid"].includes(lead?.payment_status);
+    quote?.delivery_amount > 0 ||
+    ["delivery_paid", "paid"].includes(lead?.payment_status) ||
+    ["delivery_paid", "paid"].includes(quote?.payment_status);
 
   // Stage 3 (Installation) is unlocked if installation is complete or delivery is done (and they're paying on spot)
   const isStage3Unlocked = 
     lead?.install_status === "COMPLETED" || 
     lead?.completion_pin_verified === true ||
-    lead?.payment_status === "paid";
+    lead?.status === "won" ||
+    lead?.payment_status === "paid" ||
+    quote?.payment_status === "paid" ||
+    quote?.status === "COMPLETED";
 
   // Stage 3 is paid if fully paid
   const isStage3Paid = 
     lead?.installation_amount > 0 || 
-    lead?.payment_status === "paid";
+    quote?.installation_amount > 0 ||
+    lead?.payment_status === "paid" ||
+    quote?.payment_status === "paid" ||
+    quote?.status === "COMPLETED";
 
   const handlePayNow = async (paymentType: string) => {
     try {

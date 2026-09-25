@@ -355,7 +355,14 @@ export async function POST(req: Request) {
             status: "won",
             payment_status: quotePaymentStatus,
             won_quote_id: quoteId,
+            latest_quote_id: quoteId,
+            last_quote_id: quoteId,
             paid_amount: expectedRupees,
+            amount_paid: actualPaid,
+            booking_amount: isAdvance ? actualPaid : (quoteData.booking_amount || actualPaid),
+            amount_due: actualDue,
+            quote_ids: arrayUnion(quoteId),
+            quotes: arrayUnion({ quoteId, status: quoteNewStatus, amount_paid: actualPaid }),
             updated_at: serverTimestamp(),
           });
         }

@@ -4,6 +4,8 @@ import { renderToStream } from "@react-pdf/renderer";
 import { InvoicePDFDocument } from "@/lib/pdf/invoice-pdf";
 import React from "react";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ quoteId: string }> }
@@ -14,10 +16,27 @@ export async function GET(
     let doc = await adminDb.collection("quotes").doc(quoteId).get();
     
     if (!doc.exists) {
-      // 1. Try finding in collectionGroup quotes
+      doc = await adminDb.collection("quotes").doc(quoteId.toUpperCase()).get();
+    }
+
+    if (!doc.exists) {
+      // 1. Try finding in invoices collection
+      const invDoc = await adminDb.collection("invoices").doc(quoteId).get();
+      if (invDoc.exists) {
+        doc = invDoc as any;
+      } else {
+        const invSnap = await adminDb.collection("invoices").where("quote_id", "==", quoteId).limit(1).get();
+        if (!invSnap.empty) {
+          doc = invSnap.docs[0] as any;
+        }
+      }
+    }
+
+    if (!doc.exists) {
+      // 2. Try finding in collectionGroup quotes
       try {
         const quotesSnap = await adminDb.collectionGroup("quotes").get();
-        const found = quotesSnap.docs.find((d: any) => d.id === quoteId);
+        const found = quotesSnap.docs.find((d: any) => d.id === quoteId || d.id === quoteId.toUpperCase());
         if (found) {
           doc = found as any;
         }
@@ -27,17 +46,7 @@ export async function GET(
     }
 
     if (!doc.exists) {
-      // 2. Try finding in invoices collection
-      const invDoc = await adminDb.collection("invoices").doc(quoteId).get();
-      if (invDoc.exists) {
-        doc = invDoc as any;
-      } else {
-        // 3. Try query by quote_id
-        const invSnap = await adminDb.collection("invoices").where("quote_id", "==", quoteId).limit(1).get();
-        if (!invSnap.empty) {
-          doc = invSnap.docs[0] as any;
-        }
-      }
+      return new NextResponse("Invoice / Quote record not found", { status: 404 });
     }
 
     let leadData: any = {};
@@ -47,6 +56,15 @@ export async function GET(
         leadData = leadSnap?.data() || {};
       } catch (e) {
         console.warn("Parent lead fetch error", e);
+      }
+    } else if (doc.exists) {
+      const qd = doc.data() as any;
+      const lId = qd?.lead_id || qd?.leadId;
+      if (lId) {
+        const lSnap = await adminDb.collection("leads").doc(lId).get();
+        if (lSnap.exists) {
+          leadData = lSnap.data() || {};
+        }
       }
     }
 

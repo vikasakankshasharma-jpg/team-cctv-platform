@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import admin from "firebase-admin";
-
 import { renderToStream } from "@react-pdf/renderer";
 import { QuotePDFDocument } from "@/lib/pdf/quote-pdf";
 import React from "react";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(
   request: Request,
@@ -16,25 +16,47 @@ export async function GET(
     let doc = await adminDb.collection("quotes").doc(quoteId).get();
     
     if (!doc.exists) {
+      doc = await adminDb.collection("quotes").doc(quoteId.toUpperCase()).get();
+    }
+
+    if (!doc.exists) {
+      try {
         const quotesSnap = await adminDb.collectionGroup("quotes").get();
-        const found = quotesSnap.docs.find((d: any) => d.id === quoteId);
-        if (!found) {
-            return new NextResponse("Quote not found", { status: 404 });
+        const found = quotesSnap.docs.find((d: any) => d.id === quoteId || d.id === quoteId.toUpperCase());
+        if (found) {
+          doc = found as any;
         }
-        doc = found as any;
+      } catch (cgErr) {
+        console.warn("CollectionGroup lookup failed:", cgErr);
+      }
     }
     
-    let leadData: any = {};
-    if (doc.ref.parent.parent) {
-        const leadSnap = await doc.ref.parent.parent.get();
-        leadData = leadSnap?.data() || {};
+    if (!doc.exists) {
+      return new NextResponse("Quote not found", { status: 404 });
     }
+
+    let leadData: any = {};
+    if (doc.ref?.parent?.parent) {
+      const leadSnap = await doc.ref.parent.parent.get();
+      leadData = leadSnap?.data() || {};
+    } else {
+      const qData = doc.data() as any;
+      const lId = qData?.lead_id || qData?.leadId;
+      if (lId) {
+        const leadSnap = await adminDb.collection("leads").doc(lId).get();
+        if (leadSnap.exists) {
+          leadData = leadSnap.data() || {};
+        }
+      }
+    }
+
+    const qData = (doc.data() as any) || {};
 
     const quote = {
       id: quoteId,
-      customer_name: leadData.customer_name || "Customer",
-      customer_mobile: leadData.mobile_number || "N/A",
-      ...doc.data()
+      customer_name: qData.customer_name || qData.billing_details?.customer_name || leadData.customer_name || "Valued Client",
+      customer_mobile: qData.customer_mobile || qData.billing_details?.phone || leadData.mobile_number || "N/A",
+      ...qData
     };
 
     // Generate PDF directly in memory
@@ -52,7 +74,8 @@ export async function GET(
     return new NextResponse(readableStream, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="Quote-${quoteId}.pdf"`
+        'Content-Disposition': `inline; filename="Quote-${quoteId}.pdf"`,
+        'Cache-Control': 'no-store, max-age=0'
       }
     });
   } catch (error: any) {
@@ -60,4 +83,3 @@ export async function GET(
     return new NextResponse(error.message, { status: 500 });
   }
 }
-

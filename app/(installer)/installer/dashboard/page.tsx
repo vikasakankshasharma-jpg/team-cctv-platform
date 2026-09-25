@@ -19,7 +19,7 @@ export default async function InstallerDashboardPage() {
   // 2. Fetch Active Leads (Assigned or Broadcasted to this installer)
   const leadsSnap = await adminDb
     .collection(COLLECTIONS.LEADS)
-    .where("status", "in", ["new", "contacted", "site_visit", "negotiation", "quoted"])
+    .where("status", "in", ["new", "contacted", "site_visit", "negotiation", "quoted", "booked", "won", "in_progress"])
     .orderBy("created_at", "desc")
     .limit(100)
     .get();
@@ -27,12 +27,18 @@ export default async function InstallerDashboardPage() {
   const activeLeads: Lead[] = [];
   leadsSnap.docs.forEach((doc) => {
     const data = doc.data();
+    const assignedId = data.assigned_to_installer_id || data.assigned_installer_id;
     // Include if assigned to this installer OR broadcasted to this installer
     if (
-      data.assigned_to_installer_id === installerId ||
+      assignedId === installerId ||
       (data.broadcasted_to_installer_ids && data.broadcasted_to_installer_ids.includes(installerId))
     ) {
-      activeLeads.push({ id: doc.id, ...data } as Lead);
+      activeLeads.push({ 
+        id: doc.id, 
+        ...data,
+        assigned_installer_id: assignedId,
+        assigned_to_installer_id: assignedId
+      } as unknown as Lead);
     }
   });
 
