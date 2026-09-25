@@ -292,9 +292,19 @@ export async function POST(req: Request) {
           server_created_at: serverTimestamp(),
         };
         transaction.set(jobRef, newJob);
-        const isAdvance = paymentEntity.notes?.payment_type === "advance_500_cod";
+        const fullTotal = Number(
+          quoteData.negotiated_final_price ??
+          quoteData.pricingSnapshot?.total_payable ??
+          quoteData.total_payable ??
+          quoteData.total ??
+          expectedRupees
+        );
+        const pType = String(paymentEntity.notes?.payment_type || quoteData.payment_type || "").toLowerCase();
+        const isAdvance = pType.includes("advance") || expectedRupees <= 1000 || (fullTotal > 1000 && expectedRupees < (fullTotal - 10));
         const quoteNewStatus = isAdvance ? "BOOKED" : "PAID";
         const quotePaymentStatus = isAdvance ? "advance_paid" : "paid";
+        const actualPaid = expectedRupees;
+        const actualDue = isAdvance ? Math.max(0, fullTotal - actualPaid) : 0;
 
         // 7. Create Invoice Record
         const invoiceRef = adminDb.collection("invoices").doc(quoteId);
@@ -304,9 +314,12 @@ export async function POST(req: Request) {
           lead_id: quoteData.lead_id || quoteData.leadId || null,
           customer_name: quoteData.customer_name || "",
           customer_mobile: quoteData.customer_mobile || "",
-          total_amount: expectedRupees,
+          total_amount: fullTotal,
+          amount_paid: actualPaid,
+          amount_due: actualDue,
           currency: "INR",
           status: quoteNewStatus,
+          invoice_type: isAdvance ? "advance_receipt" : "tax_invoice",
           payment_id: paymentId,
           order_id: orderId,
           payment_method: paymentEntity.method,
@@ -314,11 +327,15 @@ export async function POST(req: Request) {
           server_created_at: serverTimestamp(),
         });
 
-        // 8. Update Quote Document to BOOKED or PAID
+        // 8. Update Quote Document to BOOKED or PAID with exact amounts
         transaction.update(quoteRef, {
           status: quoteNewStatus,
           payment_status: quotePaymentStatus,
-          amount_paid: expectedRupees,
+          amount_paid: actualPaid,
+          amount_due: actualDue,
+          booking_amount: isAdvance ? actualPaid : (quoteData.booking_amount || 0),
+          delivery_amount: isAdvance ? Math.round(actualDue * 0.9) : 0,
+          installation_amount: isAdvance ? Math.max(0, actualDue - Math.round(actualDue * 0.9)) : 0,
           payment_preference: isAdvance ? "cash_on_delivery" : "online_all",
           payment_history: arrayUnion(buildPaymentRecord(paymentEntity, isAdvance ? "booking" : "full")),
           delivery_status: "PENDING",

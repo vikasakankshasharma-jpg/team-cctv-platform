@@ -36,10 +36,9 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   invoiceTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#16a34a', // Emerald / Green
-    marginBottom: 10,
+    marginBottom: 8,
     textTransform: 'uppercase',
   },
   quoteMetaGrid: {
@@ -60,7 +59,7 @@ const styles = StyleSheet.create({
   quoteMetaValue: {
     fontSize: 8,
     fontWeight: 'bold',
-    width: 85,
+    width: 95,
     textAlign: 'right',
   },
   paidBadge: {
@@ -68,19 +67,19 @@ const styles = StyleSheet.create({
     top: 20,
     right: 25,
     backgroundColor: '#22c55e',
-    paddingVertical: 5,
-    paddingHorizontal: 14,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     borderRadius: 4,
-    transform: 'rotate(12deg)',
+    transform: 'rotate(8deg)',
     borderWidth: 1.5,
     borderColor: '#16a34a',
     zIndex: 10,
   },
   paidBadgeText: {
     color: '#ffffff',
-    fontSize: 12,
+    fontSize: 9,
     fontWeight: 'bold',
-    letterSpacing: 1.5,
+    letterSpacing: 1,
     textAlign: 'center',
   },
   customerSection: {
@@ -259,13 +258,15 @@ const styles = StyleSheet.create({
   },
   watermark: {
     position: 'absolute',
-    top: 350,
-    left: 120,
-    fontSize: 120,
-    color: '#22c55e',
-    transform: 'rotate(-45deg)',
+    top: 360,
+    left: 40,
+    right: 40,
+    fontSize: 70,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    transform: 'rotate(-35deg)',
     zIndex: -1,
-    opacity: 0.15,
+    opacity: 0.12,
   },
 });
 
@@ -343,12 +344,37 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
     quote?.laborCost || 
     0;
 
-    const amountPaid = quote?.amount_paid ?? quote?.paid_amount ?? 0;
-  const amountDue = quote?.amount_due ?? 0;
+  // Authoritative Paid and Due calculation
+  const rawPaid = Number(
+    quote?.amount_paid ?? 
+    quote?.paid_amount ?? 
+    quote?.booking_amount ?? 
+    (quote?.payment_status === 'advance_paid' || quote?.status === 'BOOKED' || String(quote?.payment_type || '').includes('advance') ? 500 : 0)
+  );
+  const amountPaid = isNaN(rawPaid) ? 0 : rawPaid;
+
+  // Fully paid only if total is non-zero and amount paid covers the full total (with 1 rupee rounding tolerance)
+  const isFullyPaid = totalPayable > 0 && amountPaid >= (totalPayable - 1) && quote?.status !== 'BOOKED' && quote?.payment_status !== 'advance_paid';
+  
+  // Advance/Partial paid if booking advance was paid (e.g. ₹500) but full total is not yet settled
+  const isAdvancePaid = !isFullyPaid && (
+    amountPaid > 0 || 
+    quote?.payment_status === 'advance_paid' || 
+    quote?.status === 'BOOKED' || 
+    String(quote?.payment_type || '').includes('advance')
+  );
+
+  const effectivePaid = amountPaid > 0 ? amountPaid : (isAdvancePaid ? 500 : 0);
+
+  const amountDue = isFullyPaid 
+    ? 0 
+    : (typeof quote?.amount_due === 'number' && quote.amount_due > 0 && quote.amount_due <= totalPayable
+        ? quote.amount_due
+        : Math.max(0, totalPayable - effectivePaid));
 
   const pricing = {
     total_payable: totalPayable,
-    amount_paid: amountPaid,
+    amount_paid: effectivePaid,
     amount_due: amountDue,
     items: rawItems,
     addons: rawAddons,
@@ -391,9 +417,29 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
   const isInterState = stateCode !== '08';
   const placeOfSupply = `${billing.state || 'Rajasthan'} (${stateCode})`;
 
-  const badgeText = amountDue > 0 ? (amountPaid > 0 ? 'ADVANCE PAID' : 'UNPAID') : 'PAID';
-  const invoiceStatusColor = amountDue > 0 ? (amountPaid > 0 ? '#f59e0b' : '#ef4444') : '#22c55e';
-  const invoiceStatusBorder = amountDue > 0 ? (amountPaid > 0 ? '#d97706' : '#b91c1c') : '#16a34a';
+  // Authoritative document title, badges and status
+  let documentTitle = 'TAX INVOICE';
+  let badgeText = 'PAID';
+  let invoiceStatusColor = '#16a34a';
+  let invoiceStatusBorder = '#15803d';
+  let supplyTypeLabel = isBusiness ? 'B2B (Tax Invoice)' : 'B2C (Retail Invoice)';
+  let invoiceTypeDesc = isBusiness ? 'GST Input Credit Eligible' : 'Standard Retail Invoice';
+
+  if (isAdvancePaid) {
+    documentTitle = 'ADVANCE RECEIPT';
+    badgeText = 'ADVANCE PAID';
+    invoiceStatusColor = '#d97706'; // Amber / Warning
+    invoiceStatusBorder = '#b45309';
+    supplyTypeLabel = isBusiness ? 'B2B (Advance Booking Receipt)' : 'B2C (Advance Booking Receipt)';
+    invoiceTypeDesc = `Booking Advance (₹${pricing.amount_paid.toLocaleString('en-IN')} Received - Balance Due on Delivery)`;
+  } else if (!isFullyPaid) {
+    documentTitle = 'PROFORMA INVOICE';
+    badgeText = 'UNPAID';
+    invoiceStatusColor = '#dc2626';
+    invoiceStatusBorder = '#b91c1c';
+    supplyTypeLabel = isBusiness ? 'B2B (Proforma Quotation)' : 'B2C (Proforma Quotation)';
+    invoiceTypeDesc = 'Payment Pending';
+  }
 
   return (
     <Document>
@@ -415,23 +461,25 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
             <Text style={styles.companyInfo}>Email: sales@teamcctv.com | Web: cctvquotation.com</Text>
           </View>
           <View style={styles.headerRight}>
-            <Text style={styles.invoiceTitle}>TAX INVOICE</Text>
+            <Text style={[styles.invoiceTitle, { color: invoiceStatusColor }]}>{documentTitle}</Text>
             <View style={styles.quoteMetaGrid}>
               <View style={styles.quoteMetaRow}>
-                <Text style={styles.quoteMetaLabel}>Invoice Ref:</Text>
+                <Text style={styles.quoteMetaLabel}>{isAdvancePaid ? 'Receipt Ref:' : 'Invoice Ref:'}</Text>
                 <Text style={styles.quoteMetaValue}>{invoiceRef}</Text>
               </View>
               <View style={styles.quoteMetaRow}>
-                <Text style={styles.quoteMetaLabel}>Invoice Date:</Text>
+                <Text style={styles.quoteMetaLabel}>{isAdvancePaid ? 'Receipt Date:' : 'Invoice Date:'}</Text>
                 <Text style={styles.quoteMetaValue}>{createdDate}</Text>
               </View>
               <View style={styles.quoteMetaRow}>
                 <Text style={styles.quoteMetaLabel}>Supply Type:</Text>
-                <Text style={styles.quoteMetaValue}>{isBusiness ? 'B2B (Tax Invoice)' : 'B2C (Retail Invoice)'}</Text>
+                <Text style={styles.quoteMetaValue}>{supplyTypeLabel}</Text>
               </View>
               <View style={styles.quoteMetaRow}>
                 <Text style={styles.quoteMetaLabel}>Status:</Text>
-                <Text style={[styles.quoteMetaValue, { color: invoiceStatusColor }]}>{badgeText}</Text>
+                <Text style={[styles.quoteMetaValue, { color: invoiceStatusColor }]}>
+                  {isAdvancePaid ? `ADVANCE PAID (₹${pricing.amount_paid})` : badgeText}
+                </Text>
               </View>
             </View>
           </View>
@@ -457,7 +505,9 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
             <Text style={styles.sectionHeading}>PAYMENT DETAILS:</Text>
             <View style={styles.paymentRow}>
               <Text style={styles.paymentLabel}>Payment ID:</Text>
-              <Text style={styles.paymentValue}>{quote?.payment_id || quote?.paymentId || quote?.razorpay_payment_id || quote?.cf_payment_id || 'PAID (ONLINE)'}</Text>
+              <Text style={styles.paymentValue}>
+                {quote?.payment_id || quote?.paymentId || quote?.razorpay_payment_id || quote?.cf_payment_id || (isAdvancePaid ? `ADVANCE-ONLINE (₹${pricing.amount_paid})` : (isFullyPaid ? 'PAID (ONLINE)' : 'PENDING'))}
+              </Text>
             </View>
             <View style={styles.paymentRow}>
               <Text style={styles.paymentLabel}>Payment Method:</Text>
@@ -468,8 +518,8 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
               <Text style={styles.paymentValue}>{paidDate}</Text>
             </View>
             <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Invoice Type:</Text>
-              <Text style={styles.paymentValue}>{isBusiness ? 'GST Input Credit Eligible' : 'Standard Retail Invoice'}</Text>
+              <Text style={styles.paymentLabel}>Receipt Type:</Text>
+              <Text style={styles.paymentValue}>{invoiceTypeDesc}</Text>
             </View>
           </View>
         </View>
@@ -533,9 +583,11 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
         {/* Bottom Section */}
         <View style={styles.bottomSection}>
           <View style={styles.termsBox}>
-            <Text style={styles.termsTitle}>Terms & Confirmation</Text>
-            <Text style={styles.termsHighlight}>
-              Thank you for your payment! Installation will be scheduled within 48 hours.
+            <Text style={styles.termsTitle}>{isAdvancePaid ? 'Booking Confirmation Terms' : 'Terms & Confirmation'}</Text>
+            <Text style={[styles.termsHighlight, isAdvancePaid ? { color: '#d97706' } : {}]}>
+              {isAdvancePaid
+                ? `Booking confirmed with ₹${pricing.amount_paid.toLocaleString('en-IN')} advance! Remaining balance of ${formatCurrency(pricing.amount_due)} is payable on delivery/installation.`
+                : 'Thank you for your payment! Installation will be scheduled within 48 hours.'}
             </Text>
             <Text style={styles.termsText}>1. Standard 1-Year Warranty on all hardware items unless specified otherwise.</Text>
             <Text style={styles.termsText}>2. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.</Text>
@@ -543,7 +595,6 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
             <Text style={styles.termsText}>4. For any questions or support, please contact us at sales@teamcctv.com.</Text>
           </View>
 
-          
           <View style={styles.totalsBox}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Subtotal:</Text>
@@ -571,18 +622,22 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
               </>
             )}
 
-            <View style={[styles.grandTotalRow, { paddingBottom: 4, borderBottomWidth: amountDue > 0 ? 1 : 0, borderBottomColor: '#e5e7eb' }]}>
+            <View style={[styles.grandTotalRow, { paddingBottom: 4, borderBottomWidth: pricing.amount_due > 0 ? 1 : 0, borderBottomColor: '#e5e7eb' }]}>
               <Text style={styles.grandTotalLabel}>Grand Total:</Text>
               <Text style={styles.grandTotalValue}>{formatCurrency(pricing.total_payable)}</Text>
             </View>
             <View style={[styles.grandTotalRow, { marginTop: 4, paddingTop: 4, borderTopWidth: 0 }]}>
-              <Text style={[styles.grandTotalLabel, { color: '#4b5563', fontSize: 9 }]}>Amount Paid:</Text>
-              <Text style={[styles.grandTotalValue, { color: '#4b5563', fontSize: 10 }]}>{formatCurrency(pricing.amount_paid)}</Text>
+              <Text style={[styles.grandTotalLabel, { color: isAdvancePaid ? '#d97706' : '#4b5563', fontSize: 9 }]}>
+                {isAdvancePaid ? 'Booking Advance Paid:' : 'Amount Paid:'}
+              </Text>
+              <Text style={[styles.grandTotalValue, { color: isAdvancePaid ? '#d97706' : '#4b5563', fontSize: 10 }]}>
+                {formatCurrency(pricing.amount_paid)}
+              </Text>
             </View>
             {pricing.amount_due > 0 && (
               <View style={[styles.grandTotalRow, { marginTop: 4, paddingTop: 4, borderTopWidth: 0 }]}>
-                <Text style={[styles.grandTotalLabel, { color: '#ef4444' }]}>Balance Due:</Text>
-                <Text style={[styles.grandTotalValue, { color: '#ef4444' }]}>{formatCurrency(pricing.amount_due)}</Text>
+                <Text style={[styles.grandTotalLabel, { color: '#dc2626' }]}>Balance Due on Delivery:</Text>
+                <Text style={[styles.grandTotalValue, { color: '#dc2626' }]}>{formatCurrency(pricing.amount_due)}</Text>
               </View>
             )}
           </View>

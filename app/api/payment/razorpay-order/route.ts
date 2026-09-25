@@ -63,6 +63,7 @@ export async function POST(req: Request) {
 
     await quoteRef.update({
       razorpay_order_id: order.id,
+      razorpay_order_amount: chargeAmount,
       payment_type: paymentType,
       updated_at: serverTimestamp(),
     });
