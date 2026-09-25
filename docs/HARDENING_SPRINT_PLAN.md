@@ -311,3 +311,9 @@ These are real, worthwhile ideas surfaced across the reviews — intentionally s
 3. If you find a second implementation of something this doc says should be singular, that's a bug — fix it in the current phase, don't add a third.
 4. Update the checkboxes in this file (or a `STATUS.md` next to it) as you complete tasks, so the next session doesn't redo or contradict your work.
 5. Anything not in Phase 6 is not a growth idea until Phases 0–5 are done — no exceptions, no matter how good the idea is.
+
+## Security Policy: Production Data Mutation
+
+**Rule:** No production data mutation through public diagnostic/test/seed endpoints.
+
+All legitimate maintenance, seed logic, and database updates must reside in the scripts/ directory and be executed locally by authorized operators. These scripts must not contain hardcoded secrets and must never be exposed as public HTTP routes.
