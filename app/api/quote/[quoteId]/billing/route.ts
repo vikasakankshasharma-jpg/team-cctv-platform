@@ -115,6 +115,8 @@ export async function POST(
       state: billingDetails.state?.trim() || "Rajasthan",
       state_code: stateCode,
       pincode: billingDetails.pincode?.trim() || "",
+      coordinates: billingDetails.coordinates || null,
+      google_maps_link: billingDetails.google_maps_link || (billingDetails.coordinates ? `https://maps.google.com/?q=${billingDetails.coordinates.lat},${billingDetails.coordinates.lng}` : ""),
       updated_at: new Date().toISOString(),
     };
 
@@ -136,6 +138,9 @@ export async function POST(
         customer_name: sanitizedBilling.customer_name || quoteSnap.data()?.customer_name,
         company_name: sanitizedBilling.company_name,
         gstin: sanitizedBilling.gstin,
+        installationAddress: sanitizedBilling.address_line1 ? `${sanitizedBilling.address_line1}, ${sanitizedBilling.city} ${sanitizedBilling.pincode}` : quoteSnap.data()?.installationAddress,
+        coordinates: sanitizedBilling.coordinates || null,
+        google_maps_link: sanitizedBilling.google_maps_link || "",
         updated_at: serverTimestamp(),
       }, { merge: true });
 
@@ -147,6 +152,16 @@ export async function POST(
             billing_details: sanitizedBilling,
             company_name: sanitizedBilling.company_name,
             gst_number: sanitizedBilling.gstin,
+            address: {
+              building_no: sanitizedBilling.address_line1,
+              street: sanitizedBilling.address_line1,
+              landmark1: sanitizedBilling.address_line2,
+              city: sanitizedBilling.city,
+              state: sanitizedBilling.state,
+              pincode: sanitizedBilling.pincode,
+              coordinates: sanitizedBilling.coordinates,
+              map_url: sanitizedBilling.google_maps_link
+            },
             updated_at: serverTimestamp(),
           }, { merge: true });
         } catch (leadErr) {

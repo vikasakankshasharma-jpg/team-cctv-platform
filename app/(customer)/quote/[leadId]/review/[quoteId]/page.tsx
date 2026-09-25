@@ -119,42 +119,50 @@ export default async function QuoteReviewPage({
         // NOTE: calculatePricing already adds labor and cabling into the `items` array.
         // We do not need to manually push them again, otherwise we double-count them.
 
+        const rawInstall = quote?.billing_details?.address_line1 
+          ? `${quote.billing_details.address_line1}, ${quote.billing_details.city || ''} ${quote.billing_details.pincode || ''}`
+          : (lead?.address?.street ? `${lead.address.building_no || ''} ${lead.address.street || ''}, ${lead.address.area || ''}, ${lead.address.city || ''} - ${lead.address.pincode || ''}` : (quote?.installationAddress || ""));
+        const cleanInstallAddress = (rawInstall.toLowerCase().includes("address pending") || rawInstall.toLowerCase() === "pending") ? "" : rawInstall;
+
+        const rawLine1 = quote?.billing_details?.address_line1 || lead?.address?.street || lead?.address?.full_address || "";
+        const cleanLine1 = (rawLine1.toLowerCase().includes("address pending") || rawLine1.toLowerCase() === "pending") ? "" : rawLine1;
+
         quoteData = {
           id: quoteId,
-          leadId: leadId,
-          quoteNumber: quote?.quote_number || quoteId.slice(0, 8).toUpperCase(),
-          status: quote?.status || "pending",
-          issuedAt: quote?.created_at?.toDate?.().toISOString() || new Date().toISOString(),
-          validUntil: quote?.valid_until || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          customer: {
-            name: quote?.billing_details?.customer_name || quote?.customer_name || lead?.customer_name || "Valued Customer",
-            phone: quote?.billing_details?.phone || quote?.customer_mobile || lead?.mobile_number || "N/A",
-            email: quote?.billing_details?.email || quote?.customer_email || lead?.email || "",
-          },
-          installationAddress: quote?.billing_details?.address_line1 
-            ? `${quote.billing_details.address_line1}, ${quote.billing_details.city || ''} ${quote.billing_details.pincode || ''}`
-            : (lead?.address ? `${lead.address.building_no || ''} ${lead.address.street || ''}, ${lead.address.area || ''}, ${lead.address.city || ''} - ${lead.address.pincode || ''}` : (quote?.installationAddress || "Address pending")),
-          propertyType: lead?.property_type || "Residential",
-          propertyDetail: lead?.wizard_answers ? JSON.stringify(lead.wizard_answers) : "",
-          siteVisitDate: lead?.site_visit_date || "",
-          lineItems,
-          gstPercent: quote?.gst_rate || 18,
-          advancePercent: quote?.advance_percent || 30, 
-          companyGstin: "08AABCT1234A1ZS",
-          billing_details: quote?.billing_details || lead?.billing_details || {
-            is_business: !!(lead?.is_b2b || quote?.company_name || quote?.gstin || quote?.gst_number || lead?.gst_number),
-            company_name: quote?.company_name || lead?.company_name || "",
-            gstin: quote?.gstin || quote?.gst_number || lead?.gst_number || "",
-            customer_name: lead?.customer_name || quote?.customer_name || "",
-            phone: lead?.mobile_number || quote?.customer_mobile || "",
-            email: lead?.email || "",
-            address_line1: lead?.address?.street || lead?.address?.full_address || "",
-            address_line2: lead?.address?.landmark1 || "",
-            city: lead?.address?.city || "Jaipur",
-            state: lead?.address?.state || "Rajasthan",
-            state_code: "08",
-            pincode: lead?.address?.pincode || "",
-          },
+            leadId: leadId,
+            quoteNumber: quote?.quote_number || quoteId.slice(0, 8).toUpperCase(),
+            status: quote?.status || "pending",
+            issuedAt: quote?.created_at?.toDate?.().toISOString() || new Date().toISOString(),
+            validUntil: quote?.valid_until || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            customer: {
+              name: quote?.billing_details?.customer_name || quote?.customer_name || lead?.customer_name || "Valued Customer",
+              phone: quote?.billing_details?.phone || quote?.customer_mobile || lead?.mobile_number || "N/A",
+              email: quote?.billing_details?.email || quote?.customer_email || lead?.email || "",
+            },
+            installationAddress: cleanInstallAddress,
+            propertyType: lead?.property_type || "Residential",
+            propertyDetail: lead?.wizard_answers ? JSON.stringify(lead.wizard_answers) : "",
+            siteVisitDate: lead?.site_visit_date || "",
+            lineItems,
+            gstPercent: quote?.gst_rate || 18,
+            advancePercent: quote?.advance_percent || 30, 
+            companyGstin: "08AABCT1234A1ZS",
+            billing_details: {
+              is_business: !!(quote?.billing_details?.is_business ?? (lead?.is_b2b || quote?.company_name || quote?.gstin || quote?.gst_number || lead?.gst_number)),
+              company_name: quote?.billing_details?.company_name || quote?.company_name || lead?.company_name || "",
+              gstin: quote?.billing_details?.gstin || quote?.gst_number || lead?.gst_number || "",
+              customer_name: quote?.billing_details?.customer_name || lead?.customer_name || quote?.customer_name || "",
+              phone: quote?.billing_details?.phone || lead?.mobile_number || quote?.customer_mobile || "",
+              email: quote?.billing_details?.email || lead?.email || "",
+              address_line1: cleanLine1,
+              address_line2: quote?.billing_details?.address_line2 || lead?.address?.landmark1 || "",
+              city: quote?.billing_details?.city || lead?.address?.city || "Jaipur",
+              state: quote?.billing_details?.state || lead?.address?.state || "Rajasthan",
+              state_code: quote?.billing_details?.state_code || "08",
+              pincode: quote?.billing_details?.pincode || lead?.address?.pincode || "",
+              coordinates: quote?.billing_details?.coordinates || lead?.address?.coordinates || null,
+              google_maps_link: quote?.billing_details?.google_maps_link || lead?.address?.map_url || "",
+            },
           version: quote?.version || 1,
           isRevision: !!quote?.is_revision,
           revisionNotes: quote?.revision_notes,

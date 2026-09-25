@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { LocationPickerModal } from "./LocationPickerModal";
+
 export interface BillingFormData {
   is_business: boolean;
   company_name: string;
@@ -31,6 +33,8 @@ export interface BillingFormData {
   state: string;
   state_code: string;
   pincode: string;
+  coordinates?: { lat: number; lng: number };
+  google_maps_link?: string;
 }
 
 interface BillingOverviewModalProps {
@@ -44,6 +48,15 @@ interface BillingOverviewModalProps {
   isSubmitting?: boolean;
   mode?: "checkout" | "edit";
 }
+
+const sanitizeAddress = (val?: string) => {
+  if (!val) return "";
+  const lower = val.trim().toLowerCase();
+  if (lower === "address pending" || lower.includes("address pending") || lower === "pending") {
+    return "";
+  }
+  return val.trim();
+};
 
 const INDIAN_STATES = [
   { code: "08", name: "Rajasthan" },
@@ -78,12 +91,15 @@ export function BillingOverviewModal({
   const [customerName, setCustomerName] = useState(initialData?.customer_name || "");
   const [phone, setPhone] = useState(initialData?.phone || "");
   const [email, setEmail] = useState(initialData?.email || "");
-  const [addressLine1, setAddressLine1] = useState(initialData?.address_line1 || "");
+  const [addressLine1, setAddressLine1] = useState(sanitizeAddress(initialData?.address_line1));
   const [addressLine2, setAddressLine2] = useState(initialData?.address_line2 || "");
   const [city, setCity] = useState(initialData?.city || "Jaipur");
   const [state, setState] = useState(initialData?.state || "Rajasthan");
   const [stateCode, setStateCode] = useState(initialData?.state_code || "08");
   const [pincode, setPincode] = useState(initialData?.pincode || "");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>(initialData?.coordinates);
+  const [googleMapsLink, setGoogleMapsLink] = useState<string>(initialData?.google_maps_link || "");
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [gstError, setGstError] = useState("");
 
   useEffect(() => {
@@ -94,12 +110,14 @@ export function BillingOverviewModal({
       if (initialData.customer_name) setCustomerName(initialData.customer_name);
       if (initialData.phone) setPhone(initialData.phone);
       if (initialData.email) setEmail(initialData.email);
-      if (initialData.address_line1) setAddressLine1(initialData.address_line1);
+      if (initialData.address_line1 !== undefined) setAddressLine1(sanitizeAddress(initialData.address_line1));
       if (initialData.address_line2) setAddressLine2(initialData.address_line2);
       if (initialData.city) setCity(initialData.city);
       if (initialData.state) setState(initialData.state);
       if (initialData.state_code) setStateCode(initialData.state_code);
       if (initialData.pincode) setPincode(initialData.pincode);
+      if (initialData.coordinates) setCoords(initialData.coordinates);
+      if (initialData.google_maps_link) setGoogleMapsLink(initialData.google_maps_link);
     }
   }, [initialData]);
 
@@ -164,8 +182,8 @@ export function BillingOverviewModal({
       }
     }
 
-    if (!addressLine1.trim()) {
-      toast.error("Please enter billing / installation street address");
+    if (!addressLine1.trim() || addressLine1.trim().toLowerCase().includes("address pending") || addressLine1.trim().toLowerCase() === "pending") {
+      toast.error("Please enter your complete installation & billing street address");
       return;
     }
 
@@ -187,6 +205,8 @@ export function BillingOverviewModal({
       state: state || "Rajasthan",
       state_code: stateCode || "08",
       pincode: pincode.trim(),
+      coordinates: coords,
+      google_maps_link: googleMapsLink || (coords ? `https://maps.google.com/?q=${coords.lat},${coords.lng}` : ""),
     };
 
     onConfirmPayment(payload, paymentType);
@@ -381,9 +401,21 @@ export function BillingOverviewModal({
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 mb-1 block">
-                  {isBusiness ? "Registered Office / Billing Address" : "Installation & Billing Address"} <span className="text-rose-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-700 block">
+                    {isBusiness ? "Registered Office / Billing Address" : "Installation & Billing Address"} <span className="text-rose-500">*</span>
+                  </label>
+                  {!coords && (
+                    <button
+                      type="button"
+                      onClick={() => setIsMapModalOpen(true)}
+                      className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                    >
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>Set on Map</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   required
@@ -392,6 +424,50 @@ export function BillingOverviewModal({
                   placeholder="Flat/House/Shop No, Building, Street"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                 />
+
+                {/* Location Pin Badge or Action */}
+                <div className="mt-2">
+                  {coords ? (
+                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-900 shadow-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <div className="truncate">
+                          <span className="font-bold">Location Pinned:</span>{" "}
+                          <span className="font-mono text-[11px] font-semibold">{coords.lat.toFixed(4)}°N, {coords.lng.toFixed(4)}°E</span>
+                          {googleMapsLink && (
+                            <a 
+                              href={googleMapsLink} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="text-blue-600 hover:text-blue-800 underline ml-2 font-semibold text-[11px] inline-flex items-center gap-0.5"
+                            >
+                              <span>View Map</span> ↗
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsMapModalOpen(true)}
+                        className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline ml-2 shrink-0"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsMapModalOpen(true)}
+                      className="w-full py-2 px-3 rounded-xl bg-blue-50/80 hover:bg-blue-100/80 text-blue-700 border border-blue-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-98"
+                    >
+                      <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Pin Exact Location on Map</span>
+                      <span className="text-[10px] text-blue-500 font-normal">
+                        ({pincode ? `Referred from PIN ${pincode}` : "Default PIN area"})
+                      </span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -509,6 +585,18 @@ export function BillingOverviewModal({
           </form>
         </motion.div>
       </div>
+
+      {/* Location Pinning Map Modal */}
+      <LocationPickerModal
+        isOpen={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        initialPincode={pincode || "302001"}
+        initialCoords={coords}
+        onConfirm={(newCoords, mapUrl) => {
+          setCoords(newCoords);
+          setGoogleMapsLink(mapUrl);
+        }}
+      />
     </AnimatePresence>
   );
 }
