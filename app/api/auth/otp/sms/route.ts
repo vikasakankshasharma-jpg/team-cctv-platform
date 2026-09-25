@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     console.info(`[WhatsApp] Generating OTP for ${formattedPhone} (Role: ${role})`);

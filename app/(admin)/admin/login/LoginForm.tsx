@@ -81,7 +81,7 @@ export default function AdminLoginForm() {
   const [method, setMethod] = useState<"email" | "mobile">("email");
   const [identifier, setIdentifier] = useState("");
   const [step, setStep] = useState<1 | 2>(1);
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const [otpError, setOtpError] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -23,7 +23,7 @@ export function WizardClientV2() {
   const [leadId, setLeadId] = useState<string | null>(null);
   const [otpSent, setOtpSent] = useState(false);
   const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("whatsapp");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -96,10 +96,10 @@ export function WizardClientV2() {
         })
         .then((otpCred: any) => {
           if (otpCred && otpCred.code) {
-            const digits = otpCred.code.replace(/\D/g, "").slice(0, 6).split("");
-            if (digits.length === 6) {
+            const digits = otpCred.code.replace(/\D/g, "").slice(0, 4).split("");
+            if (digits.length === 4) {
               setOtp(digits);
-              inputRefs.current[5]?.focus();
+              inputRefs.current[3]?.focus();
             }
           }
         })
@@ -111,15 +111,15 @@ export function WizardClientV2() {
   const handleOtpChange = (value: string, index: number) => {
     const clean = value.replace(/\D/g, "");
     if (clean.length > 1) {
-      const digits = clean.slice(0, 6).split("");
+      const digits = clean.slice(0, 4).split("");
       const newOtp = [...otp];
       digits.forEach((d, i) => {
         newOtp[i] = d;
       });
       setOtp(newOtp);
-      const nextIdx = Math.min(digits.length, 5);
+      const nextIdx = Math.min(digits.length, 3);
       inputRefs.current[nextIdx]?.focus();
-      if (digits.length === 6) {
+      if (digits.length === 4) {
         handleVerifyOtp(digits.join(""));
       }
       return;
@@ -134,7 +134,7 @@ export function WizardClientV2() {
       inputRefs.current[index + 1]?.focus();
     }
     
-    if (newOtp.join("").length === 6) {
+    if (newOtp.join("").length === 4) {
       handleVerifyOtp(newOtp.join(""));
     }
   };
@@ -142,7 +142,7 @@ export function WizardClientV2() {
   const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
-    } else if (e.key === "Enter" && otp.join("").length === 6) {
+    } else if (e.key === "Enter" && otp.join("").length === 4) {
       e.preventDefault();
       handleVerifyOtp();
     }
@@ -150,17 +150,17 @@ export function WizardClientV2() {
 
   const handleOtpPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
     if (!pasted) return;
     const digits = pasted.split("");
-    const newOtp = ["", "", "", "", "", ""];
+    const newOtp = ["", "", "", ""];
     digits.forEach((d, i) => {
       newOtp[i] = d;
     });
     setOtp(newOtp);
-    const focusIdx = Math.min(digits.length, 5);
+    const focusIdx = Math.min(digits.length, 3);
     inputRefs.current[focusIdx]?.focus();
-    if (digits.length === 6) {
+    if (digits.length === 4) {
       handleVerifyOtp(digits.join(""));
     }
   };
@@ -230,7 +230,7 @@ export function WizardClientV2() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (step === 5 && otpSent) {
       setOtpSent(false);
-      setOtp(["", "", "", "", "", ""]);
+      setOtp(["", "", "", ""]);
       return;
     }
     setStep(s => Math.max(s - 1, 0));
@@ -284,7 +284,7 @@ export function WizardClientV2() {
         } as any);
         setOtpSent(true);
         setCountdown(30);
-        setOtp(["", "", "", "", "", ""]);
+        setOtp(["", "", "", ""]);
         setLoading(false);
         return;
       }
@@ -309,7 +309,7 @@ export function WizardClientV2() {
       
       setOtpSent(true);
       setCountdown(otpMethod === "sms" ? 30 : 60);
-      setOtp(["", "", "", "", "", ""]);
+      setOtp(["", "", "", ""]);
       toast.success(`${otpMethod === "sms" ? "SMS" : "WhatsApp"} OTP sent to your number.`);
       
     } catch (error: any) {
@@ -984,7 +984,7 @@ export function WizardClientV2() {
                         inputMode="numeric"
                         pattern="[0-9]*"
                         autoComplete={index === 0 ? "one-time-code" : "off"}
-                        maxLength={6}
+                        maxLength={4}
                         value={digit}
                         onChange={(e) => handleOtpChange(e.target.value, index)}
                         onKeyDown={(e) => handleOtpKeyDown(e, index)}
@@ -1014,7 +1014,7 @@ export function WizardClientV2() {
                     type="button"
                     onClick={() => {
                       setOtpSent(false);
-                      setOtp(["", "", "", "", "", ""]);
+                      setOtp(["", "", "", ""]);
                     }}
                     className="text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold transition-colors"
                   >

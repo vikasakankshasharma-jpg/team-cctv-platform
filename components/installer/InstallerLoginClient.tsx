@@ -15,7 +15,7 @@ export function InstallerLoginClient() {
   const [method, setMethod] = useState<"email" | "mobile">("mobile");
   const [identifier, setIdentifier] = useState("");
   const [step, setStep] = useState<1 | 2>(1);
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120);
@@ -341,7 +341,7 @@ export function InstallerLoginClient() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => { setStep(1); setOtp(["","","","","",""]); }}
+                  onClick={() => { setStep(1); setOtp(["","","",""]); }}
                   disabled={timeLeft > 0 || loading}
                   className="text-[10px] font-black text-indigo-600 dark:text-indigo-500 uppercase tracking-widest disabled:opacity-50 hover:underline"
                 >

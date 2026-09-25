@@ -52,7 +52,7 @@ export async function assignJob(
           
           let pin = leadData?.completion_pin;
           if (!pin) {
-            pin = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit PIN
+            pin = Math.floor(1000 + Math.random() * 9000).toString(); // 6-digit PIN
           }
 
           await leadRef.update({

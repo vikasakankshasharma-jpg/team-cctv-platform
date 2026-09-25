@@ -62,7 +62,7 @@ export async function verifyInstallerSession(): Promise<InstallerSession> {
   }
 }
 export function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 export function otpExpiresAt(): Date {
   return new Date(Date.now() + 5 * 60 * 1000);

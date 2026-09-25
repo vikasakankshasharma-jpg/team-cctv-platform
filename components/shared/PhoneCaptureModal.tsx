@@ -15,7 +15,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
   const { t } = useTranslation();
   const [step, setStep] = useState<"phone" | "otp" | "success">("phone");
   const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(0);
@@ -56,7 +56,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
             const credential = content as any;
             if (credential && credential.code) {
               const code = credential.code.replace(/\D/g, "");
-              if (code.length === 6) {
+              if (code.length === 4) {
                 const otpArray = code.split("");
                 setOtp(otpArray);
                 // Trigger auto-submit with a small dynamic micro-delay
@@ -148,15 +148,15 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
   const handleOtpChange = (value: string, index: number) => {
     const clean = value.replace(/\D/g, "");
     if (clean.length > 1) {
-      const digits = clean.slice(0, 6).split("");
+      const digits = clean.slice(0, 4).split("");
       const newOtp = [...otp];
       digits.forEach((d, i) => {
         newOtp[i] = d;
       });
       setOtp(newOtp);
-      const nextIdx = Math.min(digits.length, 5);
+      const nextIdx = Math.min(digits.length, 3);
       inputRefs.current[nextIdx]?.focus();
-      if (digits.length === 6) {
+      if (digits.length === 4) {
         handleVerifyAndSave(undefined, digits.join(""));
       }
       return;
@@ -171,7 +171,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
       inputRefs.current[index + 1]?.focus();
     }
     
-    if (newOtp.join("").length === 6) {
+    if (newOtp.join("").length === 4) {
       handleVerifyAndSave(undefined, newOtp.join(""));
     }
   };
@@ -214,7 +214,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
 
       setStep("success");
     } catch (err: any) {
-      setOtp(["", "", "", "", "", ""]);
+      setOtp(["", "", "", ""]);
       inputRefs.current[0]?.focus();
       
       let errMsg = err.message || "Incorrect code. Please try again.";
@@ -254,7 +254,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
       
       setStep("success");
     } catch (err: any) {
-      setOtp(["", "", "", "", "", ""]);
+      setOtp(["", "", "", ""]);
       
       let errMsg = err.message || "Auto-fill verification failed. Please enter code manually.";
       if (errMsg.includes("auth/invalid-verification-code")) errMsg = "The code you entered is incorrect.";
@@ -366,7 +366,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
                   type="text"
                   inputMode="numeric"
                   autoComplete={i === 0 ? "one-time-code" : "off"}
-                  maxLength={6}
+                  maxLength={4}
                   value={digit}
                   onChange={(e) => handleOtpChange(e.target.value, i)}
                   onKeyDown={(e) => handleKeyDown(e, i)}
@@ -412,7 +412,7 @@ export function PhoneCaptureModal({ pincode, onClose }: PhoneCaptureModalProps) 
                 type="button"
                 onClick={() => {
                   setStep("phone");
-                  setOtp(["", "", "", "", "", ""]);
+                  setOtp(["", "", "", ""]);
                   setCountdown(0);
                   setError("");
                 }}

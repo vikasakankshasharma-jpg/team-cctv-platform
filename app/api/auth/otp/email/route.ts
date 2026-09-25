@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       role = adminData.role || "super_admin";
 
     // Generate random 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     console.info(`[Auth] Generating OTP for ${email}`);
