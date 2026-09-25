@@ -13,17 +13,26 @@ export default async function InstallerLedgerPage() {
   const installerId = session.installerId!;
 
   // 1. Fetch Installer Wallet Balance & Details
-  const installerDoc = await adminDb.collection(COLLECTIONS.INSTALLERS).doc(installerId).get();
+  // 2. Fetch Ledger Transactions
+  // 3. Fetch Pending/Offline Verifications
+  const [installerDoc, ledgerSnap, offlineSnap] = await Promise.all([
+    adminDb.collection(COLLECTIONS.INSTALLERS).doc(installerId).get(),
+    adminDb
+      .collection(COLLECTIONS.LEDGER_TRANSACTIONS)
+      .where("user_id", "==", installerId)
+      .orderBy("created_at", "desc")
+      .limit(50)
+      .get(),
+    adminDb
+      .collection("offline_verifications")
+      .where("installer_id", "==", installerId)
+      .orderBy("created_at", "desc")
+      .limit(50)
+      .get()
+  ]);
+
   const installerData = { id: installerDoc.id, ...installerDoc.data() } as Installer;
   const balance = installerData?.wallet_balance || 0;
-
-  // 2. Fetch Ledger Transactions
-  const ledgerSnap = await adminDb
-    .collection(COLLECTIONS.LEDGER_TRANSACTIONS)
-    .where("user_id", "==", installerId)
-    .orderBy("created_at", "desc")
-    .limit(50)
-    .get();
 
   const transactions: LedgerTransaction[] = [];
   ledgerSnap.docs.forEach((doc) => {
@@ -37,13 +46,7 @@ export default async function InstallerLedgerPage() {
   });
 
 
-  // 3. Fetch Pending/Offline Verifications
-  const offlineSnap = await adminDb
-    .collection("offline_verifications")
-    .where("installer_id", "==", installerId)
-    .orderBy("created_at", "desc")
-    .limit(50)
-    .get();
+  // 3. Pending/Offline Verifications array populated below
 
   const offlineVerifications: OfflinePaymentVerification[] = [];
   offlineSnap.docs.forEach((doc) => {

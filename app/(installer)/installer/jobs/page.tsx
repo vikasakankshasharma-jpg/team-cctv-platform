@@ -13,23 +13,24 @@ export default async function InstallerJobsPage() {
   const installerId = session.installerId!;
 
   // Fetch all leads exclusively assigned to this installer
-  const leadsSnap = await adminDb
-    .collection(COLLECTIONS.LEADS)
-    .where("assigned_to_installer_id", "==", installerId)
-    .orderBy("created_at", "desc")
-    .limit(200)
-    .get();
+  const [leadsSnap, jobsSnap] = await Promise.all([
+    adminDb
+      .collection(COLLECTIONS.LEADS)
+      .where("assigned_to_installer_id", "==", installerId)
+      .orderBy("created_at", "desc")
+      .limit(200)
+      .get(),
+    adminDb
+      .collection("jobs")
+      .where("installer_id", "==", installerId)
+      .where("status", "in", ["PENDING_DISPATCH", "assigned", "en_route", "in_progress", "pending_customer_approval"])
+      .get()
+  ]);
 
   const activeLeads: Lead[] = [];
   leadsSnap.docs.forEach((doc) => {
     activeLeads.push({ id: doc.id, ...doc.data() } as Lead);
   });
-
-  const jobsSnap = await adminDb
-    .collection("jobs")
-    .where("installer_id", "==", installerId)
-    .where("status", "in", ["PENDING_DISPATCH", "assigned", "en_route", "in_progress", "pending_customer_approval"])
-    .get();
 
   jobsSnap.docs.forEach((doc) => {
     const j = doc.data();
