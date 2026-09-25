@@ -32,10 +32,7 @@ export default async function AdminLayout({
   if (!session.isAuthenticated || !["super_admin", "admin", "sales_staff"].includes(session.role as string)) {
     if (currentPath === "/admin/login") {
       return (
-        <div 
-          className={`admin-theme ${spaceGrotesk.variable} ${jetbrainsMono.variable} min-h-screen bg-[var(--bg)] font-sans text-[var(--text)]`}
-          style={adminThemeVars}
-        >
+        <div className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans`}>
           {children}
         </div>
       );
