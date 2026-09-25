@@ -14,10 +14,12 @@ import {
   BookOpen,
   Menu,
   X,
+  MapPin,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { name: "Overview", href: "/installer/dashboard", icon: LayoutDashboard },
+  { name: "Daily Route Plan", href: "/installer/route", icon: MapPin },
   { name: "My Leads", href: "/installer/jobs", icon: ClipboardList },
   { name: "Ledger", href: "/installer/ledger", icon: BookOpen },
   { name: "Profile", href: "/installer/profile", icon: Settings2 },

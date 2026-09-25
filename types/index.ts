@@ -131,8 +131,11 @@ export interface Lead {
   sla_breach_at?: unknown; // Firestore Timestamp
   is_escalated?: boolean;
   
-  // CRM Features
+  // CRM & Route Planning Features
   next_followup_date?: string | null; // ISO Date String (YYYY-MM-DD)
+  scheduled_date?: string | null;     // ISO Date String (YYYY-MM-DD)
+  time_slot?: string | null;          // "morning" | "afternoon" | "evening" | custom
+  route_order?: number | null;        // Sequential stop index (1, 2, 3...)
   
   status: "new" | "attempted" | "contacted" | "site_visit" | "quoted" | "won" | "lost" | "unreachable" | "busy" | "technical_error" | "pending_customer_approval";
   created_at: unknown;
