@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     // Fetch quotes that are ready for delivery or dispatched
     const quotesSnap = await adminDb
       .collection("quotes")
-      .where("delivery_status", "in", ["ASSIGNED", "DISPATCHED", "PENDING_DELIVERY", "DELIVERED", "SCHEDULED"])
+      .where("delivery_status", "in", ["PENDING", "ASSIGNED", "DISPATCHED", "PENDING_DELIVERY", "DELIVERED", "SCHEDULED"])
       .limit(100)
       .get();
 

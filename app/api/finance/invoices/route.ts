@@ -18,24 +18,24 @@ export async function GET(request: Request) {
     for (const doc of invSnap.docs) {
       const data = doc.data();
       seenIds.add(doc.id);
-      if (data.dealId) seenIds.add(data.dealId);
+      const grandTotal = data.grandTotal ?? data.total_amount ?? 0;
       invoiceList.push({
         id: doc.id,
-        dealId: data.dealId || data.quoteId || null,
-        quoteId: data.quoteId || data.dealId || doc.id,
-        customerId: data.customerId || "customer",
-        customerName: data.customerName || data.billing_details?.company_name || "Client",
-        customerMobile: data.customerMobile || data.billing_details?.contact_mobile || "",
+        dealId: data.dealId || data.lead_id || data.quoteId || null,
+        quoteId: data.quoteId || data.quote_id || data.dealId || doc.id,
+        customerId: data.customerId || data.customer_mobile || "customer",
+        customerName: data.customerName || data.customer_name || data.billing_details?.company_name || "Client",
+        customerMobile: data.customerMobile || data.customer_mobile || data.billing_details?.contact_mobile || "",
         is_business: !!data.billing_details?.is_business,
         companyName: data.billing_details?.company_name || null,
         gstin: data.billing_details?.gstin || null,
-        subTotal: data.subTotal || Math.round(data.grandTotal / 1.18),
-        taxAmount: data.taxAmount || (data.grandTotal - Math.round(data.grandTotal / 1.18)),
-        grandTotal: data.grandTotal || 0,
-        amountPaid: data.amountPaid || data.grandTotal || 0,
-        amountDue: data.amountDue || 0,
+        subTotal: data.subTotal || Math.round(grandTotal / 1.18),
+        taxAmount: data.taxAmount || (grandTotal - Math.round(grandTotal / 1.18)),
+        grandTotal: grandTotal,
+        amountPaid: data.amountPaid ?? data.amount_paid ?? grandTotal ?? 0,
+        amountDue: data.amountDue ?? data.amount_due ?? 0,
         status: data.status || "PAID",
-        issueDate: data.issueDate || new Date().toISOString()
+        issueDate: data.issueDate || data.created_at || new Date().toISOString()
       });
     }
 

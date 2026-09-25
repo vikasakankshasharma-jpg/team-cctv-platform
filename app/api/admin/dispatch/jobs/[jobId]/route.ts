@@ -53,6 +53,26 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
 
     await jobRef.update(updates);
 
+    // Sync back to Quote and Lead
+    const jobData = jobDoc.data() || {};
+    const quoteId = jobData.quote_id;
+    const leadId = jobData.lead_id;
+
+    if (quoteId) {
+      const qUpdates: any = { job_status: status || currentStatus };
+      if (status === "assigned" || status === "en_route") qUpdates.delivery_status = "DISPATCHED";
+      if (status === "completed") qUpdates.delivery_status = "DELIVERED";
+      if (installer_id) qUpdates.assigned_installer_id = installer_id;
+      await adminDb.collection("quotes").doc(quoteId).update(qUpdates).catch(() => {});
+    }
+
+    if (leadId) {
+      const lUpdates: any = {};
+      if (installer_id) lUpdates.assigned_to_installer_id = installer_id;
+      if (status) lUpdates.job_status = status;
+      await adminDb.collection("leads").doc(leadId).update(lUpdates).catch(() => {});
+    }
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -42,6 +42,32 @@ export default async function InstallerDashboardPage() {
     }
   });
 
+  // 3. Fetch Active Installation Jobs assigned to this installer
+  const jobsSnap = await adminDb
+    .collection("jobs")
+    .where("installer_id", "==", installerId)
+    .where("status", "in", ["PENDING_DISPATCH", "assigned", "en_route", "in_progress", "pending_customer_approval"])
+    .get();
+
+  jobsSnap.docs.forEach((doc) => {
+    const j = doc.data();
+    activeLeads.push({
+      id: doc.id,
+      customer_name: j.customer?.name || "Installation Job",
+      customer_mobile: j.customer?.mobile || "",
+      address: {
+        pincode: j.address?.pincode,
+        city: j.address?.city,
+        full_address: j.address?.full_address,
+      },
+      status: "in_progress",
+      assigned_installer_id: installerId,
+      assigned_to_installer_id: installerId,
+      created_at: j.created_at || new Date().toISOString(),
+      job_status: j.status,
+    } as unknown as Lead);
+  });
+
   return (
     <InstallerDashboardClient
       installerId={installerId}
