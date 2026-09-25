@@ -99,6 +99,30 @@ export async function POST(req: Request) {
     } else if (role === "installer") {
       const iSnap = await adminDb.collection("installers").where("mobile_number", "==", normalized).limit(1).get();
       if (!iSnap.empty) await iSnap.docs[0].ref.update({ firebase_uid: uid });
+    } else if (role === "customer") {
+      try {
+        const [leadsSnap, altLeadsSnap] = await Promise.all([
+          adminDb.collection("leads").where("mobile_number", "==", normalized).get(),
+          adminDb.collection("leads").where("customer_phone", "==", normalized).get(),
+        ]);
+        const batch = adminDb.batch();
+        let hasUpdates = false;
+        leadsSnap.docs.forEach((doc) => {
+          if (doc.data().firebase_uid !== uid) {
+            batch.update(doc.ref, { firebase_uid: uid });
+            hasUpdates = true;
+          }
+        });
+        altLeadsSnap.docs.forEach((doc) => {
+          if (doc.data().firebase_uid !== uid) {
+            batch.update(doc.ref, { firebase_uid: uid });
+            hasUpdates = true;
+          }
+        });
+        if (hasUpdates) await batch.commit();
+      } catch (err) {
+        console.warn("Could not link customer leads to uid:", err);
+      }
     }
     
     // Set custom claims and Generate Custom Token

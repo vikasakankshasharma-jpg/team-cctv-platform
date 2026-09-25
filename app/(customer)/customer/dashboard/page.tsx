@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function CustomerDashboardPage() {
   const session = await verifySession();
 
-  if (!session.isAuthenticated || session.role !== "customer") {
+  if (!session.isAuthenticated) {
     redirect("/customer/login?redirect=/customer/dashboard");
   }
 

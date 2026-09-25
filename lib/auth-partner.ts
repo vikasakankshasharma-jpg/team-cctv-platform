@@ -23,19 +23,17 @@ import type { PartnerSession, Promoter } from "@/types";
 export async function verifyPartnerSession(): Promise<PartnerSession> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("partner_session")?.value;
-  const fs = require('fs');
 
   if (!sessionCookie) {
-    fs.writeFileSync('debug-partner-auth.txt', 'No session cookie found');
     return { isAuthenticated: false, promoterId: null, promoterName: null, uid: null, role: null };
   }
 
   try {
-    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decoded = await adminAuth.verifySessionCookie(sessionCookie, false);
 
     // Enforce role claim
     if (decoded.role !== "partner") {
-      fs.writeFileSync('debug-partner-auth.txt', 'Role mismatch: ' + decoded.role);
+      console.warn("[verifyPartnerSession] Role mismatch:", decoded.role);
       return { isAuthenticated: false, promoterId: null, promoterName: null, uid: null, role: null };
     }
 
@@ -47,7 +45,7 @@ export async function verifyPartnerSession(): Promise<PartnerSession> {
       .get();
 
     if (promoterSnap.empty) {
-      fs.writeFileSync('debug-partner-auth.txt', 'No promoter found for UID: ' + decoded.uid);
+      console.warn("[verifyPartnerSession] No promoter found for UID:", decoded.uid);
       return { isAuthenticated: false, promoterId: null, promoterName: null, uid: decoded.uid, role: null };
     }
 
@@ -62,7 +60,7 @@ export async function verifyPartnerSession(): Promise<PartnerSession> {
       role: "partner",
     };
   } catch (error: any) {
-    fs.writeFileSync('debug-partner-auth.txt', 'Session verification failed: ' + error.message);
+    console.error("[verifyPartnerSession] Error:", error.message);
     return { isAuthenticated: false, promoterId: null, promoterName: null, uid: null, role: null };
   }
 }

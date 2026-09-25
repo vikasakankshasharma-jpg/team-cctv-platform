@@ -16,7 +16,7 @@ export interface SessionResult {
  */
 export async function verifySession(): Promise<SessionResult> {
   const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("admin_session")?.value;
+  const sessionCookie = cookieStore.get("customer_session")?.value || cookieStore.get("admin_session")?.value;
 
   if (!sessionCookie) {
     return { isAuthenticated: false, user: null, role: null };
@@ -30,8 +30,8 @@ export async function verifySession(): Promise<SessionResult> {
       return { isAuthenticated: true, user: { uid } as any, role };
     }
 
-    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
-    const role = (decodedToken.role as string) || null;
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, false);
+    const role = (decodedToken.role as string) || "customer";
     const permissions = decodedToken.permissions || null;
     return { isAuthenticated: true, user: decodedToken, role, permissions, uid: decodedToken.uid };
   } catch (error) {

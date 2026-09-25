@@ -139,9 +139,9 @@ export function CustomerLoginClient() {
     }
   };
 
-  const handleVerifyOtp = async (e?: React.FormEvent) => {
+  const handleVerifyOtp = async (e?: React.FormEvent, explicitCode?: string) => {
     e?.preventDefault();
-    const code = otp.join("");
+    const code = (typeof explicitCode === "string" && explicitCode.length === 6) ? explicitCode : otp.join("");
     if (code.length < 6) return;
     
     setError("");
@@ -217,6 +217,12 @@ export function CustomerLoginClient() {
     if (value !== "" && index < 5) {
       otpInputsRef.current[index + 1]?.focus();
     }
+    if (value !== "" && index === 5 && newOtp.every((v) => v !== "")) {
+      const fullCode = newOtp.join("");
+      setTimeout(() => {
+        handleVerifyOtp(undefined, fullCode);
+      }, 50);
+    }
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -237,6 +243,9 @@ export function CustomerLoginClient() {
       otpRef.current = newOtp;
       if (pastedData.length === 6) {
         otpInputsRef.current[5]?.focus();
+        setTimeout(() => {
+          handleVerifyOtp(undefined, pastedData);
+        }, 50);
       } else {
         otpInputsRef.current[pastedData.length]?.focus();
       }
@@ -403,6 +412,7 @@ export function CustomerLoginClient() {
 
               <button
                 type="submit"
+                id="verify-btn"
                 disabled={loading || otp.some((d) => d === "")}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 text-white font-black py-4 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
               >

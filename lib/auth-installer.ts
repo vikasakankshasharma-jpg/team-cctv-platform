@@ -24,7 +24,7 @@ export async function verifyInstallerSession(): Promise<InstallerSession> {
   }
 
   try {
-    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decoded = await adminAuth.verifySessionCookie(sessionCookie, false);
 
     // Enforce role claim
     if (decoded.role !== "installer") {

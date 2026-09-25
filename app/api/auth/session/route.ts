@@ -31,9 +31,9 @@ export async function POST(request: Request) {
     // The session cookie will have the same claims as the ID token.
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
     const decoded = await adminAuth.verifyIdToken(idToken);
-    const role = decoded.role;
+    const role = decoded.role || "customer";
 
-    const response = NextResponse.json({ status: "success" }, { status: 200 });
+    const response = NextResponse.json({ status: "success", role }, { status: 200 });
 
     const cookieOptions = {
       value: sessionCookie,
@@ -49,6 +49,9 @@ export async function POST(request: Request) {
       response.cookies.set({ name: "partner_session", ...cookieOptions });
     } else if (role === "installer") {
       response.cookies.set({ name: "installer_session", ...cookieOptions });
+    } else if (role === "customer") {
+      response.cookies.set({ name: "customer_session", ...cookieOptions });
+      response.cookies.set({ name: "admin_session", ...cookieOptions });
     } else {
       response.cookies.set({ name: "admin_session", ...cookieOptions });
     }
@@ -64,6 +67,7 @@ export async function DELETE() {
   const response = NextResponse.json({ status: "success" }, { status: 200 });
   
   // Clear all role session cookies
+  response.cookies.set({ name: "customer_session", value: "", maxAge: 0, path: "/" });
   response.cookies.set({ name: "admin_session", value: "", maxAge: 0, path: "/" });
   response.cookies.set({ name: "partner_session", value: "", maxAge: 0, path: "/" });
   response.cookies.set({ name: "installer_session", value: "", maxAge: 0, path: "/" });
