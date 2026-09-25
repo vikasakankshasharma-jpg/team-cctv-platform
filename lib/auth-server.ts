@@ -31,8 +31,9 @@ export async function verifySession(): Promise<SessionResult> {
     }
 
     const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
-    const role = (decodedToken.role as "super_admin" | "sales_staff" | "installer" | "customer" | "partner" | undefined) || null;
-    return { isAuthenticated: true, user: decodedToken, role };
+    const role = (decodedToken.role as string) || null;
+    const permissions = decodedToken.permissions || null;
+    return { isAuthenticated: true, user: decodedToken, role, permissions, uid: decodedToken.uid };
   } catch (error) {
     console.error("Session verification failed:", error);
     return { isAuthenticated: false, user: null, role: null };
@@ -53,24 +54,28 @@ export async function requireSuperAdmin() {
   return session;
 }
 
+const EXTERNAL_ROLES = ["customer", "installer", "partner"];
+
 /**
- * Enforces any admin role (super_admin, admin, or sales_staff). Redirects if not authorized.
+ * Enforces any internal staff role. Redirects if not authorized.
  */
 export async function requireAdmin() {
   const session = await verifySession();
-  if (!session.isAuthenticated || !["super_admin", "admin", "sales_staff"].includes(session.role as string)) {
+  // Dynamic RBAC Check: If authenticated and role is not an external role, grant access
+  if (!session.isAuthenticated || !session.role || EXTERNAL_ROLES.includes(session.role)) {
     redirect("/admin/login");
   }
   return session;
 }
 
 /**
- * Enforces any admin role (super_admin, admin, or sales_staff) for API routes.
+ * Enforces any internal staff role for API routes.
  * Returns a 401 response instead of redirecting.
  */
 export async function requireAdminApi() {
   const session = await verifySession();
-  if (!session.isAuthenticated || !["super_admin", "admin", "sales_staff"].includes(session.role as string)) {
+  // Dynamic RBAC Check: If authenticated and role is not an external role, grant access
+  if (!session.isAuthenticated || !session.role || EXTERNAL_ROLES.includes(session.role)) {
     throw new Error("Unauthorized"); // This will be caught by the API route and returned as 401
   }
   return session;
