@@ -185,13 +185,17 @@ export function CustomerLoginClient() {
             idToken = "mock-jwt-token"; // Bypass Firebase Client
         } else {
             const userCredential = await signInWithCustomToken(auth, customToken);
-            idToken = await userCredential.user.getIdToken();
+            idToken = await userCredential.user.getIdToken(true);
         }
-        await fetch("/api/auth/session", {
+        const sessionRes = await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken }),
         });
+        if (!sessionRes.ok) {
+          const errData = await sessionRes.json().catch(() => ({}));
+          throw new Error(errData.error || "Failed to establish secure session. Please try again.");
+        }
         window.location.href = redirectTo;
       } else {
         throw new Error("Missing authentication token");
@@ -448,3 +452,4 @@ export function CustomerLoginClient() {
     </div>
   );
 }
+

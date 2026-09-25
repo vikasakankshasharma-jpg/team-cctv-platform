@@ -72,13 +72,13 @@ export default function CustomerLayout({
             <TrackBookingButton />
 
             <Link
-              href="/customer/dashboard"
+              href="/login"
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-all"
-              title="My Account"
+              title="Portal"
             >
               <User className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">
-                <TranslatedText tKey="my_account" defaultText="My Account" />
+                <TranslatedText tKey="portal" defaultText="Portal" />
               </span>
             </Link>
 

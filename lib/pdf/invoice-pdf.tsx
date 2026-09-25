@@ -391,15 +391,19 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
   const isInterState = stateCode !== '08';
   const placeOfSupply = `${billing.state || 'Rajasthan'} (${stateCode})`;
 
+  const badgeText = amountDue > 0 ? (amountPaid > 0 ? 'ADVANCE PAID' : 'UNPAID') : 'PAID';
+  const invoiceStatusColor = amountDue > 0 ? (amountPaid > 0 ? '#f59e0b' : '#ef4444') : '#22c55e';
+  const invoiceStatusBorder = amountDue > 0 ? (amountPaid > 0 ? '#d97706' : '#b91c1c') : '#16a34a';
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Watermark */}
-        <Text style={styles.watermark}>PAID</Text>
+        <Text style={[styles.watermark, { color: invoiceStatusColor }]}>{badgeText}</Text>
 
         {/* Top-Right Stamp Badge */}
-        <View style={styles.paidBadge}>
-          <Text style={styles.paidBadgeText}>PAID</Text>
+        <View style={[styles.paidBadge, { backgroundColor: invoiceStatusColor, borderColor: invoiceStatusBorder }]}>
+          <Text style={styles.paidBadgeText}>{badgeText}</Text>
         </View>
 
         {/* Header */}
@@ -427,7 +431,7 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
               </View>
               <View style={styles.quoteMetaRow}>
                 <Text style={styles.quoteMetaLabel}>Status:</Text>
-                <Text style={[styles.quoteMetaValue, { color: '#16a34a' }]}>PAID</Text>
+                <Text style={[styles.quoteMetaValue, { color: invoiceStatusColor }]}>{badgeText}</Text>
               </View>
             </View>
           </View>
@@ -567,10 +571,20 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
               </>
             )}
 
-            <View style={styles.grandTotalRow}>
-              <Text style={styles.grandTotalLabel}>Total Paid:</Text>
+            <View style={[styles.grandTotalRow, { paddingBottom: 4, borderBottomWidth: amountDue > 0 ? 1 : 0, borderBottomColor: '#e5e7eb' }]}>
+              <Text style={styles.grandTotalLabel}>Grand Total:</Text>
               <Text style={styles.grandTotalValue}>{formatCurrency(pricing.total_payable)}</Text>
             </View>
+            <View style={[styles.grandTotalRow, { marginTop: 4, paddingTop: 4, borderTopWidth: 0 }]}>
+              <Text style={[styles.grandTotalLabel, { color: '#4b5563', fontSize: 9 }]}>Amount Paid:</Text>
+              <Text style={[styles.grandTotalValue, { color: '#4b5563', fontSize: 10 }]}>{formatCurrency(pricing.amount_paid)}</Text>
+            </View>
+            {pricing.amount_due > 0 && (
+              <View style={[styles.grandTotalRow, { marginTop: 4, paddingTop: 4, borderTopWidth: 0 }]}>
+                <Text style={[styles.grandTotalLabel, { color: '#ef4444' }]}>Balance Due:</Text>
+                <Text style={[styles.grandTotalValue, { color: '#ef4444' }]}>{formatCurrency(pricing.amount_due)}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -606,3 +620,7 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
     </Document>
   );
 };
+
+
+
+
