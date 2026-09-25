@@ -52,6 +52,8 @@ interface CustomerDashboardProps {
 }
 
 export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps) {
+  const safeUser = user || { uid: "", name: "Valued Client", mobile: "" };
+  const safeQuotes = Array.isArray(quotes) ? quotes : [];
   const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
@@ -75,11 +77,11 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
     }
   };
 
-  const bookedQuotes = quotes.filter(q => q.isPaid);
-  const unbookedQuotes = quotes.filter(q => !q.isPaid);
+  const bookedQuotes = safeQuotes.filter(q => q && q.isPaid);
+  const unbookedQuotes = safeQuotes.filter(q => q && !q.isPaid);
 
-  const totalQuotesCount = quotes.length;
-  const paidQuotesCount = quotes.filter((q) => q.isPaid).length;
+  const totalQuotesCount = safeQuotes.length;
+  const paidQuotesCount = bookedQuotes.length;
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-4 md:py-8 px-4 sm:px-6 lg:px-8">
@@ -89,19 +91,19 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
         <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-xl shadow-md">
-              {(user.name || "C").charAt(0).toUpperCase()}
+              {String(safeUser.name || "C").charAt(0).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white">
-                  {user.name || "Valued Client"}
+                  {safeUser.name || "Valued Client"}
                 </h1>
                 <span className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900 text-xs font-black uppercase px-2.5 py-0.5 rounded-full">
                   Customer
                 </span>
               </div>
               <p className="text-xs sm:text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">
-                {user.mobile ? `+91 ${user.mobile}` : "Authenticated Customer"}
+                {safeUser.mobile ? `+91 ${safeUser.mobile}` : "Authenticated Customer"}
               </p>
             </div>
           </div>
