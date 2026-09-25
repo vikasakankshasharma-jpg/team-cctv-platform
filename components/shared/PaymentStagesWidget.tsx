@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckCircle2, Lock, ArrowRight, ExternalLink, RefreshCw, Send, Download } from "lucide-react";
+import { CheckCircle2, Lock, ArrowRight, ExternalLink, RefreshCw, Send, Download, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
 const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
@@ -16,6 +16,7 @@ interface PaymentStagesWidgetProps {
 
 export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, isAdmin = false }: PaymentStagesWidgetProps) {
   const [loadingType, setLoadingType] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Total amount from lead or quote
   const totalAmount = lead?.total_payable || quote?.total_payable || quote?.total || 0;
