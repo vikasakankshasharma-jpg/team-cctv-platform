@@ -15,7 +15,6 @@ import {
 import { toast } from "sonner";
 import Image from "next/image";
 import { useTranslation } from "@/hooks/useTranslation";
-import imageCompression from "browser-image-compression";
 
 interface CompetitorQuoteUploaderProps {
   leadId: string;
@@ -91,6 +90,7 @@ export function CompetitorQuoteUploader({
               maxWidthOrHeight: 1920,
               useWebWorker: true,
             };
+            const imageCompression = (await import("browser-image-compression")).default;
             fileToUpload = await imageCompression(file, options) as File;
           } catch (compError) {
             console.error("Image compression failed, falling back to original:", compError);
