@@ -6,6 +6,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import type { Lead } from "@/types";
 import { updateLeadStatus, claimBroadcastedLead } from "@/app/actions/leads";
+import { LeadStatusBadge } from "@/components/shared/LeadStatusBadge";
 import { toast } from "sonner";
 
 
@@ -128,7 +129,7 @@ export function ActivePipeline({ leads, partnerId, partnerName, role = "salesper
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h4 className="text-base font-black text-white tracking-tight truncate">{lead.customer_name}</h4>
-                  <StatusBadge status={lead.status} />
+                  <LeadStatusBadge lead={lead} className="border-white/10 shadow-none !bg-white/5 !text-white" />
                   {isBroadcast && (
                     <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border bg-red-500/20 text-red-400 border-red-500/30 animate-pulse">
                       Urgent • Claim Now

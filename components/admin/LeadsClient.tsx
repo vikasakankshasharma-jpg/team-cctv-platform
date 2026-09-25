@@ -5,6 +5,7 @@ import { Users, Eye, Phone, MapPin, Search, Filter, Loader2, Target, Waves, Chev
 import type { Lead } from "@/types";
 import { updateLeadStatus, assignLeadToSalesperson, getPriceMatchRequests, getLeadQuotes } from "@/app/actions/leads";
 import Link from "next/link";
+import { LeadStatusBadge } from "@/components/shared/LeadStatusBadge";
 import { useRouter } from "next/navigation";
 import { QuoteHistoryModal } from "./QuoteHistoryModal";
 import { PriceMatchReviewModal } from "./PriceMatchReviewModal";
@@ -483,7 +484,8 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
                     </td>
                     <td className="text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-col items-center gap-2">
-                        <div className="relative inline-block w-32">
+                        <LeadStatusBadge lead={lead} className="mb-1" />
+                          <div className="relative inline-block w-32">
                             <select 
                              value={lead.status}
                              onChange={(e) => handleStatusChange(lead.id!, e.target.value)}
