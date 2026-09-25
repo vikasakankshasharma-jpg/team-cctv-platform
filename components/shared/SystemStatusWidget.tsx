@@ -6,7 +6,7 @@ export function SystemStatusWidget({ lead, job }: { lead: any, job: any }) {
   // Determine current step index (matches TrackingClient logic)
   let currentStep = 1; // 1: Order Confirmed
   if (job || lead.delivery_status === "DISPATCHED" || lead.delivery_status === "DELIVERED") currentStep = 2; // 2: Equipment Ready
-  if (job?.status === "dispatched" || job?.status === "in_progress" || lead.assigned_to_installer_id || lead.status === "site_visit") currentStep = 3; // 3: Installer En-Route
+  if (job?.status === "dispatched" || job?.status === "in_progress" || lead.assigned_to_installer_id) currentStep = 3; // 3: Installer En-Route (site_visit excluded — it's a survey, not dispatch)
   if (lead.status === "won" && (lead.installation_proof_url || lead.install_status === "COMPLETED")) currentStep = 4; // 4: Completed
 
   return (

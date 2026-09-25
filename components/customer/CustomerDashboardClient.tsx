@@ -26,6 +26,7 @@ import { TranslatedText } from "@/components/shared/TranslatedText";
 import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
 import { SystemStatusWidget } from "@/components/shared/SystemStatusWidget";
 import { LeadStatusBadge } from "@/components/shared/LeadStatusBadge";
+import { Headphones } from "lucide-react";
 
 export interface CustomerQuoteItem {
   quoteId: string;
@@ -113,6 +114,13 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
           </div>
 
           <div className="flex flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <Link
+              href="/customer/support"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-emerald-100 dark:hover:bg-emerald-900"
+            >
+              <Headphones className="w-4 h-4 shrink-0" />
+              Support
+            </Link>
             <Link
               href="/wizard"
               className="flex-1 sm:flex-none flex items-center justify-center text-center bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm whitespace-nowrap"

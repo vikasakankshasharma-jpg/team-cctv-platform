@@ -347,7 +347,7 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
                 </h3>
               </div>
               <p className="text-sm text-zinc-500 dark:text-zinc-400 ml-7 mt-0.5">
-                {!isStage3Unlocked ? 'Unlocks after successful installation.' : 'Final 10% payment for installation & warranty.'}
+                {!isStage3Unlocked && !isStage2Paid ? 'Completes after Stage 2 payment is confirmed. Paid offline? Contact us to unlock.' : !isStage3Unlocked ? 'Unlocks after successful installation.' : 'Final 10% payment for installation & warranty.'}
               </p>
             </div>
             <div className="text-right">

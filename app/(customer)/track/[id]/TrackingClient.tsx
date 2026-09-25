@@ -13,10 +13,13 @@ import {
   ExternalLink,
   Receipt,
   IndianRupee,
-  Clock
+  Clock,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
 
@@ -28,6 +31,7 @@ interface TrackingClientProps {
 }
 
 export default function TrackingClient({ lead, job, quote, invoice }: TrackingClientProps) {
+  const [pinRevealed, setPinRevealed] = useState(false);
   const { t } = useTranslation();
 
   // Determine current step index
@@ -150,13 +154,20 @@ export default function TrackingClient({ lead, job, quote, invoice }: TrackingCl
             <p className="text-zinc-600 dark:text-zinc-400 text-sm mb-8 max-w-sm mx-auto leading-relaxed">
               {t("track_pin_desc", "Please give this 6-digit PIN to your installer only after the installation is fully completed and you are happy with it.")}
             </p>
-            <div className="inline-flex items-center justify-center gap-2 sm:gap-4 bg-zinc-50 dark:bg-zinc-950 p-4 sm:p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800">
+            <div className="inline-flex items-center justify-center gap-2 sm:gap-4 bg-zinc-50 dark:bg-zinc-950 p-4 sm:p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 relative">
               {lead.completion_pin.split('').map((digit: string, i: number) => (
-                <div key={i} className="w-10 h-12 sm:w-14 sm:h-16 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-center text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white shadow-sm">
-                  {digit}
+                <div key={i} className="w-10 h-12 sm:w-14 sm:h-16 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-center text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white shadow-sm select-none">
+                  {pinRevealed ? digit : "●"}
                 </div>
               ))}
             </div>
+            <button
+              onClick={() => { setPinRevealed(!pinRevealed); if (!pinRevealed) setTimeout(() => setPinRevealed(false), 10000); }}
+              className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border transition-all bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+            >
+              {pinRevealed ? <><EyeOff className="w-4 h-4" /> Hide PIN</> : <><Eye className="w-4 h-4" /> Tap to Reveal PIN</>}
+            </button>
+            {pinRevealed && <p className="text-xs text-zinc-400 mt-2">PIN will auto-hide in 10 seconds</p>}
             
             {lead.assigned_installer_name && (
               <div className="mt-8 flex items-center justify-center gap-2 text-sm font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 py-3 px-6 rounded-full w-fit mx-auto border border-emerald-200 dark:border-emerald-500/20">
