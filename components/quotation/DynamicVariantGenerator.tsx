@@ -3,7 +3,7 @@ import { Product, Addon, AppSettings, ConfiguratorSelection, PricingResult } fro
 import { calculatePricing } from "@/lib/pricing-engine";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Check, Filter, Tag } from "lucide-react";
+import { Sparkles, Check, Filter, Tag, ChevronDown } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 
 const BRAND_DISPLAY: Record<string, string> = {
@@ -105,8 +105,8 @@ export function DynamicVariantGenerator({
   selectedCompareItems
 }: DynamicVariantGeneratorProps) {
   const { t } = useTranslation();
-  const initialTech = (selection.technology?.toLowerCase() === "ip") ? "ip" : "hd";
-  const [activeTech, setActiveTech] = useState<"hd" | "ip">(initialTech);
+  // Auto-select Standard HD (Analog) by default so customers see the lowest price first
+  const [activeTech, setActiveTech] = useState<"hd" | "ip">("hd");
   const initialBrand = selection.brand_preference ? normalizeBrandKey(selection.brand_preference) : "all";
   const [activeBrand, setActiveBrand] = useState<string>(initialBrand);
   const [sortBy, setSortBy] = useState<string>("price_asc");
@@ -404,20 +404,19 @@ export function DynamicVariantGenerator({
         <div className="bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1.5 rounded-full inline-flex relative shadow-inner">
           <button
             onClick={() => setActiveTech("hd")}
-            className={`relative z-10 px-6 py-2.5 text-sm font-bold rounded-full transition-all duration-300 ${activeTech === "hd" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
+            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "hd" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
           >
             {activeTech === "hd" && <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full -z-10" />}
-            
-                                  {t("wz_standard_hd_analog")}
-                                </button>
+            <span>{t("wz_standard_hd_analog")}</span>
+            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'hd' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'}`}>Lowest Price</span>
+          </button>
           <button
             onClick={() => setActiveTech("ip")}
-            className={`relative z-10 px-6 py-2.5 text-sm font-bold rounded-full transition-all duration-300 ${activeTech === "ip" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
+            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "ip" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
           >
             {activeTech === "ip" && <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full -z-10" />}
-            
-                                  {t("wz_premium_ip_network")}
-                                </button>
+            <span>{t("wz_premium_ip_network")}</span>
+          </button>
         </div>
 
         {/* Brand Selector */}
@@ -435,77 +434,92 @@ export function DynamicVariantGenerator({
         </div>
 
         {/* Camera Buckets UI */}
-        <div className="flex flex-col gap-3 items-center w-full max-w-2xl mx-auto mt-2">
+        <div className="flex flex-col gap-2.5 sm:gap-3 items-center w-full max-w-2xl mx-auto mt-2">
           {cameraBuckets.map((bucket) => (
-            <div key={bucket.id} className="flex flex-wrap md:flex-nowrap items-center gap-3 w-full bg-white dark:bg-[#1d1d1f] p-3 rounded-2xl border border-[#e5e5ea] dark:border-[#424245] shadow-sm relative transition-all hover:shadow-md">
-              <div className="flex items-center gap-2 w-full md:w-auto md:min-w-[5rem]">
-                <span className="text-[13px] font-bold text-[#1d1d1f] dark:text-white uppercase tracking-wider">
-                  {bucket.type === 'outdoor' ? 'OUTDOOR' : 'INDOOR'}
-                </span>
+            <div key={bucket.id} className="w-full bg-white dark:bg-[#1d1d1f] p-3 sm:p-3.5 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm transition-all hover:shadow-md">
+              {/* Header row: Camera Type & Actions */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className={`inline-block w-2.5 h-2.5 rounded-full ${bucket.type === 'outdoor' ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                  <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                    {bucket.type === 'outdoor' ? 'Outdoor Cameras' : 'Indoor Cameras'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    onClick={() => setCameraBuckets(prev => {
+                      const newBuckets = [...prev];
+                      const index = newBuckets.findIndex(b => b.id === bucket.id);
+                      if (bucket.count > 1) {
+                        newBuckets[index] = { ...bucket, count: Math.ceil(bucket.count / 2) };
+                        newBuckets.splice(index + 1, 0, { id: Math.random().toString(36).substring(7), type: bucket.type, count: Math.floor(bucket.count / 2), resolution: bucket.resolution });
+                      } else {
+                        newBuckets.splice(index + 1, 0, { id: Math.random().toString(36).substring(7), type: bucket.type, count: 1, resolution: bucket.resolution });
+                      }
+                      return newBuckets;
+                    })}
+                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 transition-colors"
+                    title="Split into another row"
+                  >
+                    {t("wz_split")}
+                  </button>
+                  {cameraBuckets.length > 1 && (
+                    <button 
+                      onClick={() => setCameraBuckets(prev => prev.filter(b => b.id !== bucket.id))}
+                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 transition-colors"
+                      title="Remove this row"
+                    >
+                      {t("wz_remove")}
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Stepper */}
-              <div className="flex items-center border border-[#d2d2d7] dark:border-[#424245] rounded-full overflow-hidden bg-[#f5f5f7] dark:bg-[#2d2d2f] shrink-0">
-                 <button 
-                   onClick={() => setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, count: Math.max(0, b.count - 1) } : b))}
-                   className="px-3 py-1.5 hover:bg-[#e5e5ea] dark:hover:bg-[#424245] text-[#1d1d1f] dark:text-white font-medium transition-colors"
-                 >
-                   -
-                 </button>
-                 <span className="px-3 py-1.5 text-sm font-semibold min-w-[2.5rem] text-center text-[#1d1d1f] dark:text-white bg-white dark:bg-[#1d1d1f]">
-                   {bucket.count}
-                 </span>
-                 <button 
-                   onClick={() => setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, count: b.count + 1 } : b))}
-                   className="px-3 py-1.5 hover:bg-[#e5e5ea] dark:hover:bg-[#424245] text-[#1d1d1f] dark:text-white font-medium transition-colors"
-                 >
-                   +
-                 </button>
-              </div>
+              {/* Controls row: Quantity Dropdown & Resolution Dropdown */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                {/* Quantity Dropdown */}
+                <div className="relative">
+                  <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
+                    Quantity
+                  </label>
+                  <select
+                    value={bucket.count}
+                    onChange={(e) => {
+                      const newCount = parseInt(e.target.value, 10);
+                      setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, count: newCount } : b));
+                    }}
+                    className="w-full py-2 px-3 text-xs sm:text-sm font-bold bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 transition-all"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16, 24, 32].map(num => (
+                      <option key={num} value={num}>
+                        {num} {num === 1 ? 'Camera' : 'Cameras'}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
+                </div>
 
-              {/* Resolution Picker */}
-              <div className="flex-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                 {availableResolutions.map(r => (
-                   <button
-                     key={r}
-                     onClick={() => setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, resolution: r } : b))}
-                     className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all shrink-0 ${bucket.resolution === r ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
-                   >
-                     {r}
-                   </button>
-                 ))}
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-1 shrink-0 ml-auto md:ml-2 border-l border-[#e5e5ea] dark:border-[#424245] pl-2">
-                 <button 
-                   onClick={() => setCameraBuckets(prev => {
-                     const newBuckets = [...prev];
-                     const index = newBuckets.findIndex(b => b.id === bucket.id);
-                     if (bucket.count > 1) {
-                       newBuckets[index] = { ...bucket, count: Math.ceil(bucket.count / 2) };
-                       newBuckets.splice(index + 1, 0, { id: Math.random().toString(36).substring(7), type: bucket.type, count: Math.floor(bucket.count / 2), resolution: bucket.resolution });
-                     } else {
-                       newBuckets.splice(index + 1, 0, { id: Math.random().toString(36).substring(7), type: bucket.type, count: 1, resolution: bucket.resolution });
-                     }
-                     return newBuckets;
-                   })}
-                   className="px-3 py-1.5 text-xs font-semibold rounded-full bg-[#f5f5f7] hover:bg-[#e5e5ea] dark:bg-[#2d2d2f] dark:hover:bg-[#424245] text-[#1d1d1f] dark:text-white transition-colors"
-                   title="Split into another row"
-                 >
-                   
-                                             {t("wz_split")}
-                                           </button>
-                 {cameraBuckets.length > 1 && (
-                   <button 
-                     onClick={() => setCameraBuckets(prev => prev.filter(b => b.id !== bucket.id))}
-                     className="px-3 py-1.5 text-xs font-semibold rounded-full bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400 transition-colors"
-                     title="Remove this row"
-                   >
-                     
-                                                   {t("wz_remove")}
-                                                 </button>
-                 )}
+                {/* Resolution Dropdown */}
+                <div className="relative">
+                  <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
+                    Resolution
+                  </label>
+                  <select
+                    value={bucket.resolution}
+                    onChange={(e) => {
+                      const newRes = e.target.value;
+                      setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, resolution: newRes } : b));
+                    }}
+                    className="w-full py-2 px-3 text-xs sm:text-sm font-bold bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 transition-all"
+                  >
+                    {availableResolutions.map(r => (
+                      <option key={r} value={r}>
+                        {r} {r === '2MP' ? '(Full HD)' : r === '3MP' ? '(2K View)' : r === '4MP' ? '(Ultra HD)' : r === '5MP' ? '(Pro Clarity)' : r === '8MP' ? '(4K Ultra)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
+                </div>
               </div>
             </div>
           ))}

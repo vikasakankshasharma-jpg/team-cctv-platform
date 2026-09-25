@@ -32,15 +32,21 @@ import { LanguageWelcomeModal } from "@/components/shared/LanguageWelcomeModal";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 import { TrackBookingButton } from "@/components/shared/TrackBookingButton";
 
-export default function CustomerLayout({
+import { headers } from "next/headers";
+
+export default async function CustomerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isWizard = pathname.startsWith("/wizard");
+
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-zinc-950 font-sans transition-colors duration-500 selection:bg-blue-600 selection:text-white">
-      {/* Premium Public Header */}
-      <header className="sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 shadow-sm transition-all">
+      {/* Premium Public Header - hidden on mobile wizard to maximize viewport */}
+      <header className={`sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 shadow-sm transition-all ${isWizard ? 'hidden md:block' : ''}`}>
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-[72px] sm:h-[80px] flex items-center justify-between">
 
           {/* Left — Logo & Service Areas */}
@@ -111,7 +117,7 @@ export default function CustomerLayout({
         {children}
       </main>
 
-      <SiteFooter />
+      {!isWizard && <SiteFooter />}
 
       {/* Sticky mobile CTA bar ?" hidden on wizard pages (handled inside component) */}
       <MobileStickyCtaBar />

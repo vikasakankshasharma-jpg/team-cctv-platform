@@ -201,7 +201,7 @@ export function WizardClientV2() {
     outdoor_camera_count: 2,
     recording_days: 7,
     recording_mode: "motion",
-    technology_preference: "IP",
+    technology_preference: "HD",
     wants_remote_viewing: true
   });
   
@@ -233,7 +233,7 @@ export function WizardClientV2() {
       setOtp(["", "", "", "", "", ""]);
       return;
     }
-    setStep(s => Math.max(s - 1, 1));
+    setStep(s => Math.max(s - 1, 0));
   };
 
   const generateQuote = async (finalReq: CCTVRequirement) => {
@@ -535,19 +535,22 @@ export function WizardClientV2() {
         );
       case 1:
         return (
-          <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-semibold mb-2">{t("wz_what_kind_of_installation_do_y")}</h2>
+          <div className="space-y-4 sm:space-y-6 animate-in fade-in">
+            <div>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_what_kind_of_installation_do_y")}</h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">Select your setup type to calculate appropriate wiring and hardware.</p>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <button onClick={() => { updateReq({ installation_type: "new", property_type: "home" }); handleNext(); }}
-                className={`p-6 rounded-xl border-2 text-left hover:border-blue-500 transition-all group ${req.installation_type === "new" ? "border-blue-500 bg-blue-50" : "bg-white"}`}>
-                <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">{t("wz_completely_new_system")}</span>
-                <span className="block text-sm text-gray-500 mt-1">{t("wz_i_dont_have_any_cctv_cameras_i")}</span>
+                className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "new" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
+                <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-blue-600">{t("wz_completely_new_system")}</span>
+                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">{t("wz_i_dont_have_any_cctv_cameras_i")}</span>
               </button>
               <button onClick={() => { updateReq({ installation_type: "addon", existing_system_known: undefined }); }}
-                className={`p-6 rounded-xl border-2 text-left hover:border-blue-500 transition-all group ${req.installation_type === "addon" ? "border-blue-500 bg-blue-50" : "bg-white"}`}>
-                <span className="block font-bold text-lg text-gray-900 group-hover:text-blue-700">{t("wz_add_to_existing_system")}</span>
-                <span className="block text-sm text-gray-500 mt-1">{t("wz_i_already_have_a_cctv_system_a")}</span>
+                className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "addon" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
+                <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-blue-600">{t("wz_add_to_existing_system")}</span>
+                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">{t("wz_i_already_have_a_cctv_system_a")}</span>
               </button>
             </div>
             
@@ -592,8 +595,13 @@ export function WizardClientV2() {
                 </div>
               </div>
             )}
-            
-            
+            {req.installation_type !== "addon" && (
+              <div className="pt-2 sm:pt-4">
+                <Button variant="outline" onClick={handlePrev} className="h-11 px-5 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                  {t("wz_back")}
+                </Button>
+              </div>
+            )}
           </div>
         );
       case 2:
@@ -633,47 +641,51 @@ export function WizardClientV2() {
            const currentIndoor = req.indoor_camera_count !== undefined ? req.indoor_camera_count : 2;
            const totalCams = currentOutdoor + currentIndoor;
 
-           return (
-            <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-3xl font-semibold mb-2">{t("wz_how_many_cameras_do_you_need")}</h2>
+            return (
+            <div className="space-y-3 sm:space-y-5 animate-in fade-in">
+              <div>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_how_many_cameras_do_you_need")}</h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">Select the number of outdoor and indoor cameras.</p>
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="p-5 rounded-2xl border-2 border-gray-200 bg-white">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">{t("wz_outdoor_cameras")}</h3>
-                      <p className="text-xs text-gray-500">{t("wz_weatherproof_bullet")}</p>
-                    </div>
+              <div className="grid grid-cols-1 gap-2.5 sm:gap-4">
+                <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">{t("wz_outdoor_cameras")}</h3>
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_weatherproof_bullet")}</p>
                   </div>
-                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
-                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-2 hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1), camera_count: Math.max(0, currentOutdoor - 1) + currentIndoor }))} disabled={currentOutdoor === 0}>-</Button>
-                    <span className="text-2xl font-bold w-12 text-center text-blue-800">{currentOutdoor}</span>
-                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-2 hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: currentOutdoor + 1, camera_count: currentOutdoor + 1 + currentIndoor }))}>+</Button>
+                  <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1), camera_count: Math.max(0, currentOutdoor - 1) + currentIndoor }))} disabled={currentOutdoor === 0}>-</Button>
+                    <span className="text-lg sm:text-xl font-black w-8 sm:w-10 text-center text-blue-700 dark:text-blue-400">{currentOutdoor}</span>
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: currentOutdoor + 1, camera_count: currentOutdoor + 1 + currentIndoor }))}>+</Button>
                   </div>
                 </div>
-  
-                <div className="p-5 rounded-2xl border-2 border-gray-200 bg-white">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">{t("wz_indoor_cameras")}</h3>
-                      <p className="text-xs text-gray-500">{t("wz_ceiling_dome")}</p>
-                    </div>
+
+                <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">{t("wz_indoor_cameras")}</h3>
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_ceiling_dome")}</p>
                   </div>
-                  <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
-                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-2 hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, currentIndoor - 1), camera_count: currentOutdoor + Math.max(0, currentIndoor - 1) }))} disabled={currentIndoor === 0}>-</Button>
-                    <span className="text-2xl font-bold w-12 text-center text-blue-800">{currentIndoor}</span>
-                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-2 hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: currentIndoor + 1, camera_count: currentOutdoor + currentIndoor + 1 }))}>+</Button>
+                  <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, currentIndoor - 1), camera_count: currentOutdoor + Math.max(0, currentIndoor - 1) }))} disabled={currentIndoor === 0}>-</Button>
+                    <span className="text-lg sm:text-xl font-black w-8 sm:w-10 text-center text-blue-700 dark:text-blue-400">{currentIndoor}</span>
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: currentIndoor + 1, camera_count: currentOutdoor + currentIndoor + 1 }))}>+</Button>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-blue-50 p-4 rounded-xl flex justify-between items-center border border-blue-100">
-                <span className="font-semibold text-blue-900">{t("wz_total_cameras")}</span>
-                <span className="text-2xl font-black text-blue-700">{totalCams}</span>
+              <div className="bg-blue-50/80 dark:bg-blue-950/40 p-2.5 sm:p-3 rounded-xl flex justify-between items-center border border-blue-100 dark:border-blue-900">
+                <span className="font-bold text-xs sm:text-sm text-blue-900 dark:text-blue-200">{t("wz_total_cameras")}</span>
+                <span className="text-xl sm:text-2xl font-black text-blue-700 dark:text-blue-400">{totalCams}</span>
               </div>
-  
-              <div className="pt-2">
-                <Button onClick={handleNext} disabled={totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined} className="w-full h-12 text-sm font-semibold">{t("wz_confirm_cameras")}</Button>
+
+              <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
+                <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                  {t("wz_back")}
+                </Button>
+                <Button onClick={handleNext} disabled={totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined} className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/20">
+                  {t("wz_confirm_cameras")}
+                </Button>
               </div>
             </div>
           );
@@ -735,39 +747,48 @@ export function WizardClientV2() {
              </div>
            );
         } else {
-           return (
-            <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-3xl font-semibold mb-2">{t("wz_recording__storage_backup")}</h2>
-              <p className="text-gray-600 mb-6">{t("wz_how_long_do_you_want_to_keep_t")}</p>
+            return (
+            <div className="space-y-3 sm:space-y-5 animate-in fade-in">
+              <div>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_recording__storage_backup")}</h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_how_long_do_you_want_to_keep_t")}</p>
+              </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
                 {[0, 7, 15, 30, 45, 60].map(days => (
                   <button key={days} onClick={() => setReq(prev => ({ ...prev, recording_days: days }))}
-                    className={`p-4 rounded-xl border-2 text-center text-xl font-bold transition-all ${req.recording_days === days ? 'border-blue-600 bg-blue-50 text-blue-700' : 'hover:border-blue-300 hover:bg-gray-50 text-gray-700'}`}>
+                    className={`py-2 sm:py-3 px-1 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.recording_days === days ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-blue-300 hover:bg-gray-50 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900'}`}>
                     {days === 0 ? "No Recording" : `${days} Days`}
                   </button>
                 ))}
               </div>
 
-              <h3 className="text-xl font-semibold mb-3">{t("wz_recording_mode")}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))}
-                  className={`p-5 rounded-xl border-2 text-left transition-all ${req.recording_mode === 'continuous' ? 'border-blue-600 bg-blue-50' : 'hover:border-gray-300'}`}>
-                  <span className="block font-bold text-gray-900 text-lg">{t("wz_24x7_continuous")}</span>
-                  <span className="block text-sm text-gray-500 mt-1">{t("wz_records_everything_nonstop_req")}</span>
-                </button>
-                <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))}
-                  className={`p-5 rounded-xl border-2 text-left transition-all ${req.recording_mode === 'motion' ? 'border-green-500 bg-green-50 shadow-sm' : 'hover:border-gray-300'}`}>
-                  <span className="block font-bold text-gray-900 text-lg flex items-center">{t("wz_smart_motion")}</span>
-                  <span className="block text-sm text-gray-500 mt-1">{t("wz_records_only_when_movement_is_")} <strong className="text-green-700">{t("wz_saves_up_to_50_hard_disk_cost")}</strong></span>
-                </button>
+              <div>
+                <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-2">{t("wz_recording_mode")}</h3>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))}
+                    className={`p-2.5 sm:p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer ${req.recording_mode === 'continuous' ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900'}`}>
+                    <span className="block font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_24x7_continuous")}</span>
+                    <span className="block text-[10px] sm:text-xs text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">Records non-stop 24/7</span>
+                  </button>
+                  <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))}
+                    className={`p-2.5 sm:p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer ${req.recording_mode === 'motion' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900'}`}>
+                    <span className="block font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center justify-between">
+                      <span>{t("wz_smart_motion")}</span>
+                      <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-1 py-0.5 rounded font-black">50% SAVE</span>
+                    </span>
+                    <span className="block text-[10px] sm:text-xs text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">Records movement only</span>
+                  </button>
+                </div>
               </div>
               
-              <div className="pt-6">
-                <Button onClick={handleNext} className="w-full h-12 text-lg font-semibold">
-                  
-                                             {t("wz_confirm_recording")}
-                                           </Button>
+              <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
+                <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                  {t("wz_back")}
+                </Button>
+                <Button onClick={handleNext} className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/20">
+                  {t("wz_confirm_recording")}
+                </Button>
               </div>
             </div>
           );
@@ -816,85 +837,80 @@ export function WizardClientV2() {
         }
       case 4:
           return (
-            <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-3xl font-semibold mb-2">{t("wz_site__preferences")}</h2>
-              <p className="text-gray-600 mb-6">{t("wz_help_us_finetune_your_quote_wi")}</p>
+            <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
+              <div>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_site__preferences")}</h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_help_us_finetune_your_quote_wi")}</p>
+              </div>
               
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <h3 className="font-semibold mb-3">{t("wz_1_approximate_mounting_height")}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">{t("wz_1_approximate_mounting_height")}</h3>
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
                     <button onClick={() => updateReq({ ceiling_height: "standard" })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.ceiling_height === 'standard' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      
-                                                        {t("wz_standard_lt10ft")}
-                                                      </button>
+                      className={`py-2 sm:py-3 px-1 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.ceiling_height === 'standard' ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-blue-300 hover:bg-gray-50 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900'}`}>
+                      {t("wz_standard_lt10ft")}
+                    </button>
                     <button onClick={() => updateReq({ ceiling_height: "high" })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.ceiling_height === 'high' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      
-                                                        {t("wz_high_1015ft")}
-                                                      </button>
+                      className={`py-2 sm:py-3 px-1 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.ceiling_height === 'high' ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-blue-300 hover:bg-gray-50 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900'}`}>
+                      {t("wz_high_1015ft")}
+                    </button>
                     <button onClick={() => updateReq({ ceiling_height: "very_high" })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.ceiling_height === 'very_high' ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      
-                                                        {t("wz_very_high_15ft")}
-                                                      </button>
+                      className={`py-2 sm:py-3 px-1 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.ceiling_height === 'very_high' ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-blue-300 hover:bg-gray-50 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900'}`}>
+                      {t("wz_very_high_15ft")}
+                    </button>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-3">{t("wz_2_surface_type")}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">{t("wz_2_surface_type")}</h3>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                     <button onClick={() => {
                         const types = req.surface_types || [];
                         const newTypes = types.includes('brick') ? types.filter((t: string) => t !== 'brick') : [...types, 'brick'];
                         updateReq({ surface_types: newTypes });
                       }}
-                      className={`p-3 rounded-xl border text-sm text-center ${(req.surface_types || []).includes('brick') ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      
-                                                        {t("wz_concrete__brick_wall")}
-                                                      </button>
+                      className={`py-2 sm:py-3 px-2 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${(req.surface_types || []).includes('brick') ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300'}`}>
+                      {t("wz_concrete__brick_wall")}
+                    </button>
                     <button onClick={() => {
                         const types = req.surface_types || [];
                         const newTypes = types.includes('false_ceiling') ? types.filter((t: string) => t !== 'false_ceiling') : [...types, 'false_ceiling'];
                         updateReq({ surface_types: newTypes });
                       }}
-                      className={`p-3 rounded-xl border text-sm text-center ${(req.surface_types || []).includes('false_ceiling') ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      
-                                                        {t("wz_false_ceiling")}
-                                                      </button>
+                      className={`py-2 sm:py-3 px-2 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${(req.surface_types || []).includes('false_ceiling') ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300'}`}>
+                      {t("wz_false_ceiling")}
+                    </button>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-3">{t("wz_3_existing_cabling")}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">{t("wz_3_existing_cabling")}</h3>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                     <button onClick={() => updateReq({ cabling_done: false })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.cabling_done === false ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
+                      className={`py-2 sm:py-3 px-2 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.cabling_done === false ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300'}`}>
                       No
                     </button>
                     <button onClick={() => updateReq({ cabling_done: true })}
-                      className={`p-3 rounded-xl border text-sm text-center ${req.cabling_done === true ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'bg-white hover:border-gray-300'}`}>
-                      
-                                                        {t("wz_yes")}
-                                                      </button>
+                      className={`py-2 sm:py-3 px-2 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.cabling_done === true ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300'}`}>
+                      {t("wz_yes")}
+                    </button>
                   </div>
 
                   {req.cabling_done === false && (
-                    <div className="mt-4 p-4 rounded-xl bg-blue-50/70 border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
+                    <div className="mt-2.5 p-2.5 sm:p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 flex items-center justify-between gap-2 animate-in fade-in">
                       <div>
-                        <span className="block font-semibold text-gray-900 text-sm">{t("wz_approx_total_cable_required")}</span>
-                        <span className="block text-xs text-gray-500">
-                          
-                                                                    {t("wz_estimated_15m_per_camera_")}{req.camera_count || 4}  {t("wz_cameras_")} {(req.camera_count || 4) * 15}m)
+                        <span className="block font-bold text-gray-900 dark:text-white text-xs">{t("wz_approx_total_cable_required")}</span>
+                        <span className="block text-[10px] text-gray-500 dark:text-zinc-400">
+                          {t("wz_estimated_15m_per_camera_")}{req.camera_count || 4} {t("wz_cameras_")} ({(req.camera_count || 4) * 15}m)
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm self-start sm:self-auto">
+                      <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 px-2 py-1 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-sm shrink-0">
                         <Button
                           type="button"
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8 text-gray-700 hover:bg-gray-100"
+                          className="h-7 w-7 text-gray-700 dark:text-gray-200 hover:bg-gray-100 font-bold"
                           onClick={() => {
                             const defaultMeters = (req.camera_count || 4) * 15;
                             const current = req.total_cable_length_meters || defaultMeters;
@@ -905,14 +921,14 @@ export function WizardClientV2() {
                         >
                           -
                         </Button>
-                        <span className="font-bold text-blue-800 min-w-[80px] text-center text-sm">
-                          {req.total_cable_length_meters || ((req.camera_count || 4) * 15)}  {t("wz_meters")}
-                                                                  </span>
+                        <span className="font-black text-blue-800 dark:text-blue-300 min-w-[60px] text-center text-xs">
+                          {req.total_cable_length_meters || ((req.camera_count || 4) * 15)} {t("wz_meters")}
+                        </span>
                         <Button
                           type="button"
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8 text-gray-700 hover:bg-gray-100"
+                          className="h-7 w-7 text-gray-700 dark:text-gray-200 hover:bg-gray-100 font-bold"
                           onClick={() => {
                             const defaultMeters = (req.camera_count || 4) * 15;
                             const current = req.total_cable_length_meters || defaultMeters;
@@ -928,15 +944,17 @@ export function WizardClientV2() {
                 </div>
               </div>
 
-              <div className="pt-6">
+              <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
+                <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                  {t("wz_back")}
+                </Button>
                 <Button 
                   onClick={handleNext} 
                   disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || req.cabling_done === undefined}
-                  className="w-full h-12 text-lg font-semibold"
+                  className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/20"
                 >
-                  
-                                            {t("wz_confirm_details")}
-                                          </Button>
+                  {t("wz_confirm_details")}
+                </Button>
               </div>
             </div>
           );
@@ -944,21 +962,20 @@ export function WizardClientV2() {
         case 5:
           if (otpSent) {
             return (
-              <div className="space-y-6 animate-in fade-in">
+              <div className="space-y-4 sm:space-y-6 animate-in fade-in">
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 text-blue-600 mb-3 mx-auto">
-                    <ShieldCheck className="w-7 h-7" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 mb-2 mx-auto">
+                    <ShieldCheck className="w-6 h-6" />
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-slate-900">{t("wz_enter_verification_code")}</h2>
-                  <p className="text-gray-600 text-sm">
-                    
-                                                {t("wz_weve_sent_a_6digit_verificatio")}{" "}
-                    <span className="font-semibold text-slate-900">+91 {req.customer_mobile}</span>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">{t("wz_enter_verification_code")}</h2>
+                  <p className="text-gray-500 dark:text-zinc-400 text-xs sm:text-sm">
+                    {t("wz_weve_sent_a_6digit_verificatio")}{" "}
+                    <span className="font-bold text-slate-900 dark:text-white">+91 {req.customer_mobile}</span>
                   </p>
                 </div>
 
-                <div className="py-2">
-                  <div className="flex justify-center gap-2 sm:gap-3" onPaste={handleOtpPaste}>
+                <div className="py-1 sm:py-2">
+                  <div className="flex justify-center gap-1.5 sm:gap-3" onPaste={handleOtpPaste}>
                     {otp.map((digit, index) => (
                       <input
                         key={index}
@@ -971,7 +988,7 @@ export function WizardClientV2() {
                         value={digit}
                         onChange={(e) => handleOtpChange(e.target.value, index)}
                         onKeyDown={(e) => handleOtpKeyDown(e, index)}
-                        className="w-11 h-14 sm:w-13 sm:h-16 text-center text-xl sm:text-2xl font-bold border-2 rounded-xl border-gray-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white text-gray-900"
+                        className="w-10 h-12 sm:w-13 sm:h-16 text-center text-lg sm:text-2xl font-black border-2 rounded-xl border-gray-200 dark:border-zinc-700 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                       />
                     ))}
                   </div>
@@ -981,35 +998,34 @@ export function WizardClientV2() {
                   onClick={() => handleVerifyOtp()}
                   disabled={loading || otp.join("").length !== 6}
                   size="lg"
-                  className="w-full text-lg h-14 font-semibold shadow-md bg-blue-600 hover:bg-blue-700"
+                  className="w-full text-sm sm:text-base h-12 sm:h-14 font-bold shadow-md bg-blue-600 hover:bg-blue-700 rounded-xl text-white"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2 justify-center">
-                      <Loader2 className="w-5 h-5 animate-spin" />  {t("wz_verifying_otp")}
-                                                    </span>
+                      <Loader2 className="w-4 h-4 animate-spin" /> {t("wz_verifying_otp")}
+                    </span>
                   ) : (
                     "Submit OTP & View Quotation"
                   )}
                 </Button>
 
-                <div className="flex items-center justify-between pt-2 text-sm">
+                <div className="flex items-center justify-between pt-1 sm:pt-2 text-xs sm:text-sm">
                   <button
                     type="button"
                     onClick={() => {
                       setOtpSent(false);
                       setOtp(["", "", "", "", "", ""]);
                     }}
-                    className="text-gray-500 hover:text-gray-800 font-medium transition-colors"
+                    className="text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold transition-colors"
                   >
-                    
-                                                {t("wz__change_mobile_number")}
-                                              </button>
+                    {t("wz__change_mobile_number")}
+                  </button>
 
                   <button
                     type="button"
                     disabled={countdown > 0 || loading}
                     onClick={handleFinishWizard}
-                    className={`font-semibold transition-colors ${
+                    className={`font-bold transition-colors ${
                       countdown > 0
                         ? "text-gray-400 cursor-not-allowed"
                         : "text-blue-600 hover:text-blue-700 hover:underline"
@@ -1023,24 +1039,26 @@ export function WizardClientV2() {
           }
 
           return (
-            <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-3xl font-semibold mb-2">{t("wz_final_step_get_your_quotation")}</h2>
-              <p className="text-gray-600 mb-6">{t("wz_please_enter_your_details_to_v")}</p>
+            <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
+              <div>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_final_step_get_your_quotation")}</h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_please_enter_your_details_to_v")}</p>
+              </div>
               
-              <div className="space-y-4">
+              <div className="space-y-2.5 sm:space-y-3.5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("wz_your_name_")}</label>
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">{t("wz_your_name_")}</label>
                   <input 
                     type="text" 
                     required
                     placeholder="e.g. Rahul Kumar" 
                     value={req.customer_name || ''} 
                     onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))} 
-                    className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("wz_mobile_number_")}</label>
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">{t("wz_mobile_number_")}</label>
                   <input 
                     type="tel" 
                     required
@@ -1048,86 +1066,79 @@ export function WizardClientV2() {
                     maxLength={10}
                     value={req.customer_mobile || ''} 
                     onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))} 
-                    className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("wz_email_optional")}</label>
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">{t("wz_email_optional")}</label>
                   <input 
                     type="email" 
                     placeholder="e.g. rahul@email.com" 
                     value={req.customer_email || ''} 
                     onChange={(e) => setReq(prev => ({ ...prev, customer_email: e.target.value }))} 
-                    className="w-full p-3.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
                 </div>
-                <div className="p-4 bg-green-50 rounded-xl border border-green-100">
-                  <label className="block text-sm font-bold text-green-900 mb-1">Referral Code (Optional)</label>
-                  <p className="text-xs text-green-700 mb-2">Submit Referral Code to get discount</p>
+                <div className="p-2.5 sm:p-3 bg-green-50/80 dark:bg-green-950/30 rounded-xl border border-green-200 dark:border-green-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-green-950 dark:text-green-300">Referral Code (Optional)</label>
+                    <span className="text-[10px] text-green-700 dark:text-green-400 font-medium">Get discount</span>
+                  </div>
                   <input 
                     type="text" 
                     placeholder="e.g. P102" 
                     value={req.partner_id || ''} 
                     onChange={(e) => setReq(prev => ({ ...prev, partner_id: e.target.value.toUpperCase() }))} 
-                    className="w-full p-3.5 border border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all uppercase placeholder-normal bg-white"
+                    className="w-full py-2 px-3 text-sm border border-green-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all uppercase placeholder-normal bg-white dark:bg-zinc-800 text-gray-900 dark:text-white font-semibold"
                   />
                 </div>
               </div>
 
-              <Button 
-                onClick={handleFinishWizard} 
-                disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} 
-                size="lg" 
-                className="w-full text-lg h-14 mt-6"
-              >
-                {loading ? (
-                  <span className="flex items-center gap-2 justify-center">
-                    <Loader2 className="w-5 h-5 animate-spin" />  {t("wz_sending_otp")}
-                                                </span>
-                ) : (
-                  "View My CCTV Options"
-                )}
-              </Button>
+              <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
+                <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2" disabled={loading}>
+                  {t("wz_back")}
+                </Button>
+                <Button 
+                  onClick={handleFinishWizard} 
+                  disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} 
+                  size="lg" 
+                  className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/20"
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2 justify-center">
+                      <Loader2 className="w-4 h-4 animate-spin" /> {t("wz_sending_otp")}
+                    </span>
+                  ) : (
+                    "View My CCTV Options"
+                  )}
+                </Button>
+              </div>
             </div>
           );
     }
   };
   return (
-    <div className="max-w-3xl mx-auto py-6 md:py-12 px-4 sm:px-6">
-      
-      
+    <div className="max-w-2xl mx-auto py-2 sm:py-6 md:py-10 px-2 sm:px-4 md:px-6">
       <h1 className="sr-only">{t("wz_cctv_quotation_wizard")}</h1>
-      <div className="bg-white rounded-2xl shadow-sm border p-4 md:p-8">
-        <div className="flex justify-between items-center mb-4">
-          <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            
-                                  {t("wz_exit")}
-                                </Link>
-          <span className="text-xs text-gray-400 font-medium">{t("wz_cctvquotationcom")}</span>
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 dark:border-zinc-800 p-3.5 sm:p-6 md:p-8">
+        <div className="flex justify-between items-center mb-2.5 sm:mb-4">
+          <Link href="/" className="text-xs sm:text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1 font-medium">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            {t("wz_exit")}
+          </Link>
+          <span className="text-[11px] sm:text-xs text-gray-400 font-medium">{t("wz_cctvquotationcom")}</span>
         </div>
         {step > 0 && (
-          <div className="mb-8">
-            <div className="h-2 bg-gray-100 rounded-full w-full overflow-hidden">
-              <div className="h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(Math.min(step, totalSteps) / totalSteps) * 100}%` }}></div>
+          <div className="mb-3.5 sm:mb-6">
+            <div className="h-1.5 sm:h-2 bg-gray-100 dark:bg-zinc-800 rounded-full w-full overflow-hidden">
+              <div className="h-1.5 sm:h-2 bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${(Math.min(step, totalSteps) / totalSteps) * 100}%` }}></div>
             </div>
-            <p className="text-sm text-gray-500 mt-2 text-right">{t("wz_step")} {Math.min(step, totalSteps)} of {totalSteps}</p>
+            <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1 sm:mt-1.5 text-right font-medium">{t("wz_step")} {Math.min(step, totalSteps)} of {totalSteps}</p>
           </div>
         )}
 
         {renderStep()}
-
-        {step > 0 && !otpSent && (
-          <div className="mt-12 flex justify-between">
-            <Button variant="outline" onClick={handlePrev} disabled={step <= 1 || loading}>
-              
-                                        {t("wz_back")}
-                                      </Button>
-          </div>
-        )}
       </div>
-
-      
     </div>
   );
 }

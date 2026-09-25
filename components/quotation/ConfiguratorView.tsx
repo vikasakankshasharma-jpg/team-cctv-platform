@@ -163,7 +163,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     const mixedReqs = (lead.wizard_answers?.["mixed_camera_requirements"] as any[]) || undefined;
 
     // Normalize "Analog" to "HD"
-    const rawTech = (lead.wizard_answers?.["q_tech"] as string) || lead.technology_choice || "IP";
+    const rawTech = (lead.wizard_answers?.["q_tech"] as string) || lead.technology_choice || "HD";
     const normalizedTech: "HD" | "IP" | "Wireless" = 
       (rawTech === "Analog" || rawTech === "analog" || rawTech === "HD" || rawTech === "hd") ? "HD"
       : (rawTech === "WiFi" || rawTech === "wifi" || rawTech === "Wireless" || rawTech === "wireless") ? "Wireless"
