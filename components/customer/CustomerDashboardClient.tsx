@@ -294,6 +294,14 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                       </div>
                     </div>
 
+                    {/* System Status Tracker */}
+                    {q.isPaid && q.rawLead && (
+                      <div className="border-t border-zinc-100 dark:border-zinc-800/50 mt-4 pt-2 mb-4">
+                        <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Order Progress</p>
+                        <SystemStatusWidget lead={q.rawLead} job={null} />
+                      </div>
+                    )}
+
                     {/* Right Actions */}
                     <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
                       
