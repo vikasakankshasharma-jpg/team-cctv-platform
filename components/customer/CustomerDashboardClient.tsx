@@ -88,77 +88,86 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Top Bar: Profile & Logout */}
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-xl shadow-md">
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6">
+          <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-md shrink-0">
               {String(safeUser.name || "C").charAt(0).toUpperCase()}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg sm:text-2xl font-black text-zinc-900 dark:text-white truncate">
                   {safeUser.name || "Valued Client"}
                 </h1>
-                <span className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900 text-xs font-black uppercase px-2.5 py-0.5 rounded-full">
+                <span className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900 text-[10px] sm:text-xs font-black uppercase px-2 py-0.5 rounded-full whitespace-nowrap">
                   Customer
                 </span>
               </div>
-              <p className="text-xs sm:text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">
+              <p className="text-xs sm:text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
                 {safeUser.mobile ? `+91 ${safeUser.mobile}` : "Authenticated Customer"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <Link
               href="/wizard"
-              className="flex-1 sm:flex-none text-center bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm"
+              className="flex-1 sm:flex-none flex items-center justify-center text-center bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm whitespace-nowrap"
             >
               + New Quotation
             </Link>
             <button
               onClick={handleLogout}
               disabled={loggingOut}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-bold transition-all cursor-pointer"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4 shrink-0" />
               <span>{loggingOut ? "Signing out..." : "Log Out"}</span>
             </button>
           </div>
         </div>
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm">
-            <div className="flex items-center justify-between text-zinc-500 mb-2">
-              <span className="text-xs font-black uppercase tracking-wider">Total Quotations</span>
-              <FileText className="w-5 h-5 text-blue-600" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm flex items-center justify-between sm:block">
+            <div>
+              <div className="flex items-center gap-2 text-zinc-500 mb-1 sm:mb-2">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Total Quotations</span>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
+                {totalQuotesCount}
+              </div>
             </div>
-            <div className="text-3xl font-black text-zinc-900 dark:text-white">
-              {totalQuotesCount}
-            </div>
-            <p className="text-xs text-zinc-400 mt-1 font-medium">Lifetime generated estimates</p>
+            <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">Lifetime generated estimates</p>
+            <FileText className="w-8 h-8 text-blue-600/20 sm:hidden" />
           </div>
 
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm">
-            <div className="flex items-center justify-between text-zinc-500 mb-2">
-              <span className="text-xs font-black uppercase tracking-wider">Booked Installations</span>
-              <Truck className="w-5 h-5 text-emerald-600" />
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm flex items-center justify-between sm:block">
+            <div>
+              <div className="flex items-center gap-2 text-zinc-500 mb-1 sm:mb-2">
+                <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Booked Installs</span>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
+                {paidQuotesCount}
+              </div>
             </div>
-            <div className="text-3xl font-black text-zinc-900 dark:text-white">
-              {paidQuotesCount}
-            </div>
-            <p className="text-xs text-zinc-400 mt-1 font-medium">Orders confirmed with advance payment</p>
+            <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">Orders confirmed with advance payment</p>
+            <Truck className="w-8 h-8 text-emerald-600/20 sm:hidden" />
           </div>
 
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm">
-            <div className="flex items-center justify-between text-zinc-500 mb-2">
-              <span className="text-xs font-black uppercase tracking-wider">Tax Invoices</span>
-              <Download className="w-5 h-5 text-indigo-600" />
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm flex items-center justify-between sm:block">
+            <div>
+              <div className="flex items-center gap-2 text-zinc-500 mb-1 sm:mb-2">
+                <Download className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Tax Invoices</span>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
+                {paidQuotesCount}
+              </div>
             </div>
-            <div className="text-3xl font-black text-zinc-900 dark:text-white">
-              {paidQuotesCount}
-            </div>
-            <p className="text-xs text-zinc-400 mt-1 font-medium">Official GST tax invoices available</p>
+            <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">Official GST tax invoices available</p>
+            <Download className="w-8 h-8 text-indigo-600/20 sm:hidden" />
           </div>
         </div>
 
@@ -283,35 +292,37 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                     </div>
 
                     {/* Right Actions */}
-                    <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+                    <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
                       
-                      {/* Review / View Quote */}
-                      <Link
-                        href={`/quote/${q.leadId}/review/${q.quoteId}`}
-                        className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all"
-                      >
-                        <FileText className="w-4 h-4 text-zinc-500" />
-                        <span>View Quote</span>
-                      </Link>
+                      <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
+                        {/* Review / View Quote */}
+                        <Link
+                          href={`/quote/${q.leadId}/review/${q.quoteId}`}
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
+                        >
+                          <FileText className="w-4 h-4 text-zinc-500 shrink-0" />
+                          <span>View Quote</span>
+                        </Link>
 
-                      {/* Download Quote */}
-                      <a
-                        href={`/api/quote/${q.quoteId}/download`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all"
-                      >
-                        <Download className="w-4 h-4 text-zinc-500" />
-                        <span>Download PDF</span>
-                      </a>
+                        {/* Download Quote */}
+                        <a
+                          href={`/api/quote/${q.quoteId}/download`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
+                        >
+                          <Download className="w-4 h-4 text-zinc-500 shrink-0" />
+                          <span>Download PDF</span>
+                        </a>
+                      </div>
 
                       {/* Track Booking */}
                       {q.isPaid && (
                         <Link
                           href={`/track/${q.leadId}`}
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-black transition-all"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-black transition-all whitespace-nowrap"
                         >
-                          <Truck className="w-4 h-4" />
+                          <Truck className="w-4 h-4 shrink-0" />
                           <span>Track Status</span>
                         </Link>
                       )}
@@ -319,9 +330,9 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                       {(q.amountDue ?? 0) > 0 && q.isPaid && (
                         <Link
                           href={`/quote/${q.leadId}/review/${q.quoteId}`}
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 text-xs font-black transition-all"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 text-xs font-black transition-all whitespace-nowrap"
                         >
-                          <CreditCard className="w-4 h-4" />
+                          <CreditCard className="w-4 h-4 shrink-0" />
                           <span>Pay Balance (Rs. {(q.amountDue ?? 0).toLocaleString('en-IN')})</span>
                         </Link>
                       )}
@@ -332,9 +343,9 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           href={`/api/invoice/${q.quoteId}/download`}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all whitespace-nowrap"
                         >
-                          <Download className="w-4 h-4" />
+                          <Download className="w-4 h-4 shrink-0" />
                           <span>Tax Invoice</span>
                         </a>
                       )}
@@ -460,35 +471,37 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                     </div>
 
                     {/* Right Actions */}
-                    <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+                    <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
                       
-                      {/* Review / View Quote */}
-                      <Link
-                        href={`/quote/${q.leadId}/review/${q.quoteId}`}
-                        className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all"
-                      >
-                        <FileText className="w-4 h-4 text-zinc-500" />
-                        <span>View Quote</span>
-                      </Link>
+                      <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
+                        {/* Review / View Quote */}
+                        <Link
+                          href={`/quote/${q.leadId}/review/${q.quoteId}`}
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
+                        >
+                          <FileText className="w-4 h-4 text-zinc-500 shrink-0" />
+                          <span>View Quote</span>
+                        </Link>
 
-                      {/* Download Quote */}
-                      <a
-                        href={`/api/quote/${q.quoteId}/download`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all"
-                      >
-                        <Download className="w-4 h-4 text-zinc-500" />
-                        <span>Download PDF</span>
-                      </a>
+                        {/* Download Quote */}
+                        <a
+                          href={`/api/quote/${q.quoteId}/download`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
+                        >
+                          <Download className="w-4 h-4 text-zinc-500 shrink-0" />
+                          <span>Download PDF</span>
+                        </a>
+                      </div>
 
                       {/* Track Booking */}
                       {q.isPaid && (
                         <Link
                           href={`/track/${q.leadId}`}
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-black transition-all"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-black transition-all whitespace-nowrap"
                         >
-                          <Truck className="w-4 h-4" />
+                          <Truck className="w-4 h-4 shrink-0" />
                           <span>Track Status</span>
                         </Link>
                       )}
@@ -496,9 +509,9 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                       {(q.amountDue ?? 0) > 0 && q.isPaid && (
                         <Link
                           href={`/quote/${q.leadId}/review/${q.quoteId}`}
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 text-xs font-black transition-all"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 text-xs font-black transition-all whitespace-nowrap"
                         >
-                          <CreditCard className="w-4 h-4" />
+                          <CreditCard className="w-4 h-4 shrink-0" />
                           <span>Pay Balance (Rs. {(q.amountDue ?? 0).toLocaleString('en-IN')})</span>
                         </Link>
                       )}
@@ -509,9 +522,9 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           href={`/api/invoice/${q.quoteId}/download`}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all"
+                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all whitespace-nowrap"
                         >
-                          <Download className="w-4 h-4" />
+                          <Download className="w-4 h-4 shrink-0" />
                           <span>Tax Invoice</span>
                         </a>
                       )}
@@ -545,17 +558,17 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
         </div>
 
         {/* VIP Support Banner */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-lg">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6 shadow-lg">
           <div>
-            <h3 className="text-xl font-black mb-1">Need help with your CCTV installation?</h3>
+            <h3 className="text-lg sm:text-xl font-black mb-1 sm:mb-2">Need help with your CCTV installation?</h3>
             <p className="text-blue-100 text-xs sm:text-sm max-w-xl">
               Our engineering coordination desk is available 7 days a week. Call or message us for site survey rescheduling, hardware upgrades, or warranty queries.
             </p>
           </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <a
               href="tel:+917357612865"
-              className="flex-1 sm:flex-none text-center bg-white hover:bg-blue-50 text-blue-800 px-5 py-3 rounded-xl font-black text-xs transition-all shadow"
+              className="flex-1 sm:flex-none text-center bg-white hover:bg-blue-50 text-blue-800 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-black text-xs transition-all shadow"
             >
               Call: +91 73576 12865
             </a>
@@ -563,7 +576,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               href={`https://wa.me/917357612865?text=${encodeURIComponent("Hi TEAM CCTV, I need support with my CCTV installation.")}`}
               target="_blank"
               rel="noreferrer"
-              className="flex-1 sm:flex-none text-center bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-black text-xs transition-all shadow flex items-center justify-center gap-1.5"
+              className="flex-1 sm:flex-none text-center bg-emerald-500 hover:bg-emerald-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-black text-xs transition-all shadow flex items-center justify-center gap-1.5"
             >
               <MessageSquare className="w-4 h-4" />
               WhatsApp
