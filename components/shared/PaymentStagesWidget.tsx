@@ -49,24 +49,20 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
 
   // Stage 2 is paid if delivery_paid or fully paid
   const isStage2Paid = 
-    lead?.delivery_amount > 0 || 
-    quote?.delivery_amount > 0 ||
     ["delivery_paid", "paid"].includes(lead?.payment_status) ||
     ["delivery_paid", "paid"].includes(quote?.payment_status);
 
-  // Stage 3 (Installation) is unlocked if installation is complete or delivery is done (and they're paying on spot)
+  // Stage 3 (Installation) is unlocked ONLY if Stage 2 is already paid
   const isStage3Unlocked = 
+    isStage2Paid ||
     lead?.install_status === "COMPLETED" || 
     lead?.completion_pin_verified === true ||
-    lead?.status === "won" ||
     lead?.payment_status === "paid" ||
     quote?.payment_status === "paid" ||
     quote?.status === "COMPLETED";
 
   // Stage 3 is paid if fully paid
   const isStage3Paid = 
-    lead?.installation_amount > 0 || 
-    quote?.installation_amount > 0 ||
     lead?.payment_status === "paid" ||
     quote?.payment_status === "paid" ||
     quote?.status === "COMPLETED";
