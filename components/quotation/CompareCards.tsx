@@ -225,7 +225,7 @@ export function CompareCards({
       available_tb: info?.available_tb,
       camera_count: info?.camera_count,
     });
-  }, [cardsData, leadId, overflowCaptured, customerName, customerPhone, selection.camera_count]);
+  }, [cardsData, leadId, overflowCaptured, customerName, customerPhone, selection.camera_count, addons]);
 
   const scrollToCard = useCallback((index: number) => {
     const container = scrollRef.current;
