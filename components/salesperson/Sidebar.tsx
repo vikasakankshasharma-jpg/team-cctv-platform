@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   HandCoins,
+  MapPin,
 } from "lucide-react";
 
 const NAV_GROUPS = [
@@ -26,6 +27,7 @@ const NAV_GROUPS = [
   {
     label: "Sales Operations",
     items: [
+      { name: "Daily Client Visits", href: "/salesperson/route", icon: MapPin },
       { name: "My Leads",     href: "/salesperson/leads",        icon: Users },
       { name: "Walk-In Quote",href: "/salesperson/create-quote", icon: FileText },
     ]
