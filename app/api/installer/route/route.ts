@@ -104,8 +104,20 @@ export async function POST(req: Request) {
         route_order: null,
         updated_at: serverTimestamp(),
       });
-
       return NextResponse.json({ success: true, message: "Stop moved back to pending pool" });
+    }
+
+    if (action === "update_status" && leadId && body.status) {
+      const leadRef = adminDb.collection(COLLECTIONS.LEADS).doc(leadId);
+      const updatePayload: any = {
+        status: body.status,
+        updated_at: serverTimestamp(),
+      };
+      if (body.status === "site_visit") {
+        updatePayload.site_visit_date = new Date().toISOString();
+      }
+      await leadRef.update(updatePayload);
+      return NextResponse.json({ success: true, message: `Status updated to ${body.status}` });
     }
 
     return NextResponse.json({ success: false, error: "Invalid action or parameters" }, { status: 400 });

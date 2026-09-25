@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { 
   Calendar as CalendarIcon, 
   MapPin, 
@@ -16,7 +16,12 @@ import {
   ExternalLink,
   Layers,
   ListOrdered,
-  ArrowRight
+  ArrowRight,
+  Sparkles,
+  Locate,
+  Car,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { GoogleMap, MarkerF, PolylineF, InfoWindowF, useJsApiLoader } from "@react-google-maps/api";
 import { toast } from "sonner";
@@ -51,9 +56,9 @@ interface RouteStop {
 }
 
 const TIME_SLOT_LABELS: Record<string, { label: string; time: string; color: string; icon: string }> = {
-  morning: { label: "Morning Slot", time: "09:30 AM – 01:00 PM", color: "bg-amber-500/10 text-amber-500 border-amber-500/20", icon: "🌅" },
-  afternoon: { label: "Afternoon Slot", time: "01:30 PM – 05:00 PM", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: "☀️" },
-  evening: { label: "Evening Slot", time: "05:30 PM – 08:00 PM", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: "🌆" },
+  morning: { label: "Morning Slot", time: "09:30 AM – 01:00 PM", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20", icon: "🌅" },
+  afternoon: { label: "Afternoon Slot", time: "01:30 PM – 05:00 PM", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20", icon: "☀️" },
+  evening: { label: "Evening Slot", time: "05:30 PM – 08:00 PM", color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20", icon: "🌆" },
 };
 
 const mapContainerStyle = {
@@ -61,6 +66,24 @@ const mapContainerStyle = {
   height: "100%",
   borderRadius: "1rem",
 };
+
+// Haversine distance calculation in kilometers
+function getHaversineDistanceKm(
+  p1: { lat: number; lng: number },
+  p2: { lat: number; lng: number }
+): number {
+  const R = 6371;
+  const dLat = ((p2.lat - p1.lat) * Math.PI) / 180;
+  const dLng = ((p2.lng - p1.lng) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((p1.lat * Math.PI) / 180) *
+      Math.cos((p2.lat * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 export function RoutePlannerClient() {
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
@@ -71,12 +94,16 @@ export function RoutePlannerClient() {
   const [activeTab, setActiveTab] = useState<"timeline" | "map">("timeline");
   const [selectedMarker, setSelectedMarker] = useState<RouteStop | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [technicianLocation, setTechnicianLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locatingUser, setLocatingUser] = useState(false);
 
   const { isLoaded: isMapLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
   });
 
-  const fetchRoute = async (date: string) => {
+  // Fetch route and pending jobs
+  const fetchRoute = useCallback(async (date: string) => {
     setLoading(true);
     try {
       const res = await fetch(`/api/installer/route?date=${date}`);
@@ -87,18 +114,40 @@ export function RoutePlannerClient() {
       } else {
         toast.error(data.error || "Failed to load route data");
       }
-    } catch (e: any) {
+    } catch {
       toast.error("Failed to connect to route service");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchRoute(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, fetchRoute]);
 
-  // Reorder stops (move stop up or down)
+  // Request Technician's Live GPS
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+    setLocatingUser(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setTechnicianLocation(coords);
+        setLocatingUser(false);
+        toast.success("Current location captured!");
+      },
+      (err) => {
+        setLocatingUser(false);
+        toast.error("Could not obtain GPS location: " + err.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  // Move a stop up or down in sequence
   const handleMoveStop = async (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= scheduledStops.length) return;
@@ -107,13 +156,12 @@ export function RoutePlannerClient() {
     const [moved] = newStops.splice(index, 1);
     newStops.splice(targetIndex, 0, moved);
 
-    // Re-index route_order sequentially 1, 2, 3...
     const updated = newStops.map((stop, idx) => ({
       ...stop,
       route_order: idx + 1,
     }));
 
-    setScheduledStops(updated); // Optimistic UI update
+    setScheduledStops(updated);
 
     try {
       setIsSaving(true);
@@ -132,7 +180,7 @@ export function RoutePlannerClient() {
       const data = await res.json();
       if (!data.success) {
         toast.error("Failed to persist reordering");
-        fetchRoute(selectedDate); // Revert
+        fetchRoute(selectedDate);
       }
     } catch {
       toast.error("Network error saving route");
@@ -162,6 +210,112 @@ export function RoutePlannerClient() {
       toast.success("Time slot updated");
     } catch {
       toast.error("Failed to update time slot");
+    }
+  };
+
+  // Update lead status (e.g. site_visit, en_route, completed)
+  const handleUpdateStatus = async (stopId: string, newStatus: string) => {
+    setScheduledStops((prev) =>
+      prev.map((s) => (s.id === stopId ? { ...s, status: newStatus } : s))
+    );
+
+    try {
+      const res = await fetch("/api/installer/route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_status",
+          leadId: stopId,
+          status: newStatus,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Job updated to ${newStatus.replace("_", " ").toUpperCase()}`);
+      } else {
+        toast.error(data.error || "Failed to update status");
+        fetchRoute(selectedDate);
+      }
+    } catch {
+      toast.error("Network error updating status");
+      fetchRoute(selectedDate);
+    }
+  };
+
+  // Nearest-Neighbor Route Auto-Optimizer
+  const handleAutoOptimize = async () => {
+    const stopsWithCoords = scheduledStops.filter(
+      (s) => s.coordinates?.lat && s.coordinates?.lng
+    );
+
+    if (stopsWithCoords.length < 2) {
+      toast.info("Need at least 2 stops with coordinates to auto-optimize");
+      return;
+    }
+
+    setIsOptimizing(true);
+    try {
+      let currentPoint = technicianLocation || stopsWithCoords[0].coordinates!;
+      const remaining = [...stopsWithCoords];
+      const optimized: RouteStop[] = [];
+
+      // If technician location is not provided, keep first stop as starting base
+      if (!technicianLocation) {
+        optimized.push(remaining.shift()!);
+        currentPoint = optimized[0].coordinates!;
+      }
+
+      while (remaining.length > 0) {
+        let nearestIdx = 0;
+        let minDistance = Infinity;
+
+        for (let i = 0; i < remaining.length; i++) {
+          const d = getHaversineDistanceKm(currentPoint, remaining[i].coordinates!);
+          if (d < minDistance) {
+            minDistance = d;
+            nearestIdx = i;
+          }
+        }
+
+        const [nextStop] = remaining.splice(nearestIdx, 1);
+        optimized.push(nextStop);
+        currentPoint = nextStop.coordinates!;
+      }
+
+      // Append stops without coordinates at the tail
+      const stopsWithoutCoords = scheduledStops.filter(
+        (s) => !s.coordinates?.lat || !s.coordinates?.lng
+      );
+      const finalOrder = [...optimized, ...stopsWithoutCoords].map((s, idx) => ({
+        ...s,
+        route_order: idx + 1,
+      }));
+
+      setScheduledStops(finalOrder);
+
+      const res = await fetch("/api/installer/route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "reorder",
+          reorderedStops: finalOrder.map((s) => ({
+            id: s.id,
+            route_order: s.route_order,
+            time_slot: s.time_slot,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`⚡ Route sequence optimized for shortest travel!`);
+      } else {
+        toast.error("Failed to save optimized sequence");
+        fetchRoute(selectedDate);
+      }
+    } catch {
+      toast.error("Error calculating optimized route");
+    } finally {
+      setIsOptimizing(false);
     }
   };
 
@@ -230,7 +384,7 @@ export function RoutePlannerClient() {
     }
   };
 
-  // Construct Multi-Stop Google Maps Directions Link
+  // Multi-Stop Google Maps Directions Link (originating at technician's GPS if available)
   const fullGoogleMapsRouteUrl = useMemo(() => {
     const validCoordsStops = scheduledStops.filter(
       (s) => s.coordinates && typeof s.coordinates.lat === "number" && typeof s.coordinates.lng === "number"
@@ -238,7 +392,11 @@ export function RoutePlannerClient() {
 
     if (validCoordsStops.length === 0) return null;
 
-    if (validCoordsStops.length === 1) {
+    const originParam = technicianLocation 
+      ? `origin=${technicianLocation.lat},${technicianLocation.lng}&` 
+      : "";
+
+    if (validCoordsStops.length === 1 && !technicianLocation) {
       const c = validCoordsStops[0].coordinates!;
       return `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`;
     }
@@ -249,16 +407,37 @@ export function RoutePlannerClient() {
       .map((s) => `${s.coordinates!.lat},${s.coordinates!.lng}`)
       .join("|");
 
-    return `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}&waypoints=${waypoints}`;
-  }, [scheduledStops]);
+    return `https://www.google.com/maps/dir/?api=1&${originParam}destination=${destination.lat},${destination.lng}${waypoints ? `&waypoints=${waypoints}` : ""}`;
+  }, [scheduledStops, technicianLocation]);
 
   // Center coordinates for map view
   const defaultCenter = useMemo(() => {
+    if (technicianLocation) return technicianLocation;
     const firstWithCoords = scheduledStops.find((s) => s.coordinates?.lat && s.coordinates?.lng);
     if (firstWithCoords?.coordinates) {
       return firstWithCoords.coordinates;
     }
-    return { lat: 26.9124, lng: 75.7873 }; // Jaipur center
+    return { lat: 26.9124, lng: 75.7873 }; // Jaipur fallback center
+  }, [scheduledStops, technicianLocation]);
+
+  // Estimated Total Travel Distance
+  const estimatedDistanceKm = useMemo(() => {
+    let dist = 0;
+    const coordsStops = scheduledStops.filter((s) => s.coordinates?.lat && s.coordinates?.lng);
+    if (coordsStops.length === 0) return "0.0";
+
+    if (technicianLocation && coordsStops.length > 0) {
+      dist += getHaversineDistanceKm(technicianLocation, coordsStops[0].coordinates!);
+    }
+    for (let i = 0; i < coordsStops.length - 1; i++) {
+      dist += getHaversineDistanceKm(coordsStops[i].coordinates!, coordsStops[i + 1].coordinates!);
+    }
+    return dist.toFixed(1);
+  }, [scheduledStops, technicianLocation]);
+
+  // Completed Count
+  const completedCount = useMemo(() => {
+    return scheduledStops.filter((s) => s.status === "completed" || s.status === "WON").length;
   }, [scheduledStops]);
 
   return (
@@ -275,7 +454,7 @@ export function RoutePlannerClient() {
             </h1>
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Optimized travel schedule with live map navigation and slot sequencing.
+            Sequence stops, optimize drive path, and navigate seamlessly in real-time.
           </p>
         </div>
 
@@ -313,26 +492,80 @@ export function RoutePlannerClient() {
         </div>
       </div>
 
-      {/* ── ACTION BAR (Navigation CTA + View Mode Switcher) ── */}
+      {/* ── SUMMARY STATS STRIP ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3 sm:p-4 rounded-xl">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Scheduled Stops</p>
+          <p className="text-xl font-black text-zinc-900 dark:text-zinc-100 mt-0.5">{scheduledStops.length}</p>
+        </div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3 sm:p-4 rounded-xl">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Completed Visits</p>
+          <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+            {completedCount} <span className="text-xs font-semibold text-zinc-400">/ {scheduledStops.length}</span>
+          </p>
+        </div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3 sm:p-4 rounded-xl">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Est. Travel Dist.</p>
+          <p className="text-xl font-black text-blue-600 dark:text-blue-400 mt-0.5">
+            ~{estimatedDistanceKm} <span className="text-xs font-normal">km</span>
+          </p>
+        </div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3 sm:p-4 rounded-xl">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Pending Leads</p>
+          <p className="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">{pendingPool.length}</p>
+        </div>
+      </div>
+
+      {/* ── ACTION BAR (Navigation CTA + Auto-Optimize + Live Location + View Switcher) ── */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Full Route Navigation Button */}
-        {fullGoogleMapsRouteUrl ? (
-          <a
-            href={fullGoogleMapsRouteUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm shadow-md transition-all"
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Full Route Navigation Button */}
+          {fullGoogleMapsRouteUrl ? (
+            <a
+              href={fullGoogleMapsRouteUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all"
+            >
+              <Navigation className="w-4 h-4" />
+              <span>Start Daily Route ({scheduledStops.length} Stops)</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
+          ) : (
+            <div className="text-xs text-zinc-400 italic flex items-center gap-1.5 p-2">
+              <Clock className="w-3.5 h-3.5" />
+              <span>Add stops with pin locations to enable 1-tap route navigation.</span>
+            </div>
+          )}
+
+          {/* Auto-Optimize Sequence Button */}
+          {scheduledStops.length >= 2 && (
+            <button
+              onClick={handleAutoOptimize}
+              disabled={isOptimizing}
+              className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 px-3.5 py-2.5 rounded-xl font-bold text-xs transition-all disabled:opacity-50"
+              title="Automatically reorder stops for shortest driving loop"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isOptimizing ? "Optimizing..." : "⚡ Auto-Optimize Sequence"}</span>
+            </button>
+          )}
+
+          {/* Technician GPS Button */}
+          <button
+            onClick={handleLocateMe}
+            disabled={locatingUser}
+            className={`inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs border transition-all ${
+              technicianLocation
+                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800"
+                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200"
+            }`}
+            title="Pin your current live GPS position as Route Start"
           >
-            <Navigation className="w-4 h-4" />
-            <span>Start Daily Route ({scheduledStops.length} Stops)</span>
-            <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-          </a>
-        ) : (
-          <div className="text-xs text-zinc-400 italic flex items-center gap-1.5 p-2">
-            <Clock className="w-3.5 h-3.5" />
-            <span>Add stops with pin location to enable 1-tap route navigation.</span>
-          </div>
-        )}
+            <Locate className={`w-3.5 h-3.5 ${locatingUser ? "animate-spin" : ""}`} />
+            <span>{technicianLocation ? "📍 Location Synced" : "Locate Me"}</span>
+          </button>
+        </div>
 
         {/* View Toggle */}
         <div className="flex items-center bg-zinc-200 dark:bg-zinc-800/80 p-1 rounded-xl self-end sm:self-auto">
@@ -381,9 +614,26 @@ export function RoutePlannerClient() {
                 mapTypeControl: false,
               }}
             >
+              {/* Technician's Current Location Marker */}
+              {technicianLocation && (
+                <MarkerF
+                  position={technicianLocation}
+                  icon={{
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 9,
+                    fillColor: "#0284C7",
+                    fillOpacity: 1,
+                    strokeColor: "#ffffff",
+                    strokeWeight: 3,
+                  }}
+                  title="You (Technician)"
+                />
+              )}
+
               {/* Stop Markers */}
               {scheduledStops.map((stop, idx) => {
                 if (!stop.coordinates?.lat || !stop.coordinates?.lng) return null;
+                const isCompleted = stop.status === "completed" || stop.status === "WON";
                 return (
                   <MarkerF
                     key={stop.id}
@@ -400,9 +650,12 @@ export function RoutePlannerClient() {
 
               {/* Connecting Polyline Route */}
               <PolylineF
-                path={scheduledStops
-                  .filter((s) => s.coordinates?.lat && s.coordinates?.lng)
-                  .map((s) => s.coordinates!)}
+                path={[
+                  ...(technicianLocation ? [technicianLocation] : []),
+                  ...scheduledStops
+                    .filter((s) => s.coordinates?.lat && s.coordinates?.lng)
+                    .map((s) => s.coordinates!),
+                ]}
                 options={{
                   strokeColor: "#2563EB",
                   strokeOpacity: 0.8,
@@ -464,17 +717,28 @@ export function RoutePlannerClient() {
                   stop.billing_details?.address_line1 ||
                   `${stop.address?.area || ""}, ${stop.address?.city || "Jaipur"}`;
                 const pincode = stop.address?.pincode || stop.billing_details?.pincode;
+                const isCompleted = stop.status === "completed" || stop.status === "WON";
+                const isSiteVisit = stop.status === "site_visit";
+                const isEnRoute = stop.status === "en_route";
 
                 return (
                   <div
                     key={stop.id}
-                    className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs hover:border-blue-500/50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    className={`bg-white dark:bg-zinc-900 border rounded-2xl p-4 sm:p-5 shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                      isCompleted
+                        ? "border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/20 dark:bg-emerald-950/10"
+                        : "border-zinc-200 dark:border-zinc-800 hover:border-blue-500/50"
+                    }`}
                   >
                     {/* Left: Stop Index & Core Details */}
                     <div className="flex items-start gap-3.5 min-w-0 flex-1">
                       {/* Sequence Badge */}
-                      <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
-                        #{index + 1}
+                      <div className={`w-10 h-10 rounded-2xl font-black text-sm flex items-center justify-center shrink-0 shadow-sm ${
+                        isCompleted
+                          ? "bg-emerald-600 text-white shadow-emerald-500/20"
+                          : "bg-blue-600 text-white shadow-blue-500/20"
+                      }`}>
+                        {isCompleted ? <CheckCircle className="w-5 h-5" /> : `#${index + 1}`}
                       </div>
 
                       <div className="min-w-0 space-y-1">
@@ -486,6 +750,16 @@ export function RoutePlannerClient() {
                           </span>
                           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 uppercase">
                             {stop.property_type || "Residential"}
+                          </span>
+
+                          {/* Real-time Status Badge */}
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${
+                            isCompleted ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" :
+                            isSiteVisit ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 animate-pulse" :
+                            isEnRoute ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" :
+                            "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                          }`}>
+                            {isCompleted ? "Completed" : isSiteVisit ? "On Site / Visit" : isEnRoute ? "En Route" : (stop.status || "Scheduled")}
                           </span>
                         </div>
 
@@ -502,7 +776,50 @@ export function RoutePlannerClient() {
                       </div>
                     </div>
 
-                    {/* Middle: Slot Modifier & Quick Actions */}
+                    {/* Middle: On-Site Status Progression Buttons */}
+                    <div className="flex items-center gap-1.5 self-start md:self-center">
+                      {!isCompleted && !isSiteVisit && !isEnRoute && (
+                        <button
+                          onClick={() => handleUpdateStatus(stop.id, "en_route")}
+                          className="px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 text-amber-700 dark:text-amber-400 text-xs font-bold transition-colors inline-flex items-center gap-1 border border-amber-200 dark:border-amber-800/40"
+                          title="Notify that you are traveling to this site"
+                        >
+                          <Car className="w-3.5 h-3.5" />
+                          <span>En Route</span>
+                        </button>
+                      )}
+
+                      {isEnRoute && (
+                        <button
+                          onClick={() => handleUpdateStatus(stop.id, "site_visit")}
+                          className="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 text-blue-700 dark:text-blue-400 text-xs font-bold transition-colors inline-flex items-center gap-1 border border-blue-200 dark:border-blue-800/40"
+                          title="Mark arrived on customer site"
+                        >
+                          <MapPin className="w-3.5 h-3.5" />
+                          <span>Arrived</span>
+                        </button>
+                      )}
+
+                      {isSiteVisit && (
+                        <button
+                          onClick={() => handleUpdateStatus(stop.id, "completed")}
+                          className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-xs"
+                          title="Complete site visit / job"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Complete Visit</span>
+                        </button>
+                      )}
+
+                      {isCompleted && (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 px-2 py-1">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Visit Done</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Right: Slot Modifier & Quick Actions */}
                     <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-zinc-100 dark:border-zinc-800">
                       {/* Change Slot */}
                       <select
@@ -515,7 +832,7 @@ export function RoutePlannerClient() {
                         <option value="evening">🌆 Evening (05:30-08:00)</option>
                       </select>
 
-                      {/* Direct Navigation */}
+                      {/* Direct Single Navigation */}
                       {stop.map_url || stop.coordinates ? (
                         <a
                           href={
