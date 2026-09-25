@@ -67,70 +67,54 @@ export default async function CustomerDashboardPage() {
 
   try {
     // ────────────────────────────────────────────────────────────
-    // 1. FETCH ALL LEADS LINKED TO THIS CUSTOMER (by UID or Phone)
+    // 1 & 2. FETCH ALL LEADS & DIRECT QUOTES LINKED TO THIS CUSTOMER
     // ────────────────────────────────────────────────────────────
+    const initialPromises: Promise<void>[] = [];
+
     if (uid) {
-      try {
-        const snapByUid = await adminDb.collection("leads").where("firebase_uid", "==", uid).get();
-        snapByUid.docs.forEach((d) => leadDocsMap.set(d.id, { id: d.id, ...d.data() }));
-      } catch (e) {
-        console.warn("[CustomerDashboard] snapByUid error:", e);
-      }
+      initialPromises.push(
+        adminDb.collection("leads").where("firebase_uid", "==", uid).get()
+          .then(snap => snap.docs.forEach(d => leadDocsMap.set(d.id, { id: d.id, ...d.data() })))
+          .catch(e => console.warn("[CustomerDashboard] snapByUid error:", e))
+      );
+      initialPromises.push(
+        adminDb.collection("quotes").where("firebase_uid", "==", uid).get()
+          .then(snap => snap.docs.forEach(d => quoteDocsMap.set(d.id, { id: d.id, ...d.data() })))
+          .catch(() => {}) // Ignored if index not available
+      );
     }
 
     if (rawMobile && rawMobile.length === 10) {
-      try {
-        const [snapByMobile, snapByCustPhone] = await Promise.all([
-          adminDb.collection("leads").where("mobile_number", "==", rawMobile).get(),
-          adminDb.collection("leads").where("customer_phone", "==", rawMobile).get(),
-        ]);
-
-        snapByMobile.docs.forEach((d) => leadDocsMap.set(d.id, { id: d.id, ...d.data() }));
-        snapByCustPhone.docs.forEach((d) => leadDocsMap.set(d.id, { id: d.id, ...d.data() }));
-      } catch (e) {
-        console.warn("[CustomerDashboard] snapByMobile error:", e);
-      }
+      initialPromises.push(
+        adminDb.collection("leads").where("mobile_number", "==", rawMobile).get()
+          .then(snap => snap.docs.forEach(d => leadDocsMap.set(d.id, { id: d.id, ...d.data() })))
+          .catch(e => console.warn("[CustomerDashboard] snapByMobile error:", e))
+      );
+      initialPromises.push(
+        adminDb.collection("leads").where("customer_phone", "==", rawMobile).get()
+          .then(snap => snap.docs.forEach(d => leadDocsMap.set(d.id, { id: d.id, ...d.data() })))
+          .catch(e => console.warn("[CustomerDashboard] snapByCustPhone error:", e))
+      );
+      initialPromises.push(
+        adminDb.collection("quotes").where("customer_mobile", "in", [rawMobile, `+91${rawMobile}`]).get()
+          .then(snap => snap.docs.forEach(d => quoteDocsMap.set(d.id, { id: d.id, ...d.data() })))
+          .catch(() => adminDb.collection("quotes").where("customer_mobile", "==", rawMobile).get()
+            .then(snap => snap.docs.forEach(d => quoteDocsMap.set(d.id, { id: d.id, ...d.data() })))
+            .catch(e => console.warn("[CustomerDashboard] quotes fallback error:", e))
+          )
+      );
     }
 
-    const allLeads = Array.from(leadDocsMap.values());
+    await Promise.all(initialPromises);
 
+    const allLeads = Array.from(leadDocsMap.values());
     if (customerName === "Valued Client" && allLeads.length > 0) {
       customerName = allLeads[0].customer_name || allLeads[0].name || "Valued Client";
     }
 
-    // ────────────────────────────────────────────────────────────
-    // 2. DISCOVER ALL QUOTES (Direct Query on Quotes + Lead Quotes)
-    // ────────────────────────────────────────────────────────────
-    if (rawMobile && rawMobile.length === 10) {
-      try {
-        const quotesByMobileSnap = await adminDb
-          .collection("quotes")
-          .where("customer_mobile", "in", [rawMobile, `+91${rawMobile}`])
-          .get();
-        quotesByMobileSnap.docs.forEach((d) => quoteDocsMap.set(d.id, { id: d.id, ...d.data() }));
-      } catch {
-        try {
-          const fallbackSnap = await adminDb
-            .collection("quotes")
-            .where("customer_mobile", "==", rawMobile)
-            .get();
-          fallbackSnap.docs.forEach((d) => quoteDocsMap.set(d.id, { id: d.id, ...d.data() }));
-        } catch (e) {
-          console.warn("[CustomerDashboard] quotes fallback error:", e);
-        }
-      }
-    }
-
-    if (uid) {
-      try {
-        const quotesByUidSnap = await adminDb.collection("quotes").where("firebase_uid", "==", uid).get();
-        quotesByUidSnap.docs.forEach((d) => quoteDocsMap.set(d.id, { id: d.id, ...d.data() }));
-      } catch {
-        // Ignored if index not available
-      }
-    }
-
     // Extract quote IDs explicitly attached to leads
+    const quoteFetchPromises: Promise<void>[] = [];
+    
     for (const lead of allLeads) {
       const candidateIds: string[] = [];
       if (typeof lead.won_quote_id === "string" && lead.won_quote_id.trim()) candidateIds.push(lead.won_quote_id.trim());
@@ -151,25 +135,54 @@ export default async function CustomerDashboardPage() {
 
       for (const qId of candidateIds) {
         if (!qId || quoteDocsMap.has(qId)) continue;
-        try {
-          const rootDoc = await adminDb.collection("quotes").doc(qId).get();
-          if (rootDoc.exists) {
-            quoteDocsMap.set(rootDoc.id, { id: rootDoc.id, lead_id: lead.id, ...rootDoc.data() });
-          } else if (lead.id) {
-            const subDoc = await adminDb.collection("leads").doc(lead.id).collection("quotes").doc(qId).get();
-            if (subDoc.exists) {
-              quoteDocsMap.set(subDoc.id, { id: subDoc.id, lead_id: lead.id, ...subDoc.data() });
+        quoteDocsMap.set(qId, null); // mark as pending to prevent duplicates in candidate list
+        
+        quoteFetchPromises.push((async () => {
+          try {
+            const rootDoc = await adminDb.collection("quotes").doc(qId).get();
+            if (rootDoc.exists) {
+              quoteDocsMap.set(rootDoc.id, { id: rootDoc.id, lead_id: lead.id, ...rootDoc.data() });
+            } else if (lead.id) {
+              const subDoc = await adminDb.collection("leads").doc(lead.id).collection("quotes").doc(qId).get();
+              if (subDoc.exists) {
+                quoteDocsMap.set(subDoc.id, { id: subDoc.id, lead_id: lead.id, ...subDoc.data() });
+              } else {
+                quoteDocsMap.delete(qId);
+              }
+            } else {
+              quoteDocsMap.delete(qId);
             }
+          } catch (err) {
+            console.warn(`[CustomerDashboard] Error fetching quote ${qId}:`, err);
+            quoteDocsMap.delete(qId);
           }
-        } catch (err) {
-          console.warn(`[CustomerDashboard] Error fetching quote ${qId}:`, err);
-        }
+        })());
       }
     }
+    
+    await Promise.all(quoteFetchPromises);
 
     // ────────────────────────────────────────────────────────────
     // 3. CROSS-REFERENCE INVOICES & BUILD FINAL UNIFIED LIST
     // ────────────────────────────────────────────────────────────
+    const invoiceFetchPromises: Promise<void>[] = [];
+    const invoicesMap = new Map<string, any>();
+    
+    for (const [quoteId] of quoteDocsMap.entries()) {
+      if (!quoteId) continue;
+      invoiceFetchPromises.push((async () => {
+        try {
+          const invDoc = await adminDb.collection("invoices").doc(quoteId).get();
+          if (invDoc.exists) {
+            invoicesMap.set(quoteId, invDoc.data());
+          }
+        } catch (err) {
+          console.warn(`[CustomerDashboard] Error fetching invoice ${quoteId}:`, err);
+        }
+      })());
+    }
+    await Promise.all(invoiceFetchPromises);
+
     for (const [quoteId, qData] of quoteDocsMap.entries()) {
       if (!quoteId || !qData) continue;
 
@@ -180,15 +193,7 @@ export default async function CustomerDashboardPage() {
 
       const leadId = qData.lead_id || qData.leadId || matchingLead?.id || quoteId;
 
-      let invData: any = null;
-      try {
-        const invDoc = await adminDb.collection("invoices").doc(quoteId).get();
-        if (invDoc.exists) {
-          invData = invDoc.data();
-        }
-      } catch (err) {
-        console.warn(`[CustomerDashboard] Error fetching invoice ${quoteId}:`, err);
-      }
+      let invData = invoicesMap.get(quoteId) || null;
 
       const totalPayable = Number(
         invData?.total_amount ??
