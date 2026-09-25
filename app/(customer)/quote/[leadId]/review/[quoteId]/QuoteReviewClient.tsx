@@ -432,15 +432,15 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const [isSurveyModalOpen, setIsSurveyModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-zinc-900 font-sans pb-36 md:pb-24 selection:bg-zinc-200">
-      <div className="max-w-[840px] mx-auto px-3 sm:px-6 pt-3 sm:pt-8">
+    <div className="min-h-screen bg-white sm:bg-[#F8FAFC] text-zinc-900 font-sans pb-32 sm:pb-24 selection:bg-zinc-200">
+      <div className="w-full max-w-[840px] mx-auto px-0 sm:px-6 pt-0 sm:pt-6">
 
         {/* Top Navigation & Status Bar */}
-        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex items-center justify-between gap-2 mb-4">
+        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="px-4 py-3 sm:px-0 sm:py-0 flex items-center justify-between gap-2 mb-0 sm:mb-4 bg-white sm:bg-transparent border-b sm:border-0 border-zinc-100">
           {!accepted ? (
             <button
               onClick={() => window.history.back()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-full shadow-xs hover:bg-zinc-50 active:scale-95 transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-700 bg-zinc-50 sm:bg-white border border-zinc-200 rounded-full shadow-xs hover:bg-zinc-100 active:scale-95 transition-all"
             >
               <ChevronLeft className="w-4 h-4 text-zinc-500" /> Modify Setup
             </button>
@@ -465,16 +465,18 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           </div>
         </motion.div>
 
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-4 sm:space-y-6">
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-0 sm:space-y-6">
           
-          <RevisionBanner 
-            version={quote.version || 1} 
-            isRevision={quote.isRevision} 
-            revisionNotes={quote.revisionNotes} 
-          />
+          <div className="px-4 sm:px-0">
+            <RevisionBanner 
+              version={quote.version || 1} 
+              isRevision={quote.isRevision} 
+              revisionNotes={quote.revisionNotes} 
+            />
+          </div>
 
-          {/* High-Impact Hero Quotation Card */}
-          <motion.div variants={fadeIn} className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-5 sm:p-7 shadow-xl border border-blue-900/40 overflow-hidden">
+          {/* High-Impact Hero Quotation Card (Edge-to-Edge on Mobile) */}
+          <motion.div variants={fadeIn} className="relative rounded-none sm:rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-4 sm:p-7 shadow-none sm:shadow-xl border-y sm:border border-blue-900/40 overflow-hidden">
             {/* Ambient Backlight */}
             <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
             
@@ -546,8 +548,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             </div>
           </motion.div>
 
-          {/* Itemized Bill of Materials */}
-          <motion.div variants={fadeIn} className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-zinc-200/80 p-4 sm:p-7">
+          {/* Itemized Bill of Materials (Edge-to-Edge on Mobile) */}
+          <motion.div variants={fadeIn} className="bg-white rounded-none sm:rounded-3xl shadow-none sm:shadow-sm border-b sm:border border-zinc-200/80 p-4 sm:p-7">
             <div className="flex items-center justify-between pb-3.5 border-b border-zinc-100 mb-4">
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
@@ -689,8 +691,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             </div>
           </motion.div>
 
-          {/* Visual Comparison */}
-          <motion.div variants={fadeIn} className="bg-white rounded-2xl sm:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 p-5 sm:p-10">
+          {/* Visual Comparison (Edge-to-Edge on Mobile) */}
+          <motion.div variants={fadeIn} className="bg-white rounded-none sm:rounded-3xl shadow-none sm:shadow-sm border-b sm:border border-zinc-100 p-4 sm:p-8">
              <div className="flex items-center gap-3 mb-4 sm:mb-6">
                 <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-800"><ImageIcon className="w-4 h-4" /></div>
                 <div>
@@ -722,19 +724,19 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           </motion.div>
 
           {/* Value Propositions */}
-          <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 px-4 sm:px-0 py-2 sm:py-0">
             <TermCard icon={<ShieldCheck className="w-5 h-5" />} title="1-Year Warranty" body="Complete equipment and labour coverage. Free replacement for any defective parts." delay={0.1} />
             <TermCard icon={<CreditCard className="w-5 h-5" />} title={`Flat ₹500 Advance`} body={`${formatINR(advance)} required to initiate the project. 90% on delivery, 10% after completion.`} delay={0.2} />
             <TermCard icon={<Clock className="w-5 h-5" />} title="Priority Support" body="Free remote assistance for 12 months. Next-business-day on-site support." delay={0.3} />
           </motion.div>
 
           {/* Dual Action / Next Steps Section */}
-          <motion.div variants={fadeIn} id="payment-section" className="pt-2 sm:pt-4">
+          <motion.div variants={fadeIn} id="payment-section" className="pt-0 sm:pt-4">
             {!accepted ? (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 
-                {/* Main Action Box */}
-                <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-zinc-100">
+                {/* Main Action Box (Edge-to-Edge on Mobile) */}
+                <div className="bg-white rounded-none sm:rounded-3xl p-4 sm:p-10 shadow-none sm:shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-y sm:border border-zinc-100">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
                     <div>
                       <h3 className="text-lg sm:text-xl font-bold text-zinc-900">How Would You Like to Proceed?</h3>
