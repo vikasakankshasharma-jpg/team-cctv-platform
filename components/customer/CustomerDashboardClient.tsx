@@ -24,6 +24,7 @@ import {
 , CreditCard} from "lucide-react";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import { PaymentStagesWidget } from "@/components/shared/PaymentStagesWidget";
+import { SystemStatusWidget } from "@/components/shared/SystemStatusWidget";
 
 export interface CustomerQuoteItem {
   quoteId: string;
