@@ -212,10 +212,11 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
 
             </div>
           ) : (
-            <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 bg-zinc-50/40 dark:bg-zinc-950/40">
               {bookedQuotes.slice(0, visibleBooked).map((q: any) => (
-                <div key={q.quoteId} className="p-6 sm:p-8 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div key={q.quoteId} className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-zinc-200 dark:bg-zinc-800 group-hover:bg-blue-500 transition-colors" />
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10 pl-2 sm:pl-0">
                     
                     {/* Left Details */}
                     <div className="space-y-3 flex-1">
@@ -409,10 +410,11 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 bg-zinc-50/40 dark:bg-zinc-950/40">
               {unbookedQuotes.slice(0, visibleUnbooked).map((q: any) => (
-                <div key={q.quoteId} className="p-6 sm:p-8 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div key={q.quoteId} className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-zinc-200 dark:bg-zinc-800 group-hover:bg-amber-500 transition-colors" />
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10 pl-2 sm:pl-0">
                     
                     {/* Left Details */}
                     <div className="space-y-3 flex-1">
