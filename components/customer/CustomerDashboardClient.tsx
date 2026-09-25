@@ -58,6 +58,8 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
   const [loggingOut, setLoggingOut] = useState(false);
+  const [visibleBooked, setVisibleBooked] = useState(5);
+  const [visibleUnbooked, setVisibleUnbooked] = useState(5);
 
   const handleCopy = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -210,7 +212,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             </div>
           ) : (
             <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {bookedQuotes.map((q: any) => (
+              {bookedQuotes.slice(0, visibleBooked).map((q: any) => (
                 <div key={q.quoteId} className="p-6 sm:p-8 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
                   <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                     
@@ -362,6 +364,16 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               ))}
             </div>
           )}
+          {visibleBooked < bookedQuotes.length && (
+            <div className="p-4 bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 text-center">
+              <button
+                onClick={() => setVisibleBooked(prev => prev + 5)}
+                className="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 rounded-xl font-bold text-xs transition-colors"
+              >
+                Load More Bookings ({bookedQuotes.length - visibleBooked} remaining)
+              </button>
+            </div>
+          )}
 
           
           {/* Pending Quotations */}
@@ -389,7 +401,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             </div>
           ) : (
             <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {unbookedQuotes.map((q: any) => (
+              {unbookedQuotes.slice(0, visibleUnbooked).map((q: any) => (
                 <div key={q.quoteId} className="p-6 sm:p-8 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
                   <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                     
@@ -552,6 +564,16 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+          {visibleUnbooked < unbookedQuotes.length && (
+            <div className="p-4 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 text-center">
+              <button
+                onClick={() => setVisibleUnbooked(prev => prev + 5)}
+                className="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 rounded-xl font-bold text-xs transition-colors"
+              >
+                Load More Quotations ({unbookedQuotes.length - visibleUnbooked} remaining)
+              </button>
             </div>
           )}
 

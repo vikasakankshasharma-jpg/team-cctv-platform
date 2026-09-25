@@ -85,6 +85,7 @@ function StatusDropdown({ leadId, currentStatus }: { leadId: string; currentStat
 
 export function ActivePipeline({ leads, partnerId, partnerName, role = "salesperson" }: { leads: Lead[], partnerId?: string, partnerName?: string, role?: "salesperson" | "installer" }) {
   const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(5);
 
   const handleClaim = async (leadId: string) => {
     if (!partnerId || !partnerName) return;
@@ -113,7 +114,7 @@ export function ActivePipeline({ leads, partnerId, partnerName, role = "salesper
 
   return (
     <div className="grid grid-cols-1 gap-4">
-      {leads.map((lead) => {
+      {leads.slice(0, visibleCount).map((lead) => {
         const isBroadcast = role === "salesperson" 
           ? !lead.assigned_salesperson_id && lead.broadcasted_to_salesperson_ids?.includes(partnerId || "")
           : !lead.assigned_installer_id && lead.broadcasted_to_installer_ids?.includes(partnerId || "");
@@ -185,6 +186,17 @@ export function ActivePipeline({ leads, partnerId, partnerName, role = "salesper
           </div>
         );
       })}
+      
+      {visibleCount < leads.length && (
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => setVisibleCount(prev => prev + 10)}
+            className="px-6 py-2 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-full font-bold text-xs transition-colors border border-white/10"
+          >
+            Load More Leads ({leads.length - visibleCount} remaining)
+          </button>
+        </div>
+      )}
     </div>
   );
 }
