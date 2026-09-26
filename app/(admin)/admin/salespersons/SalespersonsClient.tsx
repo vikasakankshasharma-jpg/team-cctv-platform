@@ -177,7 +177,12 @@ export default function SalespersonsClient() {
   useEffect(() => {
     if (showAddZone && geoStates.length === 0) {
       setLoadingStates(true);
-      fetch("https://aniket-thapa.github.io/india-pincode-api/states.json")
+      fetch("/api/admin/geo?type=states")
+        .then(r => {
+          if (!r.ok) throw new Error("Proxy error");
+          return r.json();
+        })
+        .catch(() => fetch("https://aniket-thapa.github.io/india-pincode-api/states.json").then(r => r.json()))
         .then(r => r.json())
         .then(data => {
           if (Array.isArray(data)) {
@@ -203,7 +208,12 @@ export default function SalespersonsClient() {
     setAvailablePincodes([]);
     setLoadingDistricts(true);
 
-    fetch(`https://aniket-thapa.github.io/india-pincode-api/states/${slug}.json`)
+    fetch(`/api/admin/geo?type=districts&state=${slug}`)
+      .then(r => {
+        if (!r.ok) throw new Error("Proxy error");
+        return r.json();
+      })
+      .catch(() => fetch(`https://aniket-thapa.github.io/india-pincode-api/states/${slug}.json`).then(r => r.json()))
       .then(r => r.json())
       .then(data => {
         if (data?.districts && Array.isArray(data.districts)) {
@@ -240,7 +250,12 @@ export default function SalespersonsClient() {
     setSelectedCity("all");
     setLoadingOffices(true);
 
-    fetch(`https://aniket-thapa.github.io/india-pincode-api/districts/${selectedState.slug}/${slug}.json`)
+    fetch(`/api/admin/geo?type=offices&state=${selectedState.slug}&district=${slug}`)
+      .then(r => {
+        if (!r.ok) throw new Error("Proxy error");
+        return r.json();
+      })
+      .catch(() => fetch(`https://aniket-thapa.github.io/india-pincode-api/districts/${selectedState.slug}/${slug}.json`).then(r => r.json()))
       .then(r => r.json())
       .then(data => {
         const offices = data?.offices || [];
