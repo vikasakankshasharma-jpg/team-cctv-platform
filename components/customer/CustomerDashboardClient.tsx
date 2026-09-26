@@ -205,18 +205,26 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               </p>
             </div>
 
-            {/* Filter Pills / Tabs */}
+                        {/* Filter Pills / Tabs */}
             <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl w-full sm:w-auto overflow-x-auto scrollbar-hide shrink-0">
               <button
                 onClick={() => setActiveTab('active')}
-                className={lex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap }
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                  activeTab === 'active' 
+                    ? 'bg-white dark:bg-zinc-900 text-emerald-600 shadow-sm' 
+                    : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'
+                }`}
               >
                 <CheckCircle2 className="w-4 h-4" />
                 Active Bookings ({bookedQuotes.length})
               </button>
               <button
                 onClick={() => setActiveTab('pending')}
-                className={lex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap }
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                  activeTab === 'pending' 
+                    ? 'bg-white dark:bg-zinc-900 text-amber-500 shadow-sm' 
+                    : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'
+                }`}
               >
                 <Clock className="w-4 h-4" />
                 Pending Quotations ({unbookedQuotes.length})
@@ -612,4 +620,5 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
     </div>
   );
 }
+
 
