@@ -31,6 +31,7 @@ import { TranslatedText } from "@/components/shared/TranslatedText";
 import { LanguageWelcomeModal } from "@/components/shared/LanguageWelcomeModal";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 import { TrackBookingButton } from "@/components/shared/TrackBookingButton";
+import { OfflineBanner } from "@/components/shared/OfflineBanner";
 
 import { headers } from "next/headers";
 
@@ -45,6 +46,7 @@ export default async function CustomerLayout({
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-zinc-950 font-sans transition-colors duration-500 selection:bg-blue-600 selection:text-white">
+      <OfflineBanner />
       {/* Premium Public Header - hidden on mobile wizard to maximize viewport */}
       <header className={`sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 shadow-sm transition-all ${isWizard ? 'hidden md:block' : ''}`}>
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-[72px] sm:h-[80px] flex items-center justify-between">

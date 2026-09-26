@@ -178,7 +178,7 @@ export async function updateLeadStatus(leadId: string, status: string, note?: st
  */
 export async function updateLeadInstallationProof(
   leadId: string, 
-  photoUrl: string, 
+  photoUrl: string | string[], 
   status: string, 
   note?: string, 
   pin?: string,
@@ -207,9 +207,11 @@ export async function updateLeadInstallationProof(
     throw new Error("Invalid Completion PIN. Please check with the customer.");
   }
 
+  const urls = Array.isArray(photoUrl) ? photoUrl : [photoUrl];
   const updatePayload: any = {
     updated_at: new Date(),
-    installation_proof_url: photoUrl
+    installation_proof_url: urls[0] || "",
+    installation_proof_urls: urls
   };
   
   if (note) {
@@ -725,3 +727,4 @@ export async function reportInstallerBlockage(jobId: string, leadId: string, rea
     return { success: false, error: error.message };
   }
 }
+

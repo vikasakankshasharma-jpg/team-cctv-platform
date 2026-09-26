@@ -28,8 +28,8 @@ export default function InstallerJobDetailClient({
   job?: any,
   hub?: any
 }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isBlockageModalOpen, setIsBlockageModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -53,12 +53,26 @@ export default function InstallerJobDetailClient({
 
   const allItemsScanned = flatHardware.length > 0 && scannedAssets.length === flatHardware.length;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      if (files.length >= 2) {
+        toast.error("You can upload up to 2 photos (Before & After).");
+        return;
+      }
       const selectedFile = e.target.files[0];
-      setFile(selectedFile);
-      setPreviewUrl(URL.createObjectURL(selectedFile));
+      setFiles((prev) => [...prev, selectedFile]);
+      setPreviewUrls((prev) => [...prev, URL.createObjectURL(selectedFile)]);
     }
+  };
+
+  const removePhoto = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => {
+      const newUrls = [...prev];
+      URL.revokeObjectURL(newUrls[index]);
+      newUrls.splice(index, 1);
+      return newUrls;
+    });
   };
 
   const handleResendPin = async () => {
@@ -75,8 +89,8 @@ export default function InstallerJobDetailClient({
   };
 
   const handleUploadAndComplete = async () => {
-    if (!file) {
-      toast.error("Please select a photo as proof of installation.");
+    if (files.length === 0) {
+      toast.error("Please select at least one photo as proof of installation.");
       return;
     }
     if (flatHardware.length > 0 && !allItemsScanned) {
@@ -89,42 +103,47 @@ export default function InstallerJobDetailClient({
     }
     
     setUploading(true);
+    setProgress(0);
     try {
-      const filename = `installations/${leadId}_${Date.now()}_${file.name}`;
-      const storageRef = ref(storage, filename);
-      
-      const uploadTask = uploadBytesResumable(storageRef, file);
-      
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setProgress(p);
-        }, 
-        (error) => {
-          console.error("Upload error", error);
-          toast.error("Failed to upload photo");
-          setUploading(false);
-        }, 
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+      const uploadPromises = files.map((file, index) => {
+        return new Promise<string>((resolve, reject) => {
+          const filename = `installations/${leadId}_${Date.now()}_${index}_${file.name}`;
+          const storageRef = ref(storage, filename);
+          const uploadTask = uploadBytesResumable(storageRef, file);
           
-          try {
-            const { updateLeadInstallationProof } = await import("@/app/actions/leads");
-            await updateLeadInstallationProof(leadId, downloadURL, "completed", note, pin, scannedAssets);
-            toast.success("Job successfully marked as Completed!");
-          } catch (serverError: any) {
-             toast.error(serverError.message || "Failed to update job status. Please check the PIN.");
-             setUploading(false);
-          }
-        }
-      );
+          uploadTask.on('state_changed', 
+            (snapshot) => {
+              // We could calculate total progress here, but for simplicity let's just show an indeterminate state or approximate
+              const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              setProgress(Math.round(p)); 
+            }, 
+            (error) => reject(error), 
+            async () => {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve(downloadURL);
+            }
+          );
+        });
+      });
+
+      const downloadURLs = await Promise.all(uploadPromises);
+      
+      try {
+        const { updateLeadInstallationProof } = await import("@/app/actions/leads");
+        await updateLeadInstallationProof(leadId, downloadURLs, "completed", note, pin, scannedAssets);
+        toast.success("Job successfully marked as Completed!");
+      } catch (serverError: any) {
+         toast.error(serverError.message || "Failed to update job status. Please check the PIN.");
+         setUploading(false);
+      }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+      toast.error(error.message || "An error occurred during upload");
       setUploading(false);
     }
   };
 
   const isCompleted = lead.status === "won" || !!(lead as any).installation_proof_url;
+  const leadInstallationUrls = (lead as any).installation_proof_urls || ((lead as any).installation_proof_url ? [(lead as any).installation_proof_url] : []);
 
   return (
     <div className="max-w-3xl space-y-8 pb-20 animate-in fade-in duration-500">
@@ -360,25 +379,32 @@ export default function InstallerJobDetailClient({
           <h3 className="font-bold text-foreground flex items-center gap-2">
             <Camera className="w-5 h-5 text-primary" /> Proof of Installation
           </h3>
-          <p className="text-sm text-muted-foreground">Upload a clear photo of the completed site installation to mark this job as Won and release payment.</p>
+          <p className="text-sm text-muted-foreground">Upload <strong>Before</strong> and <strong>After</strong> photos of the installation site to mark this job as Won.</p>
 
           <div className="space-y-4">
-            {!previewUrl ? (
-              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-border rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors group">
-                <UploadCloud className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
-                <span className="text-sm font-medium text-muted-foreground">Click to upload photo</span>
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
-              </label>
-            ) : (
-              <div className="relative w-full h-64 rounded-2xl overflow-hidden border border-border">
-                <Image src={previewUrl!} alt="Preview" className="w-full h-full object-cover" width={400} height={300} unoptimized />
-                {!uploading && (
-                  <button onClick={() => { setFile(null); setPreviewUrl(null); }} className="absolute top-2 right-2 bg-black/60 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-black/80 transition-colors">
-                    Change Photo
-                  </button>
-                )}
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-3">
+              {[0, 1].map((idx) => (
+                <div key={idx}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 text-center">
+                    {idx === 0 ? "Before" : "After"}
+                  </p>
+                  {previewUrls[idx] ? (
+                    <div className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200">
+                      <Image src={previewUrls[idx]} alt={idx === 0 ? "Before" : "After"} fill className="object-cover" unoptimized />
+                      {!uploading && (
+                        <button onClick={() => removePhoto(idx)} className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center text-xs hover:bg-black/80 transition-colors">✕</button>
+                      )}
+                    </div>
+                  ) : (
+                    <label className="aspect-square rounded-xl border-2 border-dashed border-zinc-300 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                      <Camera className="w-6 h-6 text-zinc-400" />
+                      <span className="text-[10px] text-zinc-400 mt-1">{idx === 0 ? "Before" : "After"}</span>
+                      <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleAddPhoto} />
+                    </label>
+                  )}
+                </div>
+              ))}
+            </div>
 
             <div>
               <label className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5">Installation Notes (Optional)</label>
@@ -432,7 +458,7 @@ export default function InstallerJobDetailClient({
             </button>
             <button 
               onClick={handleUploadAndComplete}
-              disabled={!file || uploading || pin.length !== 6}
+              disabled={files.length === 0 || uploading || pin.length !== 6}
               className="w-full py-4 bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
             >
               {uploading ? (
@@ -461,9 +487,18 @@ export default function InstallerJobDetailClient({
           <h3 className="text-xl font-black text-emerald-600 mb-1">Job Completed</h3>
           <p className="text-sm font-medium text-emerald-600/80 mb-6">You have successfully submitted proof for this installation.</p>
           
-          {(lead as any).installation_proof_url && (
-            <div className="w-full max-w-sm rounded-2xl overflow-hidden border border-emerald-500/20">
-              <Image src={(lead as any).installation_proof_url} alt="Installation Proof" className="w-full h-auto" width={400} height={300} unoptimized />
+          {leadInstallationUrls.length > 0 && (
+            <div className="w-full max-w-sm grid grid-cols-2 gap-3">
+              {leadInstallationUrls.map((url: string, idx: number) => (
+                <div key={idx}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/60 mb-1.5 text-center">
+                    {idx === 0 ? "Before" : "After"}
+                  </p>
+                  <div className="relative aspect-square rounded-xl overflow-hidden border border-emerald-500/20">
+                    <Image src={url} alt={idx === 0 ? "Before" : "After"} fill className="object-cover" unoptimized />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

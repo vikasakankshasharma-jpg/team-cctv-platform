@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth-server";
 import { DeliveryRoutePlannerClient } from "@/components/delivery/DeliveryRoutePlannerClient";
+import { OfflineBanner } from "@/components/shared/OfflineBanner";
 
 export const metadata = {
   title: "Delivery Daily Route Planner | TEAM CCTV",
@@ -17,6 +18,7 @@ export default async function DeliveryRoutePage() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-zinc-950 p-4 sm:p-6 lg:p-8">
+      <OfflineBanner />
       <div className="max-w-6xl mx-auto">
         <DeliveryRoutePlannerClient />
       </div>

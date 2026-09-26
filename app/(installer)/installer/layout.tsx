@@ -2,6 +2,7 @@ import { verifyInstallerSession } from "@/lib/auth-installer";
 import { InstallerSidebar } from "@/components/installer/InstallerSidebar";
 
 import { redirect } from "next/navigation";
+import { OfflineBanner } from "@/components/shared/OfflineBanner";
 
 export default async function InstallerLayout({
   children,
@@ -18,6 +19,7 @@ export default async function InstallerLayout({
 
   return (
     <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950 overflow-hidden">
+      <OfflineBanner />
       <InstallerSidebar installerName={session.installerName || "Installer"} />
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 pt-18 md:pt-4 lg:pt-10 scrollbar-none">
