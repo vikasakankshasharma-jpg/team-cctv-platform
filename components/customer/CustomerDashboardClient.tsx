@@ -338,15 +338,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                         </Link>
                       )}
                       
-                      {(q.amountDue ?? 0) > 0 && q.isPaid && (
-                        <Link
-                          href={`/quote/${q.leadId}/review/${q.quoteId}`}
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 text-xs font-black transition-all whitespace-nowrap"
-                        >
-                          <CreditCard className="w-4 h-4 shrink-0" />
-                          <span>Pay Balance (Rs. {(q.amountDue ?? 0).toLocaleString('en-IN')})</span>
-                        </Link>
-                      )}
+                      {/* Pay Balance link removed - users should use PaymentStagesWidget inside accordion */}
 
                       {/* Download Invoice / Receipt (if paid) */}
                       {q.isPaid && (
@@ -514,15 +506,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                         </Link>
                       )}
                       
-                      {(q.amountDue ?? 0) > 0 && q.isPaid && (
-                        <Link
-                          href={`/quote/${q.leadId}/review/${q.quoteId}`}
-                          className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 text-xs font-black transition-all whitespace-nowrap"
-                        >
-                          <CreditCard className="w-4 h-4 shrink-0" />
-                          <span>Pay Balance (Rs. {(q.amountDue ?? 0).toLocaleString('en-IN')})</span>
-                        </Link>
-                      )}
+                      {/* Pay Balance link removed - users should use PaymentStagesWidget inside accordion */}
 
                       {/* Download Invoice / Receipt (if paid) */}
                       {q.isPaid && (

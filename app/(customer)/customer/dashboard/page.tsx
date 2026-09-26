@@ -223,7 +223,7 @@ export default async function CustomerDashboardPage() {
 
       const amountDue = isPaid && (qData.status === "PAID" || invData?.status === "PAID")
         ? 0
-        : Number(invData?.amount_due ?? qData.amount_due ?? Math.max(0, totalPayable - amountPaid));
+        : Math.max(0, totalPayable - amountPaid);
 
       let createdStr = new Date().toISOString();
       try {
