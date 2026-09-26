@@ -179,9 +179,9 @@ export default async function LeadsPage() {
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
-                                title="Download GST Tax Invoice"
+                                title={((lead as any).amount_due ?? 0) > 0 ? "Download Booking Receipt" : "Download GST Tax Invoice"}
                               >
-                                Invoice
+                                {((lead as any).amount_due ?? 0) > 0 ? "Receipt" : "Invoice"}
                               </a>
                             )}
                           </div>

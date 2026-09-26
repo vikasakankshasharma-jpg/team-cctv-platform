@@ -120,7 +120,7 @@ export default function LeadDetailPage() {
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all"
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>Tax Invoice</span>
+              <span>{(lead.amount_due ?? 0) > 0 ? "Booking Receipt" : "Tax Invoice"}</span>
             </a>
           )}
 
@@ -392,7 +392,7 @@ export default function LeadDetailPage() {
                     rel="noreferrer"
                     className="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl transition-all shadow-sm"
                   >
-                    Download Tax Invoice PDF
+                    {(lead.amount_due ?? 0) > 0 ? "Download Booking Receipt PDF" : "Download Tax Invoice PDF"}
                   </a>
                   <Link href={`/track/${lead.leadId || quoteId}`}>
                     <Button variant="outline" className="w-full text-xs font-bold border-emerald-300">

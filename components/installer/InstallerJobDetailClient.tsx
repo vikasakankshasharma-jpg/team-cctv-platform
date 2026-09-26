@@ -123,8 +123,8 @@ export default function InstallerJobDetailClient({
       toast.error("Please scan or mark all hardware items as installed.");
       return;
     }
-    if (pin.length !== 6) {
-      toast.error("Please enter the 6-digit Completion PIN from the customer.");
+    if (pin.length !== 4) {
+      toast.error("Please enter the 4-digit Completion PIN from the customer.");
       return;
     }
     
@@ -369,7 +369,7 @@ export default function InstallerJobDetailClient({
         <h3 className="font-bold text-foreground flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Handover Quality Checklist
         </h3>
-        <p className="text-xs text-muted-foreground">Verify all 6 points with customer before asking for the 6-digit completion PIN:</p>
+        <p className="text-xs text-muted-foreground">Verify all 6 points with customer before asking for the 4-digit completion PIN:</p>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-foreground font-medium">
           <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/40 border border-border/50">
@@ -473,10 +473,10 @@ export default function InstallerJobDetailClient({
               </div>
               <input 
                 type="text" 
-                maxLength={6}
+                maxLength={4}
                 value={pin}
                 onChange={e => setPin(e.target.value)}
-                placeholder="Enter 6-digit PIN"
+                placeholder="Enter 4-digit PIN"
                 className="w-full px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-700 font-bold tracking-widest text-center text-lg focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-amber-500/50"
               />
             </div>

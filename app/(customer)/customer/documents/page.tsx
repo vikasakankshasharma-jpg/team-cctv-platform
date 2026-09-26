@@ -57,7 +57,7 @@ export default async function CustomerDocumentsPage() {
             documents.push({
               id: doc.id,
               type: "invoice",
-              title: `Tax Invoice - ${doc.id.slice(0, 8).toUpperCase()}`,
+              title: (data.amount_due ?? 0) > 0 ? `Advance Receipt - ${doc.id.slice(0, 8).toUpperCase()}` : `Tax Invoice - ${doc.id.slice(0, 8).toUpperCase()}`,
               date: data.created_at?.toDate ? data.created_at.toDate() : new Date(),
               amount: data.grand_total,
               downloadUrl: `/api/invoice/${doc.id}/download`,

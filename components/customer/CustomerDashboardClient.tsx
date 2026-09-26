@@ -348,7 +348,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                         </Link>
                       )}
 
-                      {/* Download Invoice (if paid) */}
+                      {/* Download Invoice / Receipt (if paid) */}
                       {q.isPaid && (
                         <a
                           href={`/api/invoice/${q.quoteId}/download`}
@@ -357,7 +357,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all whitespace-nowrap"
                         >
                           <Download className="w-4 h-4 shrink-0" />
-                          <span>Tax Invoice</span>
+                          <span>{(q.amountDue ?? 0) > 0 ? "Booking Receipt" : "Tax Invoice"}</span>
                         </a>
                       )}
                     </div>
@@ -524,7 +524,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                         </Link>
                       )}
 
-                      {/* Download Invoice (if paid) */}
+                      {/* Download Invoice / Receipt (if paid) */}
                       {q.isPaid && (
                         <a
                           href={`/api/invoice/${q.quoteId}/download`}
@@ -533,7 +533,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all whitespace-nowrap"
                         >
                           <Download className="w-4 h-4 shrink-0" />
-                          <span>Tax Invoice</span>
+                          <span>{(q.amountDue ?? 0) > 0 ? "Booking Receipt" : "Tax Invoice"}</span>
                         </a>
                       )}
                     </div>

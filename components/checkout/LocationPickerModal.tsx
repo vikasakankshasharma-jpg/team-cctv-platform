@@ -62,19 +62,34 @@ export function LocationPickerModal({
       if (initialCoords && initialCoords.lat && initialCoords.lng) {
         setCoords(initialCoords);
         setPincodeResolved(true);
+      } else if (initialPincode && initialPincode.length >= 6 && isLoaded && window.google) {
+        // Use Google Maps Geocoder for precise 6-digit PIN location
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: `${initialPincode}, India` }, (results, status) => {
+          if (status === "OK" && results && results.length > 0) {
+            const loc = results[0].geometry.location;
+            setCoords({ lat: loc.lat(), lng: loc.lng() });
+            setPincodeResolved(true);
+          } else {
+            // Fallback to coarse 3-digit mapping
+            const pinCoords = getPincodeCoordinates(initialPincode);
+            setCoords(pinCoords || DEFAULT_COORDS);
+            setPincodeResolved(!!pinCoords);
+          }
+        });
       } else if (initialPincode && initialPincode.length >= 3) {
+        // Fallback to coarse 3-digit mapping before map loads
         const pinCoords = getPincodeCoordinates(initialPincode);
         if (pinCoords) {
           setCoords(pinCoords);
           setPincodeResolved(true);
         } else {
-          // Fallback to Jaipur
           setCoords(DEFAULT_COORDS);
           setPincodeResolved(false);
         }
       }
     }
-  }, [isOpen, initialPincode, initialCoords]);
+  }, [isOpen, initialPincode, initialCoords, isLoaded]);
 
   const onLoad = useCallback(function callback(mapInstance: unknown) {
     setMap(mapInstance);
