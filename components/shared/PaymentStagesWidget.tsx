@@ -38,8 +38,9 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
     ["booked", "won", "dispatched", "delivered"].includes(String(lead?.status || "").toLowerCase()) || 
     ["booked", "paid"].includes(String(quote?.status || "").toLowerCase());
 
-  // Stage 2 (Delivery) is unlocked if dispatched or delivered
+  // Stage 2 (Delivery) is unlocked if Stage 1 is paid OR if it's dispatched
   const isStage2Unlocked = 
+    isStage1Paid ||
     lead?.delivery_status === "DISPATCHED" || 
     lead?.delivery_status === "DELIVERED" || 
     quote?.delivery_status === "DISPATCHED" ||
