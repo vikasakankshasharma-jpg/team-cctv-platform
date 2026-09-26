@@ -222,7 +222,7 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
       </div>
 
       {isExpanded && (
-        <div className="space-y-4 mt-6 border-t border-zinc-100 dark:border-zinc-800 pt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6 border-t border-zinc-100 dark:border-zinc-800 pt-6">
         {/* Stage 1: Booking */}
         <div className={`p-4 rounded-2xl border ${isStage1Paid ? 'bg-emerald-50/50 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/30' : 'bg-zinc-50 border-zinc-100 dark:bg-zinc-800/50 dark:border-zinc-800'}`}>
           <div className="flex justify-between items-start mb-2">
