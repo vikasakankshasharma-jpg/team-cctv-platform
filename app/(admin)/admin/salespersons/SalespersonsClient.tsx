@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { 
   Users, 
   MapPin, 
@@ -13,7 +13,9 @@ import {
   Search,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  Check
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "sonner";
@@ -22,6 +24,103 @@ import type { Salesperson, CoverageZone } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+
+interface SearchableDropdownProps {
+  label: string;
+  placeholder: string;
+  value: string;
+  displayValue?: string;
+  options: { label: string; value: string }[];
+  onSelect: (value: string, label: string) => void;
+  disabled?: boolean;
+  loading?: boolean;
+}
+
+function SearchableDropdown({
+  label,
+  placeholder,
+  value,
+  displayValue,
+  options,
+  onSelect,
+  disabled = false,
+  loading = false,
+}: SearchableDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [filterText, setFilterText] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter(opt =>
+    opt.label.toLowerCase().includes(filterText.toLowerCase())
+  );
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          disabled={disabled}
+          placeholder={loading ? "Loading..." : placeholder}
+          value={isOpen ? filterText : (displayValue || "")}
+          onFocus={() => {
+            setFilterText("");
+            setIsOpen(true);
+          }}
+          onChange={(e) => {
+            setFilterText(e.target.value);
+            if (!isOpen) setIsOpen(true);
+          }}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-8"
+        />
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin absolute right-2.5 top-3 text-muted-foreground pointer-events-none" />
+        ) : (
+          <ChevronDown className={`w-4 h-4 absolute right-2.5 top-3 text-muted-foreground pointer-events-none transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        )}
+      </div>
+
+      {isOpen && !disabled && (
+        <div className="absolute z-[70] mt-1 max-h-52 w-full overflow-auto rounded-md border border-border bg-popover py-1 text-popover-foreground shadow-xl">
+          {filteredOptions.length === 0 ? (
+            <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+              No matching options found
+            </div>
+          ) : (
+            filteredOptions.map((opt) => (
+              <div
+                key={opt.value}
+                onClick={() => {
+                  onSelect(opt.value, opt.label);
+                  setIsOpen(false);
+                  setFilterText("");
+                }}
+                className={`cursor-pointer px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground flex items-center justify-between ${
+                  opt.value === value ? "bg-primary/10 text-primary font-semibold" : ""
+                }`}
+              >
+                <span>{opt.label}</span>
+                {opt.value === value && <Check className="w-4 h-4 text-primary" />}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SalespersonsClient() {
   const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
@@ -41,34 +140,126 @@ export default function SalespersonsClient() {
     pincodes: []
   });
 
-  const [citySearch, setCitySearch] = useState("");
-  const [isSearchingCity, setIsSearchingCity] = useState(false);
-  const [foundPincodes, setFoundPincodes] = useState<{pincode: string, areas: string[]}[]>([]);
+  // Geographic Hierarchy State (State -> District -> City -> Pincodes)
+  const [geoStates, setGeoStates] = useState<{ label: string; value: string }[]>([]);
+  const [selectedState, setSelectedState] = useState<{ name: string; slug: string } | null>(null);
+  const [geoDistricts, setGeoDistricts] = useState<{ label: string; value: string }[]>([]);
+  const [selectedDistrict, setSelectedDistrict] = useState<{ name: string; slug: string } | null>(null);
+  const [geoCities, setGeoCities] = useState<{ label: string; value: string }[]>([]);
+  const [selectedCity, setSelectedCity] = useState<string>("all");
+  const [districtOffices, setDistrictOffices] = useState<any[]>([]);
+  const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string; areas: string[] }[]>([]);
 
-  const searchCityPincodes = async () => {
-    if (!citySearch.trim()) return toast.error("Enter a city name");
-    setIsSearchingCity(true);
-    setFoundPincodes([]);
-    try {
-      const res = await fetch(`https://api.postalpincode.in/postoffice/${encodeURIComponent(citySearch.trim())}`);
-      const data = await res.json();
-      if (data && data[0]?.Status === "Success" && data[0]?.PostOffice) {
-        const map = new Map<string, string[]>();
-        data[0].PostOffice.forEach((po: any) => {
-          if (!map.has(po.Pincode)) map.set(po.Pincode, []);
-          map.get(po.Pincode)!.push(po.Name);
-        });
-        const results = Array.from(map.entries()).map(([pincode, areas]) => ({ pincode, areas }));
-        setFoundPincodes(results);
-        toast.success(`Found ${results.length} pincodes!`);
-      } else {
-        toast.error("No pincodes found for this city");
-      }
-    } catch (e) {
-      toast.error("Failed to fetch pincodes");
-    } finally {
-      setIsSearchingCity(false);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingOffices, setLoadingOffices] = useState(false);
+
+  // Load all States on modal open
+  useEffect(() => {
+    if (showAddZone && geoStates.length === 0) {
+      setLoadingStates(true);
+      fetch("https://aniket-thapa.github.io/india-pincode-api/states.json")
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            const sorted = data
+              .map((s: any) => ({ label: s.name, value: s.slug }))
+              .sort((a, b) => a.label.localeCompare(b.label));
+            setGeoStates(sorted);
+          }
+        })
+        .catch(() => toast.error("Failed to load Indian states"))
+        .finally(() => setLoadingStates(false));
     }
+  }, [showAddZone, geoStates.length]);
+
+  // Handle State Selection
+  const handleSelectState = (slug: string, name: string) => {
+    setSelectedState({ name, slug });
+    setSelectedDistrict(null);
+    setGeoDistricts([]);
+    setSelectedCity("all");
+    setGeoCities([]);
+    setDistrictOffices([]);
+    setAvailablePincodes([]);
+    setLoadingDistricts(true);
+
+    fetch(`https://aniket-thapa.github.io/india-pincode-api/states/${slug}.json`)
+      .then(r => r.json())
+      .then(data => {
+        if (data?.districts && Array.isArray(data.districts)) {
+          const sorted = data.districts
+            .map((d: any) => ({ label: d.name, value: d.slug }))
+            .sort((a: any, b: any) => a.label.localeCompare(b.label));
+          setGeoDistricts(sorted);
+        }
+      })
+      .catch(() => toast.error("Failed to load districts"))
+      .finally(() => setLoadingDistricts(false));
+  };
+
+  // Helper to compute grouped pincodes from offices
+  const computePincodesFromOffices = (offices: any[]) => {
+    const map = new Map<string, Set<string>>();
+    offices.forEach((o: any) => {
+      if (!o.pincode) return;
+      if (!map.has(o.pincode)) map.set(o.pincode, new Set());
+      if (o.officeName) map.get(o.pincode)!.add(o.officeName);
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([pincode, areasSet]) => ({
+        pincode,
+        areas: Array.from(areasSet).slice(0, 4)
+      }));
+  };
+
+  // Handle District Selection
+  const handleSelectDistrict = (slug: string, name: string) => {
+    if (!selectedState) return;
+    setSelectedDistrict({ name, slug });
+    setSelectedCity("all");
+    setLoadingOffices(true);
+
+    fetch(`https://aniket-thapa.github.io/india-pincode-api/districts/${selectedState.slug}/${slug}.json`)
+      .then(r => r.json())
+      .then(data => {
+        const offices = data?.offices || [];
+        setDistrictOffices(offices);
+
+        // Extract sub-cities / divisions
+        const divisions = Array.from(new Set(offices.map((o: any) => o.divisionName).filter(Boolean))) as string[];
+        const cityOpts = [
+          { label: `All in ${name}`, value: "all" },
+          ...divisions.map(d => ({ label: d, value: d }))
+        ];
+        setGeoCities(cityOpts);
+
+        // Group Pincodes
+        const grouped = computePincodesFromOffices(offices);
+        setAvailablePincodes(grouped);
+
+        // Auto suggest zone name if empty
+        setNewZone(prev => ({
+          ...prev,
+          name: prev.name || `${name}, ${selectedState.name}`
+        }));
+
+        toast.success(`Loaded ${grouped.length} pincodes in ${name}`);
+      })
+      .catch(() => toast.error("Failed to load district pincodes"))
+      .finally(() => setLoadingOffices(false));
+  };
+
+  // Handle City / Division Filter Selection
+  const handleSelectCity = (val: string) => {
+    setSelectedCity(val);
+    const filteredOffices = val === "all" 
+      ? districtOffices 
+      : districtOffices.filter(o => o.divisionName === val);
+    
+    const grouped = computePincodesFromOffices(filteredOffices);
+    setAvailablePincodes(grouped);
   };
 
   useEffect(() => {
@@ -227,9 +418,9 @@ export default function SalespersonsClient() {
                          );
                        })
                      ) : (
-                       <span className="text-[10px] font-semibold text-warning uppercase flex items-center gap-1">
-                         <AlertCircle className="w-3 h-3" /> No Zones Assigned
-                       </span>
+                       <Badge variant="outline" className="text-[10px] text-muted-foreground uppercase font-semibold">
+                          All Zones (Unrestricted)
+                        </Badge>
                      )}
                    </div>
                    
@@ -322,9 +513,20 @@ export default function SalespersonsClient() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Zone Assignments</label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {zones.map(z => {
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Zone Assignments <span className="text-[11px] font-normal text-muted-foreground lowercase">(optional)</span>
+                </label>
+                {zones.length === 0 ? (
+                  <div className="p-3 bg-muted/40 rounded-xl border border-dashed border-border text-xs text-muted-foreground mt-2">
+                    No coverage zones defined yet. This agent will have <strong>unrestricted access</strong> across all areas by default. You can define zones later.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[11px] text-muted-foreground mt-1 mb-2">
+                      Select zones to restrict this agent, or leave unselected for unrestricted access across all territories.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {zones.map(z => {
                     const isSelected = newSalesperson.assigned_zone_ids?.includes(z.id!);
                     return (
                       <button 
@@ -343,7 +545,9 @@ export default function SalespersonsClient() {
                       </button>
                     );
                   })}
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="pt-4 flex gap-3">
@@ -369,8 +573,11 @@ export default function SalespersonsClient() {
       {showAddZone && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setShowAddZone(false)} />
-          <div className="relative bg-card w-full max-w-lg rounded-2xl p-6 shadow-lg border border-border animate-in fade-in zoom-in-95 duration-200">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight mb-6">Define Coverage Zone</h2>
+          <div className="relative bg-card w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl p-6 shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200">
+            <h2 className="text-xl font-semibold text-foreground tracking-tight mb-1">Define Coverage Zone</h2>
+            <p className="text-xs text-muted-foreground mb-5">
+              Select State, District, and City to view and map all official PINCODEs with single-click Select All.
+            </p>
             
             <div className="space-y-4">
               <div>
@@ -379,55 +586,116 @@ export default function SalespersonsClient() {
                   type="text" 
                   value={newZone.name || ""} 
                   onChange={e => setNewZone(prev => ({...prev, name: e.target.value}))}
-                  placeholder="e.g. South Delhi"
+                  placeholder="e.g. Jaipur, Rajasthan"
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Search City for Pincodes</label>
-                <div className="flex gap-2 mb-3">
-                  <Input 
-                    type="text" 
-                    value={citySearch} 
-                    onChange={e => setCitySearch(e.target.value)}
-                    placeholder="e.g. Jaipur"
-                    onKeyDown={e => e.key === "Enter" && searchCityPincodes()}
+              {/* 3-Tier Cascading Geographic Dropdowns with real-time text filter */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* 1. State Selector */}
+                <SearchableDropdown
+                  label="1. Select State"
+                  placeholder="Type to filter states (e.g. Rajasthan)"
+                  value={selectedState?.slug || ""}
+                  displayValue={selectedState?.name || ""}
+                  options={geoStates}
+                  onSelect={handleSelectState}
+                  loading={loadingStates}
+                />
+
+                {/* 2. District Selector */}
+                <SearchableDropdown
+                  label="2. Select District"
+                  placeholder={selectedState ? "Type to filter districts (e.g. Jaipur)" : "Select State first"}
+                  value={selectedDistrict?.slug || ""}
+                  displayValue={selectedDistrict?.name || ""}
+                  options={geoDistricts}
+                  onSelect={handleSelectDistrict}
+                  disabled={!selectedState || loadingDistricts}
+                  loading={loadingDistricts}
+                />
+              </div>
+
+              {/* 3. City / Sub-Division Filter */}
+              {selectedDistrict && geoCities.length > 1 && (
+                <div className="animate-in fade-in duration-200">
+                  <SearchableDropdown
+                    label="3. Select City / Division"
+                    placeholder="Filter by City / Division or All"
+                    value={selectedCity}
+                    displayValue={selectedCity === "all" ? `All in ${selectedDistrict.name}` : selectedCity}
+                    options={geoCities}
+                    onSelect={handleSelectCity}
+                    disabled={loadingOffices}
+                    loading={loadingOffices}
                   />
-                  <button 
-                    onClick={searchCityPincodes}
-                    disabled={isSearchingCity}
-                    className="bg-secondary text-secondary-foreground px-4 rounded-md text-sm font-semibold hover:bg-secondary/80 flex items-center justify-center min-w-[3rem]"
-                  >
-                    {isSearchingCity ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                  </button>
                 </div>
-                
-                {foundPincodes.length > 0 && (
-                  <div className="mb-4 p-3 border rounded-lg bg-muted/30 animate-in slide-in-from-top-2">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-semibold text-muted-foreground">{foundPincodes.length} Pincodes Found</span>
-                      <div className="space-x-3">
-                        <button 
-                          onClick={() => setNewZone(prev => ({...prev, pincodes: Array.from(new Set([...(prev.pincodes || []), ...foundPincodes.map(p => p.pincode)]))}))}
-                          className="text-xs text-primary font-semibold hover:underline"
-                        >Select All</button>
-                        <button 
-                          onClick={() => setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(p => !foundPincodes.map(f => f.pincode).includes(p))}))}
-                          className="text-xs text-destructive font-semibold hover:underline"
-                        >Unselect All</button>
-                      </div>
+              )}
+
+              {/* Pincodes Multi-Selection Box */}
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                    Available PINCODEs {availablePincodes.length > 0 && `(${availablePincodes.length} Found)`}
+                  </label>
+                  {availablePincodes.length > 0 && (
+                    <div className="flex items-center gap-3">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const allPins = availablePincodes.map(p => p.pincode);
+                          setNewZone(prev => ({
+                            ...prev,
+                            pincodes: Array.from(new Set([...(prev.pincodes || []), ...allPins]))
+                          }));
+                        }}
+                        className="text-xs text-primary font-semibold hover:underline"
+                      >
+                        Select All
+                      </button>
+                      <span className="text-muted-foreground text-xs">•</span>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const currentPins = new Set(availablePincodes.map(p => p.pincode));
+                          setNewZone(prev => ({
+                            ...prev,
+                            pincodes: (prev.pincodes || []).filter(p => !currentPins.has(p))
+                          }));
+                        }}
+                        className="text-xs text-destructive font-semibold hover:underline"
+                      >
+                        Unselect All
+                      </button>
                     </div>
-                    <div className="max-h-48 overflow-y-auto space-y-1.5 pr-2">
-                      {foundPincodes.map(p => {
+                  )}
+                </div>
+
+                {loadingOffices ? (
+                  <div className="p-8 border rounded-xl bg-muted/20 flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    Fetching all official post offices & pincodes in {selectedDistrict?.name}...
+                  </div>
+                ) : availablePincodes.length > 0 ? (
+                  <div className="p-3 border rounded-xl bg-muted/20 animate-in slide-in-from-top-1">
+                    <div className="max-h-52 overflow-y-auto space-y-1.5 pr-2">
+                      {availablePincodes.map(p => {
                         const isSelected = (newZone.pincodes || []).includes(p.pincode);
                         return (
-                          <label key={p.pincode} className={`flex items-start gap-2.5 p-2 rounded-md border cursor-pointer transition-colors ${isSelected ? 'bg-primary/5 border-primary/30' : 'hover:bg-muted/50 border-transparent'}`}>
+                          <label 
+                            key={p.pincode} 
+                            className={`flex items-start gap-2.5 p-2 rounded-lg border cursor-pointer transition-all ${
+                              isSelected 
+                                ? 'bg-primary/10 border-primary/40 text-foreground font-medium' 
+                                : 'hover:bg-muted/60 border-transparent text-muted-foreground'
+                            }`}
+                          >
                             <input 
                               type="checkbox" 
                               checked={isSelected}
                               onChange={(e) => {
                                 if (e.target.checked) {
-                                  setNewZone(prev => ({...prev, pincodes: [...(prev.pincodes || []), p.pincode]}));
+                                  setNewZone(prev => ({...prev, pincodes: Array.from(new Set([...(prev.pincodes || []), p.pincode]))}));
                                 } else {
                                   setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(code => code !== p.pincode)}));
                                 }
@@ -435,34 +703,46 @@ export default function SalespersonsClient() {
                               className="mt-0.5 rounded border-input text-primary focus:ring-primary h-4 w-4" 
                             />
                             <div className="flex flex-col">
-                              <span className="text-sm font-semibold">{p.pincode}</span>
-                              <span className="text-[10px] text-muted-foreground leading-tight line-clamp-1">{p.areas.join(", ")}</span>
+                              <span className="text-sm font-semibold tracking-wide">{p.pincode}</span>
+                              <span className="text-[11px] text-muted-foreground leading-tight line-clamp-1">
+                                {p.areas.length > 0 ? p.areas.join(", ") : "Post Office"}
+                              </span>
                             </div>
                           </label>
                         );
                       })}
                     </div>
                   </div>
+                ) : selectedDistrict ? (
+                  <div className="p-4 border rounded-xl bg-muted/10 text-center text-xs text-muted-foreground">
+                    No pincodes returned for this selection.
+                  </div>
+                ) : (
+                  <div className="p-6 border border-dashed rounded-xl bg-muted/10 text-center text-xs text-muted-foreground">
+                    Select a State and District above to automatically load all official PINCODEs.
+                  </div>
                 )}
 
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between mt-4">
-                  <span>Selected Pincodes</span>
-                  <span className="text-primary font-bold">{(newZone.pincodes || []).length} Selected</span>
+                  <span>Selected Pincodes Summary</span>
+                  <Badge variant="secondary" className="font-semibold text-primary">
+                    {(newZone.pincodes || []).length} Selected
+                  </Badge>
                 </label>
                 <textarea 
                   rows={2}
                   value={newZone.pincodes?.join(", ") || ""} 
                   onChange={e => setNewZone(prev => ({...prev, pincodes: e.target.value.split(",").map(p => p.trim()).filter(p => p !== "")}))}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Or type manually: 110001, 110002..."
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Pincodes will auto-populate here from checkboxes above, or you can paste manually..."
                 />
               </div>
 
               <div className="pt-4 flex gap-3">
                 <button 
                   onClick={handleAddZone}
-                  disabled={isSaving}
-                  className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm active:scale-95"
+                  disabled={isSaving || (newZone.pincodes?.length === 0)}
+                  className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} Establish Zone
                 </button>
