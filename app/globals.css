@@ -596,3 +596,10 @@ html[data-locale]:not([data-locale="en"]) .uppercase {
 html[data-locale]:not([data-locale="en"]) .font-black {
   font-weight: 700 !important; /* Downgrade black to bold for legibility */
 }
+
+/* Mobile touch target - WCAG 2.5.5 */
+@layer utilities {
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}

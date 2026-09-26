@@ -5,6 +5,7 @@ import { Truck, FileSpreadsheet } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
+import { toast } from "sonner";
 import {
   LayoutDashboard, Users, Package, Settings, LogOut, Blocks,
   FileBox, BadgeDollarSign, TrendingUp, Workflow, ShieldCheck,
@@ -113,6 +114,7 @@ export function Sidebar() {
       router.refresh();
     } catch (error) {
       console.error("Logout failed", error);
+      toast.error('Logout failed. Please try again.');
       setLoggingOut(false);
     }
   };

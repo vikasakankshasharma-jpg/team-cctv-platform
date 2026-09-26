@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
+import { toast } from "sonner";
 import { 
   LayoutDashboard, 
   Users, 
@@ -53,6 +54,7 @@ export function Sidebar() {
       router.refresh();
     } catch (error) {
       console.error("Logout failed", error);
+      toast.error('Logout failed. Please try again.');
     }
   };
 
@@ -70,7 +72,7 @@ export function Sidebar() {
           <p className="text-sm font-black text-zinc-900 dark:text-white leading-tight tracking-tight truncate">Sales Portal</p>
         </div>
         {/* Mobile close button */}
-        <button onClick={() => setMobileOpen(false)} className="md:hidden w-8 h-8 rounded-xl bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+        <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className="md:hidden w-8 h-8 rounded-xl bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -144,7 +146,7 @@ export function Sidebar() {
           </div>
           <span className="text-sm font-black text-zinc-900 dark:text-white tracking-tight">Sales</span>
         </div>
-        <button onClick={() => setMobileOpen(true)} className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+        <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
           <Menu className="w-5 h-5" />
         </button>
       </div>

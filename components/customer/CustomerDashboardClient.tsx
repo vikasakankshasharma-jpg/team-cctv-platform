@@ -239,6 +239,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           <button
                             onClick={() => handleCopy(q.quoteId)}
                             title="Copy Quote ID"
+                            aria-label="Copy Quote ID"
                             className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                           >
                             {copiedId === q.quoteId ? (
@@ -422,6 +423,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           <button
                             onClick={() => handleCopy(q.quoteId)}
                             title="Copy Quote ID"
+                            aria-label="Copy Quote ID"
                             className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                           >
                             {copiedId === q.quoteId ? (

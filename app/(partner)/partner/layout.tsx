@@ -9,10 +9,10 @@ export default async function PartnerLayout({
 }) {
   const session = await verifyPartnerSession();
   
-  if (!session.isAuthenticated) {
+  if (!session || !session.isAuthenticated) {
     // If not authenticated, the middleware should have redirected them, 
     // but just in case this is the login page (or middleware fails)
-    return <>{children}</>;
+    redirect('/partner/login');
   }
 
   return (

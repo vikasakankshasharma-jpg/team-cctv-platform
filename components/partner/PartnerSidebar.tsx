@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
+import { toast } from "sonner";
 import { 
   LayoutDashboard, 
   Target, 
@@ -36,6 +37,7 @@ export function PartnerSidebar({ partnerName }: { partnerName: string }) {
       router.refresh();
     } catch (error) {
       console.error("Logout failed", error);
+      toast.error('Logout failed. Please try again.');
     }
   };
 

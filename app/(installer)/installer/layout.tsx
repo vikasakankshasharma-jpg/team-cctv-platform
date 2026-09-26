@@ -1,6 +1,8 @@
 import { verifyInstallerSession } from "@/lib/auth-installer";
 import { InstallerSidebar } from "@/components/installer/InstallerSidebar";
 
+import { redirect } from "next/navigation";
+
 export default async function InstallerLayout({
   children,
 }: {
@@ -8,10 +10,10 @@ export default async function InstallerLayout({
 }) {
   const session = await verifyInstallerSession();
   
-  if (!session.isAuthenticated) {
+  if (!session || !session.isAuthenticated) {
     // If not authenticated, the middleware should have redirected them, 
     // but just in case this is the login page (or middleware fails)
-    return <>{children}</>;
+    redirect('/installer/login');
   }
 
   return (

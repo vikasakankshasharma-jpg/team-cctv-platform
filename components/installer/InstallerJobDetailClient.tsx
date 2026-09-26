@@ -7,6 +7,7 @@ import { storage } from "@/lib/firebase-client";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { MapPin, Phone, User, Package, Camera, CheckCircle2, ArrowLeft, Loader2, UploadCloud, Store, ScanBarcode } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { InstallerBlockageModal } from "./InstallerBlockageModal";
 import SubmitOfflinePaymentModal from "./SubmitOfflinePaymentModal";
 import BarcodeScanner from "./BarcodeScanner";
@@ -370,7 +371,7 @@ export default function InstallerJobDetailClient({
               </label>
             ) : (
               <div className="relative w-full h-64 rounded-2xl overflow-hidden border border-border">
-                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                <Image src={previewUrl!} alt="Preview" className="w-full h-full object-cover" width={400} height={300} unoptimized />
                 {!uploading && (
                   <button onClick={() => { setFile(null); setPreviewUrl(null); }} className="absolute top-2 right-2 bg-black/60 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-black/80 transition-colors">
                     Change Photo
@@ -462,7 +463,7 @@ export default function InstallerJobDetailClient({
           
           {(lead as any).installation_proof_url && (
             <div className="w-full max-w-sm rounded-2xl overflow-hidden border border-emerald-500/20">
-              <img src={(lead as any).installation_proof_url} alt="Installation Proof" className="w-full h-auto" />
+              <Image src={(lead as any).installation_proof_url} alt="Installation Proof" className="w-full h-auto" width={400} height={300} unoptimized />
             </div>
           )}
         </div>
