@@ -4,8 +4,27 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { IndianRupee, Clock, CheckCircle2, Search } from "lucide-react";
+import { IndianRupee, Clock, CheckCircle2, Search, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
+
+const downloadCSV = (data: any[], filename: string) => {
+  const headers = ['Date', 'Lead/Customer', 'Amount (INR)', 'Status', 'Type'];
+  const rows = data.map(item => [
+    new Date(item.created_at?.seconds ? item.created_at.seconds * 1000 : item.created_at).toLocaleDateString('en-IN'),
+    item.lead_name || item.customer_name || 'N/A',
+    item.commission_amount || item.amount || 0,
+    item.status || 'pending',
+    item.type || item.commission_type || 'standard'
+  ]);
+  const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 interface SalespersonCommissionsClientProps {
   records: any[];
@@ -26,6 +45,11 @@ export function SalespersonCommissionsClient({ records, summary }: SalespersonCo
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <button onClick={() => downloadCSV(records, `commissions_${new Date().toISOString().slice(0,7)}.csv`)} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all">
+          <Download className="w-4 h-4" /> Download Statement
+        </button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-zinc-900 border-zinc-800">
           <CardContent className="p-6 flex items-center gap-4">

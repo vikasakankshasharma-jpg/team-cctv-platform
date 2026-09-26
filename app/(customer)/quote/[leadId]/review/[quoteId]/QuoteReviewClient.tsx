@@ -567,93 +567,51 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </button>
             </div>
 
-            {/* Mobile View: Clean Card List */}
-            <div className="sm:hidden space-y-2">
+            {/* Mobile-friendly card layout replacing table */}
+            <div className="space-y-3">
               {quote.lineItems.map((item, idx) => {
                 const cleanDescription = (item.description || "").replace(/Camera type: undefined \| /g, "");
                 return (
-                  <div key={item.id || idx} className="bg-zinc-50/80 rounded-xl p-3 border border-zinc-200/70 flex items-start justify-between gap-2.5">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[9px] font-bold text-zinc-500 bg-white px-1.5 py-0.5 rounded border border-zinc-200">
-                          #{idx + 1}
-                        </span>
-                        <p className="text-xs font-bold text-zinc-900 leading-snug">{item.name}</p>
+                  <div key={item.id || idx} className="bg-white border border-zinc-100 rounded-2xl p-4 shadow-sm">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <h4 className="font-bold text-sm text-zinc-900 flex items-center gap-1.5">
+                          <span className="text-[10px] font-bold text-zinc-400 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">#{idx + 1}</span>
+                          {item.name}
+                        </h4>
+                        {cleanDescription && (
+                          <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed line-clamp-2">
+                            {cleanDescription}
+                          </p>
+                        )}
+                        {item.badge && (
+                          <span
+                            className="inline-block mt-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide border"
+                            style={{
+                              backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5',
+                              color: item.badge.color || '#52525b',
+                              borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7'
+                            }}
+                          >
+                            {item.badge.label}
+                          </span>
+                        )}
                       </div>
-                      {cleanDescription && (
-                        <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed line-clamp-2">{cleanDescription}</p>
-                      )}
-                      {item.badge && (
-                        <span
-                          className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide border"
-                          style={{
-                            backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5',
-                            color: item.badge.color || '#52525b',
-                            borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7'
-                          }}
-                        >
-                          {item.badge.label}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="inline-block text-[10px] font-bold text-zinc-700 bg-white px-2 py-0.5 rounded-full border border-zinc-200">
+                      <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2 py-1 rounded-full shrink-0">
                         Qty: {item.quantity}
                       </span>
-                      <p className="text-xs font-black text-zinc-900 mt-1">{formatINR(item.quantity * item.unitPrice)}</p>
-                      {item.quantity > 1 && (
-                        <p className="text-[9px] text-zinc-400">@{formatINR(item.unitPrice)}/ea</p>
-                      )}
+                    </div>
+                    <div className="flex items-center justify-between text-sm mt-4">
+                      <span className="text-zinc-500">Unit Price</span>
+                      <span className="font-semibold">{formatINR(item.unitPrice)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-zinc-50">
+                      <span className="text-zinc-500">Subtotal</span>
+                      <span className="font-bold text-zinc-900">{formatINR(item.quantity * item.unitPrice)}</span>
                     </div>
                   </div>
                 );
               })}
-            </div>
-
-            {/* Desktop View: Full Spacious Table */}
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-zinc-200 text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                    <th className="pb-3 pr-2 w-8">#</th>
-                    <th className="pb-3 pr-4">Description</th>
-                    <th className="pb-3 text-center px-4 w-16">Qty</th>
-                    <th className="pb-3 text-right px-4 w-28">Unit Rate</th>
-                    <th className="pb-3 text-right pl-4 w-32">Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 text-sm">
-                  {quote.lineItems.map((item, idx) => {
-                    const cleanDescription = (item.description || "").replace(/Camera type: undefined \| /g, "");
-                    return (
-                      <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
-                        <td className="py-3.5 pr-2 text-xs font-semibold text-zinc-400">{idx + 1}</td>
-                        <td className="py-3.5 pr-4">
-                          <p className="font-semibold text-zinc-900 text-xs sm:text-sm">{item.name}</p>
-                          {cleanDescription && (
-                            <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{cleanDescription}</p>
-                          )}
-                          {item.badge && (
-                            <span
-                              className="inline-flex mt-1 items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border"
-                              style={{
-                                backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5',
-                                color: item.badge.color || '#52525b',
-                                borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7'
-                              }}
-                            >
-                              {item.badge.label}
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3.5 text-center font-medium text-zinc-700">{item.quantity}</td>
-                        <td className="py-3.5 text-right text-zinc-500">{formatINR(item.unitPrice)}</td>
-                        <td className="py-3.5 text-right font-bold text-zinc-900">{formatINR(item.quantity * item.unitPrice)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
 
             {/* Financial Breakdown Card */}

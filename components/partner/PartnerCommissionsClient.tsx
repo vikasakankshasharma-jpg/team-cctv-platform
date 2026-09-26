@@ -1,7 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, Clock, CheckCircle2, IndianRupee, History, AlertTriangle, Calculator, FileText } from "lucide-react";
+import { TrendingUp, Clock, CheckCircle2, IndianRupee, History, AlertTriangle, Calculator, FileText, Download } from "lucide-react";
+
+const downloadCSV = (data: any[], filename: string) => {
+  const headers = ['Date', 'Lead/Customer', 'Amount (INR)', 'Status', 'Type'];
+  const rows = data.map(item => [
+    new Date(item.created_at?.seconds ? item.created_at.seconds * 1000 : item.created_at).toLocaleDateString('en-IN'),
+    item.lead_name || item.customer_name || 'N/A',
+    item.commission_amount || item.amount || 0,
+    item.status || 'pending',
+    item.type || item.commission_type || 'standard'
+  ]);
+  const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 interface PartnerCommissionsClientProps {
   records: {
@@ -42,16 +61,21 @@ export function PartnerCommissionsClient({ records, summary }: PartnerCommission
     <div className="space-y-8 animate-in fade-in duration-500">
       
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-amber-500" />
-          </div>
-          Commission Ledger
-        </h1>
-        <p className="text-sm font-medium text-gray-500 mt-2 max-w-lg">
-          Detailed history of your earnings. Payouts automatically include Govt TDS deductions (Sec 194H) and are transferred to your bank account.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-amber-500" />
+            </div>
+            Commission Ledger
+          </h1>
+          <p className="text-sm font-medium text-gray-500 mt-2 max-w-lg">
+            Detailed history of your earnings. Payouts automatically include Govt TDS deductions (Sec 194H) and are transferred to your bank account.
+          </p>
+        </div>
+        <button onClick={() => downloadCSV(records, `commissions_${new Date().toISOString().slice(0,7)}.csv`)} className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shrink-0">
+          <Download className="w-4 h-4" /> Download Statement
+        </button>
       </div>
 
       {/* PAN Warning if applicable */}
