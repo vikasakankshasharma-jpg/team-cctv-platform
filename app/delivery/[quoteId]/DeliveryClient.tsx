@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DeliveryFailureModal } from "@/components/delivery/DeliveryFailureModal";
 import { PackageCheck, KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -8,6 +9,7 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
   const [otp, setOtp] = useState("");
   const [cashCollected, setCashCollected] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isFailureModalOpen, setIsFailureModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   // If this quote expects Cash on Delivery and is assigned to internal staff
@@ -132,10 +134,24 @@ export default function DeliveryClient({ quoteId, quote }: { quoteId: string, qu
       <button
         onClick={handleVerify}
         disabled={isVerifying || otp.length !== 4 || (requiresCashCollection && !cashCollected)}
-        className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white font-bold rounded-xl text-sm transition-all shadow-md active:scale-95"
+        className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white font-bold rounded-xl text-sm transition-all shadow-md active:scale-95 mb-3"
       >
         {isVerifying ? "Verifying..." : "Verify Delivery"}
       </button>
+
+      <button
+        onClick={() => setIsFailureModalOpen(true)}
+        className="w-full py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-bold rounded-xl text-sm transition-all"
+      >
+        Report Delivery Failure
+      </button>
+
+      <DeliveryFailureModal
+        isOpen={isFailureModalOpen}
+        onClose={() => setIsFailureModalOpen(false)}
+        quoteId={quoteId}
+        leadId={quote.lead_id}
+      />
     </div>
   );
 }

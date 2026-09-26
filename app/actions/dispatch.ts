@@ -1,7 +1,7 @@
 "use server";
 
 import { adminDb } from "@/lib/firebase-admin";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdmin, verifySession } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
 import { sendAdminNotification, sendCustomerWhatsApp } from "@/lib/notification-service";
 
@@ -106,5 +106,50 @@ export async function assignJob(
   } catch (err: any) {
     console.error("Assign Job Error:", err);
     return { success: false, error: err.message || "Failed to assign job." };
+  }
+}
+
+
+export async function reportDeliveryFailure(quoteId: string, leadId: string, reason: string) {
+  try {
+    const session = await verifySession();
+    if (!session.isAuthenticated) return { success: false, error: 'Unauthorized' };
+
+    const batch = adminDb.batch();
+    
+    // Update Quote
+    if (quoteId) {
+      batch.update(adminDb.collection('quotes').doc(quoteId), {
+        delivery_status: 'FAILED',
+        delivery_failure_reason: reason,
+        updated_at: new Date()
+      });
+    }
+
+    // Update Lead
+    if (leadId) {
+      batch.update(adminDb.collection('leads').doc(leadId), {
+        delivery_status: 'FAILED',
+        updated_at: new Date()
+      });
+      
+      // Add a note
+      batch.set(adminDb.collection('leads').doc(leadId).collection('notes').doc(), {
+        content: `DELIVERY FAILED / RETURN TO HUB: ${reason}`,
+        created_at: new Date(),
+        created_by: session.uid,
+        created_by_name: session.user?.name || 'Delivery Staff',
+        created_by_role: session.role
+      });
+    }
+
+    await batch.commit();
+    revalidatePath('/delivery/route');
+    revalidatePath(`/delivery/${quoteId}`);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to report delivery failure:', error);
+    return { success: false, error: error.message };
   }
 }

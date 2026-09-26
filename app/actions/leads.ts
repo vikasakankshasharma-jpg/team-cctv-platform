@@ -1,7 +1,7 @@
 "use server";
 
 import { adminDb, arrayUnion, serverTimestamp } from "@/lib/firebase-admin";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdmin, verifySession } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
 import { COLLECTIONS, SUBCOLLECTIONS } from "@/lib/constants";
 import { UpdateLeadStatusSchema } from "@/lib/validators";
@@ -675,6 +675,53 @@ export async function updateNextFollowUp(leadId: string, dateString: string | nu
     return { success: true };
   } catch (error: any) {
     console.error("Failed to update follow-up date:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+
+export async function reportInstallerBlockage(jobId: string, leadId: string, reason: string, notes: string) {
+  try {
+    const session = await verifySession();
+    if (!session.isAuthenticated) return { success: false, error: 'Unauthorized' };
+
+    const batch = adminDb.batch();
+    
+    // Update Job
+    if (jobId) {
+      batch.update(adminDb.collection('jobs').doc(jobId), {
+        status: 'BLOCKED',
+        blockage_reason: reason,
+        blockage_notes: notes,
+        blocked_at: new Date(),
+        updated_at: new Date()
+      });
+    }
+
+    // Update Lead
+    if (leadId) {
+      batch.update(adminDb.collection('leads').doc(leadId), {
+        install_status: 'BLOCKED',
+        updated_at: new Date()
+      });
+      
+      // Add a note
+      batch.set(adminDb.collection('leads').doc(leadId).collection('notes').doc(), {
+        content: `INSTALLATION BLOCKED: ${reason}\nNotes: ${notes}`,
+        created_at: new Date(),
+        created_by: session.uid,
+        created_by_name: session.user?.name || 'Installer',
+        created_by_role: session.role
+      });
+    }
+
+    await batch.commit();
+    revalidatePath('/installer/jobs');
+    revalidatePath(`/installer/jobs/${jobId}`);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to report blockage:', error);
     return { success: false, error: error.message };
   }
 }

@@ -7,6 +7,7 @@ import { storage } from "@/lib/firebase-client";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { MapPin, Phone, User, Package, Camera, CheckCircle2, ArrowLeft, Loader2, UploadCloud, Store, ScanBarcode } from "lucide-react";
 import Link from "next/link";
+import { InstallerBlockageModal } from "./InstallerBlockageModal";
 import SubmitOfflinePaymentModal from "./SubmitOfflinePaymentModal";
 import BarcodeScanner from "./BarcodeScanner";
 import type { Lead } from "@/types";
@@ -28,6 +29,7 @@ export default function InstallerJobDetailClient({
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isBlockageModalOpen, setIsBlockageModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [note, setNote] = useState("");
@@ -422,6 +424,12 @@ export default function InstallerJobDetailClient({
             )}
             
             <button 
+              onClick={() => setIsBlockageModalOpen(true)}
+              className="w-full py-3.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-widest rounded-2xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 mb-3"
+            >
+              Report Blockage / Reschedule
+            </button>
+            <button 
               onClick={handleUploadAndComplete}
               disabled={!file || uploading || pin.length !== 6}
               className="w-full py-4 bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
@@ -435,6 +443,13 @@ export default function InstallerJobDetailClient({
           </div>
         </div>
       )}
+
+      <InstallerBlockageModal 
+        isOpen={isBlockageModalOpen} 
+        onClose={() => setIsBlockageModalOpen(false)} 
+        jobId={job?.id || ''} 
+        leadId={leadId} 
+      />
 
       {/* Already Completed State */}
       {isCompleted && (

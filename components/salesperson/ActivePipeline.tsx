@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Phone, MessageSquare, ArrowUpRight, Clock, ChevronDown, Check } from "lucide-react";
+import { Phone, MessageSquare, Calendar, ArrowUpRight, Clock, ChevronDown, Check } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import type { Lead } from "@/types";
@@ -25,6 +25,12 @@ const STATUS_OPTIONS = [
 
 function StatusBadge({ status }: { status: string }) {
   const opt = STATUS_OPTIONS.find(o => o.value === status);
+    const createGCalLink = (lead: any) => {
+    const text = encodeURIComponent(`Follow-up: ${lead.customer_name || 'Customer'}`);
+    const details = encodeURIComponent(`Phone: ${lead.mobile_number}\nStatus: ${lead.status}\nProperty: ${lead.property_type || 'N/A'}`);
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}`;
+  };
+
   return (
     <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border ${opt?.color ?? "bg-zinc-100 text-zinc-500 border-zinc-200"}`}>
       {opt?.label ?? status}
