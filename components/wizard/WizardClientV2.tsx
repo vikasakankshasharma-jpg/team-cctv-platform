@@ -897,50 +897,92 @@ export function WizardClientV2() {
                     </button>
                   </div>
 
-                  {req.cabling_done === false && (
-                    <div className="mt-2.5 p-2.5 sm:p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 flex items-center justify-between gap-2 animate-in fade-in">
-                      <div>
-                        <span className="block font-bold text-gray-900 dark:text-white text-xs">{t("wz_approx_total_cable_required")}</span>
-                        <span className="block text-[10px] text-gray-500 dark:text-zinc-400">
-                          {t("wz_estimated_15m_per_camera_")}{req.camera_count || 4} {t("wz_cameras_")} ({(req.camera_count || 4) * 15}m)
-                        </span>
+                  {req.cabling_done === false && (() => {
+                    const cameraCount = req.camera_count || 4;
+                    const freeLimitMeters = cameraCount * 15; // 15m free per camera
+                    const selectedMeters = req.total_cable_length_meters || freeLimitMeters;
+                    const excessMeters = Math.max(0, selectedMeters - freeLimitMeters);
+                    const isExceeded = excessMeters > 0;
+                    const extraCostEstimate = excessMeters * 15; // ₹15 per extra meter
+
+                    return (
+                      <div className="mt-2.5 space-y-2 animate-in fade-in">
+                        <div className={`p-2.5 sm:p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                          isExceeded 
+                            ? 'bg-red-50/80 dark:bg-red-950/40 border-red-200 dark:border-red-900/60' 
+                            : 'bg-blue-50/70 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900'
+                        }`}>
+                          <div>
+                            <span className="block font-bold text-gray-900 dark:text-white text-xs">
+                              {t("wz_approx_total_cable_required")}
+                            </span>
+                            <span className="block text-[10px] text-gray-500 dark:text-zinc-400">
+                              Free Included: {freeLimitMeters}m ({cameraCount} cameras × 15m)
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 px-2 py-1 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-sm shrink-0">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7 text-gray-700 dark:text-gray-200 hover:bg-gray-100 font-bold"
+                              onClick={() => {
+                                const current = selectedMeters;
+                                const next = Math.max(10, current - 10);
+                                updateReq({ total_cable_length_meters: next });
+                              }}
+                              disabled={selectedMeters <= 10}
+                            >
+                              -
+                            </Button>
+                            
+                            <span className={`font-black min-w-[65px] text-center text-xs transition-colors ${
+                              isExceeded 
+                                ? 'text-red-600 dark:text-red-400 animate-pulse font-extrabold' 
+                                : 'text-blue-800 dark:text-blue-300'
+                            }`}>
+                              {selectedMeters} {t("wz_meters")}
+                            </span>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7 text-gray-700 dark:text-gray-200 hover:bg-gray-100 font-bold"
+                              onClick={() => {
+                                const current = selectedMeters;
+                                const next = current + 10;
+                                updateReq({ total_cable_length_meters: next });
+                              }}
+                            >
+                              +
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Transparent Notice Banner when Exceeded */}
+                        {isExceeded ? (
+                          <div className="p-2.5 rounded-lg bg-red-100/70 dark:bg-red-950/60 border border-red-200 dark:border-red-800/80 text-[11px] text-red-800 dark:text-red-200 flex items-start gap-2 animate-in slide-in-from-top-1">
+                            <span className="text-base shrink-0">⚠️</span>
+                            <div>
+                              <p className="font-bold">
+                                Exceeds Free Installation Limit (+{excessMeters} Meters)
+                              </p>
+                              <p className="text-[10px] opacity-90 mt-0.5">
+                                Your base package includes <strong className="font-bold">{freeLimitMeters}m</strong> of cabling. The extra <strong className="font-bold">{excessMeters}m</strong> will be charged at <strong className="font-bold">₹15/meter (+₹{extraCostEstimate} estimated)</strong> on your final quote.
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="px-2 py-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+                            <span>✓</span>
+                            <span>Within complimentary installation limit ({selectedMeters}m / {freeLimitMeters}m included free).</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 px-2 py-1 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-sm shrink-0">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 text-gray-700 dark:text-gray-200 hover:bg-gray-100 font-bold"
-                          onClick={() => {
-                            const defaultMeters = (req.camera_count || 4) * 15;
-                            const current = req.total_cable_length_meters || defaultMeters;
-                            const next = Math.max(10, current - 10);
-                            updateReq({ total_cable_length_meters: next });
-                          }}
-                          disabled={((req.total_cable_length_meters || ((req.camera_count || 4) * 15)) <= 10)}
-                        >
-                          -
-                        </Button>
-                        <span className="font-black text-blue-800 dark:text-blue-300 min-w-[60px] text-center text-xs">
-                          {req.total_cable_length_meters || ((req.camera_count || 4) * 15)} {t("wz_meters")}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 text-gray-700 dark:text-gray-200 hover:bg-gray-100 font-bold"
-                          onClick={() => {
-                            const defaultMeters = (req.camera_count || 4) * 15;
-                            const current = req.total_cable_length_meters || defaultMeters;
-                            const next = current + 10;
-                            updateReq({ total_cable_length_meters: next });
-                          }}
-                        >
-                          +
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
 

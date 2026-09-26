@@ -633,7 +633,7 @@ export interface Promoter {
     account_holder_name: string;
     pan_number: string;
   };
-  cashfree_beneficiary_id?: string;
+  razorpay_fund_account_id?: string;
 
   created_at?: unknown;
   updated_at?: unknown;
@@ -908,7 +908,7 @@ export interface Installer {
     account_holder_name: string;
     pan_number: string;
   };
-  cashfree_beneficiary_id?: string;
+  razorpay_fund_account_id?: string;
 
   created_at?: unknown;
   updated_at?: unknown;
@@ -966,7 +966,7 @@ export interface PayoutRequest {
   tds_amount: number;
   net_amount: number;
   status: "pending" | "processing" | "success" | "failed";
-  cashfree_transfer_id?: string;
+  razorpay_transfer_id?: string;
   utr_number?: string;
   created_at: unknown;
   updated_at?: unknown;

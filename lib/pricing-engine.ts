@@ -538,6 +538,28 @@ function calculateLabor(
   });
   totalRetail += lineTotal;
 
+  // Cabling Labor Surcharge
+  const defaultMetersPerCamera = 15;
+  let totalMeters = selection.total_cable_length_meters || 
+                   (selection.cable_length_meters ? selection.cable_length_meters * qty : defaultMetersPerCamera * qty);
+  
+  const freeLimit = qty * defaultMetersPerCamera;
+  const excessMeters = Math.max(0, totalMeters - freeLimit);
+  
+  if (excessMeters > 0) {
+    const excessLaborRate = 15; // ₹15 per extra meter
+    const excessLineTotal = excessLaborRate * excessMeters;
+    
+    items.push({
+      product_id: "labor_cabling_excess",
+      display_name: `Excess Cabling Installation Labor (${excessMeters}m beyond ${freeLimit}m free limit)`,
+      qty: excessMeters,
+      unit_price: excessLaborRate,
+      line_total: excessLineTotal
+    });
+    totalRetail += excessLineTotal;
+  }
+
   // Note: High Reach Fee is no longer automatically added.
   // Instead, a UI warning is shown so installers can quote it post-visit.
 

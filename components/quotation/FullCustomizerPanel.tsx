@@ -851,23 +851,53 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
 
         {activeTab === "addons" && (
           <>
-            <div className="col-span-full mb-2 p-5 bg-white dark:bg-[#1d1d1f] rounded-[24px] border border-[#d2d2d7] dark:border-[#424245] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white">Total Expected Cable Length</h4>
-                <p className="text-[13px] text-[#86868b] mt-1">Adjust the total estimated cable length for all cameras combined (default is {15 * (selection.camera_count || 1)}m total).</p>
-              </div>
-              <div className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1 rounded-full shrink-0">
-                <button 
-                  onClick={() => updateSelection({ total_cable_length_meters: Math.max(10, (selection.total_cable_length_meters || (selection.cable_length_meters ? selection.cable_length_meters * (selection.camera_count || 1) : 15 * (selection.camera_count || 1))) - 10) })}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-[#3d3d3f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
-                >-</button>
-                <span className="text-[14px] font-semibold w-12 text-center">{selection.total_cable_length_meters || (selection.cable_length_meters ? selection.cable_length_meters * (selection.camera_count || 1) : 15 * (selection.camera_count || 1))}m</span>
-                <button 
-                  onClick={() => updateSelection({ total_cable_length_meters: (selection.total_cable_length_meters || (selection.cable_length_meters ? selection.cable_length_meters * (selection.camera_count || 1) : 15 * (selection.camera_count || 1))) + 10 })}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-[#3d3d3f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
-                >+</button>
-              </div>
-            </div>
+            {(() => {
+              const cameraCount = selection.camera_count || 1;
+              const freeLimitMeters = cameraCount * 15;
+              const currentTotalMeters = selection.total_cable_length_meters || (selection.cable_length_meters ? selection.cable_length_meters * cameraCount : freeLimitMeters);
+              const excessMeters = Math.max(0, currentTotalMeters - freeLimitMeters);
+              const isExceeded = excessMeters > 0;
+              
+              return (
+                <>
+                  <div className="col-span-full mb-2 p-5 bg-white dark:bg-[#1d1d1f] rounded-[24px] border border-[#d2d2d7] dark:border-[#424245] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white">Total Expected Cable Length</h4>
+                      <p className="text-[13px] text-[#86868b] mt-1">Adjust the total estimated cable length for all cameras combined (default is {freeLimitMeters}m total).</p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1 rounded-full shrink-0">
+                      <button 
+                        onClick={() => updateSelection({ total_cable_length_meters: Math.max(10, currentTotalMeters - 10) })}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-[#3d3d3f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
+                      >-</button>
+                      <span className={`text-[14px] font-semibold w-12 text-center ${isExceeded ? "text-red-500 animate-pulse" : "text-[#1d1d1f] dark:text-white"}`}>{currentTotalMeters}m</span>
+                      <button 
+                        onClick={() => updateSelection({ total_cable_length_meters: currentTotalMeters + 10 })}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-[#3d3d3f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
+                      >+</button>
+                    </div>
+                  </div>
+
+                  {isExceeded && (
+                    <div className="col-span-full mb-4 p-4 rounded-[16px] bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 flex items-start gap-3">
+                      <div className="mt-0.5">
+                        <div className="w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-red-600 dark:text-red-400">
+                            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                          </svg>
+                        </div>
+                      </div>
+                      <div>
+                        <h5 className="text-[13px] font-semibold text-red-800 dark:text-red-400">Excess Cabling Labor Surcharge</h5>
+                        <p className="text-[12px] text-red-700 dark:text-red-300/80 mt-1">
+                          Your base package includes <b>{freeLimitMeters}m</b> of free cabling installation. The extra <b>{excessMeters}m</b> will incur an excess labor surcharge of <b>₹15/meter (+₹{excessMeters * 15} estimated)</b> on the final quote.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {selection.technology === "HD" && (
               <div className="col-span-full mb-4 p-5 bg-white dark:bg-[#1d1d1f] rounded-[24px] border border-[#d2d2d7] dark:border-[#424245] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">

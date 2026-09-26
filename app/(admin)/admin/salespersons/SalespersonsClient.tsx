@@ -41,6 +41,36 @@ export default function SalespersonsClient() {
     pincodes: []
   });
 
+  const [citySearch, setCitySearch] = useState("");
+  const [isSearchingCity, setIsSearchingCity] = useState(false);
+  const [foundPincodes, setFoundPincodes] = useState<{pincode: string, areas: string[]}[]>([]);
+
+  const searchCityPincodes = async () => {
+    if (!citySearch.trim()) return toast.error("Enter a city name");
+    setIsSearchingCity(true);
+    setFoundPincodes([]);
+    try {
+      const res = await fetch(`https://api.postalpincode.in/postoffice/${encodeURIComponent(citySearch.trim())}`);
+      const data = await res.json();
+      if (data && data[0]?.Status === "Success" && data[0]?.PostOffice) {
+        const map = new Map<string, string[]>();
+        data[0].PostOffice.forEach((po: any) => {
+          if (!map.has(po.Pincode)) map.set(po.Pincode, []);
+          map.get(po.Pincode)!.push(po.Name);
+        });
+        const results = Array.from(map.entries()).map(([pincode, areas]) => ({ pincode, areas }));
+        setFoundPincodes(results);
+        toast.success(`Found ${results.length} pincodes!`);
+      } else {
+        toast.error("No pincodes found for this city");
+      }
+    } catch (e) {
+      toast.error("Failed to fetch pincodes");
+    } finally {
+      setIsSearchingCity(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -354,13 +384,77 @@ export default function SalespersonsClient() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Pincodes (Comma Separated)</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Search City for Pincodes</label>
+                <div className="flex gap-2 mb-3">
+                  <Input 
+                    type="text" 
+                    value={citySearch} 
+                    onChange={e => setCitySearch(e.target.value)}
+                    placeholder="e.g. Jaipur"
+                    onKeyDown={e => e.key === "Enter" && searchCityPincodes()}
+                  />
+                  <button 
+                    onClick={searchCityPincodes}
+                    disabled={isSearchingCity}
+                    className="bg-secondary text-secondary-foreground px-4 rounded-md text-sm font-semibold hover:bg-secondary/80 flex items-center justify-center min-w-[3rem]"
+                  >
+                    {isSearchingCity ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </button>
+                </div>
+                
+                {foundPincodes.length > 0 && (
+                  <div className="mb-4 p-3 border rounded-lg bg-muted/30 animate-in slide-in-from-top-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-semibold text-muted-foreground">{foundPincodes.length} Pincodes Found</span>
+                      <div className="space-x-3">
+                        <button 
+                          onClick={() => setNewZone(prev => ({...prev, pincodes: Array.from(new Set([...(prev.pincodes || []), ...foundPincodes.map(p => p.pincode)]))}))}
+                          className="text-xs text-primary font-semibold hover:underline"
+                        >Select All</button>
+                        <button 
+                          onClick={() => setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(p => !foundPincodes.map(f => f.pincode).includes(p))}))}
+                          className="text-xs text-destructive font-semibold hover:underline"
+                        >Unselect All</button>
+                      </div>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto space-y-1.5 pr-2">
+                      {foundPincodes.map(p => {
+                        const isSelected = (newZone.pincodes || []).includes(p.pincode);
+                        return (
+                          <label key={p.pincode} className={`flex items-start gap-2.5 p-2 rounded-md border cursor-pointer transition-colors ${isSelected ? 'bg-primary/5 border-primary/30' : 'hover:bg-muted/50 border-transparent'}`}>
+                            <input 
+                              type="checkbox" 
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setNewZone(prev => ({...prev, pincodes: [...(prev.pincodes || []), p.pincode]}));
+                                } else {
+                                  setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(code => code !== p.pincode)}));
+                                }
+                              }}
+                              className="mt-0.5 rounded border-input text-primary focus:ring-primary h-4 w-4" 
+                            />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-semibold">{p.pincode}</span>
+                              <span className="text-[10px] text-muted-foreground leading-tight line-clamp-1">{p.areas.join(", ")}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between mt-4">
+                  <span>Selected Pincodes</span>
+                  <span className="text-primary font-bold">{(newZone.pincodes || []).length} Selected</span>
+                </label>
                 <textarea 
-                  rows={4}
+                  rows={2}
                   value={newZone.pincodes?.join(", ") || ""} 
                   onChange={e => setNewZone(prev => ({...prev, pincodes: e.target.value.split(",").map(p => p.trim()).filter(p => p !== "")}))}
                   className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="110001, 110002, 110003..."
+                  placeholder="Or type manually: 110001, 110002..."
                 />
               </div>
 

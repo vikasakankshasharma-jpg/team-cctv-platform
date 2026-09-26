@@ -240,17 +240,26 @@ export class Msg91WhatsAppProvider {
 
     return this.sendMessage(msg91Payload);
   }
-  async sendJobAlert(payload: { phone: string, installerName: string, customerAddress: string, customerPhone: string }) {
-    console.log(`[MSG91] Sending job alert to installer ${payload.phone}`);
+  async sendJobAlert(payload: {
+    phone: string;
+    recipientName: string;      // {{name}} - Installer / Salesperson / Surveyor name
+    jobType: string;            // {{jobtype}} - e.g. "CCTV Installation", "Site Survey", "New Sales Lead"
+    customer: string;           // {{customer}} - e.g. "Rahul Sharma (+919829012345)"
+    customerAddress: string;    // {{address}} - Site address
+    scheduledDate: string;      // {{date}} - e.g. "27-Sept-2026 at 11:00 AM"
+  }) {
+    console.log(`[MSG91] Sending ${payload.jobType} alert to ${payload.phone}`);
     let to = payload.phone.replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
     return this.sendMessage({
       to, type: "template", template: {
         name: "cctv_job_alert", language: { code: "en", policy: "deterministic" },
         components: [{ type: "body", parameters: [
-          { type: "text", text: payload.installerName },
+          { type: "text", text: payload.recipientName },
+          { type: "text", text: payload.jobType },
+          { type: "text", text: payload.customer },
           { type: "text", text: payload.customerAddress },
-          { type: "text", text: payload.customerPhone }
+          { type: "text", text: payload.scheduledDate }
         ]}]
       }
     });

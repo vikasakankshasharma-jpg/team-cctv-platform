@@ -79,20 +79,35 @@ export async function assignJob(
           const jobData = jobDoc.data();
           let address = "Customer Address";
           let custPhone = "Customer Phone";
+          let customerName = "Customer";
           if (jobData?.lead_id) {
             const leadSnap = await adminDb.collection("leads").doc(jobData.lead_id).get();
             const lData = leadSnap.data();
             if (lData) {
               address = lData.installation_address || "Customer Address";
               custPhone = lData.mobile_number || "Customer Phone";
+              customerName = lData.customer_name || "Customer";
             }
           }
           
+          let scheduledDate = "As scheduled";
+          if (jobData?.scheduled_at) {
+             scheduledDate = typeof jobData.scheduled_at === "string" ? jobData.scheduled_at : "Scheduled date";
+             if (jobData?.time_slot) scheduledDate += ` (${jobData.time_slot})`;
+          }
+
+          const jobTypeLabel = jobData?.type === "survey" ? "Site Survey Visit"
+            : jobData?.type === "WARRANTY_SERVICE" ? "Warranty Service"
+            : jobData?.type === "AMC_SERVICE" ? "AMC Service Visit"
+            : "CCTV Installation";
+          
           await msg91.sendJobAlert({
             phone: mobile,
-            installerName,
+            recipientName: installerName,
+            jobType: jobTypeLabel,
+            customer: `${customerName} (${custPhone})`,
             customerAddress: address,
-            customerPhone: custPhone
+            scheduledDate: scheduledDate
           });
         }
         await sendAdminNotification(`📦 Job ${jobId.substring(0,8).toUpperCase()} dispatched to ${installerName}.`);
@@ -153,3 +168,4 @@ export async function reportDeliveryFailure(quoteId: string, leadId: string, rea
     return { success: false, error: error.message };
   }
 }
+

@@ -90,13 +90,18 @@ export function EditConfigurationDrawer({
           </div>
 
           <div className="space-y-2">
-            <Label>Estimated Cable Length (Meters)</Label>
+            <Label>Total Cable Length (Meters, all cameras combined)</Label>
             <Input 
               type="number" 
-              value={req.cable_length_meters || ""} 
+              value={req.total_cable_length_meters || (req.cable_length_meters ? req.cable_length_meters * (req.camera_count || 1) : "") || ""} 
               placeholder="Leave blank for auto-calculation"
-              onChange={(e) => setReq(prev => ({...prev, cable_length_meters: parseInt(e.target.value) || undefined}))}
+              onChange={(e) => setReq(prev => ({...prev, total_cable_length_meters: parseInt(e.target.value) || undefined, cable_length_meters: undefined}))}
             />
+            {req.total_cable_length_meters && req.total_cable_length_meters > ((req.camera_count || 1) * 15) && (
+              <p className="text-xs text-red-500 font-medium mt-1">
+                Exceeds {((req.camera_count || 1) * 15)}m free limit. Excess incurs a labor surcharge of ₹15/m.
+              </p>
+            )}
           </div>
         </div>
 

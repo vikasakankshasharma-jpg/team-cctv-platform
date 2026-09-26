@@ -542,7 +542,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 </div>
                 <div className="flex items-center justify-center gap-1 font-medium">
                   <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>Next-Day Setup</span>
+                  <span>2-3 Days Setup</span>
                 </div>
               </div>
             </div>

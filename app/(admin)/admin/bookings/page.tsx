@@ -64,6 +64,7 @@ export default async function BookingsPage() {
       promoter_business: promoter?.business_name || null,
       created_at: (b.created_at as any)?.toDate?.()?.toISOString() || b.created_at || null,
       site_visit_date: (b.site_visit_date as any)?.toDate?.()?.toISOString() || b.site_visit_date || null,
+      ttl: (b.ttl as any)?.toDate?.()?.toISOString() || b.ttl || null,
     };
   });
 
