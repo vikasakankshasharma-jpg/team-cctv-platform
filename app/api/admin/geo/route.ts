@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi } from "@/lib/auth-server";
 
 // Server-side cache for high-speed response
 const cache = new Map<string, any>();
 
 export async function GET(req: Request) {
   try {
-    await requireAdminApi();
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
     const state = searchParams.get("state");
