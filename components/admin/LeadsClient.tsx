@@ -13,7 +13,7 @@ import { LeadDetailsDrawer } from "./LeadDetailsDrawer";
 import { ProgressiveDialer } from "./ProgressiveDialer";
 import { toast } from "sonner";
 import { db } from "@/lib/firebase-client";
-import { collection, query, orderBy, limit, onSnapshot, where } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot, where, startAfter, getDocs } from "firebase/firestore";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,9 +28,10 @@ interface LeadsClientProps {
   isAdmin?: boolean;
   isSalesStaff?: boolean;
   allowedPincodes?: string[];
+  salespersonId?: string;
 }
 
-export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespeople = [], isAdmin = false, isSalesStaff = false, allowedPincodes = [] }: LeadsClientProps) {
+export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespeople = [], isAdmin = false, isSalesStaff = false, allowedPincodes = [], salespersonId }: LeadsClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"standard" | "industrial">("standard");
   const [viewMode, setViewMode] = useState<"table" | "kanban">("kanban");
@@ -46,6 +47,8 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
   
   const [selectedLeadForDrawer, setSelectedLeadForDrawer] = useState<Lead | null>(null);
   const [isDialerOpen, setIsDialerOpen] = useState(false);
+  const [currentCursor, setCurrentCursor] = useState<string | null>(nextCursor || null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const handleOpenPriceMatch = async (lead: Lead) => {
     if (!lead.price_match_request_id) return;
@@ -76,7 +79,9 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
   useEffect(() => {
     // Standard Leads Listener
     let q = query(collection(db, "leads"), orderBy("created_at", "desc"), limit(25));
-    if (isSalesStaff) {
+    if (salespersonId) {
+      q = query(collection(db, "leads"), where("assigned_to_salesperson_id", "==", salespersonId), orderBy("created_at", "desc"), limit(25));
+    } else if (isSalesStaff) {
       if (allowedPincodes.length > 0) {
         q = query(collection(db, "leads"), where("address.pincode", "in", allowedPincodes.slice(0, 30)), orderBy("created_at", "desc"), limit(25));
       } else {
@@ -128,7 +133,89 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
       unsubStandard();
       unsubInd();
     };
-  }, [isSalesStaff, allowedPincodes]);
+  }, [isSalesStaff, allowedPincodes, salespersonId]);
+
+  const handleLoadMore = async () => {
+    if (!currentCursor || isLoadingMore) return;
+    setIsLoadingMore(true);
+    
+    try {
+      // Need a timestamp object or string to pass to startAfter, based on how Firebase handles it.
+      // Firestore startAfter takes a DocumentSnapshot or field values. 
+      // If we order by created_at, we should pass the field value of the last document's created_at.
+      // Or we can query using where("created_at", "<", currentCursor) instead of startAfter to be simpler, 
+      // since we already have the ISO string.
+      
+      let q = query(
+        collection(db, "leads"),
+        orderBy("created_at", "desc"),
+        where("created_at", "<", currentCursor),
+        limit(20)
+      );
+
+      if (salespersonId) {
+        q = query(
+          collection(db, "leads"),
+          where("assigned_to_salesperson_id", "==", salespersonId),
+          orderBy("created_at", "desc"),
+          where("created_at", "<", currentCursor),
+          limit(20)
+        );
+      } else if (isSalesStaff) {
+        if (allowedPincodes.length > 0) {
+          q = query(
+            collection(db, "leads"),
+            where("address.pincode", "in", allowedPincodes.slice(0, 30)),
+            orderBy("created_at", "desc"),
+            where("created_at", "<", currentCursor),
+            limit(20)
+          );
+        } else {
+          q = query(
+            collection(db, "leads"),
+            where("address.pincode", "==", "NONE_ASSIGNED"),
+            orderBy("created_at", "desc"),
+            where("created_at", "<", currentCursor),
+            limit(20)
+          );
+        }
+      }
+
+      const snapshot = await getDocs(q);
+      
+      if (!snapshot.empty) {
+        const fetched = snapshot.docs.map(doc => {
+          const data = doc.data() as any;
+          return {
+            ...data,
+            id: doc.id,
+            created_at: data.created_at?.toDate ? data.created_at.toDate().toISOString() : data.created_at,
+            updated_at: data.updated_at?.toDate ? data.updated_at.toDate().toISOString() : data.updated_at,
+          } as Lead;
+        });
+        
+        setLocalLeads(prev => {
+          const fetchedIds = new Set(fetched.map(l => l.id));
+          const older = prev.filter(l => !fetchedIds.has(l.id));
+          return [...older, ...fetched]; // Append to older list
+        });
+
+        // Set the next cursor to the last fetched lead's created_at
+        if (fetched.length === 20) {
+          setCurrentCursor(fetched[fetched.length - 1].created_at as string);
+        } else {
+          setCurrentCursor(null);
+        }
+      } else {
+        setCurrentCursor(null);
+      }
+    } catch (error) {
+      console.error("Error loading more leads:", error);
+      toast.error("Failed to load more leads");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   const currentDataset = activeTab === "standard" ? localLeads : localIndLeads;
 
@@ -594,18 +681,23 @@ export function LeadsClient({ initialLeads, industrialLeads, nextCursor, salespe
       )}
 
       {/* Pagination Controller */}
-      {nextCursor && activeTab === "standard" && (
+      {currentCursor && activeTab === "standard" && (
         <div className="flex justify-center pt-4">
           <button
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("lastDate", nextCursor);
-              router.push(url.pathname + url.search);
-            }}
-            className="group flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm transition-all hover:bg-primary/90 shadow-md active:scale-95"
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+            className="group flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm transition-all hover:bg-primary/90 shadow-md active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
-            Load Next Batch
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Loading...
+              </>
+            ) : (
+              <>
+                Load More
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </button>
         </div>
       )}

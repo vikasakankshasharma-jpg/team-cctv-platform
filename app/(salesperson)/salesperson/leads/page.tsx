@@ -36,7 +36,7 @@ export default async function SalespersonLeadsPage() {
       const leadsSnap = await adminDb.collection("leads")
         .where("assigned_to_salesperson_id", "==", spId)
         .orderBy("created_at", "desc")
-        .limit(50)
+        .limit(20)
         .get();
         
       leads = leadsSnap.docs.map(doc => {
@@ -50,10 +50,31 @@ export default async function SalespersonLeadsPage() {
           sla_breach_at: (data.sla_breach_at as any)?.toDate?.()?.toISOString() || data.sla_breach_at || null,
         };
       });
+
+      const nextCursor = leads.length === 20 ? leads[leads.length - 1].created_at : null;
+
+      return (
+        <div className="space-y-10 animate-in fade-in duration-700">
+          <PageHeader
+            icon={Users}
+            title="My Leads"
+            description="Leads assigned to you for processing."
+            badge={`${leads.length} Total`}
+          />
+          
+          <div className="pb-20">
+            <LeadsClient 
+              initialLeads={leads} 
+              industrialLeads={[]} 
+              isAdmin={false}
+              salespersonId={spId}
+              nextCursor={nextCursor}
+            />
+          </div>
+        </div>
+      );
     }
   }
-
-  const newCount = leads.filter(l => l.status === "new").length;
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -61,13 +82,11 @@ export default async function SalespersonLeadsPage() {
         icon={Users}
         title="My Leads"
         description="Leads assigned to you for processing."
-        badge={`${leads.length} Total · ${newCount} New`}
+        badge="0 Total"
       />
-      
       <div className="pb-20">
-        {/* We pass isAdmin=false so the assignment dropdown is hidden from sales staff */}
         <LeadsClient 
-          initialLeads={leads} 
+          initialLeads={[]} 
           industrialLeads={[]} 
           isAdmin={false}
         />
