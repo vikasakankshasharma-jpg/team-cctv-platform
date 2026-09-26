@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   AlertCircle,
   ChevronDown,
-  Check
+  Check,
+  Pencil
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "sonner";
@@ -122,6 +123,23 @@ function SearchableDropdown({
   );
 }
 
+
+function formatCreatedDate(val: any): string {
+  if (!val) return "Recently";
+  if (typeof val === "string") {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? "Recently" : d.toLocaleDateString();
+  }
+  if (typeof val === "number") {
+    return new Date(val).toLocaleDateString();
+  }
+  if (val.seconds || val._seconds) {
+    const sec = val.seconds || val._seconds;
+    return new Date(sec * 1000).toLocaleDateString();
+  }
+  return "Recently";
+}
+
 export default function SalespersonsClient() {
   const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
   const [zones, setZones] = useState<CoverageZone[]>([]);
@@ -130,6 +148,7 @@ export default function SalespersonsClient() {
 
   // Form states
   const [showAddSalesperson, setShowAddSalesperson] = useState(false);
+  const [editingSalesperson, setEditingSalesperson] = useState<Salesperson | null>(null);
   const [newSalesperson, setNewSalesperson] = useState<Partial<Salesperson>>({
     is_active: true,
     assigned_zone_ids: []
@@ -283,6 +302,34 @@ export default function SalespersonsClient() {
     }
   }
 
+
+  async function handleUpdateSalesperson() {
+    if (!editingSalesperson || !editingSalesperson.id) return;
+    if (!editingSalesperson.name || !editingSalesperson.mobile_number) {
+      toast.error("Name and Mobile are required");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/admin/salespersons/${editingSalesperson.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingSalesperson)
+      });
+      if (res.ok) {
+        toast.success("Agent information updated successfully");
+        setEditingSalesperson(null);
+        fetchData();
+      } else {
+        toast.error("Failed to update agent");
+      }
+    } catch (err) {
+      toast.error("Error updating agent");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   async function handleAddSalesperson() {
     if (!newSalesperson.name || !newSalesperson.mobile_number) {
       toast.error("Name and Mobile are required");
@@ -389,12 +436,22 @@ export default function SalespersonsClient() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {salespersons.map(s => (
               <Card key={s.id} className="p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group relative border-border bg-card">
-                <button 
-                  onClick={() => handleDeleteSalesperson(s.id!)}
-                  className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="absolute top-3.5 right-3.5 flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-all">
+                  <button 
+                    onClick={() => setEditingSalesperson(s)}
+                    title="Edit Agent Details"
+                    className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteSalesperson(s.id!)}
+                    title="Remove Agent"
+                    className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
                 
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
@@ -429,7 +486,7 @@ export default function SalespersonsClient() {
                         {s.is_active ? 'Online' : 'Offline'}
                       </span>
                       <span className="text-[10px] font-medium text-muted-foreground italic">
-                         Added {s.created_at ? new Date(s.created_at as any).toLocaleDateString() : 'Recently'}
+                         Added {formatCreatedDate(s.created_at)}
                       </span>
                    </div>
                 </div>
@@ -560,6 +617,138 @@ export default function SalespersonsClient() {
                 </button>
                 <button 
                   onClick={() => setShowAddSalesperson(false)}
+                  className="px-6 bg-secondary text-secondary-foreground font-semibold text-sm rounded-xl hover:bg-secondary/80 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
+      {/* Edit Agent Modal */}
+      {editingSalesperson && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setEditingSalesperson(null)} />
+          <div className="relative bg-card w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-2xl p-6 shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200">
+            <h2 className="text-xl font-semibold text-foreground tracking-tight mb-1">Edit Agent Information</h2>
+            <p className="text-xs text-muted-foreground mb-5">
+              Update salesperson credentials, authorization thresholds, and assigned territories.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Full Name</label>
+                <Input 
+                  type="text" 
+                  value={editingSalesperson.name || ""} 
+                  onChange={e => setEditingSalesperson(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
+                  placeholder="e.g. Vikas Kumar Sharma"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Mobile (WhatsApp for OTP)</label>
+                <Input 
+                  type="tel" 
+                  value={editingSalesperson.mobile_number || ""} 
+                  onChange={e => setEditingSalesperson(prev => prev ? ({ ...prev, mobile_number: e.target.value }) : null)}
+                  placeholder="e.g. 9876543210"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Max Discount % (Optional)</label>
+                <Input 
+                  type="number" 
+                  min="0"
+                  max="100"
+                  value={editingSalesperson.max_discount_approval_percent ?? ""} 
+                  onChange={e => setEditingSalesperson(prev => prev ? ({ ...prev, max_discount_approval_percent: parseFloat(e.target.value) || 0 }) : null)}
+                  placeholder="e.g. 10"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">Maximum discount this salesperson can approve in the Manual Quote Builder.</p>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Account Status</label>
+                <div className="flex gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditingSalesperson(prev => prev ? ({ ...prev, is_active: true }) : null)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                      editingSalesperson.is_active 
+                        ? 'bg-success/15 border-success text-success shadow-sm' 
+                        : 'bg-secondary border-border text-muted-foreground hover:bg-secondary/80'
+                    }`}
+                  >
+                    Online / Active
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingSalesperson(prev => prev ? ({ ...prev, is_active: false }) : null)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                      !editingSalesperson.is_active 
+                        ? 'bg-destructive/15 border-destructive text-destructive shadow-sm' 
+                        : 'bg-secondary border-border text-muted-foreground hover:bg-secondary/80'
+                    }`}
+                  >
+                    Offline / Deactivated
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Zone Assignments <span className="text-[11px] font-normal text-muted-foreground lowercase">(optional)</span>
+                </label>
+                {zones.length === 0 ? (
+                  <div className="p-3 bg-muted/40 rounded-xl border border-dashed border-border text-xs text-muted-foreground mt-2">
+                    No coverage zones defined yet. This agent currently has <strong>unrestricted access</strong> across all areas.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[11px] text-muted-foreground mt-1 mb-2">
+                      Select zones to restrict this agent, or leave unselected for unrestricted access across all territories.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {zones.map(z => {
+                        const isSelected = editingSalesperson.assigned_zone_ids?.includes(z.id!);
+                        return (
+                          <button 
+                            key={z.id}
+                            type="button"
+                            onClick={() => {
+                              const current = editingSalesperson.assigned_zone_ids || [];
+                              if (isSelected) {
+                                setEditingSalesperson(prev => prev ? ({ ...prev, assigned_zone_ids: current.filter(id => id !== z.id) }) : null);
+                              } else {
+                                setEditingSalesperson(prev => prev ? ({ ...prev, assigned_zone_ids: [...current, z.id!] }) : null);
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all border ${isSelected ? 'bg-primary border-primary text-primary-foreground shadow-sm' : 'bg-secondary border-border text-muted-foreground hover:bg-secondary/80'}`}
+                          >
+                            {z.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  onClick={handleUpdateSalesperson}
+                  disabled={isSaving}
+                  className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm active:scale-95"
+                >
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
+                </button>
+                <button 
+                  onClick={() => setEditingSalesperson(null)}
                   className="px-6 bg-secondary text-secondary-foreground font-semibold text-sm rounded-xl hover:bg-secondary/80 transition-colors"
                 >
                   Cancel
