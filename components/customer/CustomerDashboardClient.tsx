@@ -58,12 +58,15 @@ interface CustomerDashboardProps {
 export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps) {
   const safeUser = user || { uid: "", name: "Valued Client", mobile: "" };
   const safeQuotes = Array.isArray(quotes) ? quotes : [];
+  const initialBookedCount = safeQuotes.filter(q => q && q.isPaid).length;
+  
   const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
   const [loggingOut, setLoggingOut] = useState(false);
   const [visibleBooked, setVisibleBooked] = useState(5);
   const [visibleUnbooked, setVisibleUnbooked] = useState(5);
+  const [activeTab, setActiveTab] = useState<'active' | 'pending'>(initialBookedCount > 0 ? 'active' : 'pending');
 
   const handleCopy = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -202,11 +205,27 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               </p>
             </div>
 
-            {/* Filter Pills */}
-            
+            {/* Filter Pills / Tabs */}
+            <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl w-full sm:w-auto overflow-x-auto scrollbar-hide shrink-0">
+              <button
+                onClick={() => setActiveTab('active')}
+                className={lex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap }
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Active Bookings ({bookedQuotes.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('pending')}
+                className={lex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap }
+              >
+                <Clock className="w-4 h-4" />
+                Pending Quotations ({unbookedQuotes.length})
+              </button>
+            </div>
           </div>
 
-          
+          {activeTab === 'active' && (
+            <div>
           {/* Active Bookings / Installations */}
           <div className="bg-zinc-50 dark:bg-zinc-800/20 px-6 py-3 border-b border-zinc-100 dark:border-zinc-800">
              <h3 className="text-sm font-black text-zinc-900 dark:text-white flex items-center gap-2 uppercase tracking-widest">
@@ -557,6 +576,9 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             </div>
           )}
 
+            </div>
+          )}
+
         </div>
 
         {/* VIP Support Banner */}
@@ -590,3 +612,4 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
     </div>
   );
 }
+
