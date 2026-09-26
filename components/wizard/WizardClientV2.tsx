@@ -322,8 +322,8 @@ export function WizardClientV2() {
 
   const handleVerifyOtp = async (codeOverride?: string) => {
     const code = codeOverride || otp.join("");
-    if (code.length !== 6) {
-      toast.error("Please enter the 6-digit OTP.");
+    if (code.length !== 4) {
+      toast.error("Please enter the 4-digit OTP.");
       return;
     }
     
@@ -996,7 +996,7 @@ export function WizardClientV2() {
 
                 <Button
                   onClick={() => handleVerifyOtp()}
-                  disabled={loading || otp.join("").length !== 6}
+                  disabled={loading || otp.join("").length !== 4}
                   size="lg"
                   className="w-full text-sm sm:text-base h-12 sm:h-14 font-bold shadow-md bg-blue-600 hover:bg-blue-700 rounded-xl text-white"
                 >

@@ -59,6 +59,9 @@ export const metadata: Metadata = {
  * This eliminates the "Unsupported metadata themeColor" build warning on every route.
  */
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)",  color: "#09090b" },

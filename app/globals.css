@@ -603,3 +603,10 @@ html[data-locale]:not([data-locale="en"]) .font-black {
     @apply min-h-[44px] min-w-[44px];
   }
 }
+
+
+/* Global Mobile Overflow Protection */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}

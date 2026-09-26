@@ -154,7 +154,7 @@ export default function AdminLoginForm() {
   const handleVerifyCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const code = otp.join("");
-    if (code.length < 6) return;
+    if (code.length < 4) return;
     setError("");
     setLoading(true);
     try {
@@ -351,7 +351,7 @@ export default function AdminLoginForm() {
                 {step === 1 ? "Secure Sign In" : "Verify Identity"}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">
-                {step === 1 ? "Authorized personnel only. All access sessions are logged." : `A 6-digit code was dispatched to your ${method}.`}
+                {step === 1 ? "Authorized personnel only. All access sessions are logged." : `A 4-digit code was dispatched to your ${method}.`}
               </p>
             </div>
 
@@ -457,7 +457,7 @@ export default function AdminLoginForm() {
                 <button
                   id="verify-btn"
                   type="submit"
-                  disabled={loading || otp.join("").length < 6 || success}
+                  disabled={loading || otp.join("").length < 4 || success}
                   className="group relative w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {loading ? (
