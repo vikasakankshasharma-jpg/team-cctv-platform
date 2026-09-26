@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateLeadInstallationProof } from "@/app/actions/leads";
 import { toast } from "sonner";
+import { compressImage } from "@/lib/compress-image";
 import { storage } from "@/lib/firebase-client";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { MapPin, Phone, User, Package, Camera, CheckCircle2, ArrowLeft, Loader2, UploadCloud, Store, ScanBarcode } from "lucide-react";
@@ -28,8 +29,8 @@ export default function InstallerJobDetailClient({
   job?: any,
   hub?: any
 }) {
-  const [files, setFiles] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  // Per-product photo proof: { "itemId": { before?: File, after?: File } }
+  const [itemPhotos, setItemPhotos] = useState<Record<string, { before?: File; after?: File; beforePreview?: string; afterPreview?: string }>>({});
   const [isBlockageModalOpen, setIsBlockageModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -53,27 +54,51 @@ export default function InstallerJobDetailClient({
 
   const allItemsScanned = flatHardware.length > 0 && scannedAssets.length === flatHardware.length;
 
-  const handleAddPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleItemPhoto = async (itemId: string, type: "before" | "after", e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      if (files.length >= 2) {
-        toast.error("You can upload up to 2 photos (Before & After).");
-        return;
-      }
-      const selectedFile = e.target.files[0];
-      setFiles((prev) => [...prev, selectedFile]);
-      setPreviewUrls((prev) => [...prev, URL.createObjectURL(selectedFile)]);
+      const raw = e.target.files[0];
+      // Compress: 1200px max, 70% JPEG quality (~60-70% size reduction)
+      const compressed = await compressImage(raw, 1200, 0.7);
+      const preview = URL.createObjectURL(compressed);
+      setItemPhotos(prev => ({
+        ...prev,
+        [itemId]: {
+          ...prev[itemId],
+          [type]: compressed,
+          [type === "before" ? "beforePreview" : "afterPreview"]: preview,
+        }
+      }));
     }
   };
 
-  const removePhoto = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviewUrls((prev) => {
-      const newUrls = [...prev];
-      URL.revokeObjectURL(newUrls[index]);
-      newUrls.splice(index, 1);
-      return newUrls;
+  const removeItemPhoto = (itemId: string, type: "before" | "after") => {
+    setItemPhotos(prev => {
+      const item = prev[itemId];
+      if (!item) return prev;
+      const previewKey = type === "before" ? "beforePreview" : "afterPreview";
+      if (item[previewKey]) URL.revokeObjectURL(item[previewKey]!);
+      return {
+        ...prev,
+        [itemId]: {
+          ...item,
+          [type]: undefined,
+          [previewKey]: undefined,
+        }
+      };
     });
   };
+
+  // Get all photo files for upload
+  const getAllPhotoFiles = () => {
+    const allFiles: { file: File; itemId: string; type: string }[] = [];
+    for (const [itemId, photos] of Object.entries(itemPhotos)) {
+      if (photos.before) allFiles.push({ file: photos.before, itemId, type: "before" });
+      if (photos.after) allFiles.push({ file: photos.after, itemId, type: "after" });
+    }
+    return allFiles;
+  };
+
+  const totalPhotos = getAllPhotoFiles().length;
 
   const handleResendPin = async () => {
     try {
@@ -89,8 +114,9 @@ export default function InstallerJobDetailClient({
   };
 
   const handleUploadAndComplete = async () => {
-    if (files.length === 0) {
-      toast.error("Please select at least one photo as proof of installation.");
+    const photoFiles = getAllPhotoFiles();
+    if (photoFiles.length === 0) {
+      toast.error("Please upload at least one photo as proof of installation.");
       return;
     }
     if (flatHardware.length > 0 && !allItemsScanned) {
@@ -105,28 +131,28 @@ export default function InstallerJobDetailClient({
     setUploading(true);
     setProgress(0);
     try {
-      const uploadPromises = files.map((file, index) => {
-        return new Promise<string>((resolve, reject) => {
-          const filename = `installations/${leadId}_${Date.now()}_${index}_${file.name}`;
+      const uploadPromises = photoFiles.map(({ file, itemId, type }, index) => {
+        return new Promise<{ url: string; itemId: string; type: string }>((resolve, reject) => {
+          const filename = `installations/${leadId}_${itemId}_${type}_${Date.now()}_${file.name}`;
           const storageRef = ref(storage, filename);
           const uploadTask = uploadBytesResumable(storageRef, file);
           
           uploadTask.on('state_changed', 
             (snapshot) => {
-              // We could calculate total progress here, but for simplicity let's just show an indeterminate state or approximate
               const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              setProgress(Math.round(p)); 
+              setProgress(Math.round((index / photoFiles.length) * 100 + p / photoFiles.length)); 
             }, 
             (error) => reject(error), 
             async () => {
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve(downloadURL);
+              resolve({ url: downloadURL, itemId, type });
             }
           );
         });
       });
 
-      const downloadURLs = await Promise.all(uploadPromises);
+      const uploadResults = await Promise.all(uploadPromises);
+      const downloadURLs = uploadResults.map(r => r.url);
       
       try {
         const { updateLeadInstallationProof } = await import("@/app/actions/leads");
@@ -379,32 +405,49 @@ export default function InstallerJobDetailClient({
           <h3 className="font-bold text-foreground flex items-center gap-2">
             <Camera className="w-5 h-5 text-primary" /> Proof of Installation
           </h3>
-          <p className="text-sm text-muted-foreground">Upload <strong>Before</strong> and <strong>After</strong> photos of the installation site to mark this job as Won.</p>
+          <p className="text-sm text-muted-foreground">Upload <strong>Before</strong> and <strong>After</strong> photos for each installed product. Photos are auto-compressed to save storage.</p>
+          <p className="text-xs text-blue-600 font-semibold">{totalPhotos} photo{totalPhotos !== 1 ? "s" : ""} selected</p>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              {[0, 1].map((idx) => (
-                <div key={idx}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 text-center">
-                    {idx === 0 ? "Before" : "After"}
-                  </p>
-                  {previewUrls[idx] ? (
-                    <div className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200">
-                      <Image src={previewUrls[idx]} alt={idx === 0 ? "Before" : "After"} fill className="object-cover" unoptimized />
-                      {!uploading && (
-                        <button onClick={() => removePhoto(idx)} className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center text-xs hover:bg-black/80 transition-colors">✕</button>
-                      )}
-                    </div>
-                  ) : (
-                    <label className="aspect-square rounded-xl border-2 border-dashed border-zinc-300 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
-                      <Camera className="w-6 h-6 text-zinc-400" />
-                      <span className="text-[10px] text-zinc-400 mt-1">{idx === 0 ? "Before" : "After"}</span>
-                      <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleAddPhoto} />
-                    </label>
-                  )}
+            {hardware.map((item: any, hIdx: number) => {
+              const itemId = item._checklistId || item.name || String(hIdx);
+              const qty = item.quantity || item.qty || 1;
+              const photos = itemPhotos[itemId] || {};
+              return (
+                <div key={itemId} className="border border-border rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-foreground">{item.name || item.product_name || "Product"}</h4>
+                    <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-full">Qty: {qty}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(["before", "after"] as const).map((type) => {
+                      const preview = type === "before" ? photos.beforePreview : photos.afterPreview;
+                      return (
+                        <div key={type}>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 text-center">
+                            {type === "before" ? "Before" : "After"}
+                          </p>
+                          {preview ? (
+                            <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700">
+                              <Image src={preview} alt={type} fill className="object-cover" unoptimized />
+                              {!uploading && (
+                                <button onClick={() => removeItemPhoto(itemId, type)} className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center text-xs hover:bg-black/80 transition-colors">{String.fromCharCode(10005)}</button>
+                              )}
+                            </div>
+                          ) : (
+                            <label className="aspect-[4/3] rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors">
+                              <Camera className="w-5 h-5 text-zinc-400" />
+                              <span className="text-[10px] text-zinc-400 mt-1">{type === "before" ? "Before" : "After"}</span>
+                              <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleItemPhoto(itemId, type, e)} />
+                            </label>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
 
             <div>
               <label className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5">Installation Notes (Optional)</label>
@@ -458,7 +501,7 @@ export default function InstallerJobDetailClient({
             </button>
             <button 
               onClick={handleUploadAndComplete}
-              disabled={files.length === 0 || uploading || pin.length !== 6}
+              disabled={totalPhotos === 0 || uploading || pin.length !== 6}
               className="w-full py-4 bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
             >
               {uploading ? (
