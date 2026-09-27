@@ -6,6 +6,9 @@ import {
   Plus, Search, Building2, AlertTriangle, CheckCircle2 
 } from "lucide-react";
 import { toast } from "sonner";
+import { VendorsTab } from "./VendorsTab";
+import { PurchaseOrdersTab } from "./PurchaseOrdersTab";
+import { LiveInventoryTab } from "./LiveInventoryTab";
 
 export function LogisticsDashboardClient() {
   const [activeTab, setActiveTab] = useState<"inventory" | "po" | "vendors">("inventory");
@@ -69,94 +72,17 @@ export function LogisticsDashboardClient() {
         
         {/* INVENTORY TAB */}
         {activeTab === "inventory" && (
-          <div className="p-0">
-            <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-[24px]">
-              <div className="relative w-72">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                <input type="text" placeholder="Search SKU or Product..." className="w-full pl-9 pr-4 py-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <button className="text-sm font-bold text-blue-600 hover:underline">Download Stock Report</button>
-            </div>
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 text-gray-500 font-bold border-b">
-                <tr>
-                  <th className="px-6 py-4">Product / SKU</th>
-                  <th className="px-6 py-4">Brand</th>
-                  <th className="px-6 py-4">Physical Stock</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {/* Mock Row 1 */}
-                <tr className="hover:bg-blue-50/30">
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-gray-900">2MP ColorVu Bullet Camera</div>
-                    <div className="text-gray-500 text-xs">SKU: HIK-2MP-BUL-CV</div>
-                  </td>
-                  <td className="px-6 py-4 font-medium">Hikvision</td>
-                  <td className="px-6 py-4">
-                    <span className="font-black text-lg">142</span> units
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Healthy
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button onClick={() => setActiveTab("po")} className="text-blue-600 font-bold hover:underline">Generate PO</button>
-                  </td>
-                </tr>
-                {/* Mock Row 2 */}
-                <tr className="hover:bg-blue-50/30">
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-gray-900">4CH DVR (AcuSense)</div>
-                    <div className="text-gray-500 text-xs">SKU: HIK-4CH-DVR-AS</div>
-                  </td>
-                  <td className="px-6 py-4 font-medium">Hikvision</td>
-                  <td className="px-6 py-4">
-                    <span className="font-black text-lg text-red-600">3</span> units
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                      <AlertTriangle className="w-3.5 h-3.5" /> Critical Low
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button onClick={() => setActiveTab("po")} className="text-blue-600 font-bold hover:underline">Generate PO</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <LiveInventoryTab />
         )}
 
         {/* PURCHASE ORDERS TAB */}
         {activeTab === "po" && (
-          <div className="p-8 text-center space-y-4">
-            <div className="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShoppingCart className="w-10 h-10" />
-            </div>
-            <h3 className="text-xl font-bold">Purchase Order System</h3>
-            <p className="text-gray-500 max-w-md mx-auto">Generate PDF Purchase Orders to send to your distributors. When stock arrives, mark it as received to automatically update Hub inventory and notify the Accountant.</p>
-            <button className="mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/20 inline-flex items-center gap-2">
-              <Plus className="w-5 h-5" /> Create New PO
-            </button>
-          </div>
+          <PurchaseOrdersTab />
         )}
 
         {/* VENDORS TAB */}
         {activeTab === "vendors" && (
-          <div className="p-8 text-center space-y-4">
-            <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Store className="w-10 h-10" />
-            </div>
-            <h3 className="text-xl font-bold">Vendor Directory</h3>
-            <p className="text-gray-500 max-w-md mx-auto">Manage your authorized distributors, their GST numbers, and contact details for automated PO generation.</p>
-            <button className="mt-4 px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 shadow-lg shadow-orange-500/20 inline-flex items-center gap-2">
-              <Plus className="w-5 h-5" /> Add New Vendor
-            </button>
-          </div>
+          <VendorsTab />
         )}
 
       </div>

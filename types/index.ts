@@ -978,8 +978,58 @@ export type VendorCategory = "cctv_camera" | "recorder" | "storage" | "connector
 export interface Vendor {
   id?: string;
   name: string;
-  prefix: string;
+  prefix: string; // Used for PO numbering or SKUs
+  contact_person?: string;
+  phone?: string;
+  email?: string;
+  gstin?: string;
+  address?: Address;
+  status: "active" | "inactive";
+  credit_limit?: number;
+  payment_terms?: "advance" | "net_15" | "net_30" | "on_delivery";
   created_at?: unknown;
+  updated_at?: unknown;
+}
+
+export interface PurchaseOrderItem {
+  product_id: string;
+  sku: string;
+  name: string;
+  quantity: number;
+  unit_cost: number;
+  total_cost: number;
+  received_quantity: number;
+  serial_numbers?: string[]; // Logged during receiving
+}
+
+export type PODeliveryMode = "direct_to_customer" | "installer_pickup" | "hub_delivery";
+
+export interface PurchaseOrder {
+  id?: string;
+  po_number: string; // e.g. PO-VEND-1001
+  vendor_id: string;
+  vendor_name: string;
+  job_id?: string; // If this PO is tied directly to a customer job (JIT Drop-shipping)
+  quote_id?: string;
+  hub_id: string;
+  
+  delivery_mode: PODeliveryMode;
+  shipping_address?: Address; // Customer address, Hub address, or null if installer pickup
+  assigned_installer_id?: string; // Who is picking it up
+  
+  status: "draft" | "issued" | "accepted" | "ready_for_pickup" | "shipped" | "partially_received" | "completed" | "cancelled";
+  
+  items: PurchaseOrderItem[];
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+  
+  notes?: string;
+  issued_at?: unknown;
+  expected_delivery_date?: unknown;
+  created_at?: unknown;
+  updated_at?: unknown;
+  created_by?: string;
 }
 
 export interface StagedProduct {

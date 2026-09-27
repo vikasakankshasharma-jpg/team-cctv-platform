@@ -578,5 +578,54 @@ export const CustomerFeedbackSchema = z.object({
 
 export type CustomerFeedback = z.infer<typeof CustomerFeedbackSchema>;
 
-export const CreatePOSchema = z.any();
-export const CreateVendorSchema = z.any();
+const AddressSchema = z.object({
+  full_address: z.string(),
+  city: z.string(),
+  state: z.string(),
+  pincode: z.string(),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+});
+
+export const CreatePOSchema = z.object({
+  vendor_id: z.string(),
+  vendor_name: z.string(),
+  job_id: z.string().optional(),
+  quote_id: z.string().optional(),
+  hub_id: z.string(),
+  delivery_mode: z.enum(["direct_to_customer", "installer_pickup", "hub_delivery"]),
+  shipping_address: AddressSchema.optional(),
+  assigned_installer_id: z.string().optional(),
+  items: z.array(z.object({
+    product_id: z.string(),
+    sku: z.string(),
+    name: z.string(),
+    quantity: z.number().positive(),
+    unit_cost: z.number().nonnegative(),
+    total_cost: z.number().nonnegative(),
+    received_quantity: z.number().default(0)
+  })).min(1),
+  subtotal: z.number().nonnegative(),
+  tax_amount: z.number().nonnegative(),
+  total_amount: z.number().nonnegative(),
+  notes: z.string().optional(),
+});
+export const CreateVendorSchema = z.object({
+  name: z.string().min(2),
+  prefix: z.string().min(2).max(10),
+  contact_person: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  gstin: z.string().optional(),
+  status: z.enum(["active", "inactive"]).default("active"),
+  credit_limit: z.number().nonnegative().optional(),
+  payment_terms: z.enum(["advance", "net_15", "net_30", "on_delivery"]).default("on_delivery"),
+  address: z.object({
+    full_address: z.string(),
+    city: z.string(),
+    state: z.string(),
+    pincode: z.string(),
+    lat: z.number().optional(),
+    lng: z.number().optional()
+  }).optional()
+});
