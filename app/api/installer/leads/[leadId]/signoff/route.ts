@@ -52,6 +52,24 @@ export async function POST(request: Request, context: { params: Promise<{ leadId
           });
         }
       }
+
+      // Generate Installer Commission
+      if (session.role === "installer" && session.user?.uid) {
+        const commissionRef = adminDb.collection("commissions").doc();
+        transaction.set(commissionRef, {
+          id: commissionRef.id,
+          lead_id: leadId,
+          quote_id: leadData.converted_quote_id || "direct",
+          user_id: session.user.uid,
+          user_type: "installer",
+          customer_name: leadData.customer_name || "Customer",
+          ex_tax_amount: leadData.final_amount_ex_tax || leadData.final_amount || 0,
+          commission_amount: 1500, // Flat fee for installers for now, could be derived from config
+          status: "pending",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      }
     });
 
     // We can also trigger the warranty API directly here

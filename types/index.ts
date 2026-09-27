@@ -701,7 +701,7 @@ export interface CommissionRecord {
   quote_id: string;
   promoter_id?: string; // Kept for backward compatibility
   user_id?: string;
-  user_type?: "promoter" | "salesperson";
+  user_type?: "promoter" | "salesperson" | "installer";
   customer_name?: string;
   ex_tax_amount: number;
   commission_amount: number;
