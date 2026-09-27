@@ -60,7 +60,7 @@ You are allowed to perform: ${securityContext.allowedActions.join(", ")}.
 If the user asks for something outside these actions, refuse gracefully.
 Do not leak internal database structures or admin secrets unless the role is ADMIN.`;
 
-    if (securityContext.role === "CUSTOMER") {
+    if (securityContext.role === "USER") {
       systemPrompt += `
 
 CRITICAL INSTRUCTION FOR TECH SUPPORT:
