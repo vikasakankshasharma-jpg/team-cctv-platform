@@ -89,11 +89,6 @@ export interface PincodeGroupedData {
   radius: number;
 }
 
-/**
- * Robustly computes verified local coordinates for all pincodes in a district dataset,
- * eliminating mis-scraped outlier coordinates from third-party postal datasets
- * (which often place pincodes in other states or across borders).
- */
 export function computeDistrictPincodes(offices: any[]): PincodeGroupedData[] {
   if (!offices || offices.length === 0) return [];
 
@@ -114,12 +109,32 @@ export function computeDistrictPincodes(offices: any[]): PincodeGroupedData[] {
     medianLng = sortedLngs[Math.floor(sortedLngs.length / 2)];
   }
 
-  // Step 3: Threshold for local district coordinates: within ~100km of district median
+  // Step 3: Threshold for local district coordinates: within ~1.2 degrees (~130km) of district median
   const isWithinDistrict = (lat: number, lng: number) => {
-    return Math.abs(lat - medianLat) <= 1.0 && Math.abs(lng - medianLng) <= 1.0;
+    return Math.abs(lat - medianLat) <= 1.2 && Math.abs(lng - medianLng) <= 1.2;
   };
 
-  // Step 4: Group offices by pincode
+  // Step 4: Determine valid pincode prefixes to remove dataset bleed (outliers from other districts)
+  const prefixCounts = new Map<string, number>();
+  offices.forEach(o => {
+    if (o.pincode && String(o.pincode).length >= 3) {
+      const prefix = String(o.pincode).substring(0, 3);
+      prefixCounts.set(prefix, (prefixCounts.get(prefix) || 0) + 1);
+    }
+  });
+
+  let maxCount = 0;
+  prefixCounts.forEach(count => { if (count > maxCount) maxCount = count; });
+  
+  const validPrefixes = new Set<string>();
+  prefixCounts.forEach((count, prefix) => {
+    // Keep prefixes that represent at least 5% of the primary prefix count
+    if (count >= maxCount * 0.05) {
+      validPrefixes.add(prefix);
+    }
+  });
+
+  // Step 5: Group offices by pincode
   const pincodeMap = new Map<string, {
     areas: Set<string>;
     validCoords: { lat: number; lng: number; isMain: boolean }[];
@@ -127,6 +142,11 @@ export function computeDistrictPincodes(offices: any[]): PincodeGroupedData[] {
 
   offices.forEach(o => {
     if (!o.pincode) return;
+    const prefix = String(o.pincode).substring(0, 3);
+    
+    // Ignore pincodes that don't belong to this district's dominant prefixes
+    if (validPrefixes.size > 0 && !validPrefixes.has(prefix)) return;
+
     if (!pincodeMap.has(o.pincode)) {
       pincodeMap.set(o.pincode, { areas: new Set(), validCoords: [] });
     }
@@ -145,12 +165,12 @@ export function computeDistrictPincodes(offices: any[]): PincodeGroupedData[] {
     }
   });
 
-  // Step 5: Assign best verified coordinates for each pincode
+  // Step 6: Assign best verified coordinates, leave undefined if none so client geocodes it accurately
   return Array.from(pincodeMap.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([pincode, data]) => {
-      let lat = medianLat;
-      let lng = medianLng;
+      let lat: number | undefined;
+      let lng: number | undefined;
 
       if (data.validCoords.length > 0) {
         // Prefer main post office (Head Office / Sub-Office)
@@ -169,8 +189,7 @@ export function computeDistrictPincodes(offices: any[]): PincodeGroupedData[] {
         pincode,
         areas: Array.from(data.areas).slice(0, 4),
         allAreas: Array.from(data.areas),
-        lat,
-        lng,
+        ...(lat && lng ? { lat, lng } : {}), // Omit lat/lng if not found to trigger client geocoding
         radius: 4000
       };
     });
