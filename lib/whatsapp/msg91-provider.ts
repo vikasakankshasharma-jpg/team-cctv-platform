@@ -354,6 +354,8 @@ export class Msg91WhatsAppProvider {
         ]
       }
     });
+  }
+
   async sendReviewAndReferral(payload: { phone: string, customerName: string, referralCode: string, reviewLink: string }) {
     console.log(`[MSG91] Sending Review & Referral to ${payload.phone}`);
     let to = payload.phone.replace(/[^0-9]/g, '');
