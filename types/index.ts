@@ -64,6 +64,16 @@ export interface Job {
   time_slot?: string;
   special_notes?: string;
   
+  completion_data?: {
+    signature_url?: string;
+    photo_urls?: string[];
+    serial_numbers?: {
+      product_id: string;
+      serial: string;
+    }[];
+    notes?: string;
+  };
+  
   scheduled_at?: unknown;
   sla_deadline?: string | null;
   completed_at?: unknown;

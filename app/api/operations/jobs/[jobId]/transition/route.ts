@@ -10,7 +10,7 @@ export async function POST(request: Request, context: { params: Promise<{ jobId:
     const params = await context.params;
     const jobId = params.jobId;
     
-    const { status, note, installer_id } = await request.json();
+    const { status, note, installer_id, completion_data } = await request.json();
     const nextStatus = status as JobStatus;
 
     if (!nextStatus) {
@@ -49,6 +49,9 @@ export async function POST(request: Request, context: { params: Promise<{ jobId:
       
       if (nextStatus === "COMPLETED") {
         updateData.completed_at = new Date().toISOString();
+        if (completion_data) {
+          updateData.completion_data = completion_data;
+        }
       }
 
       transaction.update(jobRef, updateData);

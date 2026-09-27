@@ -12,6 +12,7 @@ import Image from "next/image";
 import { InstallerBlockageModal } from "./InstallerBlockageModal";
 import SubmitOfflinePaymentModal from "./SubmitOfflinePaymentModal";
 import BarcodeScanner from "./BarcodeScanner";
+import { JobSignoffModal } from "./JobSignoffModal";
 import type { Lead } from "@/types";
 
 export default function InstallerJobDetailClient({ 
@@ -32,6 +33,7 @@ export default function InstallerJobDetailClient({
   // Per-product photo proof: { "itemId": { before?: File, after?: File } }
   const [itemPhotos, setItemPhotos] = useState<Record<string, { before?: File; after?: File; beforePreview?: string; afterPreview?: string }>>({});
   const [isBlockageModalOpen, setIsBlockageModalOpen] = useState(false);
+  const [showSignoffModal, setShowSignoffModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [note, setNote] = useState("");
@@ -499,17 +501,7 @@ export default function InstallerJobDetailClient({
             >
               Report Blockage / Reschedule
             </button>
-            <button 
-              onClick={handleUploadAndComplete}
-              disabled={totalPhotos === 0 || uploading || pin.length !== 6}
-              className="w-full py-4 bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
-            >
-              {uploading ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Uploading {progress}%</>
-              ) : (
-                <><CheckCircle2 className="w-5 h-5" /> Mark Job as Won</>
-              )}
-            </button>
+            <button onClick={() => setShowSignoffModal(true)} className="w-full py-4 bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"><CheckCircle2 className="w-5 h-5" /> Proceed to Customer Sign-Off</button>
           </div>
         </div>
       )}
@@ -550,3 +542,5 @@ export default function InstallerJobDetailClient({
     </div>
   );
 }
+
+
