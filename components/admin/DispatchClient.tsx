@@ -83,7 +83,7 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Workflow className="w-8 h-8 opacity-20" />
                     <p>No jobs found in this view.</p>
-                  </div>)}
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
@@ -198,7 +198,7 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
             )}
           </TableBody>
         </Table>
-      </div>
+      </div>)}
 
       {selectedQuote && (
         <MaterialDispatchModal 
