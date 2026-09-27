@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { assignJob } from "@/app/actions/dispatch";
 import { toast } from "sonner";
 import { MaterialDispatchModal } from "@/components/admin/MaterialDispatchModal";
+import { DispatchMapWidget } from "@/components/admin/DispatchMapWidget";
 
 export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: Hub[], installers: Installer[] }) {
-  const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
+  const [activeTab, setActiveTab] = useState<"active" | "completed" | "map">("active");
   const [isAssigning, setIsAssigning] = useState<string | null>(null);
   const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<{id: string; customerName: string; totalPayable: number} | null>(null);
@@ -49,6 +50,13 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
           Live Operations ({activeJobs.length})
         </Button>
         <Button 
+          variant={activeTab === "map" ? "default" : "ghost"} 
+          onClick={() => setActiveTab("map")}
+          className={activeTab === "map" ? "bg-blue-600 hover:bg-blue-500" : ""}
+        >
+          God-View Map
+        </Button>
+        <Button 
           variant={activeTab === "completed" ? "default" : "ghost"} 
           onClick={() => setActiveTab("completed")}
         >
@@ -56,7 +64,7 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
         </Button>
       </div>
 
-      <div className="flex-1 overflow-auto rounded-xl border border-border/50 bg-black/40">
+              {activeTab === "map" ? (<DispatchMapWidget />) : (<div className="flex-1 overflow-auto rounded-xl border border-border/50 bg-black/40">
         <Table>
           <TableHeader className="bg-muted/50 sticky top-0 z-10">
             <TableRow className="border-border/50 hover:bg-transparent">
@@ -75,7 +83,7 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Workflow className="w-8 h-8 opacity-20" />
                     <p>No jobs found in this view.</p>
-                  </div>
+                  </div>)}
                 </TableCell>
               </TableRow>
             ) : (
@@ -212,3 +220,4 @@ export function DispatchClient({ jobs, hubs, installers }: { jobs: Job[], hubs: 
     </div>
   );
 }
+
