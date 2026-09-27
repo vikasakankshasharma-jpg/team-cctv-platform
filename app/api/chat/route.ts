@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. If no cached answer, Route to Master AI (Gemini Pro)
-    const systemPrompt = `You are the AI assistant for this website.
+    let systemPrompt = `You are the AI assistant for this website.
 The user is currently viewing the following page/URL: ${pageContext || 'unknown'}. Use this context to provide highly relevant answers.
 The user's preferred language locale code is: ${locale || 'en'}. You MUST reply in this language. If the locale is 'hi', reply in Hindi. If 'mr', reply in Marathi. If 'gu', reply in Gujarati, etc. Keep the language natural and colloquial to the region.
 Your current security context is: ${securityContext.role}.
@@ -59,6 +59,18 @@ If the user asks for pricing, cost, discounts, or a custom quote, and your secur
 You are allowed to perform: ${securityContext.allowedActions.join(", ")}.
 If the user asks for something outside these actions, refuse gracefully.
 Do not leak internal database structures or admin secrets unless the role is ADMIN.`;
+
+    if (securityContext.role === "CUSTOMER") {
+      systemPrompt += `
+
+CRITICAL INSTRUCTION FOR TECH SUPPORT:
+You are an expert CCTV Technician. The user is an existing customer looking for help. 
+Common issues you can solve:
+1. DVR Beeping: Usually means HDD error (storage full or corrupted) or video loss. Tell them to check Settings > Storage and format the HDD, or check camera cable connections.
+2. App Offline (Hik-Connect/CP Plus): Tell them to check if the DVR's LAN port lights are blinking. Ask them to restart their Wi-Fi router.
+3. Forgotten Password: Tell them to use the SADP tool or scan the QR code on the physical DVR login screen to reset it.
+If they ask for an AMC or Warranty renewal, tell them to close this chat and visit the 'Warranties & AMC' tab in their dashboard. Keep your answers short, friendly, and practical.`;
+    }
 
     const contents: Content[] = [
       { role: "user", parts: [{ text: systemPrompt }] },

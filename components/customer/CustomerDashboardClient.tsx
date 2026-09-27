@@ -55,6 +55,8 @@ interface CustomerDashboardProps {
   quotes: CustomerQuoteItem[];
 }
 
+import { SupportChatbot } from "@/components/customer/SupportChatbot";
+
 export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps) {
   const safeUser = user || { uid: "", name: "Valued Client", mobile: "" };
   const safeQuotes = Array.isArray(quotes) ? quotes : [];
@@ -715,6 +717,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
         </div>
 
       </div>
+      <SupportChatbot />
     </div>
   );
 }
