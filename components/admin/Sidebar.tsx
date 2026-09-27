@@ -28,7 +28,7 @@ const NAV_GROUPS = [
     label: "Sales & CRM",
     items: [
       { name: "Leads Pipeline", href: "/admin/leads",        icon: Users },
-      { name: "Site Visits",    href: "/admin/bookings",     icon: Calendar },
+      { name: "Site Visits",    href: "/admin/bookings",     icon: Calendar }, { name: "AMC Contracts", href: "/admin/amc", icon: ShieldCheck },
       { name: "Salespersons",   href: "/admin/salespersons", icon: ShieldCheck },
     ],
   },
