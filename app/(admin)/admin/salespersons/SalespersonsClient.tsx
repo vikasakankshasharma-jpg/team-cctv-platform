@@ -209,6 +209,17 @@ export default function SalespersonsClient() {
   const [rawPincodes, setAvailablePincodes] = useState<PincodeData[]>([]);
   const { enrichedPincodes: availablePincodes, getOverlappingPincodes } = usePincodeCoverage(isLoaded, rawPincodes);
 
+  const [zonePincodeSearch, setZonePincodeSearch] = useState("");
+  
+  const filteredAvailablePincodes = useMemo(() => {
+    if (!zonePincodeSearch.trim()) return availablePincodes;
+    const q = zonePincodeSearch.toLowerCase();
+    return availablePincodes.filter(p => 
+      p.pincode.includes(q) || 
+      (p.areas || []).some(a => a.toLowerCase().includes(q))
+    );
+  }, [availablePincodes, zonePincodeSearch]);
+
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingOffices, setLoadingOffices] = useState(false);
@@ -1113,7 +1124,7 @@ export default function SalespersonsClient() {
                       <button 
                         type="button"
                         onClick={() => {
-                          const allPins = availablePincodes.map(p => p.pincode);
+                          const allPins = filteredAvailablePincodes.map(p => p.pincode);
                           setNewZone(prev => ({
                             ...prev,
                             pincodes: Array.from(new Set([...(prev.pincodes || []), ...allPins]))
@@ -1123,11 +1134,11 @@ export default function SalespersonsClient() {
                       >
                         Select All
                       </button>
-                      <span className="text-muted-foreground text-xs">•</span>
+                      <span className="text-muted-foreground text-xs">·</span>
                       <button 
                         type="button"
                         onClick={() => {
-                          const currentPins = new Set(availablePincodes.map(p => p.pincode));
+                          const currentPins = new Set(filteredAvailablePincodes.map(p => p.pincode));
                           setNewZone(prev => ({
                             ...prev,
                             pincodes: (prev.pincodes || []).filter(p => !currentPins.has(p))
@@ -1141,6 +1152,18 @@ export default function SalespersonsClient() {
                   )}
                 </div>
 
+                {availablePincodes.length > 0 && (
+                  <div className="mb-3 relative">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Search specific PINCODE or Area..."
+                      className="pl-9 h-9 text-sm bg-secondary/30"
+                      value={zonePincodeSearch}
+                      onChange={(e) => setZonePincodeSearch(e.target.value)}
+                    />
+                  </div>
+                )}
+
                 {loadingOffices ? (
                   <div className="p-8 border rounded-xl bg-muted/20 flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs">
                     <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -1150,7 +1173,11 @@ export default function SalespersonsClient() {
                   viewMode === "list" ? (
                     <div className="p-3 border rounded-xl bg-muted/20 animate-in slide-in-from-top-1">
                       <div className="max-h-52 overflow-y-auto space-y-1.5 pr-2">
-                        {availablePincodes.map(p => {
+                        {filteredAvailablePincodes.length === 0 ? (
+                          <div className="text-center p-4 text-xs text-muted-foreground italic">
+                            No matching PINCODEs found for "{zonePincodeSearch}".
+                          </div>
+                        ) : filteredAvailablePincodes.map(p => {
                           const isParentSelected = (newZone.pincodes || []).includes(p.pincode);
                           return (
                             <div key={p.pincode} className="flex flex-col gap-1 mb-2 bg-white rounded-xl border p-1 shadow-sm">
@@ -1241,7 +1268,7 @@ export default function SalespersonsClient() {
                             onClick={handleMapClick}
                             onMouseMove={handleMapMouseMove}
                           >
-                            {availablePincodes.filter(p => p.lat && p.lng).map(p => {
+                            {filteredAvailablePincodes.filter(p => p.lat && p.lng).map(p => {
                               const isSelected = (newZone.pincodes || []).includes(p.pincode);
                               const isHovered = hoveredPincodes.includes(p.pincode);
                               return (
@@ -1358,3 +1385,4 @@ export default function SalespersonsClient() {
     </div>
   );
 }
+
