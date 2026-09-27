@@ -215,7 +215,7 @@ export function AdminAmcClient() {
               <CardDescription>Create and manage the AMC packages that customers can purchase.</CardDescription>
             </div>
             <Dialog open={isNewPlanOpen} onOpenChange={setIsNewPlanOpen}>
-              <DialogTrigger asChild>
+              <DialogTrigger>
                 <Button size="sm"><Plus className="w-4 h-4 mr-2" /> New Package</Button>
               </DialogTrigger>
               <DialogContent>
