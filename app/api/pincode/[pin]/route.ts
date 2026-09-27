@@ -55,6 +55,8 @@ export async function GET(
     let lng: number | undefined;
     let radius: number | undefined;
 
+    let aiAreas: string[] | undefined = undefined;
+
     const cacheRef = adminDb.collection("pincode_cache").doc(pin);
     const cacheSnap = await cacheRef.get();
     
@@ -64,6 +66,9 @@ export async function GET(
          lat = c.lat;
          lng = c.lng;
          radius = c.radius;
+      }
+      if (c && c.ai_areas && Array.isArray(c.ai_areas) && c.ai_areas.length > 0) {
+         aiAreas = c.ai_areas;
       }
     }
 
@@ -138,6 +143,29 @@ export async function GET(
        }
     }
 
+    // Attempt inline lazy generation of AI areas if not present, without blocking response unnecessarily
+    // If it takes too long, we just proceed. We won't strictly await it forever.
+    if (!aiAreas && process.env.GEMINI_API_KEY) {
+      try {
+        const { GoogleGenAI } = await import("@google/genai");
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const prompt = `You are a geographic expert of India. List the top 5 to 10 most prominent residential colonies, neighborhoods, or local areas that belong strictly to the pincode ${pin} in ${firstOffice.District}, ${firstOffice.State}. Do not include official post office building names like G.P.O or C.P.M.G unless they are primarily known as residential/commercial hubs. Return ONLY a valid JSON array of strings representing the colony names, and nothing else. Example: ["C-Scheme", "Ashok Nagar", "Bapu Nagar"]`;
+        const aiRes = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: prompt,
+          config: { responseMimeType: "application/json" },
+        });
+        const text = aiRes.text?.replace(/```json|```/g, '').trim() || "";
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          aiAreas = parsed;
+          await cacheRef.set({ ai_areas: aiAreas }, { merge: true });
+        }
+      } catch (err) {
+        console.error("Failed to generate AI areas for pin:", pin, err);
+      }
+    }
+
     try {
       const batch = adminDb.batch();
       const impressionRef = adminDb.collection("city_impressions").doc(districtName.replace(/\s+/g, '-'));
@@ -173,7 +201,7 @@ export async function GET(
         lat,
         lng,
         radius,
-        areas: formattedAreas,
+        areas: aiAreas && aiAreas.length > 0 ? aiAreas : formattedAreas,
         message: served ? "" : "Nearest serviceable area shown as reference."
       },
       { status: 200 }
