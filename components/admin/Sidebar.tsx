@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Truck, FileSpreadsheet, Filter, IndianRupee } from "lucide-react";
+import { Truck, FileSpreadsheet, Filter } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
