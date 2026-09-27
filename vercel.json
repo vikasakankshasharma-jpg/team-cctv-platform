@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/auto-chaser",
+      "schedule": "0 10 * * *"
+    },
+    {
       "path": "/api/cron/followups",
       "schedule": "0 1 * * *"
     },
