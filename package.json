@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "TEAM – CCTV Smart Quotation & Referral Platform",
   "private": true,
-  "scripts": {`n    "reset:uat": "npx ts-node --project tsconfig.scripts.json --transpile-only scripts/reset-uat.ts",
+  "scripts": {
+    "reset:uat": "npx ts-node --project tsconfig.scripts.json --transpile-only scripts/reset-uat.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

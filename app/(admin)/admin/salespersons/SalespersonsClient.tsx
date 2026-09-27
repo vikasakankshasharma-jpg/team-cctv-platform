@@ -22,6 +22,7 @@ import {
 import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "sonner";
 import type { Salesperson, CoverageZone } from "@/types";
+import { TerritoryMatrix } from "./TerritoryMatrix";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -156,6 +157,33 @@ export default function SalespersonsClient() {
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [hoveredPincodes, setHoveredPincodes] = useState<string[]>([]);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<"directory" | "matrix">("directory");
+
+  const filteredSalespersons = useMemo(() => {
+    if (!globalSearch.trim()) return salespersons;
+    const q = globalSearch.toLowerCase();
+    return salespersons.filter(s => {
+      if (s.name?.toLowerCase().includes(q)) return true;
+      if (s.mobile_number?.includes(q)) return true;
+      const assignedZones = zones.filter(z => (s.assigned_zone_ids || []).includes(z.id!));
+      for (const z of assignedZones) {
+        if (z.name?.toLowerCase().includes(q)) return true;
+        if (z.pincodes?.some(pin => pin.includes(q))) return true;
+      }
+      return false;
+    });
+  }, [salespersons, zones, globalSearch]);
+
+  const filteredZones = useMemo(() => {
+    if (!globalSearch.trim()) return zones;
+    const q = globalSearch.toLowerCase();
+    return zones.filter(z => {
+      if (z.name?.toLowerCase().includes(q)) return true;
+      if (z.pincodes?.some(pin => pin.includes(q))) return true;
+      return false;
+    });
+  }, [zones, globalSearch]);
 
   // Form states
   const [showAddSalesperson, setShowAddSalesperson] = useState(false);
@@ -468,19 +496,23 @@ export default function SalespersonsClient() {
         pincodes_data: enrichedPincodesData
       };
 
-      const res = await fetch("/api/admin/coverage-zones", {
-        method: "POST",
+      const isEditing = !!newZone.id;
+      const url = isEditing ? `/api/admin/coverage-zones/${newZone.id}` : "/api/admin/coverage-zones";
+      const method = isEditing ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
       if (res.ok) {
-        toast.success("Zone added");
+        toast.success(isEditing ? "Zone updated" : "Zone added");
         setShowAddZone(false);
         setNewZone({ pincodes: [] });
         fetchData();
       }
     } catch (err) {
-      toast.error("Error adding zone");
+      toast.error("Error saving zone");
     } finally {
       setIsSaving(false);
     }
@@ -545,7 +577,80 @@ export default function SalespersonsClient() {
         badge={`${salespersons.length} Agents Active`}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* PHASE 1: Metrics & Global Search */}
+      <div className="space-y-4">
+        {/* Metric Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="p-4 rounded-xl flex items-center justify-between border-border shadow-sm bg-card transition-all">
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Total Salespersons</p>
+              <h4 className="text-2xl font-bold text-foreground tracking-tight">{salespersons.length}</h4>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <Users className="w-5 h-5" />
+            </div>
+          </Card>
+          
+          <Card 
+            onClick={() => setActiveTab("matrix")}
+            className="p-4 rounded-xl flex items-center justify-between border-border shadow-sm bg-card transition-all cursor-pointer hover:bg-success/5 hover:border-success/30"
+            title="Click to view full Territory Matrix"
+          >
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Covered PINCODEs</p>
+              <h4 className="text-2xl font-bold text-foreground tracking-tight">
+                {new Set(zones.flatMap(z => z.pincodes || [])).size}
+              </h4>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success">
+              <MapPin className="w-5 h-5" />
+            </div>
+          </Card>
+
+          <Card 
+            onClick={() => setActiveTab("matrix")}
+            className="p-4 rounded-xl flex items-center justify-between border-border shadow-sm bg-card transition-all cursor-pointer hover:bg-secondary/30"
+            title="Click to view full Territory Matrix"
+          >
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Serviceable Zones</p>
+              <h4 className="text-2xl font-bold text-foreground tracking-tight">{zones.length}</h4>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground">
+              <Globe className="w-5 h-5" />
+            </div>
+          </Card>
+        </div>
+
+        {/* Global Search Bar */}
+        <div className="relative">
+          <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input 
+            className="pl-12 text-sm bg-card border-border shadow-sm focus:bg-background h-12 rounded-xl text-foreground"
+            placeholder="Search by salesperson name, mobile number, PINCODE, or city..."
+            value={globalSearch}
+            onChange={e => setGlobalSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 border-b border-border pb-px mt-6">
+        <button 
+          onClick={() => setActiveTab("directory")}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${activeTab === "directory" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+        >
+          Directory
+        </button>
+        <button 
+          onClick={() => setActiveTab("matrix")}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${activeTab === "matrix" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+        >
+          Territory Matrix
+        </button>
+      </div>
+
+      {activeTab === "directory" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
         
         {/* Salespersons List */}
         <div className="lg:col-span-2 space-y-6">
@@ -560,7 +665,12 @@ export default function SalespersonsClient() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {salespersons.map(s => (
+            {filteredSalespersons.length === 0 ? (
+              <div className="col-span-2 p-8 text-center text-muted-foreground bg-secondary/20 rounded-2xl border border-dashed border-border">
+                No salespersons found.
+              </div>
+            ) : null}
+            {filteredSalespersons.map(s => (
               <Card key={s.id} className="p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group relative border-border bg-card">
                 <div className="absolute top-3.5 right-3.5 flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-all">
                   <button 
@@ -626,7 +736,7 @@ export default function SalespersonsClient() {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-foreground tracking-tight">Coverage Zones</h3>
             <button 
-              onClick={() => setShowAddZone(true)}
+              onClick={() => { setNewZone({ pincodes: [] }); setShowAddZone(true); }}
               className="p-2 bg-secondary text-secondary-foreground rounded-full hover:bg-primary/10 hover:text-primary transition-all"
             >
               <Plus className="w-4 h-4" />
@@ -634,25 +744,50 @@ export default function SalespersonsClient() {
           </div>
 
           <div className="space-y-3">
-            {zones.map(z => (
-              <Card key={z.id} className="p-4 rounded-xl flex items-center justify-between group border-border shadow-sm bg-card">
-                <div>
-                  <h5 className="text-sm font-semibold text-foreground tracking-tight">{z.name}</h5>
+            {filteredZones.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground bg-secondary/20 rounded-2xl border border-dashed border-border">
+                No coverage zones found.
+              </div>
+            ) : null}
+            {filteredZones.map(z => (
+              <Card key={z.id} className="p-4 rounded-xl flex items-center justify-between group border-border shadow-sm bg-card cursor-pointer hover:bg-secondary/20 transition-all" onClick={() => { setNewZone(z); setShowAddZone(true); }}>
+                <div className="flex-1">
+                  <h5 className="text-sm font-semibold text-foreground tracking-tight flex items-center gap-2">
+                    {z.name}
+                    <span className="text-[10px] font-medium text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">
+                      {salespersons.filter(s => (s.assigned_zone_ids || []).includes(z.id!)).length} Agents
+                    </span>
+                  </h5>
                   <p className="text-xs text-muted-foreground font-medium mt-1 truncate max-w-[180px]" title={z.pincodes.join(", ")}>
                     {z.pincodes.join(", ")}
                   </p>
                 </div>
-                <button 
-                  onClick={() => handleDeleteZone(z.id!)}
-                  className="p-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setNewZone(z); setShowAddZone(true); }}
+                    className="p-2 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
+                    title="Edit Zone"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDeleteZone(z.id!); }}
+                    className="p-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
+                    title="Delete Zone"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </Card>
             ))}
           </div>
         </div>
       </div>
+      )}
+
+      {activeTab === "matrix" && (
+        <TerritoryMatrix zones={zones} salespersons={salespersons} isLoaded={isLoaded} />
+      )}
 
       {/* Modals */}
       {showAddSalesperson && (
@@ -887,9 +1022,9 @@ export default function SalespersonsClient() {
 
       {showAddZone && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setShowAddZone(false)} />
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); }} />
           <div className="relative bg-card w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl p-6 shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight mb-1">Define Coverage Zone</h2>
+            <h2 className="text-xl font-semibold text-foreground tracking-tight mb-1">{newZone.id ? "Update Coverage Zone" : "Define Coverage Zone"}</h2>
             <p className="text-xs text-muted-foreground mb-5">
               Select State, District, and City to view and map all official PINCODEs with single-click Select All.
             </p>
@@ -1207,10 +1342,10 @@ export default function SalespersonsClient() {
                   disabled={isSaving || (newZone.pincodes?.length === 0)}
                   className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} Establish Zone
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} {newZone.id ? "Update Zone" : "Establish Zone"}
                 </button>
                 <button 
-                  onClick={() => setShowAddZone(false)}
+                  onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); }}
                   className="px-6 bg-secondary text-secondary-foreground font-semibold text-sm rounded-xl hover:bg-secondary/80 transition-colors"
                 >
                   Cancel
