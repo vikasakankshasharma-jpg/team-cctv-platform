@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { usePincodeCoverage, PincodeData } from "@/hooks/usePincodeCoverage";
 import { GoogleMap, Marker, Circle, InfoWindow } from "@react-google-maps/api";
+import { computeDistrictPincodes } from "@/lib/geo-utils";
 
 interface Props {
   zones: CoverageZone[];
@@ -27,17 +28,18 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
   const [districtOffices, setDistrictOffices] = useState<any[]>([]);
 
   const rawPincodesForMap = useMemo<PincodeData[]>(() => {
-    const map = new Map<string, PincodeData>();
-    districtOffices.forEach(o => {
-      if (!map.has(o.pincode)) {
-        map.set(o.pincode, { pincode: o.pincode, areas: [] });
-      }
-      map.get(o.pincode)!.areas.push(o.office);
-    });
-    return Array.from(map.values());
+    return computeDistrictPincodes(districtOffices);
   }, [districtOffices]);
 
   const { enrichedPincodes } = usePincodeCoverage(isLoaded, rawPincodesForMap);
+
+  const mapCenter = useMemo(() => {
+    const valid = enrichedPincodes.filter(p => p.lat && p.lng);
+    if (valid.length === 0) return { lat: 26.9124, lng: 75.7873 };
+    const avgLat = valid.reduce((s, p) => s + p.lat!, 0) / valid.length;
+    const avgLng = valid.reduce((s, p) => s + p.lng!, 0) / valid.length;
+    return { lat: avgLat, lng: avgLng };
+  }, [enrichedPincodes]);
   
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -375,11 +377,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
                   <GoogleMap
                     mapContainerStyle={{ width: '100%', height: '100%' }}
                     zoom={10}
-                    center={
-                      enrichedPincodes.find(p => p.lat && p.lng) 
-                        ? { lat: enrichedPincodes.find(p => p.lat)!.lat!, lng: enrichedPincodes.find(p => p.lat)!.lng! } 
-                        : { lat: 20.5937, lng: 78.9629 }
-                    }
+                    center={mapCenter}
                     options={{ disableDefaultUI: false, zoomControl: true, streetViewControl: false, mapTypeControl: false }}
                   >
                     {enrichedPincodes.filter(p => p.lat && p.lng).map(p => {

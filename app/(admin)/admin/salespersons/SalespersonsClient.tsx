@@ -23,6 +23,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "sonner";
 import type { Salesperson, CoverageZone } from "@/types";
 import { TerritoryMatrix } from "./TerritoryMatrix";
+import { computeDistrictPincodes } from "@/lib/geo-utils";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -286,28 +287,9 @@ export default function SalespersonsClient() {
       .finally(() => setLoadingDistricts(false));
   };
 
-  // Helper to compute grouped pincodes from offices
+  // Helper to compute grouped pincodes from offices with verified district coordinates
   const computePincodesFromOffices = (offices: any[]) => {
-    const map = new Map<string, { areas: Set<string>, lat?: number, lng?: number }>();
-    offices.forEach((o: any) => {
-      if (!o.pincode) return;
-      if (!map.has(o.pincode)) map.set(o.pincode, { areas: new Set(), lat: undefined, lng: undefined });
-      if (o.officeName) map.get(o.pincode)!.areas.add(o.officeName);
-      if (!map.get(o.pincode)!.lat && o.latitude && o.longitude) {
-         map.get(o.pincode)!.lat = o.latitude;
-         map.get(o.pincode)!.lng = o.longitude;
-      }
-    });
-    return Array.from(map.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([pincode, data]) => ({
-        pincode,
-        areas: Array.from(data.areas).slice(0, 4), // For UI short display
-        allAreas: Array.from(data.areas), // For precise geocoding
-        lat: data.lat,
-        lng: data.lng,
-        radius: 4000 // default initial radius in meters
-      }));
+    return computeDistrictPincodes(offices);
   };
 
   const handleMapClick = async (e: google.maps.MapMouseEvent) => {
@@ -565,10 +547,13 @@ export default function SalespersonsClient() {
     }
   };
 
-  // Memoize map center so it doesn't recalculate and re-center on every click (state change)
+  // Memoize map center so it centers cleanly on the district centroid
   const mapCenter = useMemo(() => {
-    const first = availablePincodes.find(p => p.lat && p.lng);
-    return first ? { lat: first.lat!, lng: first.lng! } : { lat: 20.5937, lng: 78.9629 };
+    const valid = availablePincodes.filter(p => p.lat && p.lng);
+    if (valid.length === 0) return { lat: 26.9124, lng: 75.7873 };
+    const avgLat = valid.reduce((s, p) => s + p.lat!, 0) / valid.length;
+    const avgLng = valid.reduce((s, p) => s + p.lng!, 0) / valid.length;
+    return { lat: avgLat, lng: avgLng };
   }, [availablePincodes]);
 
   if (loading) {

@@ -79,3 +79,99 @@ export function findNearestHub(customerCoords: Coordinates, activeHubs: HubWithC
 
   return nearestHub ? { hub: nearestHub, distanceKm: Math.round(minDistance) } : null;
 }
+
+export interface PincodeGroupedData {
+  pincode: string;
+  areas: string[];
+  allAreas: string[];
+  lat: number;
+  lng: number;
+  radius: number;
+}
+
+/**
+ * Robustly computes verified local coordinates for all pincodes in a district dataset,
+ * eliminating mis-scraped outlier coordinates from third-party postal datasets
+ * (which often place pincodes in other states or across borders).
+ */
+export function computeDistrictPincodes(offices: any[]): PincodeGroupedData[] {
+  if (!offices || offices.length === 0) return [];
+
+  // Step 1: Filter candidate offices that have valid India coordinates (lat: 8-37, lng: 68-98)
+  const candidateOffices = offices.filter(o => 
+    typeof o.latitude === 'number' && typeof o.longitude === 'number' &&
+    o.latitude >= 8.0 && o.latitude <= 37.0 &&
+    o.longitude >= 68.0 && o.longitude <= 98.0
+  );
+
+  // Step 2: Compute district median center from candidate offices
+  let medianLat = 26.9124;
+  let medianLng = 75.7873;
+  if (candidateOffices.length > 0) {
+    const sortedLats = [...candidateOffices.map(o => o.latitude)].sort((a, b) => a - b);
+    const sortedLngs = [...candidateOffices.map(o => o.longitude)].sort((a, b) => a - b);
+    medianLat = sortedLats[Math.floor(sortedLats.length / 2)];
+    medianLng = sortedLngs[Math.floor(sortedLngs.length / 2)];
+  }
+
+  // Step 3: Threshold for local district coordinates: within ~100km of district median
+  const isWithinDistrict = (lat: number, lng: number) => {
+    return Math.abs(lat - medianLat) <= 1.0 && Math.abs(lng - medianLng) <= 1.0;
+  };
+
+  // Step 4: Group offices by pincode
+  const pincodeMap = new Map<string, {
+    areas: Set<string>;
+    validCoords: { lat: number; lng: number; isMain: boolean }[];
+  }>();
+
+  offices.forEach(o => {
+    if (!o.pincode) return;
+    if (!pincodeMap.has(o.pincode)) {
+      pincodeMap.set(o.pincode, { areas: new Set(), validCoords: [] });
+    }
+    const group = pincodeMap.get(o.pincode)!;
+    const name = o.officeName || o.office;
+    if (name) group.areas.add(name);
+
+    if (
+      typeof o.latitude === 'number' && 
+      typeof o.longitude === 'number' &&
+      isWithinDistrict(o.latitude, o.longitude)
+    ) {
+      const isMain = o.officeType === 'HO' || o.officeType === 'SO' || 
+        (name && /H\.?O|S\.?O|G\.?P\.?O/i.test(name));
+      group.validCoords.push({ lat: o.latitude, lng: o.longitude, isMain: !!isMain });
+    }
+  });
+
+  // Step 5: Assign best verified coordinates for each pincode
+  return Array.from(pincodeMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([pincode, data]) => {
+      let lat = medianLat;
+      let lng = medianLng;
+
+      if (data.validCoords.length > 0) {
+        // Prefer main post office (Head Office / Sub-Office)
+        const mainCoord = data.validCoords.find(c => c.isMain);
+        if (mainCoord) {
+          lat = mainCoord.lat;
+          lng = mainCoord.lng;
+        } else {
+          // Average of valid local coordinates
+          lat = data.validCoords.reduce((sum, c) => sum + c.lat, 0) / data.validCoords.length;
+          lng = data.validCoords.reduce((sum, c) => sum + c.lng, 0) / data.validCoords.length;
+        }
+      }
+
+      return {
+        pincode,
+        areas: Array.from(data.areas).slice(0, 4),
+        allAreas: Array.from(data.areas),
+        lat,
+        lng,
+        radius: 4000
+      };
+    });
+}

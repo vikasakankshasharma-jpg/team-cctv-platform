@@ -26,90 +26,40 @@ export function usePincodeCoverage(isLoaded: boolean, inputPincodes: PincodeData
     });
   }, [inputPincodes]);
 
-  // Auto-geocode pincodes that are missing lat/lng or need advanced radius calculation
+  // Auto-geocode pincodes that are strictly missing lat/lng
   useEffect(() => {
     if (!isLoaded || enrichedPincodes.length === 0) return;
     
-    // Find pincodes without coordinates or with default radius
-    const toGeocode = enrichedPincodes.filter(p => !p.lat || !p.lng || !p.radius || p.radius === 4000);
+    // Find pincodes without coordinates
+    const toGeocode = enrichedPincodes.filter(p => !p.lat || !p.lng);
     if (toGeocode.length === 0) return;
 
     let delay = 0;
     const geocoder = new window.google.maps.Geocoder();
 
     toGeocode.forEach((p) => {
-      setTimeout(async () => {
+      setTimeout(() => {
         try {
-          const allAreas = p.allAreas || p.areas;
-          const points: { lat: number; lng: number }[] = [];
-          
-          // Geocode all sub-areas of this pincode concurrently
-          await Promise.all(allAreas.map(area => new Promise<void>((resolve) => {
-            geocoder.geocode({ 
-              address: `${area}, India`,
-              componentRestrictions: { postalCode: p.pincode, country: 'IN' }
-            }, (results, status) => {
-              if (status === "OK" && results && results[0]) {
-                points.push({
-                  lat: results[0].geometry.location.lat(),
-                  lng: results[0].geometry.location.lng()
-                });
-              }
-              resolve(); // Resolve even on failure to avoid hanging
-            });
-          })));
-
-          if (points.length === 0) {
-            // Fallback to just the pincode
-            geocoder.geocode({ 
-              componentRestrictions: { postalCode: p.pincode, country: 'IN' }
-            }, (results, status) => {
-              if (status === "OK" && results && results[0]) {
-                 setEnrichedPincodes(prev => prev.map(item => 
-                   item.pincode === p.pincode 
-                     ? { ...item, lat: results[0].geometry.location.lat(), lng: results[0].geometry.location.lng(), radius: 4001 }
-                     : item
-                 ));
-              }
-            });
-            return;
-          }
-
-          // Calculate Centroid
-          const centroidLat = points.reduce((sum, pt) => sum + pt.lat, 0) / points.length;
-          const centroidLng = points.reduce((sum, pt) => sum + pt.lng, 0) / points.length;
-
-          // Calculate max radius from centroid
-          let maxRadius = 0; // in meters
-          points.forEach(pt => {
-            const R = 6371e3; // Earth radius in meters
-            const lat1 = centroidLat * Math.PI/180;
-            const lat2 = pt.lat * Math.PI/180;
-            const dLat = (pt.lat - centroidLat) * Math.PI/180;
-            const dLng = (pt.lng - centroidLng) * Math.PI/180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1) * Math.cos(lat2) *
-                      Math.sin(dLng/2) * Math.sin(dLng/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            const distance = R * c;
-            if (distance > maxRadius) maxRadius = distance;
+          // Geocode with postalCode and country restriction for precision
+          geocoder.geocode({ 
+            address: `${p.pincode}, India`,
+            componentRestrictions: { postalCode: p.pincode, country: 'IN' }
+          }, (results, status) => {
+            if (status === "OK" && results && results[0]) {
+              const loc = results[0].geometry.location;
+              setEnrichedPincodes(prev => prev.map(item => 
+                item.pincode === p.pincode 
+                  ? { ...item, lat: loc.lat(), lng: loc.lng(), radius: item.radius || 4000 }
+                  : item
+              ));
+            }
           });
-
-          // Ensure minimum radius of 2km just in case points are very close, and add 1km buffer to maxRadius
-          const finalRadius = Math.max(maxRadius + 1000, 2000);
-
-          setEnrichedPincodes(prev => prev.map(item => 
-            item.pincode === p.pincode 
-              ? { ...item, lat: centroidLat, lng: centroidLng, radius: finalRadius }
-              : item
-          ));
         } catch (e) {
           // ignore error
         }
       }, delay);
       
-      // Throttle strictly (wait 800ms between each pincode processing)
-      delay += 800;
+      delay += 300;
     });
   }, [enrichedPincodes, isLoaded]);
 
