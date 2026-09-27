@@ -354,6 +354,25 @@ export class Msg91WhatsAppProvider {
         ]
       }
     });
+  async sendReviewAndReferral(payload: { phone: string, customerName: string, referralCode: string, reviewLink: string }) {
+    console.log(`[MSG91] Sending Review & Referral to ${payload.phone}`);
+    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (to.length === 10) to = `91${to}`;
+    return this.sendMessage({
+      to, type: "template", template: {
+        name: "cctv_review_referral", language: { code: "en", policy: "deterministic" },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: payload.customerName },
+              { type: "text", text: payload.referralCode },
+              { type: "text", text: payload.reviewLink }
+            ]
+          }
+        ]
+      }
+    });
   }
 
 }

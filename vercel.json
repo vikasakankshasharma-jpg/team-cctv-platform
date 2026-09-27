@@ -19,6 +19,10 @@
     {
       "path": "/api/ai/night-school",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/referrals",
+      "schedule": "0 11 * * *"
     }
   ]
 }
