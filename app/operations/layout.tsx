@@ -26,11 +26,18 @@ export default async function OperationsLayout({ children }: { children: React.R
           </div>
           <div className="flex gap-4 items-center">
             <Link 
+              href="/operations/dispatch" 
+              className="text-xs font-bold text-zinc-700 hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors"
+            >
+              <MapPin className="w-3.5 h-3.5 text-blue-600" />
+              <span>Live Dispatch Map</span>
+            </Link>
+            <Link 
               href="/installer/route" 
               className="text-xs font-bold text-zinc-700 hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-blue-50 transition-colors"
             >
               <MapPin className="w-3.5 h-3.5 text-blue-600" />
-              <span>Daily Route Planner</span>
+              <span>My Daily Route</span>
             </Link>
             <span className="text-xs font-bold bg-zinc-100 text-zinc-700 border border-zinc-200 px-3 py-1 rounded-full">
               ID: {session.user?.uid?.substring(0,6)}

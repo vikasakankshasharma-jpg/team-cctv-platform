@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Fragment, useMemo } from "react";
+import { usePincodeCoverage, PincodeData } from "@/hooks/usePincodeCoverage";
 import { 
   Users, 
   MapPin, 
@@ -124,6 +125,8 @@ function SearchableDropdown({
 }
 
 
+import { useJsApiLoader, GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
+
 function formatCreatedDate(val: any): string {
   if (!val) return "Recently";
   if (typeof val === "string") {
@@ -141,10 +144,18 @@ function formatCreatedDate(val: any): string {
 }
 
 export default function SalespersonsClient() {
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+  });
+
   const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
   const [zones, setZones] = useState<CoverageZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [hoveredPincodes, setHoveredPincodes] = useState<string[]>([]);
+  const [isGeocoding, setIsGeocoding] = useState(false);
 
   // Form states
   const [showAddSalesperson, setShowAddSalesperson] = useState(false);
@@ -167,7 +178,8 @@ export default function SalespersonsClient() {
   const [geoCities, setGeoCities] = useState<{ label: string; value: string }[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [districtOffices, setDistrictOffices] = useState<any[]>([]);
-  const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string; areas: string[] }[]>([]);
+  const [rawPincodes, setAvailablePincodes] = useState<PincodeData[]>([]);
+  const { enrichedPincodes: availablePincodes, getOverlappingPincodes } = usePincodeCoverage(isLoaded, rawPincodes);
 
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -177,13 +189,14 @@ export default function SalespersonsClient() {
   useEffect(() => {
     if (showAddZone && geoStates.length === 0) {
       setLoadingStates(true);
-      fetch("/api/admin/geo?type=states")
-        .then(r => {
+      fetch(`/api/admin/geo?type=states&_t=${Date.now()}`)
+        .then(async r => {
           if (!r.ok) throw new Error("Proxy error");
-          return r.json();
+          const data = await r.json();
+          if (data.error || !Array.isArray(data)) throw new Error(data.error || "Invalid format");
+          return data;
         })
         .catch(() => fetch("https://aniket-thapa.github.io/india-pincode-api/states.json").then(r => r.json()))
-        .then(r => r.json())
         .then(data => {
           if (Array.isArray(data)) {
             const sorted = data
@@ -192,7 +205,10 @@ export default function SalespersonsClient() {
             setGeoStates(sorted);
           }
         })
-        .catch(() => toast.error("Failed to load Indian states"))
+        .catch(err => {
+          console.error(err);
+          toast.error("Failed to load Indian states");
+        })
         .finally(() => setLoadingStates(false));
     }
   }, [showAddZone, geoStates.length]);
@@ -208,13 +224,14 @@ export default function SalespersonsClient() {
     setAvailablePincodes([]);
     setLoadingDistricts(true);
 
-    fetch(`/api/admin/geo?type=districts&state=${slug}`)
-      .then(r => {
+    fetch(`/api/admin/geo?type=districts&state=${slug}&_t=${Date.now()}`)
+      .then(async r => {
         if (!r.ok) throw new Error("Proxy error");
-        return r.json();
+        const data = await r.json();
+        if (data.error || !data.districts || !Array.isArray(data.districts)) throw new Error(data.error || "Invalid format");
+        return data;
       })
       .catch(() => fetch(`https://aniket-thapa.github.io/india-pincode-api/states/${slug}.json`).then(r => r.json()))
-      .then(r => r.json())
       .then(data => {
         if (data?.districts && Array.isArray(data.districts)) {
           const sorted = data.districts
@@ -223,24 +240,85 @@ export default function SalespersonsClient() {
           setGeoDistricts(sorted);
         }
       })
-      .catch(() => toast.error("Failed to load districts"))
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to load districts");
+      })
       .finally(() => setLoadingDistricts(false));
   };
 
   // Helper to compute grouped pincodes from offices
   const computePincodesFromOffices = (offices: any[]) => {
-    const map = new Map<string, Set<string>>();
+    const map = new Map<string, { areas: Set<string>, lat?: number, lng?: number }>();
     offices.forEach((o: any) => {
       if (!o.pincode) return;
-      if (!map.has(o.pincode)) map.set(o.pincode, new Set());
-      if (o.officeName) map.get(o.pincode)!.add(o.officeName);
+      if (!map.has(o.pincode)) map.set(o.pincode, { areas: new Set(), lat: undefined, lng: undefined });
+      if (o.officeName) map.get(o.pincode)!.areas.add(o.officeName);
+      if (!map.get(o.pincode)!.lat && o.latitude && o.longitude) {
+         map.get(o.pincode)!.lat = o.latitude;
+         map.get(o.pincode)!.lng = o.longitude;
+      }
     });
     return Array.from(map.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([pincode, areasSet]) => ({
+      .map(([pincode, data]) => ({
         pincode,
-        areas: Array.from(areasSet).slice(0, 4)
+        areas: Array.from(data.areas).slice(0, 4), // For UI short display
+        allAreas: Array.from(data.areas), // For precise geocoding
+        lat: data.lat,
+        lng: data.lng,
+        radius: 4000 // default initial radius in meters
       }));
+  };
+
+  const handleMapClick = async (e: google.maps.MapMouseEvent) => {
+    if (!e.latLng || typeof google === 'undefined') return;
+    
+    setIsGeocoding(true);
+    const geocoder = new window.google.maps.Geocoder();
+    
+    try {
+      const response = await geocoder.geocode({ location: e.latLng });
+      const results = response.results;
+      
+      if (results && results.length > 0) {
+        let foundPincode = "";
+        for (const res of results) {
+          const postalComponent = res.address_components.find(c => c.types.includes("postal_code"));
+          if (postalComponent) {
+            foundPincode = postalComponent.long_name;
+            break;
+          }
+        }
+        
+        if (foundPincode) {
+          const pinExists = availablePincodes.some(p => p.pincode === foundPincode);
+          if (pinExists) {
+            setNewZone(prev => {
+              const prevPins = prev.pincodes || [];
+              const isSelected = prevPins.includes(foundPincode);
+              
+              if (isSelected) {
+                toast.success(`Unselected area (PINCODE ${foundPincode})`);
+                return { ...prev, pincodes: prevPins.filter(code => code !== foundPincode) };
+              } else {
+                toast.success(`Selected area (PINCODE ${foundPincode})`);
+                return { ...prev, pincodes: Array.from(new Set([...prevPins, foundPincode])) };
+              }
+            });
+          } else {
+            toast.error(`Area PINCODE (${foundPincode}) is outside your selected District.`);
+          }
+        } else {
+          toast.error("Could not determine PINCODE for this location.");
+        }
+      }
+    } catch (err) {
+      console.error("Geocoding failed:", err);
+      toast.error("Failed to lookup this area. Please try again.");
+    } finally {
+      setIsGeocoding(false);
+    }
   };
 
   // Handle District Selection
@@ -250,13 +328,14 @@ export default function SalespersonsClient() {
     setSelectedCity("all");
     setLoadingOffices(true);
 
-    fetch(`/api/admin/geo?type=offices&state=${selectedState.slug}&district=${slug}`)
-      .then(r => {
+    fetch(`/api/admin/geo?type=offices&state=${selectedState.slug}&district=${slug}&_t=${Date.now()}`)
+      .then(async r => {
         if (!r.ok) throw new Error("Proxy error");
-        return r.json();
+        const data = await r.json();
+        if (data.error || !data.offices || !Array.isArray(data.offices)) throw new Error(data.error || "Invalid format");
+        return data;
       })
       .catch(() => fetch(`https://aniket-thapa.github.io/india-pincode-api/districts/${selectedState.slug}/${slug}.json`).then(r => r.json()))
-      .then(r => r.json())
       .then(data => {
         const offices = data?.offices || [];
         setDistrictOffices(offices);
@@ -281,7 +360,10 @@ export default function SalespersonsClient() {
 
         toast.success(`Loaded ${grouped.length} pincodes in ${name}`);
       })
-      .catch(() => toast.error("Failed to load district pincodes"))
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to load district pincodes");
+      })
       .finally(() => setLoadingOffices(false));
   };
 
@@ -377,10 +459,19 @@ export default function SalespersonsClient() {
     }
     setIsSaving(true);
     try {
+      const enrichedPincodesData = (newZone.pincodes || [])
+        .map(pin => availablePincodes.find(p => p.pincode === pin))
+        .filter(Boolean);
+        
+      const payload = {
+        ...newZone,
+        pincodes_data: enrichedPincodesData
+      };
+
       const res = await fetch("/api/admin/coverage-zones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newZone)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         toast.success("Zone added");
@@ -416,6 +507,26 @@ export default function SalespersonsClient() {
       toast.error("Delete failed");
     }
   }
+
+  // Handle map hover to find all overlapping pincode circles
+  const handleMapMouseMove = (e: google.maps.MapMouseEvent) => {
+    if (!e.latLng) return;
+    const overlapping = getOverlappingPincodes(e.latLng.lat(), e.latLng.lng());
+    
+    // Only update state if the overlapping set has changed
+    const currentHovered = hoveredPincodes.slice().sort().join(",");
+    const newHovered = overlapping.slice().sort().join(",");
+    
+    if (currentHovered !== newHovered) {
+      setHoveredPincodes(overlapping);
+    }
+  };
+
+  // Memoize map center so it doesn't recalculate and re-center on every click (state change)
+  const mapCenter = useMemo(() => {
+    const first = availablePincodes.find(p => p.lat && p.lng);
+    return first ? { lat: first.lat!, lng: first.lng! } : { lat: 20.5937, lng: 78.9629 };
+  }, [availablePincodes]);
 
   if (loading) {
     return (
@@ -839,9 +950,29 @@ export default function SalespersonsClient() {
               {/* Pincodes Multi-Selection Box */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                    Available PINCODEs {availablePincodes.length > 0 && `(${availablePincodes.length} Found)`}
-                  </label>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                      Available PINCODEs {availablePincodes.length > 0 && `(${availablePincodes.length} Found)`}
+                    </label>
+                    {availablePincodes.length > 0 && isLoaded && (
+                      <div className="flex bg-muted p-0.5 rounded-md">
+                        <button 
+                          type="button"
+                          onClick={() => setViewMode("list")}
+                          className={`px-2 py-0.5 text-[10px] font-semibold rounded-sm transition-all ${viewMode === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+                        >
+                          List
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setViewMode("map")}
+                          className={`px-2 py-0.5 text-[10px] font-semibold rounded-sm transition-all ${viewMode === "map" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+                        >
+                          Map
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   {availablePincodes.length > 0 && (
                     <div className="flex items-center gap-3">
                       <button 
@@ -881,42 +1012,170 @@ export default function SalespersonsClient() {
                     Fetching all official post offices & pincodes in {selectedDistrict?.name}...
                   </div>
                 ) : availablePincodes.length > 0 ? (
-                  <div className="p-3 border rounded-xl bg-muted/20 animate-in slide-in-from-top-1">
-                    <div className="max-h-52 overflow-y-auto space-y-1.5 pr-2">
-                      {availablePincodes.map(p => {
-                        const isSelected = (newZone.pincodes || []).includes(p.pincode);
-                        return (
-                          <label 
-                            key={p.pincode} 
-                            className={`flex items-start gap-2.5 p-2 rounded-lg border cursor-pointer transition-all ${
-                              isSelected 
-                                ? 'bg-primary/10 border-primary/40 text-foreground font-medium' 
-                                : 'hover:bg-muted/60 border-transparent text-muted-foreground'
-                            }`}
-                          >
-                            <input 
-                              type="checkbox" 
-                              checked={isSelected}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setNewZone(prev => ({...prev, pincodes: Array.from(new Set([...(prev.pincodes || []), p.pincode]))}));
-                                } else {
-                                  setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(code => code !== p.pincode)}));
-                                }
-                              }}
-                              className="mt-0.5 rounded border-input text-primary focus:ring-primary h-4 w-4" 
-                            />
-                            <div className="flex flex-col">
-                              <span className="text-sm font-semibold tracking-wide">{p.pincode}</span>
-                              <span className="text-[11px] text-muted-foreground leading-tight line-clamp-1">
-                                {p.areas.length > 0 ? p.areas.join(", ") : "Post Office"}
-                              </span>
+                  viewMode === "list" ? (
+                    <div className="p-3 border rounded-xl bg-muted/20 animate-in slide-in-from-top-1">
+                      <div className="max-h-52 overflow-y-auto space-y-1.5 pr-2">
+                        {availablePincodes.map(p => {
+                          const isParentSelected = (newZone.pincodes || []).includes(p.pincode);
+                          return (
+                            <div key={p.pincode} className="flex flex-col gap-1 mb-2 bg-white rounded-xl border p-1 shadow-sm">
+                              <label 
+                                className={`flex items-start gap-2.5 p-2 rounded-lg cursor-pointer transition-all ${
+                                  isParentSelected 
+                                    ? 'bg-primary/10 text-foreground font-medium' 
+                                    : 'hover:bg-muted/60 text-muted-foreground'
+                                }`}
+                              >
+                                <input 
+                                  type="checkbox" 
+                                  checked={isParentSelected}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      // Remove any specific sub-areas for this pincode, and just add the parent pincode
+                                      setNewZone(prev => ({
+                                        ...prev, 
+                                        pincodes: Array.from(new Set([
+                                          ...(prev.pincodes || []).filter(code => !code.startsWith(p.pincode + ':')), 
+                                          p.pincode
+                                        ]))
+                                      }));
+                                    } else {
+                                      setNewZone(prev => ({
+                                        ...prev, 
+                                        pincodes: (prev.pincodes || []).filter(code => code !== p.pincode)
+                                      }));
+                                    }
+                                  }}
+                                  className="mt-0.5 rounded border-input text-primary focus:ring-primary h-4 w-4" 
+                                />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-semibold tracking-wide">ALL OF {p.pincode}</span>
+                                </div>
+                              </label>
+
+                              {p.areas.length > 0 && (
+                                <div className="pl-7 pr-2 pb-2 flex flex-col gap-1 border-t pt-2 mt-1">
+                                  {p.areas.map(area => {
+                                    const areaCode = `${p.pincode}:${area}`;
+                                    const isSelected = isParentSelected || (newZone.pincodes || []).includes(areaCode);
+                                    
+                                    return (
+                                      <label key={areaCode} className={`flex items-start gap-2 p-1.5 rounded-md cursor-pointer transition-all ${
+                                        isSelected 
+                                          ? 'bg-blue-50 text-blue-900 font-medium' 
+                                          : 'hover:bg-muted/40 text-muted-foreground'
+                                      }`}>
+                                        <input 
+                                          type="checkbox" 
+                                          checked={isSelected}
+                                          disabled={isParentSelected}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              setNewZone(prev => ({...prev, pincodes: Array.from(new Set([...(prev.pincodes || []), areaCode]))}));
+                                            } else {
+                                              setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(code => code !== areaCode)}));
+                                            }
+                                          }}
+                                          className="mt-0.5 rounded border-blue-300 text-blue-600 focus:ring-blue-500 h-3.5 w-3.5 disabled:opacity-50" 
+                                        />
+                                        <span className="text-xs leading-tight">{area}</span>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
-                          </label>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="p-1 border rounded-xl bg-muted/20 animate-in slide-in-from-top-1 h-64 overflow-hidden relative">
+                      {isLoaded ? (
+                        <>
+                          <GoogleMap 
+                            mapContainerStyle={{ width: '100%', height: '100%', borderRadius: '0.5rem' }} 
+                            center={mapCenter}
+                            zoom={10}
+                            options={{ 
+                              disableDefaultUI: true, 
+                              zoomControl: true, 
+                              fullscreenControl: true,
+                              styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }] 
+                            }}
+                            onClick={handleMapClick}
+                            onMouseMove={handleMapMouseMove}
+                          >
+                            {availablePincodes.filter(p => p.lat && p.lng).map(p => {
+                              const isSelected = (newZone.pincodes || []).includes(p.pincode);
+                              const isHovered = hoveredPincodes.includes(p.pincode);
+                              return (
+                                <Fragment key={p.pincode}>
+                                  <Marker 
+                                    position={{ lat: p.lat!, lng: p.lng! }}
+                                    onMouseOver={() => setHoveredPincodes([p.pincode])}
+                                    onMouseOut={() => setHoveredPincodes([])}
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(code => code !== p.pincode)}));
+                                      } else {
+                                        setNewZone(prev => ({...prev, pincodes: Array.from(new Set([...(prev.pincodes || []), p.pincode]))}));
+                                      }
+                                    }}
+                                    icon={{
+                                      path: typeof google !== 'undefined' ? google.maps.SymbolPath.CIRCLE : 0,
+                                      fillColor: isSelected ? "#10b981" : "#ef4444",
+                                      fillOpacity: 1,
+                                      strokeWeight: 2,
+                                      strokeColor: "#ffffff",
+                                      scale: 8,
+                                    }}
+                                  />
+                                  {isHovered && (
+                                    <>
+                                      <InfoWindow 
+                                        position={{ lat: p.lat!, lng: p.lng! }} 
+                                        options={{ disableAutoPan: true, pixelOffset: typeof google !== 'undefined' ? new google.maps.Size(0, -10) : undefined }}
+                                      >
+                                        <div className="p-1 max-w-[200px]">
+                                          <p className="font-bold text-sm text-foreground mb-1">{p.pincode}</p>
+                                          <p className="text-xs text-muted-foreground leading-tight whitespace-pre-wrap">{p.areas.join(", ")}</p>
+                                        </div>
+                                      </InfoWindow>
+                                      <Circle
+                                        center={{ lat: p.lat!, lng: p.lng! }}
+                                        radius={p.radius || 4000}
+                                        options={{
+                                          fillColor: isSelected ? "#10b981" : "#ef4444",
+                                          fillOpacity: 0.15,
+                                          strokeColor: isSelected ? "#10b981" : "#ef4444",
+                                          strokeOpacity: 0.8,
+                                          strokeWeight: 2,
+                                          clickable: false
+                                        }}
+                                      />
+                                    </>
+                                  )}
+                                </Fragment>
+                              );
+                            })}
+                          </GoogleMap>
+                          {isGeocoding && (
+                            <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-[100] rounded-lg">
+                              <div className="bg-background border shadow-lg rounded-xl px-4 py-2 flex items-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                                <span className="text-sm font-medium">Identifying Area...</span>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading Map...
+                        </div>
+                      )}
+                    </div>
+                  )
                 ) : selectedDistrict ? (
                   <div className="p-4 border rounded-xl bg-muted/10 text-center text-xs text-muted-foreground">
                     No pincodes returned for this selection.

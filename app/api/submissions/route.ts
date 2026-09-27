@@ -71,17 +71,17 @@ export async function POST(request: NextRequest) {
     // --- TERRITORY MAPPING & AUTO ASSIGNMENT ---
     const { findEligiblePartners } = await import("@/lib/territory");
     const { sendCustomerWhatsApp, sendAdminNotification } = await import("@/lib/notification-service");
-    const leadAddress = { pincode, city, state, full_address: `${city} ${state} ${pincode}`, coordinates: { lat: 0, lng: 0 }, landmark1: "", landmark2: "" };
+    const leadAddress = { pincode, city, state, full_address: `${city} ${state} ${pincode}`, coordinates: undefined, landmark1: "", landmark2: "" };
     
     // Fetch active Salespersons
     const salespersonsSnap = await adminDb.collection("salespersons").where("is_active", "==", true).get();
     const allSalespersons = salespersonsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
-    const eligibleSalespersons = findEligiblePartners(leadAddress, allSalespersons);
+    const eligibleSalespersons = await findEligiblePartners(leadAddress, allSalespersons);
     
     // Fetch active Installers
     const installersSnap = await adminDb.collection("installers").where("is_active", "==", true).get();
     const allInstallers = installersSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
-    const eligibleInstallers = findEligiblePartners(leadAddress, allInstallers);
+    const eligibleInstallers = await findEligiblePartners(leadAddress, allInstallers);
 
     let assigned_salesperson_id: string | null = null;
     let broadcasted_to_salesperson_ids: string[] = [];
@@ -210,6 +210,8 @@ export async function POST(request: NextRequest) {
     return ApiResponse.error("Internal server error", "INTERNAL_ERROR", 500, error.message);
   }
 }
+
+
 
 
 

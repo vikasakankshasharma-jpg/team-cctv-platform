@@ -18,6 +18,7 @@ export async function GET(
 ) {
   const { pin } = await params;
   try {
+    // 1. Fetch from postal API
     const postRes = await fetch('https://api.postalpincode.in/pincode/' + pin);
     const postData = await postRes.json();
 
@@ -25,10 +26,11 @@ export async function GET(
       return NextResponse.json({ error: "Pincode not found or invalid." }, { status: 404 });
     }
 
-    const postOffice = postData[0].PostOffice[0];
-    const districtName = postOffice.District.toLowerCase();
-    const stateName = postOffice.State.toLowerCase();
-    const locationName = postOffice.Name;
+    const postOffices = postData[0].PostOffice;
+    const firstOffice = postOffices[0];
+    const districtName = firstOffice.District.toLowerCase();
+    const stateName = firstOffice.State.toLowerCase();
+    const locationName = firstOffice.Name;
 
     let served = false;
     let citySlug = "";
@@ -45,12 +47,101 @@ export async function GET(
       citySlug = "jaipur"; // Fallback to nearest hub for reference quote
     }
 
+    // 2. Check cache for coords/radius
+    let lat: number | undefined;
+    let lng: number | undefined;
+    let radius: number | undefined;
+
+    const cacheRef = adminDb.collection("pincode_cache").doc(pin);
+    const cacheSnap = await cacheRef.get();
+    
+    if (cacheSnap.exists) {
+      const c = cacheSnap.data();
+      if (c && c.lat && c.lng && c.radius) {
+         lat = c.lat;
+         lng = c.lng;
+         radius = c.radius;
+      }
+    }
+
+    // 3. If not cached, calculate using Google Geocoding API
+    if (!lat || !lng || !radius) {
+       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+       if (apiKey) {
+          const areas = postOffices.map((po: any) => po.Name);
+          const points: { lat: number, lng: number }[] = [];
+          
+          await Promise.all(areas.map(async (area: string) => {
+             try {
+                const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(area + ', ' + pin + ', India')}&key=${apiKey}`);
+                const geoData = await geoRes.json();
+                if (geoData.status === "OK" && geoData.results[0]) {
+                   points.push({
+                      lat: geoData.results[0].geometry.location.lat,
+                      lng: geoData.results[0].geometry.location.lng
+                   });
+                }
+             } catch (e) {
+                // ignore
+             }
+          }));
+
+          if (points.length === 0) {
+             // Fallback to just the pincode
+             try {
+                const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(pin + ', India')}&key=${apiKey}`);
+                const geoData = await geoRes.json();
+                if (geoData.status === "OK" && geoData.results[0]) {
+                   lat = geoData.results[0].geometry.location.lat;
+                   lng = geoData.results[0].geometry.location.lng;
+                   radius = 4001;
+                }
+             } catch (e) {
+                // ignore
+             }
+          } else {
+             // Calculate Centroid
+             const centroidLat = points.reduce((sum, pt) => sum + pt.lat, 0) / points.length;
+             const centroidLng = points.reduce((sum, pt) => sum + pt.lng, 0) / points.length;
+
+             // Calculate max radius
+             let maxRadius = 0;
+             points.forEach(pt => {
+                const R = 6371e3;
+                const lat1 = centroidLat * Math.PI/180;
+                const lat2 = pt.lat * Math.PI/180;
+                const dLat = (pt.lat - centroidLat) * Math.PI/180;
+                const dLng = (pt.lng - centroidLng) * Math.PI/180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                          Math.cos(lat1) * Math.cos(lat2) *
+                          Math.sin(dLng/2) * Math.sin(dLng/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                const distance = R * c;
+                if (distance > maxRadius) maxRadius = distance;
+             });
+
+             lat = centroidLat;
+             lng = centroidLng;
+             radius = Math.max(maxRadius + 1000, 2000);
+          }
+
+          // Cache it if we found it
+          if (lat && lng && radius) {
+             await cacheRef.set({
+               lat, lng, radius,
+        areas,
+               updated_at: serverTimestamp()
+             }, { merge: true });
+          }
+       }
+    }
+
     try {
       const batch = adminDb.batch();
       const impressionRef = adminDb.collection("city_impressions").doc(districtName.replace(/\s+/g, '-'));
       batch.set(impressionRef, {
-        city: postOffice.District,
-        state: postOffice.State,
+        city: firstOffice.District,
+        state: firstOffice.State,
         pincode: pin,
         served: served,
         total_lookups: increment(1),
@@ -72,11 +163,15 @@ export async function GET(
 
     return NextResponse.json(
       { 
-        district: postOffice.District, 
-        state: postOffice.State, 
+        district: firstOffice.District, 
+        state: firstOffice.State, 
         city: locationName, 
         served: served, 
         citySlug: citySlug,
+        lat,
+        lng,
+        radius,
+        areas: postOffices.map((po: any) => po.Name),
         message: served ? "" : "Nearest serviceable area shown as reference."
       },
       { status: 200 }
@@ -85,3 +180,5 @@ export async function GET(
     return NextResponse.json({ error: error.message || "Failed" }, { status: 500 });
   }
 }
+
+

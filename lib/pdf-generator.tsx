@@ -203,7 +203,7 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
                 <Text style={{ fontSize: 8, color: '#64748b' }}>{lead.address.pincode}, {lead.address.full_address}</Text>
                 <Text style={{ fontSize: 7, color: '#888' }}>Landmark: {lead.address.landmark1}</Text>
                 <Text style={{ fontSize: 7, color: '#94a3b8' }}>{lead.address.landmark2}</Text>
-                <Text style={{ fontSize: 7, color: '#cbd5e1', marginTop: 2 }}>GPS: {lead.address.coordinates.lat.toFixed(4)}, {lead.address.coordinates.lng.toFixed(4)}</Text>
+                <Text style={{ fontSize: 7, color: '#cbd5e1', marginTop: 2 }}>GPS: {lead.address.coordinates?.lat?.toFixed(4)}, {lead.address.coordinates?.lng?.toFixed(4)}</Text>
               </View>
             )}
             {!lead.address && <Text style={{ fontSize: 9, color: '#64748b' }}>{lead.property_type.toUpperCase()} Setup</Text>}
@@ -326,3 +326,5 @@ export function QuotePDFDocument({ quote, lead, settings, quoteId, sharedToNumbe
     </Document>
   );
 }
+
+

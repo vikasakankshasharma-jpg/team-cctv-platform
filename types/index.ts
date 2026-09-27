@@ -7,7 +7,7 @@ export interface Address {
   landmark1: string;
   landmark2: string;
   full_address: string;
-  coordinates: {
+  coordinates?: {
     lat: number;
     lng: number;
   };
@@ -789,6 +789,7 @@ export interface CoverageZone {
   city: string;
   state: string;
   pincodes: string[];                    // All pincodes in this zone
+  pincodes_data?: any[];                 // Cached lat, lng, radius for each pincode
   is_active: boolean;
   created_at?: unknown;
   updated_at?: unknown;
@@ -1178,3 +1179,4 @@ export interface OfflinePaymentVerification {
   admin_notes?: string;
 }
 export * from "./whatsapp";
+

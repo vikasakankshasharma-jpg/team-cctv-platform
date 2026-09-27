@@ -36,7 +36,7 @@ export async function createLeadAction(payload: {
     const { sendCustomerWhatsApp, sendAdminNotification } = await import("@/lib/notification-service");
 
     const wizardAnswers = (leadData.wizard_answers || {}) as Record<string, unknown>;
-    const pincode = String(wizardAnswers?.q_pincode || wizardAnswers?.pincode || wizardAnswers?.lead_pincode || "");
+    const pincode = String(wizardAnswers?.customer_pincode || wizardAnswers?.q_pincode || wizardAnswers?.pincode || wizardAnswers?.lead_pincode || "");
     const city    = String(wizardAnswers?.q_city    || wizardAnswers?.city    || payload.detected_city || "");
     const state   = String(wizardAnswers?.q_state   || wizardAnswers?.state   || "");
 
@@ -51,15 +51,15 @@ export async function createLeadAction(payload: {
     };
     const locationData = PINCODE_CITY_MAP[pincodePrefix] ?? null;
 
-    const mockAddress = { pincode, city, state, full_address: `${city} ${state} ${pincode}`, coordinates: { lat: 0, lng: 0 }, landmark1: "", landmark2: "" };
+    const mockAddress = { pincode, city, state, full_address: `${city} ${state} ${pincode}`, coordinates: (Number(wizardAnswers?.lat) && Number(wizardAnswers?.lng)) ? { lat: Number(wizardAnswers.lat), lng: Number(wizardAnswers.lng) } : undefined, landmark1: "", landmark2: "" };
 
     const salespersonsSnap = await adminDb.collection("salespersons").where("is_active", "==", true).get();
     const allSalespersons = salespersonsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
-    const eligibleSalespersons = findEligiblePartners(mockAddress, allSalespersons);
+    const eligibleSalespersons = await findEligiblePartners(mockAddress, allSalespersons);
 
     const installersSnap = await adminDb.collection("installers").where("is_active", "==", true).get();
     const allInstallers = installersSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
-    const eligibleInstallers = findEligiblePartners(mockAddress, allInstallers);
+    const eligibleInstallers = await findEligiblePartners(mockAddress, allInstallers);
 
     let assigned_salesperson_id: string | null = null;
     let broadcasted_to_salesperson_ids: string[] = [];
@@ -138,6 +138,7 @@ export async function createLeadAction(payload: {
       assigned_installer_id,
       broadcasted_to_salesperson_ids,
       broadcasted_to_installer_ids,
+      address: mockAddress,
       sla_breach_at:         slaBreachAt,
       is_escalated,
       detected_pincode:      pincode || null,
@@ -187,3 +188,5 @@ export async function createLeadAction(payload: {
     return { error: error.message || "Internal server error" };
   }
 }
+
+

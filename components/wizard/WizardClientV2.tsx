@@ -12,8 +12,10 @@ import { toast } from "sonner";
 import { RecaptchaVerifier, signInWithCustomToken, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
-import { ShieldCheck, Loader2, Sparkles, Wrench } from "lucide-react";
+import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
+import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
 
 export function WizardClientV2() {
   const { t } = useTranslation();
@@ -26,6 +28,18 @@ export function WizardClientV2() {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [mapCenter, setMapCenter] = useState({ lat: 26.9124, lng: 75.7873 }); // Default Jaipur
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  
+  const [localities, setLocalities] = useState<string[]>([]);
+  const [selectedLocality, setSelectedLocality] = useState<string>("");
+  const [isLoadingLocalities, setIsLoadingLocalities] = useState(false);
+  
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries: ["places"]
+  });
 
   useEffect(() => {
     setIsMounted(true);
@@ -212,6 +226,24 @@ export function WizardClientV2() {
       const ref = urlParams.get("ref") || urlParams.get("partner_id") || urlParams.get("promo");
       if (ref) {
         setReq(prev => ({ ...prev, partner_id: ref.toUpperCase() }));
+      }
+      
+      const pin = urlParams.get("pincode");
+      if (pin) {
+        setReq(prev => ({ ...prev, customer_pincode: pin }));
+        setIsLoadingLocalities(true);
+        fetch(`/api/pincode/${pin}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.areas && data.areas.length > 0) {
+              setLocalities(data.areas);
+            }
+            if (data.lat && data.lng) {
+              setMapCenter({ lat: data.lat, lng: data.lng });
+            }
+          })
+          .catch(err => console.error("Failed to fetch pincode areas:", err))
+          .finally(() => setIsLoadingLocalities(false));
       }
     }
   }, []);
@@ -401,6 +433,46 @@ export function WizardClientV2() {
   };
 
   
+  const handleWizardMapClick = async (e: google.maps.MapMouseEvent) => {
+    if (!e.latLng || typeof google === 'undefined') return;
+    
+    setIsGeocoding(true);
+    const geocoder = new window.google.maps.Geocoder();
+    
+    try {
+      const response = await geocoder.geocode({ location: e.latLng });
+      const results = response.results;
+      
+      if (results && results.length > 0) {
+        const address = results[0].formatted_address;
+        let foundPincode = "";
+        
+        for (const res of results) {
+          const postalComponent = res.address_components.find(c => c.types.includes("postal_code"));
+          if (postalComponent) {
+            foundPincode = postalComponent.long_name;
+            break;
+          }
+        }
+        
+        setReq(prev => ({
+          ...prev,
+          lat: e.latLng!.lat(),
+          lng: e.latLng!.lng(),
+          customer_address: address,
+          customer_pincode: foundPincode
+        }));
+        
+        toast.success("Location pinned successfully!");
+      }
+    } catch (err) {
+      console.error("Geocoding failed:", err);
+      toast.error("Failed to lookup this area.");
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
   const handleSelectBasePlan = (planId: string) => {
     setCustomizerPlanId(planId);
   };
@@ -1121,6 +1193,135 @@ export function WizardClientV2() {
                     className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
                 </div>
+
+                <div className="pt-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300">
+                      Installation Location
+                    </label>
+                    <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-bold">
+                      Required for installers
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 mb-2">
+                    Please search your address or drag the map and click on your exact building/house. This helps our installers navigate directly to you.
+                  </p>
+                  
+                  <div className="mb-3">
+                    {isLoadingLocalities && <p className="text-xs text-blue-600 mb-2 animate-pulse">Loading local areas...</p>}
+                    
+                    {localities.length > 0 && (
+                      <div className="mb-3">
+                        <select
+                          className="w-full h-11 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={selectedLocality}
+                          onChange={(e) => {
+                             const val = e.target.value;
+                             setSelectedLocality(val);
+                             if (val && typeof google !== 'undefined') {
+                               const geocoder = new google.maps.Geocoder();
+                               geocoder.geocode({ address: `${val}, ${req.customer_pincode || ''}, India` }, (results, status) => {
+                                 if (status === 'OK' && results && results[0]) {
+                                   const loc = results[0].geometry.location;
+                                   setMapCenter({ lat: loc.lat(), lng: loc.lng() });
+                                   setReq(prev => ({
+                                     ...prev,
+                                     customer_address: `${val}, ${prev.customer_address || ''}`
+                                   }));
+                                 }
+                               });
+                             }
+                          }}
+                        >
+                          <option value="">-- Select your Area / Locality --</option>
+                          {localities.map(loc => (
+                            <option key={loc} value={loc}>{loc}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mb-3">
+                    <PlacesAutocomplete
+                      placeholder="Search for building, street, or area..."
+                      defaultValue={req.customer_address || ""}
+                      onPlaceSelected={(place) => {
+                        setReq(prev => ({
+                          ...prev,
+                          lat: place.lat,
+                          lng: place.lng,
+                          customer_address: place.full_address,
+                          customer_pincode: place.pincode || prev.customer_pincode
+                        }));
+                        setMapCenter({ lat: place.lat, lng: place.lng });
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="h-48 w-full rounded-xl border overflow-hidden relative shadow-inner bg-gray-50">
+                    {isLoaded ? (
+                      <>
+                        <GoogleMap
+                          mapContainerStyle={{ width: '100%', height: '100%' }}
+                          center={req.lat && req.lng ? { lat: req.lat, lng: req.lng } : mapCenter}
+                          zoom={req.lat && req.lng ? 16 : 11}
+                          options={{ disableDefaultUI: true, zoomControl: true, streetViewControl: false }}
+                          onClick={handleWizardMapClick}
+                        >
+                          {req.lat && req.lng && (
+                            <Marker
+                              position={{ lat: req.lat, lng: req.lng }}
+                              icon={{
+                                path: typeof google !== 'undefined' ? google.maps.SymbolPath.CIRCLE : 0,
+                                fillColor: "#2563eb",
+                                fillOpacity: 1,
+                                strokeWeight: 2,
+                                strokeColor: "#ffffff",
+                                scale: 8,
+                              }}
+                            />
+                          )}
+                        </GoogleMap>
+                        
+                        {/* Crosshair target in center to guide user if no pin yet */}
+                        {!req.lat && (
+                          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                            <MapPin className="w-8 h-8 text-blue-600 drop-shadow-md animate-bounce opacity-70" />
+                          </div>
+                        )}
+
+                        {isGeocoding && (
+                          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-[10]">
+                            <div className="bg-white border shadow-lg rounded-xl px-3 py-1.5 flex items-center gap-2">
+                              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                              <span className="text-xs font-semibold text-blue-900">Pinning...</span>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading Map...
+                      </div>
+                    )}
+                  </div>
+
+                  {req.customer_address && (
+                    <div className="mt-2 p-2 bg-blue-50 border border-blue-100 rounded-lg animate-in fade-in flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-blue-900 font-semibold leading-snug line-clamp-2">
+                          {req.customer_address}
+                        </p>
+                        {req.customer_pincode && (
+                          <p className="text-[10px] text-blue-700 mt-0.5">PINCODE: {req.customer_pincode}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="p-2.5 sm:p-3 bg-green-50/80 dark:bg-green-950/30 rounded-xl border border-green-200 dark:border-green-800">
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-bold text-green-950 dark:text-green-300">Referral Code (Optional)</label>

@@ -22,8 +22,10 @@ import {
   Building,
   Car
 } from "lucide-react";
-import { GoogleMap, MarkerF, PolylineF, InfoWindowF, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, MarkerF, PolylineF, InfoWindowF, useJsApiLoader, Circle } from "@react-google-maps/api";
 import { toast } from "sonner";
+import { usePincodeCoverage, PincodeData } from "@/hooks/usePincodeCoverage";
+import { CoverageZone } from "@/types";
 import { 
   optimizeRouteWithTimeWindows, 
   buildGoogleMapsMultiStopUrl, 
@@ -79,17 +81,53 @@ export function SalesRoutePlannerClient() {
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
   });
 
+  const [zones, setZones] = useState<any[]>([]);
+  const [rawPincodes, setRawPincodes] = useState<any[]>([]);
+  const [hoveredPincodes, setHoveredPincodes] = useState<string[]>([]);
+  const { enrichedPincodes, getOverlappingPincodes } = usePincodeCoverage(isMapLoaded, rawPincodes);
+
   const fetchRoute = useCallback(async (date: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/salesperson/route?date=${date}`);
+      const [res, zoneRes] = await Promise.all([
+         fetch(`/api/salesperson/route?date=${date}`),
+         fetch(`/api/coverage-zones`)
+      ]);
       const data = await res.json();
+      const zoneData = await zoneRes.json();
+      
       if (data.success) {
         setScheduledStops(data.scheduledStops || []);
         setPendingPool(data.pendingPool || []);
       } else {
         toast.error(data.error || "Failed to load route");
       }
+
+      if (Array.isArray(zoneData)) {
+        setZones(zoneData);
+        const extractedPincodes: Record<string, any> = {};
+        zoneData.forEach(zone => {
+          if (zone.pincodes_data && Array.isArray(zone.pincodes_data)) {
+             zone.pincodes_data.forEach((pd: any) => {
+                extractedPincodes[pd.pincode] = {
+                  pincode: pd.pincode,
+                  areas: [],
+                  lat: pd.lat,
+                  lng: pd.lng,
+                  radius: pd.radius
+                };
+             });
+          } else if (zone.pincodes) {
+             zone.pincodes.forEach((pin: string) => {
+               if (!extractedPincodes[pin]) {
+                 extractedPincodes[pin] = { pincode: pin, areas: [] };
+               }
+             });
+          }
+        });
+        setRawPincodes(Object.values(extractedPincodes));
+      }
+
     } catch {
       toast.error("Failed to connect to sales route service");
     } finally {
@@ -308,6 +346,18 @@ export function SalesRoutePlannerClient() {
   const fullGoogleMapsRouteUrl = useMemo(() => {
     return buildGoogleMapsMultiStopUrl(scheduledStops, technicianLocation);
   }, [scheduledStops, technicianLocation]);
+
+  const handleMapMouseMove = (e: google.maps.MapMouseEvent) => {
+    if (!e.latLng) return;
+    const overlapping = getOverlappingPincodes(e.latLng.lat(), e.latLng.lng());
+    
+    const currentHovered = hoveredPincodes.slice().sort().join(",");
+    const newHovered = overlapping.slice().sort().join(",");
+    
+    if (currentHovered !== newHovered) {
+      setHoveredPincodes(overlapping);
+    }
+  };
 
   const defaultCenter = useMemo(() => {
     if (technicianLocation) return technicianLocation;
@@ -804,3 +854,5 @@ export function SalesRoutePlannerClient() {
     </div>
   );
 }
+
+
