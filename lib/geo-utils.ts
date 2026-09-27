@@ -84,8 +84,8 @@ export interface PincodeGroupedData {
   pincode: string;
   areas: string[];
   allAreas: string[];
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   radius: number;
 }
 
