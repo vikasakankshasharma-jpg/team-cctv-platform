@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, PenTool, CheckCircle2, Loader2, Camera, Barcode } from "lucide-react";
 import { toast } from "sonner";
-import { BarcodeScanner } from "./BarcodeScanner"; // Re-using existing scanner
+import BarcodeScanner from "./BarcodeScanner"; // Re-using existing scanner
 
 interface JobSignoffModalProps {
   leadId: string;
