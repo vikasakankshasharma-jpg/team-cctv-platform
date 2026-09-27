@@ -45,7 +45,10 @@ export function usePincodeCoverage(isLoaded: boolean, inputPincodes: PincodeData
           
           // Geocode all sub-areas of this pincode concurrently
           await Promise.all(allAreas.map(area => new Promise<void>((resolve) => {
-            geocoder.geocode({ address: `${area}, ${p.pincode}, India` }, (results, status) => {
+            geocoder.geocode({ 
+              address: `${area}, India`,
+              componentRestrictions: { postalCode: p.pincode, country: 'IN' }
+            }, (results, status) => {
               if (status === "OK" && results && results[0]) {
                 points.push({
                   lat: results[0].geometry.location.lat(),
@@ -58,7 +61,9 @@ export function usePincodeCoverage(isLoaded: boolean, inputPincodes: PincodeData
 
           if (points.length === 0) {
             // Fallback to just the pincode
-            geocoder.geocode({ address: `${p.pincode}, India` }, (results, status) => {
+            geocoder.geocode({ 
+              componentRestrictions: { postalCode: p.pincode, country: 'IN' }
+            }, (results, status) => {
               if (status === "OK" && results && results[0]) {
                  setEnrichedPincodes(prev => prev.map(item => 
                    item.pincode === p.pincode 

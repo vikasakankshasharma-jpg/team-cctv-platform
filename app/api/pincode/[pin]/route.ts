@@ -80,7 +80,7 @@ export async function GET(
           
           await Promise.all(formattedAreas.map(async (area: string) => {
              try {
-                const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(area + ', ' + pin + ', India')}&key=${apiKey}`);
+                const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(area + ', India')}&components=postal_code:${pin}|country:IN&key=${apiKey}`);
                 const geoData = await geoRes.json();
                 if (geoData.status === "OK" && geoData.results[0]) {
                    points.push({
@@ -96,7 +96,7 @@ export async function GET(
           if (points.length === 0) {
              // Fallback to just the pincode
              try {
-                const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(pin + ', India')}&key=${apiKey}`);
+                const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?components=postal_code:${pin}|country:IN&key=${apiKey}`);
                 const geoData = await geoRes.json();
                 if (geoData.status === "OK" && geoData.results[0]) {
                    lat = geoData.results[0].geometry.location.lat;
