@@ -59,7 +59,7 @@ export function usePincodeCoverage(isLoaded: boolean, inputPincodes: PincodeData
         }
       }, delay);
       
-      delay += 300;
+      delay += 75; // 75ms allows ~13 req/s, well within Google's 50 req/s limit
     });
   }, [enrichedPincodes, isLoaded]);
 

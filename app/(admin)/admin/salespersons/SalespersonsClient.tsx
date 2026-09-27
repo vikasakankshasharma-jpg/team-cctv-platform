@@ -547,13 +547,17 @@ export default function SalespersonsClient() {
     }
   };
 
-  // Memoize map center so it centers cleanly on the district centroid
-  const mapCenter = useMemo(() => {
+  // Keep map center stable to prevent jumping while batch geocoding
+  const [mapCenter, setMapCenter] = useState({ lat: 26.9124, lng: 75.7873 });
+  
+  useEffect(() => {
     const valid = availablePincodes.filter(p => p.lat && p.lng);
-    if (valid.length === 0) return { lat: 26.9124, lng: 75.7873 };
-    const avgLat = valid.reduce((s, p) => s + p.lat!, 0) / valid.length;
-    const avgLng = valid.reduce((s, p) => s + p.lng!, 0) / valid.length;
-    return { lat: avgLat, lng: avgLng };
+    // Only auto-center if we have enough points to get a good average, and only do it once per district
+    if (valid.length > 0 && valid.length === availablePincodes.length) {
+      const avgLat = valid.reduce((s, p) => s + p.lat!, 0) / valid.length;
+      const avgLng = valid.reduce((s, p) => s + p.lng!, 0) / valid.length;
+      setMapCenter({ lat: avgLat, lng: avgLng });
+    }
   }, [availablePincodes]);
 
   if (loading) {

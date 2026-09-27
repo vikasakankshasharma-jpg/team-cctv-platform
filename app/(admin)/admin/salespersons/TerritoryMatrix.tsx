@@ -33,12 +33,14 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
 
   const { enrichedPincodes } = usePincodeCoverage(isLoaded, rawPincodesForMap);
 
-  const mapCenter = useMemo(() => {
+  const [mapCenter, setMapCenter] = useState({ lat: 26.9124, lng: 75.7873 });
+  useEffect(() => {
     const valid = enrichedPincodes.filter(p => p.lat && p.lng);
-    if (valid.length === 0) return { lat: 26.9124, lng: 75.7873 };
-    const avgLat = valid.reduce((s, p) => s + p.lat!, 0) / valid.length;
-    const avgLng = valid.reduce((s, p) => s + p.lng!, 0) / valid.length;
-    return { lat: avgLat, lng: avgLng };
+    if (valid.length > 0 && valid.length === enrichedPincodes.length) {
+      const avgLat = valid.reduce((s, p) => s + p.lat!, 0) / valid.length;
+      const avgLng = valid.reduce((s, p) => s + p.lng!, 0) / valid.length;
+      setMapCenter({ lat: avgLat, lng: avgLng });
+    }
   }, [enrichedPincodes]);
   
   const [loadingStates, setLoadingStates] = useState(false);
