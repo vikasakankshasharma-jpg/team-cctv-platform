@@ -175,7 +175,7 @@ export function JobSignoffModal({ leadId, onClose, onSuccess, productsToInstall 
                   <span>Scanning...</span>
                   <button onClick={() => setActiveScanner(null)}>Cancel</button>
                 </div>
-                <BarcodeScanner onDetected={(code) => handleScanSuccess(activeScanner, code)} />
+                <BarcodeScanner onScan={(code) => handleScanSuccess(activeScanner, code)} />
               </div>
             )}
           </div>
