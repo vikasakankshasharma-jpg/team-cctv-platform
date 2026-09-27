@@ -12,6 +12,8 @@ const ACTIVE_HUBS: Record<string, string> = {
   "delhi": "new-delhi"
 };
 
+const formatAreaName = (name: string) => name.replace(/\s+(S\.O|B\.O|H\.O|G\.P\.O\.|S\.O\.|B\.O\.|H\.O\.)(\s+|$)/gi, ' ').replace(/\s*\([^)]*\)/g, '').trim();
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ pin: string }> }
@@ -31,6 +33,7 @@ export async function GET(
     const districtName = firstOffice.District.toLowerCase();
     const stateName = firstOffice.State.toLowerCase();
     const locationName = firstOffice.Name;
+    const formattedAreas = postOffices.map((po: any) => formatAreaName(po.Name));
 
     let served = false;
     let citySlug = "";
@@ -68,10 +71,9 @@ export async function GET(
     if (!lat || !lng || !radius) {
        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
        if (apiKey) {
-          const areas = postOffices.map((po: any) => po.Name);
           const points: { lat: number, lng: number }[] = [];
           
-          await Promise.all(areas.map(async (area: string) => {
+          await Promise.all(formattedAreas.map(async (area: string) => {
              try {
                 const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(area + ', ' + pin + ', India')}&key=${apiKey}`);
                 const geoData = await geoRes.json();
@@ -129,7 +131,7 @@ export async function GET(
           if (lat && lng && radius) {
              await cacheRef.set({
                lat, lng, radius,
-        areas,
+               areas: formattedAreas,
                updated_at: serverTimestamp()
              }, { merge: true });
           }
@@ -171,7 +173,7 @@ export async function GET(
         lat,
         lng,
         radius,
-        areas: postOffices.map((po: any) => po.Name),
+        areas: formattedAreas,
         message: served ? "" : "Nearest serviceable area shown as reference."
       },
       { status: 200 }
@@ -180,5 +182,6 @@ export async function GET(
     return NextResponse.json({ error: error.message || "Failed" }, { status: 500 });
   }
 }
+
 
 
