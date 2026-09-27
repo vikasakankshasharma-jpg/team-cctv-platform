@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Truck, FileSpreadsheet } from "lucide-react";
+import { Truck, FileSpreadsheet, Filter } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
@@ -21,7 +21,7 @@ const NAV_GROUPS = [
     label: "Overview",
     items: [
       { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-      { name: "Analytics", href: "/admin/analytics", icon: TrendingUp },
+      { name: "Analytics", href: "/admin/analytics", icon: TrendingUp }, { name: "Quote Funnel", href: "/admin/analytics/funnel", icon: Filter },
     ],
   },
   {
