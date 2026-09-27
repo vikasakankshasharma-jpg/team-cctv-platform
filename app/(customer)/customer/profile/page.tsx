@@ -36,13 +36,32 @@ export default async function CustomerProfilePage() {
     }
   }
 
+  let customerDoc = null;
+  if (uid) {
+    try {
+      const { adminDb } = await import("@/lib/firebase-admin");
+      const snap = await adminDb.collection("customers").doc(uid).get();
+      if (snap.exists) {
+        customerDoc = snap.data();
+      }
+    } catch(e) {
+      console.warn("Could not fetch customer doc:", e);
+    }
+  }
+
   const rawMobile = phoneNumber ? String(phoneNumber).replace(/\D/g, "").slice(-10) : "";
 
   const user = {
     uid,
     mobile: rawMobile,
     name,
-    email
+    email,
+    address: customerDoc?.address || "",
+    city: customerDoc?.city || "",
+    state: customerDoc?.state || "",
+    pincode: customerDoc?.pincode || "",
+    lat: customerDoc?.lat || 0,
+    lng: customerDoc?.lng || 0,
   };
 
   return (

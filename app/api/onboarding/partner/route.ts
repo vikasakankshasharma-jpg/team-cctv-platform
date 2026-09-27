@@ -10,6 +10,12 @@ const OnboardingSchema = z.object({
   mobile_number: z.string().regex(/^[6-9]\d{9}$/),
   email: z.string().email(),
   partner_type: z.enum(["promoter", "dealer"]),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  pincode: z.string().optional(),
+  lat: z.number().optional(),
+  lng: z.number().optional()
 });
 
 function generateReferralCode(name: string, business: string): string {
@@ -50,6 +56,12 @@ export async function POST(req: NextRequest) {
       mobile_number: data.mobile_number,
       email: data.email,
       partner_type: data.partner_type, // "promoter" or "dealer"
+      address: data.address || null,
+      city: data.city || null,
+      state: data.state || null,
+      pincode: data.pincode || null,
+      lat: data.lat || null,
+      lng: data.lng || null,
       referral_code: referralCode,
       is_active: true, // Auto-approve for now, or could set to false pending admin approval
       discount_type: "percent",

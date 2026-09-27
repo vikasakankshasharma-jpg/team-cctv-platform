@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, User, Building, Phone, Mail, ShieldCheck, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, User, Building, Phone, Mail, ShieldCheck, Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
+import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
 
 export default function PartnerOnboardingClient() {
   const [form, setForm] = useState({
@@ -11,6 +12,12 @@ export default function PartnerOnboardingClient() {
     mobile_number: "",
     email: "",
     partner_type: "promoter",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+    lat: 0,
+    lng: 0,
   });
   
   const [loading, setLoading] = useState(false);
@@ -100,6 +107,21 @@ export default function PartnerOnboardingClient() {
         <div>
           <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><Mail className="w-3 h-3"/> Email Address</label>
           <input required type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground focus:ring-2 focus:ring-primary focus:outline-none" placeholder="rahul@example.com" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><MapPin className="w-3 h-3"/> Business Location</label>
+          <PlacesAutocomplete 
+            placeholder="Search for building or street..."
+            onPlaceSelected={(place) => setForm(f => ({
+              ...f,
+              address: place.full_address,
+              city: place.city,
+              state: place.state,
+              pincode: place.pincode,
+              lat: place.lat,
+              lng: place.lng
+            }))}
+          />
         </div>
       </div>
 

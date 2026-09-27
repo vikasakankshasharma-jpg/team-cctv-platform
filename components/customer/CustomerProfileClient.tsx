@@ -5,18 +5,34 @@ import { User, Mail, Phone, Loader2, Save, MapPin } from "lucide-react";
 import { updateCustomerProfile } from "@/app/actions/customer";
 import { toast } from "sonner";
 
+import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
+
 interface CustomerProfileClientProps {
   user: {
     uid: string;
     mobile?: string;
     name?: string;
     email?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    lat?: number;
+    lng?: number;
   };
 }
 
 export function CustomerProfileClient({ user }: CustomerProfileClientProps) {
   const [name, setName] = useState(user.name || "");
   const [email, setEmail] = useState(user.email || "");
+  const [addressData, setAddressData] = useState({
+    address: user.address || "",
+    city: user.city || "",
+    state: user.state || "",
+    pincode: user.pincode || "",
+    lat: user.lat || 0,
+    lng: user.lng || 0
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +44,7 @@ export function CustomerProfileClient({ user }: CustomerProfileClientProps) {
 
     setIsSaving(true);
     try {
-      const res = await updateCustomerProfile({ name, email });
+      const res = await updateCustomerProfile({ name, email, ...addressData });
       if (res.success) {
         toast.success("Profile updated successfully!");
       } else {
@@ -100,6 +116,22 @@ export function CustomerProfileClient({ user }: CustomerProfileClientProps) {
               className="block w-full pl-11 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium"
             />
           </div>
+        </div>
+
+        <div className="pt-2">
+          <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Default Billing/Installation Address</label>
+          <PlacesAutocomplete 
+            defaultValue={addressData.address}
+            placeholder="Search for your building, street, or area..."
+            onPlaceSelected={(place) => setAddressData({
+              address: place.full_address,
+              city: place.city,
+              state: place.state,
+              pincode: place.pincode,
+              lat: place.lat,
+              lng: place.lng
+            })}
+          />
         </div>
 
         <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">

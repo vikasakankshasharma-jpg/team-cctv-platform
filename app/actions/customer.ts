@@ -4,7 +4,16 @@ import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { verifySession } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
 
-export async function updateCustomerProfile(data: { name: string; email: string }) {
+export async function updateCustomerProfile(data: { 
+  name: string; 
+  email: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  lat?: number;
+  lng?: number;
+}) {
   try {
     const session = await verifySession();
     if (!session.isAuthenticated || !session.uid) {
@@ -19,6 +28,19 @@ export async function updateCustomerProfile(data: { name: string; email: string 
       displayName: name,
       ...(email ? { email } : {})
     }).catch(e => console.warn("Failed to update auth user:", e));
+
+    // 1.5 Save address to a dedicated customers collection
+    await adminDb.collection("customers").doc(uid).set({
+      name,
+      email,
+      address: data.address || null,
+      city: data.city || null,
+      state: data.state || null,
+      pincode: data.pincode || null,
+      lat: data.lat || null,
+      lng: data.lng || null,
+      updated_at: new Date()
+    }, { merge: true });
 
     // 2. Update all leads linked to this uid
     const leadsSnap = await adminDb.collection("leads").where("firebase_uid", "==", uid).get();
