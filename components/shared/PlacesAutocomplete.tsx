@@ -21,6 +21,8 @@ interface PlacesAutocompleteProps {
   className?: string;
 }
 
+const LIBRARIES: any = ["places"];
+
 export function PlacesAutocomplete({
   onPlaceSelected,
   defaultValue = "",
@@ -30,11 +32,10 @@ export function PlacesAutocomplete({
   const [inputValue, setInputValue] = useState(defaultValue);
   const inputRef = useRef<HTMLInputElement>(null);
   
-  const [libraries] = useState<("places" | "drawing" | "geometry" | "visualization" | "routes" | "marker")[]>(["places"]);
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script-places',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries: libraries
+    libraries: LIBRARIES
   });
 
   useEffect(() => {
