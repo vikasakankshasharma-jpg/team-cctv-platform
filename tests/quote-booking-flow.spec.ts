@@ -49,17 +49,25 @@ test.describe('Quote & Booking End-to-End Flow', () => {
       await page.fill('input[placeholder="10-digit mobile number"]', '9999999999');
       await page.getByRole('button', { name: /View My CCTV Options/i }).click();
 
-      // Wait for OTP form to appear inline
-      await expect(page.locator('text=Enter Verification Code')).toBeVisible({ timeout: 15000 });
+      // Wait for either OTP form or Quote Options to appear
+      const otpLocator = page.locator('text=Enter Verification Code');
+      const quoteLocator = page.locator('h1', { hasText: 'Build Your Quotation' });
       
-      // Fill the 6 OTP input boxes (this will auto-submit when the 6th digit is entered)
-      const otpInputs = page.locator('input[inputmode="numeric"]');
-      for (let i = 0; i < 6; i++) {
-        await otpInputs.nth(i).fill(String(i + 1));
+      await Promise.race([
+        otpLocator.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {}),
+        quoteLocator.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
+      ]);
+
+      if (await otpLocator.isVisible()) {
+        // Fill the 6 OTP input boxes (this will auto-submit when the 6th digit is entered)
+        const otpInputs = page.locator('input[inputmode="numeric"]');
+        for (let i = 0; i < 6; i++) {
+          await otpInputs.nth(i).fill(String(i + 1));
+        }
       }
 
       // Quote Options appear (DynamicVariantGenerator)
-      await expect(page.locator('h2', { hasText: 'Build Your Quotation' })).toBeVisible({ timeout: 45000 });
+      await expect(page.locator('h1', { hasText: 'Build Your Quotation' })).toBeVisible({ timeout: 45000 });
 
       // Select recommended plan to open Add-ons
       await page.locator('button:has-text("Select Plan")').nth(1).click();

@@ -52,8 +52,9 @@ export function LocationPickerModal({
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyAPRR097NlrXF-8BiJ_sbnzzQw9NQYdtnA";
 
   const { isLoaded, loadError } = useJsApiLoader({
-    id: "google-map-location-picker",
-    googleMapsApiKey: googleMapsApiKey
+    id: "google-map-script",
+    googleMapsApiKey: googleMapsApiKey,
+    libraries: typeof window !== "undefined" ? ((window as any).__google_maps_libraries__) || ((window as any).__google_maps_libraries__ = ["places"]) : ["places"]
   });
 
   // When modal opens, center on Pincode if provided and no prior coords set

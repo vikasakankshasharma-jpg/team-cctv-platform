@@ -17,6 +17,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
 import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
 
+const GOOGLE_MAPS_LIBRARIES: any = ["places"];
+
 export function WizardClientV2() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -43,7 +45,7 @@ export function WizardClientV2() {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries: ["places"]
+    libraries: GOOGLE_MAPS_LIBRARIES
   });
 
   useEffect(() => {
@@ -1223,7 +1225,7 @@ export function WizardClientV2() {
                           onChange={(e) => {
                              const val = e.target.value;
                              setSelectedLocality(val);
-                             if (val && typeof google !== 'undefined') {
+                             if (val && typeof google !== 'undefined' && google.maps) {
                                const geocoder = new google.maps.Geocoder();
                                geocoder.geocode({ address: `${val}, ${req.customer_pincode || ''}, India` }, (results, status) => {
                                  if (status === 'OK' && results && results[0]) {
@@ -1278,7 +1280,7 @@ export function WizardClientV2() {
                             <Marker
                               position={{ lat: req.lat, lng: req.lng }}
                               icon={{
-                                path: typeof google !== 'undefined' ? google.maps.SymbolPath.CIRCLE : 0,
+                                path: typeof google !== 'undefined' && google.maps ? google.maps.SymbolPath.CIRCLE : 0,
                                 fillColor: "#2563eb",
                                 fillOpacity: 1,
                                 strokeWeight: 2,

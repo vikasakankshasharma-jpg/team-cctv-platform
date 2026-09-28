@@ -33,7 +33,7 @@ export function PlacesAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   
   const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script-places',
+    id: 'google-map-script',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries: LIBRARIES
   });
@@ -41,8 +41,11 @@ export function PlacesAutocomplete({
   useEffect(() => {
     if (!isLoaded || !inputRef.current) return;
     
-    // Check if google maps is available
-    if (typeof window.google === 'undefined') return;
+    // Check if google maps and places API is available
+    if (typeof window.google === 'undefined' || !window.google.maps || !window.google.maps.places) {
+      console.error("Google Maps Places library is not available.");
+      return;
+    }
 
     const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
       fields: ["formatted_address", "geometry", "address_components"],
