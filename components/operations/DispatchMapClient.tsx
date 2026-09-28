@@ -11,10 +11,8 @@ import {
   Clock,
   Car
 } from "lucide-react";
-import { GoogleMap, MarkerF, InfoWindowF, useJsApiLoader, Circle } from "@react-google-maps/api";
+import { GoogleMap, MarkerF, InfoWindowF, useJsApiLoader } from "@react-google-maps/api";
 import { toast } from "sonner";
-import { usePincodeCoverage, PincodeData } from "@/hooks/usePincodeCoverage";
-import { CoverageZone } from "@/types";
 
 interface DispatchMarker {
   id: string;
@@ -40,14 +38,9 @@ export function DispatchMapClient() {
   const [selectedMarker, setSelectedMarker] = useState<DispatchMarker | null>(null);
   const [filterType, setFilterType] = useState<"all" | "service" | "delivery">("all");
   const [zones, setZones] = useState<CoverageZone[]>([]);
-  const [rawPincodes, setRawPincodes] = useState<PincodeData[]>([]);
-  const [hoveredPincodes, setHoveredPincodes] = useState<string[]>([]);
-
   const { isLoaded: isMapLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
   });
-
-  const { enrichedPincodes, getOverlappingPincodes } = usePincodeCoverage(isMapLoaded, rawPincodes);
 
   useEffect(() => {
     fetchData();
@@ -68,48 +61,10 @@ export function DispatchMapClient() {
       if (markerData.success) {
         setMarkers(markerData.markers || []);
       }
-
-      if (Array.isArray(zoneData)) {
-        setZones(zoneData);
-        // Extract all pincodes from zones and transform into PincodeData
-        const extractedPincodes: Record<string, PincodeData> = {};
-        zoneData.forEach(zone => {
-          if (zone.pincodes_data && Array.isArray(zone.pincodes_data)) {
-             zone.pincodes_data.forEach((pd: any) => {
-                extractedPincodes[pd.pincode] = {
-                  pincode: pd.pincode,
-                  areas: [], // areas not needed for already-geocoded items
-                  lat: pd.lat,
-                  lng: pd.lng,
-                  radius: pd.radius
-                };
-             });
-          } else if (zone.pincodes) {
-             zone.pincodes.forEach((pin: string) => {
-               if (!extractedPincodes[pin]) {
-                 extractedPincodes[pin] = { pincode: pin, areas: [] };
-               }
-             });
-          }
-        });
-        setRawPincodes(Object.values(extractedPincodes));
-      }
     } catch {
       toast.error("Failed to fetch map data");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleMapMouseMove = (e: google.maps.MapMouseEvent) => {
-    if (!e.latLng) return;
-    const overlapping = getOverlappingPincodes(e.latLng.lat(), e.latLng.lng());
-    
-    const currentHovered = hoveredPincodes.slice().sort().join(",");
-    const newHovered = overlapping.slice().sort().join(",");
-    
-    if (currentHovered !== newHovered) {
-      setHoveredPincodes(overlapping);
     }
   };
 
@@ -201,25 +156,7 @@ export function DispatchMapClient() {
             onMouseMove={handleMapMouseMove}
             options={{ disableDefaultUI: false, zoomControl: true, mapTypeControl: true }}
           >
-            {/* Draw Coverage Zones */}
-            {enrichedPincodes.filter(p => p.lat && p.lng).map((p) => {
-              const isHovered = hoveredPincodes.includes(p.pincode);
-              return (
-                <Circle
-                  key={`zone-${p.pincode}`}
-                  center={{ lat: p.lat!, lng: p.lng! }}
-                  radius={p.radius || 4000}
-                  options={{
-                    fillColor: isHovered ? "#10b981" : "#3b82f6",
-                    fillOpacity: isHovered ? 0.3 : 0.05,
-                    strokeColor: isHovered ? "#059669" : "#2563eb",
-                    strokeOpacity: isHovered ? 0.8 : 0.3,
-                    strokeWeight: isHovered ? 2 : 1,
-                    clickable: false
-                  }}
-                />
-              );
-            })}
+
 
             {/* Draw Markers */}
             {filteredMarkers.map((marker) => (

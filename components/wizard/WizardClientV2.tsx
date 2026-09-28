@@ -20,7 +20,12 @@ import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
 export function WizardClientV2() {
   const { t } = useTranslation();
   const router = useRouter();
-  const [sessionId] = useState(() => crypto.randomUUID());
+    const [sessionId] = useState(() => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+  });
   const [step, setStep] = useState(0);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [otpSent, setOtpSent] = useState(false);
@@ -1385,3 +1390,5 @@ export function WizardClientV2() {
     </div>
   );
 }
+
+
