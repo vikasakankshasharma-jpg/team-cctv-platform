@@ -247,6 +247,7 @@ export function WizardClientV2() {
             }
             if (data.lat && data.lng) {
               setMapCenter({ lat: data.lat, lng: data.lng });
+              setReq(prev => ({ ...prev, lat: prev.lat || data.lat, lng: prev.lng || data.lng }));
             }
           })
           .catch(err => console.error("Failed to fetch pincode areas:", err))
@@ -1213,6 +1214,7 @@ export function WizardClientV2() {
                             }
                             if (data.lat && data.lng) {
                               setMapCenter({ lat: data.lat, lng: data.lng });
+                              setReq(prev => ({ ...prev, lat: data.lat, lng: data.lng }));
                             }
                           })
                           .catch(err => console.error("Failed to fetch pincode areas:", err))
@@ -1305,11 +1307,27 @@ export function WizardClientV2() {
                           mapContainerStyle={{ width: '100%', height: '100%' }}
                           center={req.lat && req.lng ? { lat: req.lat, lng: req.lng } : mapCenter}
                           zoom={req.lat && req.lng ? 16 : 11}
-                          options={{ disableDefaultUI: true, zoomControl: true, streetViewControl: false }}
+                          options={{ disableDefaultUI: true, zoomControl: true, streetViewControl: false, fullscreenControl: true }}
                           onClick={handleWizardMapClick}
                         >
                           {req.lat && req.lng && (
                             <Marker
+                              draggable={true}
+                              onDragEnd={(e) => {
+                                if (e.latLng) {
+                                  const lat = e.latLng.lat();
+                                  const lng = e.latLng.lng();
+                                  setReq(prev => ({ ...prev, lat, lng }));
+                                  if (typeof google !== 'undefined' && google.maps) {
+                                    const geocoder = new google.maps.Geocoder();
+                                    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                                      if (status === 'OK' && results && results[0]) {
+                                        setReq(prev => ({ ...prev, customer_address: results[0].formatted_address }));
+                                      }
+                                    });
+                                  }
+                                }
+                              }}
                               position={{ lat: req.lat, lng: req.lng }}
                               icon={{
                                 path: typeof google !== 'undefined' && google.maps ? google.maps.SymbolPath.CIRCLE : 0,
