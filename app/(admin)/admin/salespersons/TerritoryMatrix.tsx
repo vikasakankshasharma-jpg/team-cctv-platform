@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { CoverageZone, Salesperson } from "@/types";
-import { Search, Loader2, MapPin, Check, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Search, Loader2, MapPin, Check, AlertTriangle, ShieldCheck, Map as MapIcon, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import MapplsBoundaryMap from "@/components/MapplsBoundaryMap";
 
 interface Props {
   zones: CoverageZone[];
@@ -30,6 +32,18 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
   const [stateFilter, setStateFilter] = useState("");
   const [districtFilter, setDistrictFilter] = useState("");
   const [pincodeFilter, setPincodeFilter] = useState("");
+
+  const [activeMapQuery, setActiveMapQuery] = useState<{ type: 'district' | 'pincode'; query: string; label: string } | null>(null);
+  const [showMap, setShowMap] = useState<boolean>(true);
+
+  // Sync active map query with selected district
+  useEffect(() => {
+    if (selectedDistrict) {
+      setActiveMapQuery({ type: 'district', query: selectedDistrict.name, label: selectedDistrict.name });
+    } else {
+      setActiveMapQuery(null);
+    }
+  }, [selectedDistrict]);
 
   // Load States
   useEffect(() => {
@@ -265,6 +279,72 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
             </div>
           </div>
 
+          {/* MapmyIndia Territory Boundary Map */}
+          {showMap && activeMapQuery && (
+            <div className="p-4 border-b border-border bg-secondary/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                    <MapIcon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-foreground">MapmyIndia Territory Boundary:</span>
+                      <Badge variant="secondary" className="font-mono text-xs text-primary bg-primary/10 border-primary/20">
+                        {activeMapQuery.type === 'district' ? `District: ${activeMapQuery.label}` : `Pincode: ${activeMapQuery.label}`}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">Click any PIN card below to isolate that specific pincode polygon boundary.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {activeMapQuery.type === 'pincode' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-xs flex items-center gap-1.5"
+                      onClick={() => setActiveMapQuery({ type: 'district', query: selectedDistrict.name, label: selectedDistrict.name })}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Reset to District
+                    </Button>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowMap(false)}
+                  >
+                    Hide Map
+                  </Button>
+                </div>
+              </div>
+
+              <MapplsBoundaryMap 
+                apiKey={process.env.NEXT_PUBLIC_MAPPLS_API_KEY || ''}
+                boundaryType={activeMapQuery.type}
+                boundaryQuery={activeMapQuery.query}
+                height="360px"
+              />
+            </div>
+          )}
+
+          {!showMap && (
+            <div className="px-4 py-2 bg-secondary/10 border-b border-border flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">MapmyIndia Boundary Map is collapsed.</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-7 text-xs flex items-center gap-1.5"
+                onClick={() => setShowMap(true)}
+              >
+                <MapIcon className="w-3.5 h-3.5" />
+                Show Boundary Map
+              </Button>
+            </div>
+          )}
+
           <div className="p-4">
             {loadingOffices ? (
                <div className="p-12 flex flex-col items-center justify-center text-muted-foreground gap-3">
@@ -281,12 +361,23 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
                     return agentZones.some(z => (z.pincodes || []).includes(p.pincode) || (z.pincodes || []).some(code => code.startsWith(p.pincode + ":")));
                   });
 
+                  const isSelectedForMap = activeMapQuery?.type === 'pincode' && activeMapQuery.query === p.pincode;
+
                   return (
-                    <div key={p.pincode} className={`p-4 rounded-xl border flex flex-col transition-all ${
-                      p.status === 'covered' ? 'bg-success/5 border-success/20 hover:border-success/40' : 
-                      p.status === 'partial' ? 'bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40' : 
-                      'bg-destructive/5 border-destructive/20 hover:border-destructive/40'
-                    }`}>
+                    <div 
+                      key={p.pincode} 
+                      onClick={() => {
+                        setShowMap(true);
+                        setActiveMapQuery({ type: 'pincode', query: p.pincode, label: p.pincode });
+                      }}
+                      className={`p-4 rounded-xl border flex flex-col transition-all cursor-pointer hover:shadow-md ${
+                        isSelectedForMap ? 'ring-2 ring-primary shadow-sm ' : ''
+                      }${
+                        p.status === 'covered' ? 'bg-success/5 border-success/20 hover:border-success/40' : 
+                        p.status === 'partial' ? 'bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40' : 
+                        'bg-destructive/5 border-destructive/20 hover:border-destructive/40'
+                      }`}
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <MapPin className={`w-4 h-4 ${
