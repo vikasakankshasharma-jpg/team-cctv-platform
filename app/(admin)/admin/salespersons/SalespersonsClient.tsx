@@ -17,13 +17,15 @@ import {
   AlertCircle,
   ChevronDown,
   Check,
-  Pencil
+  Pencil,
+  Map as MapIcon
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "sonner";
 import type { Salesperson, CoverageZone } from "@/types";
 import { TerritoryMatrix } from "./TerritoryMatrix";
 import { computeDistrictPincodes } from "@/lib/geo-utils";
+import MapplsBoundaryMap from "@/components/MapplsBoundaryMap";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -188,6 +190,8 @@ export default function SalespersonsClient() {
   });
 
   const [showAddZone, setShowAddZone] = useState(false);
+  const [showZoneMap, setShowZoneMap] = useState(true);
+  const [modalMapQuery, setModalMapQuery] = useState<{ type: 'district' | 'pincode'; query: string } | null>(null);
   const [newZone, setNewZone] = useState<Partial<CoverageZone>>({
     pincodes: []
   });
@@ -249,6 +253,7 @@ export default function SalespersonsClient() {
   const handleSelectState = (slug: string, name: string) => {
     setSelectedState({ name, slug });
     setSelectedDistrict(null);
+    setModalMapQuery(null);
     setGeoDistricts([]);
     setSelectedCity("all");
     setGeoCities([]);
@@ -289,6 +294,7 @@ export default function SalespersonsClient() {
   const handleSelectDistrict = (slug: string, name: string) => {
     if (!selectedState) return;
     setSelectedDistrict({ name, slug });
+    setModalMapQuery({ type: 'district', query: name });
     setSelectedCity("all");
     setLoadingOffices(true);
 
@@ -941,7 +947,7 @@ export default function SalespersonsClient() {
       {showAddZone && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); }} />
-          <div className="relative bg-card w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl p-6 shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-card w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-2xl p-6 shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200">
             <h2 className="text-xl font-semibold text-foreground tracking-tight mb-1">{newZone.id ? "Update Coverage Zone" : "Define Coverage Zone"}</h2>
             <p className="text-xs text-muted-foreground mb-5">
               Select State, District, and City to view and map all official PINCODEs with single-click Select All.
@@ -997,6 +1003,49 @@ export default function SalespersonsClient() {
                     disabled={loadingOffices}
                     loading={loadingOffices}
                   />
+                </div>
+              )}
+
+              {/* MapmyIndia Coverage Boundary Preview */}
+              {selectedDistrict && (
+                <div className="border border-border rounded-xl p-3 bg-secondary/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-md bg-primary/10 text-primary">
+                        <MapIcon className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold text-foreground">
+                        MapmyIndia Boundary ({modalMapQuery?.type === 'pincode' ? `Pincode: ${modalMapQuery.query}` : `District: ${selectedDistrict.name}`})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {modalMapQuery?.type === 'pincode' && (
+                        <button
+                          type="button"
+                          onClick={() => setModalMapQuery({ type: 'district', query: selectedDistrict.name })}
+                          className="text-[11px] text-primary hover:underline font-semibold"
+                        >
+                          Reset to District
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowZoneMap(!showZoneMap)}
+                        className="text-[11px] text-muted-foreground hover:text-foreground font-medium underline"
+                      >
+                        {showZoneMap ? "Hide Map" : "Show Map"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {showZoneMap && (
+                    <MapplsBoundaryMap 
+                      apiKey={process.env.NEXT_PUBLIC_MAPPLS_API_KEY || ''}
+                      boundaryType={modalMapQuery?.type || 'district'}
+                      boundaryQuery={modalMapQuery?.query || selectedDistrict.name}
+                      height="260px"
+                    />
+                  )}
                 </div>
               )}
 
@@ -1069,39 +1118,54 @@ export default function SalespersonsClient() {
                           const isParentSelected = (newZone.pincodes || []).includes(p.pincode);
                           return (
                             <div key={p.pincode} className="flex flex-col gap-1 mb-2 bg-white rounded-xl border p-1 shadow-sm">
-                              <label 
-                                className={`flex items-start gap-2.5 p-2 rounded-lg cursor-pointer transition-all ${
-                                  isParentSelected 
-                                    ? 'bg-primary/10 text-foreground font-medium' 
-                                    : 'hover:bg-muted/60 text-muted-foreground'
-                                }`}
-                              >
-                                <input 
-                                  type="checkbox" 
-                                  checked={isParentSelected}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      // Remove any specific sub-areas for this pincode, and just add the parent pincode
-                                      setNewZone(prev => ({
-                                        ...prev, 
-                                        pincodes: Array.from(new Set([
-                                          ...(prev.pincodes || []).filter(code => !code.startsWith(p.pincode + ':')), 
-                                          p.pincode
-                                        ]))
-                                      }));
-                                    } else {
-                                      setNewZone(prev => ({
-                                        ...prev, 
-                                        pincodes: (prev.pincodes || []).filter(code => code !== p.pincode)
-                                      }));
-                                    }
+                              <div className="flex items-center justify-between group pr-2">
+                                <label 
+                                  className={`flex-1 flex items-start gap-2.5 p-2 rounded-lg cursor-pointer transition-all ${
+                                    isParentSelected 
+                                      ? 'bg-primary/10 text-foreground font-medium' 
+                                      : 'hover:bg-muted/60 text-muted-foreground'
+                                  }`}
+                                >
+                                  <input 
+                                    type="checkbox" 
+                                    checked={isParentSelected}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        // Remove any specific sub-areas for this pincode, and just add the parent pincode
+                                        setNewZone(prev => ({
+                                          ...prev, 
+                                          pincodes: Array.from(new Set([
+                                            ...(prev.pincodes || []).filter(code => !code.startsWith(p.pincode + ':')), 
+                                            p.pincode
+                                          ]))
+                                        }));
+                                      } else {
+                                        setNewZone(prev => ({
+                                          ...prev, 
+                                          pincodes: (prev.pincodes || []).filter(code => code !== p.pincode)
+                                        }));
+                                      }
+                                    }}
+                                    className="mt-0.5 rounded border-input text-primary focus:ring-primary h-4 w-4" 
+                                  />
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold tracking-wide">ALL OF {p.pincode}</span>
+                                  </div>
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setModalMapQuery({ type: 'pincode', query: p.pincode });
+                                    setShowZoneMap(true);
                                   }}
-                                  className="mt-0.5 rounded border-input text-primary focus:ring-primary h-4 w-4" 
-                                />
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-semibold tracking-wide">ALL OF {p.pincode}</span>
-                                </div>
-                              </label>
+                                  className="ml-2 px-2.5 py-1 bg-secondary text-foreground text-[10px] font-bold rounded-md hover:bg-primary/20 hover:text-primary transition-colors shrink-0 flex items-center gap-1"
+                                >
+                                  <MapIcon className="w-3 h-3" />
+                                  MAP
+                                </button>
+                              </div>
 
                               {p.areas.length > 0 && (
                                 <div className="pl-7 pr-2 pb-2 flex flex-col gap-1 border-t pt-2 mt-1">
