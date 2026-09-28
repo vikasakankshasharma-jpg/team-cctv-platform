@@ -37,7 +37,6 @@ export function DispatchMapClient() {
   const [loading, setLoading] = useState(true);
   const [selectedMarker, setSelectedMarker] = useState<DispatchMarker | null>(null);
   const [filterType, setFilterType] = useState<"all" | "service" | "delivery">("all");
-  const [zones, setZones] = useState<CoverageZone[]>([]);
   const { isLoaded: isMapLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
   });
@@ -51,12 +50,8 @@ export function DispatchMapClient() {
 
   const fetchData = async () => {
     try {
-      const [markerRes, zoneRes] = await Promise.all([
-        fetch(`/api/operations/dispatch-map`),
-        fetch(`/api/admin/coverage-zones`)
-      ]);
+      const markerRes = await fetch(`/api/operations/dispatch-map`);
       const markerData = await markerRes.json();
-      const zoneData = await zoneRes.json();
 
       if (markerData.success) {
         setMarkers(markerData.markers || []);
@@ -153,7 +148,7 @@ export function DispatchMapClient() {
             mapContainerStyle={mapContainerStyle}
             center={defaultCenter}
             zoom={11}
-            onMouseMove={handleMapMouseMove}
+
             options={{ disableDefaultUI: false, zoomControl: true, mapTypeControl: true }}
           >
 
