@@ -2,12 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { CoverageZone, Salesperson } from "@/types";
-import { Search, Loader2, MapPin, Check, AlertTriangle, ShieldCheck, Map as MapIcon, LayoutGrid } from "lucide-react";
+import { Search, Loader2, MapPin, Check, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { usePincodeCoverage, PincodeData } from "@/hooks/usePincodeCoverage";
-import { GoogleMap, Marker, Circle, InfoWindow } from "@react-google-maps/api";
-import { computeDistrictPincodes } from "@/lib/geo-utils";
 
 interface Props {
   zones: CoverageZone[];
@@ -16,9 +13,6 @@ interface Props {
 }
 
 export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
-  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
-  const [selectedPincodeForInfo, setSelectedPincodeForInfo] = useState<string | null>(null);
-
   const [geoStates, setGeoStates] = useState<{ label: string; value: string }[]>([]);
   const [selectedState, setSelectedState] = useState<{ name: string; slug: string } | null>(null);
   
@@ -27,21 +21,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
   
   const [districtOffices, setDistrictOffices] = useState<any[]>([]);
 
-  const rawPincodesForMap = useMemo<PincodeData[]>(() => {
-    return computeDistrictPincodes(districtOffices);
-  }, [districtOffices]);
 
-  const { enrichedPincodes } = usePincodeCoverage(isLoaded, rawPincodesForMap);
-
-  const [mapCenter, setMapCenter] = useState({ lat: 26.9124, lng: 75.7873 });
-  useEffect(() => {
-    const valid = enrichedPincodes.filter(p => p.lat && p.lng);
-    if (valid.length > 0 && valid.length === enrichedPincodes.length) {
-      const avgLat = valid.reduce((s, p) => s + p.lat!, 0) / valid.length;
-      const avgLng = valid.reduce((s, p) => s + p.lng!, 0) / valid.length;
-      setMapCenter({ lat: avgLat, lng: avgLng });
-    }
-  }, [enrichedPincodes]);
   
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -271,22 +251,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
                 <span className="text-sm font-bold text-foreground">{coveragePercentage}%</span>
               </div>
 
-              <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-lg">
-                <button 
-                  onClick={() => setViewMode("grid")}
-                  className={`p-1.5 rounded-md transition-all ${viewMode === "grid" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                  title="Grid View"
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => setViewMode("map")}
-                  className={`p-1.5 rounded-md transition-all ${viewMode === "map" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                  title="Map View"
-                >
-                  <MapIcon className="w-4 h-4" />
-                </button>
-              </div>
+
 
               <div className="relative w-[200px]">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -306,7 +271,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
                  <Loader2 className="w-8 h-8 animate-spin" />
                  <span>Scanning territory data...</span>
                </div>
-            ) : viewMode === "grid" ? (
+            ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredPincodes.map(p => {
                   
@@ -366,91 +331,6 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
                   <div className="col-span-full p-8 text-center text-muted-foreground">
                     No matching PINCODEs found in this district.
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="h-[600px] rounded-xl overflow-hidden border border-border relative bg-secondary/10">
-                {!isLoaded ? (
-                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                     <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-4" />
-                     <span className="text-sm font-medium text-muted-foreground">Initializing Google Maps...</span>
-                   </div>
-                ) : (
-                  <GoogleMap
-                    mapContainerStyle={{ width: '100%', height: '100%' }}
-                    zoom={10}
-                    center={mapCenter}
-                    options={{ disableDefaultUI: false, zoomControl: true, streetViewControl: false, mapTypeControl: false }}
-                  >
-                    {enrichedPincodes.filter(p => p.lat && p.lng).map(p => {
-                      const statusObj = pincodesInDistrict.find(dp => dp.pincode === p.pincode);
-                      const status = statusObj?.status || 'uncovered';
-                      const color = status === 'covered' ? '#10b981' : status === 'partial' ? '#f59e0b' : '#ef4444';
-                      
-                      return (
-                        <Circle
-                          key={p.pincode}
-                          center={{ lat: p.lat!, lng: p.lng! }}
-                          radius={p.radius || 4000}
-                          options={{
-                            fillColor: color,
-                            fillOpacity: 0.2,
-                            strokeColor: color,
-                            strokeOpacity: 0.8,
-                            strokeWeight: 2,
-                          }}
-                          onClick={() => setSelectedPincodeForInfo(p.pincode)}
-                        />
-                      );
-                    })}
-
-                    {selectedPincodeForInfo && enrichedPincodes.find(p => p.pincode === selectedPincodeForInfo)?.lat && (
-                      <InfoWindow
-                        position={{ 
-                          lat: enrichedPincodes.find(p => p.pincode === selectedPincodeForInfo)!.lat!, 
-                          lng: enrichedPincodes.find(p => p.pincode === selectedPincodeForInfo)!.lng! 
-                        }}
-                        onCloseClick={() => setSelectedPincodeForInfo(null)}
-                      >
-                        <div className="p-2 min-w-[200px]">
-                          <h4 className="font-bold text-base mb-1">{selectedPincodeForInfo}</h4>
-                          <p className="text-xs text-muted-foreground mb-3 line-clamp-3">
-                            {pincodesInDistrict.find(p => p.pincode === selectedPincodeForInfo)?.areas.join(", ")}
-                          </p>
-                          
-                          {(() => {
-                            const pStatus = pincodesInDistrict.find(dp => dp.pincode === selectedPincodeForInfo)?.status || 'uncovered';
-                            const assignedAgents = salespersons.filter(s => {
-                              const agentZones = zones.filter(z => (s.assigned_zone_ids || []).includes(z.id!));
-                              return agentZones.some(z => (z.pincodes || []).includes(selectedPincodeForInfo) || (z.pincodes || []).some(code => code.startsWith(selectedPincodeForInfo + ":")));
-                            });
-
-                            return (
-                              <div className="pt-2 border-t border-border mt-2">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className={`w-2 h-2 rounded-full ${pStatus === 'covered' ? 'bg-success' : pStatus === 'partial' ? 'bg-amber-500' : 'bg-destructive'}`}></span>
-                                  <span className="text-xs font-semibold uppercase">{pStatus}</span>
-                                </div>
-                                {assignedAgents.length > 0 ? (
-                                  <div className="space-y-1">
-                                    <span className="text-[10px] font-semibold text-muted-foreground uppercase block mb-1">Active Agents:</span>
-                                    {assignedAgents.map(a => (
-                                      <div key={a.id} className="text-sm font-medium flex items-center gap-2">
-                                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] text-primary">{a.name.charAt(0)}</div>
-                                        {a.name}
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="text-xs text-muted-foreground italic">No agents deployed here.</div>
-                                )}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </InfoWindow>
-                    )}
-                  </GoogleMap>
                 )}
               </div>
             )}

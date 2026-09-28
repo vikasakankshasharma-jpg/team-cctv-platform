@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, Fragment, useMemo } from "react";
-import { usePincodeCoverage, PincodeData } from "@/hooks/usePincodeCoverage";
+
 import { 
   Users, 
   MapPin, 
@@ -127,7 +127,6 @@ function SearchableDropdown({
 }
 
 
-import { useJsApiLoader, GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
 
 function formatCreatedDate(val: any): string {
   if (!val) return "Recently";
@@ -146,18 +145,12 @@ function formatCreatedDate(val: any): string {
 }
 
 export default function SalespersonsClient() {
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
-  });
+  const isLoaded = false;
 
   const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
   const [zones, setZones] = useState<CoverageZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
-  const [hoveredPincodes, setHoveredPincodes] = useState<string[]>([]);
-  const [isGeocoding, setIsGeocoding] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"directory" | "matrix">("directory");
 
@@ -207,8 +200,7 @@ export default function SalespersonsClient() {
   const [geoCities, setGeoCities] = useState<{ label: string; value: string }[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [districtOffices, setDistrictOffices] = useState<any[]>([]);
-  const [rawPincodes, setAvailablePincodes] = useState<PincodeData[]>([]);
-  const { enrichedPincodes: availablePincodes, getOverlappingPincodes } = usePincodeCoverage(isLoaded, rawPincodes);
+  const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string, areas: string[] }[]>([]);
 
   const [zonePincodeSearch, setZonePincodeSearch] = useState("");
   
@@ -217,7 +209,7 @@ export default function SalespersonsClient() {
     const q = zonePincodeSearch.toLowerCase();
     return availablePincodes.filter(p => 
       p.pincode.includes(q) || 
-      (p.areas || []).some(a => a.toLowerCase().includes(q))
+      (p.areas || []).some((a: string) => a.toLowerCase().includes(q))
     );
   }, [availablePincodes, zonePincodeSearch]);
 
@@ -292,55 +284,6 @@ export default function SalespersonsClient() {
     return computeDistrictPincodes(offices);
   };
 
-  const handleMapClick = async (e: google.maps.MapMouseEvent) => {
-    if (!e.latLng || typeof google === 'undefined') return;
-    
-    setIsGeocoding(true);
-    const geocoder = new window.google.maps.Geocoder();
-    
-    try {
-      const response = await geocoder.geocode({ location: e.latLng });
-      const results = response.results;
-      
-      if (results && results.length > 0) {
-        let foundPincode = "";
-        for (const res of results) {
-          const postalComponent = res.address_components.find(c => c.types.includes("postal_code"));
-          if (postalComponent) {
-            foundPincode = postalComponent.long_name;
-            break;
-          }
-        }
-        
-        if (foundPincode) {
-          const pinExists = availablePincodes.some(p => p.pincode === foundPincode);
-          if (pinExists) {
-            setNewZone(prev => {
-              const prevPins = prev.pincodes || [];
-              const isSelected = prevPins.includes(foundPincode);
-              
-              if (isSelected) {
-                toast.success(`Unselected area (PINCODE ${foundPincode})`);
-                return { ...prev, pincodes: prevPins.filter(code => code !== foundPincode) };
-              } else {
-                toast.success(`Selected area (PINCODE ${foundPincode})`);
-                return { ...prev, pincodes: Array.from(new Set([...prevPins, foundPincode])) };
-              }
-            });
-          } else {
-            toast.error(`Area PINCODE (${foundPincode}) is outside your selected District.`);
-          }
-        } else {
-          toast.error("Could not determine PINCODE for this location.");
-        }
-      }
-    } catch (err) {
-      console.error("Geocoding failed:", err);
-      toast.error("Failed to lookup this area. Please try again.");
-    } finally {
-      setIsGeocoding(false);
-    }
-  };
 
   // Handle District Selection
   const handleSelectDistrict = (slug: string, name: string) => {
@@ -533,32 +476,7 @@ export default function SalespersonsClient() {
     }
   }
 
-  // Handle map hover to find all overlapping pincode circles
-  const handleMapMouseMove = (e: google.maps.MapMouseEvent) => {
-    if (!e.latLng) return;
-    const overlapping = getOverlappingPincodes(e.latLng.lat(), e.latLng.lng());
-    
-    // Only update state if the overlapping set has changed
-    const currentHovered = hoveredPincodes.slice().sort().join(",");
-    const newHovered = overlapping.slice().sort().join(",");
-    
-    if (currentHovered !== newHovered) {
-      setHoveredPincodes(overlapping);
-    }
-  };
 
-  // Keep map center stable to prevent jumping while batch geocoding
-  const [mapCenter, setMapCenter] = useState({ lat: 26.9124, lng: 75.7873 });
-  
-  useEffect(() => {
-    const valid = availablePincodes.filter(p => p.lat && p.lng);
-    // Only auto-center if we have enough points to get a good average, and only do it once per district
-    if (valid.length > 0 && valid.length === availablePincodes.length) {
-      const avgLat = valid.reduce((s, p) => s + p.lat!, 0) / valid.length;
-      const avgLng = valid.reduce((s, p) => s + p.lng!, 0) / valid.length;
-      setMapCenter({ lat: avgLat, lng: avgLng });
-    }
-  }, [availablePincodes]);
 
   if (loading) {
     return (
@@ -1089,24 +1007,6 @@ export default function SalespersonsClient() {
                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                       Available PINCODEs {availablePincodes.length > 0 && `(${availablePincodes.length} Found)`}
                     </label>
-                    {availablePincodes.length > 0 && isLoaded && (
-                      <div className="flex bg-muted p-0.5 rounded-md">
-                        <button 
-                          type="button"
-                          onClick={() => setViewMode("list")}
-                          className={`px-2 py-0.5 text-[10px] font-semibold rounded-sm transition-all ${viewMode === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
-                        >
-                          List
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => setViewMode("map")}
-                          className={`px-2 py-0.5 text-[10px] font-semibold rounded-sm transition-all ${viewMode === "map" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
-                        >
-                          Map
-                        </button>
-                      </div>
-                    )}
                   </div>
                   {availablePincodes.length > 0 && (
                     <div className="flex items-center gap-3">
@@ -1159,7 +1059,6 @@ export default function SalespersonsClient() {
                     Fetching all official post offices & pincodes in {selectedDistrict?.name}...
                   </div>
                 ) : availablePincodes.length > 0 ? (
-                  viewMode === "list" ? (
                     <div className="p-3 border rounded-xl bg-muted/20 animate-in slide-in-from-top-1">
                       <div className="max-h-52 overflow-y-auto space-y-1.5 pr-2">
                         {filteredAvailablePincodes.length === 0 ? (
@@ -1206,7 +1105,7 @@ export default function SalespersonsClient() {
 
                               {p.areas.length > 0 && (
                                 <div className="pl-7 pr-2 pb-2 flex flex-col gap-1 border-t pt-2 mt-1">
-                                  {p.areas.map(area => {
+                                  {p.areas.map((area: string) => {
                                     const areaCode = `${p.pincode}:${area}`;
                                     const isSelected = isParentSelected || (newZone.pincodes || []).includes(areaCode);
                                     
@@ -1240,93 +1139,6 @@ export default function SalespersonsClient() {
                         })}
                       </div>
                     </div>
-                  ) : (
-                    <div className="p-1 border rounded-xl bg-muted/20 animate-in slide-in-from-top-1 h-64 overflow-hidden relative">
-                      {isLoaded ? (
-                        <>
-                          <GoogleMap 
-                            mapContainerStyle={{ width: '100%', height: '100%', borderRadius: '0.5rem' }} 
-                            center={mapCenter}
-                            zoom={10}
-                            options={{ 
-                              disableDefaultUI: true, 
-                              zoomControl: true, 
-                              fullscreenControl: true,
-                              styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }] 
-                            }}
-                            onClick={handleMapClick}
-                            onMouseMove={handleMapMouseMove}
-                          >
-                            {filteredAvailablePincodes.filter(p => p.lat && p.lng).map(p => {
-                              const isSelected = (newZone.pincodes || []).includes(p.pincode);
-                              const isHovered = hoveredPincodes.includes(p.pincode);
-                              return (
-                                <Fragment key={p.pincode}>
-                                  <Marker 
-                                    position={{ lat: p.lat!, lng: p.lng! }}
-                                    onMouseOver={() => setHoveredPincodes([p.pincode])}
-                                    onMouseOut={() => setHoveredPincodes([])}
-                                    onClick={() => {
-                                      if (isSelected) {
-                                        setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(code => code !== p.pincode)}));
-                                      } else {
-                                        setNewZone(prev => ({...prev, pincodes: Array.from(new Set([...(prev.pincodes || []), p.pincode]))}));
-                                      }
-                                    }}
-                                    icon={{
-                                      path: typeof google !== 'undefined' ? google.maps.SymbolPath.CIRCLE : 0,
-                                      fillColor: isSelected ? "#10b981" : "#ef4444",
-                                      fillOpacity: 1,
-                                      strokeWeight: 2,
-                                      strokeColor: "#ffffff",
-                                      scale: 8,
-                                    }}
-                                  />
-                                  {isHovered && (
-                                    <>
-                                      <InfoWindow 
-                                        position={{ lat: p.lat!, lng: p.lng! }} 
-                                        options={{ disableAutoPan: true, pixelOffset: typeof google !== 'undefined' ? new google.maps.Size(0, -10) : undefined }}
-                                      >
-                                        <div className="p-1 max-w-[200px]">
-                                          <p className="font-bold text-sm text-foreground mb-1">{p.pincode}</p>
-                                          <p className="text-xs text-muted-foreground leading-tight whitespace-pre-wrap">{p.areas.join(", ")}</p>
-                                        </div>
-                                      </InfoWindow>
-                                      <Circle
-                                        center={{ lat: p.lat!, lng: p.lng! }}
-                                        radius={p.radius || 4000}
-                                        options={{
-                                          fillColor: isSelected ? "#10b981" : "#ef4444",
-                                          fillOpacity: 0.15,
-                                          strokeColor: isSelected ? "#10b981" : "#ef4444",
-                                          strokeOpacity: 0.8,
-                                          strokeWeight: 2,
-                                          clickable: false
-                                        }}
-                                      />
-                                    </>
-                                  )}
-                                </Fragment>
-                              );
-                            })}
-                          </GoogleMap>
-                          {isGeocoding && (
-                            <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-[100] rounded-lg">
-                              <div className="bg-background border shadow-lg rounded-xl px-4 py-2 flex items-center gap-2">
-                                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                                <span className="text-sm font-medium">Identifying Area...</span>
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
-                          <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading Map...
-                        </div>
-                      )}
-                    </div>
-                  )
                 ) : selectedDistrict ? (
                   <div className="p-4 border rounded-xl bg-muted/10 text-center text-xs text-muted-foreground">
                     No pincodes returned for this selection.
