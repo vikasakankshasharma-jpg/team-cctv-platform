@@ -1006,48 +1006,7 @@ export default function SalespersonsClient() {
                 </div>
               )}
 
-              {/* MapmyIndia Coverage Boundary Preview */}
-              {selectedDistrict && (
-                <div className="border border-border rounded-xl p-3 bg-secondary/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded-md bg-primary/10 text-primary">
-                        <MapIcon className="w-4 h-4" />
-                      </div>
-                      <span className="text-xs font-bold text-foreground">
-                        MapmyIndia Boundary ({modalMapQuery?.type === 'pincode' ? `Pincode: ${modalMapQuery.query}` : `District: ${selectedDistrict.name}`})
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {modalMapQuery?.type === 'pincode' && (
-                        <button
-                          type="button"
-                          onClick={() => setModalMapQuery({ type: 'district', query: selectedDistrict.name })}
-                          className="text-[11px] text-primary hover:underline font-semibold"
-                        >
-                          Reset to District
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setShowZoneMap(!showZoneMap)}
-                        className="text-[11px] text-muted-foreground hover:text-foreground font-medium underline"
-                      >
-                        {showZoneMap ? "Hide Map" : "Show Map"}
-                      </button>
-                    </div>
-                  </div>
 
-                  {showZoneMap && (
-                    <MapplsBoundaryMap 
-                      apiKey={process.env.NEXT_PUBLIC_MAPPLS_API_KEY || ''}
-                      boundaryType={modalMapQuery?.type || 'district'}
-                      boundaryQuery={modalMapQuery?.query || selectedDistrict.name}
-                      height="260px"
-                    />
-                  )}
-                </div>
-              )}
 
               {/* Pincodes Multi-Selection Box */}
               <div>
@@ -1210,6 +1169,49 @@ export default function SalespersonsClient() {
                 ) : (
                   <div className="p-6 border border-dashed rounded-xl bg-muted/10 text-center text-xs text-muted-foreground">
                     Select a State and District above to automatically load all official PINCODEs.
+                  </div>
+                )}
+
+                {/* MapmyIndia Coverage Boundary Preview (Moved Below List) */}
+                {selectedDistrict && (
+                  <div className="border border-border rounded-xl p-3 bg-secondary/10 mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-primary/10 text-primary">
+                          <MapIcon className="w-4 h-4" />
+                        </div>
+                        <span className="text-xs font-bold text-foreground">
+                          MapmyIndia Boundary ({modalMapQuery?.type === 'pincode' ? `Pincode: ${modalMapQuery.query}` : `District: ${selectedDistrict.name}`})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {modalMapQuery?.type === 'pincode' && (
+                          <button
+                            type="button"
+                            onClick={() => setModalMapQuery({ type: 'district', query: selectedDistrict.name })}
+                            className="text-[11px] text-primary hover:underline font-semibold"
+                          >
+                            Reset to District
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setShowZoneMap(!showZoneMap)}
+                          className="text-[11px] text-muted-foreground hover:text-foreground font-medium underline"
+                        >
+                          {showZoneMap ? "Hide Map" : "Show Map"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {showZoneMap && (
+                      <MapplsBoundaryMap 
+                        apiKey={process.env.NEXT_PUBLIC_MAPPLS_API_KEY || ''}
+                        boundaryType={modalMapQuery?.type || 'district'}
+                        boundaryQuery={modalMapQuery?.query || selectedDistrict.name}
+                        height="260px"
+                      />
+                    )}
                   </div>
                 )}
 

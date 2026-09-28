@@ -112,6 +112,13 @@ export default function MapplsBoundaryMap({
     }
   }, [boundaryType, boundaryQuery, renderBoundary]);
 
+  // Define callback for Mappls script
+  useEffect(() => {
+    (window as any).initMap1 = () => {
+      setMapLoaded(true);
+    };
+  }, []);
+
   return (
     <div className={`relative w-full border border-border rounded-xl overflow-hidden shadow-sm bg-card ${className}`}>
       {(!mapLoaded || isRenderingLayer) && (
@@ -123,7 +130,6 @@ export default function MapplsBoundaryMap({
 
       <Script
         src={`https://apis.mappls.com/advancedmaps/api/${apiKey}/map_sdk?layer=vector&v=3.0&callback=initMap1&plugin=GeoAnalytics`}
-        onReady={() => setMapLoaded(true)}
         strategy="lazyOnload"
       />
 
