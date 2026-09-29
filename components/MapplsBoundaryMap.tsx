@@ -33,7 +33,7 @@ async function fetchMapplsToken(): Promise<string> {
 }
 
 /** Load the Mappls SDK once globally, then call back all waiting components */
-function loadMapplsSDK(accessToken: string, cb: () => void) {
+function loadMapplsSDK(cb: () => void) {
   // Already loaded
   if (typeof window !== "undefined" && window._mapplsSDKReady && window.mappls) {
     cb();
@@ -56,8 +56,14 @@ function loadMapplsSDK(accessToken: string, cb: () => void) {
     cbs.forEach((fn) => fn());
   };
 
+  const apiKey = process.env.NEXT_PUBLIC_MAPPLS_API_KEY;
+  if (!apiKey) {
+    console.error("Mappls API key is missing (NEXT_PUBLIC_MAPPLS_API_KEY)");
+    return;
+  }
+
   const script = document.createElement("script");
-  script.src = `https://apis.mappls.com/advancedmaps/api/${accessToken}/map_sdk?layer=vector&v=3.0&callback=initMap1&plugin=GeoAnalytics`;
+  script.src = `https://apis.mappls.com/advancedmaps/api/${apiKey}/map_sdk?layer=vector&v=3.0&callback=initMap1&plugin=GeoAnalytics`;
   script.async = true;
   script.onerror = () => {
     console.error("Mappls SDK script failed to load");
@@ -86,34 +92,21 @@ export default function MapplsBoundaryMap({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ── 1. Fetch token → Load SDK ──────────────────────────────────────────────
+  // ── 1. Load SDK ──────────────────────────────────────────────
   useEffect(() => {
     isMountedRef.current = true;
     let cancelled = false;
 
-    (async () => {
-      try {
-        const token = await fetchMapplsToken();
-        if (cancelled) return;
-
-        loadMapplsSDK(token, () => {
-          if (!cancelled && isMountedRef.current) {
-            if (window.mappls) {
-              setSdkReady(true);
-            } else {
-              setError("Map SDK failed to initialize. Check console for details.");
-              setIsLoading(false);
-            }
-          }
-        });
-      } catch (err: any) {
-        if (!cancelled && isMountedRef.current) {
-          console.error("Mappls token/SDK error:", err);
-          setError(err.message || "Failed to load map");
+    loadMapplsSDK(() => {
+      if (!cancelled && isMountedRef.current) {
+        if (window.mappls) {
+          setSdkReady(true);
+        } else {
+          setError("Map SDK failed to initialize. Check console for details.");
           setIsLoading(false);
         }
       }
-    })();
+    });
 
     return () => {
       cancelled = true;
