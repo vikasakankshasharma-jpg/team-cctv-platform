@@ -1,139 +1,206 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import Script from "next/script";
 
-// Define TypeScript interfaces for the Mappls global object
 declare global {
   interface Window {
     mappls: any;
     mapplsClassObject: any;
+    _mapplsSDKLoading: boolean;
+    _mapplsSDKReady: boolean;
+    _mapplsSDKCallbacks: Array<() => void>;
   }
 }
 
 interface MapplsBoundaryMapProps {
   apiKey: string;
-  // e.g., 'state', 'district', 'subDistrict', 'city', 'pincode'
-  boundaryType?: 'state' | 'district' | 'subDistrict' | 'city' | 'pincode';
-  // The actual name or code to search for, e.g., 'New Delhi' or '110020'
+  boundaryType?: "district" | "pincode" | "state" | "subDistrict" | "city";
   boundaryQuery?: string;
   height?: string;
   className?: string;
   onLayerLoaded?: (data: any) => void;
 }
 
+/** Load the Mappls SDK once globally, then call back all waiting components */
+function loadMapplsSDK(apiKey: string, cb: () => void) {
+  // Already loaded
+  if (typeof window !== "undefined" && window._mapplsSDKReady && window.mappls) {
+    cb();
+    return;
+  }
+  // Register callback
+  if (!window._mapplsSDKCallbacks) window._mapplsSDKCallbacks = [];
+  window._mapplsSDKCallbacks.push(cb);
+
+  // Already loading — just wait
+  if (window._mapplsSDKLoading) return;
+  window._mapplsSDKLoading = true;
+
+  // Define the global callback BEFORE injecting the script tag
+  (window as any).initMap1 = () => {
+    window._mapplsSDKReady = true;
+    window._mapplsSDKLoading = false;
+    const cbs = window._mapplsSDKCallbacks || [];
+    window._mapplsSDKCallbacks = [];
+    cbs.forEach((fn) => fn());
+  };
+
+  const script = document.createElement("script");
+  script.src = `https://apis.mappls.com/advancedmaps/api/${apiKey}/map_sdk?layer=vector&v=3.0&callback=initMap1&plugin=GeoAnalytics`;
+  script.async = true;
+  script.onerror = () => {
+    console.error("Mappls SDK failed to load. Check your API key and CSP headers.");
+    window._mapplsSDKLoading = false;
+  };
+  document.head.appendChild(script);
+}
+
 export default function MapplsBoundaryMap({
   apiKey,
-  boundaryType = 'city',
-  boundaryQuery = 'New Delhi',
-  height = '500px',
-  className = '',
-  onLayerLoaded
+  boundaryType = "district",
+  boundaryQuery = "",
+  height = "300px",
+  className = "",
+  onLayerLoaded,
 }: MapplsBoundaryMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const [isRenderingLayer, setIsRenderingLayer] = useState(false);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const currentLayerRef = useRef<any>(null);
+  const isMountedRef = useRef(true);
 
-  // Function to render or update GeoAnalytics boundary
-  const renderBoundary = useCallback((map: any, type: string, query: string) => {
-    if (!window.mappls || !map || !query) return;
+  const [sdkReady, setSdkReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    try {
-      // Remove previous layer if exists
+  // ── 1. Load SDK once ───────────────────────────────────────────────────────
+  useEffect(() => {
+    isMountedRef.current = true;
+    if (!apiKey) {
+      setError("No API key provided.");
+      setIsLoading(false);
+      return;
+    }
+    loadMapplsSDK(apiKey, () => {
+      if (isMountedRef.current) setSdkReady(true);
+    });
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [apiKey]);
+
+  // ── 2. Render boundary onto map ────────────────────────────────────────────
+  const renderBoundary = useCallback(
+    (map: any, type: string, query: string) => {
+      if (!window.mappls || !map || !query) return;
+
+      // Remove previous layer
       if (currentLayerRef.current) {
-        if (typeof map.removeLayer === 'function') {
-          map.removeLayer(currentLayerRef.current);
-        } else if (window.mappls.remove) {
-          window.mappls.remove({ map, layer: currentLayerRef.current });
-        }
+        try {
+          if (typeof map.removeLayer === "function") {
+            map.removeLayer(currentLayerRef.current);
+          } else if (window.mappls.remove) {
+            window.mappls.remove({ map, layer: currentLayerRef.current });
+          }
+        } catch (_) {}
         currentLayerRef.current = null;
       }
 
-      setIsRenderingLayer(true);
+      if (isMountedRef.current) setIsLoading(true);
 
-      window.mappls.getGeoAnalytics({
-        map: map,
-        api: type,
-        query: query,
-        attribute: "boundary",
-        transparent: false,
-        fillColor: "3b82f6", // Modern Tailwind Blue
-        fillOpacity: 0.35,
-        strokeColor: "1d4ed8",
-        strokeWidth: 2,
-      }, (data: any) => {
-        setIsRenderingLayer(false);
-        if (data) {
-          currentLayerRef.current = data;
-          if (data.bounds && map.fitBounds) {
-            map.fitBounds(data.bounds);
-          }
-          if (onLayerLoaded) {
-            onLayerLoaded(data);
-          }
-        }
-      });
-    } catch (err) {
-      console.warn("Mappls GeoAnalytics render notice:", err);
-      setIsRenderingLayer(false);
-    }
-  }, [onLayerLoaded]);
-
-  // Initial Map Load
-  useEffect(() => {
-    if (mapLoaded && mapRef.current && window.mappls && !mapInstanceRef.current) {
       try {
-        const map = new window.mappls.Map(mapRef.current, {
-          center: [28.6139, 77.2090], // Default Center (Delhi)
-          zoom: 9,
-          zoomControl: true,
-          location: true,
-        });
-
-        mapInstanceRef.current = map;
-
-        map.addListener('load', () => {
-          if (boundaryQuery) {
-            renderBoundary(map, boundaryType, boundaryQuery);
+        window.mappls.getGeoAnalytics(
+          {
+            map,
+            api: type,
+            query,
+            attribute: "boundary",
+            transparent: false,
+            fillColor: "3b82f6",
+            fillOpacity: 0.25,
+            strokeColor: "1d4ed8",
+            strokeWidth: 2,
+          },
+          (data: any) => {
+            if (!isMountedRef.current) return;
+            setIsLoading(false);
+            if (data) {
+              currentLayerRef.current = data;
+              if (data.bounds && map.fitBounds) {
+                map.fitBounds(data.bounds);
+              }
+              if (onLayerLoaded) onLayerLoaded(data);
+            }
           }
-        });
-      } catch (e) {
-        console.error("Failed to initialize Mappls Map:", e);
+        );
+      } catch (err) {
+        console.warn("GeoAnalytics error:", err);
+        if (isMountedRef.current) setIsLoading(false);
       }
-    }
-  }, [mapLoaded, renderBoundary, boundaryType, boundaryQuery]);
+    },
+    [onLayerLoaded]
+  );
 
-  // Handle prop updates when boundaryType or boundaryQuery changes dynamically
+  // ── 3. Initialize map once SDK is ready ────────────────────────────────────
   useEffect(() => {
-    if (mapInstanceRef.current && boundaryQuery) {
-      renderBoundary(mapInstanceRef.current, boundaryType, boundaryQuery);
+    if (!sdkReady || !mapContainerRef.current || mapInstanceRef.current) return;
+
+    try {
+      const map = new window.mappls.Map(mapContainerRef.current, {
+        center: [20.5937, 78.9629], // Centre of India
+        zoom: 5,
+        zoomControl: true,
+      });
+
+      mapInstanceRef.current = map;
+
+      // The 'load' event fires when the base tiles are ready
+      const onLoad = () => {
+        if (isMountedRef.current && boundaryQuery) {
+          renderBoundary(map, boundaryType, boundaryQuery);
+        } else {
+          if (isMountedRef.current) setIsLoading(false);
+        }
+      };
+
+      map.addListener("load", onLoad);
+    } catch (e) {
+      console.error("Mappls Map init error:", e);
+      setError("Map failed to initialize.");
+      setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sdkReady]);
+
+  // ── 4. Re-render boundary when query/type prop changes ─────────────────────
+  useEffect(() => {
+    if (!mapInstanceRef.current || !boundaryQuery) return;
+    renderBoundary(mapInstanceRef.current, boundaryType, boundaryQuery);
   }, [boundaryType, boundaryQuery, renderBoundary]);
 
-  // Define callback for Mappls script
-  useEffect(() => {
-    (window as any).initMap1 = () => {
-      setMapLoaded(true);
-    };
-  }, []);
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className={`relative w-full border border-border rounded-xl overflow-hidden shadow-sm bg-card ${className}`}>
-      {(!mapLoaded || isRenderingLayer) && (
-        <div className="absolute top-3 right-3 z-10 bg-background/80 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-medium border border-border shadow-sm flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-          {!mapLoaded ? "Loading Mappls..." : "Updating Boundary..."}
+    <div
+      className={`relative w-full rounded-xl overflow-hidden bg-muted/20 ${className}`}
+      style={{ height }}
+    >
+      {/* Loading / Error overlay */}
+      {(isLoading || error) && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
+          {error ? (
+            <p className="text-xs text-destructive font-medium px-4 text-center">{error}</p>
+          ) : (
+            <>
+              <span className="w-3 h-3 rounded-full bg-blue-500 animate-ping" />
+              <span className="text-xs text-muted-foreground font-medium">
+                {!sdkReady ? "Loading map SDK…" : "Rendering boundary…"}
+              </span>
+            </>
+          )}
         </div>
       )}
 
-      <Script
-        src={`https://apis.mappls.com/advancedmaps/api/${apiKey}/map_sdk?layer=vector&v=3.0&callback=initMap1&plugin=GeoAnalytics`}
-        strategy="lazyOnload"
-      />
-
-      <div ref={mapRef} style={{ width: '100%', height }} />
+      {/* Map container — always present so the DOM node is ready for the SDK */}
+      <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
     </div>
   );
 }
