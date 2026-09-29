@@ -9,8 +9,8 @@ import { NextResponse } from "next/server";
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
 export async function GET() {
-  const clientId = process.env.MAPPLS_CLIENT_ID;
-  const clientSecret = process.env.MAPPLS_CLIENT_SECRET;
+  const clientId = process.env.MAPPLS_CLIENT_ID?.trim();
+  const clientSecret = process.env.MAPPLS_CLIENT_SECRET?.trim();
 
   if (!clientId || !clientSecret) {
     return NextResponse.json(
