@@ -35,7 +35,26 @@ export function WizardClientV2() {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [mapCenter, setMapCenter] = useState({ lat: 26.9124, lng: 75.7873 }); // Default Jaipur
+  const [mapCenter, setMapCenter] = useState(() => {
+    // Try to pre-read pincode from URL for SSR-safe initial state
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const city = params.get('city');
+      // Rough city-level defaults until API returns exact coords
+      const CITY_COORDS: Record<string, {lat: number, lng: number}> = {
+        jaipur: { lat: 26.9124, lng: 75.7873 },
+        jodhpur: { lat: 26.2389, lng: 73.0243 },
+        kota: { lat: 25.2138, lng: 75.8648 },
+        ajmer: { lat: 26.4499, lng: 74.6399 },
+        delhi: { lat: 28.6139, lng: 77.2090 },
+      };
+      if (city) {
+        const c = CITY_COORDS[city.toLowerCase()];
+        if (c) return c;
+      }
+    }
+    return { lat: 26.9124, lng: 75.7873 }; // Default Jaipur
+  });
   const [isGeocoding, setIsGeocoding] = useState(false);
   
   const [localities, setLocalities] = useState<string[]>([]);
@@ -1300,17 +1319,17 @@ export function WizardClientV2() {
                     />
                   </div>
                   
-                  <div className="h-48 w-full rounded-xl border overflow-hidden relative shadow-inner bg-gray-50">
+                  <div className="h-64 sm:h-72 w-full rounded-xl border overflow-hidden relative shadow-inner bg-gray-50">
                     {isLoaded ? (
                       <>
                         <GoogleMap
                           mapContainerStyle={{ width: '100%', height: '100%' }}
-                          center={req.lat && req.lng ? { lat: req.lat, lng: req.lng } : mapCenter}
-                          zoom={req.lat && req.lng ? 16 : 11}
+                          center={mapCenter}
+                          zoom={req.lat && req.lng ? 16 : 13}
                           options={{ disableDefaultUI: true, zoomControl: true, streetViewControl: false, fullscreenControl: true }}
                           onClick={handleWizardMapClick}
                         >
-                          {req.lat && req.lng && (
+                          {(req.lat || mapCenter.lat) && (req.lng || mapCenter.lng) && (
                             <Marker
                               draggable={true}
                               onDragEnd={(e) => {
@@ -1328,7 +1347,7 @@ export function WizardClientV2() {
                                   }
                                 }
                               }}
-                              position={{ lat: req.lat, lng: req.lng }}
+                              position={{ lat: req.lat || mapCenter.lat, lng: req.lng || mapCenter.lng }}
                               icon={{
                                 path: typeof google !== 'undefined' && google.maps ? google.maps.SymbolPath.CIRCLE : 0,
                                 fillColor: "#2563eb",
