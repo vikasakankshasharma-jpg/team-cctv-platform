@@ -13,7 +13,6 @@ declare global {
 }
 
 interface MapplsBoundaryMapProps {
-  apiKey: string;
   boundaryType?: "district" | "pincode" | "state" | "subDistrict" | "city";
   boundaryQuery?: string;
   height?: string;
@@ -21,8 +20,20 @@ interface MapplsBoundaryMapProps {
   onLayerLoaded?: (data: any) => void;
 }
 
+/** Fetch an access token from our own backend (keeps client_secret server-side) */
+async function fetchMapplsToken(): Promise<string> {
+  const res = await fetch("/api/admin/mappls-token");
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `Token request failed (${res.status})`);
+  }
+  const data = await res.json();
+  if (!data.access_token) throw new Error("No access_token in response");
+  return data.access_token;
+}
+
 /** Load the Mappls SDK once globally, then call back all waiting components */
-function loadMapplsSDK(apiKey: string, cb: () => void) {
+function loadMapplsSDK(accessToken: string, cb: () => void) {
   // Already loaded
   if (typeof window !== "undefined" && window._mapplsSDKReady && window.mappls) {
     cb();
@@ -46,17 +57,20 @@ function loadMapplsSDK(apiKey: string, cb: () => void) {
   };
 
   const script = document.createElement("script");
-  script.src = `https://apis.mappls.com/advancedmaps/api/${apiKey}/map_sdk?layer=vector&v=3.0&callback=initMap1&plugin=GeoAnalytics`;
+  script.src = `https://apis.mappls.com/advancedmaps/api/${accessToken}/map_sdk?layer=vector&v=3.0&callback=initMap1&plugin=GeoAnalytics`;
   script.async = true;
   script.onerror = () => {
-    console.error("Mappls SDK failed to load. Check your API key and CSP headers.");
+    console.error("Mappls SDK script failed to load");
     window._mapplsSDKLoading = false;
+    // Notify all waiting callbacks with an error state
+    const cbs = window._mapplsSDKCallbacks || [];
+    window._mapplsSDKCallbacks = [];
+    cbs.forEach((fn) => fn());
   };
   document.head.appendChild(script);
 }
 
 export default function MapplsBoundaryMap({
-  apiKey,
   boundaryType = "district",
   boundaryQuery = "",
   height = "300px",
@@ -72,21 +86,40 @@ export default function MapplsBoundaryMap({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ── 1. Load SDK once ───────────────────────────────────────────────────────
+  // ── 1. Fetch token → Load SDK ──────────────────────────────────────────────
   useEffect(() => {
     isMountedRef.current = true;
-    if (!apiKey) {
-      setError("No API key provided.");
-      setIsLoading(false);
-      return;
-    }
-    loadMapplsSDK(apiKey, () => {
-      if (isMountedRef.current) setSdkReady(true);
-    });
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const token = await fetchMapplsToken();
+        if (cancelled) return;
+
+        loadMapplsSDK(token, () => {
+          if (!cancelled && isMountedRef.current) {
+            if (window.mappls) {
+              setSdkReady(true);
+            } else {
+              setError("Map SDK failed to initialize. Check console for details.");
+              setIsLoading(false);
+            }
+          }
+        });
+      } catch (err: any) {
+        if (!cancelled && isMountedRef.current) {
+          console.error("Mappls token/SDK error:", err);
+          setError(err.message || "Failed to load map");
+          setIsLoading(false);
+        }
+      }
+    })();
+
     return () => {
+      cancelled = true;
       isMountedRef.current = false;
     };
-  }, [apiKey]);
+  }, []);
 
   // ── 2. Render boundary onto map ────────────────────────────────────────────
   const renderBoundary = useCallback(
@@ -153,7 +186,6 @@ export default function MapplsBoundaryMap({
 
       mapInstanceRef.current = map;
 
-      // The 'load' event fires when the base tiles are ready
       const onLoad = () => {
         if (isMountedRef.current && boundaryQuery) {
           renderBoundary(map, boundaryType, boundaryQuery);
@@ -183,7 +215,6 @@ export default function MapplsBoundaryMap({
       className={`relative w-full rounded-xl overflow-hidden bg-muted/20 ${className}`}
       style={{ height }}
     >
-      {/* Loading / Error overlay */}
       {(isLoading || error) && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
           {error ? (
@@ -192,14 +223,13 @@ export default function MapplsBoundaryMap({
             <>
               <span className="w-3 h-3 rounded-full bg-blue-500 animate-ping" />
               <span className="text-xs text-muted-foreground font-medium">
-                {!sdkReady ? "Loading map SDK…" : "Rendering boundary…"}
+                {!sdkReady ? "Loading map…" : "Rendering boundary…"}
               </span>
             </>
           )}
         </div>
       )}
 
-      {/* Map container — always present so the DOM node is ready for the SDK */}
       <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
     </div>
   );

@@ -1206,7 +1206,6 @@ export default function SalespersonsClient() {
 
                     {showZoneMap && (
                       <MapplsBoundaryMap 
-                        apiKey={process.env.NEXT_PUBLIC_MAPPLS_API_KEY || ''}
                         boundaryType={modalMapQuery?.type || 'district'}
                         boundaryQuery={modalMapQuery?.query || selectedDistrict.name}
                         height="260px"

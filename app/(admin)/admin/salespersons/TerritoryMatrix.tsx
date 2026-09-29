@@ -322,7 +322,6 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded }: Props) {
               </div>
 
               <MapplsBoundaryMap 
-                apiKey={process.env.NEXT_PUBLIC_MAPPLS_API_KEY || ''}
                 boundaryType={activeMapQuery.type}
                 boundaryQuery={activeMapQuery.query}
                 height="360px"

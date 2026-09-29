@@ -1,77 +1,126 @@
-import http from "http";
-import fs from "fs";
+import puppeteer from 'puppeteer';
 
-async function runEndToEnd() {
-  console.log("Starting E2E Test...");
+(async () => {
+  const browser = await puppeteer.launch({ headless: "new" });
+  const page = await browser.newPage();
   
-  // 1. Generate Quote
-  const generateRes = await fetch("http://localhost:3000/api/quote/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      installation_type: "new",
-      indoor_camera_count: 2,
-      outdoor_camera_count: 2,
-      recording_days: 7,
-      recording_mode: "motion",
-      property_type: "Residential"
-    })
+  // Set a large viewport
+  await page.setViewport({ width: 1280, height: 800 });
+
+  const errors = [];
+  const logs = [];
+
+  page.on('console', msg => {
+    const text = msg.text();
+    logs.push(text);
+    if (msg.type() === 'error') {
+      console.log('PAGE ERROR LOG:', text);
+      errors.push(text);
+    }
   });
   
-  const generateData = await generateRes.json();
-  if (!generateData.success) throw new Error("Failed to generate: " + JSON.stringify(generateData));
-  
-  const ipPlan = generateData.plans["Budget_IP_5MP"];
-  const ptzBudget = generateData.addons.find(a => a.id === "upg_ptz_budget_15x");
-  
-  const modifiedPlan = { ...ipPlan };
-  const ptzAddonLine = {
-     item_id: "upg_ptz_budget_15x",
-     display_name: ptzBudget.display_name,
-     qty: 1,
-     unit_price: ptzBudget.unit_price,
-     line_total: ptzBudget.unit_price,
-     base_cost_at_quote: ptzBudget.base_cost
+  page.on('pageerror', error => {
+    console.log('PAGE UNHANDLED ERROR:', error.message);
+    errors.push(error.message);
+  });
+
+  const clickBtn = async (text, timeout = 5000) => {
+    await page.waitForFunction(
+      (t) => Array.from(document.querySelectorAll('button')).some(b => b.innerText.toLowerCase().includes(t.toLowerCase())),
+      { timeout },
+      text
+    ).catch(() => console.log(`Timeout waiting for button: ${text}`));
+    
+    await page.evaluate((t) => {
+      const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase().includes(t.toLowerCase()));
+      if (btn) btn.click();
+    }, text);
+    await new Promise(r => setTimeout(r, 800));
   };
-  modifiedPlan.items.push(ptzAddonLine);
-  modifiedPlan.addons_total = ptzBudget.unit_price;
-  
-  const oldGross = modifiedPlan.gross_subtotal;
-  modifiedPlan.gross_subtotal = oldGross + ptzBudget.unit_price;
-  modifiedPlan.net_taxable_amount = modifiedPlan.gross_subtotal;
-  modifiedPlan.gst_amount = modifiedPlan.net_taxable_amount * 0.18;
-  modifiedPlan.total_payable = Math.round(modifiedPlan.net_taxable_amount + modifiedPlan.gst_amount);
 
-  // 3. Save Quote
-  const saveRes = await fetch("http://localhost:3000/api/quote/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      customer_name: "Test E2E User",
-      customer_mobile: "9999999999",
-      requirementSnapshot: generateData.requirement,
-      configurationSnapshot: generateData.configuration,
-      pricingSnapshot: modifiedPlan,
-      selectedPlan: "Budget_IP_5MP",
-      isV2: true
-    })
-  });
-  
-  const saveData = await saveRes.json();
-  if (!saveData.success) throw new Error("Failed to save: " + JSON.stringify(saveData));
-  
-  const quoteId = saveData.quoteId;
-  console.log("Saved Quote ID:", quoteId);
-  
-  // 4. Download PDF
-  const pdfRes = await fetch(`http://localhost:3000/api/quote/${quoteId}/download`);
-  if (!pdfRes.ok) throw new Error("Failed to download PDF");
-  
-  const pdfBuffer = await pdfRes.arrayBuffer();
-  const pdfPath = "C:/Users/hp/.gemini/antigravity/brain/a1a0a74c-ede4-4dcc-84de-4e2ec5b4b775/Test_E2E_Quotation_PTZ.pdf";
-  fs.writeFileSync(pdfPath, Buffer.from(pdfBuffer));
-  
-  console.log(`Saved PDF to ${pdfPath}`);
-}
+  try {
+    console.log("Navigating to wizard...");
+    await page.goto('http://localhost:3000/wizard');
+    
+    // Step 0
+    console.log("Step 0...");
+    await clickBtn('Guided Setup');
+    await clickBtn('Start Builder');
 
-runEndToEnd().catch(console.error);
+    // Step 1
+    console.log("Step 1...");
+    await clickBtn('Completely New System');
+    await clickBtn('Confirm Selection');
+    
+    // Step 2
+    console.log("Step 2...");
+    // click + for indoor
+    await page.evaluate(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        btns.forEach(b => { if (b.textContent === '+') b.click(); });
+    });
+    await clickBtn('Confirm Cameras');
+    
+    // Step 3
+    console.log("Step 3...");
+    await clickBtn('Confirm Recording');
+    
+    // Step 4
+    console.log("Step 4...");
+    await clickBtn('Confirm Details');
+    
+    // Step 5 (Final Step)
+    console.log("Step 5...");
+    await page.waitForSelector('input[type="text"]', { timeout: 15000 });
+    await page.type('input[type="text"]', 'End To End Test User');
+    await page.type('input[type="tel"]', '9999999999');
+    
+    console.log("Submitting wizard...");
+    await clickBtn('View My CCTV Options');
+    
+    // Wait for the quote page to load (URL changes or API finishes)
+    console.log("Waiting for quote generation...");
+    await new Promise(r => setTimeout(r, 6000));
+    
+    // Check if error boundary is visible
+    let html = await page.content();
+    if (html.includes("synchronization error") || html.includes("Something went wrong")) {
+      console.log("ERROR: Crash detected after quote generation!");
+      errors.push("Crash after quote generation");
+    }
+
+    // Now we should be on the Quote Comparison screen.
+    // Try to click "View Details" on the first plan
+    console.log("Selecting a plan...");
+    await clickBtn('View Details');
+    
+    await new Promise(r => setTimeout(r, 2000));
+
+    // Now we should be on the CameraCustomizer screen
+    console.log("Confirming plan...");
+    await clickBtn('Confirm & Generate');
+
+    await new Promise(r => setTimeout(r, 5000));
+    
+    // Now we should be on checkout
+    console.log("At checkout...");
+    const currentUrl = page.url();
+    console.log("Current URL:", currentUrl);
+    
+    if (currentUrl.includes('/quote/')) {
+       // Wait for checkout elements
+       console.log("Clicking Complete Booking...");
+       await clickBtn('Complete Booking');
+       await new Promise(r => setTimeout(r, 3000));
+    }
+
+  } catch (err) {
+    console.log('Test execution error:', err.message);
+  }
+  
+  console.log("--- TEST SUMMARY ---");
+  console.log("Errors detected:", errors.length);
+  errors.forEach(e => console.log("-", e));
+  
+  await browser.close();
+})();
