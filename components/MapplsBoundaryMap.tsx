@@ -56,7 +56,7 @@ function loadMapplsSDK(cb: () => void) {
     cbs.forEach((fn) => fn());
   };
 
-  const apiKey = process.env.NEXT_PUBLIC_MAPPLS_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_MAPPLS_API_KEY?.trim();
   if (!apiKey) {
     console.error("Mappls API key is missing (NEXT_PUBLIC_MAPPLS_API_KEY)");
     return;
