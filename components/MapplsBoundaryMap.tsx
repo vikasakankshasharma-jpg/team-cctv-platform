@@ -225,7 +225,9 @@ export default function MapplsBoundaryMap({
                     const data = await res.json();
                     let pLat = data.lat;
                     let pLng = data.lng;
+                    
                     const allAreas = data.areas || [];
+                    const subAreasDb = data.sub_areas || {}; // Get DB cached areas
 
                     // Draw main pincode circle in light gray
                     if (pLat && pLng) {
@@ -253,24 +255,44 @@ export default function MapplsBoundaryMap({
                        
                        let aLat, aLng;
                        const cacheKey = `geo_${pin}_${area}`;
-                       const cached = localStorage.getItem(cacheKey);
-                       if (cached) {
-                          const c = JSON.parse(cached);
-                          aLat = c.lat;
-                          aLng = c.lng;
+                       
+                       // 1. Check if Firebase DB knows it (Zero API hits)
+                       if (subAreasDb[area] && subAreasDb[area].lat && subAreasDb[area].lng) {
+                          aLat = subAreasDb[area].lat;
+                          aLng = subAreasDb[area].lng;
+                          // sync to local just in case
+                          localStorage.setItem(cacheKey, JSON.stringify({lat: aLat, lng: aLng}));
                        } else {
-                          await new Promise(r => setTimeout(r, 800)); // prevent rate limit
-                          try {
-                            const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(area + " " + pin + " India")}&format=json`);
-                            if (geoRes.ok) {
-                               const geoData = await geoRes.json();
-                               if (geoData && geoData.length > 0) {
-                                  aLat = parseFloat(geoData[0].lat);
-                                  aLng = parseFloat(geoData[0].lon);
-                                  localStorage.setItem(cacheKey, JSON.stringify({lat: aLat, lng: aLng}));
+                          // 2. Check local browser cache
+                          const cached = localStorage.getItem(cacheKey);
+                          if (cached) {
+                             const c = JSON.parse(cached);
+                             aLat = c.lat;
+                             aLng = c.lng;
+                          } else {
+                             // 3. Fallback to OpenStreetMap + Save to Firebase forever!
+                             await new Promise(r => setTimeout(r, 800)); // prevent rate limit
+                             try {
+                               const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(area + " " + pin + " India")}&format=json`);
+                               if (geoRes.ok) {
+                                  const geoData = await geoRes.json();
+                                  if (geoData && geoData.length > 0) {
+                                     aLat = parseFloat(geoData[0].lat);
+                                     aLng = parseFloat(geoData[0].lon);
+                                     
+                                     // Cache locally
+                                     localStorage.setItem(cacheKey, JSON.stringify({lat: aLat, lng: aLng}));
+                                     
+                                     // Save permanently to Firebase (Lazy Geocoding)
+                                     fetch(`/api/pincode/${pin.trim()}`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ area, lat: aLat, lng: aLng })
+                                     }).catch(err => console.warn('Failed to save geo to db:', err));
+                                  }
                                }
-                            }
-                          } catch(e) {}
+                             } catch(e) {}
+                          }
                        }
 
                        // Approximate if geocoding fails

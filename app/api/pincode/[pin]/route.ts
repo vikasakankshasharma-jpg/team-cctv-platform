@@ -56,6 +56,7 @@ export async function GET(
     let radius: number | undefined;
 
     let aiAreas: string[] | undefined = undefined;
+    let subAreas: Record<string, {lat: number, lng: number}> = {};
 
     const cacheRef = adminDb.collection("pincode_cache").doc(pin);
     const cacheSnap = await cacheRef.get();
@@ -69,6 +70,9 @@ export async function GET(
       }
       if (c && c.ai_areas && Array.isArray(c.ai_areas) && c.ai_areas.length > 0) {
          aiAreas = c.ai_areas;
+      }
+      if (c && c.sub_areas) {
+         subAreas = c.sub_areas;
       }
     }
 
@@ -221,6 +225,7 @@ export async function GET(
         lng,
         radius,
         areas: aiAreas && aiAreas.length > 0 ? aiAreas : formattedAreas,
+        sub_areas: subAreas,
         message: served ? "" : "Nearest serviceable area shown as reference."
       },
       { status: 200 }
@@ -232,3 +237,28 @@ export async function GET(
 
 
 
+
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ pin: string }> }
+) {
+  const { pin } = await params;
+  try {
+    const body = await req.json();
+    const { area, lat, lng } = body;
+    if (!area || typeof lat !== "number" || typeof lng !== "number") {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const cacheRef = adminDb.collection("pincode_cache").doc(pin);
+    await cacheRef.set({
+      [`sub_areas.${area}`]: { lat, lng },
+      updated_at: serverTimestamp()
+    }, { merge: true });
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
