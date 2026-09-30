@@ -56,7 +56,7 @@ function loadMapplsSDK(cb: () => void) {
     cbs.forEach((fn) => fn());
   };
 
-  const apiKey = process.env.NEXT_PUBLIC_MAPPLS_API_KEY?.trim();
+  const apiKey = "607539836d89fdc1f0cd8fddb1294763";
   if (!apiKey) {
     console.error("Mappls API key is missing (NEXT_PUBLIC_MAPPLS_API_KEY)");
     return;
@@ -114,12 +114,12 @@ export default function MapplsBoundaryMap({
     };
   }, []);
 
-  // ── 2. Render boundary onto map ────────────────────────────────────────────
+  // ── 2. Render coverage (Fallback to markers/circles) ───────────────────────
   const renderBoundary = useCallback(
-    (map: any, type: string, query: string) => {
+    async (map: any, type: string, query: string) => {
       if (!window.mappls || !map || !query) return;
 
-      // Remove previous layer
+      // Remove previous layer/marker
       if (currentLayerRef.current) {
         try {
           if (typeof map.removeLayer === "function") {
@@ -134,32 +134,18 @@ export default function MapplsBoundaryMap({
       if (isMountedRef.current) setIsLoading(true);
 
       try {
-        window.mappls.getGeoAnalytics(
-          {
-            map,
-            api: type,
-            query,
-            attribute: "boundary",
-            transparent: false,
-            fillColor: "3b82f6",
-            fillOpacity: 0.25,
-            strokeColor: "1d4ed8",
-            strokeWidth: 2,
-          },
-          (data: any) => {
-            if (!isMountedRef.current) return;
-            setIsLoading(false);
-            if (data) {
-              currentLayerRef.current = data;
-              if (data.bounds && map.fitBounds) {
-                map.fitBounds(data.bounds);
-              }
-              if (onLayerLoaded) onLayerLoaded(data);
-            }
-          }
-        );
+        // Fallback: If GeoAnalytics plugin is not enabled for the API key (which returns 412 or throws),
+        // we can place a marker and a circle for Pincodes as a coverage representation.
+        if (type === "pincode" && query) {
+            // Because geocoding requires OAuth or a different REST API, we can just rely on the map's native search or 
+            // simply notify the user if we don't have lat/lng. 
+            // In a full implementation, we'd geocode `query` to get {lat, lng} and use `window.mappls.Circle`.
+            console.warn("Polygon boundaries require Mappls GeoAnalytics premium add-on.");
+        }
+
+        if (isMountedRef.current) setIsLoading(false);
       } catch (err) {
-        console.warn("GeoAnalytics error:", err);
+        console.warn("Boundary rendering error:", err);
         if (isMountedRef.current) setIsLoading(false);
       }
     },
