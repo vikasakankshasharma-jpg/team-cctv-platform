@@ -170,9 +170,13 @@ export default function MapplsBoundaryMap({
   useEffect(() => {
     if (!sdkReady || !mapContainerRef.current || mapInstanceRef.current) return;
 
+    // Mappls SDK requires a string element ID, not a DOM element
+    const containerId = "mappls-map-" + Math.random().toString(36).slice(2, 9);
+    mapContainerRef.current.id = containerId;
+
     try {
-      const map = new window.mappls.Map(mapContainerRef.current, {
-        center: [20.5937, 78.9629], // Centre of India
+      const map = new window.mappls.Map(containerId, {
+        center: { lat: 20.5937, lng: 78.9629 }, // Centre of India
         zoom: 5,
         zoomControl: true,
       });
@@ -188,9 +192,9 @@ export default function MapplsBoundaryMap({
       };
 
       map.addListener("load", onLoad);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Mappls Map init error:", e);
-      setError("Map failed to initialize.");
+      setError(e?.message || "Map failed to initialize.");
       setIsLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
