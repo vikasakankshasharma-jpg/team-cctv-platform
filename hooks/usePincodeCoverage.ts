@@ -38,7 +38,7 @@ export function usePincodeCoverage(isLoaded: boolean, inputPincodes: PincodeData
     toGeocode.forEach(async (p) => {
       fetchingRef.current.add(p.pincode);
       try {
-        const res = await fetch(\`/api/pincode/\${p.pincode}\`);
+        const res = await fetch(`/api/pincode/${p.pincode}`);
         if (res.ok) {
           const data = await res.json();
           if (data.lat && data.lng) {
