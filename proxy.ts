@@ -43,12 +43,15 @@ export function proxy(request: NextRequest) {
   // CSP Definition
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://maps.googleapis.com https://checkout.razorpay.com https://*.razorpay.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' blob: data: https://*.googleapis.com https://*.gstatic.com https://*.google.com;
-    font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://lumberjack-cx.razorpay.com;
-    frame-src 'self' https://www.google.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com https://*.razorpay.com https://www.google.com https://www.gstatic.com https://*.googleapis.com https://www.recaptcha.net https://*.firebaseapp.com https://www.googletagmanager.com https://connect.facebook.net https://apis.mappls.com https://*.mappls.com blob:;
+    script-src-elem 'self' 'unsafe-inline' https://checkout.razorpay.com https://*.razorpay.com https://www.google.com https://www.gstatic.com https://*.googleapis.com https://www.recaptcha.net https://*.firebaseapp.com https://www.googletagmanager.com https://connect.facebook.net https://apis.mappls.com https://*.mappls.com blob:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://apis.mappls.com https://*.mappls.com;
+    style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://apis.mappls.com https://*.mappls.com;
+    img-src 'self' blob: data: https: http:;
+    font-src 'self' https://fonts.gstatic.com https://apis.mappls.com https://*.mappls.com;
+    connect-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://lumberjack-cx.razorpay.com https://*.googleapis.com https://*.google.com https://www.google.com https://www.recaptcha.net https://*.firebaseapp.com https://*.firebasestorage.app https://vitals.vercel-insights.com https://*.sentry.io https://api.postalpincode.in https://aniket-thapa.github.io https://nominatim.openstreetmap.org https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://connect.facebook.net https://www.facebook.com https://apis.mappls.com https://*.mappls.com;
+    frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://www.google.com https://www.recaptcha.net https://*.firebaseapp.com;
+    worker-src 'self' blob:;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
