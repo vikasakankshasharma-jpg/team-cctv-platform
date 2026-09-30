@@ -1,7 +1,6 @@
 import React, { useRef, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-// Leaflet icon fix for Next.js if needed, but since it's just a fallback we'll keep it simple
 
 interface MarkerProps {
   id: string;
@@ -9,12 +8,23 @@ interface MarkerProps {
   lng: number;
   draggable?: boolean;
   onDragEnd?: (lat: number, lng: number) => void;
+  iconUrl?: string;
+  onClick?: () => void;
+}
+
+interface PolylineProps {
+  id: string;
+  path: { lat: number; lng: number }[];
+  color?: string;
+  weight?: number;
+  opacity?: number;
 }
 
 interface LeafletMapFallbackProps {
   center: { lat: number; lng: number };
   zoom: number;
   markers: MarkerProps[];
+  polylines?: PolylineProps[];
   onClick?: (lat: number, lng: number) => void;
 }
 
@@ -43,6 +53,11 @@ const LeafletDraggableMarker = ({ marker }: { marker: MarkerProps }) => {
           }
         }
       },
+      click() {
+        if (marker.onClick) {
+          marker.onClick();
+        }
+      }
     }),
     [marker]
   );
@@ -50,14 +65,14 @@ const LeafletDraggableMarker = ({ marker }: { marker: MarkerProps }) => {
   return (
     <Marker
       draggable={marker.draggable}
-      eventHandlers={marker.draggable ? eventHandlers : undefined}
+      eventHandlers={eventHandlers}
       position={[marker.lat, marker.lng]}
       ref={leafletRef}
     />
   );
 };
 
-export default function LeafletMapFallback({ center, zoom, markers, onClick }: LeafletMapFallbackProps) {
+export default function LeafletMapFallback({ center, zoom, markers, polylines, onClick }: LeafletMapFallbackProps) {
   return (
     <MapContainer
       center={[center.lat, center.lng]}
@@ -71,6 +86,13 @@ export default function LeafletMapFallback({ center, zoom, markers, onClick }: L
       <MapClickHandler onClick={onClick} />
       {markers.map((marker) => (
         <LeafletDraggableMarker key={marker.id} marker={marker} />
+      ))}
+      {polylines && polylines.map((poly) => (
+        <Polyline 
+          key={poly.id} 
+          positions={poly.path.map(p => [p.lat, p.lng] as [number, number])} 
+          pathOptions={{ color: poly.color || '#3b82f6', weight: poly.weight || 4, opacity: poly.opacity || 0.8 }} 
+        />
       ))}
     </MapContainer>
   );

@@ -41,6 +41,7 @@ export default function HybridMap({
   center,
   zoom,
   markers,
+  polylines,
   onClick,
 }: HybridMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -197,7 +198,7 @@ export default function HybridMap({
 
       {mapEngine === "leaflet" && (
         <div className="w-full h-full absolute inset-0 z-0">
-          <LeafletMapFallback center={center} zoom={zoom} markers={markers} onClick={onClick} />
+          <LeafletMapFallback center={center} zoom={zoom} markers={markers} polylines={polylines} onClick={onClick} />
         </div>
       )}
     </div>
