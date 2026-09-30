@@ -81,6 +81,7 @@ function loadMapplsSDK(cb: () => void) {
 export default function MapplsBoundaryMap({
   boundaryType = "district",
   boundaryQuery = "",
+  boundaryData,
   height = "300px",
   className = "",
   onLayerLoaded,
