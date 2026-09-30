@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     // Inject AI Areas from cache if this is an offices request
     if (type === "offices" && Array.isArray(data)) {
       const uniquePins = Array.from(new Set(data.map((o: any) => o.pincode))).filter(Boolean) as string[];
-      const aiCacheMap = new Map<string, string[]>();
+      const aiCacheMap = new Map<string, any>();
       
       // Batch fetch in chunks of 30 (Firestore limit is 30 for 'in')
       for (let i = 0; i < uniquePins.length; i += 30) {
@@ -60,7 +60,7 @@ export async function GET(req: Request) {
       // Map back to data
       data = data.map((o: any) => {
         if (o.pincode && aiCacheMap.has(o.pincode)) {
-          return { ...o, ai_areas: aiCacheMap.get(o.pincode) };
+          return { ...o, ...aiCacheMap.get(o.pincode) };
         }
         return o;
       });

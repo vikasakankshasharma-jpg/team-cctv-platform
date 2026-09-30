@@ -84,6 +84,7 @@ export interface PincodeGroupedData {
   pincode: string;
   areas: string[];
   allAreas: string[];
+  quadrants?: any[];
   lat?: number;
   lng?: number;
   radius: number;
@@ -153,6 +154,7 @@ export function computeDistrictPincodes(offices: any[]): PincodeGroupedData[] {
   // Step 6: Group offices by pincode using only high-quality coordinates
   const pincodeMap = new Map<string, {
     areas: Set<string>;
+    quadrants?: any[];
     validCoords: { lat: number; lng: number; isMain: boolean }[];
   }>();
 
@@ -165,6 +167,9 @@ export function computeDistrictPincodes(offices: any[]): PincodeGroupedData[] {
 
     if (!pincodeMap.has(o.pincode)) {
       pincodeMap.set(o.pincode, { areas: new Set(), validCoords: [] });
+    }
+    if (o.quadrants) {
+      pincodeMap.get(o.pincode)!.quadrants = o.quadrants;
     }
     const group = pincodeMap.get(o.pincode)!;
     const name = o.officeName || o.office;
@@ -208,6 +213,7 @@ export function computeDistrictPincodes(offices: any[]): PincodeGroupedData[] {
         pincode,
         areas: Array.from(data.areas).slice(0, 4),
         allAreas: Array.from(data.areas),
+        quadrants: data.quadrants,
         ...(lat && lng ? { lat, lng } : {}), // Omit lat/lng if not found to trigger client geocoding
         radius: 4000
       };
