@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   AlertCircle
 } from "lucide-react";
-import { useJsApiLoader, GoogleMap, MarkerF } from "@react-google-maps/api";
+import HybridMap from "../maps/HybridMap";
 import { getPincodeCoordinates, Coordinates } from "@/lib/geo-utils";
 import { toast } from "sonner";
 
@@ -47,15 +47,6 @@ export function LocationPickerModal({
 
   const [isLocatingGPS, setIsLocatingGPS] = useState(false);
   const [pincodeResolved, setPincodeResolved] = useState(false);
-  const [map, setMap] = useState<unknown>(null);
-
-  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyAPRR097NlrXF-8BiJ_sbnzzQw9NQYdtnA";
-
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: googleMapsApiKey,
-    libraries: typeof window !== "undefined" ? ((window as any).__google_maps_libraries__) || ((window as any).__google_maps_libraries__ = ["places"]) : ["places"]
-  });
 
   // When modal opens, center on Pincode if provided and no prior coords set
   useEffect(() => {
@@ -63,23 +54,8 @@ export function LocationPickerModal({
       if (initialCoords && initialCoords.lat && initialCoords.lng) {
         setCoords(initialCoords);
         setPincodeResolved(true);
-      } else if (initialPincode && initialPincode.length >= 6 && isLoaded && window.google) {
-        // Use Google Maps Geocoder for precise 6-digit PIN location
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ address: `${initialPincode}, India` }, (results, status) => {
-          if (status === "OK" && results && results.length > 0) {
-            const loc = results[0].geometry.location;
-            setCoords({ lat: loc.lat(), lng: loc.lng() });
-            setPincodeResolved(true);
-          } else {
-            // Fallback to coarse 3-digit mapping
-            const pinCoords = getPincodeCoordinates(initialPincode);
-            setCoords(pinCoords || DEFAULT_COORDS);
-            setPincodeResolved(!!pinCoords);
-          }
-        });
       } else if (initialPincode && initialPincode.length >= 3) {
-        // Fallback to coarse 3-digit mapping before map loads
+        // Fallback to coarse 3-digit mapping
         const pinCoords = getPincodeCoordinates(initialPincode);
         if (pinCoords) {
           setCoords(pinCoords);
@@ -90,15 +66,7 @@ export function LocationPickerModal({
         }
       }
     }
-  }, [isOpen, initialPincode, initialCoords, isLoaded]);
-
-  const onLoad = useCallback(function callback(mapInstance: unknown) {
-    setMap(mapInstance);
-  }, []);
-
-  const onUnmount = useCallback(function callback() {
-    setMap(null);
-  }, []);
+  }, [isOpen, initialPincode, initialCoords]);
 
   // One-click GPS Location Grabber
   const handleUseCurrentGPS = () => {
@@ -214,59 +182,20 @@ export function LocationPickerModal({
 
           {/* Interactive Map Canvas */}
           <div className="relative w-full h-[320px] sm:h-[380px] bg-slate-100">
-            {isLoaded && !loadError ? (
-              <GoogleMap
-                mapContainerStyle={{ width: "100%", height: "100%" }}
-                center={coords}
-                zoom={16}
-                options={{
-                  disableDefaultUI: false,
-                  zoomControl: true,
-                  mapTypeControl: false,
-                  streetViewControl: false,
-                  fullscreenControl: false,
-                  gestureHandling: "greedy" // smooth mobile touch drag
-                }}
-                onLoad={onLoad}
-                onUnmount={onUnmount}
-                onClick={(e) => {
-                  if (e.latLng) {
-                    setCoords({ lat: e.latLng.lat(), lng: e.latLng.lng() });
-                  }
-                }}
-              >
-                <MarkerF
-                  position={coords}
-                  draggable={true}
-                  onDragEnd={(e) => {
-                    if (e.latLng) {
-                      setCoords({ lat: e.latLng.lat(), lng: e.latLng.lng() });
-                    }
-                  }}
-                  title="Your Installation Site"
-                />
-              </GoogleMap>
-            ) : loadError ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-50">
-                <AlertCircle className="w-8 h-8 text-amber-500 mb-2" />
-                <p className="text-xs font-bold text-slate-800">Visual Map Unavailable</p>
-                <p className="text-[11px] text-slate-500 mt-1 max-w-xs">
-                  Coordinates locked to PIN {initialPincode || "302001"}. You can still use your device GPS below.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleUseCurrentGPS}
-                  className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold"
-                >
-                  Fetch Current GPS
-                </button>
-              </div>
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 gap-2">
-                <Loader2 className="w-7 h-7 text-blue-600 animate-spin" />
-                <p className="text-xs text-slate-500 font-medium">Centering map on {initialPincode || "site"}...</p>
-              </div>
-            )}
+            <HybridMap
+              center={coords}
+              zoom={16}
+              onClick={(lat, lng) => setCoords({ lat, lng })}
+              markers={[
+                {
+                  id: "user-location",
+                  lat: coords.lat,
+                  lng: coords.lng,
+                  draggable: true,
+                  onDragEnd: (lat, lng) => setCoords({ lat, lng }),
+                }
+              ]}
+            />
 
             {/* Float Badge with Coordinates */}
             <div className="absolute bottom-3 left-3 right-3 pointer-events-none z-10">
