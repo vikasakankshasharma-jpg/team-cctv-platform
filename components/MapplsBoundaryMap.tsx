@@ -13,7 +13,7 @@ declare global {
 }
 
 interface MapplsBoundaryMapProps {
-  boundaryType?: "district" | "pincode" | "state" | "subDistrict" | "city";
+  boundaryType?: "district" | "pincode" | "state" | "subDistrict" | "city" | "multi_pincode" | "zone";
   boundaryQuery?: string;
   height?: string;
   className?: string;
