@@ -72,7 +72,7 @@ export async function GET(
       }
     }
 
-    // 3. If not cached, calculate using Google Geocoding API
+    // 3. If not cached, calculate using Geocoding APIs
     if (!lat || !lng || !radius) {
        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
        if (apiKey) {
@@ -131,15 +131,34 @@ export async function GET(
              lng = centroidLng;
              radius = Math.max(maxRadius + 1000, 2000);
           }
-
-          // Cache it if we found it
-          if (lat && lng && radius) {
-             await cacheRef.set({
-               lat, lng, radius,
-               areas: formattedAreas,
-               updated_at: serverTimestamp()
-             }, { merge: true });
+       }
+       
+       // Fallback to OpenStreetMap (Nominatim) if Google Maps didn't yield results
+       if (!lat || !lng) {
+          try {
+             const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${pin}+India&format=json`, {
+               headers: { 'User-Agent': 'CCTVQuotationApp/1.0' }
+             });
+             if (geoRes.ok) {
+                const geoData = await geoRes.json();
+                if (geoData && geoData.length > 0) {
+                   lat = parseFloat(geoData[0].lat);
+                   lng = parseFloat(geoData[0].lon);
+                   radius = 5000;
+                }
+             }
+          } catch (e) {
+             console.error("Nominatim fallback failed:", e);
           }
+       }
+
+       // Cache it if we found it
+       if (lat && lng && radius) {
+          await cacheRef.set({
+            lat, lng, radius,
+            areas: formattedAreas,
+            updated_at: serverTimestamp()
+          }, { merge: true });
        }
     }
 

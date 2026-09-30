@@ -150,11 +150,32 @@ export default function MapplsBoundaryMap({
                   const res = await fetch(`/api/pincode/${pinQuery.trim()}`);
                   if (res.ok) {
                     const data = await res.json();
-                    if (data.lat && data.lng) {
+                    let lat = data.lat;
+                    let lng = data.lng;
+                    let radius = data.radius || 4000;
+                    
+                    // Frontend Fallback if backend didn't have Google Maps API key and got blocked by Nominatim
+                    if (!lat || !lng) {
+                       try {
+                         const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${pinQuery.trim()}+India&format=json`);
+                         if (geoRes.ok) {
+                           const geoData = await geoRes.json();
+                           if (geoData && geoData.length > 0) {
+                              lat = parseFloat(geoData[0].lat);
+                              lng = parseFloat(geoData[0].lon);
+                              radius = 5000;
+                           }
+                         }
+                       } catch(e) {
+                         console.warn("Frontend nominatim fallback failed:", e);
+                       }
+                    }
+
+                    if (lat && lng) {
                        const circle = new window.mappls.Circle({
                          map: map,
-                         center: { lat: data.lat, lng: data.lng },
-                         radius: data.radius || 4000,
+                         center: { lat: lat, lng: lng },
+                         radius: radius,
                          fillColor: "3b82f6",
                          fillOpacity: 0.25,
                          strokeColor: "1d4ed8",
