@@ -176,9 +176,9 @@ export default function MapplsBoundaryMap({
                          map: map,
                          center: { lat: lat, lng: lng },
                          radius: radius,
-                         fillColor: "3b82f6",
+                         fillColor: "#3b82f6",
                          fillOpacity: 0.25,
-                         strokeColor: "1d4ed8",
+                         strokeColor: "#1d4ed8",
                          strokeWidth: 2,
                        });
                        newLayers.push(circle);
@@ -209,17 +209,14 @@ export default function MapplsBoundaryMap({
               console.warn("Failed to fetch pincode coverage:", e);
             }
         } else if (type === "district" && query) {
-            // For districts, we can use Mappls geocoding to at least center the map
+            // For districts, we can use Nominatim to at least center the map
             try {
-               const token = await fetchMapplsToken();
-               const geoRes = await fetch(`https://atlas.mappls.com/api/places/geocode?address=${query}`, {
-                 headers: { Authorization: `bearer ${token}` }
-               });
+               const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}+District+India&format=json`);
                if (geoRes.ok) {
                  const geoData = await geoRes.json();
-                 if (geoData.copResults && geoData.copResults.eLoc) {
+                 if (geoData && geoData.length > 0) {
                     if (map.setCenter) {
-                        map.setCenter({ eLoc: geoData.copResults.eLoc });
+                        map.setCenter({ lat: parseFloat(geoData[0].lat), lng: parseFloat(geoData[0].lon) });
                         if (map.setZoom) map.setZoom(9);
                     }
                  }
