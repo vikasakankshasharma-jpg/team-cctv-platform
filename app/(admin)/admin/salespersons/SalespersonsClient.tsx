@@ -1206,8 +1206,8 @@ export default function SalespersonsClient() {
 
                     {showZoneMap && (
                       <MapplsBoundaryMap 
-                        boundaryType={modalMapQuery?.type || 'district'}
-                        boundaryQuery={modalMapQuery?.query || selectedDistrict.name}
+                        boundaryType={newZone.pincodes && newZone.pincodes.length > 0 ? "multi_pincode" : (modalMapQuery?.type || 'district')}
+                        boundaryQuery={newZone.pincodes && newZone.pincodes.length > 0 ? Array.from(new Set(newZone.pincodes.map(p => p.split(':')[0]))).join(",") : (modalMapQuery?.query || selectedDistrict.name)}
                         height="260px"
                       />
                     )}

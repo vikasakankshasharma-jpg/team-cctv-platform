@@ -56,7 +56,7 @@ function loadMapplsSDK(cb: () => void) {
     cbs.forEach((fn) => fn());
   };
 
-  const apiKey = "607539836d89fdc1f0cd8fddb1294763";
+  const apiKey = process.env.NEXT_PUBLIC_MAPPLS_API_KEY?.trim() || "607539836d89fdc1f0cd8fddb1294763";
   if (!apiKey) {
     console.error("Mappls API key is missing (NEXT_PUBLIC_MAPPLS_API_KEY)");
     return;
@@ -119,14 +119,17 @@ export default function MapplsBoundaryMap({
     async (map: any, type: string, query: string) => {
       if (!window.mappls || !map || !query) return;
 
-      // Remove previous layer/marker
+      // Remove previous layer/marker/circles
       if (currentLayerRef.current) {
         try {
-          if (typeof map.removeLayer === "function") {
-            map.removeLayer(currentLayerRef.current);
-          } else if (window.mappls.remove) {
-            window.mappls.remove({ map, layer: currentLayerRef.current });
-          }
+          const layers = Array.isArray(currentLayerRef.current) ? currentLayerRef.current : [currentLayerRef.current];
+          layers.forEach(layer => {
+            if (typeof map.removeLayer === "function") {
+              map.removeLayer(layer);
+            } else if (window.mappls.remove) {
+              window.mappls.remove({ map, layer: layer });
+            }
+          });
         } catch (_) {}
         currentLayerRef.current = null;
       }
@@ -134,13 +137,75 @@ export default function MapplsBoundaryMap({
       if (isMountedRef.current) setIsLoading(true);
 
       try {
-        // Fallback: If GeoAnalytics plugin is not enabled for the API key (which returns 412 or throws),
-        // we can place a marker and a circle for Pincodes as a coverage representation.
-        if (type === "pincode" && query) {
-            // Because geocoding requires OAuth or a different REST API, we can just rely on the map's native search or 
-            // simply notify the user if we don't have lat/lng. 
-            // In a full implementation, we'd geocode `query` to get {lat, lng} and use `window.mappls.Circle`.
-            console.warn("Polygon boundaries require Mappls GeoAnalytics premium add-on.");
+        // Fallback: If GeoAnalytics plugin is not enabled for the API key,
+        // we can place a circle for Pincodes as a coverage representation.
+        if ((type === "pincode" || type === "multi_pincode") && query) {
+            try {
+              const queries = query.split(",");
+              const newLayers: any[] = [];
+              const boundsList: any[] = [];
+              
+              await Promise.all(queries.map(async (pinQuery) => {
+                try {
+                  const res = await fetch(`/api/pincode/${pinQuery.trim()}`);
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data.lat && data.lng) {
+                       const circle = new window.mappls.Circle({
+                         map: map,
+                         center: { lat: data.lat, lng: data.lng },
+                         radius: data.radius || 4000,
+                         fillColor: "3b82f6",
+                         fillOpacity: 0.25,
+                         strokeColor: "1d4ed8",
+                         strokeWidth: 2,
+                       });
+                       newLayers.push(circle);
+                       if (circle.getBounds) {
+                          boundsList.push(circle.getBounds());
+                       }
+                    }
+                  }
+                } catch (e) {}
+              }));
+              
+              currentLayerRef.current = newLayers;
+              
+              if (boundsList.length > 0 && map.fitBounds) {
+                // Combine bounds if multiple
+                if (boundsList.length === 1) {
+                   map.fitBounds(boundsList[0]);
+                } else {
+                   // Calculate min/max lat/lng to create a combined bounding box
+                   // Note: Mappls bounds structure might be [[sw_lat, sw_lng], [ne_lat, ne_lng]] or similar
+                   // Let's just use the built-in bounds extension if possible, or fall back to zooming out
+                   // Actually, a simpler way is to just use the first bounds and zoom out slightly
+                   map.fitBounds(boundsList[0]);
+                   if (map.setZoom) map.setZoom(10);
+                }
+              }
+            } catch (e) {
+              console.warn("Failed to fetch pincode coverage:", e);
+            }
+        } else if (type === "district" && query) {
+            // For districts, we can use Mappls geocoding to at least center the map
+            try {
+               const token = await fetchMapplsToken();
+               const geoRes = await fetch(`https://atlas.mappls.com/api/places/geocode?address=${query}`, {
+                 headers: { Authorization: `bearer ${token}` }
+               });
+               if (geoRes.ok) {
+                 const geoData = await geoRes.json();
+                 if (geoData.copResults && geoData.copResults.eLoc) {
+                    if (map.setCenter) {
+                        map.setCenter({ eLoc: geoData.copResults.eLoc });
+                        if (map.setZoom) map.setZoom(9);
+                    }
+                 }
+               }
+            } catch (e) {
+               console.warn("Failed to geocode district:", e);
+            }
         }
 
         if (isMountedRef.current) setIsLoading(false);
