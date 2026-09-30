@@ -11,12 +11,23 @@ interface MarkerProps {
   lng: number;
   draggable?: boolean;
   onDragEnd?: (lat: number, lng: number) => void;
+  iconUrl?: string;
+  onClick?: () => void;
+}
+
+interface PolylineProps {
+  id: string;
+  path: { lat: number; lng: number }[];
+  color?: string;
+  weight?: number;
+  opacity?: number;
 }
 
 interface HybridMapProps {
   center: { lat: number; lng: number };
   zoom: number;
   markers: MarkerProps[];
+  polylines?: PolylineProps[];
   onClick?: (lat: number, lng: number) => void;
 }
 
@@ -110,7 +121,14 @@ export default function HybridMap({
             map: mapplsMapRef.current,
             position: [markerData.lat, markerData.lng],
             draggable: markerData.draggable || false,
+            ...(markerData.iconUrl ? { icon: markerData.iconUrl } : {})
           });
+
+          if (markerData.onClick) {
+            newMarker.addListener("click", () => {
+              if (markerData.onClick) markerData.onClick();
+            });
+          }
 
           if (markerData.draggable && markerData.onDragEnd) {
             newMarker.addListener("dragend", () => {
@@ -126,6 +144,39 @@ export default function HybridMap({
       });
     }
   }, [markers, mapEngine]);
+
+  const mapplsPolylinesRef = useRef<{ [id: string]: any }>({});
+  
+  useEffect(() => {
+    if (mapEngine === "mappls" && mapplsMapRef.current && window.mappls && polylines) {
+      const newPolyIds = new Set(polylines.map((p) => p.id));
+      Object.keys(mapplsPolylinesRef.current).forEach((id) => {
+        if (!newPolyIds.has(id)) {
+          mapplsPolylinesRef.current[id].remove();
+          delete mapplsPolylinesRef.current[id];
+        }
+      });
+
+      polylines.forEach((poly) => {
+        const existingPoly = mapplsPolylinesRef.current[poly.id];
+        const mapplsPath = poly.path.map(p => ({ lat: p.lat, lng: p.lng }));
+        
+        if (existingPoly) {
+          existingPoly.setPath(mapplsPath);
+        } else {
+          const newPoly = new window.mappls.Polyline({
+            map: mapplsMapRef.current,
+            path: mapplsPath,
+            strokeColor: poly.color || "#3b82f6",
+            strokeOpacity: poly.opacity || 0.8,
+            strokeWeight: poly.weight || 4,
+            fitbounds: true // optional to fit route
+          });
+          mapplsPolylinesRef.current[poly.id] = newPoly;
+        }
+      });
+    }
+  }, [polylines, mapEngine]);
 
   if (mapEngine === "loading") {
     return (

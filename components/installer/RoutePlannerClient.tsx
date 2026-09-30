@@ -21,9 +21,10 @@ import {
   Locate,
   Car,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  X
 } from "lucide-react";
-import { GoogleMap, MarkerF, PolylineF, InfoWindowF, useJsApiLoader } from "@react-google-maps/api";
+import HybridMap from "@/components/maps/HybridMap";
 import { toast } from "sonner";
 
 import { 
@@ -103,10 +104,6 @@ export function RoutePlannerClient() {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [technicianLocation, setTechnicianLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locatingUser, setLocatingUser] = useState(false);
-
-  const { isLoaded: isMapLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-  });
 
   // Fetch route and pending jobs
   const fetchRoute = useCallback(async (date: string) => {
@@ -560,98 +557,47 @@ export function RoutePlannerClient() {
       ) : activeTab === "map" ? (
         /* MAP VIEW */
         <div className="h-[520px] w-full rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm relative">
-          {isMapLoaded ? (
-            <GoogleMap
-              mapContainerStyle={mapContainerStyle}
-              center={defaultCenter}
-              zoom={12}
-              options={{
-                disableDefaultUI: false,
-                zoomControl: true,
-                mapTypeControl: false,
-              }}
-            >
-              {/* Technician's Current Location Marker */}
-              {technicianLocation && (
-                <MarkerF
-                  position={technicianLocation}
-                  icon={{
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 9,
-                    fillColor: "#0284C7",
-                    fillOpacity: 1,
-                    strokeColor: "#ffffff",
-                    strokeWeight: 3,
-                  }}
-                  title="You (Technician)"
-                />
-              )}
-
-              {/* Stop Markers */}
-              {scheduledStops.map((stop, idx) => {
-                if (!stop.coordinates?.lat || !stop.coordinates?.lng) return null;
-                const isCompleted = stop.status === "completed" || stop.status === "WON";
-                return (
-                  <MarkerF
-                    key={stop.id}
-                    position={stop.coordinates}
-                    label={{
-                      text: `${idx + 1}`,
-                      color: "#ffffff",
-                      fontWeight: "bold",
-                    }}
-                    onClick={() => setSelectedMarker(stop)}
-                  />
-                );
-              })}
-
-              {/* Connecting Polyline Route */}
-              <PolylineF
-                path={[
-                  ...(technicianLocation ? [technicianLocation] : []),
-                  ...scheduledStops
-                    .filter((s) => s.coordinates?.lat && s.coordinates?.lng)
-                    .map((s) => s.coordinates!),
-                ]}
-                options={{
-                  strokeColor: "#2563EB",
-                  strokeOpacity: 0.8,
-                  strokeWeight: 4,
-                }}
-              />
-
-              {/* Marker Info Window */}
-              {selectedMarker && selectedMarker.coordinates && (
-                <InfoWindowF
-                  position={selectedMarker.coordinates}
-                  onCloseClick={() => setSelectedMarker(null)}
-                >
-                  <div className="p-2 text-zinc-900 max-w-[220px]">
-                    <p className="font-bold text-xs text-blue-600">
-                      Stop #{scheduledStops.findIndex((s) => s.id === selectedMarker.id) + 1} •{" "}
-                      {TIME_SLOT_LABELS[selectedMarker.time_slot || "morning"]?.label}
-                    </p>
-                    <p className="font-bold text-sm mt-0.5">{selectedMarker.customer_name || "Customer"}</p>
-                    <p className="text-[11px] text-zinc-600 mt-1 line-clamp-2">
-                      {selectedMarker.address?.street || selectedMarker.billing_details?.address_line1 || "Jaipur"}
-                    </p>
-                    {selectedMarker.mobile_number && (
-                      <a
-                        href={`tel:${selectedMarker.mobile_number}`}
-                        className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-bold mt-2"
-                      >
-                        <Phone className="w-3 h-3" /> Call {selectedMarker.mobile_number}
-                      </a>
-                    )}
-                  </div>
-                </InfoWindowF>
-              )}
-            </GoogleMap>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-500">
-              Loading Google Maps...
-            </div>
-          )}
+          <HybridMap
+  center={defaultCenter}
+  zoom={12}
+  markers={[
+    ...(technicianLocation ? [{
+      id: "tech-loc",
+      lat: technicianLocation.lat,
+      lng: technicianLocation.lng,
+      iconUrl: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#0284C7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>')
+    }] : []),
+    ...scheduledStops.filter(s => s.coordinates?.lat && s.coordinates?.lng).map((stop, idx) => ({
+      id: stop.id,
+      lat: stop.coordinates!.lat,
+      lng: stop.coordinates!.lng,
+      onClick: () => setSelectedMarker(stop),
+      iconUrl: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="${stop.status === 'completed' || stop.status === 'WON' ? '#10b981' : '#f59e0b'}" stroke="white" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><text x="12" y="14" font-family="Arial" font-size="10" font-weight="bold" text-anchor="middle" fill="white">${idx + 1}</text></svg>`)
+    }))
+  ]}
+  polylines={[{
+    id: "route-line",
+    path: [
+      ...(technicianLocation ? [technicianLocation] : []),
+      ...scheduledStops.filter(s => s.coordinates?.lat && s.coordinates?.lng).map(s => s.coordinates!)
+    ],
+    color: "#3b82f6",
+    weight: 4,
+    opacity: 0.8
+  }]}
+/>
+{selectedMarker && (
+  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur shadow-xl rounded-xl p-4 border border-zinc-200 z-10 min-w-[240px]">
+    <button onClick={() => setSelectedMarker(null)} className="absolute top-3 right-3 text-zinc-400 hover:text-zinc-700">
+      <X className="w-4 h-4" />
+    </button>
+    <div className="font-bold text-sm mb-1 pr-6">{selectedMarker.customer_name || "Customer"}</div>
+    <div className="text-xs text-zinc-600 mb-2 truncate max-w-[200px]">{selectedMarker.address?.street || "Address"}</div>
+    <div className="text-[10px] text-zinc-500 font-mono">
+      Stop #{scheduledStops.findIndex(s => s.id === selectedMarker.id) + 1} &bull; {selectedMarker.status}
+    </div>
+  </div>
+)}
         </div>
       ) : (
         /* TIMELINE VIEW */
