@@ -275,7 +275,7 @@ export default function MapplsBoundaryMap({
                        // Approximate if geocoding fails
                        if (!aLat || !aLng) {
                           if (pLat && pLng) {
-                            const hash = area.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
+                            const hash = area.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
                             const angle = (Math.abs(hash) % 360) * (Math.PI / 180);
                             const r = ((Math.abs(hash) % 20) + 5) * 0.001; // offset by 0.005 to 0.025 degrees
                             aLat = pLat + (r * Math.cos(angle));
