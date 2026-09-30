@@ -106,12 +106,12 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
           // Geocode using OpenStreetMap Nominatim (free)
           try {
             const geoRes = await fetch(
-              `https://nominatim.openstreetmap.org/search?format=json&q=${pincode}+India`,
+              `/api/pincode/${pincode}`,
               { signal }
             );
             const geoData = await geoRes.json();
-            if (geoData && geoData.length > 0) {
-              setCoords({ lat: parseFloat(geoData[0].lat), lng: parseFloat(geoData[0].lon) });
+            if (geoData && geoData.lat && geoData.lng) {
+              setCoords({ lat: geoData.lat, lng: geoData.lng });
             }
           } catch (geoErr) {
             if ((geoErr as Error).name !== "AbortError") console.error("Geocoding failed:", geoErr);

@@ -246,12 +246,27 @@ export default function MapplsBoundaryMap({
                        }
                     }
 
+                    
                     const isEntirePinSelected = dataObj.includes(pin);
+
+                    const normalizeArea = (s: string) => {
+                       if (!s) return '';
+                       return s.replace(/\s+(S\.O|B\.O|H\.O|G\.P\.O\.|S\.O\.|B\.O\.|H\.O\.)(\s+|$)/gi, ' ').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+                    };
 
                     // Draw sub-areas
                     for (const area of allAreas) {
                        const areaId = `${pin}:${area}`;
-                       const isSelected = isEntirePinSelected || dataObj.includes(areaId);
+                       const isSelected = isEntirePinSelected || dataObj.some((selected: string) => {
+                          if (selected === areaId) return true;
+                          if (selected.startsWith(pin + ':')) {
+                             const sName = normalizeArea(selected.split(':')[1]);
+                             const aName = normalizeArea(area);
+                             return sName === aName || sName.includes(aName) || aName.includes(sName);
+                          }
+                          return false;
+                       });
+
                        
                        let aLat, aLng;
                        const cacheKey = `geo_${pin}_${area}`;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface PincodeData {
   pincode: string;
@@ -11,6 +11,7 @@ export interface PincodeData {
 
 export function usePincodeCoverage(isLoaded: boolean, inputPincodes: PincodeData[]) {
   const [enrichedPincodes, setEnrichedPincodes] = useState<PincodeData[]>(inputPincodes);
+  const fetchingRef = useRef<Set<string>>(new Set());
 
   // Sync state when input changes, preserving existing geocoded data if possible
   useEffect(() => {
@@ -28,40 +29,31 @@ export function usePincodeCoverage(isLoaded: boolean, inputPincodes: PincodeData
 
   // Auto-geocode pincodes that are strictly missing lat/lng
   useEffect(() => {
-    if (!isLoaded || enrichedPincodes.length === 0) return;
+    if (enrichedPincodes.length === 0) return;
     
-    // Find pincodes without coordinates
-    const toGeocode = enrichedPincodes.filter(p => !p.lat || !p.lng);
+    // Find pincodes without coordinates that aren't already being fetched
+    const toGeocode = enrichedPincodes.filter(p => (!p.lat || !p.lng) && !fetchingRef.current.has(p.pincode));
     if (toGeocode.length === 0) return;
 
-    let delay = 0;
-    const geocoder = new window.google.maps.Geocoder();
-
-    toGeocode.forEach((p) => {
-      setTimeout(() => {
-        try {
-          // Geocode with postalCode and country restriction for precision
-          geocoder.geocode({ 
-            address: `${p.pincode}, India`,
-            componentRestrictions: { postalCode: p.pincode, country: 'IN' }
-          }, (results, status) => {
-            if (status === "OK" && results && results[0]) {
-              const loc = results[0].geometry.location;
-              setEnrichedPincodes(prev => prev.map(item => 
-                item.pincode === p.pincode 
-                  ? { ...item, lat: loc.lat(), lng: loc.lng(), radius: item.radius || 4000 }
-                  : item
-              ));
-            }
-          });
-        } catch (e) {
-          // ignore error
+    toGeocode.forEach(async (p) => {
+      fetchingRef.current.add(p.pincode);
+      try {
+        const res = await fetch(\`/api/pincode/\${p.pincode}\`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.lat && data.lng) {
+            setEnrichedPincodes(prev => prev.map(item => 
+              item.pincode === p.pincode 
+                ? { ...item, lat: data.lat, lng: data.lng, radius: data.radius || 4000 }
+                : item
+            ));
+          }
         }
-      }, delay);
-      
-      delay += 75; // 75ms allows ~13 req/s, well within Google's 50 req/s limit
+      } catch (e) {
+        // ignore error
+      }
     });
-  }, [enrichedPincodes, isLoaded]);
+  }, [enrichedPincodes]);
 
   // Returns all pincodes whose radius overlaps with the given coordinate
   const getOverlappingPincodes = useCallback((lat: number, lng: number): string[] => {
