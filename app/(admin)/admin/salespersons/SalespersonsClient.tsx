@@ -291,6 +291,29 @@ export default function SalespersonsClient() {
 
 
   // Handle District Selection
+  
+  const handleGenerateQuadrants = async (e: React.MouseEvent, pin: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setGeneratingPins(prev => new Set(prev).add(pin));
+    try {
+      const res = await fetch(`/api/pincode/${pin}`);
+      if (res.ok) {
+        if (selectedState && selectedDistrict) {
+          await handleSelectDistrict(selectedDistrict.slug, selectedDistrict.name);
+        }
+      }
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setGeneratingPins(prev => {
+        const next = new Set(prev);
+        next.delete(pin);
+        return next;
+      });
+    }
+  };
+
   const handleSelectDistrict = (slug: string, name: string) => {
     if (!selectedState) return;
     setSelectedDistrict({ name, slug });
