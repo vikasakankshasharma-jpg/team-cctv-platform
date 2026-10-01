@@ -204,7 +204,7 @@ export default function SalespersonsClient() {
   const [geoCities, setGeoCities] = useState<{ label: string; value: string }[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [districtOffices, setDistrictOffices] = useState<any[]>([]);
-  const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string, areas: string[] }[]>([]);
+  const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string, areas: string[], quadrants?: any[] }[]>([]);
 
   const [zonePincodeSearch, setZonePincodeSearch] = useState("");
   
