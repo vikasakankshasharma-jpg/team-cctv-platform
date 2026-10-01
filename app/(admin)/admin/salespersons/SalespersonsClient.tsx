@@ -220,6 +220,7 @@ export default function SalespersonsClient() {
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingOffices, setLoadingOffices] = useState(false);
+  const [generatingPins, setGeneratingPins] = useState<Set<string>>(new Set());
 
   // Load all States on modal open
   useEffect(() => {
