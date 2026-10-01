@@ -325,5 +325,7 @@
   "footer_partner": "Partner Login",
   "placeholder_mobile": "Enter mobile number",
   "placeholder_name": "Enter full name",
-  "placeholder_pincode": "6-digit pincode"
+  "placeholder_pincode": "6-digit pincode",
+  "get_instant_price": "Get Instant Price",
+  "step_1_pincode": "Step 1: Enter Pincode for pricing"
 }
