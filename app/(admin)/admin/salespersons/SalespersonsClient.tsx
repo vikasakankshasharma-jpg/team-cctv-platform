@@ -1132,7 +1132,19 @@ export default function SalespersonsClient() {
                                     className="mt-0.5 rounded border-input text-primary focus:ring-primary h-4 w-4" 
                                   />
                                   <div className="flex flex-col">
-                                    <span className="text-sm font-semibold tracking-wide">ALL OF {p.pincode}</span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-semibold tracking-wide">ALL OF {p.pincode}</span>
+                                      {(!p.quadrants || p.quadrants.length === 0) && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => handleGenerateQuadrants(e, p.pincode)}
+                                          disabled={generatingPins.has(p.pincode)}
+                                          className="ml-2 px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded hover:bg-indigo-100 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                          {generatingPins.has(p.pincode) ? <Loader2 className="w-3 h-3 animate-spin" /> : "✨"} Gen Quadrants
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
                                 </label>
                               </div>

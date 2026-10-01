@@ -48,8 +48,15 @@ export async function GET(req: Request) {
            const snap = await adminDb.collection("pincode_cache").where("__name__", "in", chunk).get();
            snap.docs.forEach(doc => {
              const d = doc.data();
+             const payload: any = {};
              if (d.ai_areas && Array.isArray(d.ai_areas)) {
-               aiCacheMap.set(doc.id, d.ai_areas);
+               payload.ai_areas = d.ai_areas;
+             }
+             if (d.quadrants && Array.isArray(d.quadrants)) {
+               payload.quadrants = d.quadrants;
+             }
+             if (Object.keys(payload).length > 0) {
+               aiCacheMap.set(doc.id, payload);
              }
            });
         } catch(e) {
