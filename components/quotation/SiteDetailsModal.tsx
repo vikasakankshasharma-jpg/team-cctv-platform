@@ -110,8 +110,17 @@ export function SiteDetailsModal({ onConfirm, onClose, initialPincode = "" }: Si
               { signal }
             );
             const geoData = await geoRes.json();
-            if (geoData && geoData.lat && geoData.lng) {
-              setCoords({ lat: geoData.lat, lng: geoData.lng });
+            if (geoData) {
+              if (geoData.lat && geoData.lng) {
+                setCoords({ lat: geoData.lat, lng: geoData.lng });
+              }
+              if (geoData.quadrants && geoData.quadrants.length > 0) {
+                setPostOffices(geoData.quadrants.map((q: any) => ({ Name: `${q.zone} (${q.anchor}) - ${q.coverage}` })));
+                setSelectedPostOffice(`${geoData.quadrants[0].zone} (${geoData.quadrants[0].anchor}) - ${geoData.quadrants[0].coverage}`);
+              } else if (geoData.areas && geoData.areas.length > 0) {
+                setPostOffices(geoData.areas.map((a: string) => ({ Name: a })));
+                setSelectedPostOffice(geoData.areas[0]);
+              }
             }
           } catch (geoErr) {
             if ((geoErr as Error).name !== "AbortError") console.error("Geocoding failed:", geoErr);

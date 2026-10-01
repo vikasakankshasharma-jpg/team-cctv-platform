@@ -261,7 +261,9 @@ export function WizardClientV2() {
         fetch(`/api/pincode/${pin}`)
           .then(res => res.json())
           .then(data => {
-            if (data.areas && data.areas.length > 0) {
+            if (data.quadrants && data.quadrants.length > 0) {
+              setLocalities(data.quadrants.map((q: any) => `${q.zone} (${q.anchor}) - ${q.coverage}`));
+            } else if (data.areas && data.areas.length > 0) {
               setLocalities(data.areas);
             }
             if (data.lat && data.lng) {
@@ -1226,7 +1228,9 @@ export function WizardClientV2() {
                         fetch(`/api/pincode/${val}`)
                           .then(res => res.json())
                           .then(data => {
-                            if (data.areas && data.areas.length > 0) {
+                            if (data.quadrants && data.quadrants.length > 0) {
+                              setLocalities(data.quadrants.map((q: any) => `${q.zone} (${q.anchor}) - ${q.coverage}`));
+                            } else if (data.areas && data.areas.length > 0) {
                               setLocalities(data.areas);
                             } else {
                               setLocalities([]);
