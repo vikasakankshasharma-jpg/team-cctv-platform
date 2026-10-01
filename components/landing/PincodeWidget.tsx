@@ -83,7 +83,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="w-full max-w-md mx-auto lg:mx-0 relative z-10"
+      className="w-full max-w-xl mx-auto lg:mx-0 relative z-10"
     >
       <form onSubmit={handleCheck} className="relative flex flex-col sm:flex-row gap-3 items-stretch w-full">
         <div className="relative flex-1">
@@ -94,8 +94,8 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
             maxLength={6}
             value={pincode}
             onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            placeholder={t("enter_pincode_placeholder", "Enter Pincode (e.g., 302017)")}
-            className={`w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-2xl pl-12 pr-12 outline-none transition-all font-bold tracking-wider text-zinc-950 dark:text-white placeholder:text-zinc-600 dark:placeholder:text-zinc-400 ${
+            placeholder={t("enter_pincode_placeholder", "Enter 6-digit Pincode")}
+            className={`w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-2xl pl-12 pr-12 outline-none text-ellipsis overflow-hidden whitespace-nowrap transition-all font-bold tracking-wider text-zinc-950 dark:text-white placeholder:text-zinc-600 dark:placeholder:text-zinc-400 ${
               isHero 
                 ? `py-4 sm:py-5.5 text-base sm:text-lg focus:bg-white dark:focus:bg-zinc-900 ${pincode.length === 6 ? 'ring-4 ring-emerald-500/20 border-emerald-500' : 'focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500'}`
                 : `py-3.5 text-sm focus:bg-white dark:focus:bg-zinc-900 ${pincode.length === 6 ? 'ring-4 ring-emerald-500/20 border-emerald-500' : 'focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500'}`
