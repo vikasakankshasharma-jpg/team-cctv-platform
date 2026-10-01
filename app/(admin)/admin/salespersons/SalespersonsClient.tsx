@@ -301,7 +301,7 @@ export default function SalespersonsClient() {
       const res = await fetch(`/api/pincode/${pin}`);
       if (res.ok) {
         if (selectedState && selectedDistrict) {
-          await handleSelectDistrict(selectedDistrict.slug, selectedDistrict.name);
+          await handleSelectDistrict(selectedDistrict.slug, selectedDistrict.name, true);
         }
       }
     } catch(err) {
@@ -315,14 +315,14 @@ export default function SalespersonsClient() {
     }
   };
 
-  const handleSelectDistrict = (slug: string, name: string) => {
+  const handleSelectDistrict = (slug: string, name: string, forceRefresh = false) => {
     if (!selectedState) return;
     setSelectedDistrict({ name, slug });
     setModalMapQuery({ type: 'district', query: name });
     setSelectedCity("all");
     setLoadingOffices(true);
 
-    fetch(`/api/admin/geo?type=offices&state=${selectedState.slug}&district=${slug}&_t=${Date.now()}`)
+    fetch(`/api/admin/geo?type=offices&state=${selectedState.slug}&district=${slug}&_t=${Date.now()}${forceRefresh ? '&refresh=true' : ''}`)
       .then(async r => {
         if (!r.ok) throw new Error("Proxy error");
         const data = await r.json();

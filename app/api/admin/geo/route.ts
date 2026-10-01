@@ -11,6 +11,8 @@ export async function GET(req: Request) {
     const state = searchParams.get("state");
     const district = searchParams.get("district");
 
+    const refresh = searchParams.get("refresh") === "true";
+
     let targetUrl = "";
     if (type === "states") {
       targetUrl = "https://aniket-thapa.github.io/india-pincode-api/states.json";
@@ -20,6 +22,10 @@ export async function GET(req: Request) {
       targetUrl = `https://aniket-thapa.github.io/india-pincode-api/districts/${encodeURIComponent(state)}/${encodeURIComponent(district)}.json`;
     } else {
       return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
+    }
+
+    if (refresh) {
+      cache.delete(targetUrl);
     }
 
     if (cache.has(targetUrl)) {
