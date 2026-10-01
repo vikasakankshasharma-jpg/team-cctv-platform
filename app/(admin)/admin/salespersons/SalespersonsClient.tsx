@@ -1134,7 +1134,8 @@ export default function SalespersonsClient() {
                                   <div className="flex flex-col">
                                     <span className="text-sm font-semibold tracking-wide">ALL OF {p.pincode}</span>
                                   </div>
-                                </div>
+                                </label>
+                              </div>
 
                               {(p.quadrants && p.quadrants.length > 0) ? (
                                 <div className="pl-7 pr-2 pb-2 flex flex-col gap-1 border-t pt-2 mt-1">
