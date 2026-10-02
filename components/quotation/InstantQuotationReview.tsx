@@ -61,7 +61,7 @@ export function InstantQuotationReview({
     return localized;
   };
 
-  const { selection, toggleAddon } = useConfiguratorStore();
+  const { selection, toggleAddon, updateSelection } = useConfiguratorStore();
   const [showAdvancedCustomizer, setShowAdvancedCustomizer] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
@@ -248,6 +248,36 @@ export function InstantQuotationReview({
         </div>
       </div>
 
+            {/* BRAND UNIFICATION BANNER */}
+      <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-3 sm:p-4 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div>
+          <div className="text-sm font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-indigo-500" />
+            Match My Brand
+          </div>
+          <div className="text-[11px] text-indigo-700/80 dark:text-indigo-400/80 mt-0.5">
+            Want maximum items from the same brand? Switch your setup.
+          </div>
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0 pb-1 sm:pb-0">
+          <button 
+            onClick={() => updateSelection({ brand_preference: 'all' })}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all shrink-0 ${selection.brand_preference === 'all' || !selection.brand_preference ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white dark:bg-zinc-900 text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400'}`}
+          >
+            Mixed (Best Price)
+          </button>
+          {Array.from(new Set(products.filter(p => p.category === "cctv_camera" && p.brand).map(p => p.brand as string))).sort().map(brand => (
+            <button 
+              key={brand}
+              onClick={() => updateSelection({ brand_preference: brand })}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all shrink-0 ${selection.brand_preference?.toLowerCase() === brand.toLowerCase() ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white dark:bg-zinc-900 text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400'}`}
+            >
+              {brand}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 4. TAB TOGGLE: BREAKDOWN VS ADD-ONS */}
       <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl max-w-md mx-auto">
         <button
@@ -281,7 +311,12 @@ export function InstantQuotationReview({
               <div key={idx} className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-between gap-2 shadow-xs">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{translateProductName(item.display_name)}</div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    {item.brand && (
+                      <div className="inline-block mt-0.5 mb-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                        {item.brand}
+                      </div>
+                    )}
+                    <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
                     {t("wz_qty")}: {item.qty} {item.unit_price > 0 ? `• ₹${item.unit_price.toLocaleString("en-IN")} each` : '• {t("wz_free_included")}'}
                   </div>
                 </div>
@@ -330,7 +365,14 @@ export function InstantQuotationReview({
                   {activePricing.items.map((item, idx) => (
                     <tr key={idx} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
                       <td className="py-2.5 px-4 text-center text-xs text-zinc-400">{idx + 1}</td>
-                      <td className="py-2.5 px-4 font-medium text-zinc-900 dark:text-white">{translateProductName(item.display_name)}</td>
+                      <td className="py-2.5 px-4 font-medium text-zinc-900 dark:text-white">
+                          <div className="truncate">{translateProductName(item.display_name)}</div>
+                          {item.brand && (
+                            <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                              {item.brand}
+                            </span>
+                          )}
+                        </td>
                       <td className="py-2.5 px-4 text-center font-bold">{item.qty}</td>
                       <td className="py-2.5 px-4 text-right text-zinc-600 dark:text-zinc-400">₹{item.unit_price.toLocaleString("en-IN")}</td>
                       <td className="py-2.5 px-4 text-right font-bold text-zinc-900 dark:text-white">₹{item.line_total.toLocaleString("en-IN")}</td>
