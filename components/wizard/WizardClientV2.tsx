@@ -863,7 +863,7 @@ export function WizardClientV2() {
                 {[0, 7, 15, 30, 45, 60].map(days => (
                   <button key={days} onClick={() => setReq(prev => ({ ...prev, recording_days: days }))}
                     className={`py-2 sm:py-3 px-1 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.recording_days === days ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-blue-300 hover:bg-gray-50 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900'}`}>
-                    {days === 0 ? "No Recording" : `${days} Days`}
+                    {days === 0 ? t("wz_no_recording") : `${days} ${t("wz_days")}`}
                   </button>
                 ))}
               </div>
@@ -958,15 +958,15 @@ export function WizardClientV2() {
                   <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
                     <button onClick={() => updateReq({ ceiling_height: "standard" })}
                       className={`py-2 sm:py-3 px-1 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.ceiling_height === 'standard' ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-blue-300 hover:bg-gray-50 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900'}`}>
-                      {t("wz_standard_lt10ft")}
+                      {t("wz_standard")} (&lt;10{t("wz_ft")})
                     </button>
                     <button onClick={() => updateReq({ ceiling_height: "high" })}
                       className={`py-2 sm:py-3 px-1 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.ceiling_height === 'high' ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-blue-300 hover:bg-gray-50 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900'}`}>
-                      {t("wz_high_1015ft")}
+                      {t("wz_high")} (10-15{t("wz_ft")})
                     </button>
                     <button onClick={() => updateReq({ ceiling_height: "very_high" })}
                       className={`py-2 sm:py-3 px-1 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.ceiling_height === 'very_high' ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-blue-300 hover:bg-gray-50 text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900'}`}>
-                      {t("wz_very_high_15ft")}
+                      {t("wz_very_high")} (15{t("wz_ft")}+)
                     </button>
                   </div>
                 </div>
@@ -997,9 +997,7 @@ export function WizardClientV2() {
                   <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">{t("wz_3_existing_cabling")}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                     <button onClick={() => updateReq({ cabling_done: false })}
-                      className={`py-2 sm:py-3 px-2 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.cabling_done === false ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300'}`}>
-                      No
-                    </button>
+                      className={`py-2 sm:py-3 px-2 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.cabling_done === false ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300'}`}>{t("wz_no")}</button>
                     <button onClick={() => updateReq({ cabling_done: true })}
                       className={`py-2 sm:py-3 px-2 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.cabling_done === true ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300'}`}>
                       {t("wz_yes")}
@@ -1026,7 +1024,7 @@ export function WizardClientV2() {
                               {t("wz_approx_total_cable_required")}
                             </span>
                             <span className="block text-[10px] text-gray-500 dark:text-zinc-400">
-                              Free Included: {freeLimitMeters}m ({cameraCount} cameras × 15m)
+                              {t("wz_free_included_text")}: {freeLimitMeters}{t("wz_m")} ({cameraCount} {t("wz_cameras_x_15m")})
                             </span>
                           </div>
 
@@ -1076,17 +1074,17 @@ export function WizardClientV2() {
                             <span className="text-base shrink-0">⚠️</span>
                             <div>
                               <p className="font-bold">
-                                Exceeds Free Installation Limit (+{excessMeters} Meters)
+                                {t("wz_exceeds_free_limit")} (+{excessMeters} {t("wz_meters")})
                               </p>
                               <p className="text-[10px] opacity-90 mt-0.5">
-                                Your base package includes <strong className="font-bold">{freeLimitMeters}m</strong> of cabling. The extra <strong className="font-bold">{excessMeters}m</strong> will be charged at <strong className="font-bold">₹15/meter (+₹{extraCostEstimate} estimated)</strong> on your final quote.
+                                Your base package includes <strong className="font-bold">{freeLimitMeters}{t("wz_m")}</strong> of cabling. The extra <strong className="font-bold">{excessMeters}{t("wz_m")}</strong> will be charged at <strong className="font-bold">₹15/meter (+₹{extraCostEstimate} estimated)</strong> on your final quote.
                               </p>
                             </div>
                           </div>
                         ) : (
                           <div className="px-2 py-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
                             <span>✓</span>
-                            <span>{t("wz_within_complimentary_limit_1")} {selectedMeters}m / {freeLimitMeters}m {t("wz_within_complimentary_limit_2")}</span>
+                            <span>{t("wz_within_complimentary_limit_1")} {selectedMeters}{t("wz_m")} / {freeLimitMeters}{t("wz_m")} {t("wz_within_complimentary_limit_2")}</span>
                           </div>
                         )}
                       </div>
@@ -1298,7 +1296,7 @@ export function WizardClientV2() {
                       <Loader2 className="w-4 h-4 animate-spin" /> {t("wz_sending_otp")}
                     </span>
                   ) : (
-                    "View My CCTV Options"
+                    t("wz_view_cctv_options")
                   )}
                 </Button>
               </div>

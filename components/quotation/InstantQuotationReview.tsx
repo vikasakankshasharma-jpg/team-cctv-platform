@@ -228,7 +228,7 @@ export function InstantQuotationReview({
             step === 1 ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
           }`}
         >
-          📋 Itemized Breakdown
+          📋 {t("wz_itemized_breakdown")}
         </button>
         <button
           onClick={() => setStep(2)}
@@ -236,7 +236,7 @@ export function InstantQuotationReview({
             step === 2 ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
           }`}
         >
-          <span>🎁 Add-ons & Extras</span>
+          <span>🎁 {t("wz_addons_and_extras")}</span>
           {(selection.selected_addons || []).length > 0 && (
             <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">
               {(selection.selected_addons || []).length}
@@ -254,7 +254,7 @@ export function InstantQuotationReview({
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{item.display_name}</div>
                   <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    Qty: {item.qty} {item.unit_price > 0 ? `• ₹${item.unit_price.toLocaleString("en-IN")} each` : '• Free Included'}
+                    {t("wz_qty")}: {item.qty} {item.unit_price > 0 ? `• ₹${item.unit_price.toLocaleString("en-IN")} each` : '• Free Included'}
                   </div>
                 </div>
                 <div className="text-xs font-black text-zinc-900 dark:text-white shrink-0">
@@ -266,7 +266,7 @@ export function InstantQuotationReview({
               <div key={`addon-${idx}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between gap-2 shadow-xs">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold text-blue-950 dark:text-blue-200 truncate">{addon.display_name}</div>
-                  <div className="text-[11px] text-blue-700/80 dark:text-blue-400">Add-on • Qty: {addon.qty || 1}</div>
+                  <div className="text-[11px] text-blue-700/80 dark:text-blue-400">Add-on • {t("wz_qty")}: {addon.qty || 1}</div>
                 </div>
                 <div className="text-xs font-black text-blue-900 dark:text-blue-200 shrink-0">
                   +₹{((addon.price || 0) * (addon.qty || 1)).toLocaleString("en-IN")}
@@ -280,10 +280,10 @@ export function InstantQuotationReview({
             <div className="px-6 py-3 bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-blue-600" />
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Itemized Bill of Materials</h3>
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-white">{t("wz_itemized_bill_of_materials")}</h3>
               </div>
               <div className="flex items-center gap-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="w-3.5 h-3.5" /> 100% Genuine Brand Products
+                <CheckCircle2 className="w-3.5 h-3.5" /> {t("wz_100_genuine_brand_products")}
               </div>
             </div>
 
@@ -292,10 +292,10 @@ export function InstantQuotationReview({
                 <thead>
                   <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                     <th className="py-2.5 px-4 w-12 text-center">#</th>
-                    <th className="py-2.5 px-4">Item & Description</th>
-                    <th className="py-2.5 px-4 text-center">Qty</th>
-                    <th className="py-2.5 px-4 text-right">Unit Price</th>
-                    <th className="py-2.5 px-4 text-right">Line Total</th>
+                    <th className="py-2.5 px-4">{t("wz_item_and_description")}</th>
+                    <th className="py-2.5 px-4 text-center">{t("wz_qty")}</th>
+                    <th className="py-2.5 px-4 text-right">{t("wz_unit_price")}</th>
+                    <th className="py-2.5 px-4 text-right">{t("wz_line_total")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-300">
@@ -326,18 +326,18 @@ export function InstantQuotationReview({
           <div className="p-4 sm:p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xs">
             <div className="w-full max-w-sm ml-auto space-y-2 text-xs sm:text-sm">
               <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-                <span>Equipment & Hardware:</span>
+                <span>{t("wz_equipment_hardware")}</span>
                 <span className="font-semibold text-zinc-900 dark:text-white">₹{activePricing.base_hardware_cost?.toLocaleString("en-IN")}</span>
               </div>
               {activePricing.labor_cost > 0 && (
                 <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-                  <span>Installation Labor ({camCount} cameras):</span>
+                  <span>{t("wz_installation_labor_prefix")} ({camCount} {t("wz_cameras")}):</span>
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400">₹{activePricing.labor_cost.toLocaleString("en-IN")}</span>
                 </div>
               )}
               {activePricing.cabling_cost > 0 && (
                 <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-                  <span>Cabling & Wiring:</span>
+                  <span>{t("wz_cabling_wiring")}</span>
                   <span className="font-semibold text-zinc-900 dark:text-white">₹{activePricing.cabling_cost.toLocaleString("en-IN")}</span>
                 </div>
               )}
@@ -354,15 +354,15 @@ export function InstantQuotationReview({
                 </div>
               )}
               <div className="flex justify-between text-zinc-600 dark:text-zinc-400 pt-1.5 border-t border-zinc-200 dark:border-zinc-700">
-                <span>Taxable Subtotal:</span>
+                <span>{t("wz_taxable_subtotal")}</span>
                 <span className="font-semibold text-zinc-900 dark:text-white">₹{activePricing.net_taxable_amount.toLocaleString("en-IN")}</span>
               </div>
               <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-                <span>GST ({activePricing.gst_rate}%):</span>
+                <span>{t("wz_gst_rate_prefix")} ({activePricing.gst_rate}%):</span>
                 <span className="font-semibold text-zinc-900 dark:text-white">₹{activePricing.gst_amount.toLocaleString("en-IN")}</span>
               </div>
               <div className="border-t border-zinc-200 dark:border-zinc-700 pt-2 flex justify-between text-sm sm:text-base font-black text-zinc-900 dark:text-white">
-                <span>Total Amount Payable:</span>
+                <span>{t("wz_total_amount_payable")}</span>
                 <span className="text-lg sm:text-2xl font-black text-blue-600 dark:text-blue-400">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
               </div>
             </div>
@@ -374,14 +374,14 @@ export function InstantQuotationReview({
               onClick={() => setStep(2)} 
               className="w-full sm:w-auto px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
             >
-              ➕ Customize Accessories & Add-ons
+              ➕ {t("wz_customize_accessories")}
             </button>
             <Button
               onClick={onProceedToActualQuotation}
               disabled={isSaving}
               className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm flex items-center justify-center gap-2 group cursor-pointer"
             >
-              {isSaving ? "Finalizing Quote..." : "Proceed to Final Quotation →"}
+              {isSaving ? "Finalizing Quote..." : t("wz_proceed_to_final_quotation")}
             </Button>
           </div>
         </div>
@@ -450,7 +450,7 @@ export function InstantQuotationReview({
                 <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
                   <div className="text-base font-black text-zinc-900 dark:text-white">
                     +₹{acc.price.toLocaleString("en-IN")}
-                    <span className="text-[10px] font-normal text-zinc-400 ml-1">+GST</span>
+                    <span className="text-[10px] font-normal text-zinc-400 ml-1">+{t("wz_gst")}</span>
                   </div>
                   <Button
                     size="sm"
@@ -513,7 +513,7 @@ export function InstantQuotationReview({
             Grand Total: ₹{activePricing.total_payable.toLocaleString("en-IN")}
           </h3>
           <p className="text-xs sm:text-sm text-blue-100 max-w-xl">
-            Includes all selected cameras, recorder, hard disk storage, cabling, installation, and chosen accessories with full 18% GST invoice.
+            {t("wz_includes_all_selected_desc")}
           </p>
         </div>
 
@@ -530,7 +530,7 @@ export function InstantQuotationReview({
             disabled={isSaving}
             className="w-full sm:w-auto bg-white hover:bg-zinc-100 text-blue-700 font-extrabold text-sm px-4 md:px-8 py-3 rounded-full shadow-lg transition-transform active:scale-95"
           >
-            {isSaving ? "Finalizing Quote..." : "Proceed to Final Quotation →"}
+            {isSaving ? "Finalizing Quote..." : t("wz_proceed_to_final_quotation")}
           </Button>
         </div>
       </div>

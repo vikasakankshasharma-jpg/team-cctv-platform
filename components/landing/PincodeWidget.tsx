@@ -92,7 +92,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
             </span>
-            {t('step_1_pincode', 'Step 1: Enter Pincode for pricing')}
+            {t('step_1_pincode')}
           </span>
         </div>
       )}
@@ -141,7 +141,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <>
-              {t("get_instant_price", "Get Instant Price")} <ArrowRight className="w-4 h-4" />
+              {t("get_instant_price")} <ArrowRight className="w-4 h-4" />
             </>
           )}
         </motion.button>

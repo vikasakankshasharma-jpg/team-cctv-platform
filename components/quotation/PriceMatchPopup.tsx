@@ -160,7 +160,7 @@ export function PriceMatchPopup({
                     Quote Received!
                   </h4>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    Our team will review it and get back within 24 hours with a guaranteed best price.
+                    {t("wz_review_24_hours")}
                   </p>
                 </div>
               ) : expanded ? (
@@ -174,7 +174,7 @@ export function PriceMatchPopup({
                       </div>
                       <div>
                         <h4 className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-100">
-                          Price Match Guarantee
+                          {t("wz_price_match_guarantee")}
                         </h4>
                         <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                           Upload a competitor quote — we&apos;ll beat it
@@ -224,7 +224,7 @@ export function PriceMatchPopup({
                     <div className="flex-1 min-w-0 pr-4">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-                          Got a better quote?
+                          {t("wz_got_better_quote")}
                         </h4>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
                           <Sparkles className="w-3 h-3" />
@@ -232,14 +232,14 @@ export function PriceMatchPopup({
                         </span>
                       </div>
                       <p className="text-[13px] text-zinc-500 dark:text-zinc-400 leading-snug mb-3">
-                        Upload a competitor&apos;s quotation and we&apos;ll match or beat their price. Guaranteed.
+                        {t("wz_upload_competitor_quote_desc")}
                       </p>
 
                       <button
                         onClick={() => setExpanded(true)}
                         className="group inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-full text-[13px] font-semibold hover:bg-blue-600 dark:hover:bg-blue-500 dark:hover:text-white transition-all active:scale-95 shadow-sm"
                       >
-                        Upload Quote
+                        {t("wz_upload_quote")}
                         <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                       </button>
                     </div>

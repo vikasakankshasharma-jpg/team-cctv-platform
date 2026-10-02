@@ -298,14 +298,14 @@ export function DynamicVariantGenerator({
       // If we couldn't find any resolutions in the items, fallback to the requested ones
       const resolvedRes = uniqueActualRes.length > 0 ? uniqueActualRes : Array.from(new Set(mixedReqs.map(r => r.resolution)));
       const isHybrid = resolvedRes.length > 1;
-      let displayResolution = resolvedRes[0] ? `${resolvedRes[0]} Resolution` : "2MP Resolution";
+      let displayResolution = resolvedRes[0] ? `${resolvedRes[0]} ${t("wz_resolution")}` : `2MP ${t("wz_resolution")}`;
       
       if (isHybrid) {
-        displayResolution = `Mixed Resolutions (${resolvedRes.join(", ")})`;
+        displayResolution = `${t("wz_mixed_resolutions")} (${resolvedRes.join(", ")})`;
       } else if (hasOutdoor && !hasIndoor) {
-        displayResolution = `${resolvedRes[0] || "2MP"} Resolution (${outdoorCount} Outdoor)`;
+        displayResolution = `${resolvedRes[0] || "2MP"} ${t("wz_resolution")} (${outdoorCount} ${t("wz_outdoor")})`;
       } else if (hasIndoor && !hasOutdoor) {
-        displayResolution = `${resolvedRes[0] || "2MP"} Resolution (${indoorCount} Indoor)`;
+        displayResolution = `${resolvedRes[0] || "2MP"} ${t("wz_resolution")} (${indoorCount} ${t("wz_indoor")})`;
       }
       
       return { 
@@ -408,7 +408,7 @@ export function DynamicVariantGenerator({
           >
             {activeTech === "hd" && <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full -z-10" />}
             <span>{t("wz_standard_hd_analog")}</span>
-            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'hd' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'}`}>Lowest Price</span>
+            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'hd' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'}`}>{t("wz_lowest_price")}</span>
           </button>
           <button
             onClick={() => setActiveTech("ip")}
@@ -442,7 +442,7 @@ export function DynamicVariantGenerator({
                 <div className="flex items-center gap-2">
                   <span className={`inline-block w-2.5 h-2.5 rounded-full ${bucket.type === 'outdoor' ? 'bg-amber-500' : 'bg-blue-500'}`} />
                   <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-                    {bucket.type === 'outdoor' ? 'Outdoor Cameras' : 'Indoor Cameras'}
+                    {bucket.type === 'outdoor' ? t("wz_outdoor_cameras") : t("wz_indoor_cameras")}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -480,7 +480,7 @@ export function DynamicVariantGenerator({
                 {/* Quantity Dropdown */}
                 <div className="relative">
                   <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
-                    Quantity
+                    {t("wz_quantity")}
                   </label>
                   <select
                     value={bucket.count}
@@ -492,7 +492,7 @@ export function DynamicVariantGenerator({
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16, 24, 32].map(num => (
                       <option key={num} value={num}>
-                        {num} {num === 1 ? 'Camera' : 'Cameras'}
+                        {num} {num === 1 ? t("wz_camera") : t("wz_cameras")}
                       </option>
                     ))}
                   </select>
@@ -502,7 +502,7 @@ export function DynamicVariantGenerator({
                 {/* Resolution Dropdown */}
                 <div className="relative">
                   <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
-                    Resolution
+                    {t("wz_resolution")}
                   </label>
                   <select
                     value={bucket.resolution}
@@ -514,7 +514,7 @@ export function DynamicVariantGenerator({
                   >
                     {availableResolutions.map(r => (
                       <option key={r} value={r}>
-                        {r} {r === '2MP' ? '(Full HD)' : r === '3MP' ? '(2K View)' : r === '4MP' ? '(Ultra HD)' : r === '5MP' ? '(Pro Clarity)' : r === '8MP' ? '(4K Ultra)' : ''}
+                        {r} {r === '2MP' ? t('wz_2mp_full_hd') : r === '3MP' ? t('wz_3mp_2k') : r === '4MP' ? t('wz_4mp_ultra_hd') : r === '5MP' ? t('wz_5mp_pro_clarity') : r === '8MP' ? t('wz_8mp_4k_ultra') : ''}
                       </option>
                     ))}
                   </select>
