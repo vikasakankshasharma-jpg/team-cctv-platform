@@ -1335,7 +1335,7 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
   const getCapacity = (a: any) => {
     if (a.max_cameras && a.max_cameras > 0) return a.max_cameras;
     const name = (a.technical_name || a.display_name || "").toLowerCase();
-    const match = name.match(/(\d+)\s*(ch|port|channels|ports)/i);
+    const match = name.match(/(\d+)\s*(-)?\s*(ch|port|channels|ports|camera|cam)s?/i);
     if (match) return parseInt(match[1]);
     return 999; // If unknown, push it to the end
   };

@@ -442,7 +442,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               onClick={() => window.history.back()}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-700 bg-zinc-50 sm:bg-white border border-zinc-200 rounded-full shadow-xs hover:bg-zinc-100 active:scale-95 transition-all"
             >
-              <ChevronLeft className="w-4 h-4 text-zinc-500" /> Modify Setup
+              <ChevronLeft className="w-4 h-4 text-zinc-500" /> {t("qrc_modify_setup")}
             </button>
           ) : <div />}
 
@@ -450,7 +450,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             <StatusBadge status={accepted ? "accepted" : quote.status} />
             {!accepted && daysLeft > 0 && (
               <span className="text-[11px] font-semibold text-zinc-500 hidden sm:inline">
-                ({daysLeft}d validity)
+                {t("qrc_validity_days").replace("%d", daysLeft.toString())}
               </span>
             )}
             <button
@@ -459,7 +459,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full shadow-xs hover:bg-emerald-100 transition-all ${isRequestingPdf ? "opacity-70 cursor-not-allowed" : ""}`}
             >
               <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden xs:inline">{isRequestingPdf ? "Sending..." : "PDF on WhatsApp"}</span>
+              <span className="hidden xs:inline">{isRequestingPdf ? t("qrc_sending") : t("qrc_pdf_on_whatsapp")}</span>
               <span className="xs:hidden">WhatsApp</span>
             </button>
           </div>
@@ -484,31 +484,31 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               <div className="flex flex-wrap items-center justify-between gap-2 pb-3.5 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    <ShieldCheck className="w-3 h-3" /> Official Quotation
+                    <ShieldCheck className="w-3 h-3" /> {t("qrc_official_quotation")}
                   </span>
                   <span className="text-xs text-blue-200 font-mono font-medium">#{quote.quoteNumber}</span>
                 </div>
                 <div className="text-[11px] text-slate-300 flex items-center gap-1 font-medium">
-                  <Clock className="w-3.5 h-3.5 text-amber-400" /> 14-Day Price Lock
+                  <Clock className="w-3.5 h-3.5 text-amber-400" /> {t("qrc_price_lock")}
                 </div>
               </div>
 
               <div className="mt-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200/80">Total All-Inclusive Estimate</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200/80">{t("qrc_total_estimate")}</p>
                   <div className="flex items-baseline gap-2 mt-0.5">
                     <span className="text-3xl sm:text-4xl font-black tracking-tight text-white">{formatINR(total)}</span>
-                    <span className="text-xs text-emerald-400 font-semibold">Incl. 18% GST</span>
+                    <span className="text-xs text-emerald-400 font-semibold">{t("qrc_incl_gst")}</span>
                   </div>
                   <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
                     <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Pay token of <strong>₹500</strong> to book installation slot</span>
+                    <span>Pay token of <strong>₹500</strong> {t("qrc_to_book_slot")}</span>
                   </div>
                 </div>
 
                 <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 text-xs min-w-[210px]">
                   <div className="flex items-center justify-between text-slate-300 text-[10px] uppercase tracking-wider font-semibold">
-                    <span>Customer Details</span>
+                    <span>{t("qrc_customer_details")}</span>
                     <button
                       onClick={() => openBillingModal("advance_500")}
                       className="text-emerald-400 hover:text-emerald-300 flex items-center gap-0.5 font-bold"
@@ -556,14 +556,14 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   <FileText className="w-4 h-4 text-blue-600" />
                   {t("bill_of_materials", "Itemized Bill of Materials")}
                 </h3>
-                <p className="text-[11px] text-zinc-500">{quote.lineItems.length} verified components & services</p>
+                <p className="text-[11px] text-zinc-500">{t("qrc_verified_components").replace("%d", quote.lineItems.length.toString())}</p>
               </div>
               <button
                 onClick={handleDownloadPDF}
                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors"
               >
                 <Download className="w-3 h-3 text-zinc-600" />
-                <span>PDF</span>
+                <span>{t("qrc_pdf")}</span>
               </button>
             </div>
 
@@ -602,7 +602,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm mt-4">
-                      <span className="text-zinc-500">Unit Price</span>
+                      <span className="text-zinc-500">{t("qrc_unit_price")}</span>
                       <span className="font-semibold">{formatINR(item.unitPrice)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-zinc-50">
@@ -683,9 +683,9 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
           {/* Value Propositions */}
           <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 px-4 sm:px-0 py-2 sm:py-0">
-            <TermCard icon={<ShieldCheck className="w-5 h-5" />} title="1-Year Warranty" body="Complete equipment and labour coverage. Free replacement for any defective parts." delay={0.1} />
-            <TermCard icon={<CreditCard className="w-5 h-5" />} title={`Flat ₹500 Advance`} body={`${formatINR(advance)} required to initiate the project. 90% on delivery, 10% after completion.`} delay={0.2} />
-            <TermCard icon={<Clock className="w-5 h-5" />} title="Priority Support" body="Free remote assistance for 12 months. Next-business-day on-site support." delay={0.3} />
+            <TermCard icon={<ShieldCheck className="w-5 h-5" />} title={t("qrc_1_year_warranty")} body={t("qrc_warranty_desc")} delay={0.1} />
+            <TermCard icon={<CreditCard className="w-5 h-5" />} title={t("qrc_flat_advance").replace("%s", "₹$1")} body={`${formatINR(advance)} ${t("qrc_advance_desc")}`} delay={0.2} />
+            <TermCard icon={<Clock className="w-5 h-5" />} title={t("qrc_priority_support")} body={t("qrc_support_desc")} delay={0.3} />
           </motion.div>
 
           {/* Dual Action / Next Steps Section */}
@@ -722,7 +722,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           
                           <div>
                             <div className="flex items-baseline justify-between mb-1">
-                              <h4 className="text-lg font-black text-emerald-950">Milestone Plan</h4>
+                              <h4 className="text-lg font-black text-emerald-950">{t("qrc_milestone_plan")}</h4>
                               <span className="text-xs font-bold text-emerald-700">₹500 Today</span>
                             </div>
                             <p className="text-xs text-emerald-900/70 leading-relaxed mb-4">
@@ -795,7 +795,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                         <div className="p-6 rounded-2xl bg-zinc-50 border border-zinc-200 flex flex-col justify-between hover:border-zinc-300 transition-all">
                           <div>
                             <div className="flex items-baseline justify-between mb-1">
-                              <h4 className="text-lg font-black text-zinc-900">Flexi EMI</h4>
+                              <h4 className="text-lg font-black text-zinc-900">{t("qrc_flexi_emi")}</h4>
                               <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full">Easy EMIs</span>
                             </div>
                             <p className="text-xs text-zinc-500 leading-relaxed mb-4">
