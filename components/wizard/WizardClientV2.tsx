@@ -784,7 +784,11 @@ export function WizardClientV2() {
                 <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
                   {t("wz_back")}
                 </Button>
-                <Button onClick={handleNext} disabled={totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined} className="flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/20 whitespace-nowrap overflow-hidden text-ellipsis px-2">
+                <Button 
+                  onClick={handleNext} 
+                  disabled={totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined} 
+                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(totalCams === 0 || req.indoor_camera_count === undefined || req.outdoor_camera_count === undefined) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
+                >
                   {t("wz_confirm_cameras")}
                 </Button>
               </div>
@@ -887,7 +891,11 @@ export function WizardClientV2() {
                 <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
                   {t("wz_back")}
                 </Button>
-                <Button onClick={handleNext} className="flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/20 whitespace-nowrap overflow-hidden text-ellipsis px-2">
+                <Button 
+                  onClick={handleNext} 
+                  disabled={!req.recording_days || !req.recording_mode}
+                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(!req.recording_days || !req.recording_mode) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
+                >
                   {t("wz_confirm_recording")}
                 </Button>
               </div>
@@ -1094,7 +1102,7 @@ export function WizardClientV2() {
                 <Button 
                   onClick={handleNext} 
                   disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || req.cabling_done === undefined}
-                  className="flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/20 whitespace-nowrap overflow-hidden text-ellipsis px-2"
+                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || req.cabling_done === undefined) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
                 >
                   {t("wz_confirm_details")}
                 </Button>
