@@ -36,6 +36,31 @@ export function InstantQuotationReview({
   isSaving
 }: InstantQuotationReviewProps) {
   const { t } = useTranslation();
+
+  const translateProductName = (name: string) => {
+    let localized = name;
+    localized = localized.replace("Outdoor Bullet Camera", t("wz_prod_outdoor_bullet"));
+    localized = localized.replace("Indoor Dome Camera", t("wz_prod_indoor_dome"));
+    localized = localized.replace("Color Night Vision, Audio IN", t("wz_prod_color_night_audio"));
+    localized = localized.replace("Supported", t("wz_prod_supported"));
+    localized = localized.replace("Surveillance Hard Disk", t("wz_prod_surveillance_hdd"));
+    
+    // regex for approx backup
+    const backupMatch = localized.match(/Approx\. (\d+) Days Backup - Motion/);
+    if (backupMatch) {
+      localized = localized.replace(backupMatch[0], t("wz_prod_approx_backup").replace('%d', backupMatch[1]));
+    }
+    
+    localized = localized.replace("Power Supply", t("wz_prod_power_supply"));
+    localized = localized.replace("Installation & Termination", t("wz_prod_install_term"));
+    localized = localized.replace("Coaxial Cable (Open)", t("wz_prod_coaxial_cable"));
+    localized = localized.replace("Camera Cable", t("wz_prod_camera_cable"));
+    localized = localized.replace("Connector Set", t("wz_prod_connector_set"));
+    localized = localized.replace("Connectors", t("wz_prod_connectors"));
+    localized = localized.replace("Weatherproof Camera Junction Box", t("wz_prod_junction_box"));
+    return localized;
+  };
+
   const { selection, toggleAddon } = useConfiguratorStore();
   const [showAdvancedCustomizer, setShowAdvancedCustomizer] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
@@ -139,11 +164,11 @@ export function InstantQuotationReview({
           className="inline-flex items-center text-xs font-bold text-gray-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 gap-1.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 px-3 py-1.5 rounded-full shadow-xs transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>{step === 1 ? "Back to Packages" : "Back to Summary"}</span>
+          <span>{step === 1 ? t("wz_back_to_packages") : t("wz_back_to_summary")}</span>
         </button>
 
         <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-          {brandName} • {techName === "HD" ? "Standard HD" : "Premium IP"}
+          {brandName} • {techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip")}
         </span>
       </div>
 
@@ -153,10 +178,10 @@ export function InstantQuotationReview({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[10px] sm:text-xs uppercase font-black text-blue-300 tracking-wider">{t("wz_confirmed_quotation")}</span>
-              <span className="text-[9px] sm:text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">Best Value</span>
+              <span className="text-[9px] sm:text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">{t("wz_best_value")}</span>
             </div>
             <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white">
-              {brandName} {techName === "HD" ? "Standard HD" : "Premium IP"} Setup
+              {brandName} {techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip")} {t("wz_setup")}
             </h2>
             <p className="text-[11px] sm:text-xs text-blue-200/80 mt-0.5">
               {t("wz_complete_system_for")} {camCount} {t("wz_cameras_with")} {selection.recording_days || 7} {t("wz_days_storage")}
@@ -193,32 +218,32 @@ export function InstantQuotationReview({
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Camera className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Cameras</div>
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_cameras")}</div>
           <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{camCount}x {techName}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Server className="w-4 h-4 text-indigo-600 mx-auto mb-1" />
-          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Recorder</div>
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_recorder")}</div>
           <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{brandName} {techName === "IP" ? "NVR" : "DVR"}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <HardDrive className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Storage</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{selection.recording_days || 7} Days</div>
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_storage")}</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{selection.recording_days || 7} {t("wz_days")}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Cable className="w-4 h-4 text-amber-600 mx-auto mb-1" />
-          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Cabling</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">Copper Wire</div>
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_cabling")}</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{t("wz_copper_wire")}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Wrench className="w-4 h-4 text-purple-600 mx-auto mb-1" />
-          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Installation</div>
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_installation")}</div>
           <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">{t("wz_included")}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <ShieldCheck className="w-4 h-4 text-rose-600 mx-auto mb-1" />
-          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Warranty</div>
+          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_warranty")}</div>
           <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{t("wz_1_year_brand")}</div>
         </div>
       </div>
@@ -255,7 +280,7 @@ export function InstantQuotationReview({
             {activePricing.items.map((item, idx) => (
               <div key={idx} className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-between gap-2 shadow-xs">
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{item.display_name}</div>
+                  <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{translateProductName(item.display_name)}</div>
                   <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
                     {t("wz_qty")}: {item.qty} {item.unit_price > 0 ? `• ₹${item.unit_price.toLocaleString("en-IN")} each` : '• {t("wz_free_included")}'}
                   </div>
@@ -268,7 +293,7 @@ export function InstantQuotationReview({
             {activePricing.addons && activePricing.addons.length > 0 && activePricing.addons.map((addon, idx) => (
               <div key={`addon-${idx}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between gap-2 shadow-xs">
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-blue-950 dark:text-blue-200 truncate">{addon.display_name}</div>
+                  <div className="text-xs font-bold text-blue-950 dark:text-blue-200 truncate">{translateProductName(addon.display_name)}</div>
                   <div className="text-[11px] text-blue-700/80 dark:text-blue-400">Add-on • {t("wz_qty")}: {addon.qty || 1}</div>
                 </div>
                 <div className="text-xs font-black text-blue-900 dark:text-blue-200 shrink-0">
@@ -305,7 +330,7 @@ export function InstantQuotationReview({
                   {activePricing.items.map((item, idx) => (
                     <tr key={idx} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
                       <td className="py-2.5 px-4 text-center text-xs text-zinc-400">{idx + 1}</td>
-                      <td className="py-2.5 px-4 font-medium text-zinc-900 dark:text-white">{item.display_name}</td>
+                      <td className="py-2.5 px-4 font-medium text-zinc-900 dark:text-white">{translateProductName(item.display_name)}</td>
                       <td className="py-2.5 px-4 text-center font-bold">{item.qty}</td>
                       <td className="py-2.5 px-4 text-right text-zinc-600 dark:text-zinc-400">₹{item.unit_price.toLocaleString("en-IN")}</td>
                       <td className="py-2.5 px-4 text-right font-bold text-zinc-900 dark:text-white">₹{item.line_total.toLocaleString("en-IN")}</td>
@@ -314,7 +339,7 @@ export function InstantQuotationReview({
                   {activePricing.addons && activePricing.addons.length > 0 && activePricing.addons.map((addon, idx) => (
                     <tr key={`addon-${idx}`} className="bg-blue-50/40 dark:bg-blue-950/20">
                       <td className="py-2.5 px-4 text-center text-xs text-blue-500 font-bold">+</td>
-                      <td className="py-2.5 px-4 font-semibold text-blue-900 dark:text-blue-200">{addon.display_name}</td>
+                      <td className="py-2.5 px-4 font-semibold text-blue-900 dark:text-blue-200">{translateProductName(addon.display_name)}</td>
                       <td className="py-2.5 px-4 text-center font-bold text-blue-900 dark:text-blue-200">{addon.qty || 1}</td>
                       <td className="py-2.5 px-4 text-right text-blue-700 dark:text-blue-300">₹{addon.price.toLocaleString("en-IN")}</td>
                       <td className="py-2.5 px-4 text-right font-bold text-blue-900 dark:text-blue-200">₹{((addon.price || 0) * (addon.qty || 1)).toLocaleString("en-IN")}</td>
