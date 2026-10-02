@@ -173,7 +173,7 @@ export default async function QuoteResultPage({
       const quoteSnap = await adminDb.collection("quotes").doc(leadId).get().catch(() => null);
       if (quoteSnap && quoteSnap.exists) {
         const qData = quoteSnap.data() as any;
-        lead = {
+        lead = serializeDoc({
           id: qData.leadId || qData.lead_id || leadId,
           customer_name: qData.customer_name || "Valued Customer",
           mobile_number: qData.customer_mobile || "",
@@ -183,7 +183,7 @@ export default async function QuoteResultPage({
           wizard_answers: qData.requirementSnapshot || {},
           latest_quote_id: leadId,
           status: "new"
-        } as unknown as Lead;
+        } as unknown as Lead);
       }
     }
 

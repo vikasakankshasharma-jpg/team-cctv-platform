@@ -98,7 +98,7 @@ export default function LandingPage() {
       />
 
       {/* 1. Hero Section - Clean for Google Ads compatibility */}
-      <section className="relative px-4 sm:px-6 pt-10 pb-16 sm:pt-16 sm:pb-20 md:pt-24 md:pb-32 overflow-hidden">
+      <section className="relative px-4 sm:px-6 pt-10 pb-12 sm:pt-12 sm:pb-16 md:pt-16 md:pb-20 lg:pt-16 lg:pb-20 overflow-hidden min-h-[calc(100vh-80px)] flex flex-col justify-center">
         {/* Simple Background - no blur/glow that breaks renderers */}
         <div className="absolute inset-0 -z-10 bg-slate-50 dark:bg-[#050B14]">
           {/* Subtle grid pattern using SVG instead of complex CSS gradients */}
@@ -116,7 +116,7 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto flex flex-col items-center lg:items-start text-center lg:text-left relative z-10">
           {/* Trust Badge - no backdrop-blur */}
-          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-blue-500/20 text-slate-800 dark:text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mb-8 sm:mb-12 shadow-sm">
+          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-blue-500/20 text-slate-800 dark:text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mb-6 sm:mb-8 md:mb-10 shadow-sm">
             <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span><TranslatedText tKey="landing_hero_highlight" defaultText="Simple & Reliable CCTV Security" /></span>
             <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-blue-500/50 hidden sm:block" />
@@ -124,7 +124,7 @@ export default function LandingPage() {
           </div>
 
           {/* H1 - solid color on mobile, gradient only on desktop (where renderer handles it fine) */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight max-w-5xl mb-6 sm:mb-8 md:mb-10 leading-[1.3] md:leading-[1.2]">
+          <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight max-w-5xl mb-4 sm:mb-6 md:mb-8 leading-[1.3] md:leading-[1.2]">
             <TranslatedText tKey="protect_home" defaultText="Instant Free CCTV Quotation." /> <br />
             {/* Solid blue on mobile, gradient on md+ screens */}
             <span className="text-blue-600 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-blue-600 md:to-indigo-600 dark:text-blue-400 dark:md:from-blue-400 dark:md:via-cyan-300 dark:md:to-emerald-400">
@@ -132,11 +132,11 @@ export default function LandingPage() {
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-2xl text-slate-600 dark:text-blue-100/70 max-w-2xl mb-8 sm:mb-10 md:mb-16 font-medium leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-blue-100/70 max-w-2xl mb-6 sm:mb-8 md:mb-10 font-medium leading-relaxed">
             <TranslatedText tKey="landing_subtitle" defaultText="Get your exact CCTV installation cost online in 2 minutes. We offer easy CCTV on EMI options to secure your property without breaking the bank." />
           </p>
 
-          <div className="w-full mb-8 sm:mb-10 md:mb-16">
+          <div className="w-full mb-6 sm:mb-8 md:mb-10">
             <PincodeWidget variant="hero" />
           </div>
 
