@@ -195,22 +195,29 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
   const validUntil = quote.validUntil || quote.expires_at;
   const createdAt = quote.createdAt || quote.created_at;
 
-  const pricing = quote.pricingSnapshot ? {
-    total_payable: quote.pricingSnapshot.total_payable || 0,
-    items: quote.pricingSnapshot.items || [],
-    addons: quote.pricingSnapshot.addons || [],
-    labor_cost: quote.pricingSnapshot.labor_cost || 0,
-    gross_subtotal: quote.pricingSnapshot.gross_subtotal || 0,
-    gst_rate: quote.pricingSnapshot.gst_rate || 18,
-    gst_amount: quote.pricingSnapshot.gst_amount || 0
-  } : {
-    total_payable: quote.total_payable || 0,
-    items: quote.configuration_snapshot || [],
-    addons: quote.addons_snapshot || [],
-    labor_cost: quote.labor_cost || 0,
-    gross_subtotal: quote.gross_subtotal || 0,
-    gst_rate: quote.gst_rate || 18,
-    gst_amount: quote.gst_amount || 0
+  let rawItems: any[] = [];
+  if (Array.isArray(quote?.items) && quote.items.length > 0) {
+    rawItems = quote.items;
+  } else if (Array.isArray(quote?.configurationSnapshot?.items)) {
+    rawItems = quote.configurationSnapshot.items;
+  } else if (Array.isArray(quote?.pricingSnapshot?.breakdown?.items)) {
+    rawItems = quote.pricingSnapshot.breakdown.items;
+  } else if (Array.isArray(quote?.pricingSnapshot?.items)) {
+    rawItems = quote.pricingSnapshot.items;
+  } else if (Array.isArray(quote?.hardware_cart)) {
+    rawItems = quote.hardware_cart;
+  } else if (Array.isArray(quote?.configuration_snapshot)) {
+    rawItems = quote.configuration_snapshot;
+  }
+
+  const pricing = {
+    total_payable: quote?.pricingSnapshot?.total_payable ?? quote?.total_payable ?? 0,
+    items: rawItems,
+    addons: Array.isArray(quote?.addons) ? quote.addons : (quote?.pricingSnapshot?.addons || quote?.addons_snapshot || []),
+    labor_cost: quote?.pricingSnapshot?.labor_cost ?? quote?.labor_cost ?? 0,
+    gross_subtotal: quote?.pricingSnapshot?.gross_subtotal ?? quote?.gross_subtotal ?? 0,
+    gst_rate: quote?.pricingSnapshot?.gst_rate ?? quote?.gst_rate ?? 18,
+    gst_amount: quote?.pricingSnapshot?.gst_amount ?? quote?.gst_amount ?? 0
   };
 
   const validDate = validUntil ? new Date(validUntil).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
@@ -264,29 +271,40 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
             <Text style={styles.colTotal}>Total</Text>
           </View>
 
-          {pricing.items.map((item: any, i: number) => (
-            <View key={`item-${i}`} style={styles.tableRow}>
-              <View style={styles.colDesc}>
-                <Text style={styles.itemTitle}>{item.display_name}</Text>
-                <Text style={styles.itemBrand}>Brand: {item.brand || 'TEAM CCTV'}</Text>
+          {pricing.items.map((item: any, i: number) => {
+            const name = item.display_name || item.name || item.title || "CCTV Component";
+            const qty = item.qty || item.quantity || 1;
+            const unitPrice = item.unit_price || item.unitPrice || item.price || 0;
+            const lineTotal = item.line_total || item.lineTotal || (qty * unitPrice);
+            return (
+              <View key={`item-${i}`} style={styles.tableRow}>
+                <View style={styles.colDesc}>
+                  <Text style={styles.itemTitle}>{name}</Text>
+                  <Text style={styles.itemBrand}>Brand: {item.brand || 'TEAM CCTV'}</Text>
+                </View>
+                <Text style={[styles.colQty, styles.itemText]}>{qty}</Text>
+                <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(unitPrice)}</Text>
+                <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(lineTotal)}</Text>
               </View>
-              <Text style={[styles.colQty, styles.itemText]}>{item.qty}</Text>
-              <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(item.unit_price)}</Text>
-              <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(item.line_total)}</Text>
-            </View>
-          ))}
+            );
+          })}
 
-          {pricing.addons.map((addon: any, i: number) => (
-            <View key={`addon-${i}`} style={styles.tableRow}>
-              <View style={styles.colDesc}>
-                <Text style={styles.itemTitle}>{addon.display_name}</Text>
-                <Text style={styles.itemBrand}>Brand: Add-on</Text>
+          {pricing.addons && pricing.addons.map((addon: any, i: number) => {
+            const name = addon.display_name || addon.name || "Add-on component";
+            const qty = addon.qty || addon.quantity || 1;
+            const price = addon.price || addon.unit_price || 0;
+            return (
+              <View key={`addon-${i}`} style={styles.tableRow}>
+                <View style={styles.colDesc}>
+                  <Text style={styles.itemTitle}>{name}</Text>
+                  <Text style={styles.itemBrand}>Brand: Add-on</Text>
+                </View>
+                <Text style={[styles.colQty, styles.itemText]}>{qty}</Text>
+                <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(price)}</Text>
+                <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(price * qty)}</Text>
               </View>
-              <Text style={[styles.colQty, styles.itemText]}>{addon.qty || 1}</Text>
-              <Text style={[styles.colUnit, styles.itemText]}>{formatCurrency(addon.price)}</Text>
-              <Text style={[styles.colTotal, styles.itemText]}>{formatCurrency(addon.price * (addon.qty || 1))}</Text>
-            </View>
-          ))}
+            );
+          })}
 
           {pricing.labor_cost > 0 && (
             <View style={styles.tableRow}>
