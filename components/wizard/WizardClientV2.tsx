@@ -639,7 +639,7 @@ export function WizardClientV2() {
           <div className="space-y-4 sm:space-y-6 animate-in fade-in">
             <div>
               <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_what_kind_of_installation_do_y")}</h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">Select your setup type to calculate appropriate wiring and hardware.</p>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_select_setup_type_calc_wire")}</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
@@ -679,7 +679,7 @@ export function WizardClientV2() {
                 <p className="text-gray-600 mb-4">{t("wz_since_you_already_have_a_syste")}</p>
                 <div className="space-y-4 mb-4">
                   <input type="text" placeholder="Your Name" value={req.customer_name || ''} onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))} className="w-full p-3 border rounded-xl" />
-                  <input type="tel" placeholder="Mobile Number" value={req.customer_mobile || ''} onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))} className="w-full p-3 border rounded-xl" maxLength={10} />
+                  <input type="tel" placeholder={t("wz_mobile_placeholder")} value={req.customer_mobile || ''} onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))} className="w-full p-3 border rounded-xl" maxLength={10} />
                 </div>
                 <Button onClick={handleFinishWizard} disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} className="w-full h-12">
                   
@@ -746,7 +746,7 @@ export function WizardClientV2() {
             <div className="space-y-3 sm:space-y-5 animate-in fade-in">
               <div>
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_how_many_cameras_do_you_need")}</h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">Select the number of outdoor and indoor cameras.</p>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_select_number_cameras")}</p>
               </div>
               
               <div className="grid grid-cols-1 gap-2.5 sm:gap-4">
@@ -874,15 +874,15 @@ export function WizardClientV2() {
                   <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "continuous" }))}
                     className={`p-2.5 sm:p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer ${req.recording_mode === 'continuous' ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900'}`}>
                     <span className="block font-bold text-gray-900 dark:text-white text-xs sm:text-sm">{t("wz_24x7_continuous")}</span>
-                    <span className="block text-[10px] sm:text-xs text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">Records non-stop 24/7</span>
+                    <span className="block text-[10px] sm:text-xs text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">{t("wz_records_nonstop")}</span>
                   </button>
                   <button onClick={() => setReq(prev => ({ ...prev, recording_mode: "motion" }))}
                     className={`p-2.5 sm:p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer ${req.recording_mode === 'motion' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900'}`}>
                     <span className="block font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center justify-between">
                       <span>{t("wz_smart_motion")}</span>
-                      <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-1 py-0.5 rounded font-black">50% SAVE</span>
+                      <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-1 py-0.5 rounded font-black">{t("wz_50_save")}</span>
                     </span>
-                    <span className="block text-[10px] sm:text-xs text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">Records movement only</span>
+                    <span className="block text-[10px] sm:text-xs text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">{t("wz_records_movement_only")}</span>
                   </button>
                 </div>
               </div>
@@ -1086,7 +1086,7 @@ export function WizardClientV2() {
                         ) : (
                           <div className="px-2 py-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
                             <span>✓</span>
-                            <span>Within complimentary installation limit ({selectedMeters}m / {freeLimitMeters}m included free).</span>
+                            <span>{t("wz_within_complimentary_limit_1")} {selectedMeters}m / {freeLimitMeters}m {t("wz_within_complimentary_limit_2")}</span>
                           </div>
                         )}
                       </div>
@@ -1202,7 +1202,7 @@ export function WizardClientV2() {
                   <input 
                     type="text" 
                     required
-                    placeholder="e.g. Rahul Kumar" 
+                    placeholder={t("wz_eg_name")} 
                     value={req.customer_name || ''} 
                     onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))} 
                     className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
@@ -1221,12 +1221,12 @@ export function WizardClientV2() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">Pincode</label>
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">{t("wz_pincode")}</label>
                   <input
                     type="text"
                     required
                     maxLength={6}
-                    placeholder="e.g. 302012"
+                    placeholder={t("wz_eg_pincode")}
                     value={req.customer_pincode || ''}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, '');
@@ -1259,7 +1259,7 @@ export function WizardClientV2() {
                   <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">{t("wz_email_optional")}</label>
                   <input 
                     type="email" 
-                    placeholder="e.g. rahul@email.com" 
+                    placeholder={t("wz_eg_email")} 
                     value={req.customer_email || ''} 
                     onChange={(e) => setReq(prev => ({ ...prev, customer_email: e.target.value }))} 
                     className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
@@ -1270,12 +1270,12 @@ export function WizardClientV2() {
 
                 <div className="p-2.5 sm:p-3 bg-green-50/80 dark:bg-green-950/30 rounded-xl border border-green-200 dark:border-green-800">
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-green-950 dark:text-green-300">Referral Code (Optional)</label>
-                    <span className="text-[10px] text-green-700 dark:text-green-400 font-medium">Get discount</span>
+                    <label className="text-xs font-bold text-green-950 dark:text-green-300">{t("wz_referral_code_optional")}</label>
+                    <span className="text-[10px] text-green-700 dark:text-green-400 font-medium">{t("wz_get_discount")}</span>
                   </div>
                   <input 
                     type="text" 
-                    placeholder="e.g. P102" 
+                    placeholder={t("wz_eg_referral")} 
                     value={req.partner_id || ''} 
                     onChange={(e) => setReq(prev => ({ ...prev, partner_id: e.target.value.toUpperCase() }))} 
                     className="w-full py-2 px-3 text-sm border border-green-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all uppercase placeholder-normal bg-white dark:bg-zinc-800 text-gray-900 dark:text-white font-semibold"
