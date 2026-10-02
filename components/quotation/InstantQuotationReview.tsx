@@ -8,6 +8,7 @@ import {
   Cable, Monitor, Wifi, Box, FileText, Sparkles, 
   ChevronRight, Wrench, Shield, Layers
 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
@@ -24,6 +25,7 @@ interface InstantQuotationReviewProps {
 }
 
 export function InstantQuotationReview({
+
   lead,
   activePricing,
   products,
@@ -33,6 +35,7 @@ export function InstantQuotationReview({
   onProceedToActualQuotation,
   isSaving
 }: InstantQuotationReviewProps) {
+  const { t } = useTranslation();
   const { selection, toggleAddon } = useConfiguratorStore();
   const [showAdvancedCustomizer, setShowAdvancedCustomizer] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);

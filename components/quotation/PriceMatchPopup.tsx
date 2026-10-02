@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/hooks/useTranslation";
 import { useState, useEffect, useRef } from "react";
 import { Shield, X, ChevronRight, CheckCircle2, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +29,7 @@ export function PriceMatchPopup({
   alreadySubmitted = false,
   onSubmitted,
 }: PriceMatchPopupProps) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [submitted, setSubmitted] = useState(false);
