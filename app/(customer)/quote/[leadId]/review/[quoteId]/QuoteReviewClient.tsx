@@ -460,7 +460,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             >
               <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
               <span className="hidden xs:inline">{isRequestingPdf ? t("qrc_sending") : t("qrc_pdf_on_whatsapp")}</span>
-              <span className="xs:hidden">WhatsApp</span>
+              <span className="xs:hidden">{t("qrc_whatsapp")}</span>
             </button>
           </div>
         </motion.div>
@@ -513,7 +513,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                       onClick={() => openBillingModal("advance_500")}
                       className="text-emerald-400 hover:text-emerald-300 flex items-center gap-0.5 font-bold"
                     >
-                      <Edit3 className="w-2.5 h-2.5" /> Edit
+                      <Edit3 className="w-2.5 h-2.5" /> {t("qrc_edit")}
                     </button>
                   </div>
                   <p className="font-bold text-white text-sm mt-0.5 truncate">
@@ -534,15 +534,15 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               <div className="mt-5 pt-3.5 border-t border-white/10 grid grid-cols-3 gap-2 text-center text-[10px] sm:text-xs text-slate-200">
                 <div className="flex items-center justify-center gap-1 font-medium">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>100% Genuine</span>
+                  <span>{t("qrc_100_genuine")}</span>
                 </div>
                 <div className="flex items-center justify-center gap-1 font-medium">
                   <ShieldCheck className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                  <span>1-Yr Warranty</span>
+                  <span>{t("qrc_1_yr_warranty")}</span>
                 </div>
                 <div className="flex items-center justify-center gap-1 font-medium">
                   <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>2-3 Days Setup</span>
+                  <span>{t("qrc_days_setup")}</span>
                 </div>
               </div>
             </div>

@@ -573,7 +573,13 @@ export type TranslationKey =
   | "qrc_book_installation"
   | "qrc_step_1"
   | "qrc_verify_billing"
-  | "qrc_verify_desc";
+  | "qrc_verify_desc"
+  | "qrc_awaiting_approval"
+  | "qrc_whatsapp"
+  | "qrc_edit"
+  | "qrc_100_genuine"
+  | "qrc_1_yr_warranty"
+  | "qrc_days_setup";
 
 export const translations: Record<
   LocaleCode,
@@ -1332,6 +1338,13 @@ export const translations: Record<
       "qrc_step_1": "Step 1",
       "qrc_verify_billing": "Verify Billing Details",
       "qrc_verify_desc": "Ensure your name and address are correct for the tax invoice.",
+
+      "qrc_awaiting_approval": "Awaiting Approval",
+      "qrc_whatsapp": "WhatsApp",
+      "qrc_edit": "Edit",
+      "qrc_100_genuine": "100% Genuine",
+      "qrc_1_yr_warranty": "1-Yr Warranty",
+      "qrc_days_setup": "2-3 Days Setup",
 },
   hi: {
     "wz_back": "बैक",
@@ -2082,6 +2095,13 @@ export const translations: Record<
       "qrc_step_1": "स्टेप 1",
       "qrc_verify_billing": "बिलिंग डिटेल्स वेरीफाई करें",
       "qrc_verify_desc": "टैक्स इनवॉइस के लिए सुनिश्चित करें कि आपका नाम और एड्रेस सही है।",
+
+      "qrc_awaiting_approval": "अप्रूवल का इंतज़ार",
+      "qrc_whatsapp": "व्हाट्सऐप",
+      "qrc_edit": "एडिट करें",
+      "qrc_100_genuine": "100% असली",
+      "qrc_1_yr_warranty": "1 साल की वारंटी",
+      "qrc_days_setup": "2-3 दिनों में सेटअप",
 },
   mr: {
     "wz_back": "मागे",
@@ -2778,6 +2798,13 @@ export const translations: Record<
       "qrc_step_1": "स्टेप 1",
       "qrc_verify_billing": "बिलिंग डिटेल्स तपासा",
       "qrc_verify_desc": "टॅक्स इनव्हॉईससाठी तुमचे नाव आणि पत्ता योग्य असल्याची खात्री करा.",
+
+      "qrc_awaiting_approval": "मंजुरीच्या प्रतीक्षेत",
+      "qrc_whatsapp": "व्हॉट्सॲप",
+      "qrc_edit": "संपादित करा",
+      "qrc_100_genuine": "100% अस्सल",
+      "qrc_1_yr_warranty": "1-वर्षाची वॉरंटी",
+      "qrc_days_setup": "2-3 दिवसांचा सेटअप",
 },
   gu: {
     "wz_back": "બેક",
@@ -3466,6 +3493,13 @@ export const translations: Record<
       "qrc_step_1": "સ્ટેપ 1",
       "qrc_verify_billing": "બિલિંગ વિગતો વેરિફાય કરો",
       "qrc_verify_desc": "ખાતરી કરો કે ટેક્સ ઇનવોઇસ માટે તમારું નામ અને સરનામું સાચું છે.",
+
+      "qrc_awaiting_approval": "મંજૂરીની રાહમાં",
+      "qrc_whatsapp": "વ્હોટ્સએપ",
+      "qrc_edit": "એડિટ",
+      "qrc_100_genuine": "100% અસલી",
+      "qrc_1_yr_warranty": "1-વર્ષની વોરંટી",
+      "qrc_days_setup": "2-3 દિવસમાં સેટઅપ",
 },
   ta: {
     "wz_back": "பேக்",
@@ -3995,6 +4029,13 @@ export const translations: Record<
       "qrc_step_1": "ஸ்டெப் 1",
       "qrc_verify_billing": "பில்லிங் விவரங்களை சரிபார்க்கவும்",
       "qrc_verify_desc": "வரி இன்வாய்ஸிற்கு உங்கள் பெயரும் முகவரியும் சரியாக உள்ளதா என்பதை உறுதிப்படுத்தவும்.",
+
+      "qrc_awaiting_approval": "ஒப்புதலுக்கு காத்திருக்கிறது",
+      "qrc_whatsapp": "வாட்ஸ்அப்",
+      "qrc_edit": "திருத்து",
+      "qrc_100_genuine": "100% அசல்",
+      "qrc_1_yr_warranty": "1 வருட வாரண்டி",
+      "qrc_days_setup": "2-3 நாட்களில் செட்டப்",
 },
   te: {
     "wz_back": "బ్యాక్",
@@ -4561,6 +4602,13 @@ export const translations: Record<
       "qrc_step_1": "స్టెప్ 1",
       "qrc_verify_billing": "బిల్లింగ్ వివరాలను వెరిఫై చేయండి",
       "qrc_verify_desc": "ట్యాక్స్ ఇన్‌వాయిస్ కోసం మీ పేరు మరియు చిరునామా సరిగ్గా ఉన్నాయో లేదో నిర్ధారించుకోండి.",
+
+      "qrc_awaiting_approval": "ఆమోదం కోసం వేచి ఉంది",
+      "qrc_whatsapp": "వాట్సాప్",
+      "qrc_edit": "సవరించండి",
+      "qrc_100_genuine": "100% జెన్యూన్",
+      "qrc_1_yr_warranty": "1-సంవత్సరం వారంటీ",
+      "qrc_days_setup": "2-3 రోజుల సెటప్",
 },
   kn: {
     "wz_back": "ಬ್ಯಾಕ್",
@@ -5090,6 +5138,13 @@ export const translations: Record<
       "qrc_step_1": "ಹಂತ 1",
       "qrc_verify_billing": "ಬಿಲ್ಲಿಂಗ್ ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸಿ",
       "qrc_verify_desc": "ಟ್ಯಾಕ್ಸ್ ಇನ್‌ವಾಯ್ಸ್‌ಗಾಗಿ ನಿಮ್ಮ ಹೆಸರು ಮತ್ತು ವಿಳಾಸ ಸರಿಯಾಗಿದೆಯೇ ಎಂದು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ.",
+
+      "qrc_awaiting_approval": "ಅನುಮೋದನೆಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ",
+      "qrc_whatsapp": "ವಾಟ್ಸ್ಆಪ್",
+      "qrc_edit": "ಎಡಿಟ್",
+      "qrc_100_genuine": "100% ಅಸಲಿ",
+      "qrc_1_yr_warranty": "1-ವರ್ಷದ ವಾರಂಟಿ",
+      "qrc_days_setup": "2-3 ದಿನಗಳ ಸೆಟಪ್",
 },
   bn: {
     "wz_back": "ব্যাক",
@@ -5619,6 +5674,13 @@ export const translations: Record<
       "qrc_step_1": "ধাপ ১",
       "qrc_verify_billing": "বিলিং ডিটেইলস ভেরিফাই করুন",
       "qrc_verify_desc": "ট্যাক্স ইনভয়েসের জন্য আপনার নাম এবং ঠিকানা সঠিক কিনা তা নিশ্চিত করুন।",
+
+      "qrc_awaiting_approval": "অনুমোদনের অপেক্ষায়",
+      "qrc_whatsapp": "হোয়াটসঅ্যাপ",
+      "qrc_edit": "এডিট",
+      "qrc_100_genuine": "১০০% জেনুইন",
+      "qrc_1_yr_warranty": "১-বছরের ওয়ারেন্টি",
+      "qrc_days_setup": "২-৩ দিনের সেটআপ",
 },
   ml: {
     "wz_back": "തിരികെ",
@@ -6148,6 +6210,13 @@ export const translations: Record<
       "qrc_step_1": "സ്റ്റെപ്പ് 1",
       "qrc_verify_billing": "ബില്ലിംഗ് വിവരങ്ങൾ പരിശോധിക്കുക",
       "qrc_verify_desc": "ടാക്സ് ഇൻവോയ്‌സിനായി നിങ്ങളുടെ പേരും വിലാസവും ശരിയാണെന്ന് ഉറപ്പുവരുത്തുക.",
+
+      "qrc_awaiting_approval": "അംഗീകാരത്തിനായി കാത്തിരിക്കുന്നു",
+      "qrc_whatsapp": "വാട്ട്‌സ്ആപ്പ്",
+      "qrc_edit": "എഡിറ്റ് ചെയ്യുക",
+      "qrc_100_genuine": "100% ഒറിജിനൽ",
+      "qrc_1_yr_warranty": "1 വർഷത്തെ വാറൻ്റി",
+      "qrc_days_setup": "സെറ്റപ്പ് ചെയ്യാൻ 2-3 ദിവസം",
 },
   pa: {
     "wz_back": "ਬੈਕ",
@@ -6677,6 +6746,13 @@ export const translations: Record<
       "qrc_step_1": "ਸਟੈਪ 1",
       "qrc_verify_billing": "ਬਿਲਿੰਗ ਵੇਰਵੇ ਵੈਰੀਫਾਈ ਕਰੋ",
       "qrc_verify_desc": "ਯਕੀਨੀ ਬਣਾਓ ਕਿ ਟੈਕਸ ਇਨਵੌਇਸ ਲਈ ਤੁਹਾਡਾ ਨਾਮ ਅਤੇ ਪਤਾ ਸਹੀ ਹਨ।",
+
+      "qrc_awaiting_approval": "ਮਨਜ਼ੂਰੀ ਦੀ ਉਡੀਕ ਵਿੱਚ",
+      "qrc_whatsapp": "ਵਟਸਐਪ",
+      "qrc_edit": "ਸੋਧੋ",
+      "qrc_100_genuine": "100% ਅਸਲੀ",
+      "qrc_1_yr_warranty": "1-ਸਾਲ ਦੀ ਵਾਰੰਟੀ",
+      "qrc_days_setup": "2-3 ਦਿਨਾਂ ਦਾ ਸੈੱਟਅੱਪ",
 },
   or: {
     "wz_back": "ବ୍ୟାକ୍",
@@ -7250,5 +7326,12 @@ export const translations: Record<
       "qrc_step_1": "ଷ୍ଟେପ୍ 1",
       "qrc_verify_billing": "ବିଲିଂ ବିବରଣୀ ଯାଞ୍ଚ କରନ୍ତୁ",
       "qrc_verify_desc": "ଟ୍ୟାକ୍ସ ଇନଭଏସ୍ ପାଇଁ ଆପଣଙ୍କ ନାମ ଏବଂ ଠିକଣା ସଠିକ୍ ଅଛି ବୋଲି ନିଶ୍ଚିତ କରନ୍ତୁ।",
+
+      "qrc_awaiting_approval": "ଅନୁମୋଦନ ଅପେକ୍ଷାରେ",
+      "qrc_whatsapp": "ହ୍ୱାଟ୍ସଆପ୍",
+      "qrc_edit": "ସମ୍ପାଦନ",
+      "qrc_100_genuine": "100% ଅସଲି",
+      "qrc_1_yr_warranty": "1-ବର୍ଷର ୱାରେଣ୍ଟି",
+      "qrc_days_setup": "2-3 ଦିନରେ ସେଟଅପ୍",
 }
 };
