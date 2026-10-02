@@ -495,7 +495,18 @@ export type TranslationKey =
   | "wz_proceed_to_final_quotation"
   | "wz_includes_all_selected_desc"
   | "wz_itemized_breakdown"
-  | "wz_addons_and_extras";
+  | "wz_addons_and_extras"
+  | "wz_confirmed_quotation"
+  | "wz_complete_system_for"
+  | "wz_cameras_with"
+  | "wz_days_storage"
+  | "wz_100_genuine"
+  | "wz_free_onsite_install"
+  | "wz_1_year_warranty"
+  | "wz_1_year_brand"
+  | "wz_included"
+  | "wz_total_all_inclusive_price"
+  | "wz_includes_hardware_wiring_install";
 
 export const translations: Record<
   LocaleCode,
@@ -1173,6 +1184,19 @@ export const translations: Record<
       "wz_includes_all_selected_desc": "Includes all selected cameras, recorder, hard disk storage, cabling, installation, and chosen accessories with full 18% GST invoice.",
       "wz_itemized_breakdown": "Itemized Breakdown",
       "wz_addons_and_extras": "Add-ons & Extras",
+
+      "wz_confirmed_quotation": "Confirmed Quotation",
+      "wz_complete_system_for": "Complete system for",
+      "wz_cameras_with": "Cameras with",
+      "wz_days_storage": "Days Storage",
+      "wz_100_genuine": "100% Genuine",
+      "wz_free_onsite_install": "Free On-Site Install",
+      "wz_1_year_warranty": "1 Year Warranty",
+      "wz_1_year_brand": "1 Year Brand",
+      "wz_included": "Included",
+      "wz_total_all_inclusive_price": "Total All-Inclusive Price",
+      "wz_includes_hardware_wiring_install": "Includes Hardware + Wiring + Installation",
+      "wz_free_included": "Free Included",
 },
   hi: {
     "wz_back": "बैक",
@@ -1842,6 +1866,19 @@ export const translations: Record<
       "quote_h1": "आपकी सुरक्षा, ",
       "quote_h1_span": "बिल्कुल आसान।",
       "quote_prep": "खास आपके लिए तैयार, ",
+
+      "wz_confirmed_quotation": "कंफर्म कोटेशन",
+      "wz_complete_system_for": "पूरा सिस्टम",
+      "wz_cameras_with": "कैमरे और",
+      "wz_days_storage": "दिन की रिकॉर्डिंग",
+      "wz_100_genuine": "100% ओरिजिनल",
+      "wz_free_onsite_install": "फ्री ऑन-साइट इंस्टॉलेशन",
+      "wz_1_year_warranty": "1 साल की वारंटी",
+      "wz_1_year_brand": "1 साल ब्रांड",
+      "wz_included": "शामिल",
+      "wz_total_all_inclusive_price": "सब मिलाकर कुल कीमत",
+      "wz_includes_hardware_wiring_install": "हार्डवेयर + वायरिंग + इंस्टॉलेशन शामिल",
+      "wz_free_included": "फ्री शामिल",
 },
   mr: {
     "wz_back": "मागे",
@@ -2457,6 +2494,19 @@ export const translations: Record<
       "quote_h1": "तुमची सुरक्षा,",
       "quote_h1_span": "आता अगदी सोपी.",
       "quote_prep": "खास तुमच्यासाठी तयार केलेलं ",
+
+      "wz_confirmed_quotation": "निश्चित कोटेशन",
+      "wz_complete_system_for": "साठी संपूर्ण सिस्टीम",
+      "wz_cameras_with": "कॅमेरे सोबत",
+      "wz_days_storage": "दिवसांचे स्टोरेज",
+      "wz_100_genuine": "100% अस्सल",
+      "wz_free_onsite_install": "मोफत ऑन-साईट इन्स्टॉलेशन",
+      "wz_1_year_warranty": "1 वर्षाची वॉरंटी",
+      "wz_1_year_brand": "1 वर्षाचा ब्रँड",
+      "wz_included": "समाविष्ट",
+      "wz_total_all_inclusive_price": "एकूण सर्वसमावेशक किंमत",
+      "wz_includes_hardware_wiring_install": "हार्डवेअर + वायरिंग + इन्स्टॉलेशन समाविष्ट",
+      "wz_free_included": "मोफत समाविष्ट",
 },
   gu: {
     "wz_back": "બેક",
@@ -3064,6 +3114,19 @@ export const translations: Record<
       "quote_h1": "તમારી સુરક્ષા,",
       "quote_h1_span": "એકદમ સરળ.",
       "quote_prep": "ખાસ તમારા માટે તૈયાર કરેલ ",
+
+      "wz_confirmed_quotation": "કન્ફર્મ કરેલ ક્વોટેશન",
+      "wz_complete_system_for": "માટે સંપૂર્ણ સિસ્ટમ",
+      "wz_cameras_with": "કેમેરા સાથે",
+      "wz_days_storage": "દિવસનું સ્ટોરેજ",
+      "wz_100_genuine": "100% ઓરિજિનલ",
+      "wz_free_onsite_install": "ફ્રી ઓન-સાઇટ ઇન્સ્ટોલેશન",
+      "wz_1_year_warranty": "1 વર્ષની વોરંટી",
+      "wz_1_year_brand": "1 વર્ષની બ્રાન્ડ",
+      "wz_included": "શામેલ છે",
+      "wz_total_all_inclusive_price": "કુલ સર્વસમાવેશક કિંમત",
+      "wz_includes_hardware_wiring_install": "હાર્ડવેર + વાયરિંગ + ઇન્સ્ટોલેશન શામેલ છે",
+      "wz_free_included": "મફત શામેલ છે",
 },
   ta: {
     "wz_back": "பேக்",
@@ -3512,6 +3575,19 @@ export const translations: Record<
       "quote_h1": "உங்கள் பாதுகாப்பு,",
       "quote_h1_span": "இனி மிகவும் சுலபம்.",
       "quote_prep": "பிரத்யேகமாகத் தயார் செய்யப்பட்டது: ",
+
+      "wz_confirmed_quotation": "உறுதிசெய்யப்பட்ட விலைப்புள்ளி",
+      "wz_complete_system_for": "முழுமையான சிஸ்டம்:",
+      "wz_cameras_with": "கேமராக்களுடன்",
+      "wz_days_storage": "நாட்கள் சேமிப்பு",
+      "wz_100_genuine": "100% அசல்",
+      "wz_free_onsite_install": "இடத்திலேயே இலவச நிறுவல்",
+      "wz_1_year_warranty": "1 வருட உத்தரவாதம்",
+      "wz_1_year_brand": "1 வருட பிராண்ட்",
+      "wz_included": "அடங்கும்",
+      "wz_total_all_inclusive_price": "அனைத்தும் அடங்கிய மொத்த விலை",
+      "wz_includes_hardware_wiring_install": "ஹார்டுவேர் + வயரிங் + நிறுவல் அடங்கும்",
+      "wz_free_included": "இலவசமாக வழங்கப்படுகிறது",
 },
   te: {
     "wz_back": "బ్యాక్",
@@ -3997,6 +4073,19 @@ export const translations: Record<
       "quote_h1": "మీ భద్రత,",
       "quote_h1_span": "ఇప్పుడు మరింత సులభం.",
       "quote_prep": "ప్రత్యేకంగా వీరి కోసం: ",
+
+      "wz_confirmed_quotation": "ధృవీకరించబడిన కొటేషన్",
+      "wz_complete_system_for": "దీని కోసం పూర్తి సిస్టమ్",
+      "wz_cameras_with": "కెమెరాలతో పాటు",
+      "wz_days_storage": "రోజుల స్టోరేజ్",
+      "wz_100_genuine": "100% జెన్యూన్",
+      "wz_free_onsite_install": "ఉచిత ఆన్-సైట్ ఇన్‌స్టాలేషన్",
+      "wz_1_year_warranty": "1 సంవత్సరం వారంటీ",
+      "wz_1_year_brand": "1 సంవత్సరం బ్రాండ్",
+      "wz_included": "చేర్చబడింది",
+      "wz_total_all_inclusive_price": "అన్నీ కలుపుకొని మొత్తం ధర",
+      "wz_includes_hardware_wiring_install": "హార్డ్‌వేర్ + వైరింగ్ + ఇన్‌స్టాలేషన్‌తో సహా",
+      "wz_free_included": "ఉచితంగా చేర్చబడింది",
 },
   kn: {
     "wz_back": "ಬ್ಯಾಕ್",
@@ -4445,6 +4534,19 @@ export const translations: Record<
       "quote_h1": "ನಿಮ್ಮ ಭದ್ರತೆ,",
       "quote_h1_span": "ಈಗ ಇನ್ನಷ್ಟು ಸರಳ.",
       "quote_prep": "ಇವರಿಗಾಗಿ ಸಿದ್ಧಪಡಿಸಲಾಗಿದೆ: ",
+
+      "wz_confirmed_quotation": "ಖಚಿತಪಡಿಸಿದ ಕೊಟೇಶನ್",
+      "wz_complete_system_for": "ಸಂಪೂರ್ಣ ಸಿಸ್ಟಮ್",
+      "wz_cameras_with": "ಕ್ಯಾಮೆರಾಗಳೊಂದಿಗೆ",
+      "wz_days_storage": "ದಿನಗಳ ಸ್ಟೋರೇಜ್",
+      "wz_100_genuine": "100% ಅಸಲಿ",
+      "wz_free_onsite_install": "ಉಚಿತ ಆನ್-ಸೈಟ್ ಇನ್‌ಸ್ಟಾಲೇಶನ್",
+      "wz_1_year_warranty": "1 ವರ್ಷದ ವಾರಂಟಿ",
+      "wz_1_year_brand": "1 ವರ್ಷದ ಬ್ರ್ಯಾಂಡ್",
+      "wz_included": "ಒಳಗೊಂಡಿದೆ",
+      "wz_total_all_inclusive_price": "ಎಲ್ಲವನ್ನೂ ಒಳಗೊಂಡ ಒಟ್ಟು ಬೆಲೆ",
+      "wz_includes_hardware_wiring_install": "ಹಾರ್ಡ್‌ವೇರ್ + ವೈರಿಂಗ್ + ಇನ್‌ಸ್ಟಾಲೇಶನ್ ಒಳಗೊಂಡಿದೆ",
+      "wz_free_included": "ಉಚಿತವಾಗಿ ಸೇರಿಸಲಾಗಿದೆ",
 },
   bn: {
     "wz_back": "ব্যাক",
@@ -4893,6 +4995,19 @@ export const translations: Record<
       "quote_h1": "আপনার নিরাপত্তা,",
       "quote_h1_span": "এবার হলো একদম সহজ।",
       "quote_prep": "বিশেষভাবে তৈরি করা হয়েছে - ",
+
+      "wz_confirmed_quotation": "নিশ্চিত কোটেশন",
+      "wz_complete_system_for": "এর জন্য সম্পূর্ণ সিস্টেম",
+      "wz_cameras_with": "ক্যামেরার সাথে",
+      "wz_days_storage": "দিনের স্টোরেজ",
+      "wz_100_genuine": "১০০% অরিজিনাল",
+      "wz_free_onsite_install": "ফ্রি অন-সাইট ইন্সটলেশন",
+      "wz_1_year_warranty": "১ বছরের ওয়ারেন্টি",
+      "wz_1_year_brand": "১ বছরের ব্র্যান্ড",
+      "wz_included": "অন্তর্ভুক্ত",
+      "wz_total_all_inclusive_price": "সর্বমোট মূল্য",
+      "wz_includes_hardware_wiring_install": "হার্ডওয়্যার + ওয়্যারিং + ইন্সটলেশন অন্তর্ভুক্ত",
+      "wz_free_included": "ফ্রি অন্তর্ভুক্ত",
 },
   ml: {
     "wz_back": "തിരികെ",
@@ -5341,6 +5456,19 @@ export const translations: Record<
       "quote_h1": "നിങ്ങളുടെ സുരക്ഷ,",
       "quote_h1_span": "ഇനി കൂടുതൽ എളുപ്പത്തിൽ.",
       "quote_prep": "ഇവർക്കായി പ്രത്യേകം തയ്യാറാക്കിയത്: ",
+
+      "wz_confirmed_quotation": "സ്ഥിരീകരിച്ച കൊട്ടേഷൻ",
+      "wz_complete_system_for": "സമ്പൂർണ്ണ സിസ്റ്റം",
+      "wz_cameras_with": "ക്യാമറകൾക്കൊപ്പം",
+      "wz_days_storage": "ദിവസത്തെ സ്റ്റോറേജ്",
+      "wz_100_genuine": "100% ഒറിജിനൽ",
+      "wz_free_onsite_install": "സൗജന്യ ഓൺ-സൈറ്റ് ഇൻസ്റ്റാളേഷൻ",
+      "wz_1_year_warranty": "1 വർഷത്തെ വാറന്റി",
+      "wz_1_year_brand": "1 വർഷത്തെ ബ്രാൻഡ്",
+      "wz_included": "ഉൾപ്പെടുത്തിയിരിക്കുന്നു",
+      "wz_total_all_inclusive_price": "എല്ലാം ഉൾപ്പെടുന്ന ആകെ വില",
+      "wz_includes_hardware_wiring_install": "ഹാർഡ്‌വെയർ + വയറിംഗ് + ഇൻസ്റ്റാളേഷൻ ഉൾപ്പെടുന്നു",
+      "wz_free_included": "സൗജന്യമായി ഉൾപ്പെടുത്തിയിരിക്കുന്നു",
 },
   pa: {
     "wz_back": "ਬੈਕ",
@@ -5789,6 +5917,19 @@ export const translations: Record<
       "quote_h1": "ਤੁਹਾਡੀ ਸੁਰੱਖਿਆ,",
       "quote_h1_span": "ਹੁਣ ਬਿਲਕੁਲ ਆਸਾਨ।",
       "quote_prep": "ਖਾਸ ਤੌਰ 'ਤੇ ਇਹਨਾਂ ਲਈ ਤਿਆਰ ਕੀਤੀ ਗਈ: ",
+
+      "wz_confirmed_quotation": "ਪੁਸ਼ਟੀ ਕੀਤੀ ਕੋਟੇਸ਼ਨ",
+      "wz_complete_system_for": "ਲਈ ਪੂਰਾ ਸਿਸਟਮ",
+      "wz_cameras_with": "ਕੈਮਰਿਆਂ ਨਾਲ",
+      "wz_days_storage": "ਦਿਨਾਂ ਦੀ ਸਟੋਰੇਜ",
+      "wz_100_genuine": "100% ਅਸਲੀ",
+      "wz_free_onsite_install": "ਮੁਫ਼ਤ ਆਨ-ਸਾਈਟ ਇੰਸਟਾਲੇਸ਼ਨ",
+      "wz_1_year_warranty": "1 ਸਾਲ ਦੀ ਵਾਰੰਟੀ",
+      "wz_1_year_brand": "1 ਸਾਲ ਬ੍ਰਾਂਡ",
+      "wz_included": "ਸ਼ਾਮਲ",
+      "wz_total_all_inclusive_price": "ਕੁੱਲ ਕੀਮਤ (ਸਭ ਸ਼ਾਮਲ)",
+      "wz_includes_hardware_wiring_install": "ਹਾਰਡਵੇਅਰ + ਵਾਇਰਿੰਗ + ਇੰਸਟਾਲੇਸ਼ਨ ਸ਼ਾਮਲ",
+      "wz_free_included": "ਮੁਫ਼ਤ ਸ਼ਾਮਲ",
 },
   or: {
     "wz_back": "ବ୍ୟାକ୍",
@@ -6281,5 +6422,18 @@ export const translations: Record<
       "quote_h1": "ଆପଣଙ୍କ ସୁରକ୍ଷା,",
       "quote_h1_span": "ଏବେ ଆହୁରି ସହଜ।",
       "quote_prep": "କେବଳ ଆପଣଙ୍କ ପାଇଁ ପ୍ରସ୍ତୁତ ",
+
+      "wz_confirmed_quotation": "ନିଶ୍ଚିତ କୋଟେସନ୍",
+      "wz_complete_system_for": "ସମ୍ପୂର୍ଣ୍ଣ ସିଷ୍ଟମ୍ ପାଇଁ",
+      "wz_cameras_with": "କ୍ୟାମେରା ସହିତ",
+      "wz_days_storage": "ଦିନର ଷ୍ଟୋରେଜ୍",
+      "wz_100_genuine": "100% ଅସଲି",
+      "wz_free_onsite_install": "ମାଗଣା ଅନସାଇଟ୍ ଇନଷ୍ଟଲେସନ୍",
+      "wz_1_year_warranty": "1 ବର୍ଷର ୱାରେଣ୍ଟି",
+      "wz_1_year_brand": "1 ବର୍ଷ ବ୍ରାଣ୍ଡ୍",
+      "wz_included": "ଅନ୍ତର୍ଭୁକ୍ତ",
+      "wz_total_all_inclusive_price": "ସର୍ବମୋଟ ସମସ୍ତ-ଅନ୍ତର୍ଭୁକ୍ତ ମୂଲ୍ୟ",
+      "wz_includes_hardware_wiring_install": "ହାର୍ଡୱେର୍ + ୱେୟାରିଂ + ଇନଷ୍ଟଲେସନ୍ ଅନ୍ତର୍ଭୁକ୍ତ",
+      "wz_free_included": "ମାଗଣାରେ ଅନ୍ତର୍ଭୁକ୍ତ",
 }
 };

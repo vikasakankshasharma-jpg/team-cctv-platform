@@ -152,23 +152,23 @@ export function InstantQuotationReview({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] sm:text-xs uppercase font-black text-blue-300 tracking-wider">Confirmed Quotation</span>
+              <span className="text-[10px] sm:text-xs uppercase font-black text-blue-300 tracking-wider">{t("wz_confirmed_quotation")}</span>
               <span className="text-[9px] sm:text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">Best Value</span>
             </div>
             <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white">
               {brandName} {techName === "HD" ? "Standard HD" : "Premium IP"} Setup
             </h2>
             <p className="text-[11px] sm:text-xs text-blue-200/80 mt-0.5">
-              Complete system for {camCount} Cameras with {selection.recording_days || 7} Days Storage
+              {t("wz_complete_system_for")} {camCount} {t("wz_cameras_with")} {selection.recording_days || 7} {t("wz_days_storage")}
             </p>
           </div>
 
           <div className="flex items-center justify-between sm:flex-col sm:items-end bg-white/10 backdrop-blur-md px-3.5 py-2 sm:p-4 rounded-xl border border-white/10 shrink-0">
-            <span className="text-[10px] uppercase font-semibold text-blue-200">Total All-Inclusive Price</span>
+            <span className="text-[10px] uppercase font-semibold text-blue-200">{t("wz_total_all_inclusive_price")}</span>
             <div className="flex items-baseline gap-1 mt-0.5">
               <span className="text-xl sm:text-3xl font-black text-white">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
             </div>
-            <span className="hidden sm:block text-[9px] text-emerald-300 font-semibold mt-0.5">✓ Includes Hardware + Wiring + Installation</span>
+            <span className="hidden sm:block text-[9px] text-emerald-300 font-semibold mt-0.5">✓ {t("wz_includes_hardware_wiring_install")}</span>
           </div>
         </div>
 
@@ -176,15 +176,15 @@ export function InstantQuotationReview({
         <div className="mt-3.5 pt-3 border-t border-white/10 grid grid-cols-3 gap-2 text-center text-[10px] sm:text-xs font-semibold text-blue-100">
           <div className="flex items-center justify-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="truncate">100% Genuine</span>
+            <span className="truncate">{t("wz_100_genuine")}</span>
           </div>
           <div className="flex items-center justify-center gap-1">
             <Wrench className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="truncate">Free On-Site Install</span>
+            <span className="truncate">{t("wz_free_onsite_install")}</span>
           </div>
           <div className="flex items-center justify-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-            <span className="truncate">1 Year Warranty</span>
+            <span className="truncate">{t("wz_1_year_warranty")}</span>
           </div>
         </div>
       </div>
@@ -214,12 +214,12 @@ export function InstantQuotationReview({
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Wrench className="w-4 h-4 text-purple-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Installation</div>
-          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">Included</div>
+          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">{t("wz_included")}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <ShieldCheck className="w-4 h-4 text-rose-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Warranty</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">1 Year Brand</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{t("wz_1_year_brand")}</div>
         </div>
       </div>
 
@@ -257,7 +257,7 @@ export function InstantQuotationReview({
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{item.display_name}</div>
                   <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    {t("wz_qty")}: {item.qty} {item.unit_price > 0 ? `• ₹${item.unit_price.toLocaleString("en-IN")} each` : '• Free Included'}
+                    {t("wz_qty")}: {item.qty} {item.unit_price > 0 ? `• ₹${item.unit_price.toLocaleString("en-IN")} each` : '• {t("wz_free_included")}'}
                   </div>
                 </div>
                 <div className="text-xs font-black text-zinc-900 dark:text-white shrink-0">
@@ -513,7 +513,7 @@ export function InstantQuotationReview({
             Ready To Finalize Your Quotation?
           </div>
           <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Grand Total: ₹{activePricing.total_payable.toLocaleString("en-IN")}
+            {t("wz_total_amount_payable")} ₹{activePricing.total_payable.toLocaleString("en-IN")}
           </h3>
           <p className="text-xs sm:text-sm text-blue-100 max-w-xl">
             {t("wz_includes_all_selected_desc")}
