@@ -1351,28 +1351,48 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     
     if (fallbackOptions.length === 0) return undefined;
     
-    fallbackOptions.sort((a, b) => getCapacity(a) - getCapacity(b));
-    const fallback = fallbackOptions.find(o => getCapacity(o) >= selection.camera_count) || fallbackOptions[fallbackOptions.length - 1];
-    if (fallback) fallback.max_cameras = getCapacity(fallback);
+    // STRATEGIC PRICING: Find options that meet capacity, then sort by CHEAPEST price to fight competitors
+    const validFallbacks = fallbackOptions.filter(o => getCapacity(o) >= selection.camera_count);
+    if (validFallbacks.length > 0) {
+      validFallbacks.sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
+      const fallback = validFallbacks[0];
+      fallback.max_cameras = getCapacity(fallback);
+      return fallback;
+    }
+    
+    // If no fallback meets capacity, take the largest one available
+    fallbackOptions.sort((a, b) => getCapacity(b) - getCapacity(a));
+    const fallback = fallbackOptions[0];
+    fallback.max_cameras = getCapacity(fallback);
     return fallback;
   }
 
-  if (options.length === 0) return undefined;
-  options.sort((a, b) => getCapacity(a) - getCapacity(b));
+  // STRATEGIC PRICING: Filter for capacity, then sort by CHEAPEST price to maintain competitive edge
+  const validOptions = options.filter(o => getCapacity(o) >= selection.camera_count);
+  
+  if (validOptions.length === 0) {
+    // If none meet capacity, pick the largest one available
+    options.sort((a, b) => getCapacity(b) - getCapacity(a));
+    const finalTrans = options[0];
+    finalTrans.max_cameras = getCapacity(finalTrans);
+    return finalTrans;
+  }
+
+  // Sort valid options by cheapest price ascending
+  validOptions.sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
 
   let finalTrans = undefined;
 
   if (tech === "IP") {
-    const preferredOptions = options.filter(o => getCapacity(o) <= 8);
+    // For IP, we prefer standardizing on 4-ch or 8-ch switches if possible
+    const preferredOptions = validOptions.filter(o => getCapacity(o) <= 8);
     if (preferredOptions.length > 0) {
-      // Standardize on 4-ch or 8-ch switches to reduce costs through multiples
-      const idealCapacity = selection.camera_count <= 4 ? 4 : 8;
-      finalTrans = preferredOptions.find(o => getCapacity(o) >= idealCapacity) || preferredOptions[preferredOptions.length - 1];
+      finalTrans = preferredOptions[0];
     }
   }
 
   if (!finalTrans) {
-    finalTrans = options.find(o => getCapacity(o) >= selection.camera_count) || options[options.length - 1];
+    finalTrans = validOptions[0];
   }
 
   if (finalTrans) finalTrans.max_cameras = getCapacity(finalTrans);
