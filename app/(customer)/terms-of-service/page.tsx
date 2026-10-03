@@ -135,7 +135,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2>5. Appointment, Site Visit & Installation</h2>
             <ul>
-              <li>After submitting a quotation request, our team will contact you within <strong className="text-zinc-900 dark:text-white">24 business hours</strong> to schedule a complimentary site visit.</li>
+              <li>After submitting a quotation request, our team will contact you shortly to schedule a complimentary site visit.</li>
               <li>The site visit is free of charge for properties in Jaipur. A nominal visit fee may apply for properties in outskirt areas (communicated in advance).</li>
               <li>Installation timelines depend on hardware availability, your schedule, and team capacity. We will communicate estimated timelines clearly before work begins.</li>
               <li>You are responsible for providing safe access to the property and ensuring necessary permissions from property owners or housing societies.</li>

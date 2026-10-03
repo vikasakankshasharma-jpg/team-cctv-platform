@@ -203,7 +203,7 @@ export function CompetitorQuoteUploader({
           {t('up_quote_rcvd', 'Quote Received')}
         </h4>
         <p className="text-[15px] text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-          {t('up_quote_msg', "We've received your quote. Our team will review it and get back to you within 24 hours with a guaranteed best price.")}
+          {t('up_quote_msg', "We've received your quote. Our team will review it and get back to you with a guaranteed best price.")}
         </p>
       </div>
     );
