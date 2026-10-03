@@ -17,6 +17,7 @@ interface LineItem {
   id: string;
   name: string;
   description: string;
+  brand?: string;
   badge?: { label: string; color?: string };
   quantity: number;
   unitPrice: number;
@@ -579,6 +580,11 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           <span className="text-[10px] font-bold text-zinc-400 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">#{idx + 1}</span>
                           {item.name}
                         </h4>
+                        {item.brand && (
+                          <span className="inline-block mt-1 mb-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-100 text-zinc-500 border border-zinc-200">
+                            {item.brand}
+                          </span>
+                        )}
                         {cleanDescription && (
                           <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed line-clamp-2">
                             {cleanDescription}

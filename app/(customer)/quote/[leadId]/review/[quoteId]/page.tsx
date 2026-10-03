@@ -145,7 +145,8 @@ export default async function QuoteReviewPage({
         ...rawItems.map((item: any) => ({
           id: item.product_id || item.id || item.sku || Math.random().toString(36).substr(2, 9),
           name: item.display_name || item.name || item.title || "CCTV Component",
-          description: item.technology ? `Camera type: ${item.technology} | Tier: ${item.resolution_tier || 'standard'}` : (item.description || ""),
+          brand: item.brand || "",
+            description: item.technology ? `Camera type: ${item.technology} | Tier: ${item.resolution_tier || 'standard'}` : (item.description || ""),
           badge: item.technology ? { label: item.technology, color: item.technology === "IP" ? "#2C5F8A" : "#0F1F3D" } : undefined,
           quantity: item.qty || item.quantity || 1,
           unitPrice: item.unit_price || item.unitPrice || item.price || 0,
