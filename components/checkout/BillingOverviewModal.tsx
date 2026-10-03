@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/hooks/useTranslation";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -88,6 +89,7 @@ export function BillingOverviewModal({
   isSubmitting = false,
   mode = "checkout",
 }: BillingOverviewModalProps) {
+  const { t } = useTranslation();
   const [isBusiness, setIsBusiness] = useState(initialData?.is_business ?? false);
   const [companyName, setCompanyName] = useState(initialData?.company_name || "");
   const [gstin, setGstin] = useState(initialData?.gstin || "");
@@ -285,8 +287,8 @@ export function BillingOverviewModal({
                     <User className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-sm font-bold">Personal / Home</div>
-                    <div className="text-xs text-slate-500">Individual Tax Invoice</div>
+                    <div className="text-sm font-bold">{t("modal_personal")}</div>
+                    <div className="text-xs text-slate-500">{t("modal_individual_tax")}</div>
                   </div>
                 </button>
 
@@ -303,8 +305,8 @@ export function BillingOverviewModal({
                     <Building2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-sm font-bold">Business / GST Firm</div>
-                    <div className="text-xs text-slate-500">Claim 18% Input Tax Credit</div>
+                    <div className="text-sm font-bold">{t("modal_business")}</div>
+                    <div className="text-xs text-slate-500">{t("modal_claim_18")}</div>
                   </div>
                 </button>
               </div>
@@ -432,11 +434,11 @@ export function BillingOverviewModal({
                             <CheckCircle2 className="w-4 h-4" />
                           </div>
                           <div className="truncate">
-                            <span className="font-bold block text-[13px]">Location Pinned Successfully</span>
+                            <span className="font-bold block text-[13px]">{t("modal_loc_pinned")}</span>
                             <span className="font-mono text-[10px] text-emerald-700">{coords.lat.toFixed(4)}&deg;N, {coords.lng.toFixed(4)}&deg;E</span>
                           </div>
                         </div>
-                        <button type="button" className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 underline underline-offset-2 px-2 shrink-0">Edit Pin</button>
+                        <button type="button" className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 underline underline-offset-2 px-2 shrink-0">{t("modal_edit_pin")}</button>
                       </div>
                     ) : (
                       <div 
@@ -464,7 +466,7 @@ export function BillingOverviewModal({
                 </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 mb-1 block">City</label>
+                  <label className="text-xs font-semibold text-slate-700 mb-1 block">{t("modal_city")}</label>
                   <input
                     type="text"
                     required
@@ -476,7 +478,7 @@ export function BillingOverviewModal({
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 mb-1 block">State (Place of Supply)</label>
+                  <label className="text-xs font-semibold text-slate-700 mb-1 block">{t("modal_state")}</label>
                   <select
                     value={state}
                     onChange={(e) => {
@@ -515,7 +517,7 @@ export function BillingOverviewModal({
             {quoteTotal > 0 && (
               <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2">
                 <div className="flex justify-between text-xs text-slate-300">
-                  <span>Quotation Total (18% GST Included):</span>
+                  <span>{t("modal_quote_total")}</span>
                   <span className="font-semibold text-white">₹{quoteTotal.toLocaleString("en-IN")}</span>
                 </div>
                 {mode === "checkout" ? (
@@ -530,7 +532,7 @@ export function BillingOverviewModal({
                     </div>
                     {paymentType.includes("advance") && (
                       <div className="flex justify-between text-xs text-slate-400">
-                        <span>Balance Due (Milestones):</span>
+                        <span>{t("modal_balance_due")}</span>
                         <span>₹{balanceDue.toLocaleString("en-IN")}</span>
                       </div>
                     )}
@@ -552,7 +554,7 @@ export function BillingOverviewModal({
                 disabled={isSubmitting}
                 className="w-full sm:w-1/3 py-3 px-4 rounded-2xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-100 transition-colors"
               >
-                {mode === "edit" ? "Cancel" : "Back to Quote"}
+                {mode === "edit" ? "Cancel" : t("modal_back_to_quote")}
               </button>
 
               <button

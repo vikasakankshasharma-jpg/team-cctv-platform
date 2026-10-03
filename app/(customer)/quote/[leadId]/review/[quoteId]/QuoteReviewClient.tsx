@@ -133,9 +133,9 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const localizeString = (str: string) => {
     let s = str;
     // H.264 / H.265 backup
-    s = s.replace(/Approx\. (\d+) Days Backup - Motion @ H\.264/, t("qrc_backup_motion", "Approx. $1 Days Backup - Motion @ H.264").replace("{d}", "$1"));
-    s = s.replace(/Approx\. (\d+) Days Backup - 24\/7 @ H\.264/, t("qrc_backup_247", "Approx. $1 Days Backup - 24/7 @ H.264").replace("{d}", "$1"));
-    s = s.replace(/Approx\. (\d+) Days Backup - Motion @ H\.265/, t("qrc_backup_motion_265", "Approx. $1 Days Backup - Motion @ H.265").replace("{d}", "$1"));
+    s = s.replace(/Approx\. (\d+) Days Backup · Motion @ H\.264/, t("qrc_backup_motion", "Approx. $1 Days Backup · Motion @ H.264").replace("{d}", "$1"));
+    s = s.replace(/Approx\. (\d+) Days Backup - 24\/7 @ H\.264/, t("qrc_backup_247", "Approx. $1 Days Backup · 24/7 @ H.264").replace("{d}", "$1"));
+    s = s.replace(/Approx\. (\d+) Days Backup · Motion @ H\.265/, t("qrc_backup_motion_265", "Approx. $1 Days Backup · Motion @ H.265").replace("{d}", "$1"));
     
     // Labor
     s = s.replace(/Standard HD Installation & Termination/, t("qrc_std_hd_install", "Standard HD Installation & Termination"));
@@ -709,8 +709,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 <div className="bg-white rounded-none sm:rounded-3xl p-4 sm:p-10 shadow-none sm:shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-y sm:border border-zinc-100">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
                     <div>
-                      <h3 className="text-lg sm:text-xl font-bold text-zinc-900">How Would You Like to Proceed?</h3>
-                      <p className="text-xs sm:text-sm text-zinc-500">Lock your installation immediately with advance or schedule a free physical site survey first.</p>
+                      <h3 className="text-lg sm:text-xl font-bold text-zinc-900">{t("qrc_how_proceed")}</h3>
+                      <p className="text-xs sm:text-sm text-zinc-500">{t("qrc_how_proceed_desc")}</p>
                     </div>
                   </div>
 
@@ -718,8 +718,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                     {/* 3-Plan Checkout Experience */}
                     <div className="mb-8">
                       <div className="text-center mb-6">
-                         <h3 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white mb-2">Choose Your Payment Plan</h3>
-                         <p className="text-sm text-zinc-500 dark:text-zinc-400">Select how you'd like to pay for your security system.</p>
+                         <h3 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white mb-2">{t("qrc_choose_plan")}</h3>
+                         <p className="text-sm text-zinc-500 dark:text-zinc-400">{t("qrc_choose_plan_desc")}</p>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -735,23 +735,23 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           <div>
                             <div className="flex items-baseline justify-between mb-1">
                               <h4 className="text-lg font-black text-emerald-950">{t("qrc_milestone_plan")}</h4>
-                              <span className="text-xs font-bold text-emerald-700">₹500 Today</span>
+                              <span className="text-xs font-bold text-emerald-700">{t("qrc_today_badge").replace("{d}", "500")}</span>
                             </div>
                             <p className="text-xs text-emerald-900/70 leading-relaxed mb-4">
-                              Lowest upfront friction. Pay just ₹500 booking token now, 90% at material delivery, and 10% after successful installation.
+                              {t("qrc_lowest_upfront").replace("{d}", "500")}
                             </p>
                             
                             <div className="space-y-2 text-xs text-zinc-700 bg-white/70 rounded-xl p-3 mb-5 border border-emerald-100">
                               <div className="flex items-center justify-between border-b border-emerald-100/70 pb-1">
-                                <span className="font-medium">1. Booking Token:</span>
+                                <span className="font-medium">{t("qrc_booking_token")}</span>
                                 <span className="font-black text-emerald-700">₹500</span>
                               </div>
                               <div className="flex items-center justify-between border-b border-emerald-100/70 pb-1">
-                                <span className="font-medium">2. At Delivery (90%):</span>
+                                <span className="font-medium">{t("qrc_at_delivery")}</span>
                                 <span className="font-bold text-zinc-900">₹{Math.round((total - 500) * 0.90).toLocaleString('en-IN')}</span>
                               </div>
                               <div className="flex items-center justify-between pt-0.5">
-                                <span className="font-medium">3. Post-Setup (10%):</span>
+                                <span className="font-medium">{t("qrc_post_setup")}</span>
                                 <span className="font-bold text-zinc-900">₹{Math.round((total - 500) * 0.10).toLocaleString('en-IN')}</span>
                               </div>
                             </div>
@@ -771,20 +771,20 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                         <div className="p-6 rounded-2xl bg-zinc-50 border border-zinc-200 flex flex-col justify-between hover:border-zinc-300 transition-all">
                           <div>
                             <div className="flex items-baseline justify-between mb-1">
-                              <h4 className="text-lg font-black text-zinc-900">Smart Pay</h4>
-                              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">Save 2%</span>
+                              <h4 className="text-lg font-black text-zinc-900">{t("qrc_smart_pay")}</h4>
+                              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">{t("qrc_save_2pct")}</span>
                             </div>
                             <p className="text-xs text-zinc-500 leading-relaxed mb-4">
-                              Pay 100% upfront securely online and get a flat 2% instant discount on your total quotation.
+                              {t("qrc_pay_100_upfront")}
                             </p>
                             
                             <div className="bg-white rounded-xl p-3 mb-5 border border-zinc-200/80 space-y-1">
                               <div className="flex justify-between items-center text-xs">
-                                <span className="text-zinc-500">Regular Total:</span>
+                                <span className="text-zinc-500">{t("qrc_regular_total")}</span>
                                 <span className="text-zinc-400 line-through">₹{total.toLocaleString('en-IN')}</span>
                               </div>
                               <div className="flex justify-between items-center text-xs">
-                                <span className="font-bold text-zinc-900">Discounted:</span>
+                                <span className="font-bold text-zinc-900">{t("qrc_discounted")}</span>
                                 <span className="text-sm font-black text-emerald-600">₹{Math.round(total * 0.98).toLocaleString('en-IN')}</span>
                               </div>
                               <div className="text-[10px] font-bold text-emerald-600 text-right">
@@ -808,24 +808,24 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           <div>
                             <div className="flex items-baseline justify-between mb-1">
                               <h4 className="text-lg font-black text-zinc-900">{t("qrc_flexi_emi")}</h4>
-                              <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full">Easy EMIs</span>
+                              <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full">{t("qrc_easy_emis")}</span>
                             </div>
                             <p className="text-xs text-zinc-500 leading-relaxed mb-4">
-                              Convert your payment into easy monthly instalments. No Cost EMI available on major credit cards.
+                              {t("qrc_convert_emi")}
                             </p>
                             
                             <div className="space-y-2 text-xs text-zinc-600 mb-5 bg-white rounded-xl p-3 border border-zinc-200/80">
                               <div className="flex items-center gap-2">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Zero foreclosure charges</span>
+                                <span>{t("qrc_zero_foreclosure")}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Instant bank approval</span>
+                                <span>{t("qrc_instant_approval")}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Up to 12 months tenure</span>
+                                <span>{t("qrc_12_months_tenure")}</span>
                               </div>
                             </div>
                           </div>
@@ -849,8 +849,8 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                             <MapPin className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-xs sm:text-sm font-bold text-purple-950">Want an engineer to inspect your premises first?</p>
-                            <p className="text-[11px] text-purple-700">Schedule a 100% Free Physical Site Survey with zero obligations before paying anything.</p>
+                            <p className="text-xs sm:text-sm font-bold text-purple-950">{t("qrc_inspect_first")}</p>
+                            <p className="text-[11px] text-purple-700">{t("qrc_schedule_survey")}</p>
                           </div>
                         </div>
                         <button
