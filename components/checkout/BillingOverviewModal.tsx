@@ -100,7 +100,7 @@ export function BillingOverviewModal({
   const [state, setState] = useState(initialData?.state || "Rajasthan");
   const [stateCode, setStateCode] = useState(initialData?.state_code || "08");
   const [pincode, setPincode] = useState(initialData?.pincode || "");
-  const [coords, setCoords] = useState<{ lat: number;  // Auto-reverse geocode to get street address if pin dropped and address is empty
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>(initialData?.coordinates);
   useEffect(() => {
     if (coords && !addressLine1.trim()) {
       fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}&zoom=18&addressdetails=1`)
