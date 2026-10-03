@@ -131,12 +131,28 @@ export async function POST(request: NextRequest) {
       appliedReferralDiscountPercent = settings.customer_referral_discount_percent ?? 3;
     }
 
+        // Derive cablingMeters exactly as the client does in ConfiguratorView.tsx
+    // Without this the server picks a different SMPS causing a price discrepancy.
+    const rawTotalMeters = (selection as any).total_cable_length_meters;
+    const rawPerCamMeters = (selection as any).cable_length_meters;
+    let cablingMeters: number | undefined = undefined;
+    if (!leadData.cabling_done) {
+      if (typeof rawTotalMeters === 'number' && rawTotalMeters > 0) {
+        cablingMeters = rawTotalMeters / ((selection as any).camera_count || 4);
+      } else if (typeof rawPerCamMeters === 'number' && rawPerCamMeters > 0) {
+        cablingMeters = rawPerCamMeters;
+      } else {
+        cablingMeters = 15; // Default 15m per camera (same as client default)
+      }
+    }
+
     const pricing = calculatePricing({
       selection: selection as any, // Cast to any to bypass strict null checking from Zod schema vs internal type
       products,
       addons,
       settings,
       cablingDone: leadData.cabling_done || false,
+      cablingMeters,              // FIX: Now matches the client cabling calculation exactly
       referralDiscountPercent: appliedReferralDiscountPercent, // Injected via global settings
       referralDiscountFlat: 0,
       activeOffer: leadData.active_offer,
