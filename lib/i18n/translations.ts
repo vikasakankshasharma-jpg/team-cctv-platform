@@ -1507,7 +1507,7 @@ export const translations: Record<
       "wz_cameras_with": "Cameras with",
       "wz_days_storage": "Days Storage",
       "wz_100_genuine": "100% Genuine",
-      "wz_free_onsite_install": "Free On-Site Install",
+      "wz_free_onsite_install": "Free On-Site Survey",
       "wz_1_year_warranty": "1 Year Warranty",
       "wz_1_year_brand": "1 Year Brand",
       "wz_included": "Included",
