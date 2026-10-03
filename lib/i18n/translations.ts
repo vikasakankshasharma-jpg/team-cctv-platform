@@ -1559,14 +1559,7 @@ export const translations: Record<
       "qrc_1_yr_warranty": "1-Yr Warranty",
       "qrc_days_setup": "2-3 Days Setup",
 
-      "system": "System",
-      "cameras": "Cameras",
-      "storage": "Storage",
       "custom_storage": "Custom Storage",
-      "upgrades": "Upgrades",
-      "savings": "Savings",
-      "modified": "Modified",
-      "custom_built": "Custom Built",
 },
   hi: {
     "wz_back": "बैक",
@@ -2325,14 +2318,7 @@ export const translations: Record<
       "qrc_1_yr_warranty": "1 साल की वारंटी",
       "qrc_days_setup": "2-3 दिनों में सेटअप",
 
-      "system": "सिस्टम",
-      "cameras": "कैमरे",
-      "storage": "स्टोरेज",
       "custom_storage": "कस्टम स्टोरेज",
-      "upgrades": "अपग्रेड्स",
-      "savings": "बचत",
-      "modified": "संशोधित",
-      "custom_built": "कस्टम बिल्ट",
 },
   mr: {
     "wz_back": "मागे",
