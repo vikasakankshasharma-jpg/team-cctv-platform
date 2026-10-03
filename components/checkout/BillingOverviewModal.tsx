@@ -55,6 +55,9 @@ const sanitizeAddress = (val?: string) => {
   if (lower === "address pending" || lower.includes("address pending") || lower === "pending") {
     return "";
   }
+  if (/^\d{6}$/.test(val.trim())) {
+    return "";
+  }
   return val.trim();
 };
 
@@ -400,76 +403,50 @@ export function BillingOverviewModal({
                 />
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-semibold text-slate-700 block">
-                    {isBusiness ? "Registered Office / Billing Address" : "Installation & Billing Address"} <span className="text-rose-500">*</span>
+                <div className="pt-2">
+                  <label className="text-xs font-semibold text-slate-700 block mb-2">
+                    {isBusiness ? "Registered Office / Billing Address" : "Installation Location & Address"} <span className="text-rose-500">*</span>
                   </label>
-                  {!coords && (
-                    <button
-                      type="button"
-                      onClick={() => setIsMapModalOpen(true)}
-                      className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                    >
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>Set on Map</span>
-                    </button>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  required
-                  value={addressLine1}
-                  onChange={(e) => setAddressLine1(e.target.value)}
-                  placeholder="Flat/House/Shop No, Building, Street"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                />
 
-                {/* Location Pin Badge or Action */}
-                <div className="mt-2">
-                  {coords ? (
-                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-900 shadow-xs">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <div className="truncate">
-                          <span className="font-bold">Location Pinned:</span>{" "}
-                          <span className="font-mono text-[11px] font-semibold">{coords.lat.toFixed(4)}°N, {coords.lng.toFixed(4)}°E</span>
-                          {googleMapsLink && (
-                            <a 
-                              href={googleMapsLink} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="text-blue-600 hover:text-blue-800 underline ml-2 font-semibold text-[11px] inline-flex items-center gap-0.5"
-                            >
-                              <span>View Map</span> ↗
-                            </a>
-                          )}
+                  {/* Prominent Map CTA Before Address */}
+                  <div className="mb-3">
+                    {coords ? (
+                      <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-900 shadow-sm transition-all hover:bg-emerald-100/50 cursor-pointer" onClick={() => setIsMapModalOpen(true)}>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </div>
+                          <div className="truncate">
+                            <span className="font-bold block text-[13px]">Location Pinned Successfully</span>
+                            <span className="font-mono text-[10px] text-emerald-700">{coords.lat.toFixed(4)}&deg;N, {coords.lng.toFixed(4)}&deg;E</span>
+                          </div>
                         </div>
+                        <button type="button" className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 underline underline-offset-2 px-2 shrink-0">Edit Pin</button>
                       </div>
-                      <button
-                        type="button"
+                    ) : (
+                      <div 
                         onClick={() => setIsMapModalOpen(true)}
-                        className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline ml-2 shrink-0"
+                        className="p-4 rounded-xl bg-blue-50 border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-100 transition-all cursor-pointer flex flex-col items-center justify-center text-center group"
                       >
-                        Change
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setIsMapModalOpen(true)}
-                      className="w-full py-2 px-3 rounded-xl bg-blue-50/80 hover:bg-blue-100/80 text-blue-700 border border-blue-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-98"
-                    >
-                      <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Pin Exact Location on Map</span>
-                      <span className="text-[10px] text-blue-500 font-normal">
-                        ({pincode ? `Referred from PIN ${pincode}` : "Default PIN area"})
-                      </span>
-                    </button>
-                  )}
-                </div>
-              </div>
+                        <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center mb-2 shadow-md group-hover:scale-110 transition-transform">
+                          <MapPin className="w-5 h-5" />
+                        </div>
+                        <h4 className="font-bold text-blue-900 text-[13px]">Pin Installation Location on Map</h4>
+                        <p className="text-[11px] text-blue-700/80 mt-0.5">Helps our engineers find your exact site easily.</p>
+                        <span className="mt-2 text-[10px] font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full group-hover:bg-blue-200">Open Map</span>
+                      </div>
+                    )}
+                  </div>
 
+                  <input
+                    type="text"
+                    required
+                    value={addressLine1}
+                    onChange={(e) => setAddressLine1(e.target.value)}
+                    placeholder="Flat/House/Shop No, Building, Street (Manual Entry)"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                  />
+                </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-700 mb-1 block">City</label>
