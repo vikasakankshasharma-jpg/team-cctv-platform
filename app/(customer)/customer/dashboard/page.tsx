@@ -108,6 +108,14 @@ export default async function CustomerDashboardPage() {
     await Promise.all(initialPromises);
 
     const allLeads = Array.from(leadDocsMap.values());
+    // Prefer the name they entered in their actual quotations/leads over their auth profile name
+    if (allLeads.length > 0) {
+      // Find the most recently updated lead/quote with a real name
+      const bestName = allLeads.map(l => l.customer_name || l.billing_details?.customer_name || l.name).find(n => n && typeof n === "string" && !n.toLowerCase().includes("admin") && n !== "Valued Client");
+      if (bestName) {
+        customerName = bestName;
+      }
+    }
     if (customerName === "Valued Client" && allLeads.length > 0) {
       customerName = allLeads[0].customer_name || allLeads[0].name || "Valued Client";
     }
@@ -213,7 +221,9 @@ export default async function CustomerDashboardPage() {
         !!invData?.payment_id ||
         qData.payment_status === "advance_paid" ||
         qData.payment_status === "paid" ||
-        (qData.amount_paid || 0) >= 500;
+        (qData.amount_paid || 0) >= 500 ||
+        (qData.booking_amount || 0) >= 500 ||
+        (matchingLead?.booking_amount || 0) >= 500;
 
       const amountPaid = Number(
         invData?.amount_paid ??

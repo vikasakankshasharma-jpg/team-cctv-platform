@@ -33,6 +33,15 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
 
     const fetchBilling = async () => {
       try {
+        // Fallback webhook trigger
+        if (paymentId) {
+           await fetch("/api/payment/verify", {
+             method: "POST",
+             headers: { "Content-Type": "application/json" },
+             body: JSON.stringify({ quoteId, paymentId })
+           }).catch(() => {});
+        }
+        
         const res = await fetch(`/api/quote/${quoteId}/billing`);
         if (res.ok) {
           const data = await res.json();
