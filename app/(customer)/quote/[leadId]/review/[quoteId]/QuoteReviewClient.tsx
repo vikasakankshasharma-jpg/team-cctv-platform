@@ -696,7 +696,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
           {/* Value Propositions */}
           <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 px-4 sm:px-0 py-2 sm:py-0">
             <TermCard icon={<ShieldCheck className="w-5 h-5" />} title={t("qrc_1_year_warranty")} body={t("qrc_warranty_desc")} delay={0.1} />
-            <TermCard icon={<CreditCard className="w-5 h-5" />} title={t("qrc_flat_advance").replace("%s", "₹$1")} body={`${formatINR(advance)} ${t("qrc_advance_desc")}`} delay={0.2} />
+            <TermCard icon={<CreditCard className="w-5 h-5" />} title={t("qrc_flat_advance").replace("%s", formatINR(advance))} body={`${formatINR(advance)} ${t("qrc_advance_desc")}`} delay={0.2} />
             <TermCard icon={<Clock className="w-5 h-5" />} title={t("qrc_priority_support")} body={t("qrc_support_desc")} delay={0.3} />
           </motion.div>
 
