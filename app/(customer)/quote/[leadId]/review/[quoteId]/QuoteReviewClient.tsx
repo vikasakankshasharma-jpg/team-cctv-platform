@@ -655,37 +655,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             </div>
           </motion.div>
 
-          {/* Visual Comparison (Edge-to-Edge on Mobile) */}
-          <motion.div variants={fadeIn} className="bg-white rounded-none sm:rounded-3xl shadow-none sm:shadow-sm border-b sm:border border-zinc-100 p-4 sm:p-8">
-             <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-800"><ImageIcon className="w-4 h-4" /></div>
-                <div>
-                  <h3 className="text-sm font-bold text-zinc-900">Resolution Clarity Comparison</h3>
-                  <p className="text-xs text-zinc-500">Visualizing the difference in detail capture.</p>
-                </div>
-             </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div className="relative rounded-2xl overflow-hidden border border-zinc-200 aspect-video group">
-                 <Image src="/comparisons/2mp.png" alt="2MP View" width={800} height={450} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                 <div className="absolute bottom-0 left-0 p-3 sm:p-4">
-                   <p className="text-white text-xs sm:text-sm font-bold">2MP Full HD</p>
-                   <p className="text-white/70 text-[10px] sm:text-xs mt-0.5">Standard identification (10-15ft)</p>
-                 </div>
-               </div>
-               
-               <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/30 aspect-video group shadow-lg shadow-emerald-500/10">
-                 <Image src="/comparisons/5mp.png" alt="5MP View" width={800} height={450} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                 <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Recommended</div>
-                 <div className="absolute bottom-0 left-0 p-3 sm:p-4">
-                   <p className="text-white text-xs sm:text-sm font-bold">5MP Ultra 3K HD</p>
-                   <p className="text-white/80 text-[10px] sm:text-xs mt-0.5">Advanced identification (25-30ft)</p>
-                 </div>
-               </div>
-             </div>
-          </motion.div>
 
           {/* Value Propositions */}
           <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 px-4 sm:px-0 py-2 sm:py-0">
