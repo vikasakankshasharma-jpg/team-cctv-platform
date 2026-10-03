@@ -100,7 +100,24 @@ export function BillingOverviewModal({
   const [state, setState] = useState(initialData?.state || "Rajasthan");
   const [stateCode, setStateCode] = useState(initialData?.state_code || "08");
   const [pincode, setPincode] = useState(initialData?.pincode || "");
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>(initialData?.coordinates);
+  const [coords, setCoords] = useState<{ lat: number;
+  // Auto-reverse geocode to get street address if pin dropped and address is empty
+  useEffect(() => {
+    if (coords && !addressLine1.trim()) {
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}&zoom=18&addressdetails=1`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.display_name) {
+             // Simplify address slightly
+             const parts = data.display_name.split(", ");
+             const shortAddress = parts.slice(0, Math.min(4, parts.length)).join(", ");
+             setAddressLine1(shortAddress);
+          }
+        })
+        .catch(err => console.error("Reverse geocoding failed", err));
+    }
+  }, [coords, addressLine1]);
+ lng: number } | undefined>(initialData?.coordinates);
   const [googleMapsLink, setGoogleMapsLink] = useState<string>(initialData?.google_maps_link || "");
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [gstError, setGstError] = useState("");

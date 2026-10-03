@@ -55,14 +55,38 @@ export function LocationPickerModal({
         setCoords(initialCoords);
         setPincodeResolved(true);
       } else if (initialPincode && initialPincode.length >= 3) {
-        // Fallback to coarse 3-digit mapping
-        const pinCoords = getPincodeCoordinates(initialPincode);
-        if (pinCoords) {
-          setCoords(pinCoords);
-          setPincodeResolved(true);
+        if (initialPincode.length === 6) {
+          // Try precise 6-digit geocoding
+          fetch(`https://nominatim.openstreetmap.org/search?postalcode=${initialPincode}&country=india&format=json`)
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.length > 0) {
+                setCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+                setPincodeResolved(true);
+              } else {
+                throw new Error("No exact match");
+              }
+            })
+            .catch(() => {
+              const pinCoords = getPincodeCoordinates(initialPincode);
+              if (pinCoords) {
+                setCoords(pinCoords);
+                setPincodeResolved(true);
+              } else {
+                setCoords(DEFAULT_COORDS);
+                setPincodeResolved(false);
+              }
+            });
         } else {
-          setCoords(DEFAULT_COORDS);
-          setPincodeResolved(false);
+          // Fallback to coarse 3-digit mapping
+          const pinCoords = getPincodeCoordinates(initialPincode);
+          if (pinCoords) {
+            setCoords(pinCoords);
+            setPincodeResolved(true);
+          } else {
+            setCoords(DEFAULT_COORDS);
+            setPincodeResolved(false);
+          }
         }
       }
     }
