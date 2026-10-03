@@ -78,66 +78,66 @@ export function InstantQuotationReview({
   const availableAccessories = [
     {
       id: "ACC-2U-RACK-RECORDER",
-      title: "2U Metal DVR/NVR Rack",
-      description: "Wall-mount lockable steel cabinet to protect your recorder and power supply from theft and dust.",
+      title: t("addon_2u_rack_title", "2U Metal DVR/NVR Rack"),
+      description: t("addon_2u_rack_desc", "Wall-mount lockable steel cabinet to protect your recorder and power supply from theft and dust."),
       price: 490,
       icon: Box,
-      category: "Security Enclosure",
-      tag: "Recommended"
+      category: t("addon_cat_enclosure", "Security Enclosure"),
+      tag: t("addon_tag_recommended", "Recommended")
     },
     {
       id: "ACC-4U-RACK-RECORDER",
-      title: "4U Metal DVR/NVR Rack",
-      description: "Heavy-duty 4U rack with ventilation, fits recorder, PoE switch, router, and power backups.",
+      title: t("addon_4u_rack_title", "4U Metal DVR/NVR Rack"),
+      description: t("addon_4u_rack_desc", "Heavy-duty 4U rack with ventilation, fits recorder, PoE switch, router, and power backups."),
       price: 630,
       icon: Box,
-      category: "Security Enclosure",
-      tag: "Spacious"
+      category: t("addon_cat_enclosure", "Security Enclosure"),
+      tag: t("addon_tag_spacious", "Spacious")
     },
     {
       id: "ACC-PVC-RACK-POE",
-      title: "PVC Weatherproof Rack",
-      description: "Outdoor waterproof and anti-rust enclosure specially designed for PoE switch & junction protection.",
+      title: t("addon_pvc_rack_title", "PVC Weatherproof Rack"),
+      description: t("addon_pvc_rack_desc", "Outdoor waterproof and anti-rust enclosure specially designed for PoE switch & junction protection."),
       price: 630,
       icon: Box,
-      category: "Security Enclosure",
-      tag: "All-Weather"
+      category: t("addon_cat_enclosure", "Security Enclosure"),
+      tag: t("addon_tag_all_weather", "All-Weather")
     },
     {
       id: "DISP-19-INCH",
-      title: "19\" Security LED Display",
-      description: "Continuous 24/7 commercial LED monitor with HDMI/VGA support for live multi-camera monitoring.",
+      title: t("addon_disp_19_title", "19\" Security LED Display"),
+      description: t("addon_disp_19_desc", "Continuous 24/7 commercial LED monitor with HDMI/VGA support for live multi-camera monitoring."),
       price: 2940,
       icon: Monitor,
-      category: "Monitoring Display",
-      tag: "Popular"
+      category: t("addon_cat_display", "Monitoring Display"),
+      tag: t("addon_tag_popular", "Popular")
     },
     {
       id: "ACC-4G-ROUTER",
-      title: "4G SIM WiFi Router (Dual Antenna)",
-      description: "High-speed 4G router for remote mobile phone viewing without any broadband or landline connection.",
+      title: t("addon_4g_router_title", "4G SIM WiFi Router (Dual Antenna)"),
+      description: t("addon_4g_router_desc", "High-speed 4G router for remote mobile phone viewing without any broadband or landline connection."),
       price: 2030,
       icon: Wifi,
-      category: "Internet & Remote Viewing",
-      tag: "Zero-Broadband"
+      category: t("addon_cat_internet", "Internet & Remote Viewing"),
+      tag: t("addon_tag_zero_broadband", "Zero-Broadband")
     },
     {
       id: "amc_1yr",
-      title: "1-Year Comprehensive AMC",
-      description: "Annual Maintenance Contract: Free quarterly servicing, priority technician breakdown support, and peace of mind.",
+      title: t("addon_amc_title", "1-Year Comprehensive AMC"),
+      description: t("addon_amc_desc", "Annual Maintenance Contract: Free quarterly servicing, priority technician breakdown support, and peace of mind."),
       price: Math.round((activePricing.base_hardware_cost || 10000) * 0.15),
       icon: ShieldCheck,
-      category: "Warranty & Support",
-      tag: "Best Protection"
+      category: t("addon_cat_warranty", "Warranty & Support"),
+      tag: t("addon_tag_best_protection", "Best Protection")
     },
     {
       id: "HDMI-3M",
-      title: "High-Speed HDMI Cable (3 MTR)",
-      description: "Gold-plated 4K-ready HDMI cable to connect your DVR/NVR directly to TV or monitor.",
+      title: t("addon_hdmi_title", "High-Speed HDMI Cable (3 MTR)"),
+      description: t("addon_hdmi_desc", "Gold-plated 4K-ready HDMI cable to connect your DVR/NVR directly to TV or monitor."),
       price: 168,
       icon: Cable,
-      category: "Cables & Connectors",
-      tag: "Essential"
+      category: t("addon_cat_cables", "Cables & Connectors"),
+      tag: t("addon_tag_essential", "Essential")
     }
   ];
 
@@ -253,10 +253,10 @@ export function InstantQuotationReview({
         <div>
           <div className="text-sm font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-indigo-500" />
-            Match My Brand
+            {t("iqr_match_my_brand")}
           </div>
           <div className="text-[11px] text-indigo-700/80 dark:text-indigo-400/80 mt-0.5">
-            Want maximum items from the same brand? Switch your setup.
+            {t("iqr_match_brand_desc")}
           </div>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0 pb-1 sm:pb-0">
@@ -465,10 +465,10 @@ export function InstantQuotationReview({
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-[#1d1d1f] dark:text-white tracking-tight flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-500" />
-              Add-ons & Accessories For Your System
+              {t("iqr_addons_title")}
             </h2>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-              Select any additional accessories needed for your premises. The quotation above recalculates instantly in real time.
+              {t("iqr_addons_desc")}
             </p>
           </div>
           <div className="text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 self-start sm:self-auto">
@@ -550,10 +550,10 @@ export function InstantQuotationReview({
           <div className="space-y-1">
             <h3 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
               <Layers className="w-4 h-4 text-zinc-500" />
-              Advanced: Want to customize individual cameras, storage or recorder models?
+              {t("iqr_advanced_customizer_title")}
             </h3>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              You can optionally browse every individual model in our catalog to swap hard disk capacity or camera models.
+              {t("iqr_advanced_customizer_desc")}
             </p>
           </div>
           <Button
@@ -562,7 +562,7 @@ export function InstantQuotationReview({
             onClick={() => setShowAdvancedCustomizer(!showAdvancedCustomizer)}
             className="rounded-full text-xs font-semibold shrink-0"
           >
-            {showAdvancedCustomizer ? "Hide Component Customizer" : "Customize Specific Components"}
+            {showAdvancedCustomizer ? t("iqr_hide_customizer") : t("iqr_customize_components")}
           </Button>
         </div>
 

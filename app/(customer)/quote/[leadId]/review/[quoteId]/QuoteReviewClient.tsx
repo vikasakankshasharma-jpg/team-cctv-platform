@@ -129,6 +129,42 @@ function TermCard({ icon, title, body, delay }: { icon: React.ReactNode; title: 
 // ─── Main Client Component ───────────────────────────────────────────────────
 
 export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
+
+  const localizeString = (str: string) => {
+    let s = str;
+    // H.264 / H.265 backup
+    s = s.replace(/Approx\. (\d+) Days Backup - Motion @ H\.264/, t("qrc_backup_motion", "Approx. $1 Days Backup - Motion @ H.264").replace("{d}", "$1"));
+    s = s.replace(/Approx\. (\d+) Days Backup - 24\/7 @ H\.264/, t("qrc_backup_247", "Approx. $1 Days Backup - 24/7 @ H.264").replace("{d}", "$1"));
+    s = s.replace(/Approx\. (\d+) Days Backup - Motion @ H\.265/, t("qrc_backup_motion_265", "Approx. $1 Days Backup - Motion @ H.265").replace("{d}", "$1"));
+    
+    // Labor
+    s = s.replace(/Standard HD Installation & Termination/, t("qrc_std_hd_install", "Standard HD Installation & Termination"));
+    s = s.replace(/Standard IP Installation & Termination/, t("qrc_std_ip_install", "Standard IP Installation & Termination"));
+    s = s.replace(/Excess Cabling Installation Labor \((\d+)m beyond (\d+)m free limit\)/, t("qrc_excess_labor", "Excess Cabling Installation Labor ($1m beyond $2m free limit)").replace("{d1}", "$1").replace("{d2}", "$2"));
+    
+    // Cables
+    s = s.replace(/3\+1 Coaxial Cable \(Open\) \(~(\d+)m\) @ ₹(\d+)\/m/, t("qrc_coaxial_cable", "3+1 Coaxial Cable (Open) (~$1m) @ ₹$2/m").replace("{d1}", "$1").replace("{d2}", "$2"));
+    s = s.replace(/CAT6 Cable \(Open\) \(~(\d+)m\) @ ₹(\d+)\/m/, t("qrc_cat6_cable", "CAT6 Cable (Open) (~$1m) @ ₹$2/m").replace("{d1}", "$1").replace("{d2}", "$2"));
+    
+    // Connectors
+    s = s.replace(/BNC & DC Connector Set/, t("qrc_bnc_dc_conn", "BNC & DC Connector Set"));
+    s = s.replace(/RJ45 Connectors/, t("qrc_rj45_conn", "RJ45 Connectors"));
+    
+    // Box
+    s = s.replace(/PVC Weatherproof Camera Junction Box/, t("qrc_pvc_junction", "PVC Weatherproof Camera Junction Box"));
+    
+    // Camera features
+    s = s.replace(/\(Color Night Vision, Audio IN\)/, t("qrc_color_night_audio", "(Color Night Vision, Audio IN)"));
+    s = s.replace(/\(Color Night Vision\)/, t("qrc_color_night", "(Color Night Vision)"));
+    s = s.replace(/\(Audio IN\)/, t("qrc_audio_in", "(Audio IN)"));
+    
+    // Misc
+    s = s.replace(/Surveillance Hard Disk/, t("qrc_surv_hdd", "Surveillance Hard Disk"));
+    s = s.replace(/Power Supply SMPS (\d+)Ch/, t("qrc_power_supply_ch", "Power Supply SMPS $1Ch").replace("{d}", "$1"));
+    
+    return s;
+  };
+
   const { t } = useTranslation();
   const [accepted, setAccepted] = useState(quote.status === "accepted");
   const [isPayingEMI, setIsPayingEMI] = useState(false);
@@ -578,7 +614,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                       <div className="flex-1 min-w-0 pr-2">
                         <h4 className="font-bold text-sm text-zinc-900 flex items-center gap-1.5">
                           <span className="text-[10px] font-bold text-zinc-400 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">#{idx + 1}</span>
-                          {item.name}
+                          {localizeString(item.name)}
                         </h4>
                         {item.brand && (
                           <span className="inline-block mt-1 mb-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-100 text-zinc-500 border border-zinc-200">
@@ -587,7 +623,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                         )}
                         {cleanDescription && (
                           <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed line-clamp-2">
-                            {cleanDescription}
+                            {localizeString(cleanDescription)}
                           </p>
                         )}
                         {item.badge && (
@@ -623,24 +659,24 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             {/* Financial Breakdown Card */}
             <div className="mt-5 pt-4 border-t border-zinc-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="text-[11px] text-zinc-500 space-y-1">
-                <p>• Prices include standard cabling and professional on-site installation.</p>
-                <p>• GST 18% computed on taxable equipment and labor value.</p>
+                <p>{t("qrc_price_include_standard")}</p>
+                <p>{t("qrc_gst_18_computed")}</p>
                 {quote.notes && (
-                  <p className="text-zinc-600 font-medium">Note: {quote.notes} {quote.companyGstin && `| GSTIN: ${quote.companyGstin}`}</p>
+                  <p className="text-zinc-600 font-medium">{t("qrc_note")} {quote.notes} {quote.companyGstin && `| GSTIN: ${quote.companyGstin}`}</p>
                 )}
               </div>
 
               <div className="w-full sm:w-72 bg-zinc-50 rounded-xl p-3.5 border border-zinc-200/80 space-y-2 text-xs">
                 <div className="flex justify-between text-zinc-600">
-                  <span>Taxable Subtotal</span>
+                  <span>{t("qrc_taxable_subtotal")}</span>
                   <span className="font-semibold text-zinc-900">{formatINR(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-[11px] text-zinc-500">
-                  <span>CGST ({quote.gstPercent / 2}%)</span>
+                  <span>{t("qrc_cgst")} ({quote.gstPercent / 2}%)</span>
                   <span>{formatINR(halfGst)}</span>
                 </div>
                 <div className="flex justify-between text-[11px] text-zinc-500 pb-2 border-b border-zinc-200">
-                  <span>SGST ({quote.gstPercent / 2}%)</span>
+                  <span>{t("qrc_sgst")} ({quote.gstPercent / 2}%)</span>
                   <span>{formatINR(halfGst)}</span>
                 </div>
                 <div className="flex justify-between items-baseline pt-1">
@@ -648,7 +684,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                   <span className="text-lg font-black tracking-tight text-blue-950">{formatINR(total)}</span>
                 </div>
                 <div className="flex justify-between items-center pt-1.5 border-t border-dashed border-zinc-200 text-emerald-700 font-bold text-[11px]">
-                  <span>Booking Advance Due</span>
+                  <span>{t("qrc_booking_advance_due")}</span>
                   <span className="text-xs font-black">{formatINR(advance)}</span>
                 </div>
               </div>
