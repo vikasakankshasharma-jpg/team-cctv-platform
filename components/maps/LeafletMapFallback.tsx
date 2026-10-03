@@ -1,6 +1,15 @@
 import React, { useRef, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from "react-leaflet";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
+// Fix for broken default marker icons in Next.js/Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 
 interface MarkerProps {
   id: string;
@@ -26,6 +35,14 @@ interface LeafletMapFallbackProps {
   markers: MarkerProps[];
   polylines?: PolylineProps[];
   onClick?: (lat: number, lng: number) => void;
+}
+
+function MapUpdater({ center, zoom }: { center: { lat: number; lng: number }, zoom: number }) {
+  const map = useMap();
+  React.useEffect(() => {
+    map.setView([center.lat, center.lng], map.getZoom() || zoom, { animate: true });
+  }, [center.lat, center.lng, map, zoom]);
+  return null;
 }
 
 function MapClickHandler({ onClick }: { onClick?: (lat: number, lng: number) => void }) {
@@ -79,6 +96,7 @@ export default function LeafletMapFallback({ center, zoom, markers, polylines, o
       zoom={zoom}
       style={{ width: "100%", height: "100%", zIndex: 0 }}
     >
+      <MapUpdater center={center} zoom={zoom} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
