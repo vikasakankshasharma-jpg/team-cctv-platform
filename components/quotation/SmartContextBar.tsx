@@ -41,8 +41,8 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
         storageText = `${match[1].toUpperCase()}`;
         storageTextMobile = match[1].toUpperCase();
       } else {
-        storageText = "Custom Storage";
-        storageTextMobile = "Storage";
+        storageText = t("custom_storage", "Custom Storage");
+        storageTextMobile = t("storage", "Storage");
       }
     }
   }
@@ -141,7 +141,7 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
                     disabled={isSaving}
                     className="flex items-center gap-2 px-6 py-2.5 bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full text-sm font-bold transition-all shadow-md shadow-blue-500/20 active:scale-95 disabled:opacity-50"
                   >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Proceed to Final Quotation →</>}
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <>{t('wz_proceed_to_final_quotation')}</>}
                   </button>
                 ) : (
                   <>

@@ -579,7 +579,15 @@ export type TranslationKey =
   | "qrc_edit"
   | "qrc_100_genuine"
   | "qrc_1_yr_warranty"
-  | "qrc_days_setup";
+  | "qrc_days_setup"
+  | "system"
+  | "cameras"
+  | "storage"
+  | "custom_storage"
+  | "upgrades"
+  | "savings"
+  | "modified"
+  | "custom_built";
 
 export const translations: Record<
   LocaleCode,
@@ -1345,6 +1353,15 @@ export const translations: Record<
       "qrc_100_genuine": "100% Genuine",
       "qrc_1_yr_warranty": "1-Yr Warranty",
       "qrc_days_setup": "2-3 Days Setup",
+
+      "system": "System",
+      "cameras": "Cameras",
+      "storage": "Storage",
+      "custom_storage": "Custom Storage",
+      "upgrades": "Upgrades",
+      "savings": "Savings",
+      "modified": "Modified",
+      "custom_built": "Custom Built",
 },
   hi: {
     "wz_back": "बैक",
@@ -2102,6 +2119,15 @@ export const translations: Record<
       "qrc_100_genuine": "100% असली",
       "qrc_1_yr_warranty": "1 साल की वारंटी",
       "qrc_days_setup": "2-3 दिनों में सेटअप",
+
+      "system": "सिस्टम",
+      "cameras": "कैमरे",
+      "storage": "स्टोरेज",
+      "custom_storage": "कस्टम स्टोरेज",
+      "upgrades": "अपग्रेड्स",
+      "savings": "बचत",
+      "modified": "संशोधित",
+      "custom_built": "कस्टम बिल्ट",
 },
   mr: {
     "wz_back": "मागे",
@@ -2805,6 +2831,15 @@ export const translations: Record<
       "qrc_100_genuine": "100% अस्सल",
       "qrc_1_yr_warranty": "1-वर्षाची वॉरंटी",
       "qrc_days_setup": "2-3 दिवसांचा सेटअप",
+
+      "system": "सिस्टम",
+      "cameras": "कॅमेरे",
+      "storage": "स्टोरेज",
+      "custom_storage": "कस्टम स्टोरेज",
+      "upgrades": "अपग्रेड्स",
+      "savings": "बचत",
+      "modified": "मॉडिफाइड",
+      "custom_built": "कस्टम बिल्ट",
 },
   gu: {
     "wz_back": "બેક",
@@ -3500,6 +3535,15 @@ export const translations: Record<
       "qrc_100_genuine": "100% અસલી",
       "qrc_1_yr_warranty": "1-વર્ષની વોરંટી",
       "qrc_days_setup": "2-3 દિવસમાં સેટઅપ",
+
+      "system": "સિસ્ટમ",
+      "cameras": "કેમેરા",
+      "storage": "સ્ટોરેજ",
+      "custom_storage": "કસ્ટમ સ્ટોરેજ",
+      "upgrades": "અપગ્રેડ્સ",
+      "savings": "બચત",
+      "modified": "મોડિફાઇડ",
+      "custom_built": "કસ્ટમ બિલ્ટ",
 },
   ta: {
     "wz_back": "பேக்",
@@ -4036,6 +4080,15 @@ export const translations: Record<
       "qrc_100_genuine": "100% அசல்",
       "qrc_1_yr_warranty": "1 வருட வாரண்டி",
       "qrc_days_setup": "2-3 நாட்களில் செட்டப்",
+
+      "system": "சிஸ்டம்",
+      "cameras": "கேமராக்கள்",
+      "storage": "ஸ்டோரேஜ்",
+      "custom_storage": "கஸ்டம் ஸ்டோரேஜ்",
+      "upgrades": "அப்கிரேடுகள்",
+      "savings": "சேமிப்பு",
+      "modified": "மாற்றியமைக்கப்பட்டது",
+      "custom_built": "கஸ்டம் பில்ட்",
 },
   te: {
     "wz_back": "బ్యాక్",
@@ -4609,6 +4662,15 @@ export const translations: Record<
       "qrc_100_genuine": "100% జెన్యూన్",
       "qrc_1_yr_warranty": "1-సంవత్సరం వారంటీ",
       "qrc_days_setup": "2-3 రోజుల సెటప్",
+
+      "system": "సిస్టమ్",
+      "cameras": "కెమెరాలు",
+      "storage": "స్టోరేజ్",
+      "custom_storage": "కస్టమ్ స్టోరేజ్",
+      "upgrades": "అప్‌గ్రేడ్‌లు",
+      "savings": "ఆదా",
+      "modified": "సవరించబడింది",
+      "custom_built": "కస్టమ్ బిల్ట్",
 },
   kn: {
     "wz_back": "ಬ್ಯಾಕ್",
@@ -5145,6 +5207,15 @@ export const translations: Record<
       "qrc_100_genuine": "100% ಅಸಲಿ",
       "qrc_1_yr_warranty": "1-ವರ್ಷದ ವಾರಂಟಿ",
       "qrc_days_setup": "2-3 ದಿನಗಳ ಸೆಟಪ್",
+
+      "system": "ಸಿಸ್ಟಮ್",
+      "cameras": "ಕ್ಯಾಮೆರಾಗಳು",
+      "storage": "ಸ್ಟೋರೇಜ್",
+      "custom_storage": "ಕಸ್ಟಮ್ ಸ್ಟೋರೇಜ್",
+      "upgrades": "ಅಪ್‌ಗ್ರೇಡ್‌ಗಳು",
+      "savings": "ಉಳಿತಾಯ",
+      "modified": "ಮಾರ್ಪಡಿಸಲಾಗಿದೆ",
+      "custom_built": "ಕಸ್ಟಮ್ ಬಿಲ್ಟ್",
 },
   bn: {
     "wz_back": "ব্যাক",
@@ -5681,6 +5752,15 @@ export const translations: Record<
       "qrc_100_genuine": "১০০% জেনুইন",
       "qrc_1_yr_warranty": "১-বছরের ওয়ারেন্টি",
       "qrc_days_setup": "২-৩ দিনের সেটআপ",
+
+      "system": "সিস্টেম",
+      "cameras": "ক্যামেরা",
+      "storage": "স্টোরেজ",
+      "custom_storage": "কাস্টম স্টোরেজ",
+      "upgrades": "আপগ্রেড",
+      "savings": "সাশ্রয়",
+      "modified": "পরিবর্তিত",
+      "custom_built": "কাস্টম বিল্ট",
 },
   ml: {
     "wz_back": "തിരികെ",
@@ -6217,6 +6297,15 @@ export const translations: Record<
       "qrc_100_genuine": "100% ഒറിജിനൽ",
       "qrc_1_yr_warranty": "1 വർഷത്തെ വാറൻ്റി",
       "qrc_days_setup": "സെറ്റപ്പ് ചെയ്യാൻ 2-3 ദിവസം",
+
+      "system": "സിസ്റ്റം",
+      "cameras": "ക്യാമറകൾ",
+      "storage": "സ്റ്റോറേജ്",
+      "custom_storage": "കസ്റ്റം സ്റ്റോറേജ്",
+      "upgrades": "അപ്‌ഗ്രേഡുകൾ",
+      "savings": "ലാഭം",
+      "modified": "പരിഷ്കരിച്ചത്",
+      "custom_built": "കസ്റ്റം ബിൽറ്റ്",
 },
   pa: {
     "wz_back": "ਬੈਕ",
@@ -6753,6 +6842,15 @@ export const translations: Record<
       "qrc_100_genuine": "100% ਅਸਲੀ",
       "qrc_1_yr_warranty": "1-ਸਾਲ ਦੀ ਵਾਰੰਟੀ",
       "qrc_days_setup": "2-3 ਦਿਨਾਂ ਦਾ ਸੈੱਟਅੱਪ",
+
+      "system": "ਸਿਸਟਮ",
+      "cameras": "ਕੈਮਰੇ",
+      "storage": "ਸਟੋਰੇਜ",
+      "custom_storage": "ਕਸਟਮ ਸਟੋਰੇਜ",
+      "upgrades": "ਅੱਪਗ੍ਰੇਡ",
+      "savings": "ਬੱਚਤ",
+      "modified": "ਮੋਡੀਫਾਈਡ",
+      "custom_built": "ਕਸਟਮ ਬਿਲਟ",
 },
   or: {
     "wz_back": "ବ୍ୟାକ୍",
@@ -7333,5 +7431,14 @@ export const translations: Record<
       "qrc_100_genuine": "100% ଅସଲି",
       "qrc_1_yr_warranty": "1-ବର୍ଷର ୱାରେଣ୍ଟି",
       "qrc_days_setup": "2-3 ଦିନରେ ସେଟଅପ୍",
+
+      "system": "ସିଷ୍ଟମ୍",
+      "cameras": "କ୍ୟାମେରା",
+      "storage": "ଷ୍ଟୋରେଜ୍",
+      "custom_storage": "କଷ୍ଟମ୍ ଷ୍ଟୋରେଜ୍",
+      "upgrades": "ଅପଗ୍ରେଡ୍",
+      "savings": "ସଞ୍ଚୟ",
+      "modified": "ପରିବର୍ତ୍ତିତ",
+      "custom_built": "କଷ୍ଟମ୍ ବିଲ୍ଟ",
 }
 };
