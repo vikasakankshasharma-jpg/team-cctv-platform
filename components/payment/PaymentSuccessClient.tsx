@@ -237,21 +237,21 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
               <div className="flex gap-3.5 items-start">
                 <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-sm">1</div>
                 <div>
-                  <p className="font-bold text-blue-950 text-xs sm:text-sm">Engineer Assignment (Within 2 Hours)</p>
+                  <p className="font-bold text-blue-950 text-xs sm:text-sm">Engineer Assignment</p>
                   <p className="text-xs text-blue-800/90 mt-0.5 leading-relaxed">Our nearest certified engineer will be assigned to your installation and will contact you on WhatsApp.</p>
                 </div>
               </div>
               <div className="flex gap-3.5 items-start">
                 <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-sm">2</div>
                 <div>
-                  <p className="font-bold text-blue-950 text-xs sm:text-sm">Site Survey & Scheduling (Within 24 Hours)</p>
+                  <p className="font-bold text-blue-950 text-xs sm:text-sm">Site Survey & Scheduling</p>
                   <p className="text-xs text-blue-800/90 mt-0.5 leading-relaxed">The engineer will conduct a free site survey and confirm the best camera placement for your property.</p>
                 </div>
               </div>
               <div className="flex gap-3.5 items-start">
                 <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-sm">3</div>
                 <div>
-                  <p className="font-bold text-blue-950 text-xs sm:text-sm">Professional Installation (Within 48 Hours)</p>
+                  <p className="font-bold text-blue-950 text-xs sm:text-sm">Professional Installation</p>
                   <p className="text-xs text-blue-800/90 mt-0.5 leading-relaxed">Complete installation with testing, handover, and a walkthrough of your new CCTV system.</p>
                 </div>
               </div>
