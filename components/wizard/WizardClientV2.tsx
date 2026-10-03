@@ -1077,7 +1077,7 @@ export function WizardClientV2() {
                                 {t("wz_exceeds_free_limit")} (+{excessMeters} {t("wz_meters")})
                               </p>
                               <p className="text-[10px] opacity-90 mt-0.5">
-                                Your base package includes <strong className="font-bold">{freeLimitMeters}{t("wz_m")}</strong> of cabling. The extra <strong className="font-bold">{excessMeters}{t("wz_m")}</strong> will be charged at <strong className="font-bold">₹15/meter (+₹{extraCostEstimate} estimated)</strong> on your final quote.
+                                Your base package includes free installation for up to <strong className="font-bold">{freeLimitMeters}{t("wz_m")}</strong> of cabling. Laying extra cable will incur a labor charge of <strong className="font-bold">₹15/meter (+₹{extraCostEstimate} estimated)</strong> on your final quote.
                               </p>
                             </div>
                           </div>

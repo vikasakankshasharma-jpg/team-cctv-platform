@@ -890,7 +890,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                       <div>
                         <h5 className="text-[13px] font-semibold text-red-800 dark:text-red-400">Excess Cabling Labor Surcharge</h5>
                         <p className="text-[12px] text-red-700 dark:text-red-300/80 mt-1">
-                          Your base package includes <b>{freeLimitMeters}m</b> of free cabling installation. The extra <b>{excessMeters}m</b> will incur an excess labor surcharge of <b>₹15/meter (+₹{excessMeters * 15} estimated)</b> on the final quote.
+                          Your base package includes free installation for up to <b>{freeLimitMeters}m</b> of cabling. Laying extra cable will incur a labor charge of <b>₹15/meter (+₹{excessMeters * 15} estimated)</b> on the final quote.
                         </p>
                       </div>
                     </div>
