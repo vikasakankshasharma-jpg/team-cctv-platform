@@ -169,10 +169,10 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             <div>
               <div className="flex items-center gap-2 text-zinc-500 mb-1 sm:mb-2">
                 <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Booked Installs</span>
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Active Bookings</span>
               </div>
               <div className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
-                {paidQuotesCount}
+                {bookedQuotes.length}
               </div>
             </div>
             <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">Orders confirmed with advance payment</p>
@@ -186,7 +186,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                 <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Tax Invoices</span>
               </div>
               <div className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
-                {paidQuotesCount}
+                {invoicedQuotes.length}
               </div>
             </div>
             <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">Official GST tax invoices available</p>
