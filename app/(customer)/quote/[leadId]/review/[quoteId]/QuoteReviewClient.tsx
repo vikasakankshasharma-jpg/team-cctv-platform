@@ -841,6 +841,28 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                         </div>
 
                       </div>
+
+                      {/* 4th Path: Free Site Visit (Confidence Builder) */}
+                      <div className="mt-6 sm:mt-8 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 dark:border-purple-900/30 rounded-3xl p-5 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-5 text-left shadow-sm">
+                        <div className="flex-1">
+                          <h3 className="text-base sm:text-lg font-black text-purple-900 dark:text-purple-300 flex items-center gap-2">
+                            <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
+                            Not Sure About Your Exact Requirements?
+                          </h3>
+                          <p className="text-xs sm:text-sm text-purple-800/80 dark:text-purple-300/80 mt-1.5 leading-relaxed font-medium">
+                            Don't worry! Book a <strong className="text-purple-900 dark:text-purple-200">100% Free Physical Site Survey</strong>. 
+                            Our engineer will visit your property, assess your exact camera coverage needs, and finalize the quotation with zero obligation.
+                          </p>
+                        </div>
+                        <button 
+                          onClick={() => setIsSurveyModalOpen(true)}
+                          className="w-full sm:w-auto shrink-0 px-6 py-3.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-sm shadow-md shadow-purple-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          <Calendar className="w-4 h-4" />
+                          Book Free Survey
+                        </button>
+                      </div>
+
                       
                       {/* Free Physical Site Survey Banner */}
                       <div className="mt-6 p-4 rounded-2xl bg-purple-50/70 border border-purple-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
