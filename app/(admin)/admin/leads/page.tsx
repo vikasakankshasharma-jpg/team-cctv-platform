@@ -30,23 +30,55 @@ type LeadListRow = {
 export default async function LeadsPage() {
   await requireAdmin();
 
-  const snapshot = await adminDb.collection("quotes").orderBy("createdAt", "desc").limit(50).get();
-  const leads: LeadListRow[] = snapshot.docs.map(doc => {
+  // Fetch both quotes and leads and merge them
+  const [quotesSnap, leadsSnap] = await Promise.all([
+    adminDb.collection("quotes").orderBy("createdAt", "desc").limit(50).get(),
+    adminDb.collection("leads").orderBy("created_at", "desc").limit(50).get()
+  ]);
+
+  const allDocs = [...quotesSnap.docs, ...leadsSnap.docs];
+  
+  // Sort combined results by date
+  allDocs.sort((a, b) => {
+    const dataA = a.data();
+    const dataB = b.data();
+    const dateA = dataA.createdAt || dataA.created_at || "1970-01-01";
+    const dateB = dataB.createdAt || dataB.created_at || "1970-01-01";
+    
+    // Handle Firestore Timestamps
+    const timeA = typeof dateA?.toDate === "function" ? dateA.toDate().getTime() : new Date(dateA).getTime();
+    const timeB = typeof dateB?.toDate === "function" ? dateB.toDate().getTime() : new Date(dateB).getTime();
+    
+    return timeB - timeA;
+  });
+
+  // Take top 50
+  const topDocs = allDocs.slice(0, 50);
+
+  const leads: LeadListRow[] = topDocs.map(doc => {
     const data = doc.data();
     const isPaid = data.status === "PAID" || data.status === "BOOKED" || !!data.payment_id || !!data.advance_paid;
     const isSiteVisit = data.status === "site_visit" || data.leadStatus === "SITE_VISIT" || !!data.site_visit_date;
     
-    let computedLeadStatus = data.leadStatus || "NEW";
+    let computedLeadStatus = data.leadStatus || data.status || "NEW";
     if (isPaid && computedLeadStatus !== "WON") computedLeadStatus = "WON";
     else if (isSiteVisit && computedLeadStatus === "NEW") computedLeadStatus = "SITE_VISIT";
+    else if (typeof computedLeadStatus === "string") computedLeadStatus = computedLeadStatus.toUpperCase();
+
+    // Handle Firestore Timestamp serialization
+    const getSafeIsoString = (val: any) => {
+      if (!val) return null;
+      if (typeof val.toDate === "function") return val.toDate().toISOString();
+      return new Date(val).toISOString();
+    };
 
     return {
       id: data.id || doc.id,
       leadId: data.leadId || data.lead_id || data.id || doc.id,
-      customer_name: data.customer_name || data.billing_details?.contact_name || data.billing_details?.company_name || "Unknown",
-      customer_mobile: data.customer_mobile || data.billing_details?.contact_mobile || "",
+      customer_name: data.customer_name || data.billing_details?.contact_name || data.billing_details?.company_name || data.customer?.name || "Unknown",
+      customer_mobile: data.customer_mobile || data.billing_details?.contact_mobile || data.customer?.mobile || "",
       source: data.source || "wizard",
-      total_payable: data.pricingSnapshot?.total_payable || data.total_payable || 0,
+      total_payable: data.pricingSnapshot?.total_payable || data.total_payable || data.pricingSnapshot?.finalPrice || 0,
       selectedPlan: data.selectedPlan || data.pricingSnapshot?.selectedPlan || "Standard",
       status: data.status || (isPaid ? "PAID" : "GENERATED"),
       leadStatus: computedLeadStatus,
@@ -54,9 +86,9 @@ export default async function LeadsPage() {
       is_business: !!data.billing_details?.is_business,
       company_name: data.billing_details?.company_name || null,
       gstin: data.billing_details?.gstin || null,
-      site_visit_date: data.site_visit_date || null,
+      site_visit_date: getSafeIsoString(data.site_visit_date),
       site_visit_slot: data.site_visit_slot || null,
-      createdAt: data.createdAt || data.created_at || new Date().toISOString(),
+      createdAt: getSafeIsoString(data.createdAt || data.created_at) || new Date().toISOString(),
     };
   });
 
