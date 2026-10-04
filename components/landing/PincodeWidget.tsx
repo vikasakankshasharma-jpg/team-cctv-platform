@@ -141,7 +141,7 @@ export function PincodeWidget({ variant = "hero" }: { variant?: "hero" | "footer
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <>
-              {t("get_instant_price")} <ArrowRight className="w-4 h-4" />
+              {t("get_instant_price", "Get Instant Price")} <ArrowRight className="w-4 h-4" />
             </>
           )}
         </motion.button>

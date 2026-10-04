@@ -938,6 +938,7 @@ export const translations: Record<
   Partial<Record<TranslationKey, string>>
 > = {
   en: {
+    "get_instant_price": "Get Instant Price",
     "wz_back": "Back",
     "wz_step": "Step",
     "wz_cctvquotationcom": "CCTVQuotation.com",
