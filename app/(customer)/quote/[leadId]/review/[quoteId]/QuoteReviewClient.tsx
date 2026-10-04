@@ -864,24 +864,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                       </div>
 
                       
-                      {/* Free Physical Site Survey Banner */}
-                      <div className="mt-6 p-4 rounded-2xl bg-purple-50/70 border border-purple-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-                            <MapPin className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="text-xs sm:text-sm font-bold text-purple-950">{t("qrc_inspect_first")}</p>
-                            <p className="text-[11px] text-purple-700">{t("qrc_schedule_survey")}</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => setIsSurveyModalOpen(true)}
-                          className="px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs transition-all shrink-0 active:scale-95 shadow-xs"
-                        >
-                          Book Free Survey
-                        </button>
-                      </div>
+
                     </div>
 
                     <div className="flex flex-col items-center justify-center gap-2 pt-2">
