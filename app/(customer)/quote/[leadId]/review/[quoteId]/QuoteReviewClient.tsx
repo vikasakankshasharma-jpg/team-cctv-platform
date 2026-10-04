@@ -939,7 +939,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                 className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl transition-all active:scale-95 disabled:opacity-50"
               >
                 <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">Pay Full</span>
+                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">Get 2% Pay Full</span>
               </button>
 
               <button
