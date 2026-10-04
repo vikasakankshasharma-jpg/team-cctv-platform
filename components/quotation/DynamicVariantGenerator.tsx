@@ -3,7 +3,7 @@ import { Product, Addon, AppSettings, ConfiguratorSelection, PricingResult } fro
 import { calculatePricing } from "@/lib/pricing-engine";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Check, Filter, Tag, ChevronDown } from "lucide-react";
+import { Sparkles, Check, Filter, Tag, ChevronDown, Plus, Trash2, Info } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 
 const BRAND_DISPLAY: Record<string, string> = {
@@ -400,6 +400,13 @@ export function DynamicVariantGenerator({
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-4 items-center">
+        <div className="bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300 px-4 py-3 rounded-xl w-full max-w-2xl text-sm flex items-start gap-3 shadow-sm border border-blue-100 dark:border-blue-900/50">
+          <Info className="w-5 h-5 shrink-0 mt-0.5" />
+          <p className="leading-relaxed">
+            <strong>Configure your setup:</strong> Choose your preferred technology and brand, then adjust camera quantities and resolutions. Use <strong>+ Variant</strong> if you need multiple resolutions (e.g., two 2MP cameras and two 5MP cameras) in the same package.
+          </p>
+        </div>
+
         {/* Technology Selector */}
         <div className="bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1.5 rounded-full inline-flex relative shadow-inner">
           <button
@@ -458,18 +465,19 @@ export function DynamicVariantGenerator({
                       }
                       return newBuckets;
                     })}
-                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 transition-colors"
-                    title="Split into another row"
+                    className="px-2.5 py-1 flex items-center gap-1 text-[11px] font-semibold rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 transition-colors"
+                    title="Add another resolution variant for this camera type"
                   >
-                    {t("wz_split")}
+                    <Plus className="w-3 h-3" />
+                    <span>Variant</span>
                   </button>
                   {cameraBuckets.length > 1 && (
                     <button 
                       onClick={() => setCameraBuckets(prev => prev.filter(b => b.id !== bucket.id))}
-                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 transition-colors"
+                      className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 transition-colors"
                       title="Remove this row"
                     >
-                      {t("wz_remove")}
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
