@@ -21,6 +21,10 @@ export function PartnerProfileClient({ initialProfile }: PartnerProfileClientPro
     business_name: initialProfile.business_name || "",
     email: initialProfile.email || "",
     mobile_number: initialProfile.mobile_number || "",
+    pan_number: (initialProfile as any).bank_details?.pan_number || "",
+    bank_account_no: (initialProfile as any).bank_details?.account_number || "",
+    bank_ifsc: (initialProfile as any).bank_details?.ifsc_code || "",
+    bank_beneficiary: (initialProfile as any).bank_details?.account_holder_name || "",
   });
 
   const handleSave = async () => {
@@ -99,6 +103,10 @@ export function PartnerProfileClient({ initialProfile }: PartnerProfileClientPro
                     business_name: initialProfile.business_name || "",
                     email: initialProfile.email || "",
                     mobile_number: initialProfile.mobile_number || "",
+                    pan_number: (initialProfile as any).pan_number || "",
+                    bank_account_no: (initialProfile as any).bank_details?.account_no || "",
+                    bank_ifsc: (initialProfile as any).bank_details?.ifsc || "",
+                    bank_beneficiary: (initialProfile as any).bank_details?.beneficiary_name || "",
                   });
                 }}
                 disabled={saving}

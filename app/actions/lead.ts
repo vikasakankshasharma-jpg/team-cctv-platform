@@ -116,13 +116,28 @@ export async function createLeadAction(payload: {
       : rawTechChoice.toUpperCase() === "IP" ? "IP"
       : "IP";
 
+    // Resolve referral code to promoter document ID
+    let resolvedPromoterId: string | null = null;
+    const referralCodeUsed = (leadData.wizard_answers?.partner_id as string) || null;
+    if (referralCodeUsed) {
+      const promoterSnap = await adminDb
+        .collection("promoters")
+        .where("referral_code", "==", referralCodeUsed.toUpperCase())
+        .where("is_active", "==", true)
+        .limit(1)
+        .get();
+      if (!promoterSnap.empty) {
+        resolvedPromoterId = promoterSnap.docs[0].id;
+      }
+    }
+
     await newLeadRef.set({
       customer_name:        leadData.customer_name,
       mobile_number:        leadData.mobile_number,
       firebase_uid:         leadData.firebase_uid,
       status:               leadData.status || "new",
-      promoter_id:          leadData.wizard_answers?.partner_id || null,
-      referral_code_used:   leadData.wizard_answers?.partner_id || null,
+      promoter_id:          resolvedPromoterId,
+      referral_code_used:   referralCodeUsed,
       wizard_answers:       leadData.wizard_answers,
       property_type:        leadData.property_type,
       technology_choice:    normalizedTechChoice,

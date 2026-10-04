@@ -1417,7 +1417,8 @@ export function generatePricingSnapshot(
   selectedAddonIds: string[] = [],
   settings: AppSettings,
   activeOffer?: any,
-  referralCode?: string,
+  referralDiscountPercent: number = 0,
+  referralDiscountFlat: number = 0,
   products: Product[] = []
 ): QuoteDelivery {
   const lineItems: any[] = [];
@@ -1661,8 +1662,18 @@ export function generatePricingSnapshot(
   const mappedLineItems = lineItems.map(li => ({ sellingPriceExTax: li.unit_price, qty: li.qty }));
   const totals = MarginEngine.calculateDocumentTotals(mappedLineItems, 0, geoMultiplier, marginPolicy);
 
-  const grossProfitValue = totals.finalExTax - totalPurchaseCost;
-  const grossProfitPercent = totals.finalExTax > 0 ? (grossProfitValue / totals.finalExTax) * 100 : 0;
+  const rawSubtotal = totals.rawSubtotal;
+  
+  // Calculate Referral Discount (New Logic)
+  const referralDiscount = Math.round(rawSubtotal * (referralDiscountPercent / 100)) + referralDiscountFlat;
+  const netTaxableAmount = Math.max(0, totals.finalExTax - referralDiscount);
+  
+  const gstRate = marginPolicy.gst_rate < 1 ? Math.round(marginPolicy.gst_rate * 100) : marginPolicy.gst_rate;
+  const gstAmount = Math.round(netTaxableAmount * (gstRate / 100));
+  const totalPayable = netTaxableAmount + gstAmount;
+
+  const grossProfitValue = netTaxableAmount - totalPurchaseCost;
+  const grossProfitPercent = netTaxableAmount > 0 ? (grossProfitValue / netTaxableAmount) * 100 : 0;
 
   return {
     plan_type: resolvedSystem.plan_type,
@@ -1673,12 +1684,12 @@ export function generatePricingSnapshot(
     cabling_cost: cablingCost,
     labor_cost: laborCost,
     addons_total: addonsTotal,
-    gross_subtotal: totals.rawSubtotal,
-    referral_discount: 0,
-    net_taxable_amount: totals.finalExTax,
-    gst_rate: marginPolicy.gst_rate < 1 ? Math.round(marginPolicy.gst_rate * 100) : marginPolicy.gst_rate,
-    gst_amount: totals.gstAmount,
-    total_payable: totals.totalPayable,
+    gross_subtotal: rawSubtotal,
+    referral_discount: referralDiscount,
+    net_taxable_amount: netTaxableAmount,
+    gst_rate: gstRate,
+    gst_amount: gstAmount,
+    total_payable: totalPayable,
     total_purchase_cost: totalPurchaseCost,
     gross_profit_value: grossProfitValue,
     gross_profit_percent: Number(grossProfitPercent.toFixed(2)),

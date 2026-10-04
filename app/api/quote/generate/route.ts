@@ -89,6 +89,26 @@ export async function POST(request: Request) {
     const config = generateConfiguration(req);
 
     
+    // Resolve Referral Code to Discounts
+    let referralDiscountPercent = 0;
+    let referralDiscountFlat = 0;
+    if (req.partner_id) {
+      const promoterSnap = await adminDb
+        .collection("promoters")
+        .where("referral_code", "==", req.partner_id.toUpperCase().trim())
+        .where("is_active", "==", true)
+        .limit(1)
+        .get();
+      if (!promoterSnap.empty) {
+        const promoter = promoterSnap.docs[0].data();
+        if (promoter.discount_type === "flat") {
+          referralDiscountFlat = promoter.discount_value || 0;
+        } else {
+          referralDiscountPercent = promoter.discount_value || 0;
+        }
+      }
+    }
+
     // 3. Extract unique brands from catalog
     const brands = new Set<string>();
     catalog.forEach((p: Product) => {
@@ -146,7 +166,8 @@ export async function POST(request: Request) {
          selectedAddonIds,
          settings,
          undefined,
-         undefined,
+         referralDiscountPercent,
+         referralDiscountFlat,
          catalog
        );
     }

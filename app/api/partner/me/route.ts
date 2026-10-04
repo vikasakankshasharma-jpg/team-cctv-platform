@@ -31,6 +31,7 @@ export async function GET() {
       discount_value: data.discount_value,
       use_global_commission: data.use_global_commission,
       commission_slabs: data.commission_slabs,
+      bank_details: data.bank_details,
     };
 
     return NextResponse.json({ profile });
@@ -48,11 +49,22 @@ export async function PATCH(req: Request) {
     const session = await requirePartnerSession();
     const body = await req.json();
 
-    const allowedUpdates: Partial<Promoter> = {};
+    const allowedUpdates: any = {};
     if (typeof body.name === "string") allowedUpdates.name = body.name;
     if (typeof body.email === "string") allowedUpdates.email = body.email;
     if (typeof body.mobile_number === "string") allowedUpdates.mobile_number = body.mobile_number;
     if (typeof body.business_name === "string") allowedUpdates.business_name = body.business_name;
+    
+    
+    // Bank details
+    if (body.bank_account_no || body.bank_ifsc || body.bank_beneficiary || body.pan_number) {
+      allowedUpdates.bank_details = {
+        account_number: body.bank_account_no || "",
+        ifsc_code: body.bank_ifsc || "",
+        account_holder_name: body.bank_beneficiary || "",
+        pan_number: body.pan_number || ""
+      };
+    }
 
     if (Object.keys(allowedUpdates).length === 0) {
       return NextResponse.json({ error: "No valid fields provided for update." }, { status: 400 });

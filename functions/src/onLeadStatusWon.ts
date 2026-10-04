@@ -33,19 +33,21 @@ export const onLeadStatusWon = functions.firestore
     try {
       // 2. Atomic Transaction Orchestration
       await admin.firestore().runTransaction(async (transaction) => {
-        // A. Identify the Accepted Quote
-        const quotesSnapshot = await admin.firestore()
-          .collection(`leads/${leadId}/quotes`)
-          .orderBy("created_at", "desc")
-          .limit(1)
-          .get();
+        // A. Identify the Accepted Quote (quotes are in top-level 'quotes' collection)
+        const quoteIds: string[] = afterData.quote_ids || [];
+        const latestQuoteId = afterData.latest_quote_id || (quoteIds.length > 0 ? quoteIds[quoteIds.length - 1] : null);
 
-        if (quotesSnapshot.empty) {
+        if (!latestQuoteId) {
           throw new Error(`Critical Fault: Won lead ${leadId} has no quote history.`);
         }
 
-        const quoteDoc = quotesSnapshot.docs[0];
-        const quoteData = quoteDoc.data();
+        const quoteDoc = await admin.firestore().collection("quotes").doc(latestQuoteId).get();
+
+        if (!quoteDoc.exists) {
+          throw new Error(`Critical Fault: Quote ${latestQuoteId} not found for won lead ${leadId}.`);
+        }
+
+        const quoteData = quoteDoc.data()!;
         const exTaxAmount = quoteData.net_taxable_amount || 0;
 
         if (exTaxAmount <= 0) {

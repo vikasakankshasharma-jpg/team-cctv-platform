@@ -24,6 +24,19 @@ function generateReferralCode(name: string, business: string): string {
   return `${prefix}${suffix}`;
 }
 
+async function getUniqueReferralCode(name: string, business: string): Promise<string> {
+  let code = generateReferralCode(name, business);
+  let attempts = 0;
+  while (attempts < 10) {
+    const existing = await adminDb.collection("promoters").where("referral_code", "==", code).limit(1).get();
+    if (existing.empty) return code;
+    code = generateReferralCode(name, business);
+    attempts++;
+  }
+  // Fallback: use timestamp-based code to guarantee uniqueness
+  return `TEAM${Date.now().toString(36).toUpperCase().slice(-6)}`;
+}
+
 export async function POST(req: NextRequest) {
   const { success } = await rateLimit(req);
   if (!success) {
@@ -65,8 +78,9 @@ export async function POST(req: NextRequest) {
       referral_code: referralCode,
       is_active: true, // Auto-approve for now, or could set to false pending admin approval
       discount_type: "percent",
-      discount_value: 5,
-      use_global_commission: true,
+      discount_value: 3,
+      use_global_commission: false,
+      commission_slabs: [{ from: 0, to: null, type: "percent", value: 2 }],
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     });

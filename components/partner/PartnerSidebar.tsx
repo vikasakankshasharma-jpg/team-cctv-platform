@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
 import { 
+  Image as ImageIcon,
   LayoutDashboard, 
   Target, 
   BadgeDollarSign, 
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { name: "Overview", href: "/partner/dashboard", icon: LayoutDashboard },
   { name: "My Leads", href: "/partner/leads", icon: Target },
   { name: "Commissions", href: "/partner/commissions", icon: TrendingUp },
+  { name: "EDM Posters", href: "/partner/edm", icon: ImageIcon },
   { name: "Profile", href: "/partner/profile", icon: Settings2 },
 ];
 

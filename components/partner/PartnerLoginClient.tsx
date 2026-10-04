@@ -15,7 +15,7 @@ export function PartnerLoginClient() {
   const [method, setMethod] = useState<"email" | "mobile">("mobile");
   const [identifier, setIdentifier] = useState("");
   const [step, setStep] = useState<1 | 2>(1);
-  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120);
