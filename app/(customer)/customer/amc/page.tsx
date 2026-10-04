@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CustomerAmcPage() {
   const session = await verifySession();
-  if (!session.isAuthenticated || session.role !== "CUSTOMER") {
+  if (!session.isAuthenticated || session.role !== "customer") {
     redirect("/customer/login");
   }
 

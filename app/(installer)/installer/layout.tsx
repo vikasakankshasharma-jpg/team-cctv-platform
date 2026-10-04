@@ -4,16 +4,24 @@ import { InstallerSidebar } from "@/components/installer/InstallerSidebar";
 import { redirect } from "next/navigation";
 import { OfflineBanner } from "@/components/shared/OfflineBanner";
 
+import { headers } from "next/headers";
+
 export default async function InstallerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const currentPath = headersList.get("x-pathname") || "";
+  
+  // Allow the login page to render without authentication
+  if (currentPath === "/installer/login") {
+    return <>{children}</>;
+  }
+
   const session = await verifyInstallerSession();
   
   if (!session || !session.isAuthenticated) {
-    // If not authenticated, the middleware should have redirected them, 
-    // but just in case this is the login page (or middleware fails)
     redirect('/installer/login');
   }
 

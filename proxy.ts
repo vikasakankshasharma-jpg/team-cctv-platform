@@ -24,7 +24,7 @@ export function proxy(request: NextRequest) {
     if (pathname.startsWith('/admin')) url.pathname = '/admin/login';
     else if (pathname.startsWith('/partner')) url.pathname = '/partner/login';
     else if (pathname.startsWith('/dealer')) url.pathname = '/dealer/login';
-    else if (pathname.startsWith('/salesperson')) url.pathname = '/salesperson/login';
+    else if (pathname.startsWith('/salesperson')) url.pathname = '/admin/login';
     else url.pathname = '/';
     
     return NextResponse.redirect(url);

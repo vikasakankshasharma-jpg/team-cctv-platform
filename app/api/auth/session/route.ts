@@ -51,7 +51,6 @@ export async function POST(request: Request) {
       response.cookies.set({ name: "installer_session", ...cookieOptions });
     } else if (role === "customer") {
       response.cookies.set({ name: "customer_session", ...cookieOptions });
-      response.cookies.set({ name: "admin_session", ...cookieOptions });
     } else {
       response.cookies.set({ name: "admin_session", ...cookieOptions });
     }

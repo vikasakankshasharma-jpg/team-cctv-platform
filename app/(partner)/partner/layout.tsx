@@ -2,16 +2,24 @@ import { verifyPartnerSession } from "@/lib/auth-partner";
 import { redirect } from "next/navigation";
 import { PartnerSidebar } from "@/components/partner/PartnerSidebar";
 
+import { headers } from "next/headers";
+
 export default async function PartnerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const currentPath = headersList.get("x-pathname") || "";
+  
+  // Allow the login page to render without authentication
+  if (currentPath === "/partner/login") {
+    return <>{children}</>;
+  }
+
   const session = await verifyPartnerSession();
   
   if (!session || !session.isAuthenticated) {
-    // If not authenticated, the middleware should have redirected them, 
-    // but just in case this is the login page (or middleware fails)
     redirect('/partner/login');
   }
 

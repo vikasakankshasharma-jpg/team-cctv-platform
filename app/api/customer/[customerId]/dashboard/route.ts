@@ -18,7 +18,7 @@ export async function GET(
     
     const { customerId } = await params;
     // Server-Side Customer Access Control
-    if (session.role === "CUSTOMER") {
+    if (session.role === "customer") {
        const customerDoc = await adminDb.collection("customers").doc(customerId).get();
        if (!customerDoc.exists || customerDoc.data()?.authUid !== session.user?.uid) {
            return NextResponse.json({ success: false, message: "Forbidden: Cross-Customer Access Denied" }, { status: 403 });
