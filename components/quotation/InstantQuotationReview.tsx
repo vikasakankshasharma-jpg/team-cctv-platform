@@ -447,12 +447,23 @@ export function InstantQuotationReview({
             [t("addon_cat_cables", "Wires & Cables")]: t("addon_desc_cat_cables", "Essential links to connect your recorder to a local TV or monitor.")
           };
 
+          const categoryIcons: Record<string, React.ReactNode> = {
+            [t("addon_cat_enclosure", "Safety Racks & Boxes")]: <Box className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" />,
+            [t("addon_cat_display", "TV & Display Screens")]: <Monitor className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" />,
+            [t("addon_cat_internet", "Internet (For Mobile View)")]: <Wifi className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" />,
+            [t("addon_cat_warranty", "Maintenance & Warranty")]: <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" />,
+            [t("addon_cat_cables", "Wires & Cables")]: <Cable className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" />
+          };
+
           return (
             <div className="space-y-8">
               {Object.entries(groupedAccessories).map(([category, items]) => (
                 <div key={category} className="bg-white dark:bg-[#1d1d1f] border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-3 sm:p-7 shadow-sm flex flex-col space-y-3 sm:space-y-5">
                   <div>
-                    <h3 className="text-sm sm:text-lg font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tight">{category}</h3>
+                    <div className="flex items-center gap-2">
+                      {categoryIcons[category]}
+                      <h3 className="text-sm sm:text-lg font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-tight">{category}</h3>
+                    </div>
                     <p className="text-[10px] leading-snug sm:leading-normal sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 font-medium">{categoryDescriptions[category] || ""}</p>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
