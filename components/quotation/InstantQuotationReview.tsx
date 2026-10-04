@@ -450,10 +450,10 @@ export function InstantQuotationReview({
           return (
             <div className="space-y-8">
               {Object.entries(groupedAccessories).map(([category, items]) => (
-                <div key={category} className="bg-white dark:bg-[#1d1d1f] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-sm flex flex-col space-y-5">
+                <div key={category} className="bg-white dark:bg-[#1d1d1f] border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-3 sm:p-7 shadow-sm flex flex-col space-y-3 sm:space-y-5">
                   <div>
-                    <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tight">{category}</h3>
-                    <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 font-medium">{categoryDescriptions[category] || ""}</p>
+                    <h3 className="text-sm sm:text-lg font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tight">{category}</h3>
+                    <p className="text-[10px] leading-snug sm:leading-normal sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 font-medium">{categoryDescriptions[category] || ""}</p>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {items.map((acc) => {
@@ -464,7 +464,7 @@ export function InstantQuotationReview({
                         <div
                 key={acc.id}
                 onClick={() => handleToggle(acc.id, acc.title)}
-                className={`group cursor-pointer rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between ${
+                className={`group cursor-pointer rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border transition-all duration-200 flex flex-col justify-between ${
                   selected
                     ? "bg-blue-50/60 dark:bg-blue-950/30 border-blue-500 ring-2 ring-blue-500/20 shadow-md"
                     : "bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-white dark:hover:bg-zinc-900 shadow-xs hover:shadow-md"
@@ -486,16 +486,16 @@ export function InstantQuotationReview({
                   </div>
 
 
-                  <h3 className={`font-bold text-base mb-1.5 transition-colors ${selected ? "text-blue-950 dark:text-blue-200" : "text-zinc-900 dark:text-white group-hover:text-blue-600"}`}>
+                  <h3 className={`font-bold text-sm sm:text-base leading-snug sm:leading-normal mb-1.5 transition-colors ${selected ? "text-blue-950 dark:text-blue-200" : "text-zinc-900 dark:text-white group-hover:text-blue-600"}`}>
                     {acc.title}
                   </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-4">
+                  <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 leading-snug sm:leading-relaxed mb-3 sm:mb-4">
                     {acc.description}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
-                  <div className="text-base font-black text-zinc-900 dark:text-white">
+                  <div className="text-sm sm:text-base font-black text-zinc-900 dark:text-white">
                     +₹{acc.price.toLocaleString("en-IN")}
                     <span className="text-[10px] font-normal text-zinc-400 ml-1">+{t("wz_gst")}</span>
                   </div>
