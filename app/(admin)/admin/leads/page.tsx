@@ -25,6 +25,7 @@ type LeadListRow = {
   site_visit_date?: string | null;
   site_visit_slot?: string | null;
   createdAt: string;
+  quoteId?: string;
 };
 
 export default async function LeadsPage() {
@@ -74,27 +75,32 @@ export default async function LeadsPage() {
 
     let total_payable = data.pricingSnapshot?.total_payable || data.total_payable || data.pricingSnapshot?.finalPrice || 0;
     let selectedPlan = data.selectedPlan || data.pricingSnapshot?.selectedPlan || "Standard";
+    let quoteId = doc.ref.parent.id === "quotes" ? doc.id : undefined;
 
-    // If it's a legacy lead (no pricing info on root), try to fetch its latest quote
-    if (total_payable === 0 && doc.ref.parent.id === "leads") {
+    // If it's a legacy lead, try to fetch its latest quote
+    if (doc.ref.parent.id === "leads") {
       try {
         const quotesSnap = await adminDb.collection("leads").doc(doc.id).collection("quotes")
           .orderBy("createdAt", "desc")
           .limit(1)
           .get();
         if (!quotesSnap.empty) {
-          const latestQuote = quotesSnap.docs[0].data();
-          total_payable = latestQuote.pricingSnapshot?.total_payable || latestQuote.total_payable || latestQuote.pricingSnapshot?.finalPrice || 0;
-          selectedPlan = latestQuote.selectedPlan || latestQuote.pricingSnapshot?.selectedPlan || "Standard";
+          const latestQuoteDoc = quotesSnap.docs[0];
+          const latestQuote = latestQuoteDoc.data();
+          quoteId = latestQuoteDoc.id;
+          total_payable = latestQuote.pricingSnapshot?.total_payable || latestQuote.total_payable || latestQuote.pricingSnapshot?.finalPrice || total_payable;
+          selectedPlan = latestQuote.selectedPlan || latestQuote.pricingSnapshot?.selectedPlan || selectedPlan;
         }
       } catch (e) {
-        // Ignore errors (e.g., missing index, though descending createdAt might require one, fallback to basic get if it fails)
+        // Fallback if missing index
         try {
            const fallbackSnap = await adminDb.collection("leads").doc(doc.id).collection("quotes").get();
            if (!fallbackSnap.empty) {
-              const latestQuote = fallbackSnap.docs[fallbackSnap.docs.length - 1].data();
-              total_payable = latestQuote.pricingSnapshot?.total_payable || latestQuote.total_payable || latestQuote.pricingSnapshot?.finalPrice || 0;
-              selectedPlan = latestQuote.selectedPlan || latestQuote.pricingSnapshot?.selectedPlan || "Standard";
+              const latestQuoteDoc = fallbackSnap.docs[fallbackSnap.docs.length - 1];
+              const latestQuote = latestQuoteDoc.data();
+              quoteId = latestQuoteDoc.id;
+              total_payable = latestQuote.pricingSnapshot?.total_payable || latestQuote.total_payable || latestQuote.pricingSnapshot?.finalPrice || total_payable;
+              selectedPlan = latestQuote.selectedPlan || latestQuote.pricingSnapshot?.selectedPlan || selectedPlan;
            }
         } catch (fallbackErr) {}
       }
@@ -103,6 +109,7 @@ export default async function LeadsPage() {
     return {
       id: data.id || doc.id,
       leadId: data.leadId || data.lead_id || data.id || doc.id,
+      quoteId,
       customer_name: data.customer_name || data.billing_details?.contact_name || data.billing_details?.company_name || data.customer?.name || "Unknown",
       customer_mobile: data.customer_mobile || data.billing_details?.contact_mobile || data.customer?.mobile || "",
       source: data.source || "wizard",
@@ -219,23 +226,29 @@ export default async function LeadsPage() {
                         <TableCell>{getStatusBadge(lead.leadStatus, lead.isPaid)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            <Link href={`/admin/leads/${lead.id}`}>
+                            <Link href={`/admin/leads/${lead.leadId}`}>
                               <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold">
                                 Details
                               </Button>
                             </Link>
-                            <a
-                              href={`/api/quote/${lead.id}/download`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-medium border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                              title="Download Quotation PDF"
-                            >
-                              Quote
-                            </a>
+                            {lead.quoteId || lead.status === "GENERATED" || lead.status === "QUOTED" || lead.isPaid ? (
+                              <a
+                                href={`/api/quote/${lead.quoteId || lead.id}/download`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-medium border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                title="Download Quotation PDF"
+                              >
+                                Quote
+                              </a>
+                            ) : (
+                              <Button disabled variant="outline" size="sm" className="h-8 px-2.5 text-xs font-medium opacity-50">
+                                Quote
+                              </Button>
+                            )}
                             {lead.isPaid && (
                               <a
-                                href={`/api/invoice/${lead.id}/download`}
+                                href={`/api/invoice/${lead.quoteId || lead.id}/download`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
