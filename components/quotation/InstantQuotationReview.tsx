@@ -432,13 +432,36 @@ export function InstantQuotationReview({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {availableAccessories.map((acc) => {
-            const selected = isAddonSelected(acc.id);
-            const Icon = acc.icon;
+        {(() => {
+          const groupedAccessories = availableAccessories.reduce((groups, item) => {
+            if (!groups[item.category]) groups[item.category] = [];
+            groups[item.category].push(item);
+            return groups;
+          }, {} as Record<string, typeof availableAccessories[0][]>);
 
-            return (
-              <div
+          const categoryDescriptions: Record<string, string> = {
+            [t("addon_cat_enclosure", "Security Enclosure")]: t("addon_desc_cat_enclosure", "Protect your equipment from theft, dust, and weather damage."),
+            [t("addon_cat_display", "Monitoring Display")]: t("addon_desc_cat_display", "Dedicated commercial screens for 24/7 continuous live viewing."),
+            [t("addon_cat_internet", "Internet & Remote Viewing")]: t("addon_desc_cat_internet", "Required for mobile phone access if you don't have a local broadband connection."),
+            [t("addon_cat_warranty", "Warranty & Support")]: t("addon_desc_cat_warranty", "Extend your peace of mind with our priority maintenance contracts."),
+            [t("addon_cat_cables", "Cables & Connectors")]: t("addon_desc_cat_cables", "Essential links to connect your recorder to a local TV or monitor.")
+          };
+
+          return (
+            <div className="space-y-8">
+              {Object.entries(groupedAccessories).map(([category, items]) => (
+                <div key={category} className="space-y-3">
+                  <div className="border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                    <h3 className="text-sm font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-widest">{category}</h3>
+                    <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 font-medium">{categoryDescriptions[category] || ""}</p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {items.map((acc) => {
+                      const selected = isAddonSelected(acc.id);
+                      const Icon = acc.icon;
+
+                      return (
+                        <div
                 key={acc.id}
                 onClick={() => handleToggle(acc.id, acc.title)}
                 className={`group cursor-pointer rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between ${
@@ -494,10 +517,15 @@ export function InstantQuotationReview({
                     {selected ? "✓ Added" : "+ Add"}
                   </Button>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* 5. ADVANCED COMPONENT CUSTOMIZER (ACCORDION) */}
