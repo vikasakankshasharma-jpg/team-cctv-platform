@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Geist } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
@@ -14,8 +14,6 @@ import { Toaster } from "sonner";
 import { LanguageSync } from "@/components/shared/LanguageSync";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
-const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cctvquotation.com"),
@@ -88,7 +86,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://connect.facebook.net" />
       </head>
-      <body className={`${inter.className} antialiased selection:bg-blue-500/30`}>
+      <body className={`antialiased font-sans selection:bg-blue-500/30`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

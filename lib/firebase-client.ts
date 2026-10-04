@@ -55,7 +55,7 @@ function getClientApp(): FirebaseApp {
 
   try {
     if (typeof window !== "undefined") {
-      console.info("🔒 Firebase Client Init: Project " + firebaseConfig.projectId);
+      
     }
     
     // Validate config before initializing

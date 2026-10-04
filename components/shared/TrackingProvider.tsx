@@ -7,7 +7,8 @@ import { useEffect } from "react";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID?.replace(/[\r\n\s]/g, "");
 const GADS_ID = process.env.NEXT_PUBLIC_GADS_ID?.replace(/[\r\n\s]/g, "");
 const GADS_CONVERSION_LABEL = process.env.NEXT_PUBLIC_GADS_CONVERSION_LABEL?.replace(/[\r\n\s]/g, "");
-const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID?.replace(/[\r\n\s]/g, "");
+const RAW_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID?.replace(/[\r\n\s]/g, "");
+const META_PIXEL_ID = RAW_PIXEL_ID && /^\d+$/.test(RAW_PIXEL_ID) ? RAW_PIXEL_ID : null;
 
 /**
  * Global Tracking Utility

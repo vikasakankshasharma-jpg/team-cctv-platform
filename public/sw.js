@@ -46,14 +46,14 @@ self.addEventListener('fetch', (event) => {
           fetch(event.request).then((networkResponse) => {
             const clone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, clone);
+              if (event.request.url.startsWith("http")) cache.put(event.request, clone);
             });
           }).catch(() => {});
           return cachedResponse;
         }
         return fetch(event.request).then((networkResponse) => {
           const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then((cache) => { if (event.request.url.startsWith("http")) cache.put(event.request, clone); });
           return networkResponse;
         });
       })
@@ -67,7 +67,7 @@ self.addEventListener('fetch', (event) => {
       caches.match(event.request).then((cachedResponse) => {
         return cachedResponse || fetch(event.request).then((networkResponse) => {
           const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then((cache) => { if (event.request.url.startsWith("http")) cache.put(event.request, clone); });
           return networkResponse;
         });
       })
@@ -98,7 +98,7 @@ self.addEventListener('fetch', (event) => {
         const fetchPromise = fetch(event.request).then((networkResponse) => {
           const clone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, clone);
+            if (event.request.url.startsWith("http")) cache.put(event.request, clone);
           });
           return networkResponse;
         }).catch(() => {});
