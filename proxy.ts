@@ -43,8 +43,8 @@ export function proxy(request: NextRequest) {
   // CSP Definition
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com https://*.razorpay.com https://www.google.com https://www.gstatic.com https://*.googleapis.com https://www.recaptcha.net https://*.firebaseapp.com https://www.googletagmanager.com https://connect.facebook.net https://apis.mappls.com https://*.mappls.com blob:;
-    script-src-elem 'self' 'unsafe-inline' https://checkout.razorpay.com https://*.razorpay.com https://www.google.com https://www.gstatic.com https://*.googleapis.com https://www.recaptcha.net https://*.firebaseapp.com https://www.googletagmanager.com https://connect.facebook.net https://apis.mappls.com https://*.mappls.com blob:;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com https://*.razorpay.com https://www.google.com https://www.gstatic.com https://*.googleapis.com https://apis.google.com https://www.recaptcha.net https://*.firebaseapp.com https://www.googletagmanager.com https://connect.facebook.net https://apis.mappls.com https://*.mappls.com blob:;
+    script-src-elem 'self' 'unsafe-inline' https://checkout.razorpay.com https://*.razorpay.com https://www.google.com https://www.gstatic.com https://*.googleapis.com https://apis.google.com https://www.recaptcha.net https://*.firebaseapp.com https://www.googletagmanager.com https://connect.facebook.net https://apis.mappls.com https://*.mappls.com blob:;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://apis.mappls.com https://*.mappls.com;
     style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://apis.mappls.com https://*.mappls.com;
     img-src 'self' blob: data: https: http:;

@@ -1325,6 +1325,7 @@ export function WizardClientV2() {
         )}
 
         {renderStep()}
+        <div id="recaptcha-container-wizard"></div>
       </div>
     </div>
   );
