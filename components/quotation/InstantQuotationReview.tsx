@@ -63,8 +63,6 @@ export function InstantQuotationReview({
 
   const { selection, toggleAddon, updateSelection } = useConfiguratorStore();
   const [showAdvancedCustomizer, setShowAdvancedCustomizer] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
-
   // Derive package header info
   const camItem = activePricing.items?.find((i: any) => 
     products.find(p => p.id === i.product_id)?.category === "cctv_camera" ||
@@ -160,11 +158,11 @@ export function InstantQuotationReview({
       {/* 1. TOP NAVIGATION & BADGES */}
       <div className="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <button
-          onClick={step === 1 ? onBack : () => setStep(1)}
+          onClick={onBack}
           className="inline-flex items-center text-xs font-bold text-gray-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 gap-1.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 px-3 py-1.5 rounded-full shadow-xs transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>{step === 1 ? t("wz_back_to_packages") : t("wz_back_to_summary")}</span>
+          <span>{t("wz_back_to_packages")}</span>
         </button>
 
         <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
@@ -278,33 +276,7 @@ export function InstantQuotationReview({
         </div>
       </div>
 
-      {/* 4. TAB TOGGLE: BREAKDOWN VS ADD-ONS */}
-      <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl max-w-md mx-auto">
-        <button
-          onClick={() => setStep(1)}
-          className={`flex-1 py-2 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
-            step === 1 ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-          }`}
-        >
-          📋 {t("wz_itemized_breakdown")}
-        </button>
-        <button
-          onClick={() => setStep(2)}
-          className={`flex-1 py-2 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-            step === 2 ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-          }`}
-        >
-          <span>🎁 {t("wz_addons_and_extras")}</span>
-          {(selection.selected_addons || []).length > 0 && (
-            <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">
-              {(selection.selected_addons || []).length}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {step === 1 && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-4">
           {/* MOBILE ITEM CARDS (sm:hidden) */}
           <div className="sm:hidden space-y-2">
             {activePricing.items.map((item, idx) => (
@@ -438,27 +410,11 @@ export function InstantQuotationReview({
             </div>
           </div>
 
-          {/* ACTION BUTTONS ROW */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 pb-6">
-            <button 
-              onClick={() => setStep(2)} 
-              className="w-full sm:w-auto px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl border-2 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-            >
-              ➕ {t("wz_customize_accessories")}
-            </button>
-            <Button
-              onClick={onProceedToActualQuotation}
-              disabled={isSaving}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm flex items-center justify-center gap-2 group cursor-pointer"
-            >
-              {isSaving ? "Finalizing Quote..." : t("wz_proceed_to_final_quotation")}
-            </Button>
           </div>
-        </div>
-      )}
 
-      {step === 2 && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+      <hr className="border-zinc-200 dark:border-zinc-800 my-6" />
+
+      <div className="space-y-8 mt-6">
       {/* 4. INTERACTIVE ADD-ONS & ACCESSORIES SECTION */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -588,13 +544,7 @@ export function InstantQuotationReview({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
-          <Button
-            variant="secondary"
-            onClick={() => setStep(1)}
-            className="w-full sm:w-auto rounded-full font-bold text-xs px-5 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/20"
-          >
-            ← Back to System Details
-          </Button>
+          
           <Button
             onClick={onProceedToActualQuotation}
             disabled={isSaving}
@@ -605,8 +555,6 @@ export function InstantQuotationReview({
         </div>
       </div>
         </div>
-      )}
-
       {/* MOBILE STICKY PROCEED BAR */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 p-3 z-50 flex items-center justify-between shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.1)]">
         <div className="flex flex-col">
