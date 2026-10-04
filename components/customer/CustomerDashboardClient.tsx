@@ -56,8 +56,10 @@ interface CustomerDashboardProps {
 }
 
 import { SupportChatbot } from "@/components/customer/SupportChatbot";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps) {
+  const { t } = useTranslation();
   const safeUser = user || { uid: "", name: "Valued Client", mobile: "" };
   const safeQuotes = Array.isArray(quotes) ? quotes : [];
   const router = useRouter();
@@ -113,7 +115,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                   {safeUser.name || "Valued Client"}
                 </h1>
                 <span className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900 text-[10px] sm:text-xs font-black uppercase px-2 py-0.5 rounded-full whitespace-nowrap">
-                  Customer
+                  {t("dash_role_customer", "Customer")}
                 </span>
               </div>
               <p className="text-xs sm:text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
@@ -128,15 +130,15 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-emerald-100 dark:hover:bg-emerald-900"
             >
               <Headphones className="w-4 h-4 shrink-0" />
-              Support
+              {t("dash_nav_support", "Support")}
             </Link>
-            <Link href="/customer/profile" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-zinc-200 dark:hover:bg-zinc-700"><User className="w-4 h-4 shrink-0" />Profile</Link>
-            <Link href="/customer/documents" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-indigo-100 dark:hover:bg-indigo-900"><FileText className="w-4 h-4 shrink-0" />Documents</Link><Link href="/customer/amc" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-emerald-100 dark:hover:bg-emerald-900"><ShieldCheck className="w-4 h-4 shrink-0" />Warranties & AMC</Link>
+            <Link href="/customer/profile" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-zinc-200 dark:hover:bg-zinc-700"><User className="w-4 h-4 shrink-0" />{t("dash_nav_profile", "Profile")}</Link>
+            <Link href="/customer/documents" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-indigo-100 dark:hover:bg-indigo-900"><FileText className="w-4 h-4 shrink-0" />{t("dash_nav_documents", "Documents")}</Link><Link href="/customer/amc" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-center bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap hover:bg-emerald-100 dark:hover:bg-emerald-900"><ShieldCheck className="w-4 h-4 shrink-0" />{t("dash_nav_warranties", "Warranties & AMC")}</Link>
             <Link
               href="/wizard"
               className="flex-1 sm:flex-none flex items-center justify-center text-center bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm whitespace-nowrap"
             >
-              + New Quotation
+              {t("dash_nav_new_quote", "+ New Quotation")}
             </Link>
             <button
               onClick={handleLogout}
@@ -144,7 +146,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap"
             >
               <LogOut className="w-4 h-4 shrink-0" />
-              <span>{loggingOut ? "Signing out..." : "Log Out"}</span>
+              <span>{loggingOut ? t("dash_nav_logging_out", "Signing out...") : t("dash_nav_logout", "Log Out")}</span>
             </button>
           </div>
         </div>
@@ -155,13 +157,13 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             <div>
               <div className="flex items-center gap-2 text-zinc-500 mb-1 sm:mb-2">
                 <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Total Quotations</span>
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{t("dash_metric_total_quotes", "Total Quotations")}</span>
               </div>
               <div className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
                 {totalQuotesCount}
               </div>
             </div>
-            <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">Lifetime generated estimates</p>
+            <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">{t("dash_metric_total_desc", "Lifetime generated estimates")}</p>
             <FileText className="w-8 h-8 text-blue-600/20 sm:hidden" />
           </div>
 
@@ -169,13 +171,13 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             <div>
               <div className="flex items-center gap-2 text-zinc-500 mb-1 sm:mb-2">
                 <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Active Bookings</span>
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{t("dash_metric_active_bookings", "Active Bookings")}</span>
               </div>
               <div className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
                 {bookedQuotes.length}
               </div>
             </div>
-            <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">Orders confirmed with advance payment</p>
+            <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">{t("dash_metric_active_desc", "Orders confirmed with advance payment")}</p>
             <Truck className="w-8 h-8 text-emerald-600/20 sm:hidden" />
           </div>
 
@@ -183,13 +185,13 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             <div>
               <div className="flex items-center gap-2 text-zinc-500 mb-1 sm:mb-2">
                 <Download className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Tax Invoices</span>
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{t("dash_metric_tax_invoices", "Tax Invoices")}</span>
               </div>
               <div className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
                 {invoicedQuotes.length}
               </div>
             </div>
-            <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">Official GST tax invoices available</p>
+            <p className="hidden sm:block text-xs text-zinc-400 mt-1 font-medium">{t("dash_metric_tax_desc", "Official GST tax invoices available")}</p>
             <Download className="w-8 h-8 text-indigo-600/20 sm:hidden" />
           </div>
         </div>
@@ -202,10 +204,10 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             <div>
               <h2 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
                 <Layers className="w-5 h-5 text-blue-600" />
-                <span>Your Quotations & Orders</span>
+                <span>{t("dash_section_title", "Your Quotations & Orders")}</span>
               </h2>
               <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-                Review details, download official PDFs, or track live installation milestones.
+                {t("dash_section_desc", "Review details, download official PDFs, or track live installation milestones.")}
               </p>
             </div>
 
@@ -220,7 +222,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                 }`}
               >
                 <CheckCircle2 className="w-4 h-4" />
-                Active Bookings ({bookedQuotes.length})
+                {t("dash_tab_active", `Active Bookings (${bookedQuotes.length})`, { count: String(bookedQuotes.length) })}
               </button>
               <button
                 onClick={() => setActiveTab('pending')}
@@ -231,7 +233,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                 }`}
               >
                 <Clock className="w-4 h-4" />
-                Pending Quotations ({unbookedQuotes.length})
+                {t("dash_tab_pending", `Pending Quotations (${unbookedQuotes.length})`, { count: String(unbookedQuotes.length) })}
               </button>
               <button
                 onClick={() => setActiveTab('invoiced')}
@@ -242,7 +244,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                 }`}
               >
                 <Download className="w-4 h-4" />
-                Invoiced ({invoicedQuotes.length})
+                {t("dash_tab_invoiced", `Invoiced (${invoicedQuotes.length})`, { count: String(invoicedQuotes.length) })}
               </button>
             </div>
           </div>
@@ -252,7 +254,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
           {/* Active Bookings / Installations */}
           <div className="bg-zinc-50 dark:bg-zinc-800/20 px-6 py-3 border-b border-zinc-100 dark:border-zinc-800">
              <h3 className="text-sm font-black text-zinc-900 dark:text-white flex items-center gap-2 uppercase tracking-widest">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Active Bookings ({bookedQuotes.length})
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" /> {t("dash_tab_active", `Active Bookings (${bookedQuotes.length})`, { count: String(bookedQuotes.length) })}
              </h3>
           </div>
           
@@ -301,7 +303,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                         )}
                         {q.cameraCount ? (
                           <span className="text-xs text-zinc-500 font-bold">
-                            • {q.cameraCount} Cameras
+                            • {t("dash_cameras_count", `${q.cameraCount} Cameras`, { count: String(q.cameraCount) })}
                           </span>
                         ) : null}
                       </div>
@@ -329,7 +331,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           </span>
                           {(q.amountDue ?? 0) > 0 && q.isPaid && (
                             <span className="text-[10px] text-red-500 font-bold -mt-0.5">
-                              Balance: ₹{(q.amountDue ?? 0).toLocaleString("en-IN")}
+                              {t("dash_balance", `Balance: ₹${(q.amountDue ?? 0).toLocaleString("en-IN")}`, { amount: (q.amountDue ?? 0).toLocaleString("en-IN") })}
                             </span>
                           )}
                         </span>
@@ -339,7 +341,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                     {/* System Status Tracker */}
                     {q.isPaid && q.rawLead && (
                       <div className="border-t border-zinc-100 dark:border-zinc-800/50 mt-4 pt-2 mb-4">
-                        <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Order Progress</p>
+                        <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">{t("dash_order_progress", "Order Progress")}</p>
                         <SystemStatusWidget lead={q.rawLead} job={null} />
                       </div>
                     )}
@@ -354,7 +356,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
                         >
                           <FileText className="w-4 h-4 text-zinc-500 shrink-0" />
-                          <span>View Quote</span>
+                          <span>{t("dash_btn_view_quote", "View Quote")}</span>
                         </Link>
 
                         {/* Download Quote */}
@@ -365,7 +367,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
                         >
                           <Download className="w-4 h-4 text-zinc-500 shrink-0" />
-                          <span>Download PDF</span>
+                          <span>{t("dash_btn_download_pdf", "Download PDF")}</span>
                         </a>
                       </div>
 
@@ -376,7 +378,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-black transition-all whitespace-nowrap"
                         >
                           <Truck className="w-4 h-4 shrink-0" />
-                          <span>Track Status</span>
+                          <span>{t("dash_btn_track_status", "Track Status")}</span>
                         </Link>
                       )}
                       
@@ -391,7 +393,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all whitespace-nowrap"
                         >
                           <Download className="w-4 h-4 shrink-0" />
-                          <span>{(q.amountDue ?? 0) > 0 ? "Booking Receipt" : "Tax Invoice"}</span>
+                          <span>{(q.amountDue ?? 0) > 0 ? t("dash_btn_booking_receipt", "Booking Receipt") : t("dash_btn_tax_invoice", "Tax Invoice")}</span>
                         </a>
                       )}
                     </div>
@@ -426,7 +428,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
             <div>
           <div className="bg-zinc-50 dark:bg-zinc-800/20 px-6 py-3 border-y border-zinc-100 dark:border-zinc-800">
              <h3 className="text-sm font-black text-zinc-900 dark:text-white flex items-center gap-2 uppercase tracking-widest">
-                <Clock className="w-4 h-4 text-amber-500" /> Pending Quotations ({unbookedQuotes.length})
+                <Clock className="w-4 h-4 text-amber-500" /> {t("dash_tab_pending", `Pending Quotations (${unbookedQuotes.length})`, { count: String(unbookedQuotes.length) })}
              </h3>
           </div>
           
@@ -481,7 +483,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                         )}
                         {q.cameraCount ? (
                           <span className="text-xs text-zinc-500 font-bold">
-                            • {q.cameraCount} Cameras
+                            • {t("dash_cameras_count", `${q.cameraCount} Cameras`, { count: String(q.cameraCount) })}
                           </span>
                         ) : null}
                       </div>
@@ -509,7 +511,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           </span>
                           {(q.amountDue ?? 0) > 0 && q.isPaid && (
                             <span className="text-[10px] text-red-500 font-bold -mt-0.5">
-                              Balance: ₹{(q.amountDue ?? 0).toLocaleString("en-IN")}
+                              {t("dash_balance", `Balance: ₹${(q.amountDue ?? 0).toLocaleString("en-IN")}`, { amount: (q.amountDue ?? 0).toLocaleString("en-IN") })}
                             </span>
                           )}
                         </span>
@@ -526,7 +528,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
                         >
                           <FileText className="w-4 h-4 text-zinc-500 shrink-0" />
-                          <span>View Quote</span>
+                          <span>{t("dash_btn_view_quote", "View Quote")}</span>
                         </Link>
 
                         {/* Download Quote */}
@@ -537,7 +539,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black transition-all whitespace-nowrap"
                         >
                           <Download className="w-4 h-4 text-zinc-500 shrink-0" />
-                          <span>Download PDF</span>
+                          <span>{t("dash_btn_download_pdf", "Download PDF")}</span>
                         </a>
                       </div>
 
@@ -548,7 +550,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-black transition-all whitespace-nowrap"
                         >
                           <Truck className="w-4 h-4 shrink-0" />
-                          <span>Track Status</span>
+                          <span>{t("dash_btn_track_status", "Track Status")}</span>
                         </Link>
                       )}
                       
@@ -563,7 +565,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all whitespace-nowrap"
                         >
                           <Download className="w-4 h-4 shrink-0" />
-                          <span>{(q.amountDue ?? 0) > 0 ? "Booking Receipt" : "Tax Invoice"}</span>
+                          <span>{(q.amountDue ?? 0) > 0 ? t("dash_btn_booking_receipt", "Booking Receipt") : t("dash_btn_tax_invoice", "Tax Invoice")}</span>
                         </a>
                       )}
                     </div>
@@ -575,17 +577,17 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm">
-                          Special Offer 🎉
+                          {t("dash_special_offer", "Special Offer 🎉")}
                         </span>
                       </div>
-                      <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Get 2% Instant Discount on Full Payment, or choose Easy EMIs!</h4>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Select a payment plan that fits your budget.</p>
+                      <h4 className="text-sm font-bold text-zinc-900 dark:text-white">{t("dash_offer_title", "Get 2% Instant Discount on Full Payment, or choose Easy EMIs!")}</h4>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{t("dash_offer_desc", "Select a payment plan that fits your budget.")}</p>
                     </div>
                     <Link
                       href={`/quote/${q.leadId}/review/${q.quoteId}`}
                       className="shrink-0 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-100 px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
                     >
-                      Select Payment Plan <ChevronRight className="w-4 h-4" />
+                      {t("dash_btn_select_plan", "Select Payment Plan")} <ChevronRight className="w-4 h-4" />
                     </Link>
                   </div>
                 </div>
@@ -611,7 +613,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               {/* Invoiced Quotes */}
               <div className="bg-zinc-50 dark:bg-zinc-800/20 px-6 py-3 border-b border-zinc-100 dark:border-zinc-800">
                 <h3 className="text-sm font-black text-zinc-900 dark:text-white flex items-center gap-2 uppercase tracking-widest">
-                  <Download className="w-4 h-4 text-indigo-500" /> Fully Invoiced & Completed ({invoicedQuotes.length})
+                  <Download className="w-4 h-4 text-indigo-500" /> {t("dash_subhead_invoiced", `Fully Invoiced & Completed (${invoicedQuotes.length})`, { count: String(invoicedQuotes.length) })}
                 </h3>
               </div>
               
@@ -621,7 +623,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                     <FileText className="w-8 h-8" />
                   </div>
                   <h3 className="text-base font-bold text-zinc-900 dark:text-white mb-1">
-                    No fully invoiced orders yet.
+                    {t("dash_no_invoiced", "No fully invoiced orders yet.")}
                   </h3>
                 </div>
               ) : (
@@ -644,7 +646,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                           
                           <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
                             {q.propertyType && <span className="font-bold uppercase tracking-wider">• {q.propertyType}</span>}
-                            {q.cameraCount ? <span className="font-bold">• {q.cameraCount} Cameras</span> : null}
+                            {q.cameraCount ? <span className="font-bold">• {t("dash_cameras_count", `${q.cameraCount} Cameras`, { count: String(q.cameraCount) })}</span> : null}
                           </div>
 
                           {q.siteAddress && (
@@ -684,7 +686,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               {visibleInvoiced < invoicedQuotes.length && (
                 <div className="p-4 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 text-center">
                   <button onClick={() => setVisibleInvoiced(prev => prev + 5)} className="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 rounded-xl font-bold text-xs transition-colors">
-                    Load More ({invoicedQuotes.length - visibleInvoiced} remaining)
+                    {t("dash_load_more", `Load More (${invoicedQuotes.length - visibleInvoiced} remaining)`, { count: String(invoicedQuotes.length - visibleInvoiced) })}
                   </button>
                 </div>
               )}
@@ -696,9 +698,9 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
         {/* VIP Support Banner */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6 shadow-lg">
           <div>
-            <h3 className="text-lg sm:text-xl font-black mb-1 sm:mb-2">Need help with your CCTV installation?</h3>
+            <h3 className="text-lg sm:text-xl font-black mb-1 sm:mb-2">{t("dash_help_title", "Need help with your CCTV installation?")}</h3>
             <p className="text-blue-100 text-xs sm:text-sm max-w-xl">
-              Our engineering coordination desk is available 7 days a week. Call or message us for site survey rescheduling, hardware upgrades, or warranty queries.
+              {t("dash_help_desc", "Our engineering coordination desk is available 7 days a week. Call or message us for site survey rescheduling, hardware upgrades, or warranty queries.")}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
@@ -706,7 +708,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               href="tel:+917357612865"
               className="flex-1 sm:flex-none text-center bg-white hover:bg-blue-50 text-blue-800 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-black text-xs transition-all shadow"
             >
-              Call: +91 73576 12865
+              {t("dash_help_call", "Call: +91 73576 12865")}
             </a>
             <a
               href={`https://wa.me/917357612865?text=${encodeURIComponent("Hi TEAM CCTV, I need support with my CCTV installation.")}`}
@@ -715,7 +717,7 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               className="flex-1 sm:flex-none text-center bg-emerald-500 hover:bg-emerald-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-black text-xs transition-all shadow flex items-center justify-center gap-1.5"
             >
               <MessageSquare className="w-4 h-4" />
-              WhatsApp
+              {t("dash_help_whatsapp", "WhatsApp")}
             </a>
           </div>
         </div>

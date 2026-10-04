@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { CheckCircle2, Clock, Calendar, Package, Wrench, ShieldCheck, User } from "lucide-react";
 
 interface LeadStatusBadgeProps {
@@ -8,8 +9,9 @@ interface LeadStatusBadgeProps {
 }
 
 export function LeadStatusBadge({ lead, quote, className = "" }: LeadStatusBadgeProps) {
+  const { t } = useTranslation();
   // 1. Determine the unified status
-  let status = "NEW PROSPECT";
+  let status = t("badge_new_prospect", "NEW PROSPECT");
   let colorClass = "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-900";
   let Icon = User;
 
@@ -23,31 +25,31 @@ export function LeadStatusBadge({ lead, quote, className = "" }: LeadStatusBadge
     ["booked", "won", "dispatched", "delivered"].includes(rawStatus);
 
   if (installStatus === "COMPLETED" || rawStatus === "completed") {
-    status = "COMPLETED";
+    status = t("badge_completed", "COMPLETED");
     colorClass = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-900";
     Icon = CheckCircle2;
   } else if (lead?.assigned_to_installer_id || installStatus === "IN_PROGRESS" || rawStatus === "in_progress") {
-    status = "WORK IN PROGRESS";
+    status = t("badge_work_in_progress", "WORK IN PROGRESS");
     colorClass = "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-400 dark:border-indigo-900";
     Icon = Wrench;
   } else if (deliveryStatus === "DISPATCHED" || deliveryStatus === "DELIVERED") {
-    status = "HARDWARE DISPATCHED";
+    status = t("badge_hardware_dispatched", "HARDWARE DISPATCHED");
     colorClass = "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-400 dark:border-teal-900";
     Icon = Package;
   } else if (isPaid || rawStatus === "won") {
-    status = "BOOKED (ADVANCE PAID)";
+    status = t("badge_booked_advance", "BOOKED (ADVANCE PAID)");
     colorClass = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-900";
     Icon = ShieldCheck;
   } else if (rawStatus === "site_visit" || rawStatus === "survey_booked") {
-    status = "SITE SURVEY SCHEDULED";
+    status = t("badge_site_survey", "SITE SURVEY SCHEDULED");
     colorClass = "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-400 dark:border-purple-900";
     Icon = Calendar;
   } else if (rawStatus === "quoted" || quote || lead?.quotes?.length > 0) {
-    status = "ESTIMATE GENERATED";
+    status = t("badge_estimate_generated", "ESTIMATE GENERATED");
     colorClass = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-900";
     Icon = Clock;
   } else if (rawStatus === "lost") {
-    status = "LOST / CANCELLED";
+    status = t("badge_lost_cancelled", "LOST / CANCELLED");
     colorClass = "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-900";
     Icon = Clock; // could use XCircle if imported
   }

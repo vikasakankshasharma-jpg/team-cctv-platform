@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { CheckCircle2, Lock, ArrowRight, ExternalLink, RefreshCw, Send, Download, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
 
@@ -15,6 +16,7 @@ interface PaymentStagesWidgetProps {
 }
 
 export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, isAdmin = false }: PaymentStagesWidgetProps) {
+  const { t } = useTranslation();
   const [loadingType, setLoadingType] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -131,13 +133,13 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
   const totalPaid = (isStage1Paid ? stage1Amount : 0) + (isStage2Paid ? stage2Amount : 0) + (isStage3Paid ? stage3Amount : 0);
   const progressPercent = Math.min(100, Math.round((totalPaid / totalAmount) * 100));
 
-  let currentStatusText = "Pending Booking Amount (Stage 1)";
+  let currentStatusText = t("psw_stage1_pending", "Pending Booking Amount (Stage 1)");
   if (isStage3Paid) {
-    currentStatusText = "Fully Paid";
+    currentStatusText = t("psw_fully_paid", "Fully Paid");
   } else if (isStage2Paid) {
-    currentStatusText = "Pending Installation (Stage 3)";
+    currentStatusText = t("psw_stage3_pending", "Pending Installation (Stage 3)");
   } else if (isStage1Paid) {
-    currentStatusText = "Pending Material Delivery (Stage 2)";
+    currentStatusText = t("psw_stage2_pending", "Pending Material Delivery (Stage 2)");
   }
 
 
@@ -158,7 +160,7 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                Payment Status
+                {t("psw_payment_status", "Payment Status")}
                 <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${isStage3Paid ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
                   {currentStatusText}
                 </span>
@@ -168,9 +170,9 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
               </div>
             </div>
             <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-              Total Amount: <span className="font-semibold text-zinc-900 dark:text-zinc-300">{formatCurrency(totalAmount)}</span>
+              {t("psw_total_amount", "Total Amount:")} <span className="font-semibold text-zinc-900 dark:text-zinc-300">{formatCurrency(totalAmount)}</span>
               <span className="mx-2">•</span>
-              Paid: <span className="font-semibold text-emerald-600">{formatCurrency(totalPaid)}</span>
+              {t("psw_paid", "Paid:")} <span className="font-semibold text-emerald-600">{formatCurrency(totalPaid)}</span>
             </p>
           </div>
           
@@ -181,7 +183,7 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
                 onClick={(e) => { e.stopPropagation(); window.open(`/api/quote/${quoteId}/pdf`, '_blank'); }}
               >
                 <Download className="w-4 h-4" />
-                Receipt
+                {t("psw_receipt", "Receipt")}
               </button>
             )}
             <div className="hidden sm:flex text-zinc-400 group-hover:text-zinc-600 transition-colors p-2 bg-zinc-50 dark:bg-zinc-800 rounded-full">
@@ -197,7 +199,7 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center border-2 ${isStage1Paid ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-900/30 text-emerald-500' : 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.2)]'}`}>
                {isStage1Paid ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-blue-500 animate-pulse" />}
              </div>
-             <span className="text-[9px] sm:text-[10px] font-black mt-2 uppercase tracking-widest text-center">Booking</span>
+             <span className="text-[9px] sm:text-[10px] font-black mt-2 uppercase tracking-widest text-center">{t("psw_step_booking", "Booking")}</span>
           </div>
 
           <div className={`w-8 sm:w-12 h-0.5 shrink-0 rounded-full ${isStage1Paid ? 'bg-emerald-500' : 'bg-zinc-200 dark:bg-zinc-700'}`} />
@@ -207,7 +209,7 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center border-2 ${isStage2Paid ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-900/30 text-emerald-500' : isStage1Paid ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700'}`}>
                {isStage2Paid ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" /> : isStage1Paid ? <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-blue-500 animate-pulse" /> : <Lock className="w-3.5 h-3.5" />}
              </div>
-             <span className="text-[9px] sm:text-[10px] font-black mt-2 uppercase tracking-widest text-center">Delivery</span>
+             <span className="text-[9px] sm:text-[10px] font-black mt-2 uppercase tracking-widest text-center">{t("psw_step_delivery", "Delivery")}</span>
           </div>
 
           <div className={`w-8 sm:w-12 h-0.5 shrink-0 rounded-full ${isStage2Paid ? 'bg-emerald-500' : 'bg-zinc-200 dark:bg-zinc-700'}`} />
@@ -217,7 +219,7 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center border-2 ${isStage3Paid ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-900/30 text-emerald-500' : isStage2Paid ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700'}`}>
                {isStage3Paid ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" /> : isStage2Paid ? <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-blue-500 animate-pulse" /> : <Lock className="w-3.5 h-3.5" />}
              </div>
-             <span className="text-[9px] sm:text-[10px] font-black mt-2 uppercase tracking-widest text-center">Install</span>
+             <span className="text-[9px] sm:text-[10px] font-black mt-2 uppercase tracking-widest text-center">{t("psw_step_install", "Install")}</span>
           </div>
         </div>
       </div>
