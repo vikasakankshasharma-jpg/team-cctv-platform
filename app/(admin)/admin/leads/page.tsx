@@ -55,7 +55,7 @@ export default async function LeadsPage() {
   // Take top 50
   const topDocs = allDocs.slice(0, 50);
 
-  const leads: LeadListRow[] = topDocs.map(doc => {
+  const leads: LeadListRow[] = await Promise.all(topDocs.map(async doc => {
     const data = doc.data();
     const isPaid = data.status === "PAID" || data.status === "BOOKED" || !!data.payment_id || !!data.advance_paid;
     const isSiteVisit = data.status === "site_visit" || data.leadStatus === "SITE_VISIT" || !!data.site_visit_date;
@@ -72,14 +72,42 @@ export default async function LeadsPage() {
       return new Date(val).toISOString();
     };
 
+    let total_payable = data.pricingSnapshot?.total_payable || data.total_payable || data.pricingSnapshot?.finalPrice || 0;
+    let selectedPlan = data.selectedPlan || data.pricingSnapshot?.selectedPlan || "Standard";
+
+    // If it's a legacy lead (no pricing info on root), try to fetch its latest quote
+    if (total_payable === 0 && doc.ref.parent.id === "leads") {
+      try {
+        const quotesSnap = await adminDb.collection("leads").doc(doc.id).collection("quotes")
+          .orderBy("createdAt", "desc")
+          .limit(1)
+          .get();
+        if (!quotesSnap.empty) {
+          const latestQuote = quotesSnap.docs[0].data();
+          total_payable = latestQuote.pricingSnapshot?.total_payable || latestQuote.total_payable || latestQuote.pricingSnapshot?.finalPrice || 0;
+          selectedPlan = latestQuote.selectedPlan || latestQuote.pricingSnapshot?.selectedPlan || "Standard";
+        }
+      } catch (e) {
+        // Ignore errors (e.g., missing index, though descending createdAt might require one, fallback to basic get if it fails)
+        try {
+           const fallbackSnap = await adminDb.collection("leads").doc(doc.id).collection("quotes").get();
+           if (!fallbackSnap.empty) {
+              const latestQuote = fallbackSnap.docs[fallbackSnap.docs.length - 1].data();
+              total_payable = latestQuote.pricingSnapshot?.total_payable || latestQuote.total_payable || latestQuote.pricingSnapshot?.finalPrice || 0;
+              selectedPlan = latestQuote.selectedPlan || latestQuote.pricingSnapshot?.selectedPlan || "Standard";
+           }
+        } catch (fallbackErr) {}
+      }
+    }
+
     return {
       id: data.id || doc.id,
       leadId: data.leadId || data.lead_id || data.id || doc.id,
       customer_name: data.customer_name || data.billing_details?.contact_name || data.billing_details?.company_name || data.customer?.name || "Unknown",
       customer_mobile: data.customer_mobile || data.billing_details?.contact_mobile || data.customer?.mobile || "",
       source: data.source || "wizard",
-      total_payable: data.pricingSnapshot?.total_payable || data.total_payable || data.pricingSnapshot?.finalPrice || 0,
-      selectedPlan: data.selectedPlan || data.pricingSnapshot?.selectedPlan || "Standard",
+      total_payable,
+      selectedPlan,
       status: data.status || (isPaid ? "PAID" : "GENERATED"),
       leadStatus: computedLeadStatus,
       isPaid,
@@ -90,7 +118,7 @@ export default async function LeadsPage() {
       site_visit_slot: data.site_visit_slot || null,
       createdAt: getSafeIsoString(data.createdAt || data.created_at) || new Date().toISOString(),
     };
-  });
+  }));
 
   const getStatusBadge = (status: string, isPaid?: boolean) => {
     if (isPaid || status === "WON" || status === "PAID" || status === "BOOKED") {
