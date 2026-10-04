@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cctvquotation-v4';
+const CACHE_NAME = 'cctvquotation-v5';
 const OFFLINE_URL = '/offline';
 const URLS_TO_CACHE = [
   '/',
@@ -59,6 +59,11 @@ self.addEventListener('fetch', (event) => {
       })
     );
     return;
+  }
+
+  // Bypass cache for Next.js Server Components (RSC) requests and API routes
+  if (url.search.includes('_rsc=') || url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/wizard')) {
+    return; // Fall through to standard browser network request without Service Worker interception
   }
 
   // Cache-first for firebase storage images
