@@ -10,12 +10,30 @@ export default function LogoutSwitchButton() {
   const handleLogout = async () => {
     setLoading(true);
     try {
+      // 1. Clear backend session cookies across all roles
+      await fetch("/api/auth/session", { method: "DELETE" });
       await fetch("/api/customer/auth/logout", { method: "POST" });
-      router.refresh(); // Refresh to trigger server-side re-evaluation of the session
+      
+      // 2. Clear Firebase client auth if initialized
+      try {
+        const { auth } = await import("@/lib/firebase-client");
+        if (auth) await auth.signOut();
+      } catch (e) {
+        // Firebase client not initialized or offline
+      }
+
+      // 3. Clear local storage/session storage tokens if any
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {}
+
+      // 4. Force hard reload to reset Next.js router cache and service worker state
+      window.location.href = "/admin/login";
     } catch (e) {
       console.error(e);
+      window.location.reload();
     }
-    setLoading(false);
   };
 
   return (

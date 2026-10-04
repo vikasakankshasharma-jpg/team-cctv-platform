@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cctvquotation-v5';
+const CACHE_NAME = 'cctvquotation-v6';
 const OFFLINE_URL = '/offline';
 const URLS_TO_CACHE = [
   '/',
@@ -61,18 +61,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Bypass cache for Next.js Server Components (RSC) requests and API routes
-  if (url.search.includes('_rsc=') || url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/wizard')) {
-    return; // Fall through to standard browser network request without Service Worker interception
+  // Bypass service worker entirely for API routes, auth, Next.js internal RSC requests, and admin
+  if (
+    url.search.includes('_rsc=') ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/admin') ||
+    url.pathname.startsWith('/login')
+  ) {
+    return; // Fall through to direct network
   }
 
   // Cache-first for firebase storage images
   if (url.hostname === 'firebasestorage.googleapis.com') {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
-        return cachedResponse || fetch(event.request).then((networkResponse) => {
-          const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => { if (event.request.url.startsWith("http")) cache.put(event.request, clone); });
+        if (cachedResponse) return cachedResponse;
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
           return networkResponse;
         });
       })
@@ -86,9 +94,7 @@ self.addEventListener('fetch', (event) => {
       fetch(event.request)
         .catch(() => {
           return caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
-            }
+            if (cachedResponse) return cachedResponse;
             return caches.match(OFFLINE_URL);
           });
         })
@@ -96,19 +102,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Basic stale-while-revalidate strategy for the app shell / assets
+  // Stale-while-revalidate for static assets
   event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        const fetchPromise = fetch(event.request).then((networkResponse) => {
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith("http")) {
           const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            if (event.request.url.startsWith("http")) cache.put(event.request, clone);
-          });
-          return networkResponse;
-        }).catch(() => {});
-        
-        return cachedResponse || fetchPromise;
-      })
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      }).catch(() => cachedResponse);
+
+      return cachedResponse || fetchPromise;
+    })
   );
 });
