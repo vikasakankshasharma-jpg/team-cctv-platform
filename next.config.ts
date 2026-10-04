@@ -21,6 +21,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/admin/dashboard',
+        destination: '/admin',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       // ── Explicit Cache Bypass for Root & City Routes ─────────────────────
