@@ -156,7 +156,7 @@ export function InstantQuotationReview({
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 space-y-4 sm:space-y-6 animate-in fade-in duration-300">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 pb-24 sm:pb-6 space-y-4 sm:space-y-6 animate-in fade-in duration-300">
       {/* 1. TOP NAVIGATION & BADGES */}
       <div className="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <button
@@ -606,6 +606,21 @@ export function InstantQuotationReview({
       </div>
         </div>
       )}
+
+      {/* MOBILE STICKY PROCEED BAR */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 p-3 z-50 flex items-center justify-between shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.1)]">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{t("wz_total_amount_payable")}</span>
+          <span className="text-xl font-black text-blue-700 dark:text-blue-400 leading-none mt-1">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
+        </div>
+        <Button
+          onClick={onProceedToActualQuotation}
+          disabled={isSaving}
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl px-6 py-2.5 font-bold shadow-lg shadow-blue-500/30 text-sm flex items-center gap-1.5 transition-transform active:scale-95"
+        >
+          {isSaving ? "Wait..." : "Proceed"} <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
     </div>
   );
 }
