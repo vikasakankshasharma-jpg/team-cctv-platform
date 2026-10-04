@@ -31,101 +31,113 @@ type LeadListRow = {
 export default async function LeadsPage() {
   await requireAdmin();
 
-  // Fetch both quotes and leads and merge them
+  // Fetch quotes and leads concurrently
   const [quotesSnap, leadsSnap] = await Promise.all([
-    adminDb.collection("quotes").orderBy("createdAt", "desc").limit(50).get(),
-    adminDb.collection("leads").orderBy("created_at", "desc").limit(50).get()
+    adminDb.collection("quotes").get().catch(() => ({ docs: [] })),
+    adminDb.collection("leads").orderBy("created_at", "desc").limit(50).get().catch(() => ({ docs: [] }))
   ]);
 
-  const allDocs = [...quotesSnap.docs, ...leadsSnap.docs];
-  
-  // Sort combined results by date
-  allDocs.sort((a, b) => {
-    const dataA = a.data();
-    const dataB = b.data();
-    const dateA = dataA.createdAt || dataA.created_at || "1970-01-01";
-    const dateB = dataB.createdAt || dataB.created_at || "1970-01-01";
-    
-    // Handle Firestore Timestamps
-    const timeA = typeof dateA?.toDate === "function" ? dateA.toDate().getTime() : new Date(dateA).getTime();
-    const timeB = typeof dateB?.toDate === "function" ? dateB.toDate().getTime() : new Date(dateB).getTime();
-    
-    return timeB - timeA;
-  });
+  // Index quotes by ID for fast lookup
+  const quotesMap = new Map<string, FirebaseFirestore.DocumentData>();
+  quotesSnap.docs.forEach((d: any) => quotesMap.set(d.id, d.data()));
 
-  // Take top 50
-  const topDocs = allDocs.slice(0, 50);
+  const handledQuoteIds = new Set<string>();
 
-  const leads: LeadListRow[] = await Promise.all(topDocs.map(async doc => {
+  // Process leads and link their quotes
+  const resolvedLeads: LeadListRow[] = await Promise.all(leadsSnap.docs.map(async (doc: any) => {
     const data = doc.data();
-    const isPaid = data.status === "PAID" || data.status === "BOOKED" || !!data.payment_id || !!data.advance_paid;
-    const isSiteVisit = data.status === "site_visit" || data.leadStatus === "SITE_VISIT" || !!data.site_visit_date;
+    const qId = data.last_quote_id || data.latest_quote_id || data.won_quote_id;
     
-    let computedLeadStatus = data.leadStatus || data.status || "NEW";
-    if (isPaid && computedLeadStatus !== "WON") computedLeadStatus = "WON";
-    else if (isSiteVisit && computedLeadStatus === "NEW") computedLeadStatus = "SITE_VISIT";
-    else if (typeof computedLeadStatus === "string") computedLeadStatus = computedLeadStatus.toUpperCase();
+    let quoteData: any = qId ? quotesMap.get(qId) : null;
+    if (!quoteData && qId) {
+      try {
+        const sub = await adminDb.collection("leads").doc(doc.id).collection("quotes").doc(qId).get();
+        if (sub.exists) quoteData = sub.data();
+      } catch (_) {}
+    }
 
-    // Handle Firestore Timestamp serialization
+    if (qId) handledQuoteIds.add(qId);
+
+    const isPaid = quoteData?.status === "PAID" || quoteData?.status === "BOOKED" || quoteData?.payment_status === "advance_paid" || !!quoteData?.payment_id || !!data.payment_id || !!data.advance_paid;
+    const isSiteVisit = data.status === "site_visit" || quoteData?.status === "site_visit" || !!data.site_visit_date;
+
+    let computedLeadStatus = data.status || quoteData?.status || "NEW";
+    if (isPaid) computedLeadStatus = "WON";
+    else if (isSiteVisit && computedLeadStatus === "NEW") computedLeadStatus = "SITE_VISIT";
+    if (typeof computedLeadStatus === "string") computedLeadStatus = computedLeadStatus.toUpperCase();
+
     const getSafeIsoString = (val: any) => {
       if (!val) return null;
       if (typeof val.toDate === "function") return val.toDate().toISOString();
       return new Date(val).toISOString();
     };
 
-    let total_payable = data.pricingSnapshot?.total_payable || data.total_payable || data.pricingSnapshot?.finalPrice || 0;
-    let selectedPlan = data.selectedPlan || data.pricingSnapshot?.selectedPlan || "Standard";
-    let quoteId = doc.ref.parent.id === "quotes" ? doc.id : undefined;
-
-    // If it's a legacy lead, try to fetch its latest quote
-    if (doc.ref.parent.id === "leads") {
-      try {
-        const quotesSnap = await adminDb.collection("leads").doc(doc.id).collection("quotes")
-          .orderBy("createdAt", "desc")
-          .limit(1)
-          .get();
-        if (!quotesSnap.empty) {
-          const latestQuoteDoc = quotesSnap.docs[0];
-          const latestQuote = latestQuoteDoc.data();
-          quoteId = latestQuoteDoc.id;
-          total_payable = latestQuote.pricingSnapshot?.total_payable || latestQuote.total_payable || latestQuote.pricingSnapshot?.finalPrice || total_payable;
-          selectedPlan = latestQuote.selectedPlan || latestQuote.pricingSnapshot?.selectedPlan || selectedPlan;
-        }
-      } catch (e) {
-        // Fallback if missing index
-        try {
-           const fallbackSnap = await adminDb.collection("leads").doc(doc.id).collection("quotes").get();
-           if (!fallbackSnap.empty) {
-              const latestQuoteDoc = fallbackSnap.docs[fallbackSnap.docs.length - 1];
-              const latestQuote = latestQuoteDoc.data();
-              quoteId = latestQuoteDoc.id;
-              total_payable = latestQuote.pricingSnapshot?.total_payable || latestQuote.total_payable || latestQuote.pricingSnapshot?.finalPrice || total_payable;
-              selectedPlan = latestQuote.selectedPlan || latestQuote.pricingSnapshot?.selectedPlan || selectedPlan;
-           }
-        } catch (fallbackErr) {}
-      }
-    }
+    const total_payable = quoteData?.total_payable ?? quoteData?.pricingSnapshot?.total_payable ?? quoteData?.finalPrice ?? data.total_payable ?? 0;
+    const selectedPlan = quoteData?.plan_type || quoteData?.selectedPlan || data.selectedPlan || quoteData?.pricingSnapshot?.selectedPlan || "Standard";
+    const customerMobile = data.mobile_number || data.customer_mobile || quoteData?.customer_mobile || quoteData?.billing_details?.phone || "";
 
     return {
-      id: data.id || doc.id,
-      leadId: data.leadId || data.lead_id || data.id || doc.id,
-      quoteId,
-      customer_name: data.customer_name || data.billing_details?.contact_name || data.billing_details?.company_name || data.customer?.name || "Unknown",
-      customer_mobile: data.customer_mobile || data.billing_details?.contact_mobile || data.customer?.mobile || "",
-      source: data.source || "wizard",
+      id: doc.id,
+      leadId: doc.id,
+      quoteId: qId,
+      customer_name: data.customer_name || quoteData?.customer_name || data.billing_details?.contact_name || data.billing_details?.company_name || "Unknown",
+      customer_mobile: customerMobile,
+      source: data.source || quoteData?.source || "wizard",
       total_payable,
       selectedPlan,
-      status: data.status || (isPaid ? "PAID" : "GENERATED"),
+      status: quoteData?.status || data.status || (isPaid ? "PAID" : "GENERATED"),
       leadStatus: computedLeadStatus,
       isPaid,
-      is_business: !!data.billing_details?.is_business,
-      company_name: data.billing_details?.company_name || null,
-      gstin: data.billing_details?.gstin || null,
+      is_business: !!(data.is_b2b || data.billing_details?.is_business || quoteData?.billing_details?.is_business),
+      company_name: data.company_name || data.billing_details?.company_name || quoteData?.billing_details?.company_name || null,
+      gstin: data.gst_number || data.billing_details?.gstin || quoteData?.billing_details?.gstin || null,
       site_visit_date: getSafeIsoString(data.site_visit_date),
       site_visit_slot: data.site_visit_slot || null,
-      createdAt: getSafeIsoString(data.createdAt || data.created_at) || new Date().toISOString(),
+      createdAt: getSafeIsoString(data.created_at || data.createdAt) || new Date().toISOString(),
     };
   }));
+
+  // Append any standalone quotes (e.g. manual quotes) that were not already linked to a lead
+  const standaloneQuotes: LeadListRow[] = [];
+  quotesSnap.docs.forEach((qDoc: any) => {
+    if (handledQuoteIds.has(qDoc.id)) return;
+    const qData = qDoc.data();
+    if (qData.lead_id && leadsSnap.docs.some((l: any) => l.id === qData.lead_id)) return;
+
+    const isPaid = qData.status === "PAID" || qData.status === "BOOKED" || !!qData.payment_id || !!qData.advance_paid;
+    let computedLeadStatus = qData.leadStatus || qData.status || "NEW";
+    if (isPaid) computedLeadStatus = "WON";
+    if (typeof computedLeadStatus === "string") computedLeadStatus = computedLeadStatus.toUpperCase();
+
+    const getSafeIsoString = (val: any) => {
+      if (!val) return null;
+      if (typeof val.toDate === "function") return val.toDate().toISOString();
+      return new Date(val).toISOString();
+    };
+
+    standaloneQuotes.push({
+      id: qDoc.id,
+      leadId: qData.lead_id || qData.leadId || qDoc.id,
+      quoteId: qDoc.id,
+      customer_name: qData.customer_name || qData.billing_details?.customer_name || qData.billing_details?.contact_name || "Direct Quotation",
+      customer_mobile: qData.customer_mobile || qData.billing_details?.phone || "",
+      source: qData.source || "manual",
+      total_payable: qData.total_payable || qData.pricingSnapshot?.total_payable || 0,
+      selectedPlan: qData.selectedPlan || qData.plan_type || "Standard",
+      status: qData.status || (isPaid ? "PAID" : "GENERATED"),
+      leadStatus: computedLeadStatus,
+      isPaid,
+      is_business: !!(qData.billing_details?.is_business),
+      company_name: qData.billing_details?.company_name || null,
+      gstin: qData.billing_details?.gstin || null,
+      site_visit_date: getSafeIsoString(qData.site_visit_date),
+      site_visit_slot: qData.site_visit_slot || null,
+      createdAt: getSafeIsoString(qData.created_at || qData.createdAt) || new Date().toISOString(),
+    });
+  });
+
+  const leads = [...resolvedLeads, ...standaloneQuotes];
+  leads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const getStatusBadge = (status: string, isPaid?: boolean) => {
     if (isPaid || status === "WON" || status === "PAID" || status === "BOOKED") {
