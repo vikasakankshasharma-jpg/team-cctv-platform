@@ -21,10 +21,14 @@ const languages: { code: LocaleCode; name: string; native: string }[] = [
 
 export function LanguageWelcomeModal() {
   const [mounted, setMounted] = useState(false);
+  const [forceOpen, setForceOpen] = useState(false);
   const { hasSeenWelcome, setLocale, setHasSeenWelcome } = useI18nStore();
 
   useEffect(() => {
     setMounted(true);
+    const handler = () => setForceOpen(true);
+    window.addEventListener('open-language-modal', handler);
+    return () => window.removeEventListener('open-language-modal', handler);
   }, []);
 
   // Hydration mismatch prevention
@@ -32,15 +36,17 @@ export function LanguageWelcomeModal() {
 
   const handleSelect = (code: LocaleCode) => {
     setLocale(code);
+    setForceOpen(false);
   };
 
   const handleDismiss = () => {
     setHasSeenWelcome(true);
+    setForceOpen(false);
   };
 
   return (
     <AnimatePresence>
-      {!hasSeenWelcome && (
+      {(!hasSeenWelcome || forceOpen) && (
         <div className="fixed inset-0 z-[100] flex flex-col justify-end sm:justify-center p-0 sm:p-4 bg-zinc-950/40 backdrop-blur-sm transition-opacity">
           <motion.div
             initial={{ y: "100%", opacity: 0 }}
@@ -94,7 +100,8 @@ export function LanguageWelcomeModal() {
             <div className="p-5 border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex-shrink-0">
               <button
                 onClick={() => {
-                  setLocale('en'); // Explicitly set and close
+                  setLocale('en');
+                  setForceOpen(false);
                 }}
                 className="w-full py-4 px-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold text-sm hover:bg-zinc-800 dark:hover:bg-zinc-100 hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
               >
