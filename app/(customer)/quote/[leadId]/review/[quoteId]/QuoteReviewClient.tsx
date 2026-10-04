@@ -106,26 +106,6 @@ function StatusBadge({ status }: { status: QuoteData["status"] | "pending_custom
   );
 }
 
-function TermCard({ icon, title, body, delay }: { icon: React.ReactNode; title: string; body: string; delay: number }) {
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
-      whileHover={{ scale: 1.02, y: -2 }}
-      className="bg-white/60 backdrop-blur-xl border border-zinc-200/60 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow"
-    >
-      <div className="w-10 h-10 rounded-full bg-zinc-100 text-zinc-800 flex items-center justify-center">
-        {icon}
-      </div>
-      <div>
-        <h4 className="text-sm font-semibold text-zinc-900 mb-1">{title}</h4>
-        <p className="text-xs text-zinc-500 leading-relaxed">{body}</p>
-      </div>
-    </motion.div>
-  );
-}
-
 // ─── Main Client Component ───────────────────────────────────────────────────
 
 export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
@@ -691,16 +671,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             </div>
           </motion.div>
 
-
-
-          {/* Value Propositions */}
-          <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 px-4 sm:px-0 py-2 sm:py-0">
-            <TermCard icon={<ShieldCheck className="w-5 h-5" />} title={t("qrc_1_year_warranty")} body={t("qrc_warranty_desc")} delay={0.1} />
-            <TermCard icon={<CreditCard className="w-5 h-5" />} title={t("qrc_flat_advance").replace("%s", formatINR(advance))} body={`${formatINR(advance)} ${t("qrc_advance_desc")}`} delay={0.2} />
-            <TermCard icon={<Clock className="w-5 h-5" />} title={t("qrc_priority_support")} body={t("qrc_support_desc")} delay={0.3} />
-          </motion.div>
-
-          {/* Dual Action / Next Steps Section */}
+{/* Dual Action / Next Steps Section */}
           <motion.div variants={fadeIn} id="payment-section" className="pt-0 sm:pt-4">
             {!accepted ? (
               <div className="space-y-4 sm:space-y-6">
