@@ -30,7 +30,8 @@ export class Msg91WhatsAppProvider {
   async sendNegotiationNudge(payload: Msg91FollowupPayload) {
     console.log(`[MSG91] Sending negotiation nudge to ${payload.phone}`);
     
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
 
     const msg91Payload = {
@@ -57,7 +58,8 @@ export class Msg91WhatsAppProvider {
   async sendQuoteFollowup(payload: Msg91FollowupPayload) {
     console.log(`[MSG91] Sending quote followup to ${payload.phone}`);
     
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
 
     const msg91Payload = {
@@ -121,7 +123,8 @@ export class Msg91WhatsAppProvider {
   async sendQuote(payload: Msg91QuotePayload) {
     console.log(`[MSG91] Sending quote PDF to ${payload.phone}`);
     
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
 
     const msg91Payload = {
@@ -162,7 +165,8 @@ export class Msg91WhatsAppProvider {
   async sendInvoice(payload: Msg91InvoicePayload) {
     console.log(`[MSG91] Sending invoice PDF to ${payload.phone}`);
     
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
 
     const msg91Payload = {
@@ -207,7 +211,8 @@ export class Msg91WhatsAppProvider {
   async sendSurveyConfirm(payload: Msg91SurveyPayload) {
     console.log(`[MSG91] Sending survey confirmation to ${payload.phone}`);
     
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
 
     const msg91Payload = {
@@ -249,7 +254,8 @@ export class Msg91WhatsAppProvider {
     scheduledDate: string;      // {{date}} - e.g. "27-Sept-2026 at 11:00 AM"
   }) {
     console.log(`[MSG91] Sending ${payload.jobType} alert to ${payload.phone}`);
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
     return this.sendMessage({
       to, type: "template", template: {
@@ -267,7 +273,8 @@ export class Msg91WhatsAppProvider {
 
   async sendLeadWelcome(payload: { phone: string, customerName: string, configDetails: string }) {
     console.log(`[MSG91] Sending lead welcome to ${payload.phone}`);
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
     return this.sendMessage({
       to, type: "template", template: {
@@ -282,7 +289,8 @@ export class Msg91WhatsAppProvider {
 
   async sendRefundInitiated(payload: { phone: string, customerName: string, amount: number, orderId: string }) {
     console.log(`[MSG91] Sending refund alert to ${payload.phone}`);
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
     return this.sendMessage({
       to, type: "template", template: {
@@ -315,7 +323,8 @@ export class Msg91WhatsAppProvider {
 
   async sendPromoterEarned(payload: { phone: string, promoterName: string, customerName: string, amount: number }) {
     console.log(`[MSG91] Sending promoter earned alert to ${payload.phone}`);
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
     return this.sendMessage({
       to, type: "template", template: {
@@ -331,7 +340,8 @@ export class Msg91WhatsAppProvider {
 
   async sendFeedbackRequest(payload: { phone: string, customerName: string, leadId: string }) {
     console.log(`[MSG91] Sending feedback request to ${payload.phone}`);
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
     return this.sendMessage({
       to, type: "template", template: {
@@ -358,7 +368,8 @@ export class Msg91WhatsAppProvider {
 
   async sendReviewAndReferral(payload: { phone: string, customerName: string, referralCode: string, reviewLink: string }) {
     console.log(`[MSG91] Sending Review & Referral to ${payload.phone}`);
-    let to = payload.phone.replace(/[^0-9]/g, '');
+    if (!payload.phone) return { success: false, error: 'Missing phone number' };
+    let to = String(payload.phone).replace(/[^0-9]/g, '');
     if (to.length === 10) to = `91${to}`;
     return this.sendMessage({
       to, type: "template", template: {

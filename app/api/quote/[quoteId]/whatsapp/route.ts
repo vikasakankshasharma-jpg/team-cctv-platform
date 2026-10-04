@@ -48,7 +48,20 @@ export async function POST(
     } else {
       const waProvider = new Msg91WhatsAppProvider();
       
-      let phone = quote.customer_mobile;
+      let phone = quote.customer_mobile || quote.mobile_number || quote.phone;
+      
+      // Fallback to lead document if phone is still missing
+      if (!phone && quote.lead_id) {
+        const leadDoc = await adminDb.collection("leads").doc(quote.lead_id).get();
+        if (leadDoc.exists) {
+          const leadData = leadDoc.data();
+          phone = leadData?.mobile_number || leadData?.customer_mobile || leadData?.phone;
+        }
+      }
+
+      if (!phone) {
+        return NextResponse.json({ success: false, message: "Customer phone number not found in quote or lead" }, { status: 400 });
+      }
 
       deliveryResult = await waProvider.sendQuote({
         phone,
