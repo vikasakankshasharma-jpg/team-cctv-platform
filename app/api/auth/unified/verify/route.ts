@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
           } else if (assignedRole === "external_ca") {
              redirectUrl = "/admin/finance/exports";
           } else {
-             redirectUrl = "/admin/dashboard"; 
+             redirectUrl = "/admin"; 
           }
         }
 

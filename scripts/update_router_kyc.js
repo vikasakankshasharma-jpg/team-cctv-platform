@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const filePath = 'C:\\Users\\hp\\Documents\\TEAM Website\\secure-easy\\app\\api\\auth\\unified\\verify\\route.ts';
 let content = fs.readFileSync(filePath, 'utf8');
 
@@ -18,7 +18,7 @@ const newAdminCheck = `
           } else if (assignedRole === "external_ca") {
              redirectUrl = "/admin/finance/exports";
           } else {
-             redirectUrl = "/admin/dashboard"; 
+             redirectUrl = "/admin"; 
           }
         }
 `;

@@ -1,4 +1,4 @@
-import { verifyPartnerSession } from "@/lib/auth-partner";
+﻿import { verifyPartnerSession } from "@/lib/auth-partner";
 import { redirect } from "next/navigation";
 import { PartnerSidebar } from "@/components/partner/PartnerSidebar";
 
@@ -29,7 +29,7 @@ export default async function PartnerLayout({
     if (globalSession.isAuthenticated) {
       const r = globalSession.role as string;
       if (r === "customer") redirect("/customer/dashboard");
-      if (["super_admin", "admin", "sales_staff"].includes(r)) redirect("/admin/dashboard");
+      if (["super_admin", "admin", "sales_staff"].includes(r)) redirect("/admin");
       if (r === "installer") redirect("/installer/dashboard");
     }
     redirect('/partner/login');

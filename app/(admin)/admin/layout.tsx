@@ -1,4 +1,4 @@
-import { AdminHeader } from "@/components/admin/AdminHeader";
+﻿import { AdminHeader } from "@/components/admin/AdminHeader";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { OmniSearch } from "@/components/admin/OmniSearch";
 import { verifySession } from "@/lib/auth-server";
@@ -33,7 +33,7 @@ export default async function AdminLayout({
   if (currentPath === "/admin/login") {
     // If they are on the login page but ALREADY have an admin session, send them to dashboard
     if (session.isAuthenticated && ["super_admin", "admin", "sales_staff"].includes(session.role as string)) {
-      redirect("/admin/dashboard");
+      redirect("/admin");
     }
     return (
       <div className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans`}>

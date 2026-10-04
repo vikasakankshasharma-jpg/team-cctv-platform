@@ -1,4 +1,4 @@
-import { LogisticsDashboardClient } from "@/components/admin/logistics/LogisticsDashboardClient";
+﻿import { LogisticsDashboardClient } from "@/components/admin/logistics/LogisticsDashboardClient";
 import { requireAdmin } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 
@@ -13,7 +13,7 @@ export default async function LogisticsPage() {
   const hasOpsPower = session.role === "super_admin" || session.permissions?.operations?.manage_hubs === true || session.permissions?.catalog?.edit_catalog === true;
 
   if (!hasOpsPower) {
-    redirect("/admin/dashboard");
+    redirect("/admin");
   }
 
   return <LogisticsDashboardClient />;

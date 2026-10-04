@@ -1,4 +1,4 @@
-import { FinanceExportsClient } from "@/components/admin/FinanceExportsClient";
+﻿import { FinanceExportsClient } from "@/components/admin/FinanceExportsClient";
 import { requireAdmin } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 
@@ -13,7 +13,7 @@ export default async function FinanceExportsPage() {
   const hasExportPower = session.role === "super_admin" || session.permissions?.financial?.export_tax_reports === true;
 
   if (!hasExportPower) {
-    redirect("/admin/dashboard");
+    redirect("/admin");
   }
 
   return <FinanceExportsClient />;

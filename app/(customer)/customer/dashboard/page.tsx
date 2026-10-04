@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/auth-server";
+﻿import { verifySession } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { CustomerDashboardClient, type CustomerQuoteItem } from "@/components/customer/CustomerDashboardClient";
@@ -47,7 +47,7 @@ export default async function CustomerDashboardPage() {
     const globalSession = await verifySession();
     if (globalSession.isAuthenticated) {
       const r = globalSession.role as string;
-      if (["super_admin", "admin", "sales_staff"].includes(r)) redirect("/admin/dashboard");
+      if (["super_admin", "admin", "sales_staff"].includes(r)) redirect("/admin");
       if (r === "partner") redirect("/partner/dashboard");
       if (r === "installer") redirect("/installer/dashboard");
     }
@@ -75,9 +75,9 @@ export default async function CustomerDashboardPage() {
   let customerName = session.user?.name || "Valued Client";
 
   try {
-    // ────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // 1 & 2. FETCH ALL LEADS & DIRECT QUOTES LINKED TO THIS CUSTOMER
-    // ────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const initialPromises: Promise<void>[] = [];
 
     if (uid) {
@@ -179,9 +179,9 @@ export default async function CustomerDashboardPage() {
     
     await Promise.all(quoteFetchPromises);
 
-    // ────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // 3. CROSS-REFERENCE INVOICES & BUILD FINAL UNIFIED LIST
-    // ────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const invoiceFetchPromises: Promise<void>[] = [];
     const invoicesMap = new Map<string, any>();
     

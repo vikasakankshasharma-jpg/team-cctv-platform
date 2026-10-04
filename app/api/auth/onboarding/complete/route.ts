@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth-server";
 import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
        redirectUrl = "/admin/finance/exports";
     } else {
        collectionName = "admins";
-       redirectUrl = "/admin/dashboard";
+       redirectUrl = "/admin";
     }
 
     // Find the user document by firebase_uid
