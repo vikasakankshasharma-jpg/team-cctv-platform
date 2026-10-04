@@ -14,9 +14,19 @@ export interface SessionResult {
  * Retrieves and verifies the admin_session cookie.
  * Used inside Server Components and Next.js API Routes to protect resources.
  */
-export async function verifySession(): Promise<SessionResult> {
+export async function verifySession(portalType?: 'customer' | 'admin' | 'installer' | 'partner'): Promise<SessionResult> {
   const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("customer_session")?.value || cookieStore.get("admin_session")?.value;
+  let sessionCookie: string | undefined;
+
+  if (portalType) {
+    sessionCookie = cookieStore.get(`${portalType}_session`)?.value;
+  } else {
+    // Fallback if no portal type specified (checks all)
+    sessionCookie = cookieStore.get("customer_session")?.value || 
+                    cookieStore.get("admin_session")?.value || 
+                    cookieStore.get("installer_session")?.value || 
+                    cookieStore.get("partner_session")?.value;
+  }
 
   if (!sessionCookie) {
     return { isAuthenticated: false, user: null, role: null };

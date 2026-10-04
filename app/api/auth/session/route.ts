@@ -3,7 +3,7 @@ import { adminAuth } from "@/lib/firebase-admin";
 
 export async function POST(request: Request) {
   try {
-    const { idToken } = await request.json();
+    const { idToken, portal } = await request.json();
     
     if (!idToken) {
       return NextResponse.json({ error: "Missing ID token" }, { status: 400 });
@@ -44,13 +44,14 @@ export async function POST(request: Request) {
       sameSite: "lax" as const,
     };
 
-    // Set role-specific cookies
-    if (role === "partner") {
+    // Set role-specific cookies. If they explicitly logged into the customer portal,
+    // enforce a customer_session even if they are an admin.
+    if (portal === "customer" || role === "customer") {
+      response.cookies.set({ name: "customer_session", ...cookieOptions });
+    } else if (role === "partner") {
       response.cookies.set({ name: "partner_session", ...cookieOptions });
     } else if (role === "installer") {
       response.cookies.set({ name: "installer_session", ...cookieOptions });
-    } else if (role === "customer") {
-      response.cookies.set({ name: "customer_session", ...cookieOptions });
     } else {
       response.cookies.set({ name: "admin_session", ...cookieOptions });
     }

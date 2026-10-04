@@ -39,9 +39,18 @@ function sanitizeForClient<T>(obj: T): T {
 }
 
 export default async function CustomerDashboardPage() {
-  const session = await verifySession();
+  // Strictly check for a customer session. If an admin logs in here, they get a customer_session.
+  const session = await verifySession("customer");
 
   if (!session.isAuthenticated) {
+    // If they don't have a customer session but have another session, redirect them to their rightful portal
+    const globalSession = await verifySession();
+    if (globalSession.isAuthenticated) {
+      const r = globalSession.role as string;
+      if (["super_admin", "admin", "sales_staff"].includes(r)) redirect("/admin/dashboard");
+      if (r === "partner") redirect("/partner/dashboard");
+      if (r === "installer") redirect("/installer/dashboard");
+    }
     redirect("/customer/login?redirect=/customer/dashboard");
   }
 

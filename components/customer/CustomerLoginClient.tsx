@@ -191,7 +191,7 @@ export function CustomerLoginClient() {
         const sessionRes = await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken }),
+          body: JSON.stringify({ idToken, portal: "customer" }),
         });
         if (!sessionRes.ok) {
           const errData = await sessionRes.json().catch(() => ({}));

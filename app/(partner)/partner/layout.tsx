@@ -12,14 +12,26 @@ export default async function PartnerLayout({
   const headersList = await headers();
   const currentPath = headersList.get("x-pathname") || "";
   
+  const session = await verifyPartnerSession();
+
   // Allow the login page to render without authentication
   if (currentPath === "/partner/login") {
+    if (session && session.isAuthenticated) {
+      redirect("/partner/dashboard");
+    }
     return <>{children}</>;
   }
-
-  const session = await verifyPartnerSession();
   
   if (!session || !session.isAuthenticated) {
+    // Cross-portal redirection check
+    const { verifySession } = await import("@/lib/auth-server");
+    const globalSession = await verifySession();
+    if (globalSession.isAuthenticated) {
+      const r = globalSession.role as string;
+      if (r === "customer") redirect("/customer/dashboard");
+      if (["super_admin", "admin", "sales_staff"].includes(r)) redirect("/admin/dashboard");
+      if (r === "installer") redirect("/installer/dashboard");
+    }
     redirect('/partner/login');
   }
 

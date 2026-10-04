@@ -24,21 +24,35 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await verifySession();
+  // Strictly check for an admin session to access admin portal
+  const session = await verifySession("admin");
   
   const headersList = await headers();
   const currentPath = headersList.get("x-pathname") || "";
 
-  if (!session.isAuthenticated || !["super_admin", "admin", "sales_staff"].includes(session.role as string)) {
-    if (currentPath === "/admin/login") {
-      return (
-        <div className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans`}>
-          {children}
-        </div>
-      );
-    } else {
-      redirect("/admin/login");
+  if (currentPath === "/admin/login") {
+    // If they are on the login page but ALREADY have an admin session, send them to dashboard
+    if (session.isAuthenticated && ["super_admin", "admin", "sales_staff"].includes(session.role as string)) {
+      redirect("/admin/dashboard");
     }
+    return (
+      <div className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans`}>
+        {children}
+      </div>
+    );
+  }
+
+  // If not authenticated with an ADMIN session, check if they have ANOTHER session to redirect them away
+  if (!session.isAuthenticated) {
+    const globalSession = await verifySession(); // Checks all cookies
+    if (globalSession.isAuthenticated) {
+      const r = globalSession.role as string;
+      if (r === "customer") redirect("/customer/dashboard");
+      if (r === "partner") redirect("/partner/dashboard");
+      if (r === "installer") redirect("/installer/dashboard");
+    }
+    // If absolutely no session, force them to login
+    redirect("/admin/login");
   }
 
   return (
