@@ -900,42 +900,52 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
       {/* Mobile-Friendly Sticky Bottom Bar */}
       {!accepted && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-xl border-t border-zinc-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-3 py-2 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
-          <div className="flex items-center justify-between gap-1.5 max-w-lg mx-auto">
-            <div className="flex flex-col min-w-0 pr-1">
-              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Booking Token</span>
-              <span className="text-base font-black text-emerald-600 tracking-tight leading-none">{formatINR(advance)}</span>
-              <span className="text-[10px] text-zinc-500 mt-0.5 truncate">Total: {formatINR(total)}</span>
+        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-xl border-t border-zinc-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[max(0.4rem,env(safe-area-inset-bottom))]">
+          <div className="px-2 py-2 max-w-lg mx-auto space-y-2.5">
+            
+            <div className="flex items-center justify-between px-1">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Total Estimate</span>
+                <span className="text-lg font-black text-zinc-900 leading-none">{formatINR(total)}</span>
+              </div>
+              
+              <button
+                onClick={handleRequestPdf}
+                disabled={isRequestingPdf}
+                className={`flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isRequestingPdf ? "opacity-70 cursor-not-allowed" : ""}`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp PDF
+              </button>
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => openBillingModal("emi")}
+                disabled={isPayingAdvance || isPayingFull || isPayingEMI}
+                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+              >
+                <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">EMI Options</span>
+              </button>
+
               <button
                 onClick={() => setIsSurveyModalOpen(true)}
-                className="flex items-center justify-center gap-1 px-2.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-xl text-xs font-bold transition-all active:scale-95"
-                title="Schedule Free Physical Survey"
+                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl transition-all active:scale-95"
               >
-                <Calendar className="w-3.5 h-3.5 text-purple-700" />
-                <span className="hidden xs:inline">Survey</span>
+                <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">Free Visit</span>
               </button>
 
               <button
                 onClick={() => openBillingModal("advance_500")}
                 disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                className="flex items-center justify-center gap-1 px-3 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-zinc-900 text-white rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Pay ₹500</span>
-              </button>
-
-              <button
-                onClick={handleRequestPdf}
-                disabled={isRequestingPdf}
-                className={`flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors shrink-0 ${isRequestingPdf ? "opacity-70 cursor-not-allowed" : ""}`}
-                title="Send Quote to WhatsApp"
-              >
-                <MessageCircle className="w-4 h-4 text-emerald-600" />
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
+                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">Book ₹500</span>
               </button>
             </div>
+
           </div>
         </div>
       )}
