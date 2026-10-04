@@ -417,9 +417,13 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
               </button>
             </div>
           )}
+            </div>
+          )}
 
           
           {/* Pending Quotations */}
+          {activeTab === 'pending' && (
+            <div>
           <div className="bg-zinc-50 dark:bg-zinc-800/20 px-6 py-3 border-y border-zinc-100 dark:border-zinc-800">
              <h3 className="text-sm font-black text-zinc-900 dark:text-white flex items-center gap-2 uppercase tracking-widest">
                 <Clock className="w-4 h-4 text-amber-500" /> Pending Quotations ({unbookedQuotes.length})
