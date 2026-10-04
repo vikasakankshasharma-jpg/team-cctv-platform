@@ -80,7 +80,7 @@ export function InstantQuotationReview({
       description: t("addon_2u_rack_desc", "Wall-mount lockable steel cabinet to protect your recorder and power supply from theft and dust."),
       price: 490,
       icon: Box,
-      category: t("addon_cat_enclosure", "Security Enclosure"),
+      category: t("addon_cat_enclosure", "Safety Racks & Boxes"),
       tag: t("addon_tag_recommended", "Recommended")
     },
     {
@@ -89,7 +89,7 @@ export function InstantQuotationReview({
       description: t("addon_4u_rack_desc", "Heavy-duty 4U rack with ventilation, fits recorder, PoE switch, router, and power backups."),
       price: 630,
       icon: Box,
-      category: t("addon_cat_enclosure", "Security Enclosure"),
+      category: t("addon_cat_enclosure", "Safety Racks & Boxes"),
       tag: t("addon_tag_spacious", "Spacious")
     },
     {
@@ -98,7 +98,7 @@ export function InstantQuotationReview({
       description: t("addon_pvc_rack_desc", "Outdoor waterproof and anti-rust enclosure specially designed for PoE switch & junction protection."),
       price: 630,
       icon: Box,
-      category: t("addon_cat_enclosure", "Security Enclosure"),
+      category: t("addon_cat_enclosure", "Safety Racks & Boxes"),
       tag: t("addon_tag_all_weather", "All-Weather")
     },
     {
@@ -107,7 +107,7 @@ export function InstantQuotationReview({
       description: t("addon_disp_19_desc", "Continuous 24/7 commercial LED monitor with HDMI/VGA support for live multi-camera monitoring."),
       price: 2940,
       icon: Monitor,
-      category: t("addon_cat_display", "Monitoring Display"),
+      category: t("addon_cat_display", "TV & Display Screens"),
       tag: t("addon_tag_popular", "Popular")
     },
     {
@@ -116,7 +116,7 @@ export function InstantQuotationReview({
       description: t("addon_4g_router_desc", "High-speed 4G router for remote mobile phone viewing without any broadband or landline connection."),
       price: 2030,
       icon: Wifi,
-      category: t("addon_cat_internet", "Internet & Remote Viewing"),
+      category: t("addon_cat_internet", "Internet (For Mobile View)"),
       tag: t("addon_tag_zero_broadband", "Zero-Broadband")
     },
     {
@@ -125,7 +125,7 @@ export function InstantQuotationReview({
       description: t("addon_amc_desc", "Annual Maintenance Contract: Free quarterly servicing, priority technician breakdown support, and peace of mind."),
       price: Math.round((activePricing.base_hardware_cost || 10000) * 0.15),
       icon: ShieldCheck,
-      category: t("addon_cat_warranty", "Warranty & Support"),
+      category: t("addon_cat_warranty", "Maintenance & Warranty"),
       tag: t("addon_tag_best_protection", "Best Protection")
     },
     {
@@ -134,7 +134,7 @@ export function InstantQuotationReview({
       description: t("addon_hdmi_desc", "Gold-plated 4K-ready HDMI cable to connect your DVR/NVR directly to TV or monitor."),
       price: 168,
       icon: Cable,
-      category: t("addon_cat_cables", "Cables & Connectors"),
+      category: t("addon_cat_cables", "Wires & Cables"),
       tag: t("addon_tag_essential", "Essential")
     }
   ];
@@ -440,11 +440,11 @@ export function InstantQuotationReview({
           }, {} as Record<string, typeof availableAccessories[0][]>);
 
           const categoryDescriptions: Record<string, string> = {
-            [t("addon_cat_enclosure", "Security Enclosure")]: t("addon_desc_cat_enclosure", "Protect your equipment from theft, dust, and weather damage."),
-            [t("addon_cat_display", "Monitoring Display")]: t("addon_desc_cat_display", "Dedicated commercial screens for 24/7 continuous live viewing."),
-            [t("addon_cat_internet", "Internet & Remote Viewing")]: t("addon_desc_cat_internet", "Required for mobile phone access if you don't have a local broadband connection."),
-            [t("addon_cat_warranty", "Warranty & Support")]: t("addon_desc_cat_warranty", "Extend your peace of mind with our priority maintenance contracts."),
-            [t("addon_cat_cables", "Cables & Connectors")]: t("addon_desc_cat_cables", "Essential links to connect your recorder to a local TV or monitor.")
+            [t("addon_cat_enclosure", "Safety Racks & Boxes")]: t("addon_desc_cat_enclosure", "Protect your equipment from theft, dust, and weather damage."),
+            [t("addon_cat_display", "TV & Display Screens")]: t("addon_desc_cat_display", "Dedicated commercial screens for 24/7 continuous live viewing."),
+            [t("addon_cat_internet", "Internet (For Mobile View)")]: t("addon_desc_cat_internet", "Required for mobile phone access if you don't have a local broadband connection."),
+            [t("addon_cat_warranty", "Maintenance & Warranty")]: t("addon_desc_cat_warranty", "Extend your peace of mind with our priority maintenance contracts."),
+            [t("addon_cat_cables", "Wires & Cables")]: t("addon_desc_cat_cables", "Essential links to connect your recorder to a local TV or monitor.")
           };
 
           return (
