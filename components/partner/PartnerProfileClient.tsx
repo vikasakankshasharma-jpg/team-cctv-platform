@@ -186,6 +186,62 @@ export function PartnerProfileClient({ initialProfile }: PartnerProfileClientPro
           </div>
         </div>
 
+        {/* ── BANK DETAILS ────────────────────────────────────────────────── */}
+        <div className="border-t border-zinc-100 dark:border-zinc-800/60 p-6 lg:p-8 bg-zinc-50/50 dark:bg-zinc-950/30">
+          <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">Bank Details (Payouts)</h2>
+          <p className="text-sm font-medium text-zinc-500 mb-6">Enter your bank details to receive automated commission payouts.</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Account Holder Name</label>
+              <input 
+                type="text"
+                disabled={!isEditing}
+                value={formData.bank_beneficiary}
+                onChange={(e) => setFormData({...formData, bank_beneficiary: e.target.value})}
+                placeholder="Name on Bank Account"
+                className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 disabled:opacity-70 text-zinc-900 dark:text-white rounded-2xl px-5 py-4 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-sm font-bold"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">Account Number</label>
+              <input 
+                type="text"
+                disabled={!isEditing}
+                value={formData.bank_account_no}
+                onChange={(e) => setFormData({...formData, bank_account_no: e.target.value})}
+                placeholder="Bank Account Number"
+                className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 disabled:opacity-70 text-zinc-900 dark:text-white rounded-2xl px-5 py-4 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-sm font-bold font-mono"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">IFSC Code</label>
+              <input 
+                type="text"
+                disabled={!isEditing}
+                value={formData.bank_ifsc}
+                onChange={(e) => setFormData({...formData, bank_ifsc: e.target.value.toUpperCase()})}
+                placeholder="e.g. HDFC0001234"
+                className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 disabled:opacity-70 text-zinc-900 dark:text-white rounded-2xl px-5 py-4 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-sm font-bold font-mono uppercase"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">PAN Number</label>
+              <input 
+                type="text"
+                disabled={!isEditing}
+                value={formData.pan_number}
+                onChange={(e) => setFormData({...formData, pan_number: e.target.value.toUpperCase()})}
+                placeholder="e.g. ABCDE1234F"
+                className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 disabled:opacity-70 text-zinc-900 dark:text-white rounded-2xl px-5 py-4 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all text-sm font-bold font-mono uppercase"
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="border-t border-zinc-100 dark:border-zinc-800/60 p-6 lg:p-8 bg-zinc-50 dark:bg-zinc-950/50">
           <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-6">Commission Configuration</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

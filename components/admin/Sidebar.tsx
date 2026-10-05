@@ -21,7 +21,8 @@ const NAV_GROUPS = [
     label: "Overview",
     items: [
       { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-      { name: "Analytics", href: "/admin/analytics", icon: TrendingUp }, { name: "Quote Funnel", href: "/admin/analytics/funnel", icon: Filter }, { name: "Profitability", href: "/admin/analytics/profitability", icon: IndianRupee },
+      { name: "Analytics", href: "/admin/analytics", icon: TrendingUp }, 
+      { name: "Quote Funnel", href: "/admin/analytics/funnel", icon: Filter },
     ],
   },
   {
@@ -64,14 +65,20 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: "Marketing & Finance",
+    label: "Marketing & Promoters",
     items: [
       { name: "Marketing Hub",       href: "/admin/marketing",    icon: Megaphone },
       { name: "Marketing QR Codes",  href: "/admin/marketing-qr", icon: Megaphone },
       { name: "Follow-Up Rules",     href: "/admin/campaigns",    icon: Sparkles },
-      { name: "Promoters",           href: "/admin/promoters",   icon: BadgeDollarSign },
-      { name: "Ledger & Payouts",    href: "/admin/commission",  icon: FileBox },
-      { name: "Reports",             href: "/admin/reports",      icon: TrendingUp },
+      { name: "Promoter Network",    href: "/admin/promoters",    icon: BadgeDollarSign },
+    ],
+  },
+  {
+    label: "Finance & Accounts",
+    items: [
+      { name: "Accounts Payable",    href: "/admin/finance",      icon: IndianRupee },
+      { name: "Profitability",       href: "/admin/analytics/profitability", icon: TrendingUp },
+      { name: "All Reports",         href: "/admin/reports",      icon: FileBox },
     ],
   },
   {
