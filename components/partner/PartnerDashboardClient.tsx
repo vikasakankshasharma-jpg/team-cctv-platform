@@ -3,6 +3,7 @@
 import { Copy, IndianRupee, Target, TrendingUp, CheckCircle2, ChevronRight, Activity, Clock, AlertTriangle, Map } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { EDMGenerator } from "./EDMGenerator";
 
 interface PartnerDashboardClientProps {
   partnerName: string;
@@ -158,6 +159,8 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
           );
         })}
       </div>
+
+      <EDMGenerator referralCode={referralCode} />
 
       {/* ── PIPELINE TRACKER ──────────────────────────────────────────────── */}
       {pipeline && (
