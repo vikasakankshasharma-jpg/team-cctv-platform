@@ -34,7 +34,7 @@ export function resolveProducts(
   const lifecycleWarnings: string[] = [];
   const pool = catalog.filter(p => {
     if (!p.is_active || p.is_quotation_eligible === false) return false;
-    if (p.stock_status === "out_of_stock" || p.stock_status === "discontinued") return false;
+    // Allow out_of_stock products as per vendor tie-up, rely strictly on is_active
     if ((p.stock_status as string) === "on_demand") {
       lifecycleWarnings.push(`ON_DEMAND_WARNING: Product [${p.id}] ${p.display_name} is on-demand.`);
     }

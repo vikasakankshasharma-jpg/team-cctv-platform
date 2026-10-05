@@ -161,9 +161,9 @@ export default function AdminPricingPage() {
                     className="border rounded p-1"
                   >
                     <option value="in_stock">In Stock</option>
-                    <option value="ON_DEMAND">On Demand (Warning)</option>
-                    <option value="OUT_OF_STOCK">Out of Stock (Block)</option>
-                    <option value="discontinued">Discontinued (Block)</option>
+                    <option value="ON_DEMAND">On Demand</option>
+                    <option value="OUT_OF_STOCK">Out of Stock</option>
+                    <option value="discontinued">Discontinued</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

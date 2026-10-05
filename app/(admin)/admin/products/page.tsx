@@ -1079,7 +1079,7 @@ export default function AdminProductsPage() {
                     <div className="p-6 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
                       <div className="mb-4">
                         <h4 className="text-sm font-semibold text-blue-700">Stock Status</h4>
-                        <p className="text-xs font-medium text-blue-700/70 mt-0.5">Explicitly mark availability. The engine filters out_of_stock, on_order, and discontinued items.</p>
+                        <p className="text-xs font-medium text-blue-700/70 mt-0.5">Explicitly mark availability. <b>Note:</b> Both Guided Setup and Custom Build will still allow out of stock items as long as the product is marked Active (Vendor Drop-ship).</p>
                       </div>
                       <select
                         value={(editingProduct as any).stock_status || "in_stock"}
