@@ -315,6 +315,37 @@ export default function SalespersonsClient() {
     }
   };
 
+
+  const handleGenerateAllQuadrants = async () => {
+    const pinsToGenerate = filteredAvailablePincodes.filter(p => !p.quadrants || p.quadrants.length === 0).map(p => p.pincode);
+    if (pinsToGenerate.length === 0) {
+      toast.success("All pincodes already have quadrants generated!");
+      return;
+    }
+    
+    toast.loading(`Generating quadrants for ${pinsToGenerate.length} pincodes... This may take a minute.`, { id: "genAll" });
+    
+    for (const pin of pinsToGenerate) {
+      setGeneratingPins(prev => new Set(prev).add(pin));
+      try {
+        await fetch(`/api/pincode/${pin}`);
+      } catch (err) {
+        console.error("Failed to generate for pin", pin, err);
+      } finally {
+        setGeneratingPins(prev => {
+          const next = new Set(prev);
+          next.delete(pin);
+          return next;
+        });
+      }
+    }
+    
+    toast.success("Finished generating quadrants!", { id: "genAll" });
+    if (selectedState && selectedDistrict) {
+      await handleSelectDistrict(selectedDistrict.slug, selectedDistrict.name, true);
+    }
+  };
+
   const handleSelectDistrict = (slug: string, name: string, forceRefresh = false) => {
     if (!selectedState) return;
     setSelectedDistrict({ name, slug });
@@ -1042,6 +1073,14 @@ export default function SalespersonsClient() {
                   </div>
                   {availablePincodes.length > 0 && (
                     <div className="flex items-center gap-3">
+                      <button 
+                        type="button"
+                        onClick={handleGenerateAllQuadrants}
+                        className="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1"
+                      >
+                        ✨ Gen All Quadrants
+                      </button>
+                      <span className="text-muted-foreground text-xs">•</span>
                       <button 
                         type="button"
                         onClick={() => {
