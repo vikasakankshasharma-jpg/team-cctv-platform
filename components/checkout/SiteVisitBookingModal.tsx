@@ -18,6 +18,9 @@ import {
   Camera
 } from "lucide-react";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
+
+const HybridMap = dynamic(() => import("@/components/maps/HybridMap"), { ssr: false });
 
 interface SiteVisitBookingModalProps {
   isOpen: boolean;
@@ -62,11 +65,49 @@ export function SiteVisitBookingModal({
   const [selectedSlot, setSelectedSlot] = useState("10:00 AM - 01:00 PM");
   const [name, setName] = useState(customerName);
   const [phone, setPhone] = useState(customerMobile);
-  const [address, setAddress] = useState(initialAddress);
+  const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+
+  // Map States
+  const [showMap, setShowMap] = useState(false);
+  const [mapCenter, setMapCenter] = useState({ lat: 26.9124, lng: 75.7873 }); // Default Jaipur
+  const [markerPos, setMarkerPos] = useState({ lat: 26.9124, lng: 75.7873 });
+  const [isGeocoding, setIsGeocoding] = useState(false);
+
+  const handleGeocode = async (lat: number, lng: number) => {
+    setMarkerPos({ lat, lng });
+    setIsGeocoding(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+      const data = await res.json();
+      if (data && data.display_name) {
+        setAddress(data.display_name);
+      }
+    } catch (error) {
+      console.error("Geocoding failed", error);
+      toast.error("Failed to get address from map");
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  const openMap = () => {
+    setShowMap(!showMap);
+    if (!showMap && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setMapCenter({ lat: latitude, lng: longitude });
+          setMarkerPos({ lat: latitude, lng: longitude });
+          handleGeocode(latitude, longitude);
+        },
+        (error) => console.log("Geolocation error", error)
+      );
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -342,9 +383,50 @@ export function SiteVisitBookingModal({
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 mb-1 block">
-                    Site Visit / Installation Address <span className="text-rose-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-slate-700 block">
+                      Site Visit / Installation Address <span className="text-rose-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={openMap}
+                      className="text-[10px] font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 bg-purple-50 px-2 py-1 rounded-md transition-colors"
+                    >
+                      <MapPin className="w-3 h-3" />
+                      {showMap ? "Hide Map" : "Drop Pin on Map"}
+                    </button>
+                  </div>
+                  
+                  {showMap && (
+                    <div className="w-full h-[200px] mb-2 rounded-xl overflow-hidden border border-purple-200 relative">
+                      <HybridMap 
+                        center={mapCenter}
+                        zoom={16}
+                        markers={[
+                          { 
+                            id: "customer_location", 
+                            lat: markerPos.lat, 
+                            lng: markerPos.lng, 
+                            draggable: true,
+                            onDragEnd: handleGeocode 
+                          }
+                        ]}
+                        onClick={handleGeocode}
+                      />
+                      {isGeocoding && (
+                        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-[10px] font-bold text-purple-700 shadow-sm flex items-center gap-2 z-[1000]">
+                          <div className="w-3 h-3 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                          Fetching Address...
+                        </div>
+                      )}
+                      <div className="absolute bottom-2 left-2 right-2 pointer-events-none z-[1000]">
+                        <div className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg text-[10px] font-bold text-slate-700 shadow-sm text-center">
+                          Tap on the map or drag the pin to set your location
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <input
                     type="text"
                     required
