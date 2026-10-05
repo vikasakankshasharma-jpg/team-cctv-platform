@@ -134,11 +134,9 @@ export async function POST(request: Request) {
         if (cat === "cable") {
             const cableMarginPct = (settings as any).margin_cable ?? 50;
             verifiedUnitPrice = Math.round(baseCost * (1 + cableMarginPct / 100));
-        } else if (cat === "labor" || cat === "installation") {
-            const laborMarginPct = (settings as any).margin_labor ?? 20;
-            verifiedUnitPrice = Math.round(baseCost * (1 + laborMarginPct / 100));
-        } else if (cat.includes("surcharge")) {
-            verifiedUnitPrice = baseCost; // Surcharges have no margin
+        } else if (cat === "labor" || cat === "installation" || cat.includes("surcharge")) {
+            // Surcharges and labor use labor_margin
+            verifiedUnitPrice = Math.round(baseCost * (1 + (marginPolicy.labor_margin || 0.2)));
         } else {
             // Hardware and accessories use MarginEngine (resolving price/margin conflicts)
             const isStorage = cat.includes("storage") || cat.includes("hdd") || cat.includes("hard disk") || (dbProduct.storage_type && dbProduct.storage_type.toLowerCase().includes("hard disk"));
