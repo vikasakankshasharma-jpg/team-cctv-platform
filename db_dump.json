@@ -1,0 +1,2326 @@
+{
+  "products": [
+    {
+      "id": "ACC-2U-RACK-RECORDER",
+      "sku": "ACC-2U-RACK-RECORDER",
+      "brand": "Budget Brand",
+      "category": "rack",
+      "description": "2U Rack for Recorder",
+      "base_cost": 350,
+      "technology": "Common",
+      "margin_percent_applied": 40,
+      "unit_price": 490,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Budget Brand 2U Rack for Recorder",
+      "created_at": "2026-09-10T15:41:26.552Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.464Z"
+    },
+    {
+      "id": "ACC-4G-ROUTER",
+      "sku": "ACC-4G-ROUTER",
+      "brand": "Budget Brand",
+      "category": "network",
+      "description": "4G Router",
+      "base_cost": 1450,
+      "technology": "Common",
+      "margin_percent_applied": 40,
+      "unit_price": 2030,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Budget Brand 4G Router",
+      "created_at": "2026-09-10T15:41:26.552Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z"
+    },
+    {
+      "id": "ACC-4U-RACK-RECORDER",
+      "sku": "ACC-4U-RACK-RECORDER",
+      "brand": "Budget Brand",
+      "category": "rack",
+      "description": "4U Rack for Recorder",
+      "base_cost": 450,
+      "technology": "Common",
+      "margin_percent_applied": 40,
+      "unit_price": 630,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Budget Brand 4U Rack for Recorder",
+      "created_at": "2026-09-10T15:41:26.552Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z"
+    },
+    {
+      "id": "ACC-JUNCTION-BOX",
+      "sku": "ACC-JUNCTION-BOX",
+      "brand": "Budget Brand",
+      "category": "accessories",
+      "description": "Junction Box for Camera",
+      "base_cost": 20,
+      "technology": "Common",
+      "margin_percent_applied": 40,
+      "unit_price": 28,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Budget Brand Junction Box for Camera",
+      "created_at": "2026-09-10T15:41:26.552Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z"
+    },
+    {
+      "id": "ACC-PVC-RACK-POE",
+      "sku": "ACC-PVC-RACK-POE",
+      "brand": "Budget Brand",
+      "category": "rack",
+      "description": "PVC Rack for PoE Switch",
+      "base_cost": 450,
+      "technology": "IP",
+      "margin_percent_applied": 40,
+      "unit_price": 630,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "Budget Brand PVC Rack for PoE Switch",
+      "created_at": "2026-09-10T15:41:26.552Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z"
+    },
+    {
+      "id": "CAB-HD-BUD-70",
+      "sku": "CAB-HD-BUD-70",
+      "brand": "Budget Brand",
+      "category": "cable",
+      "description": "3+1 Cable HD - 70 MTR Copper Coated",
+      "base_cost": 600,
+      "technology": "HD",
+      "margin_percent_applied": 40,
+      "unit_price": 840,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "Budget Brand 3+1 Cable HD - 70 MTR Copper Coated",
+      "created_at": "2026-09-10T15:41:26.550Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z"
+    },
+    {
+      "id": "CAB-HD-CPP-90",
+      "sku": "CAB-HD-CPP-90",
+      "brand": "CP Plus",
+      "category": "cable",
+      "description": "3+1 Cable HD - 90 MTR Copper",
+      "base_cost": 1350,
+      "technology": "HD",
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 3+1 Cable HD - 90 MTR Copper",
+      "created_at": "2026-09-10T15:41:26.550Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z",
+      "unit_price": 1552
+    },
+    {
+      "id": "CAB-IP-BUD-100-CU",
+      "sku": "CAB-IP-BUD-100-CU",
+      "brand": "Budget Brand",
+      "category": "cable",
+      "description": "CAT6 - 100 MTR Copper",
+      "base_cost": 1200,
+      "technology": "IP",
+      "margin_percent_applied": 40,
+      "unit_price": 1680,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "Budget Brand CAT6 - 100 MTR Copper",
+      "created_at": "2026-09-10T15:41:26.550Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z"
+    },
+    {
+      "id": "CAB-IP-BUD-305-CCA",
+      "sku": "CAB-IP-BUD-305-CCA",
+      "brand": "Budget Brand",
+      "category": "cable",
+      "description": "CAT6 - 305 MTR Copper Coated",
+      "base_cost": 3200,
+      "technology": "IP",
+      "margin_percent_applied": 40,
+      "unit_price": 4480,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "Budget Brand CAT6 - 305 MTR Copper Coated",
+      "created_at": "2026-09-10T15:41:26.550Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z"
+    },
+    {
+      "id": "CAB-IP-CPP-305-CCA",
+      "sku": "CAB-IP-CPP-305-CCA",
+      "brand": "CP Plus",
+      "category": "cable",
+      "description": "CAT6 - 305 MTR Copper Coated",
+      "base_cost": 3700,
+      "technology": "IP",
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus CAT6 - 305 MTR Copper Coated",
+      "created_at": "2026-09-10T15:41:26.550Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z",
+      "unit_price": 4255
+    },
+    {
+      "id": "CAB-IP-CPP-305-CU",
+      "sku": "CAB-IP-CPP-305-CU",
+      "brand": "CP Plus",
+      "category": "cable",
+      "description": "CAT6 - 305 MTR Copper",
+      "base_cost": 9500,
+      "technology": "IP",
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus CAT6 - 305 MTR Copper",
+      "created_at": "2026-09-10T15:41:26.550Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z",
+      "unit_price": 10925
+    },
+    {
+      "id": "CONN-BNC",
+      "sku": "CONN-BNC",
+      "brand": "Budget Brand",
+      "category": "connector",
+      "description": "BNC Connector",
+      "base_cost": 15,
+      "technology": "HD",
+      "margin_percent_applied": 40,
+      "unit_price": 21,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "Budget Brand BNC Connector",
+      "created_at": "2026-09-10T15:41:26.551Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z"
+    },
+    {
+      "id": "CONN-DC",
+      "sku": "CONN-DC",
+      "brand": "Budget Brand",
+      "category": "connector",
+      "description": "DC Connector",
+      "base_cost": 5,
+      "technology": "HD",
+      "margin_percent_applied": 40,
+      "unit_price": 7,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "Budget Brand DC Connector",
+      "created_at": "2026-09-10T15:41:26.551Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.465Z"
+    },
+    {
+      "id": "CONN-RJ45",
+      "sku": "CONN-RJ45",
+      "brand": "Budget Brand",
+      "category": "connector",
+      "description": "RJ45 Connector",
+      "base_cost": 5,
+      "technology": "IP",
+      "margin_percent_applied": 40,
+      "unit_price": 7,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "Budget Brand RJ45 Connector",
+      "created_at": "2026-09-10T15:41:26.551Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z"
+    },
+    {
+      "id": "DISP-19-INCH",
+      "sku": "DISP-19-INCH",
+      "brand": "Budget Brand",
+      "category": "display",
+      "description": "Display 19 inch",
+      "base_cost": 2100,
+      "technology": "Common",
+      "margin_percent_applied": 40,
+      "unit_price": 2940,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Budget Brand Display 19 inch",
+      "created_at": "2026-09-10T15:41:26.552Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z"
+    },
+    {
+      "id": "DVR-CPP-16CH-2MP",
+      "sku": "DVR-CPP-16CH-2MP",
+      "brand": "CP Plus",
+      "category": "recorder",
+      "technology": "HD",
+      "channels": 16,
+      "resolution": "2MP Supported",
+      "sata": "1SATA",
+      "base_cost": 8100,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 16Ch HD DVR/NVR 1SATA 2MP Supported",
+      "created_at": "2026-09-10T15:41:26.548Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 9315
+    },
+    {
+      "id": "DVR-CPP-16CH-5MP",
+      "sku": "DVR-CPP-16CH-5MP",
+      "brand": "CP Plus",
+      "category": "recorder",
+      "technology": "HD",
+      "channels": 16,
+      "resolution": "5MP Supported",
+      "sata": "1SATA",
+      "base_cost": 13300,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 16Ch HD DVR/NVR 1SATA 5MP Supported",
+      "created_at": "2026-09-10T15:41:26.548Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 15295
+    },
+    {
+      "id": "DVR-CPP-4CH-2MP",
+      "sku": "DVR-CPP-4CH-2MP",
+      "brand": "CP Plus",
+      "category": "recorder",
+      "technology": "HD",
+      "channels": 4,
+      "resolution": "2MP Supported",
+      "sata": "1SATA",
+      "base_cost": 3700,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 4Ch HD DVR/NVR 1SATA 2MP Supported",
+      "created_at": "2026-09-10T15:41:26.547Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 4255
+    },
+    {
+      "id": "DVR-CPP-4CH-5MP",
+      "sku": "DVR-CPP-4CH-5MP",
+      "brand": "CP Plus",
+      "category": "recorder",
+      "technology": "HD",
+      "channels": 4,
+      "resolution": "5MP Supported",
+      "sata": "1SATA",
+      "base_cost": 5750,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 4Ch HD DVR/NVR 1SATA 5MP Supported",
+      "created_at": "2026-09-10T15:41:26.548Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 6612
+    },
+    {
+      "id": "DVR-CPP-8CH-2MP",
+      "sku": "DVR-CPP-8CH-2MP",
+      "brand": "CP Plus",
+      "category": "recorder",
+      "technology": "HD",
+      "channels": 8,
+      "resolution": "2MP Supported",
+      "sata": "1SATA",
+      "base_cost": 4800,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 8Ch HD DVR/NVR 1SATA 2MP Supported",
+      "created_at": "2026-09-10T15:41:26.548Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 5520
+    },
+    {
+      "id": "DVR-CPP-8CH-5MP",
+      "sku": "DVR-CPP-8CH-5MP",
+      "brand": "CP Plus",
+      "category": "recorder",
+      "technology": "HD",
+      "channels": 8,
+      "resolution": "5MP Supported",
+      "sata": "1SATA",
+      "base_cost": 8100,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 8Ch HD DVR/NVR 1SATA 5MP Supported",
+      "created_at": "2026-09-10T15:41:26.548Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 9315
+    },
+    {
+      "id": "HDA-BUD-2MP-COL-BULLET",
+      "sku": "HDA-BUD-2MP-COL-BULLET",
+      "brand": "Budget Brand",
+      "category": "cctv_camera",
+      "technology": "HD",
+      "resolution": "2MP",
+      "type": "Bullet",
+      "feature": "Color Night Vision, Audio IN",
+      "base_cost": 750,
+      "margin_percent_applied": 40,
+      "unit_price": 1050,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "Budget Brand 2MP HD Bullet (Color Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.544Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z"
+    },
+    {
+      "id": "HDA-BUD-2MP-COL-DOME",
+      "sku": "HDA-BUD-2MP-COL-DOME",
+      "brand": "Budget Brand",
+      "category": "cctv_camera",
+      "technology": "HD",
+      "resolution": "2MP",
+      "type": "Dome",
+      "feature": "Color Night Vision, Audio IN",
+      "base_cost": 700,
+      "margin_percent_applied": 40,
+      "unit_price": 980,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "Budget Brand 2MP HD Dome (Color Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.544Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z"
+    },
+    {
+      "id": "HDA-CPP-2MP-BW-BULLET",
+      "sku": "HDA-CPP-2MP-BW-BULLET",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "HD",
+      "resolution": "2MP",
+      "type": "Bullet",
+      "feature": "B&W Night Vision, Audio IN",
+      "base_cost": 1050,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 2MP HD Bullet (B&W Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.543Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 1208
+    },
+    {
+      "id": "HDA-CPP-2MP-BW-DOME",
+      "sku": "HDA-CPP-2MP-BW-DOME",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "HD",
+      "resolution": "2MP",
+      "type": "Dome",
+      "feature": "B&W Night Vision, Audio IN",
+      "base_cost": 1000,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 2MP HD Dome (B&W Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.542Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 1150
+    },
+    {
+      "id": "HDA-CPP-2MP-COL-BULLET",
+      "sku": "HDA-CPP-2MP-COL-BULLET",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "HD",
+      "resolution": "2MP",
+      "type": "Bullet",
+      "feature": "Color Night Vision, Audio IN",
+      "base_cost": 1300,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 2MP HD Bullet (Color Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.543Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 1495
+    },
+    {
+      "id": "HDA-CPP-2MP-COL-DOME",
+      "sku": "HDA-CPP-2MP-COL-DOME",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "HD",
+      "resolution": "2MP",
+      "type": "Dome",
+      "feature": "Color Night Vision, Audio IN",
+      "base_cost": 1250,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 2MP HD Dome (Color Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.543Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 1438
+    },
+    {
+      "id": "HDA-CPP-5MP-COL-BULLET",
+      "sku": "HDA-CPP-5MP-COL-BULLET",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "HD",
+      "resolution": "5MP",
+      "type": "Bullet",
+      "feature": "Color Night Vision, Audio IN",
+      "base_cost": 1650,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 5MP HD Bullet (Color Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.544Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 1897
+    },
+    {
+      "id": "HDA-CPP-5MP-COL-DOME",
+      "sku": "HDA-CPP-5MP-COL-DOME",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "HD",
+      "resolution": "5MP",
+      "type": "Dome",
+      "feature": "Color Night Vision, Audio IN",
+      "base_cost": 1600,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus 5MP HD Dome (Color Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.543Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "unit_price": 1840
+    },
+    {
+      "id": "HDD-BUD-1TB",
+      "sku": "HDD-BUD-1TB",
+      "brand": "Budget Brand",
+      "category": "storage",
+      "capacity": "1TB",
+      "base_cost": 4700,
+      "margin_percent_applied": 40,
+      "display_name": "Budget Brand 1TB Surveillance Hard Disk",
+      "created_at": "2026-09-10T15:41:26.549Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "storage_type": "Surveillance HDD",
+      "technologies": [
+        "both"
+      ],
+      "margin_percentage": 20,
+      "group_path": "storage/HDD",
+      "technical_name": "budget_brand_1tb_surveillance_hard_disk",
+      "unit_price": 5640,
+      "catalog_path": "storage/HDD",
+      "updated_at": {
+        "_seconds": 1790520877,
+        "_nanoseconds": 120000000
+      },
+      "storage_capacity_tb": 1
+    },
+    {
+      "id": "HDD-BUD-2TB",
+      "sku": "HDD-BUD-2TB",
+      "brand": "Budget Brand",
+      "category": "storage",
+      "capacity": "2TB",
+      "base_cost": 7800,
+      "margin_percent_applied": 40,
+      "display_name": "Budget Brand 2TB Surveillance Hard Disk",
+      "created_at": "2026-09-10T15:41:26.549Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "storage_type": "Surveillance HDD",
+      "technologies": [
+        "both"
+      ],
+      "margin_percentage": 20,
+      "updated_at": {
+        "_seconds": 1790520840,
+        "_nanoseconds": 652000000
+      },
+      "storage_capacity_tb": 2,
+      "group_path": "storage/HDD",
+      "technical_name": "budget_brand_2tb_surveillance_hard_disk",
+      "unit_price": 9360,
+      "catalog_path": "storage/HDD"
+    },
+    {
+      "id": "HDD-BUD-4TB",
+      "sku": "HDD-BUD-4TB",
+      "brand": "Budget Brand",
+      "category": "storage",
+      "capacity": "4TB",
+      "base_cost": 14500,
+      "margin_percent_applied": 40,
+      "display_name": "Budget Brand 4TB Surveillance Hard Disk",
+      "created_at": "2026-09-10T15:41:26.549Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "technologies": [
+        "both"
+      ],
+      "group_path": "storage/HDD",
+      "technical_name": "budget_brand_4tb_surveillance_hard_disk",
+      "catalog_path": "storage/HDD",
+      "storage_type": "Surveillance HDD",
+      "margin_percentage": 20,
+      "updated_at": {
+        "_seconds": 1790520959,
+        "_nanoseconds": 479000000
+      },
+      "storage_capacity_tb": 4,
+      "unit_price": 17400
+    },
+    {
+      "id": "HDD-BUD-500GB",
+      "sku": "HDD-BUD-500GB",
+      "brand": "Budget Brand",
+      "category": "storage",
+      "capacity": "500GB",
+      "base_cost": 1800,
+      "margin_percent_applied": 40,
+      "display_name": "Budget Brand 500GB Surveillance Hard Disk",
+      "created_at": "2026-09-10T15:41:26.549Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.466Z",
+      "storage_type": "Surveillance HDD",
+      "technologies": [
+        "both"
+      ],
+      "margin_percentage": 20,
+      "storage_capacity_tb": 0.5,
+      "group_path": "storage/HDD",
+      "technical_name": "budget_brand_500gb_surveillance_hard_disk",
+      "unit_price": 2160,
+      "catalog_path": "storage/HDD",
+      "updated_at": {
+        "_seconds": 1791225245,
+        "_nanoseconds": 518000000
+      }
+    },
+    {
+      "id": "HDD-SEA-1TB",
+      "sku": "HDD-SEA-1TB",
+      "brand": "Seagate",
+      "category": "storage",
+      "capacity": "1TB",
+      "base_cost": 9500,
+      "margin_percent_applied": 10,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Seagate 1TB Surveillance Hard Disk",
+      "created_at": "2026-09-10T15:41:26.549Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 5,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 9975
+    },
+    {
+      "id": "HDD-SEA-2TB",
+      "sku": "HDD-SEA-2TB",
+      "brand": "Seagate",
+      "category": "storage",
+      "capacity": "2TB",
+      "base_cost": 10900,
+      "margin_percent_applied": 10,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Seagate 2TB Surveillance Hard Disk",
+      "created_at": "2026-09-10T15:41:26.549Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 5,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 11445
+    },
+    {
+      "id": "HDD-SEA-4TB",
+      "sku": "HDD-SEA-4TB",
+      "brand": "Seagate",
+      "category": "storage",
+      "capacity": "4TB",
+      "base_cost": 18500,
+      "margin_percent_applied": 10,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Seagate 4TB Surveillance Hard Disk",
+      "created_at": "2026-09-10T15:41:26.550Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 5,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 19425
+    },
+    {
+      "id": "HDMI-1.5M",
+      "sku": "HDMI-1.5M",
+      "brand": "Budget Brand",
+      "category": "hdmi_cable",
+      "description": "HDMI Cable 1.5 MTR",
+      "base_cost": 60,
+      "technology": "Common",
+      "margin_percent_applied": 40,
+      "unit_price": 84,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Budget Brand HDMI Cable 1.5 MTR",
+      "created_at": "2026-09-10T15:41:26.551Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z"
+    },
+    {
+      "id": "HDMI-10M",
+      "sku": "HDMI-10M",
+      "brand": "Budget Brand",
+      "category": "hdmi_cable",
+      "description": "HDMI Cable 10 MTR",
+      "base_cost": 300,
+      "technology": "Common",
+      "margin_percent_applied": 40,
+      "unit_price": 420,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Budget Brand HDMI Cable 10 MTR",
+      "created_at": "2026-09-10T15:41:26.552Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z"
+    },
+    {
+      "id": "HDMI-3M",
+      "sku": "HDMI-3M",
+      "brand": "Budget Brand",
+      "category": "hdmi_cable",
+      "description": "HDMI Cable 3 MTR",
+      "base_cost": 120,
+      "technology": "Common",
+      "margin_percent_applied": 40,
+      "unit_price": 168,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Budget Brand HDMI Cable 3 MTR",
+      "created_at": "2026-09-10T15:41:26.551Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z"
+    },
+    {
+      "id": "HDMI-5M",
+      "sku": "HDMI-5M",
+      "brand": "Budget Brand",
+      "category": "hdmi_cable",
+      "description": "HDMI Cable 5 MTR",
+      "base_cost": 180,
+      "technology": "Common",
+      "margin_percent_applied": 40,
+      "unit_price": 252,
+      "technologies": [
+        "Common"
+      ],
+      "display_name": "Budget Brand HDMI Cable 5 MTR",
+      "created_at": "2026-09-10T15:41:26.552Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z"
+    },
+    {
+      "id": "IP-BUD-5MP-ECO-BULLET",
+      "sku": "IP-BUD-5MP-ECO-BULLET",
+      "brand": "Budget Brand",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "5MP",
+      "type": "Bullet",
+      "feature": "Color Night Vision, Audio IN, ECO",
+      "base_cost": 1450,
+      "margin_percent_applied": 40,
+      "unit_price": 2030,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "Budget Brand 5MP IP Bullet (Color Night Vision, Audio IN, ECO)",
+      "created_at": "2026-09-10T15:41:26.547Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z"
+    },
+    {
+      "id": "IP-BUD-5MP-ECO-DOME",
+      "sku": "IP-BUD-5MP-ECO-DOME",
+      "brand": "Budget Brand",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "5MP",
+      "type": "Dome",
+      "feature": "Color Night Vision, Audio IN, ECO",
+      "base_cost": 1400,
+      "margin_percent_applied": 40,
+      "unit_price": 1960,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "Budget Brand 5MP IP Dome (Color Night Vision, Audio IN, ECO)",
+      "created_at": "2026-09-10T15:41:26.547Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z"
+    },
+    {
+      "id": "IP-BUD-5MP-PREM-BULLET",
+      "sku": "IP-BUD-5MP-PREM-BULLET",
+      "brand": "Budget Brand",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "5MP",
+      "type": "Bullet",
+      "feature": "Color Night Vision, Audio IN, Premium",
+      "base_cost": 2050,
+      "margin_percent_applied": 40,
+      "unit_price": 2870,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "Budget Brand 5MP IP Bullet (Color Night Vision, Audio IN, Premium)",
+      "created_at": "2026-09-10T15:41:26.547Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z"
+    },
+    {
+      "id": "IP-BUD-5MP-PREM-DOME",
+      "sku": "IP-BUD-5MP-PREM-DOME",
+      "brand": "Budget Brand",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "5MP",
+      "type": "Dome",
+      "feature": "Color Night Vision, Audio IN, Premium",
+      "base_cost": 2000,
+      "margin_percent_applied": 40,
+      "unit_price": 2800,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "Budget Brand 5MP IP Dome (Color Night Vision, Audio IN, Premium)",
+      "created_at": "2026-09-10T15:41:26.547Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z"
+    },
+    {
+      "id": "IP-CPP-2MP-ECO-BULLET",
+      "sku": "IP-CPP-2MP-ECO-BULLET",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "2MP",
+      "type": "Bullet",
+      "feature": "Color Night Vision, Audio IN, ECO",
+      "base_cost": 3250,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 2MP IP Bullet (Color Night Vision, Audio IN, ECO)",
+      "created_at": "2026-09-10T15:41:26.545Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 3737
+    },
+    {
+      "id": "IP-CPP-2MP-ECO-DOME",
+      "sku": "IP-CPP-2MP-ECO-DOME",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "2MP",
+      "type": "Dome",
+      "feature": "Color Night Vision, Audio IN, ECO",
+      "base_cost": 3200,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 2MP IP Dome (Color Night Vision, Audio IN, ECO)",
+      "created_at": "2026-09-10T15:41:26.545Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 3680
+    },
+    {
+      "id": "IP-CPP-4MP-NORM-BULLET",
+      "sku": "IP-CPP-4MP-NORM-BULLET",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "4MP",
+      "type": "Bullet",
+      "feature": "Color Night Vision, Audio IN",
+      "base_cost": 4050,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 4MP IP Bullet (Color Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.545Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 4658
+    },
+    {
+      "id": "IP-CPP-4MP-NORM-DOME",
+      "sku": "IP-CPP-4MP-NORM-DOME",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "4MP",
+      "type": "Dome",
+      "feature": "Color Night Vision, Audio IN",
+      "base_cost": 4000,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 4MP IP Dome (Color Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.545Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 4600
+    },
+    {
+      "id": "IP-CPP-6MP-NORM-BULLET",
+      "sku": "IP-CPP-6MP-NORM-BULLET",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "6MP",
+      "type": "Bullet",
+      "feature": "Color Night Vision, Audio IN",
+      "base_cost": 5250,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 6MP IP Bullet (Color Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.546Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 6037
+    },
+    {
+      "id": "IP-CPP-6MP-NORM-DOME",
+      "sku": "IP-CPP-6MP-NORM-DOME",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "6MP",
+      "type": "Dome",
+      "feature": "Color Night Vision, Audio IN",
+      "base_cost": 5200,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 6MP IP Dome (Color Night Vision, Audio IN)",
+      "created_at": "2026-09-10T15:41:26.546Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 5980
+    },
+    {
+      "id": "IP-CPP-8MP-PREM-BULLET",
+      "sku": "IP-CPP-8MP-PREM-BULLET",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "8MP",
+      "type": "Bullet",
+      "feature": "Color Night Vision, Audio IN, Premium",
+      "base_cost": 7500,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 8MP IP Bullet (Color Night Vision, Audio IN, Premium)",
+      "created_at": "2026-09-10T15:41:26.546Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 8625
+    },
+    {
+      "id": "IP-CPP-8MP-PREM-DOME",
+      "sku": "IP-CPP-8MP-PREM-DOME",
+      "brand": "CP Plus",
+      "category": "cctv_camera",
+      "technology": "IP",
+      "resolution": "8MP",
+      "type": "Dome",
+      "feature": "Color Night Vision, Audio IN, Premium",
+      "base_cost": 7500,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 8MP IP Dome (Color Night Vision, Audio IN, Premium)",
+      "created_at": "2026-09-10T15:41:26.546Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.467Z",
+      "unit_price": 8625
+    },
+    {
+      "id": "NVR-CPP-16CH",
+      "sku": "NVR-CPP-16CH",
+      "brand": "CP Plus",
+      "category": "recorder",
+      "technology": "IP",
+      "channels": 16,
+      "sata": "1SATA",
+      "base_cost": 8300,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 16Ch IP DVR/NVR 1SATA",
+      "created_at": "2026-09-10T15:41:26.549Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 9545
+    },
+    {
+      "id": "NVR-CPP-32CH",
+      "sku": "NVR-CPP-32CH",
+      "brand": "CP Plus",
+      "category": "recorder",
+      "technology": "IP",
+      "channels": 32,
+      "sata": "2SATA",
+      "base_cost": 15000,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 32Ch IP DVR/NVR 2SATA",
+      "created_at": "2026-09-10T15:41:26.549Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 17250
+    },
+    {
+      "id": "NVR-CPP-4CH",
+      "sku": "NVR-CPP-4CH",
+      "brand": "CP Plus",
+      "category": "recorder",
+      "technology": "IP",
+      "channels": 4,
+      "sata": "1SATA",
+      "base_cost": 4900,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 4Ch IP DVR/NVR 1SATA",
+      "created_at": "2026-09-10T15:41:26.548Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 5635
+    },
+    {
+      "id": "NVR-CPP-8CH",
+      "sku": "NVR-CPP-8CH",
+      "brand": "CP Plus",
+      "category": "recorder",
+      "technology": "IP",
+      "channels": 8,
+      "sata": "1SATA",
+      "base_cost": 5500,
+      "margin_percent_applied": 20,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "CP Plus 8Ch IP DVR/NVR 1SATA",
+      "created_at": "2026-09-10T15:41:26.548Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 6325
+    },
+    {
+      "id": "POE-BUD-4CH",
+      "sku": "POE-BUD-4CH",
+      "brand": "Budget Brand",
+      "category": "network",
+      "description": "PoE Switch 4Ch",
+      "base_cost": 900,
+      "technology": "IP",
+      "margin_percent_applied": 40,
+      "unit_price": 1260,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "Budget Brand PoE Switch 4Ch",
+      "created_at": "2026-09-10T15:41:26.550Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.468Z"
+    },
+    {
+      "id": "POE-BUD-8CH",
+      "sku": "POE-BUD-8CH",
+      "brand": "Budget Brand",
+      "category": "network",
+      "description": "PoE Switch 8Ch",
+      "base_cost": 1200,
+      "technology": "IP",
+      "margin_percent_applied": 40,
+      "unit_price": 1680,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "Budget Brand PoE Switch 8Ch",
+      "created_at": "2026-09-10T15:41:26.551Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.468Z"
+    },
+    {
+      "id": "POE-DLINK-16CH",
+      "sku": "POE-DLINK-16CH",
+      "brand": "D-Link",
+      "category": "network",
+      "description": "PoE Switch 16Ch",
+      "base_cost": 9500,
+      "technology": "IP",
+      "margin_percent_applied": 15,
+      "unit_price": 10925,
+      "technologies": [
+        "IP"
+      ],
+      "display_name": "D-Link PoE Switch 16Ch",
+      "created_at": "2026-09-10T15:41:26.551Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.468Z"
+    },
+    {
+      "id": "SMPS-BUD-8CH",
+      "sku": "SMPS-BUD-8CH",
+      "brand": "Budget Brand",
+      "category": "power_device",
+      "description": "Power Supply SMPS 8Ch",
+      "base_cost": 350,
+      "technology": "HD",
+      "margin_percent_applied": 40,
+      "unit_price": 490,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "Budget Brand Power Supply SMPS 8Ch",
+      "created_at": "2026-09-10T15:41:26.551Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 40,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.468Z"
+    },
+    {
+      "id": "SMPS-CPP-8CH",
+      "sku": "SMPS-CPP-8CH",
+      "brand": "CP Plus",
+      "category": "power_device",
+      "description": "Power Supply SMPS 8Ch",
+      "base_cost": 600,
+      "technology": "HD",
+      "margin_percent_applied": 20,
+      "technologies": [
+        "HD"
+      ],
+      "display_name": "CP Plus Power Supply SMPS 8Ch",
+      "created_at": "2026-09-10T15:41:26.551Z",
+      "is_active": true,
+      "in_stock": true,
+      "is_deleted": false,
+      "markup_percent": 15,
+      "pricing_rule_ref": "BRAND_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 690
+    },
+    {
+      "id": "cp_dvr_16ch",
+      "is_active": true,
+      "max_cameras": 16,
+      "base_cost": 5500,
+      "description": "CP Plus 16-channel DVR. Enterprise analog setup.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "HD",
+      "display_name": "CP Plus 16-Channel DVR (HD/Analog)",
+      "tags": [
+        "dvr",
+        "hd",
+        "16ch",
+        "analog",
+        "cp-plus"
+      ],
+      "channels": 16,
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "CP-UVR-1601H1-HC",
+      "category": "recorder",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 6600
+    },
+    {
+      "id": "cp_dvr_4ch",
+      "is_active": true,
+      "max_cameras": 4,
+      "base_cost": 2100,
+      "description": "CP Plus 4-channel HD DVR. Compatible with all HD CCTV cameras.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "HD",
+      "display_name": "CP Plus 4-Channel DVR (HD/Analog)",
+      "tags": [
+        "dvr",
+        "hd",
+        "4ch",
+        "analog",
+        "cp-plus"
+      ],
+      "channels": 4,
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "CP-UVR-0401H1-HC",
+      "category": "recorder",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 2520
+    },
+    {
+      "id": "cp_dvr_8ch",
+      "is_active": true,
+      "max_cameras": 8,
+      "base_cost": 3200,
+      "description": "CP Plus 8-channel HD DVR. For 5-8 analog cameras.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "HD",
+      "display_name": "CP Plus 8-Channel DVR (HD/Analog)",
+      "tags": [
+        "dvr",
+        "hd",
+        "8ch",
+        "analog",
+        "cp-plus"
+      ],
+      "channels": 8,
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "CP-UVR-0801H1-HC",
+      "category": "recorder",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 3840
+    },
+    {
+      "id": "cp_nvr_16ch",
+      "is_active": true,
+      "max_cameras": 16,
+      "base_cost": 7500,
+      "description": "CP Plus 16-channel NVR. For 9-16 IP cameras. Enterprise grade.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 16-Channel NVR",
+      "tags": [
+        "nvr",
+        "ip",
+        "16ch",
+        "cp-plus"
+      ],
+      "channels": 16,
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "CP-UNR-116X2-4P",
+      "category": "recorder",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 9000
+    },
+    {
+      "id": "cp_nvr_4ch",
+      "is_active": true,
+      "max_cameras": 4,
+      "base_cost": 2700,
+      "description": "CP Plus 4-channel NVR with PoE. Supports up to 4 IP cameras with H.265+ compression.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 4-Channel NVR",
+      "tags": [
+        "nvr",
+        "ip",
+        "4ch",
+        "cp-plus"
+      ],
+      "channels": 4,
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "CP-UNR-104X2-1P",
+      "category": "recorder",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 3240
+    },
+    {
+      "id": "cp_nvr_8ch",
+      "is_active": true,
+      "max_cameras": 8,
+      "base_cost": 4200,
+      "description": "CP Plus 8-channel NVR. For 5-8 IP cameras.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 8-Channel NVR",
+      "tags": [
+        "nvr",
+        "ip",
+        "8ch",
+        "cp-plus"
+      ],
+      "channels": 8,
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "CP-UNR-108X2-2P",
+      "category": "recorder",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 5040
+    },
+    {
+      "id": "cphd_2mp_bullet",
+      "is_active": true,
+      "base_cost": 800,
+      "description": "CP Plus 2MP HD bullet camera with 40m IR. Outdoor-rated for boundary walls and parking.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "HD",
+      "display_name": "CP Plus 2MP HD Bullet Camera (Outdoor)",
+      "resolution_mp": 2,
+      "tags": [
+        "hd",
+        "analog",
+        "2mp",
+        "bullet",
+        "outdoor"
+      ],
+      "features": [
+        "night_vision"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 990,
+      "technical_name": "CP-VAC-T21L2-V3",
+      "category": "cctv_camera",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 960
+    },
+    {
+      "id": "cphd_2mp_dome",
+      "is_active": true,
+      "base_cost": 720,
+      "description": "CP Plus 2MP analog HD dome camera. Most affordable option for budget residential installs.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "HD",
+      "display_name": "CP Plus 2MP HD Dome Camera",
+      "resolution_mp": 2,
+      "tags": [
+        "hd",
+        "analog",
+        "2mp",
+        "dome",
+        "budget"
+      ],
+      "features": [
+        "night_vision"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 900,
+      "technical_name": "CP-VAC-D21L2-V3",
+      "category": "cctv_camera",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 864
+    },
+    {
+      "id": "cphd_5mp_colorvu_bullet",
+      "is_active": true,
+      "base_cost": 1680,
+      "description": "CP Plus 5MP HD ColorVu bullet — 24/7 full color on analog DVR. Upgrade from standard black & white night vision.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "HD",
+      "display_name": "CP Plus 5MP HD ColorVu Bullet Camera",
+      "resolution_mp": 5,
+      "tags": [
+        "hd",
+        "analog",
+        "5mp",
+        "colorvu",
+        "outdoor"
+      ],
+      "features": [
+        "color_night",
+        "night_vision"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 2100,
+      "technical_name": "CP-VAC-T51ML3S",
+      "category": "cctv_camera",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 2016
+    },
+    {
+      "id": "cpip_2mp_bullet_basic",
+      "is_active": true,
+      "base_cost": 1400,
+      "description": "Entry-level 2MP IP bullet camera with 30m IR night vision. Ideal for standard residential coverage.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 2MP IP Bullet Camera",
+      "resolution_mp": 2,
+      "tags": [
+        "ip",
+        "2mp",
+        "bullet",
+        "outdoor"
+      ],
+      "features": [
+        "night_vision"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 1750,
+      "technical_name": "CP-UNC-T21L3-MD",
+      "category": "cctv_camera",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 1680
+    },
+    {
+      "id": "cpip_2mp_dome_basic",
+      "is_active": true,
+      "base_cost": 1480,
+      "description": "2MP IP dome camera for indoor ceiling mounting.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 2MP IP Dome Camera",
+      "resolution_mp": 2,
+      "tags": [
+        "ip",
+        "2mp",
+        "dome",
+        "indoor",
+        "ceiling"
+      ],
+      "features": [
+        "night_vision"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 1850,
+      "technical_name": "CP-UNC-V21L3-MD",
+      "category": "cctv_camera",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 1776
+    },
+    {
+      "id": "cpip_4mp_colorvu_bullet",
+      "is_active": true,
+      "base_cost": 2450,
+      "description": "4MP IP bullet with 24/7 full-color night vision using ColorVu technology. No IR — always in color.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 4MP ColorVu Bullet Camera",
+      "resolution_mp": 4,
+      "tags": [
+        "ip",
+        "4mp",
+        "bullet",
+        "outdoor",
+        "color-night"
+      ],
+      "features": [
+        "color_night",
+        "night_vision"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 3050,
+      "technical_name": "CP-UNC-T41L3C-MD",
+      "category": "cctv_camera",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 2940
+    },
+    {
+      "id": "cpip_5mp_colorvu_dome",
+      "is_active": true,
+      "base_cost": 2900,
+      "description": "5MP ColorVu dome camera with built-in microphone. Best seller for offices and shops.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 5MP ColorVu Dome Camera",
+      "resolution_mp": 5,
+      "tags": [
+        "ip",
+        "5mp",
+        "dome",
+        "color-night",
+        "audio"
+      ],
+      "features": [
+        "color_night",
+        "night_vision",
+        "mic"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 3600,
+      "technical_name": "CP-UNC-V51L3C-MD",
+      "category": "cctv_camera",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 3480
+    },
+    {
+      "id": "cpip_5mp_dual_light_bullet",
+      "is_active": true,
+      "base_cost": 3100,
+      "description": "5MP smart dual-light camera: color on motion detection, IR otherwise. Most advanced CP Plus bullet.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 5MP Dual Light Bullet (Smart Color)",
+      "resolution_mp": 5,
+      "tags": [
+        "ip",
+        "5mp",
+        "bullet",
+        "dual-light",
+        "smart"
+      ],
+      "features": [
+        "feat_dual_light",
+        "color_night",
+        "night_vision",
+        "mic"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 3900,
+      "technical_name": "CP-UNC-T51L3S-MD",
+      "category": "cctv_camera",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.468Z",
+      "unit_price": 3720
+    },
+    {
+      "id": "cpip_8mp_4k_bullet",
+      "is_active": true,
+      "base_cost": 5000,
+      "description": "8MP 4K UHD IP bullet camera. Premium enterprise-grade for banks, factories, and large premises.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 8MP 4K UHD IP Bullet Camera",
+      "resolution_mp": 8,
+      "tags": [
+        "ip",
+        "8mp",
+        "4k",
+        "bullet",
+        "outdoor",
+        "enterprise"
+      ],
+      "features": [
+        "night_vision",
+        "4k"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 6200,
+      "technical_name": "CP-UNC-T81L3-MD",
+      "category": "cctv_camera",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 6000
+    },
+    {
+      "id": "hdd_1tb_wd_purple",
+      "is_active": true,
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "base_cost": 3200,
+      "description": "WD Purple 1TB HDD designed for 24/7 surveillance recording. Supports AllFrame technology.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "WD10PURZ-1TB",
+      "technology": "BOTH",
+      "category": "storage",
+      "display_name": "WD Purple 1TB Surveillance HDD",
+      "brand": "wd",
+      "tags": [
+        "hdd",
+        "1tb",
+        "storage",
+        "wd-purple"
+      ],
+      "markup_percent": 10,
+      "pricing_rule_ref": "CATEGORY_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 3520
+    },
+    {
+      "id": "hdd_2tb_wd_purple",
+      "is_active": true,
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "base_cost": 4600,
+      "description": "WD Purple 2TB surveillance HDD. Handles continuous writes from 4-8 cameras.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "WD20PURZ-2TB",
+      "technology": "BOTH",
+      "category": "storage",
+      "display_name": "WD Purple 2TB Surveillance HDD",
+      "brand": "wd",
+      "tags": [
+        "hdd",
+        "2tb",
+        "storage",
+        "wd-purple"
+      ],
+      "markup_percent": 10,
+      "pricing_rule_ref": "CATEGORY_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 5060
+    },
+    {
+      "id": "hdd_4tb_seagate_skyhawk",
+      "is_active": true,
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "base_cost": 7400,
+      "description": "Seagate SkyHawk 4TB. Heavy duty — handles up to 16 cameras simultaneously.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "ST4000VX013-4TB",
+      "technology": "BOTH",
+      "category": "storage",
+      "display_name": "Seagate SkyHawk 4TB Surveillance HDD",
+      "brand": "seagate",
+      "tags": [
+        "hdd",
+        "4tb",
+        "storage",
+        "seagate-skyhawk"
+      ],
+      "markup_percent": 10,
+      "pricing_rule_ref": "CATEGORY_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 8140
+    },
+    {
+      "id": "hdd_6tb_seagate_skyhawk",
+      "is_active": true,
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "base_cost": 11200,
+      "description": "Seagate SkyHawk 6TB for enterprise 30-90 day retention with multiple cameras.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "ST6000VX001-6TB",
+      "technology": "BOTH",
+      "category": "storage",
+      "display_name": "Seagate SkyHawk 6TB Surveillance HDD",
+      "brand": "seagate",
+      "tags": [
+        "hdd",
+        "6tb",
+        "storage",
+        "seagate-skyhawk"
+      ],
+      "markup_percent": 10,
+      "pricing_rule_ref": "CATEGORY_RULE",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 12320
+    },
+    {
+      "id": "poe_16port_cpplus",
+      "is_active": true,
+      "max_cameras": 16,
+      "base_cost": 5000,
+      "description": "CP Plus 16-port PoE switch for enterprise IP installations.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 16-Port PoE Switch (250W)",
+      "tags": [
+        "poe",
+        "switch",
+        "16port",
+        "ip-power"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "CP-ANW-HP16F-U250",
+      "category": "power_device",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 6000
+    },
+    {
+      "id": "poe_4port_cpplus",
+      "is_active": true,
+      "max_cameras": 4,
+      "base_cost": 1400,
+      "description": "CP Plus 4-port PoE switch — powers up to 4 IP cameras via network cable. No separate adapters needed.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 4-Port PoE Switch (60W)",
+      "tags": [
+        "poe",
+        "switch",
+        "4port",
+        "ip-power"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "CP-ANW-HP4F-U60",
+      "category": "power_device",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 1680
+    },
+    {
+      "id": "poe_8port_cpplus",
+      "is_active": true,
+      "max_cameras": 8,
+      "base_cost": 2500,
+      "description": "CP Plus 8-port PoE switch — powers up to 8 IP cameras simultaneously.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "CP Plus 8-Port PoE Switch (120W)",
+      "tags": [
+        "poe",
+        "switch",
+        "8port",
+        "ip-power"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "CP-ANW-HP8F-U120",
+      "category": "power_device",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 3000
+    },
+    {
+      "id": "pramaip_2mp_dome",
+      "is_active": true,
+      "base_cost": 1450,
+      "description": "Prama 2MP IP dome camera powered by Hikvision technology. Good choice for budget IP installs.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "Prama 2MP IP Fixed Dome Camera",
+      "resolution_mp": 2,
+      "tags": [
+        "ip",
+        "2mp",
+        "dome",
+        "prama",
+        "hikvision-tech"
+      ],
+      "features": [
+        "night_vision"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 1800,
+      "technical_name": "PRAMA-IPC-D120H-D",
+      "category": "cctv_camera",
+      "brand": "prama",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 1740
+    },
+    {
+      "id": "pramaip_4mp_acupix_bullet",
+      "is_active": true,
+      "base_cost": 2380,
+      "description": "Prama 4MP AcuPix bullet camera with advanced image processing. Popular for commercial use.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "IP",
+      "display_name": "Prama 4MP AcuPix IP Bullet Camera",
+      "resolution_mp": 4,
+      "tags": [
+        "ip",
+        "4mp",
+        "bullet",
+        "prama",
+        "acupix"
+      ],
+      "features": [
+        "color_night",
+        "night_vision"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "bulk_discount_threshold": 4,
+      "bulk_unit_price": 2950,
+      "technical_name": "PRAMA-IPC-B140H-D",
+      "category": "cctv_camera",
+      "brand": "prama",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 2856
+    },
+    {
+      "id": "psu_16ch_smps",
+      "is_active": true,
+      "max_cameras": 16,
+      "base_cost": 1450,
+      "description": "SMPS 12V 20A power supply for large 9-16 camera analog installations.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "HD",
+      "display_name": "16-Camera SMPS Power Supply (12V 20A)",
+      "tags": [
+        "psu",
+        "smps",
+        "16ch",
+        "hd-power"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "SMPS-12V20A-16CH",
+      "category": "power_device",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 1740
+    },
+    {
+      "id": "psu_4ch_smps",
+      "is_active": true,
+      "max_cameras": 4,
+      "base_cost": 480,
+      "description": "SMPS 12V 5A power supply for up to 4 analog HD cameras.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "HD",
+      "display_name": "4-Camera SMPS Power Supply (12V 5A)",
+      "tags": [
+        "psu",
+        "smps",
+        "4ch",
+        "hd-power"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "SMPS-12V5A-4CH",
+      "category": "power_device",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 576
+    },
+    {
+      "id": "psu_8ch_smps",
+      "is_active": true,
+      "max_cameras": 8,
+      "base_cost": 820,
+      "description": "SMPS 12V 10A power supply for 5-8 analog HD cameras.",
+      "created_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technology": "HD",
+      "display_name": "8-Camera SMPS Power Supply (12V 10A)",
+      "tags": [
+        "psu",
+        "smps",
+        "8ch",
+        "hd-power"
+      ],
+      "updated_at": {
+        "_seconds": 1790439262,
+        "_nanoseconds": 284000000
+      },
+      "technical_name": "SMPS-12V10A-8CH",
+      "category": "power_device",
+      "brand": "cpplus",
+      "markup_percent": 20,
+      "pricing_rule_ref": "GLOBAL_DEFAULT",
+      "price_updated_at": "2026-09-27T14:45:37.469Z",
+      "unit_price": 984
+    }
+  ],
+  "addons": []
+}

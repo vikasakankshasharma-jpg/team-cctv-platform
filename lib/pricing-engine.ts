@@ -510,7 +510,9 @@ function calculateLabor(
   const items: QuoteLineItem[] = [];
   let totalRetail = 0;
 
-  const baseRate = tech === "IP" ? (settings.labor_ip_per_camera || 500) : (settings.labor_hd_per_camera || 400);
+  const baseRate = selection.cabling_done 
+      ? (settings.labor_fitting_only_rate || 300)
+      : (tech === "IP" ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500) : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400));
   const rate = Math.round(baseRate * locationMultiplier);
   // Only charge labor for wired cameras - wireless cameras don't need cable termination work
   let qty = Number(selection.camera_count) || 0;
@@ -1567,10 +1569,12 @@ export function generatePricingSnapshot(
 
   if (wiredCameraCount > 0) {
     const isIP = resolvedSystem.plan_type?.includes("IP");
-    const baseRate = isIP 
-      ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500)
-      : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400);
-    const rate = Math.round(baseRate * (1 + marginPolicy.labor_margin));
+    const baseRate = req.cabling_done 
+        ? (settings.labor_fitting_only_rate || 300)
+        : (isIP 
+          ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500)
+          : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400));
+    const rate = Math.round(baseRate);
     const laborTotal = rate * wiredCameraCount;
 
     lineItems.push({
@@ -1596,7 +1600,7 @@ export function generatePricingSnapshot(
   };
 
   const addSurcharge = (id: string, name: string, cost: number) => {
-    const price = Math.round(cost * (1 + marginPolicy.labor_margin));
+    const price = Math.round(cost);
     lineItems.push({
       product_id: id,
       display_name: name,

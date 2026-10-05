@@ -89,9 +89,41 @@ export async function POST(request: Request) {
     };
     if (source === "pro_builder" && configurationSnapshot?.items) {
       // Pro Builder Item-by-Item Verification — Zero Client Trust
+      
+      let totalWiredCameras = 0;
+      let totalCableMeters = 0;
+      let isIPSystem = false;
+      
+      for (const item of configurationSnapshot.items as any[]) {
+          const dbProduct = catalog.find(p => p.id === item.product_id) || addons.find(a => a.id === item.product_id) || { category: item.category };
+          const cat = (dbProduct.category || "").toLowerCase();
+          const qty = Math.max(1, Math.min(100, Math.floor(Number(item.qty || 1))));
+          
+          if (cat === "cctv_camera" || cat.includes("camera")) {
+              if (item.product_id?.toLowerCase().includes("ip")) isIPSystem = true;
+              if (!item.product_id?.toLowerCase().includes("wifi") && !item.product_id?.toLowerCase().includes("wireless")) {
+                  totalWiredCameras += qty;
+              }
+          } else if (cat === "cable") {
+              const name = (dbProduct.display_name || item.name || "").toLowerCase();
+              let lengthInItem = 90;
+              if (name.includes("305")) lengthInItem = 305;
+              else if (name.includes("70")) lengthInItem = 70;
+              else if (name.includes("100")) lengthInItem = 100;
+              else if (name.match(/(\d+)\s*m/)) {
+                  lengthInItem = parseInt(name.match(/(\d+)\s*m/)[1], 10);
+              }
+              totalCableMeters += (lengthInItem * qty);
+          }
+      }
+      
+      const cablingDone = requirementSnapshot.cabling_done ?? false;
+      const strictLaborRate = cablingDone 
+          ? (settings.labor_fitting_only_rate || 300)
+          : (isIPSystem ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500) : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400));
+
       let subtotal = 0;
       const verifiedItems: any[] = [];
-
       for (const item of configurationSnapshot.items as any[]) {
         let dbProduct: any = catalog.find(p => p.id === item.product_id) || addons.find(a => a.id === item.product_id);
 
@@ -134,9 +166,12 @@ export async function POST(request: Request) {
         if (cat === "cable") {
             const cableMarginPct = (settings as any).margin_cable ?? 50;
             verifiedUnitPrice = Math.round(baseCost * (1 + cableMarginPct / 100));
-        } else if (cat === "labor" || cat === "installation" || cat.includes("surcharge")) {
-            // Surcharges and labor use labor_margin
-            verifiedUnitPrice = Math.round(baseCost * (1 + (marginPolicy.labor_margin || 0.2)));
+        } else if (cat === "labor" || cat === "installation") {
+            // Strict rule: Overwrite any catalog price with the strict market rate
+            verifiedUnitPrice = Math.round(strictLaborRate);
+        } else if (cat.includes("surcharge")) {
+            // Surcharges have no margin
+            verifiedUnitPrice = Math.round(baseCost);
         } else {
             // Hardware and accessories use MarginEngine (resolving price/margin conflicts)
             const isStorage = cat.includes("storage") || cat.includes("hdd") || cat.includes("hard disk") || (dbProduct.storage_type && dbProduct.storage_type.toLowerCase().includes("hard disk"));
@@ -163,6 +198,27 @@ export async function POST(request: Request) {
         });
       }
 
+      // Strict Rule: Excess Cabling Labor
+      if (!cablingDone && totalWiredCameras > 0 && totalCableMeters > 0) {
+          const defaultMetersPerCamera = 15;
+          const freeLimit = totalWiredCameras * defaultMetersPerCamera;
+          const excessMeters = Math.max(0, totalCableMeters - freeLimit);
+          
+          if (excessMeters > 0) {
+              const excessLaborRate = 15;
+              const excessLineTotal = excessLaborRate * excessMeters;
+              subtotal += excessLineTotal;
+              verifiedItems.push({
+                  product_id: "labor_cabling_excess",
+                  name: `Excess Cabling Installation Labor (${excessMeters}m beyond ${freeLimit}m free limit)`,
+                  category: "labor",
+                  unit_price: excessLaborRate,
+                  qty: excessMeters,
+                  line_total: excessLineTotal
+              });
+          }
+      }
+      
       const gstRate = settings.gst_rate || 18;
       const gstAmount = Math.round(subtotal * (gstRate / 100));
       const totalPayable = subtotal + gstAmount;
