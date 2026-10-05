@@ -66,6 +66,7 @@ const NAV_GROUPS = [
   {
     label: "Marketing & Finance",
     items: [
+      { name: "Marketing Hub",       href: "/admin/marketing",    icon: Megaphone },
       { name: "Marketing QR Codes",  href: "/admin/marketing-qr", icon: Megaphone },
       { name: "Follow-Up Rules",     href: "/admin/campaigns",    icon: Sparkles },
       { name: "Promoters",           href: "/admin/promoters",   icon: BadgeDollarSign },

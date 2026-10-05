@@ -31,9 +31,10 @@ interface PartnerDashboardClientProps {
     lost: number;
   };
   slaBreachesCount?: number;
+  templates?: any[];
 }
 
-export function PartnerDashboardClient({ partnerName, referralCode, stats, recentWins, pipeline, slaBreachesCount = 0 }: PartnerDashboardClientProps) {
+export function PartnerDashboardClient({ partnerName, referralCode, stats, recentWins, pipeline, slaBreachesCount = 0, templates = [] }: PartnerDashboardClientProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -160,7 +161,7 @@ export function PartnerDashboardClient({ partnerName, referralCode, stats, recen
         })}
       </div>
 
-      <EDMGenerator referralCode={referralCode} />
+      <EDMGenerator referralCode={referralCode} templates={templates} />
 
       {/* ── PIPELINE TRACKER ──────────────────────────────────────────────── */}
       {pipeline && (

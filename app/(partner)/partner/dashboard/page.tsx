@@ -16,11 +16,12 @@ export default async function PartnerDashboardPage() {
   // 2. Fetch Recent Won Leads
   // 3. Count Total Leads and aggregate statuses
   // 4. Fetch Promoter details for referral code
-  const [commsSnap, recentCommsSnap, leadsSnap, promoterDoc] = await Promise.all([
+  const [commsSnap, recentCommsSnap, leadsSnap, promoterDoc, templatesSnap] = await Promise.all([
     adminDb.collection(COLLECTIONS.COMMISSION_RECORDS).where("promoter_id", "==", promoterId).get(),
     adminDb.collection(COLLECTIONS.COMMISSION_RECORDS).where("promoter_id", "==", promoterId).orderBy("created_at", "desc").limit(5).get(),
     adminDb.collection(COLLECTIONS.LEADS).where("promoter_id", "==", promoterId).get(),
-    adminDb.collection(COLLECTIONS.PROMOTERS).doc(promoterId).get()
+    adminDb.collection(COLLECTIONS.PROMOTERS).doc(promoterId).get(),
+    adminDb.collection("marketing_templates").where("is_active", "==", true).get()
   ]);
 
   let totalEarned = 0;
@@ -89,6 +90,11 @@ export default async function PartnerDashboardPage() {
     }
   });
 
+  const templates = templatesSnap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
   return (
     <PartnerDashboardClient 
       partnerName={session.promoterName || "Partner"}
@@ -102,6 +108,7 @@ export default async function PartnerDashboardPage() {
       recentWins={recentWins}
       pipeline={pipeline}
       slaBreachesCount={slaBreachesCount}
+      templates={templates}
     />
   );
 }

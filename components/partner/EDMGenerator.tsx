@@ -5,9 +5,10 @@ import { Download, Share2, ImageIcon, Sparkles, AlertCircle } from "lucide-react
 
 interface EDMGeneratorProps {
   referralCode: string;
+  templates?: any[];
 }
 
-const TEMPLATES = [
+const DEFAULT_TEMPLATES = [
   {
     id: "diwali_special",
     name: "Festival Offer (Diwali)",
@@ -46,12 +47,22 @@ const TEMPLATES = [
   }
 ];
 
-export function EDMGenerator({ referralCode }: EDMGeneratorProps) {
+export function EDMGenerator({ referralCode, templates = [] }: EDMGeneratorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [selectedTemplateId, setSelectedTemplateId] = useState(TEMPLATES[0].id);
+  
+  const activeTemplates = templates.length > 0 ? templates : DEFAULT_TEMPLATES;
+  
+  const [selectedTemplateId, setSelectedTemplateId] = useState(activeTemplates[0]?.id);
   const [downloading, setDownloading] = useState(false);
 
-  const activeTemplate = TEMPLATES.find(t => t.id === selectedTemplateId) || TEMPLATES[0];
+  // If templates array changes, make sure we have a valid selected template
+  useEffect(() => {
+    if (!activeTemplates.find(t => t.id === selectedTemplateId)) {
+      setSelectedTemplateId(activeTemplates[0]?.id);
+    }
+  }, [activeTemplates, selectedTemplateId]);
+
+  const activeTemplate = activeTemplates.find(t => t.id === selectedTemplateId) || activeTemplates[0];
 
   useEffect(() => {
     drawCanvas();
@@ -197,7 +208,7 @@ export function EDMGenerator({ referralCode }: EDMGeneratorProps) {
           <div className="space-y-3 flex-1">
             <h3 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest mb-1">Select a Template</h3>
             
-            {TEMPLATES.map(template => {
+            {activeTemplates.map((template: any) => {
               const isActive = selectedTemplateId === template.id;
               return (
                 <button
