@@ -276,6 +276,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       selection: { 
         ...selection, 
         technology: cT as "HD" | "IP", 
+        plan_type: (typeof cO === "string" && ["budget", "recommended", "premium"].includes(cO)) ? (cO as any) : selection.plan_type,
         selected_camera_option: typeof cO === "number" ? cO : undefined, 
         selected_camera_id: selection.selected_camera_id || (isCameraSku ? cO : undefined),
         recording_days: active_checkout_option?.storage_days ?? selection.recording_days
@@ -444,8 +445,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         selected_recorder_id: undefined,
         selected_storage_id: undefined,
         technology: tech,
+        plan_type: pricing.plan_type,
         brand_preference: pricing.camera_device?.brand || selection.brand_preference,
-        resolution_preference: pricing.camera_device?.derivedResolution || selection.resolution_preference,
+        resolution_preference: pricing.mixed_camera_requirements?.[0]?.resolution || selection.resolution_preference,
         mixed_camera_requirements: pricing.mixed_camera_requirements || selection.mixed_camera_requirements,
       });
 
