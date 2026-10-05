@@ -7,6 +7,7 @@ import { generateConfiguration } from "@/lib/configuration-engine";
 import { resolveProducts } from "@/lib/product-resolver";
 import { generatePricingSnapshot } from "@/lib/pricing-engine";
 import { SETTINGS_DOC_ID } from "@/lib/constants";
+import { MarginEngine, DEFAULT_MARGIN_POLICY } from "@/lib/margin-engine";
 
 async function getCachedAdminSettings(): Promise<AppSettings> {
   const doc = await adminDb.collection("settings").doc(SETTINGS_DOC_ID).get();
@@ -72,6 +73,20 @@ export async function POST(request: Request) {
     let authoritativePricing: any = null;
     let finalConfig = configurationSnapshot;
 
+    const marginPolicy: any = {
+      ...DEFAULT_MARGIN_POLICY,
+      ...((settings as any)?.margin_policy || {}),
+      margin_hdd: settings?.margin_hdd ?? (settings as any)?.margin_policy?.margin_hdd ?? DEFAULT_MARGIN_POLICY.margin_hdd,
+      margin_hdd_budget: settings?.margin_hdd_budget ?? (settings as any)?.margin_policy?.margin_hdd_budget ?? DEFAULT_MARGIN_POLICY.margin_hdd_budget,
+      margin_cctv_camera: settings?.margin_cctv_camera ?? (settings as any)?.margin_policy?.margin_cctv_camera ?? DEFAULT_MARGIN_POLICY.margin_cctv_camera,
+      margin_cctv_camera_budget: settings?.margin_cctv_camera_budget ?? (settings as any)?.margin_policy?.margin_cctv_camera_budget ?? DEFAULT_MARGIN_POLICY.margin_cctv_camera_budget,
+      margin_recorder: settings?.margin_recorder ?? (settings as any)?.margin_policy?.margin_recorder ?? DEFAULT_MARGIN_POLICY.margin_recorder,
+      margin_junction_box: settings?.margin_junction_box ?? (settings as any)?.margin_policy?.margin_junction_box ?? DEFAULT_MARGIN_POLICY.margin_junction_box,
+      margin_connectors: settings?.margin_connectors ?? (settings as any)?.margin_policy?.margin_connectors ?? DEFAULT_MARGIN_POLICY.margin_connectors,
+      margin_hdmi_cable: settings?.margin_hdmi_cable ?? (settings as any)?.margin_policy?.margin_hdmi_cable ?? DEFAULT_MARGIN_POLICY.margin_hdmi_cable,
+      margin_rack: settings?.margin_rack ?? (settings as any)?.margin_policy?.margin_rack ?? DEFAULT_MARGIN_POLICY.margin_rack,
+      margin_power_supply: settings?.margin_power_supply ?? (settings as any)?.margin_policy?.margin_power_supply ?? DEFAULT_MARGIN_POLICY.margin_power_supply,
+    };
     if (source === "pro_builder" && configurationSnapshot?.items) {
       // Pro Builder Item-by-Item Verification — Zero Client Trust
       let subtotal = 0;
@@ -111,8 +126,26 @@ export async function POST(request: Request) {
           );
         }
 
-        // Server-authoritative unit price — ignore any client-provided price
-        const verifiedUnitPrice = dbProduct.unit_price || 0;
+                // Determine the final retail price for the Custom Build following Guided Setup rules exactly
+        let verifiedUnitPrice = 0;
+        const cat = (dbProduct.category || "").toLowerCase();
+        const baseCost = dbProduct.base_cost || dbProduct.unit_price || 0;
+
+        if (cat === "cable") {
+            const cableMarginPct = (settings as any).margin_cable ?? 50;
+            verifiedUnitPrice = Math.round(baseCost * (1 + cableMarginPct / 100));
+        } else if (cat === "labor" || cat === "installation") {
+            const laborMarginPct = (settings as any).margin_labor ?? 20;
+            verifiedUnitPrice = Math.round(baseCost * (1 + laborMarginPct / 100));
+        } else if (cat.includes("surcharge")) {
+            verifiedUnitPrice = baseCost; // Surcharges have no margin
+        } else {
+            // Hardware and accessories use MarginEngine (resolving price/margin conflicts)
+            const isStorage = cat.includes("storage") || cat.includes("hdd") || cat.includes("hard disk") || (dbProduct.storage_type && dbProduct.storage_type.toLowerCase().includes("hard disk"));
+            const effectiveCat = isStorage ? "storage" : (cat || "cctv_camera");
+            const calc = MarginEngine.calculateUnitPricing(baseCost, effectiveCat, "recommended", marginPolicy, dbProduct.brand);
+            verifiedUnitPrice = calc.sellingPriceExTax;
+        }
 
         // Clamp quantity: must be positive integer, max 100
         const rawQty = Number(item.qty || 1);
@@ -346,5 +379,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: error.message || "Failed to save quote" }, { status: 500 });
   }
 }
+
 
 

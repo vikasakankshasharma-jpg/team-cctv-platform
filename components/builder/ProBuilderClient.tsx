@@ -96,10 +96,19 @@ export function ProBuilderClient() {
               name.includes("cat5") || 
               name.includes("3+1 cable");
 
+            const isStorage = 
+              cat.includes("storage") || 
+              cat.includes("hdd") || 
+              cat.includes("hard disk") ||
+              cat.includes("hard drive") ||
+              (p.storage_type && p.storage_type.toLowerCase().includes("hard disk")) ||
+              (p.storage_type && p.storage_type.toLowerCase().includes("hdd")) ||
+              /(\bhdd\b|\bhard\s*(disk|drive)\b|\bsurveillance\s*drive\b|\bpurple\b|\bskyhawk\b)/i.test(name);
+
             let normCat = "accessory";
             if (cat.includes("camera") || cat.includes("cctv_camera")) normCat = "camera";
             else if (cat.includes("recorder") || cat.includes("dvr") || cat.includes("nvr")) normCat = "recorder";
-            else if (cat.includes("storage") || cat.includes("hdd")) normCat = "storage";
+            else if (isStorage) normCat = "storage";
             else if (isCable) normCat = "cable";
             else if (cat.includes("power") || cat.includes("network") || cat.includes("power_device")) normCat = "power";
             else if (cat === "installation" || cat === "labor") normCat = "installation";

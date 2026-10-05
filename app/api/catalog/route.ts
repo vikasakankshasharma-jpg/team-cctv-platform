@@ -8,11 +8,9 @@ export async function GET(req: NextRequest) {
     const [prodSnap, addonSnap] = await Promise.all([
       adminDb.collection("products")
              .where("is_active", "==", true)
-             .where("is_deleted", "==", false)
              .get(),
       adminDb.collection("addons")
              .where("is_active", "==", true)
-             .where("is_deleted", "==", false)
              .get()
     ]);
 
@@ -20,6 +18,7 @@ export async function GET(req: NextRequest) {
     
     prodSnap.forEach(doc => {
       const data = doc.data() as any;
+      if (data.is_deleted === true) return; // Skip deleted products
       if (!Array.isArray(data.technologies)) {
         data.technologies = data.technology ? [data.technology] : ["Common"];
       }
@@ -28,6 +27,7 @@ export async function GET(req: NextRequest) {
 
     addonSnap.forEach(doc => {
       const data = doc.data();
+      if (data.is_deleted === true) return; // Skip deleted addons
       items.push({ 
         id: doc.id, 
         ...data,

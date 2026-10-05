@@ -1456,7 +1456,7 @@ export function generatePricingSnapshot(
   // 1. Cameras
   for (const cam of resolvedSystem.cameras) {
     const qty = cam.qty;
-    const baseCost = cam.product.baseCost || cam.product.unit_price || 0;
+    const baseCost = cam.product.base_cost || cam.product.unit_price || 0;
     const calc = MarginEngine.calculateUnitPricing(baseCost, cam.product.category, planType, marginPolicy, cam.product.brand);
     
     lineItems.push({
@@ -1475,7 +1475,7 @@ export function generatePricingSnapshot(
 
   // 2. Recorder
   if (resolvedSystem.recorder) {
-    const baseCost = resolvedSystem.recorder.baseCost || resolvedSystem.recorder.unit_price || 0;
+    const baseCost = resolvedSystem.recorder.base_cost || resolvedSystem.recorder.unit_price || 0;
     const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.recorder.category, planType, marginPolicy, resolvedSystem.recorder.brand);
     lineItems.push({
       product_id: resolvedSystem.recorder.id,
@@ -1493,8 +1493,8 @@ export function generatePricingSnapshot(
 
   // 3. Storage
   if (resolvedSystem.storage) {
-    const baseCost = resolvedSystem.storage.baseCost || resolvedSystem.storage.unit_price || 0;
-    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.storage.category, planType, marginPolicy, resolvedSystem.storage.brand);
+    const baseCost = resolvedSystem.storage.base_cost || resolvedSystem.storage.unit_price || 0;
+    const calc = MarginEngine.calculateUnitPricing(baseCost, "storage", planType, marginPolicy, resolvedSystem.storage.brand);
     lineItems.push({
       product_id: resolvedSystem.storage.id,
       display_name: resolvedSystem.storage.display_name,
@@ -1511,7 +1511,7 @@ export function generatePricingSnapshot(
 
   // 4. Power Supply
   if (resolvedSystem.power) {
-    const baseCost = resolvedSystem.power.baseCost || resolvedSystem.power.unit_price || 0;
+    const baseCost = resolvedSystem.power.base_cost || resolvedSystem.power.unit_price || 0;
     const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.power.category, planType, marginPolicy, resolvedSystem.power.brand);
     lineItems.push({
       product_id: resolvedSystem.power.id,
@@ -1625,7 +1625,7 @@ export function generatePricingSnapshot(
     for (const [addonId, qty] of Object.entries(addonCounts)) {
       const addonObj = addons.find((a: any) => a.id === addonId);
       if (addonObj) {
-        const baseCost = addonObj.baseCost || addonObj.unit_price || 0;
+        const baseCost = addonObj.base_cost || addonObj.unit_price || 0;
         const calc = MarginEngine.calculateUnitPricing(baseCost, 'accessory', planType, marginPolicy);
         const lineTotal = calc.sellingPriceExTax * qty;
         
