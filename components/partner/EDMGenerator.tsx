@@ -10,10 +10,10 @@ interface EDMGeneratorProps {
 const TEMPLATES = [
   {
     id: "diwali_special",
-    name: "Festival Offer",
+    name: "Festival Offer (Diwali)",
     badge: "Seasonal",
-    type: "gradient",
-    colors: ["#1e1b4b", "#3730a3"], // Deep Indigo to Purple
+    type: "image",
+    imageUrl: "https://images.unsplash.com/photo-1572947113192-3c1a3db613e5?auto=format&fit=crop&q=80&w=1080&h=1350",
     textColor: "#ffffff",
     accentColor: "#fbbf24", // Amber
     title: "UPGRADE YOUR HOME SECURITY",
@@ -22,10 +22,10 @@ const TEMPLATES = [
   },
   {
     id: "standard_discount",
-    name: "General Offer",
+    name: "Home Security",
     badge: "Standard",
-    type: "gradient",
-    colors: ["#020617", "#0f172a"], // Slate dark
+    type: "image",
+    imageUrl: "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&q=80&w=1080&h=1350", // Smart home/security vibe
     textColor: "#ffffff",
     accentColor: "#38bdf8", // Sky blue
     title: "PROTECT WHAT MATTERS",
@@ -36,8 +36,8 @@ const TEMPLATES = [
     id: "business_security",
     name: "Business Security",
     badge: "B2B",
-    type: "gradient",
-    colors: ["#042f2e", "#115e59"], // Teal
+    type: "image",
+    imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1080&h=1350", // Modern office
     textColor: "#ffffff",
     accentColor: "#34d399", // Emerald
     title: "SECURE YOUR BUSINESS",
@@ -64,88 +64,92 @@ export function EDMGenerator({ referralCode }: EDMGeneratorProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Standard WhatsApp Status portrait size (1080x1920 is standard, we use 1080x1080 for square posts or 1080x1350)
-    // We will use 1080x1350 for a nice portrait poster.
     canvas.width = 1080;
     canvas.height = 1350;
 
-    // Draw Background Gradient
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, activeTemplate.colors[0]);
-    gradient.addColorStop(1, activeTemplate.colors[1]);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Helper to draw text and UI
+    const drawUI = () => {
+      // Dark overlay for text readability
+      ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Decorative Elements (Circles)
-    ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
-    ctx.beginPath();
-    ctx.arc(1080, 0, 400, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(0, 1350, 600, 0, Math.PI * 2);
-    ctx.fill();
+      // Brand Logo/Header Area
+      ctx.fillStyle = activeTemplate.textColor;
+      ctx.font = "bold 50px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("TEAM CCTV", canvas.width / 2, 150);
+      
+      ctx.font = "600 30px sans-serif";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fillText("PREMIUM SECURITY SYSTEMS", canvas.width / 2, 200);
 
-    // Brand Logo/Header Area
-    ctx.fillStyle = activeTemplate.textColor;
-    ctx.font = "bold 50px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("TEAM CCTV", canvas.width / 2, 150);
-    
-    ctx.font = "600 30px sans-serif";
-    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("PREMIUM SECURITY SYSTEMS", canvas.width / 2, 200);
+      // Main Title
+      ctx.fillStyle = activeTemplate.accentColor;
+      ctx.font = "900 75px sans-serif";
+      ctx.fillText(activeTemplate.title, canvas.width / 2, 450);
 
-    // Main Title
-    ctx.fillStyle = activeTemplate.accentColor;
-    ctx.font = "900 75px sans-serif";
-    ctx.fillText(activeTemplate.title, canvas.width / 2, 450);
-
-    // Subtitle
-    ctx.fillStyle = activeTemplate.textColor;
-    ctx.font = "400 40px sans-serif";
-    // Multiline subtitle naive wrap
-    const words = activeTemplate.subtitle.split(" ");
-    let line = "";
-    let y = 550;
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + words[n] + " ";
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > 900 && n > 0) {
-        ctx.fillText(line, canvas.width / 2, y);
-        line = words[n] + " ";
-        y += 60;
-      } else {
-        line = testLine;
+      // Subtitle
+      ctx.fillStyle = activeTemplate.textColor;
+      ctx.font = "400 40px sans-serif";
+      const words = activeTemplate.subtitle.split(" ");
+      let line = "";
+      let y = 550;
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + " ";
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > 900 && n > 0) {
+          ctx.fillText(line, canvas.width / 2, y);
+          line = words[n] + " ";
+          y += 60;
+        } else {
+          line = testLine;
+        }
       }
+      ctx.fillText(line, canvas.width / 2, y);
+
+      // Offer Highlight Box
+      const boxY = 800;
+      const boxHeight = 120;
+      ctx.fillStyle = activeTemplate.accentColor;
+      ctx.roundRect ? ctx.roundRect(140, boxY, 800, boxHeight, 20) : ctx.fillRect(140, boxY, 800, boxHeight);
+      ctx.fill();
+
+      ctx.fillStyle = "#000000"; 
+      ctx.font = "900 60px sans-serif";
+      ctx.fillText(activeTemplate.offerText, canvas.width / 2, boxY + 80);
+
+      // Referral Code Section
+      ctx.fillStyle = activeTemplate.textColor;
+      ctx.font = "600 40px sans-serif";
+      ctx.fillText("USE THIS CODE AT CHECKOUT:", canvas.width / 2, 1050);
+
+      // Dashed Referral Box
+      ctx.setLineDash([15, 15]);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = activeTemplate.accentColor;
+      ctx.strokeRect(240, 1100, 600, 120);
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = activeTemplate.accentColor;
+      ctx.font = "900 70px monospace";
+      ctx.fillText(referralCode, canvas.width / 2, 1185);
+    };
+
+    if (activeTemplate.type === "image" && activeTemplate.imageUrl) {
+      const img = new Image();
+      img.crossOrigin = "anonymous"; // Prevents canvas tainting when downloading
+      img.onload = () => {
+        // Draw the image filling the canvas
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        drawUI();
+      };
+      img.src = activeTemplate.imageUrl;
+    } else {
+      // Fallback to solid dark background
+      ctx.fillStyle = "#111827";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawUI();
     }
-    ctx.fillText(line, canvas.width / 2, y);
-
-    // Offer Highlight Box
-    const boxY = 800;
-    const boxHeight = 120;
-    ctx.fillStyle = activeTemplate.accentColor;
-    ctx.roundRect ? ctx.roundRect(140, boxY, 800, boxHeight, 20) : ctx.fillRect(140, boxY, 800, boxHeight); // Fallback
-    ctx.fill();
-
-    ctx.fillStyle = "#000000"; // Dark text for contrast inside the box
-    ctx.font = "900 60px sans-serif";
-    ctx.fillText(activeTemplate.offerText, canvas.width / 2, boxY + 80);
-
-    // Referral Code Section
-    ctx.fillStyle = activeTemplate.textColor;
-    ctx.font = "600 40px sans-serif";
-    ctx.fillText("USE THIS CODE AT CHECKOUT:", canvas.width / 2, 1050);
-
-    // Dashed Referral Box
-    ctx.setLineDash([15, 15]);
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = activeTemplate.accentColor;
-    ctx.strokeRect(240, 1100, 600, 120);
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = activeTemplate.accentColor;
-    ctx.font = "900 70px monospace";
-    ctx.fillText(referralCode, canvas.width / 2, 1185);
   };
 
   const downloadImage = () => {
