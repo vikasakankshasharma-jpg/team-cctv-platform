@@ -317,27 +317,45 @@ export default function SalespersonsClient() {
 
 
   const handleGenerateAllQuadrants = async () => {
-    const pinsToGenerate = filteredAvailablePincodes.filter(p => !p.quadrants || p.quadrants.length === 0).map(p => p.pincode);
-    if (pinsToGenerate.length === 0) {
-      toast.success("All pincodes already have quadrants generated!");
+    let targetPins: string[] = [];
+    if (newZone.pincodes && newZone.pincodes.length > 0) {
+      const selectedBasePins = Array.from(new Set(newZone.pincodes.map(p => p.split(':')[0])));
+      targetPins = filteredAvailablePincodes
+        .filter(p => selectedBasePins.includes(p.pincode) && (!p.quadrants || p.quadrants.length === 0))
+        .map(p => p.pincode);
+    } else {
+      targetPins = filteredAvailablePincodes
+        .filter(p => !p.quadrants || p.quadrants.length === 0)
+        .map(p => p.pincode);
+    }
+
+    if (targetPins.length === 0) {
+      toast.success("Target pincodes already have quadrants generated!");
       return;
     }
     
-    toast.loading(`Generating quadrants for ${pinsToGenerate.length} pincodes... This may take a minute.`, { id: "genAll" });
+    toast.loading(`Generating quadrants for ${targetPins.length} pincodes... This may take a minute.`, { id: "genAll" });
     
-    for (const pin of pinsToGenerate) {
-      setGeneratingPins(prev => new Set(prev).add(pin));
-      try {
-        await fetch(`/api/pincode/${pin}`);
-      } catch (err) {
-        console.error("Failed to generate for pin", pin, err);
-      } finally {
-        setGeneratingPins(prev => {
-          const next = new Set(prev);
-          next.delete(pin);
-          return next;
-        });
-      }
+    // Process in batches of 5 to speed things up without overloading the server
+    const batchSize = 5;
+    for (let i = 0; i < targetPins.length; i += batchSize) {
+      const batch = targetPins.slice(i, i + batchSize);
+      
+      batch.forEach(pin => setGeneratingPins(prev => new Set(prev).add(pin)));
+      
+      await Promise.all(batch.map(async (pin) => {
+        try {
+          await fetch(`/api/pincode/${pin}`);
+        } catch (err) {
+          console.error("Failed to generate for pin", pin, err);
+        } finally {
+          setGeneratingPins(prev => {
+            const next = new Set(prev);
+            next.delete(pin);
+            return next;
+          });
+        }
+      }));
     }
     
     toast.success("Finished generating quadrants!", { id: "genAll" });
@@ -1078,8 +1096,8 @@ export default function SalespersonsClient() {
                         onClick={handleGenerateAllQuadrants}
                         className="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1"
                       >
-                        ✨ Gen All Quadrants
-                      </button>
+                          ✨ Gen Quadrants {(newZone.pincodes && newZone.pincodes.length > 0) ? "(Selected)" : "(All)"}
+                        </button>
                       <span className="text-muted-foreground text-xs">•</span>
                       <button 
                         type="button"
