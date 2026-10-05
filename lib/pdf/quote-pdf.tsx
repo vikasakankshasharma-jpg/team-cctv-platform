@@ -2,44 +2,51 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { QuoteSnapshot, PricingResult, QuoteLineItem } from '@/types';
 
-// Create styles
+// Create styles optimized for professional single-page layout
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    paddingTop: 24,
+    paddingBottom: 24,
+    paddingHorizontal: 28,
     fontFamily: 'Helvetica',
-    fontSize: 9,
-    color: '#1d1d1f',
+    fontSize: 8.5,
+    color: '#0f172a',
+    position: 'relative',
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 40,
+    marginBottom: 12,
   },
   headerLeft: {
     flexDirection: 'column',
+    maxWidth: '56%',
   },
   logoText: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 2,
     color: '#000000',
+    letterSpacing: 0.5,
   },
   companyInfo: {
-    fontSize: 8,
-    color: '#6b7280',
-    lineHeight: 1.4,
+    fontSize: 7.5,
+    color: '#64748b',
+    lineHeight: 1.35,
   },
   headerRight: {
     flexDirection: 'column',
     alignItems: 'flex-end',
+    maxWidth: '44%',
   },
   quoteTitle: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#4f46e5', // Indigo-600
-    marginBottom: 10,
+    color: '#2563eb', // Indigo / Brand Blue
+    marginBottom: 5,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   quoteMetaGrid: {
     flexDirection: 'column',
@@ -47,142 +54,170 @@ const styles = StyleSheet.create({
   quoteMetaRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   quoteMetaLabel: {
-    color: '#6b7280',
-    fontSize: 8,
-    marginRight: 10,
-    width: 60,
+    color: '#64748b',
+    fontSize: 7.5,
+    marginRight: 8,
     textAlign: 'right',
   },
   quoteMetaValue: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 'bold',
-    width: 70,
+    color: '#0f172a',
     textAlign: 'right',
   },
+  customerBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    padding: 8,
+    backgroundColor: '#f8fafc',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  customerInfoCol: {
+    width: '49%',
+  },
+  metaInfoCol: {
+    width: '49%',
+  },
   preparedForLabel: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: 'bold',
-    color: '#6b7280',
-    marginBottom: 4,
+    color: '#64748b',
+    marginBottom: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   customerName: {
-    fontSize: 12,
+    fontSize: 9.5,
     fontWeight: 'bold',
     marginBottom: 2,
-    color: '#000000',
+    color: '#0f172a',
   },
   customerPhone: {
-    fontSize: 9,
-    color: '#6b7280',
-    marginBottom: 30,
+    fontSize: 7.5,
+    color: '#475569',
   },
   table: {
     width: '100%',
-    marginBottom: 30,
+    marginBottom: 8,
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#f3f4f6',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 5,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#cbd5e1',
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: '#cbd5e1',
   },
-  colDesc: { width: '55%', fontWeight: 'bold' },
+  colDesc: { width: '56%', fontWeight: 'bold' },
   colQty: { width: '10%', textAlign: 'center', fontWeight: 'bold' },
-  colUnit: { width: '15%', textAlign: 'right', fontWeight: 'bold' },
-  colTotal: { width: '20%', textAlign: 'right', fontWeight: 'bold' },
+  colUnit: { width: '16%', textAlign: 'right', fontWeight: 'bold' },
+  colTotal: { width: '18%', textAlign: 'right', fontWeight: 'bold' },
   tableRow: {
     flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    paddingVertical: 3.5,
+    paddingHorizontal: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#f1f5f9',
   },
   itemTitle: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 2,
+    color: '#0f172a',
+    marginBottom: 1,
   },
   itemBrand: {
-    fontSize: 7,
-    color: '#9ca3af',
+    fontSize: 6.5,
+    color: '#64748b',
   },
   itemText: {
-    fontSize: 9,
-    color: '#374151',
+    fontSize: 7.5,
+    color: '#334155',
   },
   bottomSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginTop: 4,
   },
   termsBox: {
-    width: '60%',
+    width: '58%',
   },
   termsTitle: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 6,
+    color: '#0f172a',
+    marginBottom: 3,
   },
   termsText: {
-    fontSize: 7,
-    color: '#6b7280',
-    lineHeight: 1.5,
+    fontSize: 6.5,
+    color: '#64748b',
+    lineHeight: 1.35,
   },
   totalsBox: {
-    width: '35%',
+    width: '38%',
     flexDirection: 'column',
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 2.5,
   },
   totalLabel: {
-    fontSize: 9,
-    color: '#4b5563',
+    fontSize: 7.5,
+    color: '#64748b',
   },
   totalValue: {
-    fontSize: 9,
+    fontSize: 7.5,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#0f172a',
   },
   grandTotalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
-    paddingTop: 10,
+    marginTop: 3,
+    paddingTop: 4,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: '#cbd5e1',
   },
   grandTotalLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#0f172a',
   },
   grandTotalValue: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: 'bold',
-    color: '#4f46e5',
+    color: '#2563eb',
   },
   watermark: {
     position: 'absolute',
-    top: 350,
-    left: 80,
-    fontSize: 120,
-    color: '#f3f4f6',
-    transform: 'rotate(-45deg)',
+    top: 320,
+    left: 28,
+    right: 28,
+    fontSize: 60,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    transform: 'rotate(-30deg)',
     zIndex: -1,
-    opacity: 0.5,
-  }
+    opacity: 0.05,
+    color: '#2563eb',
+  },
+  footerMicroText: {
+    position: 'absolute',
+    bottom: 8,
+    left: 28,
+    right: 28,
+    textAlign: 'center',
+    fontSize: 6.5,
+    color: '#94a3b8',
+  },
 });
 
 export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
@@ -257,10 +292,19 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
           </View>
         </View>
 
-        {/* Prepared For */}
-        <Text style={styles.preparedForLabel}>PREPARED FOR:</Text>
-        <Text style={styles.customerName}>{customer_name || 'Customer'}</Text>
-        <Text style={styles.customerPhone}>Phone: {customer_mobile || 'N/A'}</Text>
+        {/* Prepared For Box */}
+        <View style={styles.customerBox}>
+          <View style={styles.customerInfoCol}>
+            <Text style={styles.preparedForLabel}>PREPARED FOR:</Text>
+            <Text style={styles.customerName}>{customer_name || 'Customer'}</Text>
+            <Text style={styles.customerPhone}>Phone: {customer_mobile || 'N/A'}</Text>
+          </View>
+          <View style={styles.metaInfoCol}>
+            <Text style={styles.preparedForLabel}>PROJECT DETAILS:</Text>
+            <Text style={styles.customerPhone}>Surveillance Security Quotation</Text>
+            <Text style={styles.customerPhone}>Doorstep Installation & Termination</Text>
+          </View>
+        </View>
 
         {/* Table */}
         <View style={styles.table}>
@@ -277,7 +321,7 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
             const unitPrice = item.unit_price || item.unitPrice || item.price || 0;
             const lineTotal = item.line_total || item.lineTotal || (qty * unitPrice);
             return (
-              <View key={`item-${i}`} style={styles.tableRow}>
+              <View key={`item-${i}`} style={styles.tableRow} wrap={false}>
                 <View style={styles.colDesc}>
                   <Text style={styles.itemTitle}>{name}</Text>
                   <Text style={styles.itemBrand}>Brand: {item.brand || 'TEAM CCTV'}</Text>
@@ -294,7 +338,7 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
             const qty = addon.qty || addon.quantity || 1;
             const price = addon.price || addon.unit_price || 0;
             return (
-              <View key={`addon-${i}`} style={styles.tableRow}>
+              <View key={`addon-${i}`} style={styles.tableRow} wrap={false}>
                 <View style={styles.colDesc}>
                   <Text style={styles.itemTitle}>{name}</Text>
                   <Text style={styles.itemBrand}>Brand: Add-on</Text>
@@ -307,7 +351,7 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
           })}
 
           {pricing.labor_cost > 0 && (
-            <View style={styles.tableRow}>
+            <View style={styles.tableRow} wrap={false}>
               <View style={styles.colDesc}>
                 <Text style={styles.itemTitle}>Labor & Installation</Text>
                 <Text style={styles.itemBrand}>Service</Text>
@@ -320,14 +364,14 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
         </View>
 
         {/* Bottom Section */}
-        <View style={styles.bottomSection}>
+        <View style={styles.bottomSection} wrap={false}>
           <View style={styles.termsBox}>
             <Text style={styles.termsTitle}>Terms & Conditions</Text>
             <Text style={styles.termsText}>1. Prices are valid for 7 days from the date of this quotation.</Text>
             <Text style={styles.termsText}>2. Standard 1-Year Warranty on all hardware items unless specified otherwise.</Text>
             <Text style={styles.termsText}>3. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.</Text>
             <Text style={styles.termsText}>4. Additional cabling beyond the estimated requirement will be charged at actual per-meter rate as quoted above.</Text>
-            <Text style={styles.termsText}>5. 50% advance payment required for order confirmation, balance on completion of installation.</Text>
+            <Text style={styles.termsText}>5. Booking advance required for order confirmation, balance on completion of installation.</Text>
           </View>
 
           <View style={styles.totalsBox}>
@@ -351,6 +395,10 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
           </View>
         </View>
 
+        {/* Micro Footer */}
+        <Text style={styles.footerMicroText}>
+          Computer-generated quotation. Valid for 7 days. | TEAM CCTV (cctvquotation.com) | Support: sales@teamcctv.com
+        </Text>
       </Page>
     </Document>
   );

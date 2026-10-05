@@ -1,45 +1,50 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
-// Create styles
+// Create styles optimized for professional single-page layout
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    paddingTop: 24,
+    paddingBottom: 24,
+    paddingHorizontal: 28,
     fontFamily: 'Helvetica',
-    fontSize: 9,
-    color: '#1d1d1f',
+    fontSize: 8.5,
+    color: '#0f172a',
     position: 'relative',
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 28,
+    marginBottom: 12,
   },
   headerLeft: {
     flexDirection: 'column',
+    maxWidth: '56%',
   },
   logoText: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 2,
     color: '#000000',
+    letterSpacing: 0.5,
   },
   companyInfo: {
-    fontSize: 8,
-    color: '#6b7280',
-    lineHeight: 1.4,
+    fontSize: 7.5,
+    color: '#64748b',
+    lineHeight: 1.35,
   },
   headerRight: {
     flexDirection: 'column',
     alignItems: 'flex-end',
-    paddingRight: 20,
+    maxWidth: '44%',
   },
   invoiceTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 5,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   quoteMetaGrid: {
     flexDirection: 'column',
@@ -47,153 +52,154 @@ const styles = StyleSheet.create({
   quoteMetaRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   quoteMetaLabel: {
-    color: '#6b7280',
-    fontSize: 8,
-    marginRight: 10,
-    width: 65,
+    color: '#64748b',
+    fontSize: 7.5,
+    marginRight: 8,
     textAlign: 'right',
   },
   quoteMetaValue: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 'bold',
-    width: 95,
     textAlign: 'right',
+    color: '#0f172a',
   },
   paidBadge: {
     position: 'absolute',
-    top: 20,
-    right: 25,
+    top: 14,
+    right: 24,
     backgroundColor: '#22c55e',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 4,
-    transform: 'rotate(8deg)',
-    borderWidth: 1.5,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 3,
+    transform: 'rotate(6deg)',
+    borderWidth: 1,
     borderColor: '#16a34a',
     zIndex: 10,
   },
   paidBadgeText: {
     color: '#ffffff',
-    fontSize: 9,
+    fontSize: 7.5,
     fontWeight: 'bold',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
     textAlign: 'center',
   },
   customerSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
-    padding: 12,
-    backgroundColor: '#f9fafb',
+    marginBottom: 10,
+    padding: 8,
+    backgroundColor: '#f8fafc',
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#e2e8f0',
   },
   customerInfoCol: {
-    width: '48%',
+    width: '49%',
   },
   paymentInfoCol: {
-    width: '48%',
+    width: '49%',
   },
   sectionHeading: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: 'bold',
-    color: '#6b7280',
-    marginBottom: 4,
+    color: '#64748b',
+    marginBottom: 3,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   customerName: {
-    fontSize: 11,
+    fontSize: 9.5,
     fontWeight: 'bold',
     marginBottom: 2,
-    color: '#000000',
+    color: '#0f172a',
   },
   customerPhone: {
-    fontSize: 8,
-    color: '#6b7280',
+    fontSize: 7.5,
+    color: '#475569',
+    lineHeight: 1.3,
   },
   paymentRow: {
     flexDirection: 'row',
     marginBottom: 2,
   },
   paymentLabel: {
-    fontSize: 8,
-    color: '#6b7280',
-    width: 75,
+    fontSize: 7.5,
+    color: '#64748b',
+    width: 72,
   },
   paymentValue: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#0f172a',
     flex: 1,
   },
   table: {
     width: '100%',
-    marginBottom: 28,
+    marginBottom: 8,
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#f3f4f6',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 5,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#cbd5e1',
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: '#cbd5e1',
   },
-  colDesc: { width: '55%', fontWeight: 'bold' },
+  colDesc: { width: '56%', fontWeight: 'bold' },
   colQty: { width: '10%', textAlign: 'center', fontWeight: 'bold' },
-  colUnit: { width: '15%', textAlign: 'right', fontWeight: 'bold' },
-  colTotal: { width: '20%', textAlign: 'right', fontWeight: 'bold' },
+  colUnit: { width: '16%', textAlign: 'right', fontWeight: 'bold' },
+  colTotal: { width: '18%', textAlign: 'right', fontWeight: 'bold' },
   tableRow: {
     flexDirection: 'row',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    paddingVertical: 3.5,
+    paddingHorizontal: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#f1f5f9',
   },
   itemTitle: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 2,
+    color: '#0f172a',
+    marginBottom: 1,
   },
   itemBrand: {
-    fontSize: 7,
-    color: '#9ca3af',
+    fontSize: 6.5,
+    color: '#64748b',
   },
   itemText: {
-    fontSize: 9,
-    color: '#374151',
+    fontSize: 7.5,
+    color: '#334155',
   },
   bottomSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: 4,
   },
   termsBox: {
     width: '58%',
   },
   termsTitle: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 6,
-  },
-  termsHighlight: {
     fontSize: 8,
     fontWeight: 'bold',
+    color: '#0f172a',
+    marginBottom: 3,
+  },
+  termsHighlight: {
+    fontSize: 7.2,
+    fontWeight: 'bold',
     color: '#15803d',
-    marginBottom: 6,
-    lineHeight: 1.4,
+    marginBottom: 4,
+    lineHeight: 1.3,
   },
   termsText: {
-    fontSize: 7,
-    color: '#6b7280',
-    lineHeight: 1.5,
+    fontSize: 6.5,
+    color: '#64748b',
+    lineHeight: 1.3,
   },
   totalsBox: {
     width: '38%',
@@ -201,72 +207,81 @@ const styles = StyleSheet.create({
   },
 
   paymentHistoryBox: {
-    marginTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    paddingTop: 10,
+    marginTop: 8,
+    borderTopWidth: 0.5,
+    borderTopColor: '#e2e8f0',
+    paddingTop: 6,
   },
   phTitle: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 6,
+    color: '#0f172a',
+    marginBottom: 4,
   },
   phRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 3,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    paddingVertical: 2.5,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#f1f5f9',
   },
-  phColStage: { width: '35%', fontSize: 8, color: '#374151' },
-  phColDate: { width: '25%', fontSize: 8, color: '#6b7280' },
-  phColMethod: { width: '20%', fontSize: 8, color: '#6b7280' },
-  phColAmount: { width: '20%', fontSize: 8, fontWeight: 'bold', textAlign: 'right', color: '#111827' },
+  phColStage: { width: '35%', fontSize: 7, color: '#334155' },
+  phColDate: { width: '25%', fontSize: 7, color: '#64748b' },
+  phColMethod: { width: '20%', fontSize: 7, color: '#64748b' },
+  phColAmount: { width: '20%', fontSize: 7, fontWeight: 'bold', textAlign: 'right', color: '#0f172a' },
 
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 2.5,
   },
   totalLabel: {
-    fontSize: 8,
-    color: '#4b5563',
+    fontSize: 7.5,
+    color: '#64748b',
   },
   totalValue: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#0f172a',
   },
   grandTotalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 6,
-    paddingTop: 8,
+    marginTop: 3,
+    paddingTop: 4,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: '#cbd5e1',
   },
   grandTotalLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#0f172a',
   },
   grandTotalValue: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: 'bold',
     color: '#16a34a',
   },
   watermark: {
     position: 'absolute',
-    top: 360,
-    left: 40,
-    right: 40,
-    fontSize: 70,
+    top: 320,
+    left: 28,
+    right: 28,
+    fontSize: 60,
     fontWeight: 'bold',
     textAlign: 'center',
-    transform: 'rotate(-35deg)',
+    transform: 'rotate(-30deg)',
     zIndex: -1,
-    opacity: 0.12,
+    opacity: 0.08,
+  },
+  footerMicroText: {
+    position: 'absolute',
+    bottom: 8,
+    left: 28,
+    right: 28,
+    textAlign: 'center',
+    fontSize: 6.5,
+    color: '#94a3b8',
   },
 });
 
@@ -538,7 +553,7 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
             const unitPrice = item.unit_price || item.unitPrice || item.price || 0;
             const lineTotal = item.line_total || item.lineTotal || item.amount || (unitPrice * qty);
             return (
-              <View key={`item-${i}`} style={styles.tableRow}>
+              <View key={`item-${i}`} style={styles.tableRow} wrap={false}>
                 <View style={styles.colDesc}>
                   <Text style={styles.itemTitle}>{item.display_name || item.name || 'Hardware Item'}</Text>
                   <Text style={styles.itemBrand}>{item.brand ? `Brand: ${item.brand}` : (item.description || 'TEAM CCTV Standard')}</Text>
@@ -555,7 +570,7 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
             const price = addon.price || addon.unit_price || 0;
             const lineTotal = addon.total || (price * qty);
             return (
-              <View key={`addon-${i}`} style={styles.tableRow}>
+              <View key={`addon-${i}`} style={styles.tableRow} wrap={false}>
                 <View style={styles.colDesc}>
                   <Text style={styles.itemTitle}>{addon.display_name || addon.name || 'Addon Service'}</Text>
                   <Text style={styles.itemBrand}>Brand: Add-on</Text>
@@ -568,7 +583,7 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
           })}
 
           {pricing.labor_cost > 0 && !pricing.items.some((it: any) => (it.display_name || it.name || '').toLowerCase().includes('installation') || (it.display_name || it.name || '').toLowerCase().includes('labor')) && (
-            <View style={styles.tableRow}>
+            <View style={styles.tableRow} wrap={false}>
               <View style={styles.colDesc}>
                 <Text style={styles.itemTitle}>Labor & Professional Installation</Text>
                 <Text style={styles.itemBrand}>Service</Text>
@@ -581,7 +596,7 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
         </View>
 
         {/* Bottom Section */}
-        <View style={styles.bottomSection}>
+        <View style={styles.bottomSection} wrap={false}>
           <View style={styles.termsBox}>
             <Text style={styles.termsTitle}>{isAdvancePaid ? 'Booking Confirmation Terms' : 'Terms & Confirmation'}</Text>
             <Text style={[styles.termsHighlight, isAdvancePaid ? { color: '#d97706' } : {}]}>
@@ -670,7 +685,10 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
             })}
           </View>
         )}
-
+        {/* Micro Footer */}
+        <Text style={styles.footerMicroText}>
+          Computer-generated document. No signature required. | TEAM CCTV (cctvquotation.com) | Support: sales@teamcctv.com
+        </Text>
       </Page>
     </Document>
   );
