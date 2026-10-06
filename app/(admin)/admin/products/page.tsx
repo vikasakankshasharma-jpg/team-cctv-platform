@@ -517,6 +517,10 @@ export default function AdminProductsPage() {
                           <option value="network">Network & Switches</option>
                           <option value="rack">Rack / Enclosure</option>
                           <option value="display">Display / Monitor</option>
+                          <option value="connector">Connectors (RJ45/BNC/DC)</option>
+                          <option value="camera_mount">Camera Mount Box</option>
+                          <option value="hdmi_cable">HDMI Cables</option>
+                          <option value="others">Installation / Others</option>
                         </select>
                       </div>
                       <div className="space-y-1.5">
