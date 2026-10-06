@@ -29,6 +29,7 @@ export function WizardClientV2() {
     return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
   });
   const [step, setStep] = useState(0);
+  const [isProBuilderFlow, setIsProBuilderFlow] = useState(false);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [otpSent, setOtpSent] = useState(false);
   const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("whatsapp");
@@ -294,6 +295,11 @@ export function WizardClientV2() {
       setOtp(["", "", "", ""]);
       return;
     }
+    if (step === 5 && isProBuilderFlow) {
+      setStep(0);
+      setIsProBuilderFlow(false);
+      return;
+    }
     setStep(s => Math.max(s - 1, 0));
   };
 
@@ -435,7 +441,7 @@ export function WizardClientV2() {
       const newLeadId = await createLeadAction(payload as any);
       if (newLeadId && 'success' in newLeadId && newLeadId.success && newLeadId.id) {
         setLeadId(newLeadId.id);
-        router.push(`/quote/${newLeadId.id}`);
+        if (isProBuilderFlow) { router.push(`/pro-builder?leadId=${newLeadId.id}`); } else { router.push(`/quote/${newLeadId.id}`); }
         return;
       } else {
         console.error("Failed to save lead: ", (newLeadId as any)?.error, (newLeadId as any)?.details);
@@ -638,7 +644,7 @@ export function WizardClientV2() {
             <div className="text-center pt-2 sm:pt-4">
               <button
                 type="button"
-                onClick={() => window.location.href = '/pro-builder'}
+                onClick={() => { setIsProBuilderFlow(true); setStep(5); }}
                 className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors cursor-pointer inline-block leading-relaxed max-w-xl mx-auto"
               >
                 <span className="font-semibold text-slate-700 dark:text-zinc-300 inline-flex items-center gap-1 mr-1">
@@ -1208,8 +1214,8 @@ export function WizardClientV2() {
           return (
             <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
               <div>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_final_step_get_your_quotation")}</h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_please_enter_your_details_to_v")}</p>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{isProBuilderFlow ? "Contact Info & Verification" : t("wz_final_step_get_your_quotation")}</h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{isProBuilderFlow ? "Please verify your mobile number before accessing the advanced builder." : t("wz_please_enter_your_details_to_v")}</p>
               </div>
               
               <div className="space-y-2.5 sm:space-y-3.5">
@@ -1314,7 +1320,7 @@ export function WizardClientV2() {
                       <Loader2 className="w-4 h-4 animate-spin" /> {t("wz_sending_otp")}
                     </span>
                   ) : (
-                    t("wz_view_cctv_options")
+                    isProBuilderFlow ? "Access Pro Builder" : t("wz_view_cctv_options")
                   )}
                 </Button>
               </div>

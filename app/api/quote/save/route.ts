@@ -43,8 +43,20 @@ export async function POST(request: Request) {
       source = "wizard"
     } = data;
 
-    // 1. Validate & Normalize Mobile Number
-    const customer_mobile = String(rawMobile || "").replace(/\D/g, "").slice(-10);
+    let customer_mobile = String(rawMobile || "").replace(/\D/g, "").slice(-10);
+    
+    let leadId: string | null = data.leadId || null;
+    let finalCustomerName = customer_name;
+
+    if (leadId && !customer_mobile) {
+      const doc = await adminDb.collection("leads").doc(leadId).get();
+      if (doc.exists) {
+        const leadData = doc.data();
+        if (leadData?.mobile_number) customer_mobile = leadData.mobile_number;
+        if (!finalCustomerName && leadData?.customer_name) finalCustomerName = leadData.customer_name;
+      }
+    }
+
     if (!customer_mobile || customer_mobile.length !== 10 || !/^[6-9]/.test(customer_mobile)) {
       return NextResponse.json(
         { success: false, message: "A valid 10-digit Indian mobile number is required" },
@@ -336,7 +348,7 @@ export async function POST(request: Request) {
     const snapshot: QuoteSnapshot = {
       id: quoteId,
       customer_mobile,
-      customer_name: customer_name || "",
+      customer_name: finalCustomerName || "",
       requirementSnapshot,
       configurationSnapshot: finalConfig,
       pricingSnapshot: authoritativePricing,
@@ -363,7 +375,7 @@ export async function POST(request: Request) {
     });
 
     // 6. Lead Association (Find or Create Lead)
-    let leadId: string | null = data.leadId || null;
+    
     try {
       const leadsRef = adminDb.collection("leads");
       let existingLeadSnap = null;
@@ -396,7 +408,7 @@ export async function POST(request: Request) {
         leadId = newLeadRef.id;
         await newLeadRef.set({
           id: leadId,
-          customer_name: customer_name || "Prospective Client",
+          customer_name: finalCustomerName || "Prospective Client",
           mobile_number: customer_mobile,
           property_type: requirementSnapshot.property_type || "home",
           technology_choice: requirementSnapshot.technology_preference || "HD",

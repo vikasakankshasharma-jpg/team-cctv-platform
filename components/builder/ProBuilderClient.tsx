@@ -7,7 +7,7 @@ import {
   Search, X, ArrowUpDown, Filter, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function ProBuilderClient() {
   const [products, setProducts] = useState<any[]>([]);
@@ -19,6 +19,8 @@ export function ProBuilderClient() {
   const [checkoutName, setCheckoutName] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const existingLeadId = searchParams.get("leadId");
 
   // Search, Sort & Filters State
   const [searchQuery, setSearchQuery] = useState("");
@@ -306,6 +308,7 @@ export function ProBuilderClient() {
   ]);
 
   const initiateCheckout = () => {
+    if (existingLeadId) { handleCheckout(); return; }
     setPhoneError("");
     setShowCheckoutForm(true);
   };
@@ -313,7 +316,7 @@ export function ProBuilderClient() {
   const handleCheckout = async () => {
     // Validate phone from inline form state
     const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
-    if (cleanedPhone.length !== 10 || !/^[6-9]/.test(cleanedPhone)) {
+    if (!existingLeadId && (cleanedPhone.length !== 10 || !/^[6-9]/.test(cleanedPhone))) {
       setPhoneError("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.");
       return;
     }
@@ -340,6 +343,7 @@ export function ProBuilderClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          leadId: existingLeadId || undefined,
           customer_name: checkoutName || "Pro Builder Client",
           customer_mobile: cleanedPhone,
           requirementSnapshot: {
