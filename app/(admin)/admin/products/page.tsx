@@ -824,6 +824,17 @@ export default function AdminProductsPage() {
                             <option value={8}>8 SATA Slots (8 HDDs)</option>
                           </select>
                         </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">U Height</label>
+                          <select 
+                            value={editingProduct.rack_u_height || ""}
+                            onChange={e => setEditingProduct({...editingProduct, rack_u_height: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                          >
+                            <option value="">Select U-Height...</option>
+                            {[1, 1.5, 2, 3, 4, 5, 6].map(u => <option key={u} value={u}>{u}U</option>)}
+                          </select>
+                        </div>
                       </div>
                     )}
                     
