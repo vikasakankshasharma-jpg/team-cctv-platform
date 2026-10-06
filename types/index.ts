@@ -266,6 +266,7 @@ export interface Product {
   markup_override?: number;
   is_quotation_eligible?: boolean;
   is_configurator_visible?: boolean;
+  is_addon?: boolean;            // NEW: Treat this product as an optional Addon in the wizard
   [key: string]: any; // Allow dynamic fields from DB
   features?: string[];           // Array of FeatureTag IDs
   

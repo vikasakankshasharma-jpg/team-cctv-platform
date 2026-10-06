@@ -265,12 +265,16 @@ export function DynamicVariantGenerator({
       let indoorProvided: string | null = null;
 
       pricing.items.forEach((item: any) => {
+        const product = products.find(p => p.id === item.product_id);
+        const lowerName = (item.display_name || "").toLowerCase();
+        const isCamera = product ? product.category === "cctv_camera" : lowerName.includes("camera");
+        if (!isCamera) return;
+
         // Items typically look like: "Outdoor Bullet Camera: Budget Brand 5MP IP Dome..."
         const match = item.display_name.match(/(\d+(?:\.\d+)?)MP/i);
         if (match) {
           const res = match[0].toUpperCase();
           actualResolutions.push(res);
-          const lowerName = item.display_name.toLowerCase();
           if (lowerName.includes("outdoor")) outdoorProvided = res;
           if (lowerName.includes("indoor")) indoorProvided = res;
         }

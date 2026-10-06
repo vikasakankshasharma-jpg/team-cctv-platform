@@ -17,7 +17,7 @@ export const getCachedProducts = unstable_cache(
 
       const items = snap.docs
         .map(doc => ({ id: doc.id, ...doc.data() } as Product))
-        .filter(p => p.is_deleted !== true);
+        .filter(p => p.is_deleted !== true && p.is_addon !== true);
       
       return items;
     } catch (error) {
@@ -47,6 +47,30 @@ export const getCachedAddons = unstable_cache(
       const items = snap.docs
         .map(doc => ({ id: doc.id, ...doc.data() } as Addon))
         .filter(a => (a as any).is_deleted !== true);
+
+      // Map any Products that are explicitly flagged as addons
+      const prodSnap = await adminDb
+        .collection("products")
+        .where("is_active", "==", true)
+        .where("is_addon", "==", true)
+        .get();
+
+      prodSnap.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.is_deleted === true) return;
+        items.push({
+          id: doc.id,
+          display_name: data.display_name || data.technical_name || "Addon",
+          unit_price: data.unit_price || 0,
+          base_cost: data.base_cost || 0,
+          is_active: data.is_active,
+          // Support for other addon fields if necessary (category, features, etc)
+          category: data.category || "accessory",
+          features: data.features || [],
+          image_url: data.image_url || data.thumbnail_url || null,
+        } as unknown as Addon);
+      });
+
       return items;
     } catch (error) {
       console.error("Error fetching cached addons:", error);

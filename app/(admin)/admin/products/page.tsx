@@ -1101,6 +1101,20 @@ export default function AdminProductsPage() {
                 {activeTab === "marketing" && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
 
+                    {/* Treat as Optional Addon */}
+                    <div className="p-6 bg-purple-500/10 border border-purple-500/20 rounded-2xl">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h4 className="text-sm font-semibold text-purple-700">Treat as Optional Addon</h4>
+                          <p className="text-xs font-medium text-purple-700/70 mt-0.5">Exclude from standard core system and show in the 'Optional Upgrades' step.</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" checked={!!editingProduct.is_addon} onChange={e => setEditingProduct({...editingProduct, is_addon: e.target.checked})} className="sr-only peer" />
+                          <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                        </label>
+                      </div>
+                    </div>
+
                     {/* Quotation Eligibility */}
                     <div className="p-6 bg-green-500/10 border border-green-500/20 rounded-2xl">
                       <div className="flex items-center justify-between mb-2">
