@@ -272,6 +272,37 @@ export default function AdminProductsPage() {
         payload.group_path = computedPath;
       }
 
+      // Auto-tag features based on specifications (replaces manual wizard tags)
+      if (payload.category === "cctv_camera") {
+        const computedFeatures = new Set(payload.features || []);
+        
+        // Add tags based on explicit truthy checks
+        if (payload.has_audio) computedFeatures.add("audio");
+        if (payload.night_vision_type === "color" || payload.night_vision_type === "dual_light" || payload.night_vision_type === "starlight") computedFeatures.add("color");
+        if (payload.form_factor === "ptz" || payload.is_pt) computedFeatures.add("ptz");
+        if (payload.is_solar) computedFeatures.add("solar");
+        if (payload.has_4g) computedFeatures.add("4g");
+        if (payload.has_wifi) computedFeatures.add("wifi");
+        if (payload.is_360) computedFeatures.add("360");
+        if (payload.is_dual_lens) computedFeatures.add("dual_lens");
+        if (payload.is_triple_lens) computedFeatures.add("triple_lens");
+        if (payload.is_quad_lens) computedFeatures.add("quad_lens");
+
+        // Remove tags if they are explicitly false/missing
+        if (!payload.has_audio) computedFeatures.delete("audio");
+        if (!(payload.night_vision_type === "color" || payload.night_vision_type === "dual_light" || payload.night_vision_type === "starlight")) computedFeatures.delete("color");
+        if (!(payload.form_factor === "ptz" || payload.is_pt)) computedFeatures.delete("ptz");
+        if (!payload.is_solar) computedFeatures.delete("solar");
+        if (!payload.has_4g) computedFeatures.delete("4g");
+        if (!payload.has_wifi) computedFeatures.delete("wifi");
+        if (!payload.is_360) computedFeatures.delete("360");
+        if (!payload.is_dual_lens) computedFeatures.delete("dual_lens");
+        if (!payload.is_triple_lens) computedFeatures.delete("triple_lens");
+        if (!payload.is_quad_lens) computedFeatures.delete("quad_lens");
+
+        payload.features = Array.from(computedFeatures);
+      }
+
       const res = await fetch("/api/admin/products", {
         method,
         headers: { "Content-Type": "application/json" },
@@ -650,50 +681,59 @@ export default function AdminProductsPage() {
                           />
                         </div>
                         
-                        {/* Toggles */}
-                        <div className="col-span-1 md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                          <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
-                            <input type="checkbox" checked={!!editingProduct.has_audio} onChange={e => setEditingProduct({...editingProduct, has_audio: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
-                            <span className="text-xs font-semibold text-foreground">Audio Mic</span>
-                          </label>
-                          <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
-                            <input type="checkbox" checked={!!editingProduct.wdr} onChange={e => setEditingProduct({...editingProduct, wdr: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
-                            <span className="text-xs font-semibold text-foreground">WDR</span>
-                          </label>
-                          <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
-                            <input type="checkbox" checked={!!editingProduct.poe} onChange={e => setEditingProduct({...editingProduct, poe: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
-                            <span className="text-xs font-semibold text-foreground">PoE Support</span>
-                          </label>
-                          <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
-                            <input type="checkbox" checked={!!editingProduct.has_sd_slot} onChange={e => setEditingProduct({...editingProduct, has_sd_slot: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
-                            <span className="text-xs font-semibold text-foreground">SD Slot</span>
-                          </label>
-                        </div>
-
-                        {/* Special Features / Wizard Tags */}
-                        <div className="col-span-1 md:col-span-3 mt-4 p-4 border border-border rounded-xl bg-muted/20">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">Special Features / Wizard Tags</label>
-                          <div className="flex flex-wrap gap-2">
-                            {["color", "audio", "ptz", "solar", "4g"].map(feat => (
-                              <label key={feat} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${editingProduct.features?.includes(feat) ? 'bg-primary/10 border-primary text-primary' : 'bg-background border-border text-foreground hover:bg-muted'}`}>
-                                <input 
-                                  type="checkbox" 
-                                  className="sr-only"
-                                  checked={editingProduct.features?.includes(feat) || false}
-                                  onChange={e => {
-                                    const current = editingProduct.features || [];
-                                    if (e.target.checked) {
-                                      setEditingProduct({ ...editingProduct, features: [...current, feat] });
-                                    } else {
-                                      setEditingProduct({ ...editingProduct, features: current.filter(f => f !== feat) });
-                                    }
-                                  }}
-                                />
-                                <span className="text-xs font-semibold capitalize">{feat === "4g" ? "4G / SIM" : feat}</span>
-                              </label>
-                            ))}
+                        {/* Hardware Capabilities (Replaces old toggles + wizard tags) */}
+                        <div className="col-span-1 md:col-span-3 mt-4">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">Hardware Capabilities</label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.has_audio} onChange={e => setEditingProduct({...editingProduct, has_audio: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">Audio Mic</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.wdr} onChange={e => setEditingProduct({...editingProduct, wdr: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">WDR</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.poe} onChange={e => setEditingProduct({...editingProduct, poe: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">PoE Support</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.has_sd_slot} onChange={e => setEditingProduct({...editingProduct, has_sd_slot: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">SD Slot</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.has_wifi} onChange={e => setEditingProduct({...editingProduct, has_wifi: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">WiFi</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.is_solar} onChange={e => setEditingProduct({...editingProduct, is_solar: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">Solar Powered</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.has_4g} onChange={e => setEditingProduct({...editingProduct, has_4g: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">4G / SIM</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.is_360} onChange={e => setEditingProduct({...editingProduct, is_360: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">360 Degree</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.is_pt} onChange={e => setEditingProduct({...editingProduct, is_pt: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">PT (Pan & Tilt)</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.is_dual_lens} onChange={e => setEditingProduct({...editingProduct, is_dual_lens: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">Dual Camera</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.is_triple_lens} onChange={e => setEditingProduct({...editingProduct, is_triple_lens: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">Triple Camera</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input type="checkbox" checked={!!editingProduct.is_quad_lens} onChange={e => setEditingProduct({...editingProduct, is_quad_lens: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <span className="text-xs font-semibold text-foreground">Quad Camera</span>
+                            </label>
                           </div>
-                          <p className="text-[10px] text-muted-foreground mt-2">These tags are used by the pricing engine to filter products during the wizard flow.</p>
                         </div>
                       </div>
                     )}

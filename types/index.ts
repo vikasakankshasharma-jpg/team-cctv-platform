@@ -313,6 +313,18 @@ export interface Product {
   has_audio?: boolean;               // Built-in microphone
   has_sd_slot?: boolean;             // Local SD card storage
   poe?: boolean;                     // Power over Ethernet
+  
+  // Lens & View Specs
+  has_wifi?: boolean;                // WiFi Support
+  is_360?: boolean;                  // 360 Degree / Panoramic / Fisheye
+  is_dual_lens?: boolean;            // Dual Camera / Lens
+  is_triple_lens?: boolean;          // Triple Camera / Lens
+  is_quad_lens?: boolean;            // Quad Camera / Lens
+  is_pt?: boolean;                   // PT Camera (Pan & Tilt)
+
+  // Connectivity & Power
+  is_solar?: boolean;                // Solar Powered
+  has_4g?: boolean;                  // 4G / SIM Support
 
   // ── AI Enrichment fields ─────────────────────────────────────────────
   // Populated automatically by the AI Spec Enrichment tool (/admin/products/enrich)
