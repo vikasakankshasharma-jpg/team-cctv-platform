@@ -619,17 +619,35 @@ export function WizardClientV2() {
             <h2 className="text-3xl font-semibold mb-2 text-center text-slate-900">{t("wz_how_would_you_like_to_build_yo")}</h2>
             <p className="text-center text-slate-500 mb-8 max-w-lg mx-auto">{t("wz_choose_between_our_easy_guided")}</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button onClick={() => setStep(1)}
-                className="p-4 md:p-8 rounded-2xl border-2 text-left hover:border-blue-500 transition-all group bg-blue-50/50 border-blue-100 shadow-sm hover:shadow-md">
-                <span className="block font-black text-xl text-blue-900 group-hover:text-blue-700 mb-2"><Sparkles className="w-5 h-5 mr-1.5 inline-block" />  {t("wz_guided_setup_recommended")}</span>
-                <span className="block text-sm text-blue-800 font-medium leading-relaxed">{t("wz_answer_a_few_simple_questions_")}</span>
-              </button>
-              
-              <button onClick={() => window.location.href = '/pro-builder'}
-                className="p-4 md:p-8 rounded-2xl border-2 text-left hover:border-zinc-900 transition-all group bg-white border-zinc-200 shadow-sm hover:shadow-md">
-                <span className="block font-black text-xl text-zinc-900 group-hover:text-black mb-2"><Wrench className="w-5 h-5 mr-1.5 inline-block" />  {t("wz_custom_build_advanced")}</span>
-                <span className="block text-sm text-zinc-500 font-medium leading-relaxed">{t("wz_i_already_know_exactly_what_ca")}</span>
+            {/* Primary Action: Big Guided Setup Card */}
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="w-full text-left p-6 sm:p-8 rounded-2xl border-2 border-blue-500 bg-blue-50/70 dark:bg-blue-950/30 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 hover:border-blue-600 transition-all group shadow-sm hover:shadow-md cursor-pointer block"
+            >
+              <span className="flex items-center gap-2 font-black text-xl sm:text-2xl text-blue-900 dark:text-blue-300 group-hover:text-blue-700 dark:group-hover:text-blue-200 mb-2 sm:mb-3">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                {t("wz_guided_setup_recommended")}
+              </span>
+              <span className="block text-sm sm:text-base text-blue-800 dark:text-blue-200/90 font-medium leading-relaxed">
+                {t("wz_answer_a_few_simple_questions_")}
+              </span>
+            </button>
+
+            {/* Secondary Action: Subtle text link for advanced users */}
+            <div className="text-center pt-2 sm:pt-4">
+              <button
+                type="button"
+                onClick={() => window.location.href = '/pro-builder'}
+                className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors cursor-pointer inline-block leading-relaxed max-w-xl mx-auto"
+              >
+                <span className="font-semibold text-slate-700 dark:text-zinc-300 inline-flex items-center gap-1 mr-1">
+                  <Wrench className="w-3.5 h-3.5 inline-block shrink-0" />
+                  {t("wz_custom_build_advanced")}:
+                </span>
+                <span className="underline underline-offset-4 decoration-slate-300 dark:decoration-zinc-700 hover:decoration-blue-500">
+                  {t("wz_i_already_know_exactly_what_ca")}
+                </span>
               </button>
             </div>
           </div>
