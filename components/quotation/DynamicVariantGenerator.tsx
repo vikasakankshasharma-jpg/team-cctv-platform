@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Product, Addon, AppSettings, ConfiguratorSelection, PricingResult } from "@/types";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { Card, CardContent } from "@/components/ui/card";
@@ -105,10 +105,36 @@ export function DynamicVariantGenerator({
   selectedCompareItems
 }: DynamicVariantGeneratorProps) {
   const { t } = useTranslation();
-  // Auto-select Standard HD (Analog) by default so customers see the lowest price first
-  const [activeTech, setActiveTech] = useState<"hd" | "ip">("hd");
+  // Auto-select Standard HD (Analog) by default or load from session
+  const [activeTech, setActiveTech] = useState<"hd" | "ip">(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('quote_active_tech');
+      if (saved === 'hd' || saved === 'ip') return saved;
+    }
+    return "hd";
+  });
+  
   const initialBrand = selection.brand_preference ? normalizeBrandKey(selection.brand_preference) : "all";
-  const [activeBrand, setActiveBrand] = useState<string>(initialBrand);
+  const [activeBrand, setActiveBrand] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('quote_active_brand');
+      if (saved) return saved;
+    }
+    return initialBrand;
+  });
+
+  // Persist selections to session storage to remember them when returning from Full Quote view
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('quote_active_tech', activeTech);
+    }
+  }, [activeTech]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('quote_active_brand', activeBrand);
+    }
+  }, [activeBrand]);
   const [sortBy, setSortBy] = useState<string>("price_asc");
   
   const [cameraBuckets, setCameraBuckets] = useState<any[]>(() => {
