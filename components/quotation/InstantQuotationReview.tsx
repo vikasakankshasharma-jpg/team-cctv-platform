@@ -139,6 +139,42 @@ export function InstantQuotationReview({
     }
   ];
 
+  // Merge dynamic addons from DB
+  const dynamicAccessories = (addons || []).map(a => {
+    let cat = (a.category || "General Accessories").toString();
+    let Icon = Box;
+    const catLower = cat.toLowerCase();
+    
+    if (catLower.includes("display") || catLower.includes("monitor")) {
+      cat = t("addon_cat_display", "TV & Display Screens");
+      Icon = Monitor;
+    } else if (catLower.includes("rack") || catLower.includes("box") || catLower.includes("enclosure")) {
+      cat = t("addon_cat_enclosure", "Safety Racks & Boxes");
+      Icon = Box;
+    } else if (catLower.includes("cable") || catLower.includes("wire")) {
+      cat = t("addon_cat_cables", "Wires & Cables");
+      Icon = Cable;
+    } else if (catLower.includes("internet") || catLower.includes("router") || catLower.includes("network")) {
+      cat = t("addon_cat_internet", "Internet (For Mobile View)");
+      Icon = Wifi;
+    }
+
+    return {
+      id: a.id || "",
+      title: a.display_name,
+      description: (a as any).description || "Optional system upgrade or accessory.",
+      price: a.unit_price || 0,
+      icon: Icon,
+      category: cat,
+      tag: ((a as any).features && (a as any).features.length > 0) ? (a as any).features[0] : undefined
+    };
+  });
+
+  const staticIds = new Set(availableAccessories.map(a => a.id));
+  const newDynamicAccessories = dynamicAccessories.filter(a => !staticIds.has(a.id) && a.price > 0 && a.id !== "");
+  
+  const allAccessories = [...availableAccessories, ...newDynamicAccessories];
+
   const isAddonSelected = (id: string) => {
     return (selection.selected_addons || []).includes(id);
   };
@@ -433,11 +469,11 @@ export function InstantQuotationReview({
         </div>
 
         {(() => {
-          const groupedAccessories = availableAccessories.reduce((groups, item) => {
+          const groupedAccessories = allAccessories.reduce((groups, item) => {
             if (!groups[item.category]) groups[item.category] = [];
             groups[item.category].push(item);
             return groups;
-          }, {} as Record<string, typeof availableAccessories[0][]>);
+          }, {} as Record<string, typeof allAccessories[0][]>);
 
           const categoryDescriptions: Record<string, string> = {
             [t("addon_cat_enclosure", "Safety Racks & Boxes")]: t("addon_desc_cat_enclosure", "Protect your equipment from theft, dust, and weather damage."),
