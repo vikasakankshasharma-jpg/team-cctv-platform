@@ -670,6 +670,28 @@ export default function AdminProductsPage() {
                             <option value="IP67">IP67</option>
                           </select>
                         </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Optical Zoom (x)</label>
+                          <input 
+                            type="number" 
+                            step="1"
+                            value={editingProduct.optical_zoom_x || ""}
+                            onChange={e => setEditingProduct({...editingProduct, optical_zoom_x: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="e.g. 25"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Digital Zoom (x)</label>
+                          <input 
+                            type="number" 
+                            step="1"
+                            value={editingProduct.digital_zoom_x || ""}
+                            onChange={e => setEditingProduct({...editingProduct, digital_zoom_x: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="e.g. 16"
+                          />
+                        </div>
                         <div className="space-y-1.5 col-span-1 md:col-span-3">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">AI Analytics Features (comma separated)</label>
                           <input 

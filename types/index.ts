@@ -300,6 +300,8 @@ export interface Product {
   resolution_mp?: number;
 
   image_url?: string;               // NEW: Option to upload an image for the product/kit
+  optical_zoom_x?: number;          // Optical Zoom multiplier (e.g. 25 for 25x)
+  digital_zoom_x?: number;          // Digital Zoom multiplier (e.g. 16 for 16x)
 
   // ── Camera Specifications (Structured) ──────────────────────────────
   // These replace fragile string-parsing of technical_name for spec comparison.
