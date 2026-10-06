@@ -469,6 +469,7 @@ export interface ConfiguratorSelection {
   power_socket_near_dvr?: boolean;
   router_near_dvr?: boolean;
   include_junction_boxes?: boolean;
+  cabling_done?: boolean;
   partner_id?: string;
   utm_source?: string;
   utm_campaign?: string;

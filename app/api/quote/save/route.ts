@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       let isIPSystem = false;
       
       for (const item of configurationSnapshot.items as any[]) {
-          const dbProduct = catalog.find(p => p.id === item.product_id) || addons.find(a => a.id === item.product_id) || { category: item.category };
+          const dbProduct: any = catalog.find(p => p.id === item.product_id) || addons.find(a => a.id === item.product_id) || { category: item.category };
           const cat = (dbProduct.category || "").toLowerCase();
           const qty = Math.max(1, Math.min(100, Math.floor(Number(item.qty || 1))));
           
