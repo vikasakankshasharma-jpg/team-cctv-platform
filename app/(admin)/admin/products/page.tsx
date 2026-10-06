@@ -847,13 +847,23 @@ export default function AdminProductsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Cable Type</label>
-                          <input 
-                            type="text" 
+                          <select 
                             value={editingProduct.cable_type || ""}
                             onChange={e => setEditingProduct({...editingProduct, cable_type: e.target.value})}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                            placeholder="e.g. Cat6, 3+1 CCTV, Fiber"
-                          />
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background appearance-none"
+                          >
+                            <option value="">Select Cable Type</option>
+                            <option value="Cat6">Cat6 (IP/Network)</option>
+                            <option value="Cat5e">Cat5e (IP/Network)</option>
+                            <option value="3+1 CCTV">3+1 CCTV (Coaxial)</option>
+                            <option value="4+1 CCTV">4+1 CCTV (Coaxial)</option>
+                            <option value="2 Core Power">2 Core Power Cable</option>
+                            <option value="Optical Fiber">Optical Fiber</option>
+                            <option value="HDMI">HDMI Cable</option>
+                            <option value="VGA">VGA Cable</option>
+                            <option value="Patch Cord">Patch Cord</option>
+                            <option value="Other">Other</option>
+                          </select>
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Length (Meters)</label>
