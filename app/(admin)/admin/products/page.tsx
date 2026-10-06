@@ -515,6 +515,8 @@ export default function AdminProductsPage() {
                           <option value="storage">Storage / HDD</option>
                           <option value="power_device">Power Supply / UPS</option>
                           <option value="network">Network & Switches</option>
+                          <option value="rack">Rack / Enclosure</option>
+                          <option value="display">Display / Monitor</option>
                         </select>
                       </div>
                       <div className="space-y-1.5">
@@ -838,7 +840,7 @@ export default function AdminProductsPage() {
                       </div>
                     )}
                     
-                    {editingProduct.category === "rack" && (
+                    {(editingProduct.category === "rack" || editingProduct.group_path?.toLowerCase().includes("rack")) && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">U Height</label>
