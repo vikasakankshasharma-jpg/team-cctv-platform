@@ -232,7 +232,7 @@ Example:
 ]`;
         const aiRes = await ai.models.generateContent({
           model: "gemini-2.5-flash",
-          contents: prompt,
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
           config: { responseMimeType: "application/json" },
         });
         const text = aiRes.text?.replace(/```json|```/g, '').trim() || "";
@@ -243,6 +243,28 @@ Example:
         }
       } catch (err) {
         console.error("Failed to generate AI quadrants for pin:", pin, err);
+      }
+    }
+
+    // Deterministic fallback: guarantee every pincode in India has 4 quadrants
+    if (!quadrants || !Array.isArray(quadrants) || quadrants.length !== 4) {
+      const areaList = formattedAreas && formattedAreas.length > 0 ? formattedAreas : [locationName];
+      const p1 = areaList[0] || `${firstOffice.District} Central`;
+      const p2 = areaList[1] || `${p1} North`;
+      const p3 = areaList[2] || `${p1} South`;
+      const p4 = areaList[3] || `${p1} Extension`;
+
+      quadrants = [
+        { zone: "North-West", anchor: `${p1} Sector / Chowk`, coverage: `${p1}, ${p2}` },
+        { zone: "North-East", anchor: `${p2} Main Market`, coverage: `${p2}, Surrounding areas` },
+        { zone: "South-West", anchor: `${p3} Intersection`, coverage: `${p3}, Adjacent blocks` },
+        { zone: "South-East", anchor: `${p4} Circle`, coverage: `${p4}, Outer limits` }
+      ];
+
+      try {
+        await cacheRef.set({ quadrants }, { merge: true });
+      } catch (saveErr) {
+        // Ignore cache write error
       }
     }
 
