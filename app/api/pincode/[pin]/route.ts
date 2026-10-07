@@ -20,16 +20,49 @@ export async function GET(
 ) {
   const { pin } = await params;
   try {
-    // 1. Fetch from postal API
-    const postRes = await fetch('https://api.postalpincode.in/pincode/' + pin);
-    const postData = await postRes.json();
+    let postOffices: any[] = [];
+    let firstOffice: any = null;
 
-    if (!postData || postData[0].Status === "Error" || !postData[0].PostOffice) {
+    // 1. Fetch from postal API
+    try {
+      const postRes = await fetch('https://api.postalpincode.in/pincode/' + pin, { next: { revalidate: 86400 } });
+      const postData = await postRes.json();
+      if (postData && postData[0]?.Status !== "Error" && postData[0]?.PostOffice) {
+        postOffices = postData[0].PostOffice;
+        firstOffice = postOffices[0];
+      }
+    } catch (e) {
+      // Postal API error or down, fallback below
+    }
+
+    // Fallback if primary postal API doesn't have the pincode (e.g. newly established delivery codes like 302039, 302041)
+    if (!firstOffice) {
+      try {
+        const stateSlug = pin.startsWith("30") ? "rajasthan" : pin.startsWith("11") ? "delhi" : "";
+        if (stateSlug) {
+          const fallbackRes = await fetch(`https://aniket-thapa.github.io/india-pincode-api/districts/${stateSlug}/jaipur.json`);
+          if (fallbackRes.ok) {
+            const fallbackData = await fallbackRes.json();
+            const matched = (fallbackData?.offices || []).filter((o: any) => o.pincode === pin);
+            if (matched.length > 0) {
+              postOffices = matched.map((m: any) => ({
+                Name: m.officeName,
+                District: "Jaipur",
+                State: "Rajasthan"
+              }));
+              firstOffice = postOffices[0];
+            }
+          }
+        }
+      } catch (fbErr) {
+        // Fallback failed
+      }
+    }
+
+    if (!firstOffice) {
       return NextResponse.json({ error: "Pincode not found or invalid." }, { status: 404 });
     }
 
-    const postOffices = postData[0].PostOffice;
-    const firstOffice = postOffices[0];
     const districtName = firstOffice.District.toLowerCase();
     const stateName = firstOffice.State.toLowerCase();
     const locationName = firstOffice.Name;
