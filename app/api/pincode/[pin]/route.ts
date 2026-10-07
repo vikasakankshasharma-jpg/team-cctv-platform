@@ -38,20 +38,31 @@ export async function GET(
     // Fallback if primary postal API doesn't have the pincode (e.g. newly established delivery codes like 302039, 302041)
     if (!firstOffice) {
       try {
-        const stateSlug = pin.startsWith("30") ? "rajasthan" : pin.startsWith("11") ? "delhi" : "";
-        if (stateSlug) {
-          const fallbackRes = await fetch(`https://aniket-thapa.github.io/india-pincode-api/districts/${stateSlug}/jaipur.json`);
-          if (fallbackRes.ok) {
-            const fallbackData = await fallbackRes.json();
-            const matched = (fallbackData?.offices || []).filter((o: any) => o.pincode === pin);
-            if (matched.length > 0) {
-              postOffices = matched.map((m: any) => ({
-                Name: m.officeName,
-                District: "Jaipur",
-                State: "Rajasthan"
-              }));
-              firstOffice = postOffices[0];
-            }
+        const prefix = pin.substring(0, 3);
+        const pincodeData = await import("@/data/pincodes.json");
+        const regionalInfo = (pincodeData.default as any)[prefix];
+        const targetCity = (regionalInfo?.city || "jaipur").toLowerCase();
+
+        // State mappings for fallback
+        let targetState = "rajasthan";
+        if (pin.startsWith("11")) targetState = "delhi";
+        else if (pin.startsWith("40")) targetState = "maharashtra";
+        else if (pin.startsWith("56")) targetState = "karnataka";
+        else if (pin.startsWith("60")) targetState = "tamil-nadu";
+        else if (pin.startsWith("70")) targetState = "west-bengal";
+        else if (pin.startsWith("38") || pin.startsWith("39")) targetState = "gujarat";
+
+        const fallbackRes = await fetch(`https://aniket-thapa.github.io/india-pincode-api/districts/${targetState}/${targetCity}.json`);
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          const matched = (fallbackData?.offices || []).filter((o: any) => o.pincode === pin);
+          if (matched.length > 0) {
+            postOffices = matched.map((m: any) => ({
+              Name: m.officeName,
+              District: regionalInfo?.city || "Jaipur",
+              State: targetState.charAt(0).toUpperCase() + targetState.slice(1)
+            }));
+            firstOffice = postOffices[0];
           }
         }
       } catch (fbErr) {

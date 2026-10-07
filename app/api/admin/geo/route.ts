@@ -4,6 +4,8 @@ import { adminDb } from "@/lib/firebase-admin";
 // Server-side cache for high-speed response
 const cache = new Map<string, any>();
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -28,7 +30,8 @@ export async function GET(req: Request) {
       cache.delete(targetUrl);
     }
 
-    if (cache.has(targetUrl)) {
+    // Only use in-memory cache for static states and districts, not for offices whose quadrants are actively mutating
+    if (!refresh && type !== "offices" && cache.has(targetUrl)) {
       return NextResponse.json(cache.get(targetUrl), {
         headers: { "Cache-Control": "public, max-age=86400, s-maxage=86400" },
       });
@@ -79,10 +82,16 @@ export async function GET(req: Request) {
       });
     }
 
-    cache.set(targetUrl, data);
+    if (type !== "offices") {
+      cache.set(targetUrl, data);
+    }
 
     return NextResponse.json(data, {
-      headers: { "Cache-Control": "public, max-age=86400, s-maxage=86400" },
+      headers: {
+        "Cache-Control": type === "offices"
+          ? "no-cache, no-store, must-revalidate"
+          : "public, max-age=86400, s-maxage=86400"
+      },
     });
   } catch (err: any) {
     console.error("Geo API proxy error:", err);
