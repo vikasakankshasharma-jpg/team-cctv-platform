@@ -12,16 +12,16 @@ export default function PricingControlCenter() {
   const [message, setMessage] = useState("");
   const [previewData, setPreviewData] = useState<any[] | null>(null);
 
-  useEffect(() => {
-    fetchRules();
-  }, []);
-
   const fetchRules = async () => {
     const res = await fetch("/api/catalog/pricing-rules");
     const data = await res.json();
     setRules(data);
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchRules();
+  }, []);
 
   const handlePreview = async () => {
     setSaving(true);

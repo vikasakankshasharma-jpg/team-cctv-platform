@@ -334,10 +334,10 @@ export default function SalespersonsClient() {
       return;
     }
     
-    toast.loading(`Generating quadrants for ${targetPins.length} pincodes... This may take a minute.`, { id: "genAll" });
+    toast.loading(`Generating quadrants for ${targetPins.length} pincodes... This may take up to ${Math.ceil(targetPins.length * 4.5 / 60)} minutes.`, { id: "genAll" });
     
-    // Process in batches of 5 to speed things up without overloading the server
-    const batchSize = 5;
+    // Process sequentially to stay strictly under Gemini 15 RPM free tier limit
+    const batchSize = 1;
     for (let i = 0; i < targetPins.length; i += batchSize) {
       const batch = targetPins.slice(i, i + batchSize);
       
@@ -356,6 +356,11 @@ export default function SalespersonsClient() {
           });
         }
       }));
+      
+      // Wait 4.5 seconds between requests to avoid 429 Too Many Requests (15 RPM limit)
+      if (i + batchSize < targetPins.length) {
+        await new Promise(r => setTimeout(r, 4500));
+      }
     }
     
     toast.success("Finished generating quadrants!", { id: "genAll" });

@@ -17,6 +17,7 @@ export default function DealConversionPage() {
   // Negotiation state
   const [discountAmount, setDiscountAmount] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [approvalLink, setApprovalLink] = useState("");
   
   // Admin defined minimum margin (could be fetched from settings, hardcoded to 15% for now)
   const MIN_MARGIN_PERCENT = 15;
@@ -52,8 +53,6 @@ export default function DealConversionPage() {
   const marginPercent = finalPrice > 0 ? (grossProfit / finalPrice) * 100 : 0;
   
   const requiresApproval = marginPercent < MIN_MARGIN_PERCENT;
-
-  const [approvalLink, setApprovalLink] = useState("");
 
   const handleSendToCustomer = async () => {
     setSaving(true);

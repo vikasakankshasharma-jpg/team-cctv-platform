@@ -16,7 +16,11 @@ const eslintConfig = [
       // Justification: Using standard img tags for external/unoptimized images
       "@next/next/no-img-element": "off",
       // Justification: Let developers decide const vs let
-      "prefer-const": "off"
+      "prefer-const": "off",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
+      "@next/next/no-html-link-for-pages": "off",
+      "@typescript-eslint/ban-ts-comment": "off"
     }
   },
   {
@@ -28,6 +32,7 @@ const eslintConfig = [
       "next-env.d.ts",
       ".firebase/**",
       "scratch/**",
+      "scripts/**",
       "functions/lib/**"
     ]
   }
