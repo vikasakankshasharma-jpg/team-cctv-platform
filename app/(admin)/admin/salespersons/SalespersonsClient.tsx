@@ -300,6 +300,23 @@ export default function SalespersonsClient() {
     try {
       const res = await fetch(`/api/pincode/${pin}`);
       if (res.ok) {
+        const data = await res.json();
+        if (data.quadrants && data.quadrants.length > 0) {
+          // Immediately update availablePincodes in local state so UI reflects it instantly
+          setAvailablePincodes(prev => prev.map(p => {
+            if (p.pincode === pin) {
+              return { ...p, quadrants: data.quadrants };
+            }
+            return p;
+          }));
+          setDistrictOffices(prev => prev.map(o => {
+            if (o.pincode === pin) {
+              return { ...o, quadrants: data.quadrants };
+            }
+            return o;
+          }));
+          toast.success(`Generated quadrants for ${pin}`);
+        }
         if (selectedState && selectedDistrict) {
           await handleSelectDistrict(selectedDistrict.slug, selectedDistrict.name, true);
         }
@@ -345,7 +362,24 @@ export default function SalespersonsClient() {
       
       await Promise.all(batch.map(async (pin) => {
         try {
-          await fetch(`/api/pincode/${pin}`);
+          const res = await fetch(`/api/pincode/${pin}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.quadrants && data.quadrants.length > 0) {
+              setAvailablePincodes(prev => prev.map(p => {
+                if (p.pincode === pin) {
+                  return { ...p, quadrants: data.quadrants };
+                }
+                return p;
+              }));
+              setDistrictOffices(prev => prev.map(o => {
+                if (o.pincode === pin) {
+                  return { ...o, quadrants: data.quadrants };
+                }
+                return o;
+              }));
+            }
+          }
         } catch (err) {
           console.error("Failed to generate for pin", pin, err);
         } finally {
