@@ -1068,13 +1068,35 @@ export function WizardClientV2() {
                               -
                             </Button>
                             
-                            <span className={`font-black min-w-[65px] text-center text-xs transition-colors ${
-                              isExceeded 
-                                ? 'text-red-600 dark:text-red-400 animate-pulse font-extrabold' 
-                                : 'text-blue-800 dark:text-blue-300'
-                            }`}>
-                              {selectedMeters} {t("wz_meters")}
-                            </span>
+                            <div className="flex items-center min-w-[65px] justify-center">
+                              <input
+                                type="number"
+                                min="0"
+                                value={selectedMeters === '' ? '' : selectedMeters}
+                                onChange={(e) => {
+                                  if (e.target.value === '') {
+                                    updateReq({ total_cable_length_meters: 0 });
+                                    return;
+                                  }
+                                  const val = parseInt(e.target.value);
+                                  if (!isNaN(val)) {
+                                    updateReq({ total_cable_length_meters: Math.max(0, val) });
+                                  }
+                                }}
+                                className={`w-10 text-center font-black text-xs bg-transparent border-none focus:ring-0 p-0 outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                                  isExceeded 
+                                    ? 'text-red-600 dark:text-red-400 animate-pulse font-extrabold' 
+                                    : 'text-blue-800 dark:text-blue-300'
+                                }`}
+                              />
+                              <span className={`text-xs font-black transition-colors ml-0.5 ${
+                                isExceeded 
+                                  ? 'text-red-600 dark:text-red-400 animate-pulse font-extrabold' 
+                                  : 'text-blue-800 dark:text-blue-300'
+                              }`}>
+                                {t("wz_meters")}
+                              </span>
+                            </div>
 
                             <Button
                               type="button"
