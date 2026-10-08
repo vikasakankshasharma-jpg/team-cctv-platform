@@ -1158,7 +1158,7 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
     if ((p.max_cameras || p.channels || 0) < selection.camera_count) return false;
 
     // Filter HD DVR by resolution if applicable
-    if (techUpper === "HD" && selection.resolution_preference) {
+    if (targetUpper === "HD" && selection.resolution_preference) {
         const resPref = String(selection.resolution_preference).toUpperCase();
         const dvrName = String(p.display_name || "").toUpperCase();
         if ((resPref === "5MP" || resPref === "8MP") && dvrName.includes("2MP SUPPORTED")) {
@@ -1711,5 +1711,6 @@ export function generatePricingSnapshot(
     recommendation_reasons: []
   };
 }
+
 
 
