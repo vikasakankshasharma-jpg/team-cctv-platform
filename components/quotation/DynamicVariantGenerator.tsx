@@ -528,7 +528,7 @@ export function DynamicVariantGenerator({
                     }}
                     className="w-full py-2 px-3 text-xs sm:text-sm font-bold bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 transition-all"
                   >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16, 24, 32].map(num => (
+                    {Array.from(new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 24, 32, bucket.count])).sort((a,b)=>a-b).map(num => (
                       <option key={num} value={num}>
                         {num} {num === 1 ? t("wz_camera") : t("wz_cameras")}
                       </option>
