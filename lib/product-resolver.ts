@@ -163,11 +163,17 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
   if (!config.recorder_channels) return undefined;
   const isBudget = !brandFilter || brandFilter === "Budget";
   
-  const recs = pool.filter(p => 
-    p.category === "recorder" && 
-    (p.channels || p.max_cameras || 0) >= config.recorder_channels &&
-    ((p.technologies || []).includes(config.technology as any) || (p as any).technology === config.technology)
-  );
+  const recs = pool.filter(p => {
+    if (p.category !== "recorder") return false;
+    if ((p.channels || p.max_cameras || 0) < config.recorder_channels) return false;
+    const techs = (p.technologies || [p.technology]).filter(Boolean).map((t: any) => String(t).toUpperCase());
+    const targetTech = String(config.technology).toUpperCase();
+    return techs.some(t => {
+      if (targetTech === "IP") return t.includes("IP") || t.includes("DIGITAL IP") || t.includes("NETWORK");
+      if (targetTech === "HD") return t.includes("HD") || t.includes("ANALOG");
+      return t === targetTech;
+    });
+  });
   if (recs.length === 0) return undefined;
   // Sort ascending by channel count (prefer smallest that fits), then by price
   recs.sort((a, b) => {
