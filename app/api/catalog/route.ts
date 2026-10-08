@@ -38,27 +38,6 @@ export async function GET(req: NextRequest) {
       });
     });
 
-    // Add installation pseudo-products
-    items.push({
-      id: "PRO_INSTALL_HD",
-      display_name: "Standard Installation (HD)",
-      category: "installation",
-      technologies: ["HD"],
-      unit_price: 600,
-      unit_multiplier: "camera_count",
-      type: "service"
-    });
-    
-    items.push({
-      id: "PRO_INSTALL_IP",
-      display_name: "Standard Installation (IP)",
-      category: "installation",
-      technologies: ["IP"],
-      unit_price: 800,
-      unit_multiplier: "camera_count",
-      type: "service"
-    });
-
     return NextResponse.json({ success: true, products: items });
   } catch (error) {
     console.error("Error fetching catalog:", error);

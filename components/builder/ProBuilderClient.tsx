@@ -38,9 +38,10 @@ export function ProBuilderClient() {
     { id: "camera", label: "Cameras" },
     { id: "recorder", label: "Recorders" },
     { id: "storage", label: "Storage" },
+    { id: "connector", label: "Connectors" },
     { id: "cable", label: "Cables" },
-    { id: "power", label: "Power" },
-    { id: "accessory", label: "Accessories" },
+    { id: "power", label: "Power Device" },
+    { id: "upgrades", label: "Optional Upgrades" },
     { id: "installation", label: "Installation" }
   ];
 
@@ -107,13 +108,15 @@ export function ProBuilderClient() {
               (p.storage_type && p.storage_type.toLowerCase().includes("hdd")) ||
               /(\bhdd\b|\bhard\s*(disk|drive)\b|\bsurveillance\s*drive\b|\bpurple\b|\bskyhawk\b)/i.test(name);
 
-            let normCat = "accessory";
+            let normCat = "upgrades";
             if (cat.includes("camera") || cat.includes("cctv_camera")) normCat = "camera";
             else if (cat.includes("recorder") || cat.includes("dvr") || cat.includes("nvr")) normCat = "recorder";
             else if (isStorage) normCat = "storage";
-            else if (isCable) normCat = "cable";
-            else if (cat.includes("power") || cat.includes("network") || cat.includes("power_device")) normCat = "power";
+            else if (cat.includes("connector") || /(\brj45\b|\bbnc\b|\bdc\b)/i.test(name) || name.includes("connector")) normCat = "connector";
+            else if (isCable && !name.includes("hdmi") && !cat.includes("hdmi")) normCat = "cable";
+            else if (cat.includes("power") || cat.includes("power_device") || name.includes("poe") || name.includes("smps")) normCat = "power";
             else if (cat === "installation" || cat === "labor") normCat = "installation";
+            else normCat = "upgrades"; // Catches Racks, Display, Mount Box, Network Device (Router), HDMI cables, etc.
 
             // Derived camera form factor
             let formFactor = p.form_factor ? p.form_factor.toLowerCase() : "";
@@ -239,10 +242,11 @@ export function ProBuilderClient() {
     const channels = Array.from(new Set(categoryProducts.map(p => p.derivedChannels ? String(p.derivedChannels) : "").filter(Boolean))).sort((a, b) => parseInt(a) - parseInt(b));
     const capacities = Array.from(new Set(categoryProducts.map(p => p.derivedCapacity).filter(Boolean))) as string[];
     const cableTypes = Array.from(new Set(categoryProducts.map(p => p.derivedCableType).filter(Boolean))) as string[];
+    const upgradeTypes = Array.from(new Set(categoryProducts.filter(p => p.normCat === "upgrades").map(p => p.category || "General"))).filter(Boolean) as string[];
     const hasDomes = categoryProducts.some(p => p.derivedFormFactor === "dome");
     const hasBullets = categoryProducts.some(p => p.derivedFormFactor === "bullet");
 
-    return { brands, resolutions, channels, capacities, cableTypes, hasDomes, hasBullets };
+    return { brands, resolutions, channels, capacities, cableTypes, upgradeTypes, hasDomes, hasBullets };
   }, [categoryProducts]);
 
   const camCount = getCameraCount();
@@ -277,6 +281,8 @@ export function ProBuilderClient() {
         if (filterCapacity !== "all" && p.derivedCapacity !== filterCapacity) return false;
       } else if (activeCategory === "cable") {
         if (filterCableType !== "all" && p.derivedCableType !== filterCableType) return false;
+      } else if (activeCategory === "upgrades") {
+        if (filterType !== "all" && (p.category || "General") !== filterType) return false;
       }
 
       return true;
@@ -496,31 +502,27 @@ export function ProBuilderClient() {
           )}
 
           {/* Progress Stepper */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4 border-b border-slate-200 scrollbar-hide">
+          <div className="flex flex-wrap items-center gap-2 pb-4 mb-4 border-b border-slate-200">
             {STEPS.map((step, idx) => (
-              <div key={step.id} className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => handleStepChange(idx)}
-                  disabled={!technology && idx > 0}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition-all ${
-                    activeStepIndex === idx
-                      ? "bg-slate-900 text-white shadow-md"
-                      : (idx < activeStepIndex || technology)
-                        ? "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-                        : "bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed"
-                  }`}
-                >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
-                    activeStepIndex === idx ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
-                  }`}>
-                    {idx + 1}
-                  </span>
-                  {step.label}
-                </button>
-                {idx < STEPS.length - 1 && (
-                  <div className="w-4 h-[1px] bg-slate-200" />
-                )}
-              </div>
+              <button
+                key={step.id}
+                onClick={() => handleStepChange(idx)}
+                disabled={!technology && idx > 0}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition-all ${
+                  activeStepIndex === idx
+                    ? "bg-slate-900 text-white shadow-md"
+                    : (idx < activeStepIndex || technology)
+                      ? "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                      : "bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed"
+                }`}
+              >
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                  activeStepIndex === idx ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
+                }`}>
+                  {idx + 1}
+                </span>
+                {step.label}
+              </button>
             ))}
           </div>
 
@@ -756,6 +758,28 @@ export function ProBuilderClient() {
                           className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterCableType === ct ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                         >
                           {ct}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Upgrades Filters */}
+                  {activeCategory === "upgrades" && filterOptions.upgradeTypes.length > 0 && (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Type:</span>
+                      <button
+                        onClick={() => setFilterType("all")}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterType === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                      >
+                        All
+                      </button>
+                      {filterOptions.upgradeTypes.map(ut => (
+                        <button
+                          key={ut}
+                          onClick={() => setFilterType(ut)}
+                          className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterType === ut ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                        >
+                          {ut.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
                         </button>
                       ))}
                     </div>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cctvquotation-v6';
+const CACHE_NAME = 'cctvquotation-v7';
 const OFFLINE_URL = '/offline';
 const URLS_TO_CACHE = [
   '/',
@@ -95,7 +95,9 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           return caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) return cachedResponse;
-            return caches.match(OFFLINE_URL);
+            return caches.match(OFFLINE_URL).then((offlineRes) => {
+              return offlineRes || Response.error();
+            });
           });
         })
     );
@@ -111,7 +113,10 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return networkResponse;
-      }).catch(() => cachedResponse);
+      }).catch(() => {
+        if (cachedResponse) return cachedResponse;
+        return Response.error();
+      });
 
       return cachedResponse || fetchPromise;
     })
