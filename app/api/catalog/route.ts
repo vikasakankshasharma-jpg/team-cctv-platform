@@ -5,14 +5,17 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const [prodSnap, addonSnap] = await Promise.all([
+    const [prodSnap, addonSnap, settingsSnap] = await Promise.all([
       adminDb.collection("products")
              .where("is_active", "==", true)
              .get(),
       adminDb.collection("addons")
              .where("is_active", "==", true)
-             .get()
+             .get(),
+      adminDb.collection("settings").doc("app_config").get()
     ]);
+    
+    const settings = settingsSnap.exists ? settingsSnap.data() : {};
 
     const items: any[] = [];
     
@@ -36,6 +39,31 @@ export async function GET(req: NextRequest) {
         technologies: data.technology ? [data.technology] : ["Common"],
         type: "addon"
       });
+    });
+
+    // Dynamically generate Installation "Products" based on Admin Settings
+    // This perfectly respects Admin Rules without hardcoding dummy prices
+    const laborHd = settings?.labor_hd_per_camera || 400;
+    const laborIp = settings?.labor_ip_per_camera || 500;
+
+    items.push({
+      id: "PRO_INSTALL_HD",
+      display_name: "Professional Installation (HD)",
+      category: "installation",
+      technologies: ["HD"],
+      unit_price: laborHd,
+      unit_multiplier: "camera_count",
+      type: "service"
+    });
+    
+    items.push({
+      id: "PRO_INSTALL_IP",
+      display_name: "Professional Installation (IP)",
+      category: "installation",
+      technologies: ["IP"],
+      unit_price: laborIp,
+      unit_multiplier: "camera_count",
+      type: "service"
     });
 
     return NextResponse.json({ success: true, products: items });
