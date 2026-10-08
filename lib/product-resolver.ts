@@ -182,7 +182,9 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
     if (p.category !== "recorder") return false;
     if ((p.channels || p.max_cameras || 0) < config.recorder_channels) return false;
     if (!isTechMatch(p, config.technology)) return false;
-  if (recs.length === 0) return undefined;
+      return true;
+    });
+    if (recs.length === 0) return undefined;
   // Sort ascending by channel count (prefer smallest that fits), then by price
   recs.sort((a, b) => {
     const aCh = (a.channels || a.max_cameras || 0);
@@ -329,3 +331,4 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
 
   return valid.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
 }
+
