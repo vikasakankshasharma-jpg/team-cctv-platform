@@ -751,20 +751,24 @@ export function WizardClientV2() {
                
                <h3 className="font-semibold text-lg mt-6">{t("wz_3_currently_working_cameras")}</h3>
                <div className="flex items-center gap-4">
-                  <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, existing_working_cameras: Math.max(0, (prev.existing_working_cameras || 0) - 1) }))}>-</Button>
+                  <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, existing_working_cameras: Math.max(0, (typeof prev.existing_working_cameras === 'number' ? prev.existing_working_cameras : 0) - 1) }))}>-</Button>
                   <input
                     type="number"
                     min="0"
-                    value={(req.existing_working_cameras || 0).toString()}
+                    value={req.existing_working_cameras === '' ? '' : (req.existing_working_cameras || 0).toString()}
                     onChange={(e) => {
-                      const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                      if (e.target.value === '') {
+                        setReq(prev => ({ ...prev, existing_working_cameras: '' as any }));
+                        return;
+                      }
+                      const val = parseInt(e.target.value);
                       if (!isNaN(val)) {
                         setReq(prev => ({ ...prev, existing_working_cameras: Math.max(0, val) }));
                       }
                     }}
                     className="text-2xl font-bold w-16 text-center text-gray-900 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
-                  <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, existing_working_cameras: (prev.existing_working_cameras || 0) + 1 }))}>+</Button>
+                  <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, existing_working_cameras: (typeof prev.existing_working_cameras === 'number' ? prev.existing_working_cameras : 0) + 1 }))}>+</Button>
                </div>
                
                <div className="pt-6">
@@ -791,20 +795,24 @@ export function WizardClientV2() {
                     <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_weatherproof_bullet")}</p>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1), camera_count: Math.max(0, currentOutdoor - 1) + currentIndoor }))} disabled={currentOutdoor === 0}>-</Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, (typeof currentOutdoor === 'number' ? currentOutdoor : 0) - 1), camera_count: Math.max(0, (typeof currentOutdoor === 'number' ? currentOutdoor : 0) - 1) + (typeof currentIndoor === 'number' ? currentIndoor : 0) }))} disabled={currentOutdoor === 0}>-</Button>
                     <input
                       type="number"
                       min="0"
                       value={currentOutdoor.toString()}
-                      onChange={(e) => {
-                        const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                        if (!isNaN(val)) {
-                          setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, val), camera_count: Math.max(0, val) + currentIndoor }));
-                        }
-                      }}
+                        onChange={(e) => {
+                          if (e.target.value === '') {
+                            setReq(prev => ({ ...prev, outdoor_camera_count: '' as any, camera_count: (typeof currentIndoor === 'number' ? currentIndoor : 0) }));
+                            return;
+                          }
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val)) {
+                            setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, val), camera_count: Math.max(0, val) + (typeof currentIndoor === 'number' ? currentIndoor : 0) }));
+                          }
+                        }}
                       className="text-lg sm:text-xl font-black w-10 sm:w-12 text-center text-blue-700 dark:text-blue-400 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: currentOutdoor + 1, camera_count: currentOutdoor + 1 + currentIndoor }))}>+</Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + 1, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + 1 + (typeof currentIndoor === 'number' ? currentIndoor : 0) }))}>+</Button>
                   </div>
                 </div>
 
@@ -814,20 +822,24 @@ export function WizardClientV2() {
                     <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_ceiling_dome")}</p>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, currentIndoor - 1), camera_count: currentOutdoor + Math.max(0, currentIndoor - 1) }))} disabled={currentIndoor === 0}>-</Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, (typeof currentIndoor === 'number' ? currentIndoor : 0) - 1), camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + Math.max(0, (typeof currentIndoor === 'number' ? currentIndoor : 0) - 1) }))} disabled={currentIndoor === 0}>-</Button>
                     <input
                       type="number"
                       min="0"
                       value={currentIndoor.toString()}
-                      onChange={(e) => {
-                        const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                        if (!isNaN(val)) {
-                          setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, val), camera_count: currentOutdoor + Math.max(0, val) }));
-                        }
-                      }}
+                        onChange={(e) => {
+                          if (e.target.value === '') {
+                            setReq(prev => ({ ...prev, indoor_camera_count: '' as any, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) }));
+                            return;
+                          }
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val)) {
+                            setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, val), camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + Math.max(0, val) }));
+                          }
+                        }}
                       className="text-lg sm:text-xl font-black w-10 sm:w-12 text-center text-blue-700 dark:text-blue-400 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: currentIndoor + 1, camera_count: currentOutdoor + currentIndoor + 1 }))}>+</Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: (typeof currentIndoor === 'number' ? currentIndoor : 0) + 1, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + (typeof currentIndoor === 'number' ? currentIndoor : 0) + 1 }))}>+</Button>
                   </div>
                 </div>
               </div>
@@ -872,39 +884,47 @@ export function WizardClientV2() {
                  <div className="p-4 rounded-xl border-2 bg-white">
                    <h3 className="font-bold mb-3">{t("wz_new_outdoor")}</h3>
                    <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
-                     <Button variant="outline" size="icon" className="bg-white border-2" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1), camera_count: Math.max(0, currentOutdoor - 1) + currentIndoor }))}>-</Button>
+                     <Button variant="outline" size="icon" className="bg-white border-2" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, (typeof currentOutdoor === 'number' ? currentOutdoor : 0) - 1), camera_count: Math.max(0, (typeof currentOutdoor === 'number' ? currentOutdoor : 0) - 1) + (typeof currentIndoor === 'number' ? currentIndoor : 0) }))}>-</Button>
                      <input
                        type="number"
                        min="0"
                        value={currentOutdoor.toString()}
-                       onChange={(e) => {
-                         const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                         if (!isNaN(val)) {
-                           setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, val), camera_count: Math.max(0, val) + currentIndoor }));
-                         }
-                       }}
+                        onChange={(e) => {
+                          if (e.target.value === '') {
+                            setReq(prev => ({ ...prev, outdoor_camera_count: '' as any, camera_count: (typeof currentIndoor === 'number' ? currentIndoor : 0) }));
+                            return;
+                          }
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val)) {
+                            setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, val), camera_count: Math.max(0, val) + (typeof currentIndoor === 'number' ? currentIndoor : 0) }));
+                          }
+                        }}
                        className="text-2xl font-bold w-16 text-center text-blue-800 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                      />
-                     <Button variant="outline" size="icon" className="bg-white border-2 hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: currentOutdoor + 1, camera_count: currentOutdoor + 1 + currentIndoor }))}>+</Button>
+                     <Button variant="outline" size="icon" className="bg-white border-2 hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + 1, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + 1 + (typeof currentIndoor === 'number' ? currentIndoor : 0) }))}>+</Button>
                    </div>
                  </div>
                  <div className="p-4 rounded-xl border-2 bg-white">
                    <h3 className="font-bold mb-3">{t("wz_new_indoor")}</h3>
                    <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
-                     <Button variant="outline" size="icon" className="bg-white border-2" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, currentIndoor - 1), camera_count: currentOutdoor + Math.max(0, currentIndoor - 1) }))}>-</Button>
+                     <Button variant="outline" size="icon" className="bg-white border-2" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, (typeof currentIndoor === 'number' ? currentIndoor : 0) - 1), camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + Math.max(0, (typeof currentIndoor === 'number' ? currentIndoor : 0) - 1) }))}>-</Button>
                      <input
                        type="number"
                        min="0"
                        value={currentIndoor.toString()}
-                       onChange={(e) => {
-                         const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                         if (!isNaN(val)) {
-                           setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, val), camera_count: currentOutdoor + Math.max(0, val) }));
-                         }
-                       }}
+                        onChange={(e) => {
+                          if (e.target.value === '') {
+                            setReq(prev => ({ ...prev, indoor_camera_count: '' as any, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) }));
+                            return;
+                          }
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val)) {
+                            setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, val), camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + Math.max(0, val) }));
+                          }
+                        }}
                        className="text-2xl font-bold w-16 text-center text-blue-800 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                      />
-                     <Button variant="outline" size="icon" className="bg-white border-2 hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: currentIndoor + 1, camera_count: currentOutdoor + currentIndoor + 1 }))}>+</Button>
+                     <Button variant="outline" size="icon" className="bg-white border-2 hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: (typeof currentIndoor === 'number' ? currentIndoor : 0) + 1, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + (typeof currentIndoor === 'number' ? currentIndoor : 0) + 1 }))}>+</Button>
                    </div>
                  </div>
                </div>
@@ -1086,7 +1106,7 @@ export function WizardClientV2() {
                   {req.cabling_done === false && (() => {
                     const cameraCount = req.camera_count || 4;
                     const freeLimitMeters = cameraCount * 15; // 15m free per camera
-                    const selectedMeters = req.total_cable_length_meters || freeLimitMeters;
+                    const selectedMeters = req.total_cable_length_meters ?? freeLimitMeters;
                     const excessMeters = Math.max(0, selectedMeters - freeLimitMeters);
                     const isExceeded = excessMeters > 0;
                     const extraCostEstimate = excessMeters * 15; // ₹15 per extra meter
@@ -1130,7 +1150,7 @@ export function WizardClientV2() {
                                 value={selectedMeters === '' ? '' : selectedMeters}
                                 onChange={(e) => {
                                   if (e.target.value === '') {
-                                    updateReq({ total_cable_length_meters: 0 });
+                                    updateReq({ total_cable_length_meters: '' as any });
                                     return;
                                   }
                                   const val = parseInt(e.target.value);
