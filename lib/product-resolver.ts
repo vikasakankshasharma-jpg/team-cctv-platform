@@ -263,22 +263,40 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
     return p.max_cameras || p.channels || 0;
   };
   
+  const isPoe = (p: Product) => {
+    const name = (p.technical_name || p.display_name || "").toLowerCase();
+    const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
+    return name.includes("poe") && !name.includes("adapter") && !isRouterOrAccessory;
+  };
+
+  const isSmps = (p: Product) => {
+    const name = (p.technical_name || p.display_name || "").toLowerCase();
+    const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
+    return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !name.includes("poe") && !isRouterOrAccessory;
+  };
+
   let valid = powerItems.filter(p => {
       const matchTech = !p.technology || p.technology === config.technology;
+      const matchHardware = config.technology === "IP" ? isPoe(p) : isSmps(p);
       const matchCams = getPowerCh(p) === config.recorder_channels;
-      return matchTech && matchCams;
+      return matchTech && matchHardware && matchCams;
   });
 
   if (valid.length === 0) {
       valid = powerItems.filter(p => {
           const matchTech = !p.technology || p.technology === config.technology;
+          const matchHardware = config.technology === "IP" ? isPoe(p) : isSmps(p);
           const matchCams = getPowerCh(p) >= config.recorder_channels;
-          return matchTech && matchCams;
+          return matchTech && matchHardware && matchCams;
       });
   }
 
   if (valid.length === 0) {
-      valid = powerItems.filter(p => !p.technology || p.technology === config.technology);
+      valid = powerItems.filter(p => {
+          const matchTech = !p.technology || p.technology === config.technology;
+          const matchHardware = config.technology === "IP" ? isPoe(p) : isSmps(p);
+          return matchTech && matchHardware;
+      });
   }
   
   if (valid.length === 0) valid = powerItems;
