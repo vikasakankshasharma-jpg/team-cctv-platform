@@ -276,9 +276,6 @@ export function ProBuilderClient() {
         if (filterRes !== "all" && p.derivedResolution !== filterRes) return false;
         if (filterNightVision !== "all" && p.derivedNightVision !== filterNightVision) return false;
       } else if (activeCategory === "recorder") {
-        // Cascading Filter: Hide recorders with fewer channels than the number of cameras in the cart
-        if (p.derivedChannels && p.derivedChannels < camCount) return false;
-        
         if (filterChannels !== "all" && String(p.derivedChannels) !== filterChannels) return false;
       } else if (activeCategory === "storage") {
         if (filterCapacity !== "all" && p.derivedCapacity !== filterCapacity) return false;
@@ -841,6 +838,12 @@ export function ProBuilderClient() {
                     p.derivedChannels >= camCount && 
                     p.derivedChannels <= camCount * 2;
 
+                  const isUnderCapacityRecorder = 
+                    activeCategory === "recorder" && 
+                    camCount > 0 && 
+                    p.derivedChannels && 
+                    p.derivedChannels < camCount;
+
                   return (
                     <div key={p.id} className={`bg-white rounded-2xl border p-4 flex flex-col h-full hover:shadow-lg transition-all ${isRecommendedStorage || isRecommendedRecorder ? 'border-blue-300 ring-1 ring-blue-100' : 'border-slate-200'}`}>
                       <div className="flex-1 space-y-3">
@@ -896,6 +899,11 @@ export function ProBuilderClient() {
                         {isRecommendedRecorder && (
                           <div className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md flex items-center gap-1">
                             <Sparkles className="w-3 h-3 text-blue-600 shrink-0" /> Best fit for {camCount} cameras
+                          </div>
+                        )}
+                        {isUnderCapacityRecorder && (
+                          <div className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md flex items-start gap-1">
+                            <span className="shrink-0 mt-0.5">⚠️</span> <span>Under capacity for {camCount} cameras. You will need multiple units.</span>
                           </div>
                         )}
 
