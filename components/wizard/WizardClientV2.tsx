@@ -752,7 +752,18 @@ export function WizardClientV2() {
                <h3 className="font-semibold text-lg mt-6">{t("wz_3_currently_working_cameras")}</h3>
                <div className="flex items-center gap-4">
                   <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, existing_working_cameras: Math.max(0, (prev.existing_working_cameras || 0) - 1) }))}>-</Button>
-                  <span className="text-2xl font-bold w-12 text-center">{req.existing_working_cameras || 0}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={(req.existing_working_cameras || 0).toString()}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                      if (!isNaN(val)) {
+                        setReq(prev => ({ ...prev, existing_working_cameras: Math.max(0, val) }));
+                      }
+                    }}
+                    className="text-2xl font-bold w-16 text-center text-gray-900 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                   <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, existing_working_cameras: (prev.existing_working_cameras || 0) + 1 }))}>+</Button>
                </div>
                
@@ -781,7 +792,18 @@ export function WizardClientV2() {
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
                     <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1), camera_count: Math.max(0, currentOutdoor - 1) + currentIndoor }))} disabled={currentOutdoor === 0}>-</Button>
-                    <span className="text-lg sm:text-xl font-black w-8 sm:w-10 text-center text-blue-700 dark:text-blue-400">{currentOutdoor}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={currentOutdoor.toString()}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                        if (!isNaN(val)) {
+                          setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, val), camera_count: Math.max(0, val) + currentIndoor }));
+                        }
+                      }}
+                      className="text-lg sm:text-xl font-black w-10 sm:w-12 text-center text-blue-700 dark:text-blue-400 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                     <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: currentOutdoor + 1, camera_count: currentOutdoor + 1 + currentIndoor }))}>+</Button>
                   </div>
                 </div>
@@ -793,7 +815,18 @@ export function WizardClientV2() {
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
                     <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, currentIndoor - 1), camera_count: currentOutdoor + Math.max(0, currentIndoor - 1) }))} disabled={currentIndoor === 0}>-</Button>
-                    <span className="text-lg sm:text-xl font-black w-8 sm:w-10 text-center text-blue-700 dark:text-blue-400">{currentIndoor}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={currentIndoor.toString()}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                        if (!isNaN(val)) {
+                          setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, val), camera_count: currentOutdoor + Math.max(0, val) }));
+                        }
+                      }}
+                      className="text-lg sm:text-xl font-black w-10 sm:w-12 text-center text-blue-700 dark:text-blue-400 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                     <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: currentIndoor + 1, camera_count: currentOutdoor + currentIndoor + 1 }))}>+</Button>
                   </div>
                 </div>
@@ -840,7 +873,18 @@ export function WizardClientV2() {
                    <h3 className="font-bold mb-3">{t("wz_new_outdoor")}</h3>
                    <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
                      <Button variant="outline" size="icon" className="bg-white border-2" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1), camera_count: Math.max(0, currentOutdoor - 1) + currentIndoor }))}>-</Button>
-                     <span className="text-2xl font-bold w-12 text-center text-blue-800">{currentOutdoor}</span>
+                     <input
+                       type="number"
+                       min="0"
+                       value={currentOutdoor.toString()}
+                       onChange={(e) => {
+                         const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                         if (!isNaN(val)) {
+                           setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, val), camera_count: Math.max(0, val) + currentIndoor }));
+                         }
+                       }}
+                       className="text-2xl font-bold w-16 text-center text-blue-800 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                     />
                      <Button variant="outline" size="icon" className="bg-white border-2 hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: currentOutdoor + 1, camera_count: currentOutdoor + 1 + currentIndoor }))}>+</Button>
                    </div>
                  </div>
@@ -848,7 +892,18 @@ export function WizardClientV2() {
                    <h3 className="font-bold mb-3">{t("wz_new_indoor")}</h3>
                    <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border">
                      <Button variant="outline" size="icon" className="bg-white border-2" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, currentIndoor - 1), camera_count: currentOutdoor + Math.max(0, currentIndoor - 1) }))}>-</Button>
-                     <span className="text-2xl font-bold w-12 text-center text-blue-800">{currentIndoor}</span>
+                     <input
+                       type="number"
+                       min="0"
+                       value={currentIndoor.toString()}
+                       onChange={(e) => {
+                         const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                         if (!isNaN(val)) {
+                           setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, val), camera_count: currentOutdoor + Math.max(0, val) }));
+                         }
+                       }}
+                       className="text-2xl font-bold w-16 text-center text-blue-800 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                     />
                      <Button variant="outline" size="icon" className="bg-white border-2 hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: currentIndoor + 1, camera_count: currentOutdoor + currentIndoor + 1 }))}>+</Button>
                    </div>
                  </div>
