@@ -375,7 +375,8 @@ function calculateHardware(
       if (typeLower.includes("ptz")) extraFeatures.push("ptz");
       if (typeLower.includes("solar")) extraFeatures.push("solar");
       if (typeLower.includes("4g")) extraFeatures.push("4g");
-      if (typeLower.includes("audio") || typeLower.includes("speaker") || typeLower.includes("mic")) extraFeatures.push("audio");
+      if (typeLower.includes("speaker") || typeLower.includes("2-way") || typeLower.includes("two-way")) extraFeatures.push("2-way");
+        else if (typeLower.includes("audio") || typeLower.includes("mic")) extraFeatures.push("audio");
       if (typeLower.includes("color")) extraFeatures.push("color");
       if (typeLower.includes("indoor") || typeLower.includes("dome")) extraFeatures.push("dome");
       if (typeLower.includes("outdoor") || typeLower.includes("bullet")) extraFeatures.push("bullet");
@@ -395,7 +396,8 @@ function calculateHardware(
             .filter(f => f !== "bullet" && f !== "dome")
             .map(f => {
               if (f === "color") return "Color Night Vision";
-              if (f === "audio") return "Audio/Mic";
+              if (f === "audio" || f === "mic") return "Audio/Mic";
+                if (f === "2-way" || f === "two-way") return "2-Way Audio";
               if (f === "ptz") return "PTZ";
               if (f === "solar") return "Solar";
               if (f === "4g") return "4G";
@@ -1035,7 +1037,8 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
         const rfLower = rf.toLowerCase().trim();
         if (rfLower === "dome") return formFactor === "dome" || name.includes("dome");
         if (rfLower === "bullet") return formFactor === "bullet" || name.includes("bullet");
-        if (rfLower === "mic") return feats.some(f => f.includes("mic") || f.includes("audio")) || name.includes("mic") || name.includes("audio");
+        if (rfLower === "mic" || rfLower === "audio") return feats.some(f => f.includes("mic") || f.includes("audio") || f.includes("2-way") || f.includes("two-way") || f.includes("two way")) || name.includes("mic") || name.includes("audio") || name.includes("2-way") || name.includes("two-way") || name.includes("two way");
+        if (rfLower === "2-way" || rfLower === "two-way" || rfLower === "two way") return feats.some(f => f.includes("2-way") || f.includes("two-way") || f.includes("two way") || f.includes("speaker")) || name.includes("2-way") || name.includes("two-way") || name.includes("two way") || name.includes("speaker");
         if (rfLower === "color") return feats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) || name.includes("color") || name.includes("colour");
         if (rfLower === "ptz") return feats.some(f => f.includes("ptz")) || name.includes("ptz");
         return feats.includes(rfLower) || name.includes(rfLower);
@@ -1117,8 +1120,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
         const highSpec = pool.slice(Math.floor(pool.length / 2)).find(cam => {
           const feats = (cam.features || []).join(" ").toLowerCase();
           const name = (cam.technical_name || "").toLowerCase();
-          return feats.includes("mic") || feats.includes("audio") || 
-                 feats.includes("ptz") || name.includes("4mp") || name.includes("5mp") || name.includes("8mp");
+          return feats.includes("mic") || feats.includes("audio") || feats.includes("2-way") || feats.includes("two-way") || feats.includes("ptz") || name.includes("4mp") || name.includes("5mp") || name.includes("8mp");
         });
         return highSpec || pool[Math.floor(pool.length * 0.7)]; // Fallback to 70th percentile
       } else {
