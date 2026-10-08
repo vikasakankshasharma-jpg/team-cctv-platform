@@ -20,7 +20,7 @@ function isTechMatch(p: any, targetTech: string): boolean {
 
 export function isBrandMatch(p: Product, brandFilter: string): boolean {
   if (!brandFilter || brandFilter === "Budget" || brandFilter === "All Brands") return true;
-  const filterLower = brandFilter.toLowerCase().replace(/\s+/g, "");
+  const filterLower = brandFilter.toLowerCase().replace(/[\s-]+/g, "");
   
   let pBrand = p.brand;
   if (!pBrand) {
@@ -30,7 +30,7 @@ export function isBrandMatch(p: Product, brandFilter: string): boolean {
      else if (p.display_name.toLowerCase().includes("dahua")) pBrand = "Dahua";
   }
   if (pBrand) {
-     const lower = pBrand.toLowerCase().replace(/\s+/g, "");
+     const lower = pBrand.toLowerCase().replace(/[\s-]+/g, "");
      if (lower === "cpplus" && filterLower === "cpplus") return true;
      if (lower === filterLower) return true;
   }
@@ -123,12 +123,16 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
       
       // Must match Resolution
       const pRes = (p.specifications as any)?.resolution || (p as any).resolution;
-      let matchRes = false;
-      if (!pRes) {
-         matchRes = p.display_name?.toLowerCase().includes(targetResolution.toLowerCase()) || false;
-      } else {
-         matchRes = pRes === targetResolution || pRes.includes(targetResolution);
-      }
+        let matchRes = false;
+        const normalizeRes = (r: string) => String(r || "").toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
+        const normTarget = normalizeRes(targetResolution);
+        
+        if (!pRes) {
+           matchRes = normalizeRes(p.display_name).includes(normTarget);
+        } else {
+           const normPRes = normalizeRes(pRes);
+           matchRes = normPRes === normTarget || normPRes.includes(normTarget);
+        }
 
       return matchForm && matchRes;
     });
@@ -282,13 +286,13 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
   const isPoe = (p: Product) => {
     const name = (p.technical_name || p.display_name || "").toLowerCase();
     const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
-    return name.includes("poe") && !name.includes("adapter") && !isRouterOrAccessory;
+    return (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !name.includes("adapter") && !isRouterOrAccessory;
   };
 
   const isSmps = (p: Product) => {
     const name = (p.technical_name || p.display_name || "").toLowerCase();
     const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
-    return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !name.includes("poe") && !isRouterOrAccessory;
+    return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !(name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !isRouterOrAccessory;
   };
 
   let valid = powerItems.filter(p => {
@@ -331,4 +335,5 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
 
   return valid.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
 }
+
 

@@ -1008,15 +1008,15 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
   // Filter by Resolution (Megapixel)
   if (selection.resolution_preference && selection.resolution_preference !== "all") {
     // We expect resolution_preference to be something like "2MP" or "4MP"
-    const resPref = selection.resolution_preference.toUpperCase();
+    const resPref = String(selection.resolution_preference).toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
     const resFiltered = pool.filter(cam => {
       // Safely parse resolution_mp or resolution (which might be "2MP", "2.4MP", "4MP", etc.)
-      let camRes = String(cam.resolution_mp || cam.resolution || "").toUpperCase();
+      let camRes = String(cam.resolution_mp || cam.resolution || "").toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
       if (!camRes) {
-        const match = ((cam.technical_name || "") + " " + (cam.display_name || "")).match(/(\d+)MP/i);
+        const match = ((cam.technical_name || "") + " " + (cam.display_name || "")).replace(/\s+/g, "").match(/(\d+)MP/i);
         if (match) camRes = match[0].toUpperCase();
       }
-      return camRes === resPref || camRes === resPref.replace("MP", "") || camRes + "MP" === resPref;
+      return camRes === resPref || camRes === resPref.replace("MP", "") || camRes + "MP" === resPref || camRes.includes(resPref) || resPref.includes(camRes);
     });
     // Fallback: If strict resolution matching eliminates ALL cameras, drop the filter
     if (resFiltered.length > 0) {
@@ -1036,7 +1036,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
         if (rfLower === "dome") return formFactor === "dome" || name.includes("dome");
         if (rfLower === "bullet") return formFactor === "bullet" || name.includes("bullet");
         if (rfLower === "mic") return feats.some(f => f.includes("mic") || f.includes("audio")) || name.includes("mic") || name.includes("audio");
-        if (rfLower === "color") return feats.some(f => f.includes("color") || f.includes("night")) || name.includes("color");
+        if (rfLower === "color") return feats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) || name.includes("color") || name.includes("colour");
         if (rfLower === "ptz") return feats.some(f => f.includes("ptz")) || name.includes("ptz");
         return feats.includes(rfLower) || name.includes(rfLower);
       });
@@ -1159,9 +1159,9 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
 
     // Filter HD DVR by resolution if applicable
     if (targetUpper === "HD" && selection.resolution_preference) {
-        const resPref = String(selection.resolution_preference).toUpperCase();
-        const dvrName = String(p.display_name || "").toUpperCase();
-        if ((resPref === "5MP" || resPref === "8MP") && dvrName.includes("2MP SUPPORTED")) {
+        const resPref = String(selection.resolution_preference).toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
+        const dvrName = String(p.display_name || "").toUpperCase().replace(/\s+/g, "");
+        if ((resPref === "5MP" || resPref === "8MP" || resPref === "4MP" || resPref === "6MP") && (dvrName.includes("2MPSUPPORTED") || dvrName.includes("UPTO2MP"))) {
             return false; // Don't use a 2MP DVR for 5MP cameras
         }
     }
@@ -1216,7 +1216,7 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   if (tech === "WiFi") {
     const sdCards = hdds.filter(a => {
       const name = a.display_name.toLowerCase();
-      return (a as any).storage_type === "Micro SD" || name.includes("sd card") || name.includes("micro sd") || name.includes("memory card");
+      return (a as any).storage_type === "Micro SD" || name.includes("sd card") || name.includes("sdcard") || name.includes("micro sd") || name.includes("microsd") || name.includes("memory card");
     });
     if (sdCards.length > 0) {
       sdCards.sort((a, b) => resolveHDDCapacity(a) - resolveHDDCapacity(b));
@@ -1266,7 +1266,7 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
 
   const hardDisks = hdds.filter(a => {
     const name = a.display_name.toLowerCase();
-    return !((a as any).storage_type === "Micro SD" || name.includes("sd card") || name.includes("micro sd") || name.includes("memory card"));
+    return !((a as any).storage_type === "Micro SD" || name.includes("sd card") || name.includes("sdcard") || name.includes("micro sd") || name.includes("microsd") || name.includes("memory card"));
   });
   if (hardDisks.length === 0) return undefined;
 
@@ -1337,10 +1337,10 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
 
     if (tech === "IP") {
       // IP Cameras need a dedicated PoE Switch
-      return name.includes("poe") && !name.includes("adapter") && !isRouterOrAccessory;
+      return (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !name.includes("adapter") && !isRouterOrAccessory;
     } else {
       // HD Cameras need an SMPS or PSU
-      return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !name.includes("poe") && !isRouterOrAccessory;
+      return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !(name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !isRouterOrAccessory;
     }
   });
 
@@ -1358,7 +1358,7 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
       const cat = (a.category || "").toLowerCase();
       const name = (a.technical_name || a.display_name || "").toLowerCase();
       const isRouter = name.includes("router") || name.includes("4g") || name.includes("sim");
-      return (cat.includes("power") || name.includes("power") || name.includes("smps") || name.includes("poe")) && !name.includes("adapter") && !isRouter;
+      return (cat.includes("power") || name.includes("power") || name.includes("smps") || (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e"))) && !name.includes("adapter") && !isRouter;
     });
     
     if (fallbackOptions.length === 0) return undefined;
@@ -1711,6 +1711,8 @@ export function generatePricingSnapshot(
     recommendation_reasons: []
   };
 }
+
+
 
 
 
