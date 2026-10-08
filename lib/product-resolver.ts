@@ -179,18 +179,18 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
 
   if (isBudget) {
     const budgetRecs = recs.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));
-    if (budgetRecs.length > 0) return budgetRecs[0];
-    return recs[0];
+    if (budgetRecs.length > 0) return budgetRecs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+    return recs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
   }
 
   if (brandFilter) {
     const brandRecs = recs.filter(p => isBrandMatch(p, brandFilter));
-    if (brandRecs.length > 0) return brandRecs[0];
+    if (brandRecs.length > 0) return brandRecs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
     return undefined; // Strictly enforce recorder brand
   }
 
   // Fallback if no specific brand was requested
-  return recs[0];
+  return recs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
 }
 
 function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string, resolvedCameras?: { product: Product, qty: number }[]) {
