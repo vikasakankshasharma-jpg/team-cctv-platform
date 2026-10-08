@@ -22,6 +22,21 @@ import type {
 import { getCatalogCapacity } from "./catalog-capacity";
 import { MarginEngine, DEFAULT_MARGIN_POLICY } from "./margin-engine";
 
+function isTechMatch(p: any, targetTech: string): boolean {
+  if (!targetTech) return true;
+  let targetUpper = String(targetTech).toUpperCase();
+  if (targetUpper.includes("DIGITAL IP") || targetUpper.includes("NETWORK")) targetUpper = "IP";
+  if (targetUpper.includes("ANALOG")) targetUpper = "HD";
+  const techs = (p.technologies || [p.technology]).filter(Boolean).map((t: any) => String(t).toUpperCase());
+  if (techs.length === 0) return true;
+  return techs.some((t: string) => {
+    if (targetUpper === "IP") return t.includes("IP") || t.includes("DIGITAL IP") || t.includes("NETWORK");
+    if (targetUpper === "HD") return t.includes("HD") || t.includes("ANALOG");
+    if (targetUpper === "WIFI" || targetUpper === "WIRELESS") return t.includes("WIFI") || t.includes("WIRELESS");
+    return t === targetUpper;
+  });
+}
+
 export interface PricingEngineParams {
   selection: ConfiguratorSelection;
   products: Product[];
@@ -946,19 +961,16 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
   // Exclude products that are out of stock or on order — they are deactivated from quoting
   const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued" && (p.stock_quantity === undefined || p.stock_quantity > 0);
 
-  const techUpper = String(tech || "HD").toUpperCase();
-
   if (selection.selected_camera_id) {
     const cam = products.find(p => p.id === selection.selected_camera_id);
-    if (cam && isAvailable(cam) && (cam.technologies || [cam.technology]).filter(Boolean).some((t: any) => String(t).toUpperCase() === techUpper)) {
+    if (cam && isAvailable(cam) && isTechMatch(cam, tech)) {
       return cam;
     }
   }
 
   let pool = products.filter(p => {
     if (p.category !== "cctv_camera" || !isAvailable(p)) return false;
-    const techs = (p.technologies || [p.technology]).filter(Boolean).map((t: any) => String(t).toUpperCase());
-    return techs.includes(techUpper);
+    return isTechMatch(p, tech);
   });
 
   // ── Specialty Camera Guardrail ──────────────────────────────
@@ -1129,22 +1141,20 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
 function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: string) {
   const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued" && (p.stock_quantity === undefined || p.stock_quantity > 0);
 
-  const techUpper = String(tech || "HD").toUpperCase();
-
   if (selection.selected_recorder_id) {
     if (selection.selected_recorder_id === "none") return undefined;
     const rec = products.find(p => p.id === selection.selected_recorder_id);
-    if (rec && isAvailable(rec) && (rec.technologies || [rec.technology]).filter(Boolean).some((t: any) => String(t).toUpperCase() === techUpper) && (rec.max_cameras || rec.channels || 0) >= selection.camera_count) {
+    if (rec && isAvailable(rec) && isTechMatch(rec, tech) && (rec.max_cameras || rec.channels || 0) >= selection.camera_count) {
       return rec;
     }
   }
 
-  if (techUpper === "WIFI" || techUpper === "WIRELESS") return undefined; // WiFi cameras generally use SD Cards and no DVR/NVR
+  const targetUpper = String(tech || "HD").toUpperCase();
+  if (targetUpper === "WIFI" || targetUpper === "WIRELESS") return undefined;
 
   const recorders = products.filter(p => {
     if (p.category !== "recorder" || !isAvailable(p)) return false;
-    const techs = (p.technologies || [p.technology]).filter(Boolean).map((t: any) => String(t).toUpperCase());
-    if (!techs.includes(techUpper)) return false;
+    if (!isTechMatch(p, tech)) return false;
     if ((p.max_cameras || p.channels || 0) < selection.camera_count) return false;
 
     // Filter HD DVR by resolution if applicable
@@ -1701,3 +1711,5 @@ export function generatePricingSnapshot(
     recommendation_reasons: []
   };
 }
+
+

@@ -1,6 +1,23 @@
 
 import { Product, CCTVRequirement, CCTVConfiguration, ResolvedSystem } from "@/types";
 
+function isTechMatch(p: any, targetTech: string): boolean {
+  if (!targetTech) return true;
+  let targetUpper = String(targetTech).toUpperCase();
+  if (targetUpper.includes("DIGITAL IP") || targetUpper.includes("NETWORK")) targetUpper = "IP";
+  if (targetUpper.includes("ANALOG")) targetUpper = "HD";
+  
+  const techs = (p.technologies || [p.technology]).filter(Boolean).map((t: any) => String(t).toUpperCase());
+  if (techs.length === 0 || techs.includes("COMMON")) return true;
+  
+  return techs.some((t: string) => {
+    if (targetUpper === "IP") return t.includes("IP") || t.includes("DIGITAL IP") || t.includes("NETWORK");
+    if (targetUpper === "HD") return t.includes("HD") || t.includes("ANALOG");
+    if (targetUpper === "WIFI" || targetUpper === "WIRELESS") return t.includes("WIFI") || t.includes("WIRELESS");
+    return t === targetUpper;
+  });
+}
+
 export function isBrandMatch(p: Product, brandFilter: string): boolean {
   if (!brandFilter || brandFilter === "Budget" || brandFilter === "All Brands") return true;
   const filterLower = brandFilter.toLowerCase().replace(/\s+/g, "");
@@ -94,9 +111,7 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
   const getCameraBySpec = (formFactor: string) => {
     let filtered = cams.filter(p => {
       // Must match Technology — handle both legacy `technology` (string) and new `technologies` (array)
-      const techs = Array.isArray(p.technologies) ? p.technologies
-        : (p as any).technology ? [(p as any).technology] : ["Common"];
-      if (!techs.includes("Common") && !techs.includes(config.technology)) return false;
+        if (!isTechMatch(p, config.technology)) return false;
       
       // Must match Form Factor — use form_factor (primary) with multiple fallbacks
       const pForm = p.form_factor
@@ -166,14 +181,7 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
   const recs = pool.filter(p => {
     if (p.category !== "recorder") return false;
     if ((p.channels || p.max_cameras || 0) < config.recorder_channels) return false;
-    const techs = (p.technologies || [p.technology]).filter(Boolean).map((t: any) => String(t).toUpperCase());
-    const targetTech = String(config.technology).toUpperCase();
-    return techs.some(t => {
-      if (targetTech === "IP") return t.includes("IP") || t.includes("DIGITAL IP") || t.includes("NETWORK");
-      if (targetTech === "HD") return t.includes("HD") || t.includes("ANALOG");
-      return t === targetTech;
-    });
-  });
+    if (!isTechMatch(p, config.technology)) return false;
   if (recs.length === 0) return undefined;
   // Sort ascending by channel count (prefer smallest that fits), then by price
   recs.sort((a, b) => {
@@ -282,7 +290,7 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
   };
 
   let valid = powerItems.filter(p => {
-      const matchTech = !p.technology || p.technology === config.technology;
+      const matchTech = isTechMatch(p, config.technology);
       const matchHardware = config.technology === "IP" ? isPoe(p) : isSmps(p);
       const matchCams = getPowerCh(p) === config.recorder_channels;
       return matchTech && matchHardware && matchCams;
@@ -290,7 +298,7 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
 
   if (valid.length === 0) {
       valid = powerItems.filter(p => {
-          const matchTech = !p.technology || p.technology === config.technology;
+          const matchTech = isTechMatch(p, config.technology);
           const matchHardware = config.technology === "IP" ? isPoe(p) : isSmps(p);
           const matchCams = getPowerCh(p) >= config.recorder_channels;
           return matchTech && matchHardware && matchCams;
@@ -299,7 +307,7 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
 
   if (valid.length === 0) {
       valid = powerItems.filter(p => {
-          const matchTech = !p.technology || p.technology === config.technology;
+          const matchTech = isTechMatch(p, config.technology);
           const matchHardware = config.technology === "IP" ? isPoe(p) : isSmps(p);
           return matchTech && matchHardware;
       });
