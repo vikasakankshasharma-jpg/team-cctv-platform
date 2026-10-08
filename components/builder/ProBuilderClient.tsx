@@ -161,6 +161,9 @@ export function ProBuilderClient() {
             let techList = Array.isArray(p.technologies) && p.technologies.length > 0 
               ? [...p.technologies] 
               : (p.technology ? [p.technology] : []);
+              
+            // Normalize "both" to "Common"
+            techList = techList.map((t: string) => t.toLowerCase() === "both" ? "Common" : t);
 
             if (techList.length === 0 || (techList.length === 1 && techList[0] === "Common")) {
               if (cableType === "CAT6" || sku.startsWith("cab-ip") || sku.startsWith("poe-") || /(\bpoe\b|\brj45\b|\bnvr\b)/i.test(name)) {
