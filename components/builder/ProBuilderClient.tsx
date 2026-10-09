@@ -510,7 +510,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       <div className="flex-1 p-4 md:p-8 overflow-y-auto h-screen">
-        <div className="max-w-5xl mx-auto space-y-8">
+        <div className="max-w-5xl mx-auto space-y-8 pb-32">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Pro Builder</h1>
             <p className="text-slate-500 mt-2">Build a custom quotation item by item.</p>

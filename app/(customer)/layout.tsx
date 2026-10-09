@@ -43,6 +43,7 @@ export default async function CustomerLayout({
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
   const isWizard = pathname.startsWith("/wizard");
+  const hideFooter = pathname.startsWith("/wizard") || pathname.startsWith("/pro-builder");
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-zinc-950 font-sans transition-colors duration-500 selection:bg-blue-600 selection:text-white">
@@ -120,7 +121,7 @@ export default async function CustomerLayout({
         {children}
       </main>
 
-      {!isWizard && <SiteFooter />}
+      {!hideFooter && <SiteFooter />}
 
       {/* Sticky mobile CTA bar ?" hidden on wizard pages (handled inside component) */}
       <MobileStickyCtaBar />
