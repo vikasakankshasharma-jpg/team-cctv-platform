@@ -109,14 +109,23 @@ export function ProBuilderClient() {
               /(\bhdd\b|\bhard\s*(disk|drive)\b|\bsurveillance\s*drive\b|\bpurple\b|\bskyhawk\b)/i.test(name);
 
             let normCat = "upgrades";
-            if (cat.includes("camera") || cat.includes("cctv_camera")) normCat = "camera";
+            // 1. Strictly respect explicit Admin Category first
+            if (cat === "cctv_camera" || cat === "camera") normCat = "camera";
+            else if (cat === "recorder" || cat === "dvr" || cat === "nvr") normCat = "recorder";
+            else if (cat === "storage") normCat = "storage";
+            else if (cat === "cable") normCat = "cable";
+            else if (cat === "power_device" || cat === "power") normCat = "power";
+            else if (cat === "network" || cat === "rack" || cat === "accessories" || cat === "accessory") normCat = "upgrades";
+            else if (cat === "installation" || cat === "labor") normCat = "installation";
+            else if (cat === "connector") normCat = "connector";
+            // 2. Fallback "brain" fuzzy matching for missing or legacy categories
+            else if (cat.includes("camera") || cat.includes("cctv_camera")) normCat = "camera";
             else if (cat.includes("recorder") || cat.includes("dvr") || cat.includes("nvr")) normCat = "recorder";
             else if (isStorage) normCat = "storage";
             else if (cat.includes("connector") || /(\brj45\b|\bbnc\b|\bdc\b)/i.test(name) || name.includes("connector")) normCat = "connector";
             else if (isCable && !name.includes("hdmi") && !cat.includes("hdmi")) normCat = "cable";
             else if (cat.includes("power") || cat.includes("power_device") || name.includes("poe") || name.includes("smps")) normCat = "power";
-            else if (cat === "installation" || cat === "labor") normCat = "installation";
-            else normCat = "upgrades"; // Catches Racks, Display, Mount Box, Network Device (Router), HDMI cables, etc.
+            else normCat = "upgrades";
 
             // Derived camera form factor
             let formFactor = p.form_factor ? p.form_factor.toLowerCase() : "";
@@ -1107,3 +1116,5 @@ export function ProBuilderClient() {
     </div>
   );
 }
+
+
