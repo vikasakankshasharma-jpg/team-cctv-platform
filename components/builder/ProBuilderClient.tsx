@@ -881,6 +881,25 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     p.derivedChannels && 
                     p.derivedChannels < camCount;
 
+                  let recConnectorQty = 0;
+                  let recConnectorLabel = "";
+                  if (activeCategory === "connector" && camCount > 0) {
+                    const name = (p.display_name || p.sku || "").toUpperCase();
+                    if (name.includes("BNC") && name.includes("DC")) {
+                       recConnectorQty = camCount;
+                       recConnectorLabel = `${camCount} pairs (1 set per camera)`;
+                    } else if (name.includes("RJ45") || name.includes("BNC")) {
+                       recConnectorQty = camCount * 2;
+                       recConnectorLabel = `${camCount * 2} units (2 per camera)`;
+                    } else if (name.includes("DC")) {
+                       recConnectorQty = camCount;
+                       recConnectorLabel = `${camCount} units (1 per camera)`;
+                    } else {
+                       recConnectorQty = camCount * 2; // Default fallback for generic connectors
+                       recConnectorLabel = `${camCount * 2} units (2 per camera)`;
+                    }
+                  }
+
                   return (
                     <div key={p.id} className={`bg-white rounded-2xl border p-4 flex flex-col h-full hover:shadow-lg transition-all ${isRecommendedStorage || isRecommendedRecorder ? 'border-blue-300 ring-1 ring-blue-100' : 'border-slate-200'}`}>
                       <div className="flex-1 space-y-3">
@@ -958,7 +977,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                             <button onClick={() => addItem(p)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">+</button>
                           </div>
                         ) : (
-                          <Button onClick={() => addItem(p)} className="w-full bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-md">
+                          <Button onClick={() => addItem(p, recConnectorQty > 0 ? recConnectorQty : 1)} className="w-full bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-md">
                             Add to Quote
                           </Button>
                         )}
