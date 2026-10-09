@@ -215,7 +215,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
 
             return {
               ...p,
-              unit_multiplier: (normCat === "installation" || (p.category || "").toLowerCase() === "installation") ? "camera_count" : p.unit_multiplier,
+              unit_multiplier: p.unit_multiplier,
               normCat,
               technologies: techList,
               derivedFormFactor: formFactor,
@@ -991,20 +991,11 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                       
                       <div className="mt-4 pt-4 border-t border-slate-100">
                         {inCart ? (
-                          p.unit_multiplier === "camera_count" ? (
-                            <div className="flex items-center justify-between bg-blue-50 rounded-xl px-3 py-2 border border-blue-200">
-                              <span className="text-xs font-bold text-blue-900">Added ({camCount} Cameras)</span>
-                              <button onClick={() => removeItem(p.id)} className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors">
-                                <Trash2 className="w-3.5 h-3.5" /> Remove
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-between bg-blue-50 rounded-xl p-1">
-                              <button onClick={() => updateQty(p.id, inCart.qty - 1)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">-</button>
-                              <QtyInput qty={inCart.qty} onUpdate={(q) => updateQty(p.id, q)} className="font-bold text-blue-900 w-12 text-base" />
-                              <button onClick={() => addItem(p)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">+</button>
-                            </div>
-                          )
+                          <div className="flex items-center justify-between bg-blue-50 rounded-xl p-1">
+                            <button onClick={() => updateQty(p.id, inCart.qty - 1)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">-</button>
+                            <QtyInput qty={inCart.qty} onUpdate={(q) => updateQty(p.id, q)} className="font-bold text-blue-900 w-12 text-base" />
+                            <button onClick={() => addItem(p)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">+</button>
+                          </div>
                         ) : (
                           <Button onClick={() => addItem(p, autoQty > 0 ? autoQty : 1)} className="w-full bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-md">
                             Add to Quote
@@ -1110,7 +1101,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
             </div>
           ) : (
             items.map(item => {
-              const effQty = item.unit_multiplier === "camera_count" ? camCount : item.qty;
+              const effQty = item.qty;
               return (
                 <div key={item.id} className="flex gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50/50 relative group">
                   <div className="flex-1 min-w-0">

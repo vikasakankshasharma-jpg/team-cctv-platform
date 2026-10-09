@@ -86,15 +86,8 @@ export const useCartStore = create<CartState>()(
   },
   clearCart: () => set({ items: [], technology: null }),
   getTotal: () => {
-    const { items, getCameraCount } = get();
-    const camCount = getCameraCount();
-    return items.reduce((total, item) => {
-      let multiplier = item.qty;
-      if (item.unit_multiplier === "camera_count") {
-        multiplier = camCount;
-      }
-      return total + (item.unit_price * multiplier);
-    }, 0);
+    const { items } = get();
+    return items.reduce((total, item) => total + (item.unit_price * item.qty), 0);
   },
   getCameraCount: () => {
     return get().items.reduce((count, item) => {
