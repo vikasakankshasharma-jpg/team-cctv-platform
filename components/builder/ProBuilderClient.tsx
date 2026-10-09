@@ -1145,7 +1145,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     placeholder="e.g. 9876543210"
                     value={checkoutPhone}
                     onChange={(e) => { setCheckoutPhone(e.target.value); setPhoneError(""); }}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     maxLength={13}
                     autoFocus
                   />
@@ -1158,7 +1158,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     placeholder="e.g. Rajesh Kumar"
                     value={checkoutName}
                     onChange={(e) => setCheckoutName(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                 </div>
                 <div className="flex gap-2">

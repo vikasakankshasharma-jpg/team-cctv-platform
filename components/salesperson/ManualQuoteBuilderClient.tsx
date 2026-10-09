@@ -270,20 +270,20 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><User className="w-3 h-3"/> Name</label>
-                <input required value={leadForm.name} onChange={e => setLeadForm(f => ({...f, name: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground" placeholder="Ramesh Sharma" />
+                <input required value={leadForm.name} onChange={e => setLeadForm(f => ({...f, name: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm" placeholder="Ramesh Sharma" />
               </div>
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><Phone className="w-3 h-3"/> Mobile</label>
-                <input required type="tel" pattern="[0-9]{10}" value={leadForm.mobile} onChange={e => setLeadForm(f => ({...f, mobile: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground" placeholder="10-digit number" />
+                <input required type="tel" pattern="[0-9]{10}" value={leadForm.mobile} onChange={e => setLeadForm(f => ({...f, mobile: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm" placeholder="10-digit number" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <div>
                     <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5"><MapPin className="w-3 h-3"/> City</label>
-                    <input required value={leadForm.city} onChange={e => setLeadForm(f => ({...f, city: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground" placeholder="Jaipur" />
+                    <input required value={leadForm.city} onChange={e => setLeadForm(f => ({...f, city: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm" placeholder="Jaipur" />
                  </div>
                  <div>
                     <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5 mb-1.5">Property</label>
-                    <select value={leadForm.property_type} onChange={e => setLeadForm(f => ({...f, property_type: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground">
+                    <select value={leadForm.property_type} onChange={e => setLeadForm(f => ({...f, property_type: e.target.value}))} className="w-full px-4 py-3 rounded-2xl border border-input bg-background text-foreground text-base sm:text-sm">
                       <option value="home">Home / Flat</option>
                       <option value="shop">Shop / Office</option>
                       <option value="factory">Factory</option>
@@ -437,7 +437,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 
                 <div className="flex items-center justify-between text-sm group">
                   <span className="text-muted-foreground flex items-center gap-1"><Plus className="w-3 h-3"/> Installation</span>
-                  <input type="number" min="0" value={installationCost} onChange={e => setInstallationCost(Number(e.target.value) || 0)} className="w-24 px-3 py-1.5 bg-background border border-input rounded-lg text-right font-medium focus:ring-2 focus:ring-primary outline-none transition-all" placeholder="₹0" />
+                  <input type="number" min="0" value={installationCost} onChange={e => setInstallationCost(Number(e.target.value) || 0)} className="w-24 px-3 py-1.5 bg-background border border-input rounded-lg text-right font-medium focus:ring-2 focus:ring-primary outline-none transition-all text-base sm:text-sm" placeholder="₹0" />
                 </div>
 
                 <div className="flex items-center justify-between text-sm group">
@@ -447,7 +447,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                   </div>
                   <div className="flex items-center gap-2">
                     {discountAmount > 0 && <span className="text-xs font-semibold text-success">- ₹{discountAmount.toLocaleString()}</span>}
-                    <input type="number" min="0" max={salespersonMaxDiscount} value={discountPercent} onChange={e => setDiscountPercent(Number(e.target.value) || 0)} className="w-16 px-3 py-1.5 bg-background border border-success/30 rounded-lg text-right text-success font-bold focus:ring-2 focus:ring-success outline-none transition-all" placeholder="0%" />
+                    <input type="number" min="0" max={salespersonMaxDiscount} value={discountPercent} onChange={e => setDiscountPercent(Number(e.target.value) || 0)} className="w-16 px-3 py-1.5 bg-background border border-success/30 rounded-lg text-right text-success font-bold focus:ring-2 focus:ring-success outline-none transition-all text-base sm:text-sm" placeholder="0%" />
                   </div>
                 </div>
               </div>
