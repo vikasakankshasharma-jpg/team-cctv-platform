@@ -203,19 +203,34 @@ export default function SalespersonsClient() {
   const [selectedDistrict, setSelectedDistrict] = useState<{ name: string; slug: string } | null>(null);
   const [geoCities, setGeoCities] = useState<{ label: string; value: string }[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("all");
+  
+  // Tehsils State
+  const [geoTehsils, setGeoTehsils] = useState<{ label: string; value: string; pincodes: string[] }[]>([]);
+  const [selectedTehsil, setSelectedTehsil] = useState<string>("all");
+  const [loadingTehsils, setLoadingTehsils] = useState(false);
+
   const [districtOffices, setDistrictOffices] = useState<any[]>([]);
   const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string, areas: string[], quadrants?: any[] }[]>([]);
 
   const [zonePincodeSearch, setZonePincodeSearch] = useState("");
   
   const filteredAvailablePincodes = useMemo(() => {
-    if (!zonePincodeSearch.trim()) return availablePincodes;
-    const q = zonePincodeSearch.toLowerCase();
-    return availablePincodes.filter(p => 
-      p.pincode.includes(q) || 
-      (p.areas || []).some((a: string) => a.toLowerCase().includes(q))
-    );
-  }, [availablePincodes, zonePincodeSearch]);
+    let result = availablePincodes;
+    if (selectedTehsil && selectedTehsil !== "all") {
+      const tehsilData = geoTehsils.find(t => t.value === selectedTehsil);
+      if (tehsilData) {
+        result = result.filter(p => tehsilData.pincodes.includes(p.pincode));
+      }
+    }
+    if (zonePincodeSearch.trim()) {
+      const q = zonePincodeSearch.toLowerCase();
+      result = result.filter(p => 
+        p.pincode.includes(q) || 
+        (p.areas || []).some((a: string) => a.toLowerCase().includes(q))
+      );
+    }
+    return result;
+  }, [availablePincodes, zonePincodeSearch, selectedTehsil, geoTehsils]);
 
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -258,6 +273,8 @@ export default function SalespersonsClient() {
     setGeoDistricts([]);
     setSelectedCity("all");
     setGeoCities([]);
+    setSelectedTehsil("all");
+    setGeoTehsils([]);
     setDistrictOffices([]);
     setAvailablePincodes([]);
     setLoadingDistricts(true);
@@ -408,7 +425,10 @@ export default function SalespersonsClient() {
     setSelectedDistrict({ name, slug });
     setModalMapQuery({ type: 'district', query: name });
     setSelectedCity("all");
+    setSelectedTehsil("all");
+    setGeoTehsils([]);
     setLoadingOffices(true);
+    setLoadingTehsils(true);
 
     fetch(`/api/admin/geo?type=offices&state=${selectedState.slug}&district=${slug}&_t=${Date.now()}${forceRefresh ? '&refresh=true' : ''}`)
       .then(async r => {
@@ -441,10 +461,31 @@ export default function SalespersonsClient() {
         }));
 
         toast.success(`Loaded ${grouped.length} pincodes in ${name}`);
+
+        // Fetch Tehsils in background
+        fetch(`/api/admin/geo/tehsils?state=${selectedState.slug}&district=${slug}`)
+          .then(res => res.json())
+          .then(tehsilData => {
+            if (tehsilData && !tehsilData.error) {
+              const tehsilOpts = [
+                { label: `All Tehsils in ${name}`, value: "all", pincodes: [] },
+                ...Object.keys(tehsilData).map(tName => ({
+                  label: `${tName} (${tehsilData[tName].length} PINs)`,
+                  value: tName,
+                  pincodes: tehsilData[tName]
+                }))
+              ];
+              setGeoTehsils(tehsilOpts);
+            }
+          })
+          .catch(e => console.error("Failed to load tehsils", e))
+          .finally(() => setLoadingTehsils(false));
+
       })
       .catch((err) => {
         console.error(err);
         toast.error("Failed to load district pincodes");
+        setLoadingTehsils(false);
       })
       .finally(() => setLoadingOffices(false));
   };
@@ -1118,6 +1159,21 @@ export default function SalespersonsClient() {
                 </div>
               )}
 
+              {/* 4. Tehsil Filter (AI Powered) */}
+              {selectedDistrict && (
+                <div className="animate-in fade-in duration-200">
+                  <SearchableDropdown
+                    label="4. Select Tehsil (AI Powered)"
+                    placeholder={loadingTehsils ? "AI is analyzing PINCODEs..." : "Select Tehsil..."}
+                    value={selectedTehsil}
+                    displayValue={selectedTehsil === "all" ? `All Tehsils in ${selectedDistrict.name}` : geoTehsils.find(t => t.value === selectedTehsil)?.label || selectedTehsil}
+                    options={geoTehsils}
+                    onSelect={(val) => setSelectedTehsil(val)}
+                    disabled={loadingTehsils}
+                    loading={loadingTehsils}
+                  />
+                </div>
+              )}
 
 
               {/* Pincodes Multi-Selection Box */}

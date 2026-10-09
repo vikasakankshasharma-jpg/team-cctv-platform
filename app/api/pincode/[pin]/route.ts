@@ -217,18 +217,22 @@ export async function GET(
       try {
         const { GoogleGenAI } = await import("@google/genai");
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        const prompt = `You are a geographic expert of India. Divide the geographic area of PINCODE ${pin} in ${firstOffice.District}, ${firstOffice.State} into exactly 4 equal geographic quadrants (North-West, North-East, South-East, South-West). 
+        const prompt = `You are a geographic expert of India. I have the following delivery locations/sub-post offices for PINCODE ${pin} in ${firstOffice.District}, ${firstOffice.State}:
+${formattedAreas.join(", ")}
+
+Divide these EXACT locations into exactly 4 geographic quadrants (North-West, North-East, South-East, South-West) based on their real-world geographic distribution within the pincode.
+Do NOT invent any new places, landmarks, or anchors. ONLY use the location names provided above.
 For each quadrant, provide:
 1. "zone": The quadrant name (e.g., "North-West").
-2. "anchor": The single most prominent, well-known, and map-searchable landmark or major intersection exactly in the center of that quadrant.
-3. "coverage": A brief string listing the key localities covered in that quadrant.
+2. "anchor": The most prominent location from the provided list for this quadrant.
+3. "coverage": A comma-separated string of the locations from the list that fall into this quadrant. Ensure all provided locations are distributed across the 4 quadrants.
 Return ONLY a valid JSON array of 4 objects. 
 Example:
 [
-  { "zone": "North-West", "anchor": "Chandpole Gate", "coverage": "Purani Basti, Nahargarh" },
-  { "zone": "North-East", "anchor": "Chhoti Chaupar", "coverage": "Indra Bazar, Khazane Walon" },
-  { "zone": "South-East", "anchor": "Panch Batti", "coverage": "M.I. Road, Jayanti Market" },
-  { "zone": "South-West", "anchor": "Statue Circle", "coverage": "Ashok Nagar, Hathroi" }
+  { "zone": "North-West", "anchor": "Location A", "coverage": "Location A, Location B" },
+  { "zone": "North-East", "anchor": "Location C", "coverage": "Location C" },
+  { "zone": "South-East", "anchor": "Location D", "coverage": "Location D, Location E" },
+  { "zone": "South-West", "anchor": "Location F", "coverage": "Location F, Location G" }
 ]`;
         const aiRes = await ai.models.generateContent({
           model: "gemini-2.5-flash",
