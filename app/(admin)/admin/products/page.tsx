@@ -159,7 +159,11 @@ export default function AdminProductsPage() {
       const match = rest.display_name?.toLowerCase().match(/(\\d+)\\s*u\\b/);
       if (match) rest.rack_u_height = parseInt(match[1]);
     }
-    setEditingProduct({ ...rest, technical_name: (rest.technical_name || '') + '-COPY' });
+    setEditingProduct({ 
+      ...rest, 
+      display_name: (rest.display_name || "") + " (Copy)",
+      technical_name: "" 
+    });
     setActiveTab('basic');
     setIsModalOpen(true);
   };
@@ -328,7 +332,7 @@ export default function AdminProductsPage() {
       fetchProducts(); // Refresh list
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save product");
+      toast.error(error instanceof Error ? error.message : "Failed to save product");
     } finally {
       setIsSaving(false);
     }
@@ -1370,6 +1374,7 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+
 
 
 
