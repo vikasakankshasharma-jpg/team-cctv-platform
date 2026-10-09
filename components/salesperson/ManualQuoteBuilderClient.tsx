@@ -142,7 +142,17 @@ export default function ManualQuoteBuilderClient() {
       
       // Normalize category to match tabs
       let normCat = (p.category || "").toLowerCase();
-      if (normCat.includes("cam") || normCat.includes("cctv")) normCat = "camera";
+      // 1. Strictly respect explicit Admin Category
+      if (normCat === "cctv_camera" || normCat === "camera") normCat = "camera";
+      else if (normCat === "recorder" || normCat === "dvr" || normCat === "nvr") normCat = "recorder";
+      else if (normCat === "storage") normCat = "storage";
+      else if (normCat === "cable") normCat = "cable";
+      else if (normCat === "power_device" || normCat === "power") normCat = "power";
+      else if (normCat === "accessories" || normCat === "accessory" || normCat === "rack" || normCat === "network") normCat = "accessory";
+      else if (normCat === "installation" || normCat === "labor") normCat = "installation";
+      else if (normCat === "connector") normCat = "accessory";
+      // 2. Fallback fuzzy match
+      else if (normCat.includes("cam") || normCat.includes("cctv")) normCat = "camera";
       else if (normCat.includes("rec") || normCat.includes("dvr") || normCat.includes("nvr")) normCat = "recorder";
       else if (normCat.includes("stor") || normCat.includes("hdd") || normCat.includes("hard drive")) normCat = "storage";
       else if (normCat.includes("cab") || normCat.includes("wire")) normCat = "cable";
@@ -468,3 +478,4 @@ export default function ManualQuoteBuilderClient() {
     </div>
   );
 }
+
