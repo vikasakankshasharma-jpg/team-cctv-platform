@@ -153,6 +153,17 @@ export default function AdminProductsPage() {
     return `${category}/General`;
   };
 
+    const handleDuplicate = (product: Product) => {
+    const { id, created_at, updated_at, ...rest } = product;
+    if (rest.category === 'rack' && !rest.rack_u_height) {
+      const match = rest.display_name?.toLowerCase().match(/(\\d+)\\s*u\\b/);
+      if (match) rest.rack_u_height = parseInt(match[1]);
+    }
+    setEditingProduct({ ...rest, technical_name: (rest.technical_name || '') + '-COPY' });
+    setActiveTab('basic');
+    setIsModalOpen(true);
+  };
+
   const handleEdit = (product: Product) => {
     const p = { ...product };
     
@@ -400,6 +411,7 @@ export default function AdminProductsPage() {
             <ProductInventory
               products={products}
               onEdit={handleEdit}
+                onDuplicate={handleDuplicate}
               onToggle={handleToggleActive}
               onFiltersChange={setActiveFilters}
               selectedIds={selectedIds}
@@ -1259,9 +1271,16 @@ export default function AdminProductsPage() {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                form="product-form"
+                              {editingProduct.id && (
+                  <button
+                    type="button"
+                    onClick={() => handleDuplicate(editingProduct as Product)}
+                    className="flex items-center gap-2 px-5 py-2 border border-border text-foreground hover:bg-secondary rounded-full text-sm font-semibold transition-colors"
+                  >
+                    Duplicate as New
+                  </button>
+                )}
+                <button type="submit" form="product-form"
                 disabled={isSaving}
                 className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full text-sm font-semibold shadow-sm disabled:opacity-50 transition-colors"
               >
@@ -1275,3 +1294,4 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+

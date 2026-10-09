@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { 
-  Search, ChevronDown, ChevronRight, Edit2, Camera, Monitor, 
+  Search, ChevronDown, ChevronRight, Edit2, Copy, Camera, Monitor, 
   Layers, Zap, Package, HardDrive, Cpu, ShieldCheck,
   ListFilter, Filter, Wrench, Shield, Tv, Box, Server, Square, CheckSquare
 } from "lucide-react";
@@ -61,7 +61,8 @@ function SubCategoryGroup({
   label,
   products,
   onEdit,
-  onToggle,
+    onDuplicate,
+    onToggle,
   selectedIds,
   onToggleSelect,
   onSelectAllGroup,
@@ -70,6 +71,7 @@ function SubCategoryGroup({
   label: string;
   products: Product[];
   onEdit: (p: Product) => void;
+    onDuplicate?: (p: Product) => void;
   onToggle: (p: Product) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
@@ -259,7 +261,8 @@ function CategorySection({
   categoryKey,
   products,
   onEdit,
-  onToggle,
+    onDuplicate,
+    onToggle,
   selectedIds,
   onToggleSelect,
   onSelectAllGroup,
@@ -268,6 +271,7 @@ function CategorySection({
   categoryKey: string;
   products: Product[];
   onEdit: (p: Product) => void;
+    onDuplicate?: (p: Product) => void;
   onToggle: (p: Product) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
@@ -322,6 +326,7 @@ function CategorySection({
               label={subLabel}
               products={items}
               onEdit={onEdit}
+              onDuplicate={onDuplicate}
               onToggle={onToggle}
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
@@ -340,6 +345,7 @@ function CategorySection({
 interface ProductInventoryProps {
   products: Product[];
   onEdit: (p: Product) => void;
+    onDuplicate?: (p: Product) => void;
   onToggle: (p: Product) => void;
   onFiltersChange?: (filters: { category: string; technology: string }) => void;
   selectedIds?: Set<string>;
@@ -350,8 +356,9 @@ interface ProductInventoryProps {
 
 export function ProductInventory({ 
   products, 
-  onEdit, 
-  onToggle, 
+  onEdit,
+    onDuplicate,
+    onToggle, 
   onFiltersChange,
   selectedIds,
   onToggleSelect,
@@ -494,6 +501,7 @@ export function ProductInventory({
               categoryKey={cat}
               products={items}
               onEdit={onEdit}
+              onDuplicate={onDuplicate}
               onToggle={onToggle}
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
@@ -519,6 +527,7 @@ export function ProductInventory({
               categoryKey={cat}
               products={items}
               onEdit={onEdit}
+              onDuplicate={onDuplicate}
               onToggle={onToggle}
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
