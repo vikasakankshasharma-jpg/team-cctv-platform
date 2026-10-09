@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface CartItem {
   id: string;
@@ -24,7 +25,9 @@ interface CartState {
   getCameraCount: () => number;
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
   technology: null,
   items: [],
   setTechnology: (tech) => {
@@ -101,4 +104,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       return count;
     }, 0);
   }
-}));
+    }),
+    { name: "cctv-cart-storage" }
+  )
+);
