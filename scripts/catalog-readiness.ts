@@ -9,10 +9,10 @@ async function checkCatalog() {
 
   const snapshot = await db.collection("products")
     .where("is_active", "==", true)
-    .where("is_quotation_eligible", "==", true)
+    
     .get();
 
-  const products = snapshot.docs.map(doc => doc.data());
+  const products = snapshot.docs.map(doc => doc.data()).filter(p => p.is_quotation_eligible !== false);
   console.log(`Found ${products.length} active and quotation-eligible products.\n`);
 
   let errors = 0;
@@ -100,3 +100,4 @@ async function checkCatalog() {
 }
 
 checkCatalog().catch(console.error);
+

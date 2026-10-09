@@ -27,7 +27,7 @@ export function useRealtimeInventory(initialProducts: Product[], initialAddons: 
         } as Product;
       });
       
-      setProducts(updatedProducts);
+      setProducts(updatedProducts.filter(p => p.is_quotation_eligible !== false));
     }, (error) => {
       console.error("Error syncing products:", error);
     });
@@ -57,3 +57,4 @@ export function useRealtimeInventory(initialProducts: Product[], initialAddons: 
 
   return { products, addons };
 }
+

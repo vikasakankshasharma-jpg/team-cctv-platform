@@ -12,12 +12,12 @@ export const getCachedProducts = unstable_cache(
       const snap = await adminDb
         .collection("products")
         .where("is_active", "==", true)
-        .where("is_quotation_eligible", "==", true)
+        
         .get();
 
       const items = snap.docs
         .map(doc => ({ id: doc.id, ...doc.data() } as Product))
-        .filter(p => p.is_deleted !== true && p.is_addon !== true);
+        .filter(p => p.is_deleted !== true && p.is_addon !== true && p.is_quotation_eligible !== false);
       
       return items;
     } catch (error) {
@@ -83,3 +83,4 @@ export const getCachedAddons = unstable_cache(
     tags: ["catalog", "addons"],
   }
 );
+

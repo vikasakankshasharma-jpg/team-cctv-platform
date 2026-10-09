@@ -61,10 +61,10 @@ async function getActiveProducts(): Promise<Product[]> {
   const snap = await adminDb
     .collection("products")
     .where("is_active", "==", true)
-    .where("is_quotation_eligible", "==", true)
+    
     .get();
 
-  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)).filter(p => p.is_quotation_eligible !== false);
 }
 
 async function getActiveAddons(): Promise<Addon[]> {
@@ -187,4 +187,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
+
 
