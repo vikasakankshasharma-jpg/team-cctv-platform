@@ -668,7 +668,18 @@ function calculateCabling(
     conduitRate = settings.conduit_cost_per_meter || 20;
   }
 
-  const cableMarginPct = (settings as any).margin_cable ?? 50;
+      let cableMarginPct = (settings as any).margin_cable ?? 50;
+    
+    // Dynamic Margin Slab for short cable runs to protect installer profitability
+    // (Compensates for fixed labor time when material totals are very low)
+    const avgMeters = totalMeters / (wiredCameraCount || 1);
+    if (avgMeters <= 5) {
+      cableMarginPct += 120; // Massive boost for <=5m
+    } else if (avgMeters <= 10) {
+      cableMarginPct += 60;  // High boost for <=10m
+    } else if (avgMeters <= 15) {
+      cableMarginPct += 20;  // Slight boost for <=15m
+    }
   const cableRetailPerMeter = Math.round(baseCostPerMeter * (1 + cableMarginPct / 100));
   const finalRatePerMeter = Math.round((cableRetailPerMeter + conduitRate) * locationMultiplier);
   const typeLabel = isConduit ? `Conduit Pipe + ${cableTypeLabel}` : `${cableTypeLabel} (Open)`;
@@ -1714,6 +1725,7 @@ export function generatePricingSnapshot(
     recommendation_reasons: []
   };
 }
+
 
 
 
