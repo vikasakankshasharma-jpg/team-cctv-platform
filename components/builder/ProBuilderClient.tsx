@@ -10,6 +10,34 @@ import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export function ProBuilderClient() {
+
+const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q: number) => void, className?: string }) => {
+  const [localQty, setLocalQty] = useState<string | number>(qty);
+  useEffect(() => { setLocalQty(qty); }, [qty]);
+  return (
+    <input 
+      type="number"
+      value={localQty}
+      onChange={e => setLocalQty(e.target.value)}
+      onBlur={() => {
+        const parsed = parseInt(localQty as string);
+        if (isNaN(parsed) || parsed < 1) {
+          setLocalQty(qty); // Revert to old valid qty if they clear it and blur, or default to 1? Wait, 1 is safer.
+          // Wait, actually better to revert to 1 if it's invalid
+          setLocalQty(1);
+          onUpdate(1);
+        } else {
+          onUpdate(parsed);
+        }
+      }}
+      onKeyDown={e => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+      }}
+      className={`bg-transparent border-none outline-none text-center focus:ring-0 p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
+    />
+  );
+};
+
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
@@ -926,7 +954,7 @@ export function ProBuilderClient() {
                         {inCart ? (
                           <div className="flex items-center justify-between bg-blue-50 rounded-xl p-1">
                             <button onClick={() => updateQty(p.id, inCart.qty - 1)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">-</button>
-                            <span className="font-bold text-blue-900">{inCart.qty}</span>
+                            <QtyInput qty={inCart.qty} onUpdate={(q) => updateQty(p.id, q)} className="font-bold text-blue-900 w-12" />
                             <button onClick={() => addItem(p)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">+</button>
                           </div>
                         ) : (
@@ -1024,7 +1052,7 @@ export function ProBuilderClient() {
                         <button onClick={() => updateQty(item.id, item.qty - 1)} className="text-slate-400 hover:text-slate-700">
                           {item.qty === 1 ? <Trash2 className="w-4 h-4 text-red-400" /> : <Minus className="w-4 h-4" />}
                         </button>
-                        <span className="text-xs font-bold w-4 text-center">{item.qty}</span>
+                        <QtyInput qty={item.qty} onUpdate={(q) => updateQty(item.id, q)} className="text-xs font-bold w-10 text-center" />
                         <button onClick={() => updateQty(item.id, item.qty + 1)} className="text-slate-400 hover:text-slate-700">
                           <Plus className="w-4 h-4" />
                         </button>

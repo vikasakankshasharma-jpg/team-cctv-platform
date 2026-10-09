@@ -31,6 +31,34 @@ const CATEGORIES_TO_SHOW: VendorCategory[] = [
 ];
 
 export default function ManualQuoteBuilderClient() {
+
+const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q: number) => void, className?: string }) => {
+  const [localQty, setLocalQty] = useState<string | number>(qty);
+  useEffect(() => { setLocalQty(qty); }, [qty]);
+  return (
+    <input 
+      type="number"
+      value={localQty}
+      onChange={e => setLocalQty(e.target.value)}
+      onBlur={() => {
+        const parsed = parseInt(localQty as string);
+        if (isNaN(parsed) || parsed < 1) {
+          setLocalQty(qty); // Revert to old valid qty if they clear it and blur, or default to 1? Wait, 1 is safer.
+          // Wait, actually better to revert to 1 if it's invalid
+          setLocalQty(1);
+          onUpdate(1);
+        } else {
+          onUpdate(parsed);
+        }
+      }}
+      onKeyDown={e => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+      }}
+      className={`bg-transparent border-none outline-none text-center focus:ring-0 p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
+    />
+  );
+};
+
   const [step, setStep] = useState<"lead" | "pos" | "done">("lead");
   
   // Lead state
@@ -376,7 +404,7 @@ export default function ManualQuoteBuilderClient() {
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center bg-background rounded-lg border border-border h-8">
                           <button onClick={() => updateCartQty(item.id!, -1)} className="w-8 h-full flex items-center justify-center text-muted-foreground hover:text-foreground">-</button>
-                          <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
+                          <QtyInput qty={item.quantity} onUpdate={(q) => updateCartQty(item.id!, q - item.quantity)} className="text-sm font-bold w-10 text-center" />
                           <button onClick={() => updateCartQty(item.id!, 1)} className="w-8 h-full flex items-center justify-center text-muted-foreground hover:text-foreground">+</button>
                         </div>
                         <span className="font-bold text-sm">₹{(item.unit_price * item.quantity).toLocaleString()}</span>
