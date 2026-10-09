@@ -43,6 +43,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const [showMobileCart, setShowMobileCart] = useState(false);
   const [checkoutPhone, setCheckoutPhone] = useState("");
   const [checkoutName, setCheckoutName] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -1000,30 +1001,59 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 )}
               </div>
               
-              {/* Sticky Next Button */}
-              {activeStepIndex > 0 && activeStepIndex < STEPS.length - 1 && (
-                <div className="sticky bottom-6 mt-8 w-full max-w-sm mx-auto z-20">
-                  <Button 
-                    onClick={() => handleNextStep()}
-                    className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl shadow-2xl shadow-slate-900/20 text-lg font-bold flex items-center justify-between px-6"
-                  >
-                    <span>Next: {STEPS[activeStepIndex + 1].label}</span>
-                    <span>→</span>
-                  </Button>
-                </div>
-              )}
+              {/* Sticky Bottom Navigation & Mobile Cart Toggle */}
+                {(activeStepIndex > 0) && (
+                  <div className="sticky bottom-0 -mx-4 md:-mx-8 px-4 md:px-8 py-4 bg-white/90 backdrop-blur-md border-t border-slate-200 z-30 mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+                    
+                    {/* Mobile Cart Toggle */}
+                    <div className="md:hidden flex items-center justify-between w-full mb-2">
+                      <div>
+                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Cart Total ({items.length})</div>
+                        <div className="text-lg font-black text-slate-900">INR {getTotal().toLocaleString('en-IN')}</div>
+                      </div>
+                      <Button onClick={() => setShowMobileCart(true)} variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 h-10 px-4 rounded-xl font-bold flex items-center gap-2">
+                        <ShoppingCart className="w-4 h-4" /> View Cart
+                      </Button>
+                    </div>
+
+                    {activeStepIndex < STEPS.length - 1 && (
+                      <Button 
+                        onClick={() => handleNextStep()}
+                        className="w-full sm:max-w-sm h-12 sm:h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-xl sm:rounded-2xl shadow-xl text-base sm:text-lg font-bold flex items-center justify-between px-6 transition-transform active:scale-95"
+                      >
+                        <span>Next: {STEPS[activeStepIndex + 1].label}</span>
+                        <span>&rarr;</span>
+                      </Button>
+                    )}
+                    
+                    {activeStepIndex === STEPS.length - 1 && (
+                      <Button 
+                        onClick={() => setShowMobileCart(true)}
+                        className="w-full sm:max-w-sm h-12 sm:h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl sm:rounded-2xl shadow-xl text-base sm:text-lg font-bold flex md:hidden items-center justify-between px-6 transition-transform active:scale-95"
+                      >
+                        <span>Complete Checkout</span>
+                        <span>&rarr;</span>
+                      </Button>
+                    )}
+                  </div>
+                )}
             </>
           )}
         </div>
       </div>
 
-      <div className="w-full md:w-[400px] bg-white border-l border-slate-200 h-screen overflow-y-auto flex flex-col shadow-2xl z-10 sticky top-0">
+      <div className={`fixed inset-0 z-50 bg-white md:static md:inset-auto md:z-10 w-full md:w-[400px] border-l border-slate-200 h-screen overflow-y-auto flex flex-col shadow-2xl transition-transform duration-300 ${showMobileCart ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}>
         <div className="p-6 border-b border-slate-100 bg-slate-50">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5" /> Current Build
-            </h2>
-            <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">{items.length} items</span>
+                <ShoppingCart className="w-5 h-5" /> Current Build
+              </h2>
+              <div className="flex items-center gap-2">
+                <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">{items.length} items</span>
+                <button onClick={() => setShowMobileCart(false)} className="md:hidden p-1.5 bg-slate-200 hover:bg-slate-300 rounded-full text-slate-700 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
           </div>
           {isOverCapacity && (
             <div className="mt-4 bg-yellow-50 border border-yellow-200 p-3 rounded-xl flex gap-3 text-yellow-800 text-sm font-medium">
