@@ -670,15 +670,18 @@ function calculateCabling(
 
       let cableMarginPct = (settings as any).margin_cable ?? 50;
     
-    // Dynamic Margin Slab for short cable runs to protect installer profitability
-    // (Compensates for fixed labor time when material totals are very low)
-    const avgMeters = totalMeters / (wiredCameraCount || 1);
-    if (avgMeters <= 5) {
-      cableMarginPct += 120; // Massive boost for <=5m
-    } else if (avgMeters <= 10) {
-      cableMarginPct += 60;  // High boost for <=10m
-    } else if (avgMeters <= 15) {
-      cableMarginPct += 20;  // Slight boost for <=15m
+    // Admin-controlled Dynamic Margin Slabs for short cable runs
+    if (selectedCable?.enable_margin_slabs && Array.isArray(selectedCable.margin_slabs)) {
+      const avgMeters = totalMeters / (wiredCameraCount || 1);
+      // Sort slabs by max_meters ascending to apply the lowest matching bracket
+      const slabs = [...selectedCable.margin_slabs].sort((a, b) => a.max_meters - b.max_meters);
+      
+      for (const slab of slabs) {
+        if (avgMeters <= slab.max_meters) {
+          cableMarginPct += (slab.margin_modifier || 0);
+          break; // Stop at the first matching slab
+        }
+      }
     }
   const cableRetailPerMeter = Math.round(baseCostPerMeter * (1 + cableMarginPct / 100));
   const finalRatePerMeter = Math.round((cableRetailPerMeter + conduitRate) * locationMultiplier);
@@ -1725,6 +1728,7 @@ export function generatePricingSnapshot(
     recommendation_reasons: []
   };
 }
+
 
 
 

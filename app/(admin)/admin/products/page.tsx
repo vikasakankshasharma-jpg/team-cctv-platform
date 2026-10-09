@@ -1126,6 +1126,82 @@ export default function AdminProductsPage() {
                       </div>
                     </div>
 
+                                          {/* Dynamic Margin Slabs (Cable Only) */}
+                      {editingProduct.category === "cable" && (
+                        <div className="p-6 bg-card border border-border rounded-2xl mb-6 mt-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <h4 className="text-sm font-semibold text-foreground">Dynamic Margin Slabs</h4>
+                              <p className="text-xs text-muted-foreground mt-0.5 font-medium">Add extra margin % for short cable runs.</p>
+                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={!!editingProduct.enable_margin_slabs}
+                                onChange={e => setEditingProduct({...editingProduct, enable_margin_slabs: e.target.checked})}
+                                className="rounded border-input text-primary focus:ring-primary h-4 w-4"
+                              />
+                              <span className="text-sm font-semibold">Enable</span>
+                            </label>
+                          </div>
+                          
+                          {editingProduct.enable_margin_slabs && (
+                            <div className="space-y-3">
+                              {(editingProduct.margin_slabs || []).map((slab, i) => (
+                                <div key={i} className="flex gap-3 items-end">
+                                  <div className="flex-1 space-y-1.5">
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Up to (Meters)</label>
+                                    <input
+                                      type="number"
+                                      value={slab.max_meters || ""}
+                                      onChange={e => {
+                                        const newSlabs = [...(editingProduct.margin_slabs || [])];
+                                        newSlabs[i] = { ...slab, max_meters: Number(e.target.value) };
+                                        setEditingProduct({ ...editingProduct, margin_slabs: newSlabs });
+                                      }}
+                                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    />
+                                  </div>
+                                  <div className="flex-1 space-y-1.5">
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Add Margin (%)</label>
+                                    <input
+                                      type="number"
+                                      value={slab.margin_modifier || ""}
+                                      onChange={e => {
+                                        const newSlabs = [...(editingProduct.margin_slabs || [])];
+                                        newSlabs[i] = { ...slab, margin_modifier: Number(e.target.value) };
+                                        setEditingProduct({ ...editingProduct, margin_slabs: newSlabs });
+                                      }}
+                                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newSlabs = (editingProduct.margin_slabs || []).filter((_, idx) => idx !== i);
+                                      setEditingProduct({ ...editingProduct, margin_slabs: newSlabs });
+                                    }}
+                                    className="h-10 w-10 flex items-center justify-center rounded-md border border-red-200 text-red-500 hover:bg-red-50 shrink-0"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                              
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newSlabs = [...(editingProduct.margin_slabs || []), { max_meters: 5, margin_modifier: 120 }];
+                                  setEditingProduct({ ...editingProduct, margin_slabs: newSlabs });
+                                }}
+                                className="text-sm font-semibold text-primary hover:underline mt-2 inline-block"
+                              >
+                                + Add Slab
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     {/* Bulk Volume Logic */}
                     <div className="p-6 bg-card border border-border rounded-2xl">
                       <div className="mb-4">
@@ -1294,4 +1370,6 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+
+
 

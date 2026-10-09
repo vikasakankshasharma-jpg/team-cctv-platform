@@ -267,6 +267,8 @@ export interface Product {
   is_quotation_eligible?: boolean;
   is_configurator_visible?: boolean;
   is_addon?: boolean;            // NEW: Treat this product as an optional Addon in the wizard
+    enable_margin_slabs?: boolean;
+    margin_slabs?: MarginSlab[];
   [key: string]: any; // Allow dynamic fields from DB
   features?: string[];           // Array of FeatureTag IDs
   
@@ -1255,4 +1257,10 @@ export interface OfflinePaymentVerification {
   admin_notes?: string;
 }
 export * from "./whatsapp";
+
+
+export interface MarginSlab {
+  max_meters: number;
+  margin_modifier: number;
+}
 
