@@ -903,6 +903,9 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     } else if (activeCategory === "upgrades" && (p.category === "camera_mount" || name.includes("JUNCTION") || name.includes("MOUNT"))) {
                       autoQty = camCount;
                       autoQtyLabel = `${camCount} units (1 per camera)`;
+                    } else if (activeCategory === "installation" || p.category === "installation" || p.unit_multiplier === "camera_count") {
+                      autoQty = camCount;
+                      autoQtyLabel = `${camCount} units (1 per camera)`;
                     }
                   }
 
