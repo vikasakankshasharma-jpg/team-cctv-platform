@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { calculateSystemScore } from "@/lib/system-score";
+import { isTechMatch, isBrandMatch } from "@/lib/product-resolver";
 import { 
   Zap, Maximize, Mic, Moon, Camera, Server, HardDrive, Plug, PlusCircle,
   Search, X, Sparkles, Check, CheckCircle2, ChevronDown, ChevronUp, Unlock, Lock, Wrench, ArrowRight, Cable
@@ -208,12 +209,12 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
       : selection.technology;
 
     if (proxyTech && proxyTech !== "both" as any) {
-      list = list.filter(p => p.technologies?.includes(proxyTech as any));
+      list = list.filter(p => isTechMatch(p, proxyTech as string));
     }
     
     const appliedBrand = activeFilters.brand;
     if (appliedBrand && appliedBrand !== "all" && appliedBrand !== "recommend" && appliedBrand !== "unsure") {
-      const brandFiltered = list.filter(p => p.brand?.toLowerCase() === appliedBrand.toLowerCase());
+      const brandFiltered = list.filter(p => isBrandMatch(p, appliedBrand));
       if (brandFiltered.length > 0) {
         list = brandFiltered;
       }
@@ -264,8 +265,9 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         const name = (cam.display_name + " " + cam.technical_name).toLowerCase();
         const formFactor = (cam.form_factor || "").toLowerCase();
         const check = (tag: string) => {
-          if (tag === "mic") return camFeats.some(f => f.includes("mic") || f.includes("audio")) || name.includes("mic") || name.includes("audio");
-          if (tag === "color") return camFeats.some(f => f.includes("color") || f.includes("night")) || name.includes("color");
+          if (tag === "mic") return camFeats.some(f => f.includes("mic") || f.includes("audio") || f.includes("2-way") || f.includes("two-way")) || name.includes("mic") || name.includes("audio") || name.includes("2-way") || name.includes("two-way");
+            if (tag === "2-way") return camFeats.some(f => f.includes("2-way") || f.includes("two-way") || f.includes("speaker")) || name.includes("2-way") || name.includes("two-way") || name.includes("speaker");
+          if (tag === "color") return camFeats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) || name.includes("color") || name.includes("colour");
           if (tag === "ptz") return camFeats.some(f => f.includes("ptz")) || name.includes("ptz");
           if (tag === "dome") return formFactor === "dome" || name.includes("dome");
           if (tag === "bullet") return formFactor === "bullet" || name.includes("bullet");
@@ -283,11 +285,11 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
 
   const filteredRecorders = useMemo(() => {
     let list = products.filter(p => p.category === "recorder" && p.is_active && (p.unit_price || 0) > 0);
-    if (selection.technology && selection.technology !== "both" as any) list = list.filter(p => p.technologies?.includes(selection.technology as any));
+    if (selection.technology && selection.technology !== "both" as any) list = list.filter(p => isTechMatch(p, selection.technology as string));
     list = list.filter(p => (p.max_cameras || p.channels || 0) >= selection.camera_count);
     
     if (activeFilters.brand && activeFilters.brand !== "all") {
-      const brandFiltered = list.filter(p => p.brand === activeFilters.brand);
+      const brandFiltered = list.filter(p => isBrandMatch(p, activeFilters.brand!));
       if (brandFiltered.length > 0) {
         list = brandFiltered;
       }
@@ -310,13 +312,13 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
     if (!activeFilters.type && selection.technology === "Wireless") {
       list = list.filter(a => {
         const name = a.display_name.toLowerCase();
-        return (a as any).storage_type === "Micro SD" || (!(a as any).storage_type && (name.includes("sd card") || name.includes("micro sd") || name.includes("memory card")));
+        return (a as any).storage_type === "Micro SD" || (!(a as any).storage_type && (name.includes("sd card") || name.includes("sdcard") || name.includes("micro sd") || name.includes("microsd") || name.includes("memory card")));
       });
     } else if (activeFilters.type && activeFilters.type !== "all") {
       list = list.filter(a => {
         const name = a.display_name.toLowerCase();
         if (activeFilters.type === "Micro SD") {
-          return (a as any).storage_type === "Micro SD" || (!(a as any).storage_type && (name.includes("sd card") || name.includes("micro sd") || name.includes("memory card")));
+          return (a as any).storage_type === "Micro SD" || (!(a as any).storage_type && (name.includes("sd card") || name.includes("sdcard") || name.includes("micro sd") || name.includes("microsd") || name.includes("memory card")));
         }
         if (activeFilters.type === "Hard Disk") {
           return (a as any).storage_type === "Hard Disk" || (!(a as any).storage_type && (name.includes("hard disk") || name.includes("hdd") || name.includes("purple") || name.includes("skyhawk")));
@@ -343,7 +345,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
       const cat = a.category || "";
       const name = (a.technical_name || a.display_name || "").toLowerCase();
       if (isIP) {
-        return (cat === "power_device" || cat === "power" || cat === "network") && (name.includes("poe") || name.includes("switch"));
+        return (cat === "power_device" || cat === "power" || cat === "network") && (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e") || name.includes("switch"));
       } else {
         return (cat === "power_device" || cat === "power") && (name.includes("smps") || name.includes("power supply") || name.includes("psu"));
       }

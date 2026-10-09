@@ -66,7 +66,10 @@ async function checkCatalog() {
   const neededTechs = ["IP", "HD", "WiFi"];
   
   for (const tech of neededTechs) {
-    const matchingCams = cameras.filter(c => c.technologies && c.technologies.includes(tech));
+    const matchingCams = cameras.filter(c => {
+      const tArr = c.technologies || (c.technology ? [c.technology] : []);
+      return tArr.some((t: any) => t === tech || t.includes(tech) || (tech === "IP" && t.includes("Digital IP")) || (tech === "HD" && t.includes("Analog")));
+    });
     if (matchingCams.length === 0) {
       console.log(`❌ ERROR: No active ${tech} cameras found! Users selecting ${tech} will get a 400 rejection.`);
       errors++;

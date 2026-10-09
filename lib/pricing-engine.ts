@@ -4,6 +4,7 @@
  * Decomposed into modular, testable units with zero-trust server validation.
  */
 
+import { isBrandMatch } from "./product-resolver";
 import type {
   Product,
   Addon,
@@ -1000,7 +1001,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
 
   // Filter by Brand
   if (selection.brand_preference && selection.brand_preference !== "all") {
-    const brandFiltered = pool.filter(cam => cam.brand?.toLowerCase() === selection.brand_preference?.toLowerCase());
+    const brandFiltered = pool.filter(cam => isBrandMatch(cam, selection.brand_preference!));
     // Fallback: If strict brand matching eliminates ALL cameras, drop the filter
     if (brandFiltered.length > 0) {
       pool = brandFiltered;

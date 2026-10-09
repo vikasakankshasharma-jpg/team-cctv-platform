@@ -13,6 +13,7 @@
  */
 
 import type { Product } from "@/types";
+import { isTechMatch } from "./product-resolver";
 
 export type TechnologyKey = "HD" | "IP" | "Wireless";
 
@@ -40,11 +41,7 @@ export function getCatalogCapacity(products: Product[]): CatalogCapacity {
   );
 
   const maxChannelsFor = (tech: string): number => {
-    const recs = activeRecorders.filter((p) =>
-      Array.isArray(p.technologies)
-        ? p.technologies.includes(tech as any)
-        : (p as any).technologies === tech
-    );
+    const recs = activeRecorders.filter((p) => isTechMatch(p, tech));
     if (recs.length === 0) return 16; // safe default
     return Math.max(...recs.map((p) => p.channels || p.max_cameras || 0));
   };

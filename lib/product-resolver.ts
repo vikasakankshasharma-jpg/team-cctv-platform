@@ -1,7 +1,7 @@
 
 import { Product, CCTVRequirement, CCTVConfiguration, ResolvedSystem } from "@/types";
 
-function isTechMatch(p: any, targetTech: string): boolean {
+export function isTechMatch(p: any, targetTech: string): boolean {
   if (!targetTech) return true;
   let targetUpper = String(targetTech).toUpperCase();
   if (targetUpper.includes("DIGITAL IP") || targetUpper.includes("NETWORK")) targetUpper = "IP";
@@ -335,5 +335,7 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
 
   return valid.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
 }
+
+
 
 
