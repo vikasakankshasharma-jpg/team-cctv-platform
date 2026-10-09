@@ -973,7 +973,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                         {inCart ? (
                           <div className="flex items-center justify-between bg-blue-50 rounded-xl p-1">
                             <button onClick={() => updateQty(p.id, inCart.qty - 1)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">-</button>
-                            <QtyInput qty={inCart.qty} onUpdate={(q) => updateQty(p.id, q)} className="font-bold text-blue-900 w-12" />
+                            <QtyInput qty={inCart.qty} onUpdate={(q) => updateQty(p.id, q)} className="font-bold text-blue-900 w-12 text-base" />
                             <button onClick={() => addItem(p)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">+</button>
                           </div>
                         ) : (
@@ -1071,7 +1071,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                         <button onClick={() => updateQty(item.id, item.qty - 1)} className="text-slate-400 hover:text-slate-700">
                           {item.qty === 1 ? <Trash2 className="w-4 h-4 text-red-400" /> : <Minus className="w-4 h-4" />}
                         </button>
-                        <QtyInput qty={item.qty} onUpdate={(q) => updateQty(item.id, q)} className="text-xs font-bold w-10 text-center" />
+                        <QtyInput qty={item.qty} onUpdate={(q) => updateQty(item.id, q)} className="text-base sm:text-xs font-bold w-10 text-center" />
                         <button onClick={() => updateQty(item.id, item.qty + 1)} className="text-slate-400 hover:text-slate-700">
                           <Plus className="w-4 h-4" />
                         </button>

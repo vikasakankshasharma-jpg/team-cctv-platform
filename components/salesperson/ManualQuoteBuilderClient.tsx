@@ -404,7 +404,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center bg-background rounded-lg border border-border h-8">
                           <button onClick={() => updateCartQty(item.id!, -1)} className="w-8 h-full flex items-center justify-center text-muted-foreground hover:text-foreground">-</button>
-                          <QtyInput qty={item.quantity} onUpdate={(q) => updateCartQty(item.id!, q - item.quantity)} className="text-sm font-bold w-10 text-center" />
+                          <QtyInput qty={item.quantity} onUpdate={(q) => updateCartQty(item.id!, q - item.quantity)} className="text-base sm:text-sm font-bold w-10 text-center" />
                           <button onClick={() => updateCartQty(item.id!, 1)} className="w-8 h-full flex items-center justify-center text-muted-foreground hover:text-foreground">+</button>
                         </div>
                         <span className="font-bold text-sm">₹{(item.unit_price * item.quantity).toLocaleString()}</span>
