@@ -634,70 +634,149 @@ function calculateCabling(
     effectiveCableTech = "IP";
   }
 
-  // Find cable in products (filter out bundled boxes with high base costs)
-  const cables = products.filter(p => 
+  // 1. Gather all cables for this technology
+  const allCables = products.filter(p => 
     p.category === "cable" && 
     (p.technologies || []).includes(effectiveCableTech as any) &&
-    ((p.base_cost === undefined || p.base_cost < 100) && (p.unit_price === undefined || p.unit_price < 200))
+    p.is_active !== false && p.stock_status !== "out_of_stock"
   );
-  let selectedCable = cables.find(c => (c.brand || "").toLowerCase() === cameraBrand.toLowerCase());
-  
-  if (!selectedCable && cables.length > 0) {
-    selectedCable = cables[0];
+
+  // 2. Filter by requested brand, fallback if empty
+  let brandCables = allCables.filter(c => (c.brand || "").toLowerCase() === cameraBrand.toLowerCase());
+  if (brandCables.length === 0) {
+    brandCables = allCables; // Fallback to all brands if specific brand is missing
   }
 
-  let baseCostPerMeter = 12;
-  let cableTypeLabel = effectiveCableTech === "IP" ? "CAT6 Cable" : "3+1 Coaxial Cable";
+  // 3. Separate into Bundles and Per-Meter
+  const bundles: Product[] = [];
+  let perMeterCable: Product | null = null;
 
-  if (selectedCable) {
-    baseCostPerMeter = selectedCable.base_cost || 12;
-    cableTypeLabel = selectedCable.display_name || cableTypeLabel;
-  } else {
-    // Legacy fallback using legacy settings as COST if no DB items found
-    if (effectiveCableTech === "IP") {
-      baseCostPerMeter = settings.cable_copper_coated_ip || 12;
-    } else {
-      baseCostPerMeter = settings.cable_copper_coated_hd || 8;
+  for (const c of brandCables) {
+    const nameLower = (c.display_name || "").toLowerCase();
+    
+    // Determine length
+    let len = c.cable_length_m;
+    if (!len) {
+      const match = nameLower.match(/(\d+)\s*(?:m|meter|meters)\b/);
+      if (match) len = parseInt(match[1]);
+    }
+    
+    const isExplicitPerMeter = nameLower.includes("per mtr") || nameLower.includes("per meter") || nameLower.includes("per unit") || c.sku?.toLowerCase().includes("-pu");
+    const isCheap = (c.unit_price !== undefined && c.unit_price < 200) || (c.base_cost !== undefined && c.base_cost < 100);
+
+    if (isExplicitPerMeter || len === 1 || (!len && isCheap)) {
+      if (!perMeterCable || (c.unit_price || 0) < (perMeterCable.unit_price || Infinity)) {
+        perMeterCable = c; // Pick the cheapest per-meter variant
+      }
+    } else if (len && len > 1) {
+      bundles.push({ ...c, parsed_length: len });
     }
   }
-    
-  // Conduit Cost Addition
-  const isConduit = selection.wiring_type === "conduit";
-  let conduitRate = 0;
-  if (isConduit) {
-    conduitRate = settings.conduit_cost_per_meter || 20;
+
+  // 4. Determine Per-Meter Cost & Retail
+  let baseCostPerMeter = 12;
+  let cableTypeLabel = effectiveCableTech === "IP" ? "CAT6 Cable" : "3+1 Coaxial Cable";
+  let perMeterProductId = "cabling_material";
+
+  if (perMeterCable) {
+    baseCostPerMeter = perMeterCable.base_cost || 12;
+    cableTypeLabel = perMeterCable.display_name?.replace(/\(Per Mtr\)/i, "").trim() || cableTypeLabel;
+    perMeterProductId = perMeterCable.id!;
+  } else {
+    baseCostPerMeter = effectiveCableTech === "IP" ? (settings.cable_copper_coated_ip || 12) : (settings.cable_copper_coated_hd || 8);
+  }
+  
+  // Calculate Dynamic Margin Slabs for the Per-Meter rate
+  let cableMarginPct = (settings as any).margin_cable ?? 50;
+  if (perMeterCable?.enable_margin_slabs && Array.isArray(perMeterCable.margin_slabs)) {
+    const avgMeters = totalMeters / (wiredCameraCount || 1);
+    const slabs = [...perMeterCable.margin_slabs].sort((a, b) => a.max_meters - b.max_meters);
+    for (const slab of slabs) {
+      if (avgMeters <= slab.max_meters) {
+        cableMarginPct += (slab.margin_modifier || 0);
+        break;
+      }
+    }
   }
 
-      let cableMarginPct = (settings as any).margin_cable ?? 50;
-    
-    // Admin-controlled Dynamic Margin Slabs for short cable runs
-    if (selectedCable?.enable_margin_slabs && Array.isArray(selectedCable.margin_slabs)) {
-      const avgMeters = totalMeters / (wiredCameraCount || 1);
-      // Sort slabs by max_meters ascending to apply the lowest matching bracket
-      const slabs = [...selectedCable.margin_slabs].sort((a, b) => a.max_meters - b.max_meters);
-      
-      for (const slab of slabs) {
-        if (avgMeters <= slab.max_meters) {
-          cableMarginPct += (slab.margin_modifier || 0);
-          break; // Stop at the first matching slab
+  const cableRetailPerMeter = Math.round(baseCostPerMeter * (1 + cableMarginPct / 100));
+
+  // Conduit addition
+  const isConduit = selection.wiring_type === "conduit";
+  const conduitRate = isConduit ? (settings.conduit_cost_per_meter || 20) : 0;
+  const conduitCost = isConduit ? (conduitRate * 0.7) : 0;
+  
+  const finalRatePerMeter = Math.round((cableRetailPerMeter + conduitRate) * locationMultiplier);
+  const costPerMeterFinal = baseCostPerMeter + conduitCost;
+
+  // 5. Optimization Engine (Knapsack for Bundles vs Per-Meter)
+  let bestCombination: any = {
+    bundle: null,
+    bundleCount: 0,
+    remainderMeters: totalMeters,
+    totalRetail: finalRatePerMeter * totalMeters,
+    totalCost: costPerMeterFinal * totalMeters
+  };
+
+  if (bundles.length > 0) {
+    for (const b of bundles) {
+      const bLen = (b as any).parsed_length;
+      if (bLen && bLen > 0) {
+        const bundleCount = Math.floor(totalMeters / bLen);
+        const remainderMeters = totalMeters % bLen;
+        
+        // Base bundle math (ignoring location/conduit for a moment to get pure cable retail)
+        const pureBundleRetail = b.unit_price || Math.round((b.base_cost || 0) * (1 + cableMarginPct/100));
+        const pureBundleCost = b.base_cost || Math.round(pureBundleRetail / 1.5);
+        
+        // Add conduit/location back into the final bundle price
+        const bundleConduitRetail = bLen * conduitRate;
+        const finalBundleRetail = Math.round((pureBundleRetail + bundleConduitRetail) * locationMultiplier);
+        const finalBundleCost = pureBundleCost + (bLen * conduitCost);
+        
+        const comboRetail = (bundleCount * finalBundleRetail) + (remainderMeters * finalRatePerMeter);
+        const comboCost = (bundleCount * finalBundleCost) + (remainderMeters * costPerMeterFinal);
+        
+        if (comboRetail < bestCombination.totalRetail) {
+          bestCombination = {
+            bundle: b,
+            bundleCount,
+            remainderMeters,
+            totalRetail: comboRetail,
+            totalCost: comboCost,
+            finalBundleRetail
+          };
         }
       }
     }
-  const cableRetailPerMeter = Math.round(baseCostPerMeter * (1 + cableMarginPct / 100));
-  const finalRatePerMeter = Math.round((cableRetailPerMeter + conduitRate) * locationMultiplier);
-  const typeLabel = isConduit ? `Conduit Pipe + ${cableTypeLabel}` : `${cableTypeLabel} (Open)`;
-  const lineTotal = finalRatePerMeter * totalMeters;
-  const lineCost = (baseCostPerMeter + (isConduit ? conduitRate * 0.7 : 0)) * totalMeters;
+  }
 
-  items.push({
-    product_id: selectedCable ? selectedCable.id! : "cabling_material",
-    display_name: `${typeLabel} (~${totalMeters}m) @ ₹${finalRatePerMeter}/m`,
-    qty: totalMeters,
-    unit_price: finalRatePerMeter,
-    line_total: lineTotal
-  });
+  // 6. Push Line Items
+  const typeLabelStr = isConduit ? `Conduit Pipe + ${cableTypeLabel}` : `${cableTypeLabel} (Open)`;
+  
+  if (bestCombination.bundleCount > 0) {
+    const b = bestCombination.bundle;
+    const bLen = (b as any).parsed_length;
+    items.push({
+      product_id: b.id!,
+      display_name: `${isConduit ? "Conduit Pipe + " : ""}${b.display_name} (Bundle)`,
+      qty: bestCombination.bundleCount,
+      unit_price: bestCombination.finalBundleRetail,
+      line_total: bestCombination.bundleCount * bestCombination.finalBundleRetail
+    });
+  }
 
-  return { items, totalRetail: lineTotal, totalCost: lineCost };
+  if (bestCombination.remainderMeters > 0) {
+    items.push({
+      product_id: perMeterProductId,
+      display_name: `${typeLabelStr} (~${bestCombination.remainderMeters}m) @ ?${finalRatePerMeter}/m`,
+      qty: bestCombination.remainderMeters,
+      unit_price: finalRatePerMeter,
+      line_total: bestCombination.remainderMeters * finalRatePerMeter
+    });
+  }
+
+  return { items, totalRetail: bestCombination.totalRetail, totalCost: bestCombination.totalCost };
 }
 
 function calculateConnectors(
