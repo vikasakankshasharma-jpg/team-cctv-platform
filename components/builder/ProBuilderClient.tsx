@@ -284,10 +284,11 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     const capacities = Array.from(new Set(categoryProducts.map(p => p.derivedCapacity).filter(Boolean))) as string[];
     const cableTypes = Array.from(new Set(categoryProducts.map(p => p.derivedCableType).filter(Boolean))) as string[];
     const upgradeTypes = Array.from(new Set(categoryProducts.filter(p => p.normCat === "upgrades").map(p => p.category || "General"))).filter(Boolean) as string[];
+    const nightVisions = Array.from(new Set(categoryProducts.map(p => p.derivedNightVision).filter(Boolean))) as string[];
     const hasDomes = categoryProducts.some(p => p.derivedFormFactor === "dome");
     const hasBullets = categoryProducts.some(p => p.derivedFormFactor === "bullet");
 
-    return { brands, resolutions, channels, capacities, cableTypes, upgradeTypes, hasDomes, hasBullets };
+    return { brands, resolutions, channels, capacities, cableTypes, upgradeTypes, nightVisions, hasDomes, hasBullets };
   }, [categoryProducts]);
 
   const camCount = getCameraCount();
@@ -662,7 +663,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                   {/* Camera Filters */}
                   {activeCategory === "camera" && (
                     <>
-                      {(filterOptions.hasDomes || filterOptions.hasBullets) && (
+                      {(filterOptions.hasDomes && filterOptions.hasBullets) && (
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Type:</span>
                           <button
@@ -690,7 +691,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                         </div>
                       )}
 
-                      {filterOptions.resolutions.length > 0 && (
+                      {filterOptions.resolutions.length > 1 && (
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Res:</span>
                           <button
@@ -711,32 +712,31 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                         </div>
                       )}
 
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Night Vision:</span>
-                        <button
-                          onClick={() => setFilterNightVision("all")}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterNightVision === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                        >
-                          All
-                        </button>
-                        <button
-                          onClick={() => setFilterNightVision("Color")}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterNightVision === "Color" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                        >
-                          Color
-                        </button>
-                        <button
-                          onClick={() => setFilterNightVision("B&W")}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterNightVision === "B&W" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                        >
-                          B&W
-                        </button>
-                      </div>
+                      {filterOptions.nightVisions.length > 1 && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Night Vision:</span>
+                            <button
+                              onClick={() => setFilterNightVision("all")}
+                              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterNightVision === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                            >
+                              All
+                            </button>
+                            {filterOptions.nightVisions.map(nv => (
+                              <button
+                                key={nv}
+                                onClick={() => setFilterNightVision(nv)}
+                                className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterNightVision === nv ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                              >
+                                {nv}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                     </>
                   )}
 
                   {/* Recorder Filters */}
-                  {activeCategory === "recorder" && filterOptions.channels.length > 0 && (
+                  {activeCategory === "recorder" && filterOptions.channels.length > 1 && (
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Channels:</span>
                       <button
@@ -758,7 +758,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                   )}
 
                   {/* Storage Filters */}
-                  {activeCategory === "storage" && filterOptions.capacities.length > 0 && (
+                  {activeCategory === "storage" && filterOptions.capacities.length > 1 && (
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Capacity:</span>
                       <button
@@ -780,7 +780,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                   )}
 
                   {/* Cable Filters */}
-                  {activeCategory === "cable" && filterOptions.cableTypes.length > 0 && (
+                  {activeCategory === "cable" && filterOptions.cableTypes.length > 1 && (
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Type:</span>
                       <button
@@ -802,7 +802,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                   )}
 
                   {/* Upgrades Filters */}
-                  {activeCategory === "upgrades" && filterOptions.upgradeTypes.length > 0 && (
+                  {activeCategory === "upgrades" && filterOptions.upgradeTypes.length > 1 && (
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Type:</span>
                       <button
