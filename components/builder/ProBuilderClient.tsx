@@ -882,22 +882,27 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     p.derivedChannels && 
                     p.derivedChannels < camCount;
 
-                  let recConnectorQty = 0;
-                  let recConnectorLabel = "";
-                  if (activeCategory === "connector" && camCount > 0) {
+                  let autoQty = 0;
+                  let autoQtyLabel = "";
+                  if (camCount > 0) {
                     const name = (p.display_name || p.sku || "").toUpperCase();
-                    if (name.includes("BNC") && name.includes("DC")) {
-                       recConnectorQty = camCount;
-                       recConnectorLabel = `${camCount} pairs (1 set per camera)`;
-                    } else if (name.includes("RJ45") || name.includes("BNC")) {
-                       recConnectorQty = camCount * 2;
-                       recConnectorLabel = `${camCount * 2} units (2 per camera)`;
-                    } else if (name.includes("DC")) {
-                       recConnectorQty = camCount;
-                       recConnectorLabel = `${camCount} units (1 per camera)`;
-                    } else {
-                       recConnectorQty = camCount * 2; // Default fallback for generic connectors
-                       recConnectorLabel = `${camCount * 2} units (2 per camera)`;
+                    if (activeCategory === "connector") {
+                      if (name.includes("BNC") && name.includes("DC")) {
+                         autoQty = camCount;
+                         autoQtyLabel = `${camCount} pairs (1 per camera)`;
+                      } else if (name.includes("RJ45") || name.includes("BNC")) {
+                         autoQty = camCount * 2;
+                         autoQtyLabel = `${camCount * 2} units (2 per camera)`;
+                      } else if (name.includes("DC")) {
+                         autoQty = camCount;
+                         autoQtyLabel = `${camCount} units (1 per camera)`;
+                      } else {
+                         autoQty = camCount * 2;
+                         autoQtyLabel = `${camCount * 2} units (2 per camera)`;
+                      }
+                    } else if (activeCategory === "upgrades" && (p.category === "camera_mount" || name.includes("JUNCTION") || name.includes("MOUNT"))) {
+                      autoQty = camCount;
+                      autoQtyLabel = `${camCount} units (1 per camera)`;
                     }
                   }
 
@@ -945,6 +950,16 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                         </div>
 
                         <h4 className="font-bold text-slate-900 leading-snug">{p.display_name}</h4>
+                        
+                        {/* Auto-Quantity Smart Badge */}
+                        {autoQty > 0 && (
+                          <div className="flex items-center gap-1 mt-1.5 mb-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full inline-block">
+                              Recommended: {autoQtyLabel}
+                            </span>
+                          </div>
+                        )}
                         {p.channels && <p className="text-xs text-slate-500 font-medium">{p.channels} Channels</p>}
 
                         {/* Recommendation Badges */}
@@ -978,7 +993,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                             <button onClick={() => addItem(p)} className="w-8 h-8 flex items-center justify-center bg-white text-blue-600 rounded-lg shadow-sm font-black">+</button>
                           </div>
                         ) : (
-                          <Button onClick={() => addItem(p, recConnectorQty > 0 ? recConnectorQty : 1)} className="w-full bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-md">
+                          <Button onClick={() => addItem(p, autoQty > 0 ? autoQty : 1)} className="w-full bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-md">
                             Add to Quote
                           </Button>
                         )}
