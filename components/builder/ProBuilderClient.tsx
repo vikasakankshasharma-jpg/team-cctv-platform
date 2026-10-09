@@ -115,11 +115,11 @@ export function ProBuilderClient() {
             else if (cat === "storage") normCat = "storage";
             else if (cat === "cable") normCat = "cable";
             else if (cat === "power_device" || cat === "power") normCat = "power";
-            else if (cat === "network" || cat === "rack" || cat === "accessories" || cat === "accessory") normCat = "upgrades";
+            else if (cat === "network" || cat === "rack" || cat === "accessories" || cat === "accessory" || cat === "camera_mount" || cat === "mount" || cat === "bracket") normCat = "upgrades";
             else if (cat === "installation" || cat === "labor") normCat = "installation";
             else if (cat === "connector") normCat = "connector";
             // 2. Fallback "brain" fuzzy matching for missing or legacy categories
-            else if (cat.includes("camera") || cat.includes("cctv_camera")) normCat = "camera";
+            else if ((cat.includes("camera") || cat.includes("cctv_camera")) && !cat.includes("mount") && !cat.includes("bracket") && !cat.includes("accessory") && !cat.includes("accessories")) normCat = "camera";
             else if (cat.includes("recorder") || cat.includes("dvr") || cat.includes("nvr")) normCat = "recorder";
             else if (isStorage) normCat = "storage";
             else if (cat.includes("connector") || /(\brj45\b|\bbnc\b|\bdc\b)/i.test(name) || name.includes("connector")) normCat = "connector";

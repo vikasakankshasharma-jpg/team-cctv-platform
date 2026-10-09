@@ -148,11 +148,11 @@ export default function ManualQuoteBuilderClient() {
       else if (normCat === "storage") normCat = "storage";
       else if (normCat === "cable") normCat = "cable";
       else if (normCat === "power_device" || normCat === "power") normCat = "power";
-      else if (normCat === "accessories" || normCat === "accessory" || normCat === "rack" || normCat === "network") normCat = "accessory";
+      else if (normCat === "accessories" || normCat === "accessory" || normCat === "rack" || normCat === "network" || normCat === "camera_mount" || normCat === "mount" || normCat === "bracket") normCat = "accessory";
       else if (normCat === "installation" || normCat === "labor") normCat = "installation";
       else if (normCat === "connector") normCat = "accessory";
       // 2. Fallback fuzzy match
-      else if (normCat.includes("cam") || normCat.includes("cctv")) normCat = "camera";
+      else if ((normCat.includes("cam") || normCat.includes("cctv")) && !normCat.includes("mount") && !normCat.includes("bracket") && !normCat.includes("accessory") && !normCat.includes("accessories")) normCat = "camera";
       else if (normCat.includes("rec") || normCat.includes("dvr") || normCat.includes("nvr")) normCat = "recorder";
       else if (normCat.includes("stor") || normCat.includes("hdd") || normCat.includes("hard drive")) normCat = "storage";
       else if (normCat.includes("cab") || normCat.includes("wire")) normCat = "cable";
