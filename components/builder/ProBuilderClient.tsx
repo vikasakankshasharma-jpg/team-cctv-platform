@@ -1460,7 +1460,10 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                    const name = (i.display_name || "").toLowerCase();
                    return name.includes("poe switch") || name.includes("p.o.e");
                 }).reduce((acc, i) => acc + i.qty, 0);
-                const hasCoreSwitch = items.some(i => i.id === "SYS_GIGABIT_SWITCH" || (i.display_name || "").toLowerCase().includes("gigabit"));
+                const hasCoreSwitch = items.some(i => {
+                   const name = (i.display_name || "").toLowerCase();
+                   return (name.includes("gigabit") || name.includes("desktop switch")) && !name.includes("poe");
+                });
                 
                 if (poeSwitchesInCart >= 3 && !hasCoreSwitch) {
                   return (
@@ -1485,6 +1488,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     </div>
   );
 }
+
 
 
 

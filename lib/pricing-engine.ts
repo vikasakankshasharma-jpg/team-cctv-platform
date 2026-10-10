@@ -511,17 +511,24 @@ function calculateHardware(
       totalRetail += unitPrice * qty;
       totalCost += (transmission.base_cost || 0) * qty;
         if (tech === "IP" && qty >= 3) {
-           const gigCost = settings.network_switch_cost || 800;
-           const gigRetail = Math.round(gigCost * (1 + (marginPolicy.margin_accessory || 40) / 100));
-           items.push({
-             product_id: "SYS_GIGABIT_SWITCH",
-             display_name: "8-Port Gigabit Desktop Switch (Core Hub)",
-             qty: 1,
-             unit_price: gigRetail,
-             line_total: gigRetail
+           // Look for a real Gigabit Switch in the catalog rather than using a fake system ID
+           const coreSwitch = [...products, ...addons].find(p => {
+               const name = (p.display_name || p.technical_name || "").toLowerCase();
+               return (name.includes("gigabit") || name.includes("desktop switch") || name.includes("core hub")) && !name.includes("poe");
            });
-           totalRetail += gigRetail;
-           totalCost += gigCost;
+           
+           if (coreSwitch) {
+               const coreUnitPrice = coreSwitch.unit_price || coreSwitch.price || 800;
+               items.push({
+                 product_id: coreSwitch.id!,
+                 display_name: coreSwitch.display_name,
+                 qty: 1,
+                 unit_price: coreUnitPrice,
+                 line_total: coreUnitPrice
+               });
+               totalRetail += coreUnitPrice;
+               totalCost += (coreSwitch.base_cost || 0);
+           }
         }
       }
   }
@@ -1832,6 +1839,7 @@ export function generatePricingSnapshot(
     recommendation_reasons: []
   };
 }
+
 
 
 

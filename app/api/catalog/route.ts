@@ -99,17 +99,7 @@ export async function GET(req: NextRequest) {
       type: "service"
     });
 
-    const gigabitCost = settings?.network_switch_cost || 800;
-    items.push({
-      id: "SYS_GIGABIT_SWITCH",
-      display_name: "8-Port Gigabit Desktop Switch (Core Hub)",
-      category: "accessory",
-      technologies: ["IP"],
-      unit_price: processItemPrice({ base_cost: gigabitCost, category: "accessory", brand: "Generic" }, "accessory"),
-      unit_multiplier: "fixed",
-      type: "product",
-      description: "Required as a central core hub when linking 3 or more PoE switches to a single NVR."
-    });
+
 
     return NextResponse.json({ success: true, products: items });
   } catch (error) {
@@ -117,3 +107,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Failed to fetch catalog" }, { status: 500 });
   }
 }
+

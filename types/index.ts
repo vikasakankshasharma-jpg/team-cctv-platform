@@ -583,6 +583,7 @@ export interface AppSettings {
   cable_copper_coated_hd: number;
   cable_pure_copper: number;
   connector_rj45_cost: number;
+  network_switch_cost?: number;
   connector_bnc_dc_cost: number;
   cable_overage_per_mtr: number;
   visit_charge: number;
