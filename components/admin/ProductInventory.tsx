@@ -378,7 +378,8 @@ export function ProductInventory({
   selectedIds,
   onToggleSelect,
   onSelectAllGroup,
-  onDeselectAllGroup
+  onDeselectAllGroup,
+  onAddProduct
 }: ProductInventoryProps) {
   const [search, setSearch]         = useState("");
   const [filterCat, setFilterCat]   = useState<string>("all");
