@@ -62,6 +62,7 @@ interface LineItem {
 
 interface QuoteData {
   id: string;
+  leadId?: string;
   quoteNumber: string;
   status: string;
   issuedAt: string;
@@ -80,7 +81,7 @@ interface QuoteData {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatINR(n: number) {
-  return "INR " + n.toLocaleString("en-IN");
+  return "INR " + Math.round(n).toLocaleString("en-IN");
 }
 
 function formatDate(iso: string) {
@@ -319,7 +320,7 @@ const s = StyleSheet.create({
     marginTop: 6,
     marginBottom: 22,
   },
-  totalsBox: { width: 200 },
+  totalsBox: { width: 230 },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -335,18 +336,19 @@ const s = StyleSheet.create({
     alignItems: "center",
     backgroundColor: C.navy,
     borderRadius: 6,
-    padding: "10 12",
+    padding: "8 12",
     marginTop: 6,
+    gap: 10,
   },
   grandLabel: {
     fontSize: 7.5,
     fontWeight: 700,
-    color: "rgba(255,255,255,0.6)",
+    color: "rgba(255,255,255,0.7)",
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
   grandValue: {
-    fontSize: 17,
+    fontSize: 13.5,
     fontWeight: 700,
     color: C.gold,
   },
@@ -518,7 +520,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
               ["Date Issued",    formatDate(quote.issuedAt)],
               ["Prepared For",   quote.customer.name],
               ["Valid Until",    formatDate(quote.validUntil)],
-              ["Lead Reference", quote.id.substring(0, 14) + "…"],
+              ["Lead Reference", (quote.leadId || quote.id).substring(0, 14) + "…"],
             ].map(([label, value]) => (
               <View key={label}>
                 <Text style={s.metaLabel}>{label}</Text>
@@ -537,26 +539,28 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
             <View style={s.billBlock}>
               <Text style={s.billLabel}>Bill To</Text>
               <Text style={s.billName}>{quote.customer.name}</Text>
-              <Text style={s.billDetail}>{quote.customer.phone}</Text>
-              {quote.customer.email && <Text style={s.billDetail}>{quote.customer.email}</Text>}
-              <View style={s.addressBox}>
-                <Text style={s.addressPin}></Text>
-                <Text style={s.addressText}>{quote.installationAddress}</Text>
-              </View>
+              {quote.customer.phone ? <Text style={s.billDetail}>{quote.customer.phone}</Text> : null}
+              {quote.customer.email ? <Text style={s.billDetail}>{quote.customer.email}</Text> : null}
+              {quote.installationAddress ? (
+                <View style={s.addressBox}>
+                  <Text style={s.addressText}>{quote.installationAddress}</Text>
+                </View>
+              ) : null}
             </View>
 
             {/* Installation site */}
             <View style={s.billBlock}>
               <Text style={s.billLabel}>Installation Site</Text>
               <Text style={s.billName}>{quote.propertyType}</Text>
-              <Text style={s.billDetail}>{quote.propertyDetail}</Text>
-              <View style={s.addressBox}>
-                <Text style={s.addressPin}></Text>
-                <Text style={s.addressText}>
-                  {quote.installationAddress}
-                  {quote.siteVisitDate ? `\nSite visit: ${formatDate(quote.siteVisitDate)}` : ""}
-                </Text>
-              </View>
+              {quote.propertyDetail ? <Text style={s.billDetail}>{quote.propertyDetail}</Text> : null}
+              {quote.installationAddress || quote.siteVisitDate ? (
+                <View style={s.addressBox}>
+                  <Text style={s.addressText}>
+                    {quote.installationAddress}
+                    {quote.siteVisitDate ? `\nSite visit: ${formatDate(quote.siteVisitDate)}` : ""}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </View>
 
@@ -591,7 +595,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           })}
 
           {/* Totals */}
-          <View style={s.totalsWrap}>
+          <View style={s.totalsWrap} wrap={false}>
             <View style={s.totalsBox}>
               {[
                 { label: "Subtotal",                              value: formatINR(subtotal) },
@@ -611,7 +615,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           </View>
 
           {/* Terms cards */}
-          <View style={s.termsGrid}>
+          <View style={s.termsGrid} wrap={false}>
             {[
               {
                 bg: C.goldBg,

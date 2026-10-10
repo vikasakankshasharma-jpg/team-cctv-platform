@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TEAM CCTV â€” PDF Download API Route
  * File: app/api/v1/quotes/[id]/pdf/route.ts
  *
@@ -144,16 +144,42 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const quoteData: any = {
     id: quoteSnap.id,
     leadId: trueLeadId || quoteSnap.id,
-    quoteNumber: String(quote?.quote_number || quote?.quote_id || quoteSnap.id.slice(0, 10).toUpperCase()),
+    quoteNumber: String(quote?.quote_number || quote?.quote_id || quoteSnap.id),
     status: String(quote?.status || "pending"),
     issuedAt: quote?.createdAt || (quote?.created_at as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
     validUntil: quote?.validUntil || quote?.valid_until || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     customer: {
-      name: String((quote?.billing_details as any)?.customer_name || quote?.customer_name || lead?.customer_name || "Valued Customer"),
-      phone: String((quote?.billing_details as any)?.phone || quote?.customer_mobile || lead?.mobile_number || "N/A"),
-      email: String((quote?.billing_details as any)?.email || quote?.customer_email || lead?.email || ""),
+      name: String(
+        (quote?.billing_details as any)?.customer_name ||
+        (quote?.customer_name && quote.customer_name !== "Pro Builder Client" ? quote.customer_name : null) ||
+        lead?.customer_name ||
+        lead?.wizard_answers?.customer_name ||
+        lead?.wizard_answers?.name ||
+        quote?.customer_name ||
+        "Valued Customer"
+      ),
+      phone: String(
+        (quote?.billing_details as any)?.phone ||
+        (quote?.customer_mobile && quote.customer_mobile !== "N/A" ? quote.customer_mobile : null) ||
+        lead?.mobile_number ||
+        lead?.customer_mobile ||
+        lead?.wizard_answers?.customer_mobile ||
+        lead?.wizard_answers?.phone ||
+        lead?.phone ||
+        ""
+      ),
+      email: String(
+        (quote?.billing_details as any)?.email ||
+        quote?.customer_email ||
+        lead?.email ||
+        lead?.customer_email ||
+        lead?.wizard_answers?.customer_email ||
+        ""
+      ),
     },
-    installationAddress: cleanInstallAddress,
+    installationAddress: cleanInstallAddress || (
+      lead?.wizard_answers?.city || lead?.city ? `${lead?.wizard_answers?.city || lead?.city || ''} ${lead?.wizard_answers?.pincode || lead?.pincode || ''}`.trim() : ""
+    ),
     propertyType: String(lead?.property_type || (quote?.requirementSnapshot as any)?.property_type || "Residential"),
     propertyDetail: String((quote?.requirementSnapshot as any)?.property_detail || lead?.property_detail || ""),
     siteVisitDate: lead?.site_visit_date || "",
@@ -219,7 +245,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   // â”€â”€ 3. Check Storage cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const bucket     = adminStorage.bucket();
-  const storagePath = `quotes/${leadId}/${quoteId}${isInvoice ? "_invoice" : ""}_v3.pdf`;
+  const storagePath = `quotes/${leadId}/${quoteId}${isInvoice ? "_invoice" : ""}_v4.pdf`;
   const file        = bucket.file(storagePath);
 
   try {
