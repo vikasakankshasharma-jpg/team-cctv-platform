@@ -46,7 +46,25 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   const [showMobileCart, setShowMobileCart] = useState(false);
   const [checkoutPhone, setCheckoutPhone] = useState("");
   const [checkoutName, setCheckoutName] = useState("");
+  const [checkoutPincode, setCheckoutPincode] = useState("");
+  const [checkoutEmail, setCheckoutEmail] = useState("");
+  const [checkoutReferral, setCheckoutReferral] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  
+  // OTP State
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [countdown, setCountdown] = useState(0);
+  const [otpLoading, setOtpLoading] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const existingLeadId = searchParams.get("leadId");
@@ -393,7 +411,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
             installation_type: "new",
             camera_count: camCount,
             technology_preference: technology || "IP",
-            is_pro_builder: true
+            is_pro_builder: true, customer_pincode: checkoutPincode, customer_email: checkoutEmail, partner_id: checkoutReferral
           },
           configurationSnapshot: {
             items: quoteItems
@@ -508,56 +526,255 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   }
 
   if (!isLeadCaptured) {
+    const handleSendOtp = async () => {
+      const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
+      if (!checkoutName.trim()) {
+        setPhoneError("Please enter your name.");
+        return;
+      }
+      if (cleanedPhone.length !== 10 || !/^[6-9]/.test(cleanedPhone)) {
+        setPhoneError("Please enter a valid 10-digit Indian mobile number.");
+        return;
+      }
+      setPhoneError("");
+      setOtpLoading(true);
+      
+      try {
+        const res = await fetch("/api/auth/otp/whatsapp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: cleanedPhone }),
+        });
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to send OTP.");
+        }
+        
+        setOtpSent(true);
+        setCountdown(30);
+        setOtp(["", "", "", ""]);
+      } catch (error: any) {
+        setPhoneError(error.message || "Failed to send OTP. Please try again.");
+      } finally {
+        setOtpLoading(false);
+      }
+    };
+
+    const handleVerifyOtp = async () => {
+      const code = otp.join("");
+      if (code.length !== 4) {
+        setPhoneError("Please enter the 4-digit OTP.");
+        return;
+      }
+      setPhoneError("");
+      setOtpLoading(true);
+      
+      try {
+        const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
+        const res = await fetch("/api/auth/otp/whatsapp/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: cleanedPhone, otp: code }),
+        });
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.error || "Invalid OTP code.");
+        }
+        
+        setIsLeadCaptured(true);
+      } catch (error: any) {
+        setPhoneError(error.message || "Invalid OTP code.");
+        setOtp(["", "", "", ""]); // Reset OTP on failure
+      } finally {
+        setOtpLoading(false);
+      }
+    };
+
+    const handleOtpChange = (val: string, index: number) => {
+      const newOtp = [...otp];
+      newOtp[index] = val;
+      setOtp(newOtp);
+      
+      if (val && index < 3) {
+        const nextInput = document.getElementById(`otp-input-${index + 1}`);
+        if (nextInput) nextInput.focus();
+      }
+    };
+
+    const handleOtpKeyDown = (e: React.KeyboardEvent, index: number) => {
+      if (e.key === "Backspace" && !otp[index] && index > 0) {
+        const prevInput = document.getElementById(`otp-input-${index - 1}`);
+        if (prevInput) prevInput.focus();
+      }
+    };
+
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden relative">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-          <div className="p-8 space-y-8">
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Sparkles className="w-8 h-8 text-blue-600" />
-              </div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Custom Build</h1>
-              <p className="text-sm text-slate-500 font-medium leading-relaxed px-4">Please enter your details to start building your professional CCTV quotation.</p>
+        <div className="max-w-xl w-full bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden relative">
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#5e4dff]"></div>
+          
+          <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center text-xs text-gray-500 font-medium">
+            <button onClick={() => router.push("/")} className="flex items-center gap-1 hover:text-gray-900 transition-colors">
+              <X className="w-3.5 h-3.5" /> Exit
+            </button>
+            <span>CCTVQuotation.com</span>
+          </div>
+
+          <div className="p-8 sm:p-10 space-y-6">
+            <div className="text-right">
+              <span className="text-xs text-gray-400 font-medium tracking-wide">Step 1 of 1</span>
             </div>
-            <div className="space-y-5">
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Mobile Number *</label>
-                <input
-                  type="tel"
-                  placeholder="10-digit mobile number"
-                  value={checkoutPhone}
-                  onChange={(e) => { setCheckoutPhone(e.target.value.replace(/\D/g, '')); setPhoneError(""); }}
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-base focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium text-slate-900"
-                  maxLength={10}
-                  autoFocus
-                />
-                {phoneError && <p className="text-red-500 text-xs mt-1.5 font-semibold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {phoneError}</p>}
+            
+            {otpSent ? (
+              <div className="space-y-4 sm:space-y-6 animate-in slide-in-from-right-4">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">Verify Your Mobile</h2>
+                  <p className="text-sm text-slate-500">
+                    Enter the 4-digit code sent to <strong className="text-slate-900">{checkoutPhone}</strong>
+                  </p>
+                </div>
+                
+                <div className="flex justify-center gap-3 sm:gap-4 my-8">
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      id={`otp-input-${index}`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(e.target.value.replace(/\D/g, ''), index)}
+                      onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                      className="w-12 h-14 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-black border-2 border-gray-200 rounded-xl focus:border-[#9b8cff] focus:ring-4 focus:ring-[#9b8cff]/20 outline-none transition-all bg-white"
+                      autoFocus={index === 0}
+                    />
+                  ))}
+                </div>
+                
+                {phoneError && (
+                  <p className="text-red-500 text-sm text-center font-semibold flex items-center justify-center gap-1">
+                    <AlertTriangle className="w-4 h-4" /> {phoneError}
+                  </p>
+                )}
+                
+                <div className="space-y-4">
+                  <Button 
+                    onClick={handleVerifyOtp} 
+                    disabled={otpLoading || otp.join("").length !== 4} 
+                    className="w-full h-12 sm:h-14 text-base font-bold bg-[#9b8cff] hover:bg-[#8675ff] text-white rounded-xl shadow-md"
+                  >
+                    {otpLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Verify & Continue"}
+                  </Button>
+                  
+                  <div className="text-center text-sm">
+                    <span className="text-gray-500 mr-1">Didn't receive code?</span>
+                    <button
+                      type="button"
+                      disabled={countdown > 0 || otpLoading}
+                      onClick={handleSendOtp}
+                      className={`font-bold transition-colors ${
+                        countdown > 0
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-[#9b8cff] hover:text-[#8675ff] hover:underline"
+                      }`}
+                    >
+                      {countdown > 0 ? `Resend OTP in ${countdown}s` : "Resend OTP"}
+                    </button>
+                  </div>
+                  
+                  <div className="text-center mt-2">
+                    <button 
+                      onClick={() => { setOtpSent(false); setPhoneError(""); }}
+                      className="text-sm font-semibold text-gray-500 hover:text-gray-700"
+                    >
+                      Change Mobile Number
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Your Name (optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Rajesh Kumar"
-                  value={checkoutName}
-                  onChange={(e) => setCheckoutName(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-base focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium text-slate-900"
-                />
+            ) : (
+              <div className="space-y-6 animate-in fade-in">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1">Final Step: Get Your Quotation</h2>
+                  <p className="text-sm text-slate-500 font-medium">Please enter your details to view your personalized CCTV options instantly.</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Your Name *</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Rahul Kumar" 
+                      value={checkoutName} 
+                      onChange={(e) => { setCheckoutName(e.target.value); setPhoneError(""); }} 
+                      className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#9b8cff] focus:border-[#9b8cff] outline-none transition-all bg-white text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Mobile Number *</label>
+                    <input 
+                      type="tel" 
+                      placeholder="10-digit mobile number" 
+                      maxLength={10}
+                      value={checkoutPhone} 
+                      onChange={(e) => { setCheckoutPhone(e.target.value.replace(/\D/g, '')); setPhoneError(""); }} 
+                      className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#9b8cff] focus:border-[#9b8cff] outline-none transition-all bg-white text-gray-900"
+                    />
+                    {phoneError && <p className="text-red-500 text-xs mt-1.5 font-semibold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {phoneError}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Pincode</label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="302012"
+                      value={checkoutPincode}
+                      onChange={(e) => setCheckoutPincode(e.target.value.replace(/\D/g, ''))}
+                      className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#9b8cff] focus:border-[#9b8cff] outline-none transition-all bg-white text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Email (Optional)</label>
+                    <input 
+                      type="email" 
+                      placeholder="e.g. rahul@email.com" 
+                      value={checkoutEmail} 
+                      onChange={(e) => setCheckoutEmail(e.target.value)} 
+                      className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#9b8cff] focus:border-[#9b8cff] outline-none transition-all bg-white text-gray-900"
+                    />
+                  </div>
+
+                  <div className="p-3 bg-green-50/80 rounded-xl border border-green-200">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-green-900">Referral Code (Optional)</label>
+                      <span className="text-[10px] text-green-700 font-medium">Get discount</span>
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="E.G. P102" 
+                      value={checkoutReferral} 
+                      onChange={(e) => setCheckoutReferral(e.target.value.toUpperCase())} 
+                      className="w-full py-2.5 px-3.5 sm:p-3 text-sm border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all uppercase placeholder-normal bg-white text-gray-900 font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center gap-3">
+                  <Button variant="outline" onClick={() => router.push("/")} className="h-12 px-6 rounded-xl font-bold text-gray-700 border-2">
+                    Back
+                  </Button>
+                  <Button 
+                    onClick={handleSendOtp}
+                    disabled={otpLoading}
+                    className="flex-1 h-12 text-base font-bold bg-[#9b8cff] hover:bg-[#8675ff] text-white rounded-xl shadow-md"
+                  >
+                    {otpLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "View My CCTV Options"}
+                  </Button>
+                </div>
               </div>
-              <Button
-                onClick={() => {
-                  const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
-                  if (cleanedPhone.length !== 10 || !/^[6-9]/.test(cleanedPhone)) {
-                    setPhoneError("Please enter a valid 10-digit Indian mobile number.");
-                    return;
-                  }
-                  setIsLeadCaptured(true);
-                }}
-                className="w-full h-14 bg-slate-900 hover:bg-black text-white rounded-xl text-[15px] font-bold shadow-lg shadow-slate-900/10 transition-all mt-4"
-              >
-                Start Building <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -1236,5 +1453,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     </div>
   );
 }
+
+
 
 

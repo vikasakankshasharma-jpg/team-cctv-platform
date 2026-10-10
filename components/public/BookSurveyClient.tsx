@@ -97,7 +97,7 @@ export function BookSurveyClient() {
           <label className="text-xs font-bold text-gray-700 uppercase tracking-widest mb-2 flex items-center gap-1">
             <CalendarIcon className="w-3 h-3" /> Select Date
           </label>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {availableDates.map((date, idx) => {
               const dateStr = date.toISOString().split("T")[0];
               const isSelected = formData.date === dateStr;
@@ -116,6 +116,34 @@ export function BookSurveyClient() {
                 </div>
               );
             })}
+
+            {/* Custom Date Picker */}
+            <div className={`border-2 rounded-xl p-2 text-center relative flex flex-col justify-center items-center transition-all overflow-hidden ${
+                (!availableDates.map(d=>d.toISOString().split("T")[0]).includes(formData.date) && formData.date !== "") 
+                ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-200'
+            }`}>
+                <input 
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={(!availableDates.map(d=>d.toISOString().split("T")[0]).includes(formData.date)) ? formData.date : ""}
+                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  title="Select Custom Date"
+                />
+                {(!availableDates.map(d=>d.toISOString().split("T")[0]).includes(formData.date) && formData.date !== "") ? (
+                    <>
+                       <div className="text-[10px] font-bold uppercase text-blue-600">Custom</div>
+                       <div className="text-sm font-black text-blue-900 leading-tight mt-0.5">
+                         {new Date(formData.date).getDate()} {new Date(formData.date).toLocaleDateString('en-US', {month: 'short'})}
+                       </div>
+                    </>
+                ) : (
+                    <>
+                       <div className="text-[10px] font-bold uppercase text-gray-400">Custom</div>
+                       <CalendarIcon className="w-5 h-5 text-gray-400 mt-0.5" />
+                    </>
+                )}
+            </div>
           </div>
         </div>
 
