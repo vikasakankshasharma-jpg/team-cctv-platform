@@ -14,6 +14,24 @@ export async function GET(
     let leadId = quoteData?.leadId || quoteData?.lead_id || quoteId;
     let leadDoc = await adminDb.collection("leads").doc(leadId).get();
     let leadData: any = leadDoc.exists ? leadDoc.data() : null;
+    
+    // If quote wasn't found by ID, but we found a lead, check if the lead has a linked quote
+    if (!quoteData && leadData) {
+      const qId = leadData.last_quote_id || leadData.latest_quote_id || leadData.won_quote_id;
+      if (qId) {
+        const linkedQuoteDoc = await adminDb.collection("quotes").doc(qId).get();
+        if (linkedQuoteDoc.exists) {
+          quoteData = linkedQuoteDoc.data();
+          quoteData.id = qId;
+        } else {
+          const subQuote = await adminDb.collection("leads").doc(leadId).collection("quotes").doc(qId).get();
+          if (subQuote.exists) {
+             quoteData = subQuote.data();
+             quoteData.id = qId;
+          }
+        }
+      }
+    }
 
     if (!quoteData && !leadData) {
       return NextResponse.json({ success: false, message: "Lead/Quote not found" }, { status: 404 });
