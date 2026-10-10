@@ -497,7 +497,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
                     <Image src={settings.pdf_logo_url} style={s.brandIconImage} />
                   </>
                 ) : (
-                  <Text style={s.brandIconText}>▶</Text>
+                  <Text style={s.brandIconText}>T</Text>
                 )}
               </View>
               <View>
@@ -615,8 +615,8 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
             {[
               {
                 bg: C.goldBg,
-                icon: "🛡",
-                title: "1-Year Warranty",
+                icon: "W",
+                  title: "1-Year Warranty",
                 body: "All equipment + labour covered. Free replacement if defective.",
               },
               {
@@ -627,8 +627,8 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
               },
               {
                 bg: C.navyBg,
-                icon: "📞",
-                title: "Support Included",
+                icon: "S",
+                  title: "Support Included",
                 body: "Free remote support 12 months. On-site response within 24h.",
               },
             ].map((t) => (
