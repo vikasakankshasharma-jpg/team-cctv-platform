@@ -33,7 +33,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   // ── 1. Fetch quote from Firestore ──────────────────────────────────────────
   const db        = adminFirestore;
-  const quoteSnap = await db.collection("leads").doc(leadId).collection("quotes").doc(quoteId).get();
+  
+  // Check Root Collection FIRST (V2), then Subcollection (Legacy)
+  let quoteSnap = await db.collection("quotes").doc(quoteId).get();
+  
+  if (!quoteSnap.exists) {
+    // Try uppercase
+    quoteSnap = await db.collection("quotes").doc(quoteId.toUpperCase()).get();
+  }
+  
+  if (!quoteSnap.exists) {
+    quoteSnap = await db.collection("leads").doc(leadId).collection("quotes").doc(quoteId).get();
+  }
 
   if (!quoteSnap.exists) {
     return NextResponse.json({ error: "Quote not found" }, { status: 404 });
