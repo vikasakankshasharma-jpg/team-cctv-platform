@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { 
-  Search, ChevronDown, ChevronRight, Edit2, Copy, Camera, Monitor, 
+  Search, ChevronDown, ChevronRight, Edit2, Copy, Camera, Monitor, Plus, 
   Layers, Zap, Package, HardDrive, Cpu, ShieldCheck,
   ListFilter, Filter, Wrench, Shield, Tv, Box, Server, Square, CheckSquare
 } from "lucide-react";
@@ -588,4 +588,5 @@ export function ProductInventory({
     </div>
   );
 }
+
 
