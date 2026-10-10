@@ -77,6 +77,7 @@ function SubCategoryGroup({
   onToggleSelect?: (id: string) => void;
   onSelectAllGroup?: (ids: string[]) => void;
   onDeselectAllGroup?: (ids: string[]) => void;
+  onAddProduct?: (category: string) => void;
 }) {
   const [open, setOpen] = useState(true);
   
@@ -365,6 +366,7 @@ interface ProductInventoryProps {
   onToggleSelect?: (id: string) => void;
   onSelectAllGroup?: (ids: string[]) => void;
   onDeselectAllGroup?: (ids: string[]) => void;
+  onAddProduct?: (category: string) => void;
 }
 
 export function ProductInventory({ 
