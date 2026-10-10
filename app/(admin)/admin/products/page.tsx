@@ -212,13 +212,13 @@ export default function AdminProductsPage() {
     setIsModalOpen(true);
   };
 
-  const handleAdd = () => {
+  const handleAdd = (category: any = "cctv_camera") => {
     setEditingProduct({
       display_name: "",
       technical_name: "",
       brand: "",
-      category: "cctv_camera",
-      technologies: ["HD"],
+      category: category,
+        technologies: ["HD"],
       is_active: true,
       base_cost: 0,
       margin_percentage: 15,
@@ -1386,6 +1386,9 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+
+
+
 
 
 
