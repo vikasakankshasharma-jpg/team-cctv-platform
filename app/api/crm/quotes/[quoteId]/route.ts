@@ -35,10 +35,16 @@ export async function GET(
       isPaid,
       
       // Commercial & Pricing Snapshot
-      pricingSnapshot: quoteData?.pricingSnapshot || leadData?.pricingSnapshot || {
-        total_payable: quoteData?.total_payable ?? leadData?.total_payable ?? quoteData?.finalPrice ?? 0,
-        finalPrice: quoteData?.finalPrice ?? quoteData?.total_payable ?? leadData?.total_payable ?? 0
-      },
+      pricingSnapshot: (() => {
+        const pSnap = quoteData?.pricingSnapshot || leadData?.pricingSnapshot;
+        if (pSnap && (pSnap.total_payable > 0 || pSnap.finalPrice > 0)) {
+          return pSnap;
+        }
+        return {
+          total_payable: quoteData?.total_payable || leadData?.total_payable || quoteData?.finalPrice || 0,
+          finalPrice: quoteData?.finalPrice || quoteData?.total_payable || leadData?.total_payable || 0
+        };
+      })(),
       requirementSnapshot: quoteData?.requirementSnapshot || leadData?.wizard_answers || {},
       
       // Billing Details (merged)
@@ -53,7 +59,7 @@ export async function GET(
       // Intelligence & CRM
       intentScore: quoteData?.intentScore || (isPaid ? "Hot" : isSiteVisit ? "Warm" : "Cold"),
       probabilityPercent: quoteData?.probabilityPercent || (isPaid ? 100 : isSiteVisit ? 75 : 25),
-      expectedValue: quoteData?.expectedValue ?? leadData?.expectedValue ?? quoteData?.pricingSnapshot?.finalPrice ?? quoteData?.total_payable ?? leadData?.total_payable ?? 0,
+      expectedValue: quoteData?.expectedValue || leadData?.expectedValue || quoteData?.pricingSnapshot?.finalPrice || leadData?.pricingSnapshot?.finalPrice || quoteData?.total_payable || leadData?.total_payable || 0,
       nextActionDate: quoteData?.nextActionDate || quoteData?.followUpDate || quoteData?.site_visit_date || null,
       nextActionType: quoteData?.nextActionType || (isSiteVisit ? "Site Visit" : "Follow-up"),
       follow_ups: quoteData?.follow_ups || [],
