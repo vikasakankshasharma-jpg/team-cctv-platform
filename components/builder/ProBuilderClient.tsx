@@ -1162,7 +1162,10 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                       if (name.includes("BNC") && name.includes("DC")) {
                          autoQty = camCount;
                          autoQtyLabel = `${camCount} pairs (1 per camera)`;
-                      } else if (name.includes("RJ45") || name.includes("BNC")) {
+                      } else if (name.includes("RJ45")) {
+                         autoQty = (camCount * 2) + 2;
+                         autoQtyLabel = `${autoQty} units (2/cam + 2 uplink)`;
+                      } else if (name.includes("BNC")) {
                          autoQty = camCount * 2;
                          autoQtyLabel = `${camCount * 2} units (2 per camera)`;
                       } else if (name.includes("DC")) {
@@ -1178,6 +1181,18 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     } else if (activeCategory === "installation" || p.category === "installation" || p.unit_multiplier === "camera_count") {
                       autoQty = camCount;
                       autoQtyLabel = `${camCount} units (1 per camera)`;
+                    } else if (activeCategory === "power" || p.category === "power_device" || p.category === "power") {
+                      const maxCams = p.max_cameras || p.channels || 0;
+                      if (maxCams > 0 && maxCams < camCount) {
+                        autoQty = Math.ceil(camCount / maxCams);
+                        autoQtyLabel = `${autoQty} units (to power ${camCount} cams)`;
+                      }
+                    } else if (activeCategory === "storage" || p.category === "storage") {
+                      const nameStr = (p.display_name || "").toLowerCase();
+                      if (p.storage_type === "Micro SD" || nameStr.includes("sd card") || nameStr.includes("micro sd") || nameStr.includes("memory card")) {
+                        autoQty = camCount;
+                        autoQtyLabel = `${camCount} units (1 per camera)`;
+                      }
                     }
                   }
 
