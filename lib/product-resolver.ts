@@ -280,7 +280,13 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
   const powerItems = pool.filter(p => p.category === "power_device");
   
   const getPowerCh = (p: Product) => {
-    return p.max_cameras || p.channels || 0;
+    if (p.max_cameras && p.max_cameras > 0) return p.max_cameras;
+    if (p.channels && p.channels > 0) return p.channels;
+    
+    const name = (p.technical_name || p.display_name || "").toLowerCase();
+    const match = name.match(/(\d+)\s*(ch|port|channels|ports)/i);
+    if (match) return parseInt(match[1]);
+    return 0;
   };
   
   const isPoe = (p: Product) => {
