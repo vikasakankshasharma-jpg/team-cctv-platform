@@ -677,7 +677,7 @@ function calculateCabling(
     // Determine length
     let len = c.cable_length_m;
     if (!len) {
-      const match = nameLower.match(/(\d+)\s*(?:m|meter|meters)\b/);
+      const match = nameLower.match(/(\d+)\s*(?:m|mtr|mtrs|meter|meters|roll|rolls)\b/);
       if (match) len = parseInt(match[1]);
     }
     
@@ -686,7 +686,7 @@ function calculateCabling(
 
     if (isExplicitPerMeter || len === 1 || (!len && isCheap)) {
       if (!perMeterCable || (c.unit_price || 0) < (perMeterCable.unit_price || Infinity)) {
-        perMeterCable = c; // Pick the cheapest per-meter variant
+        if ((c.base_cost || 0) < 150) { perMeterCable = c; }
       }
     } else if (len && len > 1) {
       bundles.push({ ...c, parsed_length: len });
@@ -702,6 +702,14 @@ function calculateCabling(
     baseCostPerMeter = perMeterCable.base_cost || 12;
     cableTypeLabel = perMeterCable.display_name?.replace(/\(Per Mtr\)/i, "").trim() || cableTypeLabel;
     perMeterProductId = perMeterCable.id!;
+  } else if (bundles.length > 0) {
+    // Auto-derive per meter cost from the cheapest bundle (or use explicitly provided per_meter_cost)
+    const b = bundles.sort((x, y) => (x.base_cost || 0) - (y.base_cost || 0))[0];
+    const bLen = (b as any).parsed_length || 1;
+    baseCostPerMeter = b.per_meter_cost !== undefined ? b.per_meter_cost : ((b.base_cost || 0) / bLen);
+    // Extract base name without length suffix for the per-meter label
+    cableTypeLabel = b.display_name?.replace(/\s*\d+\s*(?:m|mtr|mtrs|meter|meters|roll|rolls).*$/i, "").trim() || cableTypeLabel;
+    perMeterProductId = b.id!;
   } else {
     baseCostPerMeter = effectiveCableTech === "IP" ? (settings.cable_copper_coated_ip || 12) : (settings.cable_copper_coated_hd || 8);
   }

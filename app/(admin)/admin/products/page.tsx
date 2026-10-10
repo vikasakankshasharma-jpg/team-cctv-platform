@@ -181,7 +181,7 @@ export default function AdminProductsPage() {
       }
     }
     if (p.category === 'cable' && !p.cable_length_m) {
-      const match = p.display_name?.toLowerCase().match(/(\d+)\s*(?:m|meter|meters)\b/);
+      const match = p.display_name?.toLowerCase().match(/(\d+)\s*(?:m|mtr|mtrs|meter|meters|roll|rolls)\b/);
       if (match) p.cable_length_m = parseInt(match[1]);
     }
     if (p.category === 'power_device') {
@@ -1126,8 +1126,23 @@ export default function AdminProductsPage() {
                                 : "0"
                             }
                           </div>
-                        </div>
                       </div>
+
+                      {editingProduct.category === "cable" && (
+                        <div className="space-y-1.5 pt-2 border-t">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">
+                            Loose Per-Meter Cost (₹) 
+                            <span className="text-[10px] ml-2 text-primary lowercase capitalize">Overrides auto-derive</span>
+                          </label>
+                          <input 
+                            type="number" 
+                            placeholder="e.g. 15 (Optional)"
+                            value={editingProduct.per_meter_cost !== undefined ? editingProduct.per_meter_cost : ""}
+                            onChange={e => setEditingProduct({...editingProduct, per_meter_cost: e.target.value ? Number(e.target.value) : undefined})}
+                            className="flex h-10 w-full rounded-md border border-input bg-secondary/30 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+                          />
+                        </div>
+                      )}
                     </div>
 
                                           {/* Dynamic Margin Slabs (Cable Only) */}
