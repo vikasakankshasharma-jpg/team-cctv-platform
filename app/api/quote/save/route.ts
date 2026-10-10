@@ -159,6 +159,8 @@ export async function POST(request: Request) {
             dbProduct = { id: item.product_id, display_name: item.display_name || item.name || "Standard Installation", category: "installation", unit_price: item.product_id.includes("HD") ? 600 : 800 };
           } else if (item.product_id?.startsWith("surcharge_")) {
             dbProduct = { id: item.product_id, display_name: item.name || item.display_name || "Site Surcharge", category: "labor", unit_price: 500 };
+          } else if (item.product_id === "SYS_GIGABIT_SWITCH") {
+            dbProduct = { id: "SYS_GIGABIT_SWITCH", display_name: "8-Port Gigabit Desktop Switch (Core Hub)", category: "accessory", unit_price: settings.network_switch_cost || 800 };
           }
         }
 

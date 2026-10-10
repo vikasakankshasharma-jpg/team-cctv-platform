@@ -1455,6 +1455,23 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
               </div>
             </div>
             
+            {(() => {
+                const poeSwitchesInCart = items.filter(i => {
+                   const name = (i.display_name || "").toLowerCase();
+                   return name.includes("poe switch") || name.includes("p.o.e");
+                }).reduce((acc, i) => acc + i.qty, 0);
+                const hasCoreSwitch = items.some(i => i.id === "SYS_GIGABIT_SWITCH" || (i.display_name || "").toLowerCase().includes("gigabit"));
+                
+                if (poeSwitchesInCart >= 3 && !hasCoreSwitch) {
+                  return (
+                    <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl mb-4 text-xs text-amber-800">
+                      <span className="font-bold">⚠️ Architecture Warning:</span> You have {poeSwitchesInCart} PoE switches. You will need a Gigabit Desktop Switch (Core Hub) to link them to the NVR. Add it from the "Optional Upgrades" section.
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
               <Button 
                 onClick={handleCheckout} 
                 disabled={isGenerating || items.length === 0} 
@@ -1468,6 +1485,8 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     </div>
   );
 }
+
+
 
 
 

@@ -71,9 +71,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers();
-  const nonce = headersList.get("x-nonce") || undefined;
-
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <head>
@@ -94,7 +91,7 @@ export default async function RootLayout({
           storageKey="team-cctv-theme"
         >
           <Suspense fallback={null}>
-            <TrackingProvider nonce={nonce} />
+            <TrackingProvider />
             <LanguageSync />
           </Suspense>
           <PwaRegistry />

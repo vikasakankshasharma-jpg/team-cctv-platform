@@ -18,8 +18,6 @@ import { FaqAccordion } from "@/components/landing/FaqAccordion";
 import { TranslatedText } from "@/components/shared/TranslatedText";
 import type { Metadata } from "next";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 export const metadata: Metadata = {
   title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
   description: "Get an instant free CCTV quotation online. We offer CCTV on EMI with the lowest price guaranteed for CP Plus, Hikvision & Prama. 100% Free Smart Estimate.",
@@ -197,10 +195,10 @@ export default function LandingPage() {
           <div className="mt-16 sm:mt-20 flex flex-col items-center gap-6 sm:gap-8 w-full">
             <div className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]"><TranslatedText tKey="trusted_partners" defaultText="Trusted Hardware Partners & Verified Installs" /></div>
             <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-12 md:gap-16 lg:gap-20">
-              <Image src="/partners/cpplus.png" alt="CP PLUS" width={120} height={40} unoptimized className="h-6 md:h-8 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
-              <Image src="/partners/dahua.png" alt="Dahua" width={120} height={40} unoptimized className="h-6 md:h-8 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
-              <Image src="/partners/hikvision.png" alt="Hikvision" width={120} height={40} unoptimized className="h-6 md:h-8 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
-              <Image src="/partners/prama.png" alt="PRAMA" width={120} height={40} unoptimized className="h-6 md:h-8 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
+              <Image src="/partners/cpplus.png" alt="CP PLUS" width={120} height={40} className="h-6 md:h-8 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
+              <Image src="/partners/dahua.png" alt="Dahua" width={120} height={40} className="h-6 md:h-8 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
+              <Image src="/partners/hikvision.png" alt="Hikvision" width={120} height={40} className="h-6 md:h-8 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
+              <Image src="/partners/prama.png" alt="PRAMA" width={120} height={40} className="h-6 md:h-8 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
               <div className="flex items-center gap-3 opacity-60 dark:opacity-40">
                 <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" />
                 <span className="font-black text-lg sm:text-xl tracking-tight uppercase">BIS-ER</span>

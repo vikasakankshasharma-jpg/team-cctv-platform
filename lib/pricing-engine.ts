@@ -510,7 +510,20 @@ function calculateHardware(
       });
       totalRetail += unitPrice * qty;
       totalCost += (transmission.base_cost || 0) * qty;
-    }
+        if (tech === "IP" && qty >= 3) {
+           const gigCost = settings.network_switch_cost || 800;
+           const gigRetail = Math.round(gigCost * (1 + (marginPolicy.margin_accessory || 40) / 100));
+           items.push({
+             product_id: "SYS_GIGABIT_SWITCH",
+             display_name: "8-Port Gigabit Desktop Switch (Core Hub)",
+             qty: 1,
+             unit_price: gigRetail,
+             line_total: gigRetail
+           });
+           totalRetail += gigRetail;
+           totalCost += gigCost;
+        }
+      }
   }
   // Surface storage overflow info for auto-lead capture
   const storageOverflow = hdd && (hdd as any).storage_overflow ? true : false;
@@ -1819,6 +1832,8 @@ export function generatePricingSnapshot(
     recommendation_reasons: []
   };
 }
+
+
 
 
 
