@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Check, Filter, Tag, ChevronDown, Plus, Trash2, Info } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { BookSurveyClient } from "@/components/public/BookSurveyClient";
 
 const BRAND_DISPLAY: Record<string, string> = {
   "all": "All Brands",
@@ -580,9 +581,27 @@ export function DynamicVariantGenerator({
       </div>
 
       {variants.length === 0 && (
-        <div className="text-center py-6 md:py-12 bg-white rounded-2xl border border-dashed border-slate-300">
-          <p className="text-slate-500 font-medium">{t("wz_no_packages_found_for_these_fi")}</p>
-          <Button variant="link" onClick={() => { setActiveBrand("all"); setCameraBuckets(prev => prev.map(b => ({ ...b, resolution: "2MP" }))); }}>{t("wz_clear_filters")}</Button>
+        <div className="w-full">
+          {outdoorCount + indoorCount > 16 ? (
+            <div className="w-full max-w-4xl mx-auto border border-blue-100 dark:border-blue-900/30 rounded-2xl overflow-hidden bg-white dark:bg-[#1d1d1f] shadow-sm mt-4 animate-in fade-in zoom-in-95 duration-300">
+              <div className="bg-blue-50/80 dark:bg-blue-900/20 p-6 text-center border-b border-blue-100 dark:border-blue-900/30">
+                <h3 className="text-2xl font-bold text-blue-900 dark:text-blue-300 mb-2">Custom Solution Required</h3>
+                <p className="text-blue-700/80 dark:text-blue-400/80 max-w-xl mx-auto">
+                  A {outdoorCount + indoorCount}-camera installation requires specialized design. Our experts will prepare a custom quote for you.
+                </p>
+              </div>
+              <div className="p-6 md:p-8 bg-slate-50 dark:bg-zinc-900/30">
+                <div className="max-w-2xl mx-auto bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-zinc-800">
+                  <BookSurveyClient />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-6 md:py-12 bg-white dark:bg-[#1d1d1f] rounded-2xl border border-dashed border-slate-300 dark:border-zinc-700">
+              <p className="text-slate-500 dark:text-zinc-400 font-medium">{t("wz_no_packages_found_for_these_fi")}</p>
+              <Button variant="link" onClick={() => { setActiveBrand("all"); setCameraBuckets(prev => prev.map(b => ({ ...b, resolution: "2MP" }))); }}>{t("wz_clear_filters")}</Button>
+            </div>
+          )}
         </div>
       )}
 
