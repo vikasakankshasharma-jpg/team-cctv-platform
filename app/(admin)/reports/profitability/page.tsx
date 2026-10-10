@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
 "use client";
+import { Suspense } from 'react';
 
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";

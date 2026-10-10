@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
 "use client";
+import { Suspense } from 'react';
 
 import { useEffect, useState } from "react";
 import { signInWithCustomToken } from "firebase/auth";

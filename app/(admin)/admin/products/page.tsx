@@ -424,7 +424,7 @@ export default function AdminProductsPage() {
           <ProductsSkeleton />
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <ProductInventory
+            <ProductInventory onAddProduct={handleAdd}
               products={products}
               onEdit={handleEdit}
                 onDuplicate={handleDuplicate}
@@ -1386,6 +1386,7 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+
 
 
 

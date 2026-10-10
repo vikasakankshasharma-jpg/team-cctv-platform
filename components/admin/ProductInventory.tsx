@@ -266,7 +266,8 @@ function CategorySection({
   selectedIds,
   onToggleSelect,
   onSelectAllGroup,
-  onDeselectAllGroup
+  onDeselectAllGroup,
+  onAddProduct
 }: {
   categoryKey: string;
   products: Product[];
@@ -277,6 +278,7 @@ function CategorySection({
   onToggleSelect?: (id: string) => void;
   onSelectAllGroup?: (ids: string[]) => void;
   onDeselectAllGroup?: (ids: string[]) => void;
+  onAddProduct?: (category: string) => void;
 }) {
   const [open, setOpen] = useState(true);
   const cfg = CATEGORIES[categoryKey] || { label: categoryKey, icon: Package };
@@ -298,9 +300,9 @@ function CategorySection({
 
   return (
     <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 mb-6">
-      <button
+      <div
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-6 py-5 bg-card hover:bg-muted/30 transition-colors border-b border-border"
+        className="w-full flex items-center justify-between px-6 py-5 bg-card hover:bg-muted/30 transition-colors border-b border-border cursor-pointer select-none"
       >
         <div className="flex items-center gap-4">
           <div className="p-2.5 rounded-xl bg-secondary text-foreground">
@@ -315,8 +317,18 @@ function CategorySection({
             </div>
           </div>
         </div>
-        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
-      </button>
+        <div className="flex items-center gap-3">
+           {onAddProduct && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onAddProduct(categoryKey); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors outline-none"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add New
+              </button>
+           )}
+          <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+        </div>
+      </div>
 
       {open && (
         <div className="flex flex-col bg-card">
@@ -332,6 +344,7 @@ function CategorySection({
               onToggleSelect={onToggleSelect}
               onSelectAllGroup={onSelectAllGroup}
               onDeselectAllGroup={onDeselectAllGroup}
+              onAddProduct={onAddProduct}
             />
           ))}
         </div>
@@ -507,6 +520,7 @@ export function ProductInventory({
               onToggleSelect={onToggleSelect}
               onSelectAllGroup={onSelectAllGroup}
               onDeselectAllGroup={onDeselectAllGroup}
+              onAddProduct={onAddProduct}
             />
           );
         })}
@@ -533,6 +547,7 @@ export function ProductInventory({
               onToggleSelect={onToggleSelect}
               onSelectAllGroup={onSelectAllGroup}
               onDeselectAllGroup={onDeselectAllGroup}
+              onAddProduct={onAddProduct}
             />
           );
         })}
@@ -571,3 +586,4 @@ export function ProductInventory({
     </div>
   );
 }
+
