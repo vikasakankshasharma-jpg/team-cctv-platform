@@ -1600,22 +1600,27 @@ export function generatePricingSnapshot(
   }
 
   // 3. Storage
-  if (resolvedSystem.storage) {
-    const baseCost = resolvedSystem.storage.base_cost || resolvedSystem.storage.unit_price || 0;
-    const calc = MarginEngine.calculateUnitPricing(baseCost, "storage", planType, marginPolicy, resolvedSystem.storage.brand);
-    lineItems.push({
-      product_id: resolvedSystem.storage.id,
-      display_name: resolvedSystem.storage.display_name,
-      qty: 1,
-      unit_price: calc.sellingPriceExTax,
-      line_total: calc.sellingPriceExTax,
-      base_cost_at_quote: baseCost,
-      stock_status_at_quote: resolvedSystem.storage.stock_status,
-      brand: resolvedSystem.storage.brand
-    });
-    baseHardwareCost += calc.sellingPriceExTax;
-    totalPurchaseCost += calc.workingCost;
-  }
+    if (resolvedSystem.storage) {
+      const baseCost = resolvedSystem.storage.base_cost || resolvedSystem.storage.unit_price || 0;
+      const calc = MarginEngine.calculateUnitPricing(baseCost, "storage", planType, marginPolicy, resolvedSystem.storage.brand);
+      
+      const nameStr = (resolvedSystem.storage.display_name || "").toLowerCase();
+      const isSdCard = resolvedSystem.storage.category === "memory_card" || nameStr.includes("sd card") || nameStr.includes("micro sd") || nameStr.includes("memory card");
+      const storageQty = isSdCard ? req.camera_count : 1;
+
+      lineItems.push({
+        product_id: resolvedSystem.storage.id,
+        display_name: resolvedSystem.storage.display_name,
+        qty: storageQty,
+        unit_price: calc.sellingPriceExTax,
+        line_total: calc.sellingPriceExTax * storageQty,
+        base_cost_at_quote: baseCost,
+        stock_status_at_quote: resolvedSystem.storage.stock_status,
+        brand: resolvedSystem.storage.brand
+      });
+      baseHardwareCost += (calc.sellingPriceExTax * storageQty);
+      totalPurchaseCost += (calc.workingCost * storageQty);
+    }
 
   // 4. Power Supply
     if (resolvedSystem.power) {
