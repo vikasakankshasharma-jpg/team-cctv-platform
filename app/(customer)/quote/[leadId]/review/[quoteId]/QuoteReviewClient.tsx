@@ -416,7 +416,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
       toast.info("Generating your PDF...");
       const user = auth.currentUser;
       const token = user ? await user.getIdToken() : "";
-      const pdfRes = await fetch(`/api/v1/leads/${quote.leadId}/quotes/${quote.id}/pdf`, {
+      const pdfRes = await fetch(`/api/v1/leads/${quote.leadId}/quotes/${quote.id}/pdf?t=${Date.now()}`, {
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
         }
