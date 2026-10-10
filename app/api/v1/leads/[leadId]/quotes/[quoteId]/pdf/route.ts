@@ -155,7 +155,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     },
     installationAddress: cleanInstallAddress,
     propertyType: String(lead?.property_type || (quote?.requirementSnapshot as any)?.property_type || "Residential"),
-    propertyDetail: lead?.wizard_answers ? JSON.stringify(lead.wizard_answers) : "",
+    propertyDetail: String((quote?.requirementSnapshot as any)?.property_detail || lead?.property_detail || ""),
     siteVisitDate: lead?.site_visit_date || "",
     lineItems,
     gstPercent: Number((quote?.pricingSnapshot as any)?.gst_rate || quote?.gst_rate || 18),
@@ -219,7 +219,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   // â”€â”€ 3. Check Storage cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const bucket     = adminStorage.bucket();
-  const storagePath = `quotes/${leadId}/${quoteId}${isInvoice ? "_invoice" : ""}_v2.pdf`;
+  const storagePath = `quotes/${leadId}/${quoteId}${isInvoice ? "_invoice" : ""}_v3.pdf`;
   const file        = bucket.file(storagePath);
 
   try {

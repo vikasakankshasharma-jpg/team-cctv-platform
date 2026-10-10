@@ -80,7 +80,7 @@ interface QuoteData {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatINR(n: number) {
-  return "₹" + n.toLocaleString("en-IN");
+  return "INR " + n.toLocaleString("en-IN");
 }
 
 function formatDate(iso: string) {
@@ -540,7 +540,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
               <Text style={s.billDetail}>{quote.customer.phone}</Text>
               {quote.customer.email && <Text style={s.billDetail}>{quote.customer.email}</Text>}
               <View style={s.addressBox}>
-                <Text style={s.addressPin}>📍</Text>
+                <Text style={s.addressPin}></Text>
                 <Text style={s.addressText}>{quote.installationAddress}</Text>
               </View>
             </View>
@@ -551,7 +551,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
               <Text style={s.billName}>{quote.propertyType}</Text>
               <Text style={s.billDetail}>{quote.propertyDetail}</Text>
               <View style={s.addressBox}>
-                <Text style={s.addressPin}>📍</Text>
+                <Text style={s.addressPin}></Text>
                 <Text style={s.addressText}>
                   {quote.installationAddress}
                   {quote.siteVisitDate ? `\nSite visit: ${formatDate(quote.siteVisitDate)}` : ""}
@@ -621,8 +621,8 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
               },
               {
                 bg: C.greenBg,
-                icon: "✓",
-                title: `Flat ₹500 Advance`,
+                icon: "A",
+                title: `Flat INR 500 Advance`,
                 body: `${formatINR(advance)} required to initiate the project. 90% on delivery, 10% after completion.`,
               },
               {
