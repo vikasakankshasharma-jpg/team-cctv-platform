@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Product } from "@/types";
 import { Loader2, Plus, Save, X, Package, IndianRupee, BadgeDollarSign, Camera, Info, Settings, Tag, Target, HardDrive, Trash2, Sparkles, ChevronDown } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { ProductInventory } from "@/components/admin/ProductInventory";
 import { ProductsSkeleton } from "@/components/admin/ProductsSkeleton";
@@ -396,24 +395,13 @@ export default function AdminProductsPage() {
                AI Enrich
              </Link>
 
-             <DropdownMenu>
-               <DropdownMenuTrigger className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 outline-none">
-                   <Plus className="w-4 h-4" />
-                   New Product
-                   <ChevronDown className="w-3.5 h-3.5 ml-1 opacity-70" />
-               </DropdownMenuTrigger>
-               <DropdownMenuContent align="end" className="w-56 font-medium z-[200]">
-                 <DropdownMenuLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Category</DropdownMenuLabel>
-                 <DropdownMenuSeparator />
-                 <DropdownMenuItem onClick={() => handleAdd("cctv_camera")} className="cursor-pointer">Camera</DropdownMenuItem>
-                 <DropdownMenuItem onClick={() => handleAdd("recorder")} className="cursor-pointer">Recorder Unit</DropdownMenuItem>
-                 <DropdownMenuItem onClick={() => handleAdd("storage")} className="cursor-pointer">Storage / HDD</DropdownMenuItem>
-                 <DropdownMenuItem onClick={() => handleAdd("network")} className="cursor-pointer">Network & Switches</DropdownMenuItem>
-                 <DropdownMenuItem onClick={() => handleAdd("power_device")} className="cursor-pointer">Power Supply / UPS</DropdownMenuItem>
-                 <DropdownMenuItem onClick={() => handleAdd("cable")} className="cursor-pointer">Transmission Line</DropdownMenuItem>
-                 <DropdownMenuItem onClick={() => handleAdd("accessories")} className="cursor-pointer">Hardware Accessory</DropdownMenuItem>
-               </DropdownMenuContent>
-             </DropdownMenu>
+             <button
+               onClick={() => handleAdd()}
+               className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95"
+             >
+               <Plus className="w-4 h-4" />
+               New Product
+             </button>
           </div>
         </div>
       </header>
