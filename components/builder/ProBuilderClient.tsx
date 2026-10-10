@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useCartStore } from "@/stores/useCartStore";
 import { 
   Loader2, ShoppingCart, Trash2, AlertTriangle, Plus, Minus, Lock, Unlock,
-  Search, X, ArrowUpDown, Filter, Sparkles
+  Search, X, ArrowUpDown, Filter, Sparkles, ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -42,7 +42,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   const [loading, setLoading] = useState(true);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+
   const [showMobileCart, setShowMobileCart] = useState(false);
   const [checkoutPhone, setCheckoutPhone] = useState("");
   const [checkoutName, setCheckoutName] = useState("");
@@ -50,6 +50,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   const router = useRouter();
   const searchParams = useSearchParams();
   const existingLeadId = searchParams.get("leadId");
+  const [isLeadCaptured, setIsLeadCaptured] = useState(!!existingLeadId);
 
   // Search, Sort & Filters State
   const [searchQuery, setSearchQuery] = useState("");
@@ -353,11 +354,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     camCount
   ]);
 
-  const initiateCheckout = () => {
-    if (existingLeadId) { handleCheckout(); return; }
-    setPhoneError("");
-    setShowCheckoutForm(true);
-  };
+
 
   const handleCheckout = async () => {
     // Validate phone from inline form state
@@ -506,6 +503,63 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!isLeadCaptured) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden relative">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+          <div className="p-8 space-y-8">
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="w-8 h-8 text-blue-600" />
+              </div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Custom Build</h1>
+              <p className="text-sm text-slate-500 font-medium leading-relaxed px-4">Please enter your details to start building your professional CCTV quotation.</p>
+            </div>
+            <div className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Mobile Number *</label>
+                <input
+                  type="tel"
+                  placeholder="10-digit mobile number"
+                  value={checkoutPhone}
+                  onChange={(e) => { setCheckoutPhone(e.target.value.replace(/\D/g, '')); setPhoneError(""); }}
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-base focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium text-slate-900"
+                  maxLength={10}
+                  autoFocus
+                />
+                {phoneError && <p className="text-red-500 text-xs mt-1.5 font-semibold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {phoneError}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Your Name (optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Rajesh Kumar"
+                  value={checkoutName}
+                  onChange={(e) => setCheckoutName(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-base focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium text-slate-900"
+                />
+              </div>
+              <Button
+                onClick={() => {
+                  const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
+                  if (cleanedPhone.length !== 10 || !/^[6-9]/.test(cleanedPhone)) {
+                    setPhoneError("Please enter a valid 10-digit Indian mobile number.");
+                    return;
+                  }
+                  setIsLeadCaptured(true);
+                }}
+                className="w-full h-14 bg-slate-900 hover:bg-black text-white rounded-xl text-[15px] font-bold shadow-lg shadow-slate-900/10 transition-all mt-4"
+              >
+                Start Building <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1169,57 +1223,13 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
               </div>
             </div>
             
-            {showCheckoutForm ? (
-              <div className="space-y-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Number *</label>
-                  <input
-                    type="tel"
-                    placeholder="e.g. 9876543210"
-                    value={checkoutPhone}
-                    onChange={(e) => { setCheckoutPhone(e.target.value); setPhoneError(""); }}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    maxLength={13}
-                    autoFocus
-                  />
-                  {phoneError && <p className="text-red-600 text-xs mt-1 font-medium">{phoneError}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Your Name (optional)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Rajesh Kumar"
-                    value={checkoutName}
-                    onChange={(e) => setCheckoutName(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setShowCheckoutForm(false)}
-                    variant="outline"
-                    className="flex-1 h-12 rounded-xl"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCheckout}
-                    disabled={isGenerating}
-                    className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg"
-                  >
-                    {isGenerating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Generate Quote"}
-                  </Button>
-                </div>
-              </div>
-            ) : (
               <Button 
-                onClick={initiateCheckout} 
+                onClick={handleCheckout} 
                 disabled={isGenerating || items.length === 0} 
                 className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-lg font-bold shadow-xl shadow-emerald-600/20"
               >
-                Review & Get PDF on WhatsApp
+                {isGenerating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Generate Quote"}
               </Button>
-            )}
           </div>
         )}
       </div>
