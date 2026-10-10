@@ -50,7 +50,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Quote not found" }, { status: 404 });
   }
 
-  const quote = quoteSnap.data() as Record<string, unknown>;
+  const quote = quoteSnap.data() as any;
 
   // 2. Fetch Associated Lead Document
   let trueLeadId = leadId;
