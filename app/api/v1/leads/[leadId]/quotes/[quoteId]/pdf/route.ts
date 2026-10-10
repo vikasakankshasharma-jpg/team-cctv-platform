@@ -219,12 +219,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
   // â”€â”€ 3. Check Storage cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const bucket     = adminStorage.bucket();
-  const storagePath = `quotes/${leadId}/${quoteId}${isInvoice ? "_invoice" : ""}.pdf`;
+  const storagePath = `quotes/${leadId}/${quoteId}${isInvoice ? "_invoice" : ""}_v2.pdf`;
   const file        = bucket.file(storagePath);
 
   try {
     const [exists] = await file.exists();
-    if (exists) {
+    const forceRegenerate = request.nextUrl.searchParams.get('force') === 'true';
+    if (exists && !forceRegenerate) {
       // Return a short-lived signed URL (1 hour) â€” client downloads directly from Storage
       const [signedUrl] = await file.getSignedUrl({
         action: "read",
