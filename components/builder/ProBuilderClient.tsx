@@ -423,7 +423,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
 
       const data = await res.json();
       if (data.success) {
-        router.push(data.leadId ? `/quote/${data.leadId}` : `/quote/${data.quoteId}`);
+        router.push(data.leadId ? `/quote/${data.leadId}/review/${data.quoteId}` : `/quote/review/${data.quoteId}`);
       } else {
         alert(data.message || "Failed to generate quotation.");
         setIsGenerating(false);

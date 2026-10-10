@@ -1618,22 +1618,29 @@ export function generatePricingSnapshot(
   }
 
   // 4. Power Supply
-  if (resolvedSystem.power) {
-    const baseCost = resolvedSystem.power.base_cost || resolvedSystem.power.unit_price || 0;
-    const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.power.category, planType, marginPolicy, resolvedSystem.power.brand);
-    lineItems.push({
-      product_id: resolvedSystem.power.id,
-      display_name: resolvedSystem.power.display_name,
-      qty: 1,
-      unit_price: calc.sellingPriceExTax,
-      line_total: calc.sellingPriceExTax,
-      base_cost_at_quote: baseCost,
-      stock_status_at_quote: resolvedSystem.power.stock_status,
-      brand: resolvedSystem.power.brand
-    });
-    baseHardwareCost += calc.sellingPriceExTax;
-    totalPurchaseCost += calc.workingCost;
-  }
+    if (resolvedSystem.power) {
+      const baseCost = resolvedSystem.power.base_cost || resolvedSystem.power.unit_price || 0;
+      const calc = MarginEngine.calculateUnitPricing(baseCost, resolvedSystem.power.category, planType, marginPolicy, resolvedSystem.power.brand);
+      
+      let pwrQty = 1;
+      const maxCams = resolvedSystem.power.max_cameras || resolvedSystem.power.channels || 0;
+      if (maxCams > 0 && maxCams < req.camera_count) {
+         pwrQty = Math.ceil(req.camera_count / maxCams);
+      }
+
+      lineItems.push({
+        product_id: resolvedSystem.power.id,
+        display_name: resolvedSystem.power.display_name,
+        qty: pwrQty,
+        unit_price: calc.sellingPriceExTax,
+        line_total: calc.sellingPriceExTax * pwrQty,
+        base_cost_at_quote: baseCost,
+        stock_status_at_quote: resolvedSystem.power.stock_status,
+        brand: resolvedSystem.power.brand
+      });
+      baseHardwareCost += (calc.sellingPriceExTax * pwrQty);
+      totalPurchaseCost += (calc.workingCost * pwrQty);
+    }
 
   // 5. Cable (Fetch from DB, fallback to settings)
   if (resolvedSystem.cable_meters > 0) {
