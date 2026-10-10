@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,7 +6,7 @@ import { signInWithCustomToken } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function E2ELoginPage() {
+function E2ELoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState("Initializing E2E Auth...");
@@ -68,5 +69,13 @@ export default function E2ELoginPage() {
         <p data-testid="e2e-status">{status}</p>
       </div>
     </div>
+  );
+}
+
+export default function E2ELoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <E2ELoginPageContent />
+    </Suspense>
   );
 }

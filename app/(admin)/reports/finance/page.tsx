@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ReportFilters, ReportFilterState } from "@/components/ui/report-filters";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { DollarSign, Wallet, FileText, AlertCircle } from "lucide-react";
 
-export default function FinanceDashboard() {
+function FinanceDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -216,3 +216,11 @@ export default function FinanceDashboard() {
   );
 }
 
+
+export default function FinanceDashboard() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading report...</div>}>
+      <FinanceDashboardContent />
+    </Suspense>
+  );
+}

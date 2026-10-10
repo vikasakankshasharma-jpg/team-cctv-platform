@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ReportFilters, ReportFilterState } from "@/components/ui/report-filters";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Target, Users, TrendingUp, DollarSign } from "lucide-react";
 
-export default function SalesDashboard() {
+function SalesDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -175,5 +175,13 @@ export default function SalesDashboard() {
         </>
       ) : null}
     </div>
+  );
+}
+
+export default function SalesDashboard() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading report...</div>}>
+      <SalesDashboardContent />
+    </Suspense>
   );
 }

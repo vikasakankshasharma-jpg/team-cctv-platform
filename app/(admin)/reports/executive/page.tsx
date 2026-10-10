@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ReportFilters, ReportFilterState } from "@/components/ui/report-filters";
 import { Activity, AlertTriangle, CheckCircle, Package } from "lucide-react";
@@ -12,7 +12,7 @@ interface ExecutiveMetrics {
   activeAmcContracts: number;
 }
 
-export default function ExecutiveDashboard() {
+function ExecutiveDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -143,5 +143,13 @@ export default function ExecutiveDashboard() {
       </div>
 
     </div>
+  );
+}
+
+export default function ExecutiveDashboard() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading report...</div>}>
+      <ExecutiveDashboardContent />
+    </Suspense>
   );
 }

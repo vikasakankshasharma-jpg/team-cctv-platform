@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ReportFilters, ReportFilterState } from "@/components/ui/report-filters";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { Clock, ShieldCheck, Wrench, AlertCircle } from "lucide-react";
 
-export default function ServiceDashboard() {
+function ServiceDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -228,3 +228,11 @@ export default function ServiceDashboard() {
 }
 
 
+
+export default function ServiceDashboard() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading report...</div>}>
+      <ServiceDashboardContent />
+    </Suspense>
+  );
+}

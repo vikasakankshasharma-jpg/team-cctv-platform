@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ReportFilters, ReportFilterState } from "@/components/ui/report-filters";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { Package, AlertTriangle, Layers, ArrowDownUp } from "lucide-react";
 
-export default function InventoryDashboard() {
+function InventoryDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -234,3 +234,11 @@ function DollarSignIcon(props: any) {
 }
 
 
+
+export default function InventoryDashboard() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading report...</div>}>
+      <InventoryDashboardContent />
+    </Suspense>
+  );
+}

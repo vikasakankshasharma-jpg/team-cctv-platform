@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -37,7 +38,7 @@ interface ProfitabilityResult {
 
 const columnHelper = createColumnHelper<ProfitabilityResult>();
 
-export default function ProfitabilityDashboard() {
+function ProfitabilityDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -280,3 +281,11 @@ export default function ProfitabilityDashboard() {
 
 
 
+
+export default function ProfitabilityDashboard() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading report...</div>}>
+      <ProfitabilityDashboardContent />
+    </Suspense>
+  );
+}
