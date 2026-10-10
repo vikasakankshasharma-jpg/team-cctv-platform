@@ -88,7 +88,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         action: "read",
         expires: Date.now() + 3_600_000, // 1 hour
       });
-      return NextResponse.redirect(signedUrl, { status: 302 });
+      return NextResponse.json({ url: signedUrl });
     }
   } catch {
     // Storage check failed — fall through to generate
@@ -201,5 +201,5 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     expires: Date.now() + 3_600_000,
   });
 
-  return NextResponse.redirect(signedUrl, { status: 302 });
+  return NextResponse.json({ url: signedUrl });
 }
