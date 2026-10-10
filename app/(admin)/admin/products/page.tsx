@@ -782,7 +782,7 @@ export default function AdminProductsPage() {
                       </div>
                     )}
 
-                    {["recorder", "power_device", "network"].includes(editingProduct.category) && (
+                    {["recorder", "power_device", "network"].includes(editingProduct.category || "") && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Channels</label>
