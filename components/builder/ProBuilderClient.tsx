@@ -127,7 +127,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   const { technology, items, addItem, removeItem, updateQty, clearCart, setTechnology, getTotal, getCameraCount } = useCartStore();
 
   useEffect(() => {
-    fetch("/api/catalog")
+    fetch("/api/catalog?retail=true")
       .then(res => res.json())
       .then(data => {
         if (data.success) {
