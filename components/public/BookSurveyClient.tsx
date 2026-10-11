@@ -209,11 +209,13 @@ export function BookSurveyClient() {
         pincode={formData.pincode}
         onPincodeChange={(pin) => setFormData(prev => ({ ...prev, pincode: pin }))}
         selectedQuadrant={formData.quadrant}
+        initialCoords={formData.lat && formData.lng ? { lat: formData.lat, lng: formData.lng } : undefined}
+        onCoordinatesChange={(c) => setFormData(prev => ({ ...prev, lat: c.lat, lng: c.lng }))}
         onQuadrantChange={(quadrant, meta) => setFormData(prev => ({ 
           ...prev, 
           quadrant,
-          lat: meta?.lat,
-          lng: meta?.lng
+          lat: meta?.lat || prev.lat,
+          lng: meta?.lng || prev.lng
         }))}
         streetAddress={formData.address}
         onStreetAddressChange={(addr) => setFormData(prev => ({ ...prev, address: addr }))}

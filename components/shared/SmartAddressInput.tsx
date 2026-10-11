@@ -9,6 +9,7 @@ import {
   Compass, 
   AlertCircle 
 } from "lucide-react";
+import { LocationPickerModal, LocationMeta } from "@/components/checkout/LocationPickerModal";
 
 export interface QuadrantInfo {
   zone: string;
@@ -39,6 +40,9 @@ interface SmartAddressInputProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  allowMapSelection?: boolean;
+  initialCoords?: { lat?: number; lng?: number };
+  onCoordinatesChange?: (coords: { lat: number; lng: number }) => void;
 }
 
 export function SmartAddressInput({
@@ -53,8 +57,19 @@ export function SmartAddressInput({
   required = false,
   disabled = false,
   className = "",
+  allowMapSelection = true,
+  initialCoords,
+  onCoordinatesChange,
 }: SmartAddressInputProps) {
   const [loading, setLoading] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [pinnedCoords, setPinnedCoords] = useState<{ lat?: number; lng?: number } | undefined>(initialCoords);
+
+  useEffect(() => {
+    if (initialCoords?.lat && initialCoords?.lng) {
+      setPinnedCoords(initialCoords);
+    }
+  }, [initialCoords?.lat, initialCoords?.lng]);
   const [geoInfo, setGeoInfo] = useState<{
     district?: string;
     state?: string;
@@ -120,6 +135,10 @@ export function SmartAddressInput({
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
+        setPinnedCoords({ lat: latitude, lng: longitude });
+        if (onCoordinatesChange) {
+          onCoordinatesChange({ lat: latitude, lng: longitude });
+        }
         try {
           // Reverse geocode via OpenStreetMap Nominatim
           const res = await fetch(
@@ -144,35 +163,72 @@ export function SmartAddressInput({
       },
       (err) => {
         setGpsLoading(false);
-        setError("Location permission denied. Please enter PINCODE manually.");
+        setError("Location permission denied. Please enter PINCODE manually or use Select on Map.");
       },
       { timeout: 10000, enableHighAccuracy: true }
     );
+  };
+
+  // Handle Map Pinpoint Confirmation
+  const handleMapConfirm = (coords: { lat: number; lng: number }, mapUrl: string, meta?: LocationMeta) => {
+    setPinnedCoords(coords);
+    if (onCoordinatesChange) {
+      onCoordinatesChange(coords);
+    }
+
+    if (meta?.pincode && meta.pincode.length === 6) {
+      onPincodeChange(meta.pincode);
+    }
+
+    if (meta?.formattedAddress && onStreetAddressChange && !streetAddress) {
+      onStreetAddressChange(meta.formattedAddress);
+    }
+
+    if (onQuadrantChange) {
+      onQuadrantChange(selectedQuadrant || meta?.locality || "Pinned Location", {
+        anchor: meta?.locality || "Map Pinpoint",
+        lat: coords.lat,
+        lng: coords.lng,
+      });
+    }
   };
 
   return (
     <div className={`space-y-3.5 ${className}`}>
       {/* Pincode & City/State badge row */}
       <div>
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-1 gap-2">
           <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300">
             PINCODE {required && <span className="text-red-500">*</span>}
           </label>
-          {mode !== "compact" && (
-            <button
-              type="button"
-              onClick={handleUseCurrentGPS}
-              disabled={gpsLoading || disabled}
-              className="text-[11px] text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 transition-colors hover:underline disabled:opacity-50"
-            >
-              {gpsLoading ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
-              ) : (
-                <Navigation className="w-3 h-3" />
-              )}
-              {gpsLoading ? "Detecting GPS..." : "Use Current Location"}
-            </button>
-          )}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {allowMapSelection && (
+              <button
+                type="button"
+                onClick={() => setIsMapModalOpen(true)}
+                disabled={disabled}
+                className="text-[11px] text-blue-600 hover:text-blue-700 dark:text-blue-400 font-bold flex items-center gap-1 bg-blue-50 hover:bg-blue-100/80 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 border border-blue-200/80 dark:border-blue-800/80 px-2 sm:px-2.5 py-0.5 rounded-full transition-all active:scale-95 shadow-2xs"
+              >
+                <MapPin className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                <span>{pinnedCoords?.lat ? "Change Map Pin" : "Select on Map"}</span>
+              </button>
+            )}
+            {mode !== "compact" && (
+              <button
+                type="button"
+                onClick={handleUseCurrentGPS}
+                disabled={gpsLoading || disabled}
+                className="text-[11px] text-slate-600 hover:text-slate-900 dark:text-zinc-400 font-bold flex items-center gap-1 transition-colors hover:underline disabled:opacity-50"
+              >
+                {gpsLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Navigation className="w-3 h-3" />
+                )}
+                <span>{gpsLoading ? "GPS..." : "Use GPS"}</span>
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="relative">
@@ -204,6 +260,25 @@ export function SmartAddressInput({
           <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-medium flex items-center gap-1">
             <AlertCircle className="w-3 h-3" /> {error}
           </p>
+        )}
+
+        {/* Pinned Coordinates Confirmation Badge */}
+        {pinnedCoords?.lat && pinnedCoords?.lng && (
+          <div className="mt-2 flex items-center justify-between bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 px-3 py-1.5 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 animate-in fade-in">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="font-bold text-[11px] truncate">
+                Exact Location Pinned ({pinnedCoords.lat.toFixed(4)}°N, {pinnedCoords.lng.toFixed(4)}°E)
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsMapModalOpen(true)}
+              className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0 ml-2"
+            >
+              Edit Pin
+            </button>
+          </div>
         )}
       </div>
 
@@ -276,6 +351,21 @@ export function SmartAddressInput({
             />
           </div>
         </div>
+      )}
+
+      {/* Interactive Map Modal */}
+      {allowMapSelection && (
+        <LocationPickerModal
+          isOpen={isMapModalOpen}
+          onClose={() => setIsMapModalOpen(false)}
+          initialPincode={pincode || "302001"}
+          initialCoords={
+            pinnedCoords?.lat && pinnedCoords?.lng
+              ? { lat: pinnedCoords.lat, lng: pinnedCoords.lng }
+              : undefined
+          }
+          onConfirm={handleMapConfirm}
+        />
       )}
     </div>
   );

@@ -739,6 +739,8 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                       pincode={checkoutPincode}
                       onPincodeChange={setCheckoutPincode}
                       selectedQuadrant={checkoutQuadrant}
+                      initialCoords={checkoutCoords}
+                      onCoordinatesChange={setCheckoutCoords}
                       onQuadrantChange={(q, meta) => {
                         setCheckoutQuadrant(q);
                         if (meta?.lat) setCheckoutCoords({ lat: meta.lat, lng: meta.lng });

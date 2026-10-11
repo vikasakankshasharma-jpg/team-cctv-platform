@@ -1346,6 +1346,11 @@ export function WizardClientV2() {
                     pincode={req.customer_pincode || ""}
                     onPincodeChange={(val) => setReq(prev => ({ ...prev, customer_pincode: val }))}
                     selectedQuadrant={req.quadrant || ""}
+                    initialCoords={req.lat && req.lng ? { lat: req.lat, lng: req.lng } : undefined}
+                    onCoordinatesChange={(coords) => {
+                      setReq(prev => ({ ...prev, lat: coords.lat, lng: coords.lng }));
+                      setMapCenter(coords);
+                    }}
                     onQuadrantChange={(q, meta) => {
                       setReq(prev => ({
                         ...prev,

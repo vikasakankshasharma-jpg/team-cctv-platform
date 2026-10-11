@@ -18,10 +18,16 @@ import HybridMap from "../maps/HybridMap";
 import { getPincodeCoordinates, Coordinates } from "@/lib/geo-utils";
 import { toast } from "sonner";
 
+export interface LocationMeta {
+  pincode?: string;
+  locality?: string;
+  formattedAddress?: string;
+}
+
 interface LocationPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (coords: Coordinates, googleMapsLink: string) => void;
+  onConfirm: (coords: Coordinates, googleMapsLink: string, meta?: LocationMeta) => void;
   initialPincode?: string;
   initialCoords?: Coordinates;
   addressContext?: string;
@@ -47,6 +53,8 @@ export function LocationPickerModal({
 
   const [isLocatingGPS, setIsLocatingGPS] = useState(false);
   const [pincodeResolved, setPincodeResolved] = useState(false);
+  const [resolvedAddress, setResolvedAddress] = useState<LocationMeta | null>(null);
+  const [isResolvingAddress, setIsResolvingAddress] = useState(false);
 
   // When modal opens, center on Pincode if provided and no prior coords set
   useEffect(() => {
@@ -123,9 +131,36 @@ export function LocationPickerModal({
     );
   };
 
+  // Live reverse geocode when coordinates change
+  useEffect(() => {
+    if (!coords || !coords.lat || !coords.lng) return;
+    setIsResolvingAddress(true);
+    const timer = setTimeout(() => {
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lng}&format=json&addressdetails=1`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.address) {
+            const pin = (data.address.postcode || "").replace(/\D/g, "");
+            const locality = data.address.suburb || data.address.neighbourhood || data.address.residential || data.address.city_district || "";
+            const road = [data.address.house_number, data.address.road].filter(Boolean).join(" ");
+            const shortAddr = [road, locality].filter(Boolean).join(", ") || data.display_name?.split(", ").slice(0, 3).join(", ") || "";
+            setResolvedAddress({
+              pincode: pin.length === 6 ? pin : undefined,
+              locality,
+              formattedAddress: shortAddr,
+            });
+          }
+        })
+        .catch(err => console.warn("Reverse geocode failed:", err))
+        .finally(() => setIsResolvingAddress(false));
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [coords]);
+
   const handleConfirmLocation = () => {
     const googleMapsUrl = `https://maps.google.com/?q=${coords.lat},${coords.lng}`;
-    onConfirm(coords, googleMapsUrl);
+    onConfirm(coords, googleMapsUrl, resolvedAddress || undefined);
     toast.success("Installation location pinned successfully!");
     onClose();
   };
@@ -244,23 +279,42 @@ export function LocationPickerModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="p-4 bg-white border-t border-slate-200 flex items-center justify-between gap-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
-            >
-              Cancel
-            </button>
+          <div className="p-4 bg-white border-t border-slate-200 flex flex-col gap-2.5 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            {/* Resolved address display */}
+            {(resolvedAddress?.formattedAddress || isResolvingAddress) && (
+              <div className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between text-slate-700">
+                <div className="flex items-center gap-2 min-w-0">
+                  <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <span className="truncate font-medium text-[11px] sm:text-xs">
+                    {isResolvingAddress ? "Detecting area & address..." : resolvedAddress?.formattedAddress}
+                  </span>
+                </div>
+                {resolvedAddress?.pincode && (
+                  <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-md shrink-0 ml-2">
+                    PIN: {resolvedAddress.pincode}
+                  </span>
+                )}
+              </div>
+            )}
 
-            <button
-              type="button"
-              onClick={handleConfirmLocation}
-              className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Confirm This Pinpoint</span>
-            </button>
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmLocation}
+                className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Confirm This Pinpoint</span>
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>
