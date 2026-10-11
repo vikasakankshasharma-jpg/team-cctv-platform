@@ -28,7 +28,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "sonner";
 import type { Salesperson, CoverageZone } from "@/types";
 import { TerritoryMatrix } from "./TerritoryMatrix";
-import { computeDistrictPincodes } from "@/lib/geo-utils";
+import { computeDistrictPincodes, getPincodeCoordinates } from "@/lib/geo-utils";
 import MapplsBoundaryMap from "@/components/MapplsBoundaryMap";
 import { CoverageAreaMapEditor } from "@/components/admin/CoverageAreaMapEditor";
 
@@ -473,10 +473,20 @@ export default function SalespersonsClient() {
         const grouped = computePincodesFromOffices(offices);
         setAvailablePincodes(grouped);
 
-        // Auto suggest zone name if empty
+        // Derive coordinates to center map on the selected district
+        let districtCenter: { lat: number; lng: number } | undefined;
+        if (grouped.length > 0 && grouped[0].pincode) {
+          const coords = getPincodeCoordinates(grouped[0].pincode);
+          if (coords) districtCenter = coords;
+        }
+
+        // Auto suggest zone name if empty, and sync city, state, center_coordinates
         setNewZone(prev => ({
           ...prev,
-          name: prev.name || `${name}, ${selectedState.name}`
+          name: prev.name || `${name}, ${selectedState.name}`,
+          city: name,
+          state: selectedState.name,
+          ...(districtCenter ? { center_coordinates: districtCenter } : {})
         }));
 
         toast.success(`Loaded ${grouped.length} pincodes in ${name}`);
@@ -1206,6 +1216,48 @@ export default function SalespersonsClient() {
                 />
               </div>
 
+              {/* 3-Tier Cascading Geographic Dropdowns with real-time text filter — ALWAYS VISIBLE */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* 1. State Selector */}
+                <SearchableDropdown
+                  label="1. Select State"
+                  placeholder="Type to filter states (e.g. Rajasthan)"
+                  value={selectedState?.slug || ""}
+                  displayValue={selectedState?.name || ""}
+                  options={geoStates}
+                  onSelect={handleSelectState}
+                  loading={loadingStates}
+                />
+
+                {/* 2. District Selector */}
+                <SearchableDropdown
+                  label="2. Select District"
+                  placeholder={selectedState ? "Type to filter districts (e.g. Jaipur)" : "Select State first"}
+                  value={selectedDistrict?.slug || ""}
+                  displayValue={selectedDistrict?.name || ""}
+                  options={geoDistricts}
+                  onSelect={handleSelectDistrict}
+                  disabled={!selectedState || loadingDistricts}
+                  loading={loadingDistricts}
+                />
+              </div>
+
+              {/* 3. Tehsil Filter (AI Powered) */}
+              {selectedDistrict && (
+                <div className="animate-in fade-in duration-200">
+                  <SearchableDropdown
+                    label="3. Select Tehsil (AI Powered)"
+                    placeholder={loadingTehsils ? "AI is analyzing PINCODEs..." : "Select Tehsil..."}
+                    value={selectedTehsil}
+                    displayValue={selectedTehsil === "all" ? `All Tehsils in ${selectedDistrict.name}` : geoTehsils.find(t => t.value === selectedTehsil)?.label || selectedTehsil}
+                    options={geoTehsils}
+                    onSelect={(val) => setSelectedTehsil(val)}
+                    disabled={loadingTehsils}
+                    loading={loadingTehsils}
+                  />
+                </div>
+              )}
+
               {/* Coverage Definition Method Selector */}
               <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-secondary/30 border border-border">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
@@ -1274,60 +1326,15 @@ export default function SalespersonsClient() {
                       setNewZone(prev => ({ ...prev, polygon_coordinates: pts }));
                     }}
                     height="380px"
-                    allowModeSwitch={true}
+                    allowModeSwitch={false}
                   />
                 </div>
               )}
 
-              {/* Strategy C: 3-Tier Cascading Geographic Dropdowns & Pincodes list */}
+              {/* Strategy C: Pincodes Multi-Selection Box */}
               {zoneDefinitionMode === "pincodes" && (
                 <div className="space-y-4 animate-in fade-in duration-300">
-
-              {/* 3-Tier Cascading Geographic Dropdowns with real-time text filter */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* 1. State Selector */}
-                <SearchableDropdown
-                  label="1. Select State"
-                  placeholder="Type to filter states (e.g. Rajasthan)"
-                  value={selectedState?.slug || ""}
-                  displayValue={selectedState?.name || ""}
-                  options={geoStates}
-                  onSelect={handleSelectState}
-                  loading={loadingStates}
-                />
-
-                {/* 2. District Selector */}
-                <SearchableDropdown
-                  label="2. Select District"
-                  placeholder={selectedState ? "Type to filter districts (e.g. Jaipur)" : "Select State first"}
-                  value={selectedDistrict?.slug || ""}
-                  displayValue={selectedDistrict?.name || ""}
-                  options={geoDistricts}
-                  onSelect={handleSelectDistrict}
-                  disabled={!selectedState || loadingDistricts}
-                  loading={loadingDistricts}
-                />
-              </div>
-
-              {/* 3. Tehsil Filter (AI Powered) */}
-              {selectedDistrict && (
-                <div className="animate-in fade-in duration-200">
-                  <SearchableDropdown
-                    label="3. Select Tehsil (AI Powered)"
-                    placeholder={loadingTehsils ? "AI is analyzing PINCODEs..." : "Select Tehsil..."}
-                    value={selectedTehsil}
-                    displayValue={selectedTehsil === "all" ? `All Tehsils in ${selectedDistrict.name}` : geoTehsils.find(t => t.value === selectedTehsil)?.label || selectedTehsil}
-                    options={geoTehsils}
-                    onSelect={(val) => setSelectedTehsil(val)}
-                    disabled={loadingTehsils}
-                    loading={loadingTehsils}
-                  />
-                </div>
-              )}
-
-
-              {/* Pincodes Multi-Selection Box */}
-              <div>
+                  <div>
                 <div className="flex justify-between items-center mb-1.5">
                   <div className="flex items-center gap-3">
                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
