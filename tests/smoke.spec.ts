@@ -5,8 +5,8 @@ test.describe('CCTV Wizard Smoke Test', () => {
     // 1. Visit homepage
     await page.goto('/');
     
-    // 2. Check for the main CTA (Check Area)
-    const startButton = page.getByRole('button', { name: /check area/i }).first();
+    // 2. Check for the main CTA (Get Instant Price / Check Area)
+    const startButton = page.getByRole('button', { name: /get instant price|check area/i }).first();
     await expect(startButton).toBeVisible();
     
     // 3. Click and navigate to wizard (Note: PincodeWidget requires entering a 6-digit pin first)

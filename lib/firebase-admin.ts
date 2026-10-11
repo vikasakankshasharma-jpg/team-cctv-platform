@@ -37,10 +37,23 @@ function getAdminApp(): App {
     return existingApps[0];
   }
 
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || (projectId ? `${projectId}.firebasestorage.app` : undefined);
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+      return initializeApp({
+        credential: cert(serviceAccount),
+        projectId: serviceAccount.project_id || projectId,
+        storageBucket: storageBucket || (serviceAccount.project_id ? `${serviceAccount.project_id}.firebasestorage.app` : undefined),
+      });
+    } catch (e) {
+      console.warn("Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON:", e);
+    }
+  }
   
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     console.log("Using GOOGLE_APPLICATION_CREDENTIALS for Firebase Admin");

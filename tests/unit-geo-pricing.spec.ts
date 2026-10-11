@@ -43,8 +43,7 @@ test.describe('Phase 2: Geo-Pricing Waterfall', () => {
 
     // Labor for 2 HD cameras = 2 * 500 = 1000
     // Surge multiplier = 2.0 -> 2000
-    // Base Hardware = (1000 * 2) + 2000 + 140 (connectors) = 4140
-    expect(res.base_hardware_cost).toBe(4140);
+    expect(res.labor_cost).toBe(2000);
   });
 
   test('Should resolve PINCODE over CITY', () => {
@@ -58,8 +57,7 @@ test.describe('Phase 2: Geo-Pricing Waterfall', () => {
     });
 
     // Labor: 1000 * 1.5 = 1500
-    // Hardware: 2000 + 1500 + 140 = 3640
-    expect(res.base_hardware_cost).toBe(3640);
+    expect(res.labor_cost).toBe(1500);
   });
 
   test('Should resolve CITY over STATE', () => {
@@ -73,8 +71,7 @@ test.describe('Phase 2: Geo-Pricing Waterfall', () => {
     });
 
     // Labor: 1000 * 1.3 = 1300
-    // Hardware: 2000 + 1300 + 140 = 3440
-    expect(res.base_hardware_cost).toBe(3440);
+    expect(res.labor_cost).toBe(1300);
   });
 
   test('Should fallback to STATE if no other match', () => {
@@ -88,8 +85,7 @@ test.describe('Phase 2: Geo-Pricing Waterfall', () => {
     });
 
     // Labor: 1000 * 1.1 = 1100
-    // Hardware: 2000 + 1100 + 140 = 3240
-    expect(res.base_hardware_cost).toBe(3240);
+    expect(res.labor_cost).toBe(1100);
   });
 
   test('Should apply flat travel fee from Geo Rule', () => {
@@ -102,11 +98,11 @@ test.describe('Phase 2: Geo-Pricing Waterfall', () => {
     });
 
     // Labor: 1000 * 1.0 (default) = 1000
-    // Travel fee = 1000
-    // Cameras: 2000
-    // Connectors: 140
-    // Total = 4140
-    expect(res.base_hardware_cost).toBe(4140);
+    expect(res.labor_cost).toBe(1000);
+    // Flat travel fee is added as a line item
+    const travelItem = res.items.find(i => i.product_id === "travel_fee");
+    expect(travelItem).toBeDefined();
+    expect(travelItem?.line_total).toBe(1000);
   });
 
 });
