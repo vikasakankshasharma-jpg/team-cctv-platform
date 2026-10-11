@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, Fragment, useMemo } from "react";
+import { useEffect, useState, useRef, Fragment, useMemo, useCallback } from "react";
 
 import { 
   Users, 
@@ -29,7 +29,6 @@ import { toast } from "sonner";
 import type { Salesperson, CoverageZone } from "@/types";
 import { TerritoryMatrix } from "./TerritoryMatrix";
 import { computeDistrictPincodes, getPincodeCoordinates, calculateDistance, isPointInPolygon } from "@/lib/geo-utils";
-import MapplsBoundaryMap from "@/components/MapplsBoundaryMap";
 import { CoverageAreaMapEditor } from "@/components/admin/CoverageAreaMapEditor";
 import type { QuadrantMapMarker } from "@/components/admin/CoverageMapCanvas";
 
@@ -265,6 +264,8 @@ export default function SalespersonsClient() {
     return result;
   }, [availablePincodes, zonePincodeSearch, selectedTehsil, geoTehsils]);
 
+  const [liveAutoSync, setLiveAutoSync] = useState<boolean>(true);
+
   // Quadrant micro-zone map markers (Red for uncovered, Green for covered)
   const quadrantMapMarkers = useMemo<QuadrantMapMarker[]>(() => {
     const markers: QuadrantMapMarker[] = [];
@@ -302,13 +303,26 @@ export default function SalespersonsClient() {
           });
         });
       } else {
-        markers.push({
-          id: p.pincode,
-          pincode: p.pincode,
-          areaName: (p.areas || []).join(", ") || p.pincode,
-          lat: baseCoords.lat,
-          lng: baseCoords.lng,
-          isSelected: isParentSelected
+        // Guarantee 4 distinct cardinal micro-zones for every single pincode!
+        const cardinalZones = [
+          { name: "North-West", dLat: 0.012, dLng: -0.012, area: p.areas?.[0] || `${p.pincode} North-West` },
+          { name: "North-East", dLat: 0.012, dLng: 0.012, area: p.areas?.[1] || `${p.pincode} North-East` },
+          { name: "South-West", dLat: -0.012, dLng: -0.012, area: p.areas?.[2] || `${p.pincode} South-West` },
+          { name: "South-East", dLat: -0.012, dLng: 0.012, area: p.areas?.[3] || `${p.pincode} South-East` },
+        ];
+
+        cardinalZones.forEach(z => {
+          const tag = `${p.pincode}:${z.name}`;
+          const isQuadSelected = isParentSelected || selectedSet.has(tag);
+          markers.push({
+            id: tag,
+            pincode: p.pincode,
+            quadrantName: z.name,
+            areaName: z.area,
+            lat: baseCoords.lat + z.dLat,
+            lng: baseCoords.lng + z.dLng,
+            isSelected: isQuadSelected
+          });
         });
       }
     });
@@ -488,6 +502,99 @@ export default function SalespersonsClient() {
     }));
     toast.success(`Claimed ${uncoveredIds.length} uncovered micro-zones! All are now covered.`);
   };
+
+  // Live / Automatic Sync helper: syncs selected PINs & micro-zones from current map center, radius, or polygon
+  const syncPincodesFromMap = useCallback((
+    center?: { lat: number; lng: number },
+    radiusKm?: number,
+    polygon?: { lat: number; lng: number }[],
+    mode: "radius" | "polygon" = mapToolMode
+  ) => {
+    const c = center || newZone.center_coordinates;
+    const r = radiusKm !== undefined ? radiusKm : (newZone.radius_km || 15);
+    const poly = polygon || newZone.polygon_coordinates || [];
+
+    if (mode === "radius") {
+      if (!c?.lat || !r) return;
+      const insideIds: string[] = [];
+      quadrantMapMarkers.forEach(m => {
+        const dist = calculateDistance(c, { lat: m.lat, lng: m.lng });
+        if (dist <= r) {
+          insideIds.push(m.id);
+        }
+      });
+
+      // Group quadrants by base pincode to check if all 4 are inside
+      const pinCountMap: Record<string, number> = {};
+      insideIds.forEach(id => {
+        const [pin] = id.split(":");
+        pinCountMap[pin] = (pinCountMap[pin] || 0) + 1;
+      });
+
+      const consolidated: string[] = [];
+      const addedBasePins = new Set<string>();
+      insideIds.forEach(id => {
+        const [pin, q] = id.split(":");
+        if (q && pinCountMap[pin] >= 4) {
+          if (!addedBasePins.has(pin)) {
+            consolidated.push(pin);
+            addedBasePins.add(pin);
+          }
+        } else if (!q && pinCountMap[pin] >= 4) {
+          if (!addedBasePins.has(pin)) {
+            consolidated.push(pin);
+            addedBasePins.add(pin);
+          }
+        } else {
+          consolidated.push(id);
+        }
+      });
+
+      setNewZone(prev => ({
+        ...prev,
+        pincodes: Array.from(new Set(consolidated))
+      }));
+    } else {
+      if (poly.length < 3) return;
+      const insideIds: string[] = [];
+      quadrantMapMarkers.forEach(m => {
+        if (isPointInPolygon({ lat: m.lat, lng: m.lng }, poly)) {
+          insideIds.push(m.id);
+        }
+      });
+
+      const pinCountMap: Record<string, number> = {};
+      insideIds.forEach(id => {
+        const [pin] = id.split(":");
+        pinCountMap[pin] = (pinCountMap[pin] || 0) + 1;
+      });
+
+      const consolidated: string[] = [];
+      const addedBasePins = new Set<string>();
+      insideIds.forEach(id => {
+        const [pin, q] = id.split(":");
+        if (q && pinCountMap[pin] >= 4) {
+          if (!addedBasePins.has(pin)) {
+            consolidated.push(pin);
+            addedBasePins.add(pin);
+          }
+        } else if (!q && pinCountMap[pin] >= 4) {
+          if (!addedBasePins.has(pin)) {
+            consolidated.push(pin);
+            addedBasePins.add(pin);
+          }
+        } else {
+          consolidated.push(id);
+        }
+      });
+
+      setNewZone(prev => ({
+        ...prev,
+        pincodes: Array.from(new Set(consolidated))
+      }));
+    }
+  }, [mapToolMode, newZone.center_coordinates, newZone.radius_km, newZone.polygon_coordinates, quadrantMapMarkers]);
+
 
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -1516,6 +1623,23 @@ export default function SalespersonsClient() {
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* Auto-Sync Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={() => setLiveAutoSync(prev => !prev)}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all flex items-center gap-1.5 ${
+                        liveAutoSync
+                          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
+                          : "bg-secondary/40 text-muted-foreground border-border hover:text-foreground"
+                      }`}
+                      title={liveAutoSync ? "Auto-Sync is ON: Dragging map or radius automatically updates selected PINs" : "Auto-Sync is OFF: Manual selection only"}
+                    >
+                      <span>⚡ Auto-Sync:</span>
+                      <span className={liveAutoSync ? "font-bold text-amber-600 dark:text-amber-400" : "font-normal"}>
+                        {liveAutoSync ? "ON" : "OFF"}
+                      </span>
+                    </button>
+
                     <div className="inline-flex rounded-lg bg-secondary/60 p-0.5 border border-border text-xs">
                       <button
                         type="button"
@@ -1571,17 +1695,26 @@ export default function SalespersonsClient() {
                           center_coordinates: centerCoords,
                           center_address_text: addrText || prev.center_address_text
                         }));
+                        if (liveAutoSync) {
+                          syncPincodesFromMap(centerCoords, newZone.radius_km || 15, undefined, "radius");
+                        }
                       }}
                       radiusKm={newZone.radius_km || 15}
                       onRadiusKmChange={(r) => {
                         setNewZone(prev => ({ ...prev, radius_km: r }));
+                        if (liveAutoSync && newZone.center_coordinates) {
+                          syncPincodesFromMap(newZone.center_coordinates, r, undefined, "radius");
+                        }
                       }}
                       polygonPoints={newZone.polygon_coordinates || []}
                       onPolygonPointsChange={(pts) => {
                         setNewZone(prev => ({ ...prev, polygon_coordinates: pts }));
+                        if (liveAutoSync && pts.length >= 3) {
+                          syncPincodesFromMap(undefined, undefined, pts, "polygon");
+                        }
                       }}
                       height="340px"
-                      allowModeSwitch={true}
+                      allowModeSwitch={false}
                       quadrantMarkers={quadrantMapMarkers}
                       onToggleQuadrantMarker={handleToggleQuadrantMarker}
                       onAutoSelectInsideMap={handleAutoSelectInsideMap}
@@ -1638,6 +1771,22 @@ export default function SalespersonsClient() {
                       >
                         Unselect All
                       </button>
+                      <span className="text-muted-foreground text-xs">·</span>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const allPins = filteredAvailablePincodes.map(p => p.pincode);
+                          const areAllExpanded = allPins.length > 0 && allPins.every(p => expandedPincodes.has(p));
+                          if (areAllExpanded) {
+                            setExpandedPincodes(new Set());
+                          } else {
+                            setExpandedPincodes(new Set(allPins));
+                          }
+                        }}
+                        className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1"
+                      >
+                        {filteredAvailablePincodes.length > 0 && filteredAvailablePincodes.every(p => expandedPincodes.has(p.pincode)) ? "Collapse All" : "Expand All Quadrants"}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1668,10 +1817,16 @@ export default function SalespersonsClient() {
                           </div>
                         ) : filteredAvailablePincodes.map(p => {
                           const isParentSelected = (newZone.pincodes || []).includes(p.pincode);
-                          const hasQuadrants = p.quadrants && p.quadrants.length > 0;
-                          const hasAreas = p.areas && p.areas.length > 0;
+                          const effectiveQuadrants = (p.quadrants && p.quadrants.length > 0)
+                            ? p.quadrants
+                            : [
+                                { zone: "North-West", anchor: p.areas?.[0] || `${p.pincode} North-West`, coverage: "North-Western micro-zone" },
+                                { zone: "North-East", anchor: p.areas?.[1] || `${p.pincode} North-East`, coverage: "North-Eastern micro-zone" },
+                                { zone: "South-West", anchor: p.areas?.[2] || `${p.pincode} South-West`, coverage: "South-Western micro-zone" },
+                                { zone: "South-East", anchor: p.areas?.[3] || `${p.pincode} South-East`, coverage: "South-Eastern micro-zone" },
+                              ];
                           const isExpanded = expandedPincodes.has(p.pincode);
-                          const selectedSubCount = (newZone.pincodes || []).filter(code => code.startsWith(p.pincode + ':')).length;
+                          const selectedSubCount = effectiveQuadrants.filter((q: any) => (newZone.pincodes || []).includes(`${p.pincode}:${q.zone}`)).length;
 
                           return (
                             <div key={p.pincode} className="flex flex-col gap-1 mb-2 bg-white rounded-xl border p-1 shadow-sm transition-all">
@@ -1699,7 +1854,7 @@ export default function SalespersonsClient() {
                                       } else {
                                         setNewZone(prev => ({
                                           ...prev, 
-                                          pincodes: (prev.pincodes || []).filter(code => code !== p.pincode)
+                                          pincodes: (prev.pincodes || []).filter(code => code !== p.pincode && !code.startsWith(p.pincode + ':'))
                                         }));
                                       }
                                     }}
@@ -1715,7 +1870,7 @@ export default function SalespersonsClient() {
                                           </span>
                                         ) : selectedSubCount > 0 ? (
                                           <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 text-[10px] font-bold rounded">
-                                            {selectedSubCount} of {p.quadrants?.length || 4} Covered
+                                            {selectedSubCount} of {effectiveQuadrants.length} Covered
                                           </span>
                                         ) : (
                                           <span className="px-1.5 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 text-[10px] font-bold rounded flex items-center gap-1 border border-rose-300/60">
@@ -1723,7 +1878,7 @@ export default function SalespersonsClient() {
                                           </span>
                                         )}
                                       </div>
-                                      {hasQuadrants ? (
+                                      <div className="flex items-center gap-1.5">
                                         <button
                                           type="button"
                                           onClick={(e) => {
@@ -1731,48 +1886,34 @@ export default function SalespersonsClient() {
                                             e.stopPropagation();
                                             togglePincodeExpand(p.pincode);
                                           }}
-                                          className="ml-1 px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded transition-colors flex items-center gap-1"
+                                          className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded transition-colors flex items-center gap-1"
                                         >
                                           {isExpanded ? (
-                                            <>Hide {p.quadrants!.length} Quadrants <ChevronUp className="w-3 h-3" /></>
+                                            <>Hide {effectiveQuadrants.length} Quadrants <ChevronUp className="w-3 h-3" /></>
                                           ) : (
-                                            <>View {p.quadrants!.length} Quadrants <ChevronDown className="w-3 h-3" /></>
+                                            <>View {effectiveQuadrants.length} Quadrants <ChevronDown className="w-3 h-3" /></>
                                           )}
                                         </button>
-                                      ) : hasAreas ? (
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            togglePincodeExpand(p.pincode);
-                                          }}
-                                          className="ml-1 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-medium rounded transition-colors flex items-center gap-1"
-                                        >
-                                          {isExpanded ? (
-                                            <>Hide {p.areas.length} Areas <ChevronUp className="w-3 h-3" /></>
-                                          ) : (
-                                            <>View {p.areas.length} Areas <ChevronDown className="w-3 h-3" /></>
-                                          )}
-                                        </button>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          onClick={(e) => handleGenerateQuadrants(e, p.pincode)}
-                                          disabled={generatingPins.has(p.pincode)}
-                                          className="ml-2 px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded hover:bg-indigo-100 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                          {generatingPins.has(p.pincode) ? <Loader2 className="w-3 h-3 animate-spin" /> : "✨"} Gen Quadrants
-                                        </button>
-                                      )}
+                                        {(!p.quadrants || p.quadrants.length === 0) && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => handleGenerateQuadrants(e, p.pincode)}
+                                            disabled={generatingPins.has(p.pincode)}
+                                            className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded hover:bg-indigo-100 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Enrich with AI landmark anchors"
+                                          >
+                                            {generatingPins.has(p.pincode) ? <Loader2 className="w-3 h-3 animate-spin" /> : "✨"} AI Enrich
+                                          </button>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 </label>
                               </div>
 
-                              {hasQuadrants && isExpanded && (
+                              {isExpanded && (
                                 <div className="pl-7 pr-2 pb-2 flex flex-col gap-1 border-t pt-2 mt-1">
-                                  {p.quadrants!.map((q: any) => {
+                                  {effectiveQuadrants.map((q: any) => {
                                     const areaCode = `${p.pincode}:${q.zone}`;
                                     const isSelected = isParentSelected || (newZone.pincodes || []).includes(areaCode);
                                     
@@ -1785,15 +1926,10 @@ export default function SalespersonsClient() {
                                         <input 
                                           type="checkbox" 
                                           checked={isSelected}
-                                          disabled={isParentSelected}
-                                          onChange={(e) => {
-                                            if (e.target.checked) {
-                                              setNewZone(prev => ({...prev, pincodes: Array.from(new Set([...(prev.pincodes || []), areaCode]))}));
-                                            } else {
-                                              setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(code => code !== areaCode)}));
-                                            }
+                                          onChange={() => {
+                                            handleToggleQuadrantMarker(areaCode, isSelected);
                                           }}
-                                          className="mt-0.5 rounded border-input text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5 disabled:opacity-50" 
+                                          className="mt-0.5 rounded border-input text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5" 
                                         />
                                         <div className="flex flex-col flex-1 min-w-0">
                                           <div className="flex items-center justify-between gap-2">
@@ -1808,40 +1944,10 @@ export default function SalespersonsClient() {
                                               </span>
                                             )}
                                           </div>
-                                          <span className="text-[9px] opacity-60 leading-tight mt-0.5">{q.coverage}</span>
+                                          {q.coverage && (
+                                            <span className="text-[9px] opacity-60 leading-tight mt-0.5">{q.coverage}</span>
+                                          )}
                                         </div>
-                                      </label>
-                                    );
-                                  })}
-                                </div>
-                              )}
-
-                              {hasAreas && !hasQuadrants && isExpanded && (
-                                <div className="pl-7 pr-2 pb-2 flex flex-col gap-1 border-t pt-2 mt-1">
-                                  {p.areas.map((area: string) => {
-                                    const areaCode = `${p.pincode}:${area}`;
-                                    const isSelected = isParentSelected || (newZone.pincodes || []).includes(areaCode);
-                                    
-                                    return (
-                                      <label key={areaCode} className={`flex items-start gap-2 p-1.5 rounded-md cursor-pointer transition-all ${
-                                        isSelected 
-                                          ? 'bg-blue-50 text-blue-900 font-medium' 
-                                          : 'hover:bg-muted/40 text-muted-foreground'
-                                      }`}>
-                                        <input 
-                                          type="checkbox" 
-                                          checked={isSelected}
-                                          disabled={isParentSelected}
-                                          onChange={(e) => {
-                                            if (e.target.checked) {
-                                              setNewZone(prev => ({...prev, pincodes: Array.from(new Set([...(prev.pincodes || []), areaCode]))}));
-                                            } else {
-                                              setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(code => code !== areaCode)}));
-                                            }
-                                          }}
-                                          className="mt-0.5 rounded border-blue-300 text-blue-600 focus:ring-blue-500 h-3.5 w-3.5 disabled:opacity-50" 
-                                        />
-                                        <span className="text-xs leading-tight">{area}</span>
                                       </label>
                                     );
                                   })}
@@ -1862,48 +1968,6 @@ export default function SalespersonsClient() {
                   </div>
                 )}
 
-                {/* MapmyIndia Coverage Boundary Preview (Moved Below List) */}
-                {selectedDistrict && (
-                  <div className="border border-border rounded-xl p-3 bg-secondary/10 mt-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1 rounded-md bg-primary/10 text-primary">
-                          <MapIcon className="w-4 h-4" />
-                        </div>
-                        <span className="text-xs font-bold text-foreground">
-                          MapmyIndia Boundary ({modalMapQuery?.type === 'pincode' ? `Pincode: ${modalMapQuery.query}` : `District: ${selectedDistrict.name}`})
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {modalMapQuery?.type === 'pincode' && (
-                          <button
-                            type="button"
-                            onClick={() => setModalMapQuery({ type: 'district', query: selectedDistrict.name })}
-                            className="text-[11px] text-primary hover:underline font-semibold"
-                          >
-                            Reset to District
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setShowZoneMap(!showZoneMap)}
-                          className="text-[11px] text-muted-foreground hover:text-foreground font-medium underline"
-                        >
-                          {showZoneMap ? "Hide Map" : "Show Map"}
-                        </button>
-                      </div>
-                    </div>
-
-                    {showZoneMap && (
-                      <MapplsBoundaryMap 
-                          boundaryType={newZone.pincodes && newZone.pincodes.length > 0 ? "zone" : (modalMapQuery?.type || 'district')}
-                          boundaryQuery={modalMapQuery?.query || selectedDistrict?.name || ""}
-                          boundaryData={newZone.pincodes}
-                          height="260px"
-                        />
-                    )}
-                  </div>
-                )}
 
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between mt-4">
                   <span>Selected Pincodes Summary</span>

@@ -948,6 +948,10 @@ export interface Installer {
     pan_number: string;
   };
   razorpay_fund_account_id?: string;
+  entity_type?: "individual" | "firm";
+  company_name?: string;
+  pan_number?: string;
+  gst_number?: string;
 
   created_at?: unknown;
   updated_at?: unknown;
