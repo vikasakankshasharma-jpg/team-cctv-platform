@@ -232,27 +232,25 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     marginWarnings.push(`Warning: Mixed technology configurations (e.g. IP and HD) may require multiple recorders, which is not currently supported in auto-quoting.`);
   }
 
-  // 7. Validation for Missing Hardware & Out of Stock
+  // 7. Validation for Missing Hardware & Inactive Products
+  // Per BUSINESS_RULES.md: If is_active = true, it is quotation eligible on-demand via vendors.
   let error = false;
   let errorMessage = undefined;
 
-  // Check if any selected item is explicitly out of stock
-  const outOfStockItems = [
+  const unavailableItems = [
     ...lineItems.filter(item => {
       const p = products.find(prod => prod.id === item.product_id) || addons.find(a => a.id === item.product_id);
-      return p && p.stock_quantity === 0;
+      return p && p.is_active === false;
     }),
     ...quoteAddons.filter(item => {
       const a = addons.find(addon => addon.id === item.addon_id);
-      if (!a) return false;
-      if (a.stock_quantity === undefined) return false;
-      return a.stock_quantity < (item.qty || 1);
+      return a && (a as any).is_active === false;
     }).map(i => ({ display_name: i.display_name }))
   ];
 
-  if (outOfStockItems.length > 0) {
+  if (unavailableItems.length > 0) {
     error = true;
-    errorMessage = `One or more selected items are out of stock: ${outOfStockItems.map(i => i.display_name).join(', ')}`;
+    errorMessage = `One or more selected items are currently inactive in catalog: ${unavailableItems.map(i => i.display_name).join(', ')}`;
   } else if (selection.camera_count > 0) {
     const hasCamera = lineItems.some(item => products.some(p => p.id === item.product_id && p.category === "cctv_camera"));
     if (!hasCamera) {

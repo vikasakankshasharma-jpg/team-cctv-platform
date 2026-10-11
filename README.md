@@ -36,11 +36,10 @@ All administrative actions are tracked in the `audit_logs` collection. Each log 
 ### Zero-Trust Pricing
 The system ignores client-side pricing calculations during checkout. Every quote is re-validated and recalculated on the server using authoritative database values to prevent tampering.
 
-### Middleware
-Global `middleware.ts` enforces:
-- **HSTS**: Strict Transport Security (Production only)
-- **CSP**: Content Security Policy whitelisting Google Maps & Firebase
-- **RBAC**: Protected routes for `/admin`, `/partner`, and `/salesperson`
+### Security & Access Control
+- **HSTS & CSP**: Configured in `next.config.ts` enforcing strict transport security and fine-grained Content Security Policy (whitelisting Razorpay, Google Maps, Firebase, Mappls, etc.).
+- **RBAC**: Enforced via server layouts (`verifySession`) across `/admin`, `/partner`, `/installer`, and `/salesperson`.
+- **Path Tracking**: Global `middleware.ts` injects `x-pathname` request headers for context-aware layout navigation.
 
 ## 📦 Operational Commands
 

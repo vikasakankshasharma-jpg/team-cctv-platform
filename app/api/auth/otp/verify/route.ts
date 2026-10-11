@@ -32,49 +32,33 @@ export async function POST(req: NextRequest) {
       const email = identifier.toLowerCase().trim();
       const otpDoc = await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(email).get();
 
-      let data: any = { name: "Master Admin", role: "super_admin" };
-      let isValid = false;
-
-      if (email === "admin@example.com" && otp === "123456") {
-        isValid = true;
-      } else {
-        if (!otpDoc.exists) {
-          return NextResponse.json({ error: "OTP not found or expired." }, { status: 404 });
-        }
-
-        data = otpDoc.data()!;
-        const now = new Date();
-        const expiry = (data?.expiresAt as any)?.toDate?.();
-
-        if (expiry && now > expiry) {
-          await otpDoc.ref.delete();
-          return NextResponse.json({ error: "OTP has expired." }, { status: 400 });
-        }
-
-        if (data?.otp !== otp) {
-          await createAuditLog({
-            action: "ADMIN_LOGIN_FAILURE",
-            actor_id: "unknown",
-            actor_email: email,
-            resource_type: "auth",
-            metadata: { reason: "INVALID_OTP", type: "email" },
-            ...getRequestMetadata(req)
-          });
-          return NextResponse.json({ error: "Invalid OTP code." }, { status: 400 });
-        }
-        
-        isValid = true;
+      if (!otpDoc.exists) {
+        return NextResponse.json({ error: "OTP not found or expired." }, { status: 404 });
       }
 
-      if (isValid && otpDoc.exists) {
-        // Cleanup OTP after successful verification
+      const data = otpDoc.data()!;
+      const now = new Date();
+      const expiry = (data?.expiresAt as any)?.toDate?.();
+
+      if (expiry && now > expiry) {
         await otpDoc.ref.delete();
+        return NextResponse.json({ error: "OTP has expired." }, { status: 400 });
       }
 
-      // Resolve or Create Firebase User
-      if (email === "admin@example.com") {
-         return NextResponse.json({ success: true, customToken: "mock-custom-token", role: "super_admin" });
+      if (data?.otp !== otp) {
+        await createAuditLog({
+          action: "ADMIN_LOGIN_FAILURE",
+          actor_id: "unknown",
+          actor_email: email,
+          resource_type: "auth",
+          metadata: { reason: "INVALID_OTP", type: "email" },
+          ...getRequestMetadata(req)
+        });
+        return NextResponse.json({ error: "Invalid OTP code." }, { status: 400 });
       }
+
+      // Cleanup OTP after successful verification
+      await otpDoc.ref.delete();
 
       let uid: string;
       try {

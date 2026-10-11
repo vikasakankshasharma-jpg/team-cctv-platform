@@ -21,56 +21,32 @@ export async function POST(req: Request) {
     let formattedPhone = cleanPhone;
     if (cleanPhone.length === 10) formattedPhone = "91" + cleanPhone;
     
-    let data: any = null;
-    let isBypass = false;
-
-    if (formattedPhone === "919587980007" && otp.toString().trim() === "123456") {
-      isBypass = true;
-      data = { role: "customer" };
-    } else if (formattedPhone === "919587980008" && otp.toString().trim() === "123456") {
-      isBypass = true;
-      data = { role: "installer" };
-    } else if (formattedPhone === "919587980009" && otp.toString().trim() === "123456") {
-      isBypass = true;
-      data = { role: "partner" };
-    }
-
-    if (isBypass) {
-      // BYPASS FOR TEST NUMBERS
-    } else {
-      const docId = `+${formattedPhone}`;
-      const otpDoc = await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(docId).get();
-
-      if (!otpDoc.exists) {
-        return NextResponse.json({ error: "OTP expired or not found. Please request a new one." }, { status: 404 });
-      }
-
-      data = otpDoc.data()!;
-      
-      if (data.type !== "sms") {
-        return NextResponse.json({ error: "Invalid verification method." }, { status: 400 });
-      }
-
-      const now = new Date();
-      const expiry = data.expiresAt?.toDate();
-      if (expiry && now > expiry) {
-        await otpDoc.ref.delete();
-        return NextResponse.json({ error: "OTP has expired." }, { status: 400 });
-      }
-
-      if (data.otp !== otp.toString().trim()) {
-        return NextResponse.json({ error: "Incorrect OTP code." }, { status: 400 });
-      }
-
-      // OTP matches! Delete it.
-      await otpDoc.ref.delete();
-    }
-
     const docId = `+${formattedPhone}`;
+    const otpDoc = await adminDb.collection(COLLECTIONS.OTP_VERIFICATIONS).doc(docId).get();
 
-    if (isBypass) {
-      return NextResponse.json({ success: true, customToken: "mock-custom-token", role: data.role });
+    if (!otpDoc.exists) {
+      return NextResponse.json({ error: "OTP expired or not found. Please request a new one." }, { status: 404 });
     }
+
+    const data = otpDoc.data()!;
+    
+    if (data.type !== "sms") {
+      return NextResponse.json({ error: "Invalid verification method." }, { status: 400 });
+    }
+
+    const now = new Date();
+    const expiry = data.expiresAt?.toDate();
+    if (expiry && now > expiry) {
+      await otpDoc.ref.delete();
+      return NextResponse.json({ error: "OTP has expired." }, { status: 400 });
+    }
+
+    if (data.otp !== otp.toString().trim()) {
+      return NextResponse.json({ error: "Incorrect OTP code." }, { status: 400 });
+    }
+
+    // OTP matches! Delete it.
+    await otpDoc.ref.delete();
 
     // Find or create Firebase user
     let uid: string;

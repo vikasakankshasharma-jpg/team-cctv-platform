@@ -24,16 +24,10 @@ export async function POST(req: Request) {
     const normalizedEmail = email.toLowerCase().trim();
     const { ip, ua } = getRequestMetadata(req);
 
-    // --- TEST ADMIN BYPASS ---
-      let userName = "Master Admin";
-      let role = "super_admin";
+    let userName = "Master Admin";
+    let role = "super_admin";
       
-      if (normalizedEmail === "admin@example.com") {
-        console.info(`[Auth] Bypassing RBAC and Firebase for test admin ${normalizedEmail}`);
-        return NextResponse.json({ success: true, message: "OTP sent (Bypass)." });
-      }
-      
-      // 2. Dynamic RBAC Lookup
+    // 2. Dynamic RBAC Lookup
       const adminSnap = await adminDb.collection("admins")
         .where("email", "==", normalizedEmail)
         .where("is_active", "==", true)

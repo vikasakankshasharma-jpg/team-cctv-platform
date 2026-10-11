@@ -40,10 +40,18 @@ These files were **not written by this hardening session**. They were uncommitte
 
 ---
 
-## Phase 0 — Security Emergency
+## Phase 0 — Security Emergency & Remediation
 
 | Item | Status |
 |------|--------|
+| Remove hardcoded OTP & mock token bypasses across all auth APIs | `[DONE]` |
+| Restrict `/settings` collection in Firestore to Admins | `[DONE]` |
+| Secure `/leads/{leadId}/competitor/` uploads in Storage | `[DONE]` |
+| Enforce HSTS (Strict-Transport-Security) in Next.js headers | `[DONE]` |
+| Fix missing `pricing-engine-v2` import in Playwright tests | `[DONE]` |
+| Safely guard `@firebase/rules-unit-testing` Playwright test | `[DONE]` |
+| Align on-demand stock policy with BUSINESS_RULES.md | `[DONE]` |
+| Repo root cleanup / .gitignore protection | `[DONE]` |
 | Revoke Firebase Admin key in GCP Console | `[TODO]` — manual, owner action |
 | Regenerate & restrict Google Maps API key | `[TODO]` — manual, owner action |
 | New keys in Vercel env vars only | `[TODO]` — manual, owner action |

@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
@@ -13,21 +13,13 @@ export async function POST(req: NextRequest) {
     let email = "";
     let phoneNumber = "";
 
-    // MOCK BYPASS FOR LOCAL DEVELOPMENT (Since Google Auth won't easily work without actual domains)
-    if (idToken === "mock-jwt-token") {
-      uid = "mock-uid-" + Date.now();
-      email = identifier?.includes("@") ? identifier.toLowerCase().trim() : "";
-      phoneNumber = !identifier?.includes("@") ? identifier : "";
-    } else {
-      // PROD: Verify real Firebase ID Token
-      try {
-        const decodedToken = await adminAuth.verifyIdToken(idToken);
-        uid = decodedToken.uid;
-        email = decodedToken.email || "";
-        phoneNumber = decodedToken.phone_number || "";
-      } catch (err: any) {
-        return NextResponse.json({ error: "Invalid or expired token." }, { status: 401 });
-      }
+    try {
+      const decodedToken = await adminAuth.verifyIdToken(idToken);
+      uid = decodedToken.uid;
+      email = decodedToken.email || "";
+      phoneNumber = decodedToken.phone_number || "";
+    } catch (err: any) {
+      return NextResponse.json({ error: "Invalid or expired token." }, { status: 401 });
     }
 
     // 1. CUSTOMER ROUTING
@@ -37,9 +29,7 @@ export async function POST(req: NextRequest) {
       const redirectUrl = "/customer/dashboard";
       
       // Setup Custom Claims for Customer
-      if (idToken !== "mock-jwt-token") {
-         await adminAuth.setCustomUserClaims(uid, { role: "customer" });
-      }
+      await adminAuth.setCustomUserClaims(uid, { role: "customer" });
 
       return NextResponse.json({ success: true, role: "customer", redirectUrl });
     }
@@ -125,9 +115,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Set Claims
-      if (idToken !== "mock-jwt-token") {
-         await adminAuth.setCustomUserClaims(uid, { role: assignedRole, permissions });
-      }
+      await adminAuth.setCustomUserClaims(uid, { role: assignedRole, permissions });
 
       return NextResponse.json({ success: true, role: assignedRole, redirectUrl });
     }

@@ -77,4 +77,22 @@ staging_*.json
 *-firebase-adminsdk.json
 *.log
 day0-reset-evidence-*.json
+check_*.ts
+check_*.js
+patch_*.js
+patch_*.py
+fix_*.py
+test*.js
+test*.ts
+!tests/**
+query.js
+get_js.js
+fetch*.js
+v2_cache.py
+clear_cache.ts
+list_bucket.ts
+output.html
+search_chunks.js
+pricing_table.md
+debug-*.json
 
