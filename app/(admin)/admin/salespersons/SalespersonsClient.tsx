@@ -16,8 +16,10 @@ import {
   CheckCircle2,
   AlertCircle,
   ChevronDown,
+  ChevronUp,
   Check,
   Pencil,
+  X,
   Map as MapIcon
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -190,7 +192,16 @@ export default function SalespersonsClient() {
   });
 
   const [showAddZone, setShowAddZone] = useState(false);
-  const [showZoneMap, setShowZoneMap] = useState(true);
+  const [showZoneMap, setShowZoneMap] = useState(false);
+  const [expandedPincodes, setExpandedPincodes] = useState<Set<string>>(new Set());
+  const togglePincodeExpand = (pincode: string) => {
+    setExpandedPincodes(prev => {
+      const next = new Set(prev);
+      if (next.has(pincode)) next.delete(pincode);
+      else next.add(pincode);
+      return next;
+    });
+  };
   const [modalMapQuery, setModalMapQuery] = useState<{ type: 'district' | 'pincode'; query: string } | null>(null);
   const [newZone, setNewZone] = useState<Partial<CoverageZone>>({
     pincodes: []
@@ -1100,13 +1111,27 @@ export default function SalespersonsClient() {
       {showAddZone && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); }} />
-          <div className="relative bg-card w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-2xl p-6 shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200">
-            <h2 className="text-xl font-semibold text-foreground tracking-tight mb-1">{newZone.id ? "Update Coverage Zone" : "Define Coverage Zone"}</h2>
-            <p className="text-xs text-muted-foreground mb-5">
-              Select State, District, and City to view and map all official PINCODEs with single-click Select All.
-            </p>
+          <div className="relative bg-card w-full max-w-3xl max-h-[92vh] flex flex-col rounded-2xl shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-5 pb-4 border-b border-border flex items-center justify-between shrink-0 bg-card">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground tracking-tight mb-0.5">{newZone.id ? "Update Coverage Zone" : "Define Coverage Zone"}</h2>
+                <p className="text-xs text-muted-foreground">
+                  Select State, District, and City to view and map all official PINCODEs with single-click Select All.
+                </p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); }}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
             
-            <div className="space-y-4">
+            {/* Scrollable Modal Body */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Zone Name</label>
                 <Input 
@@ -1181,7 +1206,7 @@ export default function SalespersonsClient() {
                 <div className="flex justify-between items-center mb-1.5">
                   <div className="flex items-center gap-3">
                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                      Available PINCODEs {availablePincodes.length > 0 && `(${availablePincodes.length} Found)`}
+                      Available PINCODEs {availablePincodes.length > 0 && `(${filteredAvailablePincodes.length !== availablePincodes.length ? `${filteredAvailablePincodes.length} of ${availablePincodes.length}` : availablePincodes.length} Found)`}
                     </label>
                   </div>
                   {availablePincodes.length > 0 && (
@@ -1244,15 +1269,20 @@ export default function SalespersonsClient() {
                   </div>
                 ) : availablePincodes.length > 0 ? (
                     <div className="p-3 border rounded-xl bg-muted/20 animate-in slide-in-from-top-1">
-                      <div className="max-h-52 overflow-y-auto space-y-1.5 pr-2">
+                      <div className="max-h-64 overflow-y-auto space-y-1.5 pr-2">
                         {filteredAvailablePincodes.length === 0 ? (
                           <div className="text-center p-4 text-xs text-muted-foreground italic">
                             No matching PINCODEs found for "{zonePincodeSearch}".
                           </div>
                         ) : filteredAvailablePincodes.map(p => {
                           const isParentSelected = (newZone.pincodes || []).includes(p.pincode);
+                          const hasQuadrants = p.quadrants && p.quadrants.length > 0;
+                          const hasAreas = p.areas && p.areas.length > 0;
+                          const isExpanded = expandedPincodes.has(p.pincode);
+                          const selectedSubCount = (newZone.pincodes || []).filter(code => code.startsWith(p.pincode + ':')).length;
+
                           return (
-                            <div key={p.pincode} className="flex flex-col gap-1 mb-2 bg-white rounded-xl border p-1 shadow-sm">
+                            <div key={p.pincode} className="flex flex-col gap-1 mb-2 bg-white rounded-xl border p-1 shadow-sm transition-all">
                               <div className="flex items-center justify-between group pr-2">
                                 <label 
                                   className={`flex-1 flex items-start gap-2.5 p-2 rounded-lg cursor-pointer transition-all ${
@@ -1284,9 +1314,46 @@ export default function SalespersonsClient() {
                                     className="mt-0.5 rounded border-input text-primary focus:ring-primary h-4 w-4" 
                                   />
                                   <div className="flex flex-col">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                       <span className="text-sm font-semibold tracking-wide">ALL OF {p.pincode}</span>
-                                      {(!p.quadrants || p.quadrants.length === 0) && (
+                                      {selectedSubCount > 0 && !isParentSelected && (
+                                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded">
+                                          {selectedSubCount} areas selected
+                                        </span>
+                                      )}
+                                      {hasQuadrants ? (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            togglePincodeExpand(p.pincode);
+                                          }}
+                                          className="ml-1 px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded transition-colors flex items-center gap-1"
+                                        >
+                                          {isExpanded ? (
+                                            <>Hide {p.quadrants!.length} Quadrants <ChevronUp className="w-3 h-3" /></>
+                                          ) : (
+                                            <>View {p.quadrants!.length} Quadrants <ChevronDown className="w-3 h-3" /></>
+                                          )}
+                                        </button>
+                                      ) : hasAreas ? (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            togglePincodeExpand(p.pincode);
+                                          }}
+                                          className="ml-1 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-medium rounded transition-colors flex items-center gap-1"
+                                        >
+                                          {isExpanded ? (
+                                            <>Hide {p.areas.length} Areas <ChevronUp className="w-3 h-3" /></>
+                                          ) : (
+                                            <>View {p.areas.length} Areas <ChevronDown className="w-3 h-3" /></>
+                                          )}
+                                        </button>
+                                      ) : (
                                         <button
                                           type="button"
                                           onClick={(e) => handleGenerateQuadrants(e, p.pincode)}
@@ -1301,9 +1368,9 @@ export default function SalespersonsClient() {
                                 </label>
                               </div>
 
-                              {(p.quadrants && p.quadrants.length > 0) ? (
+                              {hasQuadrants && isExpanded && (
                                 <div className="pl-7 pr-2 pb-2 flex flex-col gap-1 border-t pt-2 mt-1">
-                                  {p.quadrants.map((q: any) => {
+                                  {p.quadrants!.map((q: any) => {
                                     const areaCode = `${p.pincode}:${q.zone}`;
                                     const isSelected = isParentSelected || (newZone.pincodes || []).includes(areaCode);
                                     
@@ -1334,7 +1401,9 @@ export default function SalespersonsClient() {
                                     );
                                   })}
                                 </div>
-                              ) : p.areas.length > 0 && (
+                              )}
+
+                              {hasAreas && !hasQuadrants && isExpanded && (
                                 <div className="pl-7 pr-2 pb-2 flex flex-col gap-1 border-t pt-2 mt-1">
                                   {p.areas.map((area: string) => {
                                     const areaCode = `${p.pincode}:${area}`;
@@ -1438,20 +1507,30 @@ export default function SalespersonsClient() {
                 />
               </div>
 
-              <div className="pt-4 flex gap-3">
-                <button 
-                  onClick={handleAddZone}
-                  disabled={isSaving || (newZone.pincodes?.length === 0)}
-                  className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
-                >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} {newZone.id ? "Update Zone" : "Establish Zone"}
-                </button>
-                <button 
-                  onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); }}
-                  className="px-6 bg-secondary text-secondary-foreground font-semibold text-sm rounded-xl hover:bg-secondary/80 transition-colors"
-                >
-                  Cancel
-                </button>
+              {/* Sticky Footer */}
+              <div className="p-4 border-t border-border bg-card/95 backdrop-blur-sm flex items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="font-semibold text-primary px-3 py-1 text-xs">
+                    {(newZone.pincodes || []).length} Selected
+                  </Badge>
+                </div>
+                <div className="flex gap-2.5">
+                  <button 
+                    type="button"
+                    onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); }}
+                    className="px-5 py-2.5 bg-secondary text-secondary-foreground font-semibold text-sm rounded-xl hover:bg-secondary/80 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={handleAddZone}
+                    disabled={isSaving || (newZone.pincodes?.length === 0)}
+                    className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} {newZone.id ? "Update Zone" : "Establish Zone"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
