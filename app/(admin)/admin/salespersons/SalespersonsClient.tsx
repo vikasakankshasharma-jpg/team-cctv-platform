@@ -220,7 +220,9 @@ export default function SalespersonsClient() {
     });
   };
   const [modalMapQuery, setModalMapQuery] = useState<{ type: 'district' | 'pincode'; query: string } | null>(null);
-  const [zoneDefinitionMode, setZoneDefinitionMode] = useState<"pincodes" | "radius" | "polygon" | "hybrid">("pincodes");
+  const [zoneDefinitionMode, setZoneDefinitionMode] = useState<"pincodes" | "radius" | "polygon" | "hybrid">("hybrid");
+  const [mapToolMode, setMapToolMode] = useState<"radius" | "polygon">("radius");
+  const [showCoverageMap, setShowCoverageMap] = useState<boolean>(true);
   const [newZone, setNewZone] = useState<Partial<CoverageZone>>({
     pincodes: [],
     radius_km: 15,
@@ -598,18 +600,27 @@ export default function SalespersonsClient() {
       toast.error("Zone name is required");
       return;
     }
-    if (zoneDefinitionMode === "pincodes" && (!newZone.pincodes || newZone.pincodes.length === 0)) {
-      toast.error("Please select at least one PINCODE for this zone");
+
+    const hasPincodes = Boolean(newZone.pincodes && newZone.pincodes.length > 0);
+    const hasRadius = Boolean(mapToolMode === "radius" && newZone.center_coordinates?.lat && newZone.radius_km);
+    const hasPolygon = Boolean(mapToolMode === "polygon" && newZone.polygon_coordinates && newZone.polygon_coordinates.length >= 3);
+
+    if (!hasPincodes && !hasRadius && !hasPolygon) {
+      toast.error("Please configure at least one coverage boundary: select PINCODEs/Quadrants or set a Map area");
       return;
     }
-    if (zoneDefinitionMode === "radius" && (!newZone.center_coordinates?.lat || !newZone.radius_km)) {
-      toast.error("Please specify center coordinates and radius");
-      return;
+
+    let finalCoverageType: "pincodes" | "radius" | "polygon" | "hybrid" = "pincodes";
+    if (hasPincodes && (hasRadius || hasPolygon)) {
+      finalCoverageType = "hybrid";
+    } else if (hasRadius) {
+      finalCoverageType = "radius";
+    } else if (hasPolygon) {
+      finalCoverageType = "polygon";
+    } else {
+      finalCoverageType = "pincodes";
     }
-    if (zoneDefinitionMode === "polygon" && (!newZone.polygon_coordinates || newZone.polygon_coordinates.length < 3)) {
-      toast.error("Please add at least 3 boundary points to complete the polygon");
-      return;
-    }
+
     setIsSaving(true);
     try {
       const enrichedPincodesData = (newZone.pincodes || [])
@@ -623,7 +634,7 @@ export default function SalespersonsClient() {
         pincodes: newZone.pincodes || [],
         pincodes_data: enrichedPincodesData,
         is_active: newZone.is_active ?? true,
-        coverage_type: zoneDefinitionMode,
+        coverage_type: finalCoverageType,
         center_coordinates: newZone.center_coordinates,
         radius_km: newZone.radius_km || 15,
         polygon_coordinates: newZone.polygon_coordinates || [],
@@ -859,7 +870,8 @@ export default function SalespersonsClient() {
                   center_coordinates: { lat: 26.9124, lng: 75.7873 },
                   polygon_coordinates: []
                 }); 
-                setZoneDefinitionMode("radius");
+                setMapToolMode("radius");
+                setShowCoverageMap(true);
                 setShowAddZone(true); 
               }}
               className="p-2 bg-secondary text-secondary-foreground rounded-full hover:bg-primary/10 hover:text-primary transition-all"
@@ -875,14 +887,17 @@ export default function SalespersonsClient() {
               </div>
             ) : null}
             {filteredZones.map(z => {
-              const zoneMode = z.coverage_type || (z.radius_km ? "radius" : (z.polygon_coordinates && z.polygon_coordinates.length > 0 ? "polygon" : "pincodes"));
+              const isPoly = z.coverage_type === "polygon" || (z.polygon_coordinates && z.polygon_coordinates.length >= 3);
+              const isHybrid = z.coverage_type === "hybrid" || (Boolean(z.pincodes?.length) && (Boolean(z.radius_km) || (z.polygon_coordinates && z.polygon_coordinates.length >= 3)));
+              const zoneMode = z.coverage_type || (z.radius_km ? "radius" : (isPoly ? "polygon" : "pincodes"));
               return (
               <Card 
                 key={z.id} 
                 className="p-4 rounded-xl flex items-center justify-between group border-border shadow-sm bg-card cursor-pointer hover:bg-secondary/20 transition-all" 
                 onClick={() => { 
                   setNewZone(z); 
-                  setZoneDefinitionMode(zoneMode);
+                  setMapToolMode(isPoly ? "polygon" : "radius");
+                  setShowCoverageMap(true);
                   setShowAddZone(true); 
                 }}
               >
@@ -894,24 +909,28 @@ export default function SalespersonsClient() {
                         {salespersons.filter(s => (s.assigned_zone_ids || []).includes(z.id!)).length} Agents
                       </span>
                     </h5>
-                    {zoneMode === "radius" && (
+                    {isHybrid ? (
+                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-indigo-500/10 text-indigo-600 border-indigo-500/30 gap-1 font-semibold">
+                        ⚡ Hybrid ({z.pincodes?.length || 0} PINs + Map)
+                      </Badge>
+                    ) : zoneMode === "radius" ? (
                       <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-blue-500/10 text-blue-600 border-blue-500/30 gap-1 font-semibold">
                         🎯 {z.radius_km || 15} km Radius
                       </Badge>
-                    )}
-                    {zoneMode === "polygon" && (
+                    ) : zoneMode === "polygon" ? (
                       <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-purple-500/10 text-purple-600 border-purple-500/30 gap-1 font-semibold">
                         🔷 Polygon ({z.polygon_coordinates?.length || 0} pts)
                       </Badge>
-                    )}
-                    {zoneMode === "pincodes" && (
+                    ) : (
                       <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1 font-semibold">
                         📮 {z.pincodes?.length || 0} PINs
                       </Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground font-medium mt-1 truncate max-w-full" title={zoneMode === "radius" ? (z.center_address_text || `${z.radius_km} km radius`) : (z.pincodes?.join(", ") || "")}>
-                    {zoneMode === "radius" 
+                    {isHybrid
+                      ? `${z.pincodes?.length || 0} PINs · ${z.polygon_coordinates && z.polygon_coordinates.length >= 3 ? `${z.polygon_coordinates.length} pts polygon` : `${z.radius_km || 15} km radius`}`
+                      : zoneMode === "radius" 
                       ? (z.center_address_text ? `Centered: ${z.center_address_text}` : `Center: ${z.center_coordinates?.lat.toFixed(3) || "26.912"}, ${z.center_coordinates?.lng.toFixed(3) || "75.787"} (${z.radius_km || 15} km)`)
                       : zoneMode === "polygon"
                       ? `${z.polygon_coordinates?.length || 0} boundary points defined`
@@ -923,7 +942,8 @@ export default function SalespersonsClient() {
                     onClick={(e) => { 
                       e.stopPropagation(); 
                       setNewZone(z); 
-                      setZoneDefinitionMode(zoneMode);
+                      setMapToolMode(isPoly ? "polygon" : "radius");
+                      setShowCoverageMap(true);
                       setShowAddZone(true); 
                     }}
                     className="p-2 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
@@ -1258,84 +1278,94 @@ export default function SalespersonsClient() {
                 </div>
               )}
 
-              {/* Coverage Definition Method Selector */}
-              <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-secondary/30 border border-border">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                  Coverage Area Strategy
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setZoneDefinitionMode("radius")}
-                    className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                      zoneDefinitionMode === "radius"
-                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                        : "bg-card text-muted-foreground hover:bg-secondary border-border"
-                    }`}
-                  >
-                    <CircleDot className="w-4 h-4" />
-                    <span>Radius Tool</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setZoneDefinitionMode("polygon")}
-                    className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                      zoneDefinitionMode === "polygon"
-                        ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                        : "bg-card text-muted-foreground hover:bg-secondary border-border"
-                    }`}
-                  >
-                    <Hexagon className="w-4 h-4" />
-                    <span>Polygon Tool</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setZoneDefinitionMode("pincodes")}
-                    className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                      zoneDefinitionMode === "pincodes"
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                        : "bg-card text-muted-foreground hover:bg-secondary border-border"
-                    }`}
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span>Pincode Matrix</span>
-                  </button>
+              {/* Strategy 1: Interactive Map Polygon & Radius Tool */}
+              <div className="flex flex-col gap-2 rounded-xl border border-border bg-card/60 p-3 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      Map Polygon & Radius Tool
+                    </span>
+                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 text-muted-foreground">
+                      Visual Geo-Fence
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="inline-flex rounded-lg bg-secondary/60 p-0.5 border border-border text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMapToolMode("radius");
+                          setShowCoverageMap(true);
+                        }}
+                        className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                          mapToolMode === "radius"
+                            ? "bg-blue-600 text-white shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <CircleDot className="w-3.5 h-3.5" />
+                        <span>Radius Tool ({newZone.radius_km || 15}km)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMapToolMode("polygon");
+                          setShowCoverageMap(true);
+                        }}
+                        className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                          mapToolMode === "polygon"
+                            ? "bg-purple-600 text-white shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Hexagon className="w-3.5 h-3.5" />
+                        <span>Polygon Tool ({(newZone.polygon_coordinates || []).length} pts)</span>
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowCoverageMap(prev => !prev)}
+                      className="px-2.5 py-1 text-xs font-medium rounded-lg border border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground transition-all flex items-center gap-1"
+                      title={showCoverageMap ? "Collapse map to save space" : "Expand interactive map"}
+                    >
+                      {showCoverageMap ? "Collapse Map" : "Expand Map"}
+                    </button>
+                  </div>
                 </div>
+
+                {showCoverageMap && (
+                  <div className="animate-in fade-in duration-200 mt-1">
+                    <CoverageAreaMapEditor
+                      mode={mapToolMode}
+                      onModeChange={(m) => setMapToolMode(m)}
+                      center={newZone.center_coordinates || { lat: 26.9124, lng: 75.7873 }}
+                      onCenterChange={(centerCoords, addrText) => {
+                        setNewZone(prev => ({
+                          ...prev,
+                          center_coordinates: centerCoords,
+                          center_address_text: addrText || prev.center_address_text
+                        }));
+                      }}
+                      radiusKm={newZone.radius_km || 15}
+                      onRadiusKmChange={(r) => {
+                        setNewZone(prev => ({ ...prev, radius_km: r }));
+                      }}
+                      polygonPoints={newZone.polygon_coordinates || []}
+                      onPolygonPointsChange={(pts) => {
+                        setNewZone(prev => ({ ...prev, polygon_coordinates: pts }));
+                      }}
+                      height="340px"
+                      allowModeSwitch={true}
+                    />
+                  </div>
+                )}
               </div>
 
-              {/* Strategy A & B: Map Radius / Polygon Tool */}
-              {(zoneDefinitionMode === "radius" || zoneDefinitionMode === "polygon") && (
-                <div className="animate-in fade-in duration-300">
-                  <CoverageAreaMapEditor
-                    mode={zoneDefinitionMode}
-                    onModeChange={(m) => setZoneDefinitionMode(m)}
-                    center={newZone.center_coordinates || { lat: 26.9124, lng: 75.7873 }}
-                    onCenterChange={(centerCoords, addrText) => {
-                      setNewZone(prev => ({
-                        ...prev,
-                        center_coordinates: centerCoords,
-                        center_address_text: addrText || prev.center_address_text
-                      }));
-                    }}
-                    radiusKm={newZone.radius_km || 15}
-                    onRadiusKmChange={(r) => {
-                      setNewZone(prev => ({ ...prev, radius_km: r }));
-                    }}
-                    polygonPoints={newZone.polygon_coordinates || []}
-                    onPolygonPointsChange={(pts) => {
-                      setNewZone(prev => ({ ...prev, polygon_coordinates: pts }));
-                    }}
-                    height="380px"
-                    allowModeSwitch={false}
-                  />
-                </div>
-              )}
-
-              {/* Strategy C: Pincodes Multi-Selection Box */}
-              {zoneDefinitionMode === "pincodes" && (
-                <div className="space-y-4 animate-in fade-in duration-300">
-                  <div>
-                <div className="flex justify-between items-center mb-1.5">
+              {/* Strategy 2: 4-Quadrant & PINCODE Matrix */}
+              <div className="space-y-4 pt-1">
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
                   <div className="flex items-center gap-3">
                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                       Available PINCODEs {availablePincodes.length > 0 && `(${filteredAvailablePincodes.length !== availablePincodes.length ? `${filteredAvailablePincodes.length} of ${availablePincodes.length}` : availablePincodes.length} Found)`}
@@ -1639,22 +1669,26 @@ export default function SalespersonsClient() {
                 />
                 </div>
               </div>
-              )}
 
               {/* Sticky Footer */}
               <div className="p-4 border-t border-border bg-card/95 backdrop-blur-sm flex items-center justify-between gap-3 shrink-0">
-                <div className="flex items-center gap-2">
-                  {zoneDefinitionMode === "radius" ? (
-                    <Badge variant="secondary" className="font-semibold text-blue-600 px-3 py-1 text-xs bg-blue-500/10 border-blue-500/30">
-                      🎯 {newZone.radius_km || 15} km Radius Area
+                <div className="flex items-center gap-2 flex-wrap">
+                  {mapToolMode === "radius" && newZone.center_coordinates?.lat ? (
+                    <Badge variant="secondary" className="font-semibold text-blue-600 px-2.5 py-1 text-xs bg-blue-500/10 border-blue-500/30">
+                      🎯 {newZone.radius_km || 15} km Radius
                     </Badge>
-                  ) : zoneDefinitionMode === "polygon" ? (
-                    <Badge variant="secondary" className="font-semibold text-purple-600 px-3 py-1 text-xs bg-purple-500/10 border-purple-500/30">
-                      🔷 {(newZone.polygon_coordinates || []).length} Vertices Perimeter
+                  ) : null}
+                  {mapToolMode === "polygon" && (newZone.polygon_coordinates || []).length >= 3 ? (
+                    <Badge variant="secondary" className="font-semibold text-purple-600 px-2.5 py-1 text-xs bg-purple-500/10 border-purple-500/30">
+                      🔷 {(newZone.polygon_coordinates || []).length} Pts Polygon
                     </Badge>
-                  ) : (
-                    <Badge variant="secondary" className="font-semibold text-primary px-3 py-1 text-xs">
-                      📮 {(newZone.pincodes || []).length} PINs Selected
+                  ) : null}
+                  <Badge variant="secondary" className="font-semibold text-primary px-2.5 py-1 text-xs">
+                    📮 {(newZone.pincodes || []).length} PINs/Quadrants
+                  </Badge>
+                  {((newZone.pincodes || []).length > 0 && ((mapToolMode === "radius" && !!newZone.center_coordinates?.lat) || (mapToolMode === "polygon" && (newZone.polygon_coordinates || []).length >= 3))) && (
+                    <Badge variant="outline" className="font-bold text-emerald-600 px-2 py-0.5 text-[11px] bg-emerald-500/10 border-emerald-500/30">
+                      ⚡ Hybrid Strategy Active
                     </Badge>
                   )}
                 </div>
@@ -1672,9 +1706,9 @@ export default function SalespersonsClient() {
                     disabled={
                       isSaving || 
                       !newZone.name?.trim() || 
-                      (zoneDefinitionMode === "pincodes" && (!newZone.pincodes || newZone.pincodes.length === 0)) ||
-                      (zoneDefinitionMode === "radius" && (!newZone.center_coordinates?.lat || !newZone.radius_km)) ||
-                      (zoneDefinitionMode === "polygon" && (!newZone.polygon_coordinates || newZone.polygon_coordinates.length < 3))
+                      ((!newZone.pincodes || newZone.pincodes.length === 0) &&
+                       (!newZone.center_coordinates?.lat || !newZone.radius_km) &&
+                       (!newZone.polygon_coordinates || newZone.polygon_coordinates.length < 3))
                     }
                     className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                   >
