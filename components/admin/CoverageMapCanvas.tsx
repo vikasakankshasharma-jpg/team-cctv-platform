@@ -8,6 +8,7 @@ import {
   Circle, 
   Polygon, 
   Polyline, 
+  Tooltip,
   useMapEvents, 
   useMap 
 } from "react-leaflet";
@@ -27,6 +28,16 @@ export interface MapPoint {
   lng: number;
 }
 
+export interface QuadrantMapMarker {
+  id: string; // e.g., "302020:North-East" or "302020"
+  pincode: string;
+  quadrantName?: string;
+  areaName?: string;
+  lat: number;
+  lng: number;
+  isSelected: boolean; // true = Green (Covered), false = Red (Uncovered)
+}
+
 interface CoverageMapCanvasProps {
   center: MapPoint;
   zoom: number;
@@ -36,6 +47,8 @@ interface CoverageMapCanvasProps {
   onCenterChange: (center: MapPoint) => void;
   onAddPolygonPoint: (point: MapPoint) => void;
   onUpdatePolygonPoint?: (index: number, point: MapPoint) => void;
+  quadrantMarkers?: QuadrantMapMarker[];
+  onToggleQuadrantMarker?: (id: string, currentlySelected: boolean) => void;
 }
 
 // Map Center & Fly Controller
@@ -196,6 +209,111 @@ function PolygonVertexMarker({
   );
 }
 
+// Interactive Quadrant micro-zone circle marker
+function QuadrantMarkerItem({
+  marker,
+  onToggle
+}: {
+  marker: QuadrantMapMarker;
+  onToggle?: (id: string, currentlySelected: boolean) => void;
+}) {
+  const icon = useMemo(() => {
+    const isSel = marker.isSelected;
+    const bg = isSel ? "#16a34a" : "#dc2626";
+    const symbol = isSel ? "✓" : "⭕";
+    const label = marker.quadrantName ? marker.quadrantName.charAt(0) : "P";
+
+    return L.divIcon({
+      className: `quadrant-marker-icon`,
+      html: `
+        <div style="
+          min-width: 24px;
+          height: 24px;
+          padding: 0 4px;
+          background: ${bg};
+          color: white;
+          border-radius: 12px;
+          border: 2px solid #ffffff;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          font-weight: 700;
+          cursor: pointer;
+          user-select: none;
+          transition: transform 0.15s ease, background 0.2s ease;
+        " title="${marker.pincode} ${marker.quadrantName || ''}">
+          <span style="font-size: 9px; margin-right: 2px;">${symbol}</span>
+          <span>${label}</span>
+        </div>
+      `,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13]
+    });
+  }, [marker.isSelected, marker.quadrantName, marker.pincode]);
+
+  const eventHandlers = useMemo(
+    () => ({
+      click(e: any) {
+        L.DomEvent.stopPropagation(e);
+        if (onToggle) {
+          onToggle(marker.id, marker.isSelected);
+        }
+      }
+    }),
+    [onToggle, marker.id, marker.isSelected]
+  );
+
+  return (
+    <>
+      {/* Visual circle indicating quadrant micro-zone perimeter */}
+      <Circle
+        center={[marker.lat, marker.lng]}
+        radius={750}
+        eventHandlers={eventHandlers}
+        pathOptions={{
+          color: marker.isSelected ? "#16a34a" : "#dc2626",
+          fillColor: marker.isSelected ? "#22c55e" : "#ef4444",
+          fillOpacity: marker.isSelected ? 0.32 : 0.18,
+          weight: 1.5,
+          dashArray: marker.isSelected ? undefined : "4, 4"
+        }}
+      />
+      {/* Clickable pill marker at quadrant position */}
+      <Marker
+        position={[marker.lat, marker.lng]}
+        icon={icon}
+        eventHandlers={eventHandlers}
+      >
+        <Tooltip direction="top" offset={[0, -12]} opacity={0.96}>
+          <div style={{ fontSize: "11px", minWidth: "140px", padding: "2px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
+              <span style={{ fontWeight: 700, color: marker.isSelected ? "#15803d" : "#b91c1c" }}>
+                {marker.isSelected ? "✓ COVERED" : "⭕ UNCOVERED"}
+              </span>
+              <span style={{ color: "#6b7280", fontWeight: 600 }}>{marker.pincode}</span>
+            </div>
+            {marker.quadrantName && (
+              <div style={{ fontWeight: 600, marginTop: "2px", color: "#111827" }}>
+                {marker.quadrantName} Quadrant
+              </div>
+            )}
+            {marker.areaName && (
+              <div style={{ color: "#4b5563", fontSize: "10px", marginTop: "2px", maxWidth: "180px", whiteSpace: "normal" }}>
+                {marker.areaName}
+              </div>
+            )}
+            <div style={{ marginTop: "4px", paddingTop: "4px", borderTop: "1px solid #e5e7eb", color: "#6b7280", fontStyle: "italic", fontSize: "10px" }}>
+              {marker.isSelected ? "Click to unselect (reverts to red)" : "Click to select (turns green)"}
+            </div>
+          </div>
+        </Tooltip>
+      </Marker>
+    </>
+  );
+}
+
 export default function CoverageMapCanvas({
   center,
   zoom,
@@ -204,7 +322,9 @@ export default function CoverageMapCanvas({
   polygonPoints,
   onCenterChange,
   onAddPolygonPoint,
-  onUpdatePolygonPoint
+  onUpdatePolygonPoint,
+  quadrantMarkers,
+  onToggleQuadrantMarker
 }: CoverageMapCanvasProps) {
   return (
     <MapContainer
@@ -279,6 +399,15 @@ export default function CoverageMapCanvas({
           )}
         </>
       )}
+
+      {/* Quadrant micro-zone indicators (Red for uncovered, Green for covered) */}
+      {quadrantMarkers?.map((marker) => (
+        <QuadrantMarkerItem
+          key={marker.id}
+          marker={marker}
+          onToggle={onToggleQuadrantMarker}
+        />
+      ))}
     </MapContainer>
   );
 }

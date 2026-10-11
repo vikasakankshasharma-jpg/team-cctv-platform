@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import type { MapPoint } from "./CoverageMapCanvas";
+import type { MapPoint, QuadrantMapMarker } from "./CoverageMapCanvas";
 
 // Client-only dynamic import of Leaflet Canvas
 const CoverageMapCanvas = dynamic(() => import("./CoverageMapCanvas"), {
@@ -57,6 +57,11 @@ interface CoverageAreaMapEditorProps {
   onPolygonPointsChange: (points: MapPoint[]) => void;
   height?: string;
   allowModeSwitch?: boolean;
+  quadrantMarkers?: QuadrantMapMarker[];
+  onToggleQuadrantMarker?: (id: string, currentlySelected: boolean) => void;
+  onAutoSelectInsideMap?: () => void;
+  onFitMapToSelectedPins?: () => void;
+  onClaimAllUncovered?: () => void;
 }
 
 export function CoverageAreaMapEditor({
@@ -69,7 +74,12 @@ export function CoverageAreaMapEditor({
   polygonPoints = [],
   onPolygonPointsChange,
   height = "420px",
-  allowModeSwitch = true
+  allowModeSwitch = true,
+  quadrantMarkers,
+  onToggleQuadrantMarker,
+  onAutoSelectInsideMap,
+  onFitMapToSelectedPins,
+  onClaimAllUncovered
 }: CoverageAreaMapEditorProps) {
   const [zoom, setZoom] = useState<number>(11);
   const [searchQuery, setSearchQuery] = useState("");
@@ -308,6 +318,61 @@ export function CoverageAreaMapEditor({
         </Button>
       </div>
 
+      {/* Smart Coverage Sync & Gap Detection Bar */}
+      {quadrantMarkers && quadrantMarkers.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-secondary/50 border border-border text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-foreground text-xs">
+              Quadrants:
+            </span>
+            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[11px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              {quadrantMarkers.filter(m => m.isSelected).length} Covered (Green)
+            </span>
+            <span className="inline-flex items-center gap-1 font-semibold text-rose-600 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full text-[11px]">
+              <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+              {quadrantMarkers.filter(m => !m.isSelected).length} Uncovered (Red)
+            </span>
+            <span className="text-[10px] text-muted-foreground hidden lg:inline italic">
+              • Click any circle to toggle/revert
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {onAutoSelectInsideMap && (
+              <button
+                type="button"
+                onClick={onAutoSelectInsideMap}
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-xs flex items-center gap-1"
+                title="Automatically selects all PINs and quadrants located within the drawn map boundary"
+              >
+                🪄 Auto-Select in Map
+              </button>
+            )}
+            {onFitMapToSelectedPins && (
+              <button
+                type="button"
+                onClick={onFitMapToSelectedPins}
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-card border border-border text-foreground hover:bg-secondary transition-all shadow-xs flex items-center gap-1"
+                title="Calculates centroid and encloses map radius or perimeter to wrap currently selected PINs"
+              >
+                🎯 Fit Map to PINs
+              </button>
+            )}
+            {onClaimAllUncovered && quadrantMarkers.some(m => !m.isSelected) && (
+              <button
+                type="button"
+                onClick={onClaimAllUncovered}
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-600/10 border border-rose-600/30 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-xs flex items-center gap-1"
+                title="Instantly covers all remaining red micro-zones"
+              >
+                🛡️ Claim All Uncovered
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Quick Jump City Chips */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
         <span className="text-[11px] font-semibold text-muted-foreground shrink-0 uppercase tracking-wider">
@@ -339,6 +404,8 @@ export function CoverageAreaMapEditor({
           onCenterChange={(newCenter) => onCenterChange(newCenter)}
           onAddPolygonPoint={handleAddPolygonPoint}
           onUpdatePolygonPoint={handleUpdatePolygonPoint}
+          quadrantMarkers={quadrantMarkers}
+          onToggleQuadrantMarker={onToggleQuadrantMarker}
         />
 
         {/* On-Map Floating Hint Box */}

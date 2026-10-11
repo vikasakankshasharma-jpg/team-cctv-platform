@@ -18,30 +18,8 @@ function deg2rad(deg: number): number {
   return deg * (Math.PI / 180);
 }
 
-/**
- * Ray-casting algorithm to determine if a point (lat, lng) lies inside a polygon boundary.
- * Highly efficient O(n) algorithm with zero external dependencies.
- */
-export function isPointInPolygon(
-  point: { lat: number; lng: number },
-  polygon: { lat: number; lng: number }[]
-): boolean {
-  if (!point || typeof point.lat !== "number" || typeof point.lng !== "number") return false;
-  if (!polygon || polygon.length < 3) return false;
-
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const xi = polygon[i].lat, yi = polygon[i].lng;
-    const xj = polygon[j].lat, yj = polygon[j].lng;
-
-    const intersect =
-      yi > point.lng !== yj > point.lng &&
-      point.lat < ((xj - xi) * (point.lng - yi)) / (yj - yi) + xi;
-
-    if (intersect) inside = !inside;
-  }
-  return inside;
-}
+import { isPointInPolygon } from "./geo-utils";
+export { isPointInPolygon };
 
 type PartnerWithTerritory = Salesperson | Installer;
 

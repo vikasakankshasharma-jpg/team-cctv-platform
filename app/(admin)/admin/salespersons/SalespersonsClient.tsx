@@ -28,9 +28,10 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "sonner";
 import type { Salesperson, CoverageZone } from "@/types";
 import { TerritoryMatrix } from "./TerritoryMatrix";
-import { computeDistrictPincodes, getPincodeCoordinates } from "@/lib/geo-utils";
+import { computeDistrictPincodes, getPincodeCoordinates, calculateDistance, isPointInPolygon } from "@/lib/geo-utils";
 import MapplsBoundaryMap from "@/components/MapplsBoundaryMap";
 import { CoverageAreaMapEditor } from "@/components/admin/CoverageAreaMapEditor";
+import type { QuadrantMapMarker } from "@/components/admin/CoverageMapCanvas";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -242,7 +243,7 @@ export default function SalespersonsClient() {
   const [loadingTehsils, setLoadingTehsils] = useState(false);
 
   const [districtOffices, setDistrictOffices] = useState<any[]>([]);
-  const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string, areas: string[], quadrants?: any[] }[]>([]);
+  const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string; areas: string[]; quadrants?: any[]; lat?: number; lng?: number; radius?: number }[]>([]);
 
   const [zonePincodeSearch, setZonePincodeSearch] = useState("");
   
@@ -263,6 +264,230 @@ export default function SalespersonsClient() {
     }
     return result;
   }, [availablePincodes, zonePincodeSearch, selectedTehsil, geoTehsils]);
+
+  // Quadrant micro-zone map markers (Red for uncovered, Green for covered)
+  const quadrantMapMarkers = useMemo<QuadrantMapMarker[]>(() => {
+    const markers: QuadrantMapMarker[] = [];
+    const selectedSet = new Set(newZone.pincodes || []);
+
+    filteredAvailablePincodes.forEach(p => {
+      const baseCoords = (p.lat && p.lng) ? { lat: p.lat, lng: p.lng } : getPincodeCoordinates(p.pincode);
+      if (!baseCoords) return;
+
+      const isParentSelected = selectedSet.has(p.pincode);
+      const hasQuadrants = p.quadrants && p.quadrants.length > 0;
+
+      if (hasQuadrants) {
+        p.quadrants!.forEach((q: any) => {
+          const zoneName = q.zone || "Central";
+          const tag = `${p.pincode}:${zoneName}`;
+          const isQuadSelected = isParentSelected || selectedSet.has(tag);
+
+          let dLat = 0;
+          let dLng = 0;
+          const zLower = zoneName.toLowerCase();
+          if (zLower.includes("north")) dLat += 0.012;
+          if (zLower.includes("south")) dLat -= 0.012;
+          if (zLower.includes("east")) dLng += 0.012;
+          if (zLower.includes("west")) dLng -= 0.012;
+
+          markers.push({
+            id: tag,
+            pincode: p.pincode,
+            quadrantName: zoneName,
+            areaName: q.anchor || q.coverage || (p.areas && p.areas[0]) || p.pincode,
+            lat: baseCoords.lat + dLat,
+            lng: baseCoords.lng + dLng,
+            isSelected: isQuadSelected
+          });
+        });
+      } else {
+        markers.push({
+          id: p.pincode,
+          pincode: p.pincode,
+          areaName: (p.areas || []).join(", ") || p.pincode,
+          lat: baseCoords.lat,
+          lng: baseCoords.lng,
+          isSelected: isParentSelected
+        });
+      }
+    });
+
+    return markers;
+  }, [filteredAvailablePincodes, newZone.pincodes]);
+
+  // Toggle quadrant circle on the map between Red (uncovered) and Green (covered)
+  const handleToggleQuadrantMarker = (id: string, currentlySelected: boolean) => {
+    setNewZone(prev => {
+      const current = new Set(prev.pincodes || []);
+      if (id.includes(":")) {
+        const [pin] = id.split(":");
+        if (currentlySelected) {
+          // If parent pincode was selected, break it down to the remaining 3 quadrants
+          if (current.has(pin)) {
+            current.delete(pin);
+            const pData = availablePincodes.find(p => p.pincode === pin);
+            if (pData?.quadrants) {
+              pData.quadrants.forEach(q => {
+                const qTag = `${pin}:${q.zone}`;
+                if (qTag !== id) current.add(qTag);
+              });
+            }
+          } else {
+            current.delete(id);
+          }
+        } else {
+          // Was uncovered (Red) -> now covered (Green)
+          current.add(id);
+          // If all 4 quadrants for this pincode are now covered, consolidate into parent
+          const pData = availablePincodes.find(p => p.pincode === pin);
+          if (pData?.quadrants && pData.quadrants.length === 4) {
+            const all4Selected = pData.quadrants.every(q => current.has(`${pin}:${q.zone}`));
+            if (all4Selected) {
+              pData.quadrants.forEach(q => current.delete(`${pin}:${q.zone}`));
+              current.add(pin);
+            }
+          }
+        }
+      } else {
+        // Base pincode
+        if (currentlySelected) {
+          current.delete(id);
+          Array.from(current).forEach(item => {
+            if (item.startsWith(`${id}:`)) current.delete(item);
+          });
+        } else {
+          Array.from(current).forEach(item => {
+            if (item.startsWith(`${id}:`)) current.delete(item);
+          });
+          current.add(id);
+        }
+      }
+
+      return { ...prev, pincodes: Array.from(current) };
+    });
+  };
+
+  // Smart Sync: Auto-select PINs and quadrants inside current map radius or polygon
+  const handleAutoSelectInsideMap = () => {
+    if (mapToolMode === "radius") {
+      if (!newZone.center_coordinates?.lat || !newZone.radius_km) {
+        toast.error("Center coordinates and radius are required");
+        return;
+      }
+      const center = newZone.center_coordinates;
+      const radiusKm = newZone.radius_km;
+
+      const insideIds: string[] = [];
+      quadrantMapMarkers.forEach(m => {
+        const dist = calculateDistance(center, { lat: m.lat, lng: m.lng });
+        if (dist <= radiusKm) {
+          insideIds.push(m.id);
+        }
+      });
+
+      if (insideIds.length === 0) {
+        toast.info("No PINs or Quadrants fall within the current radius circle");
+        return;
+      }
+
+      setNewZone(prev => ({
+        ...prev,
+        pincodes: Array.from(new Set([...(prev.pincodes || []), ...insideIds]))
+      }));
+      toast.success(`Auto-selected ${insideIds.length} micro-zones within ${radiusKm}km radius!`);
+    } else {
+      const poly = newZone.polygon_coordinates || [];
+      if (poly.length < 3) {
+        toast.error("Please add at least 3 polygon boundary points first");
+        return;
+      }
+
+      const insideIds: string[] = [];
+      quadrantMapMarkers.forEach(m => {
+        if (isPointInPolygon({ lat: m.lat, lng: m.lng }, poly)) {
+          insideIds.push(m.id);
+        }
+      });
+
+      if (insideIds.length === 0) {
+        toast.info("No PINs or Quadrants fall within the current polygon perimeter");
+        return;
+      }
+
+      setNewZone(prev => ({
+        ...prev,
+        pincodes: Array.from(new Set([...(prev.pincodes || []), ...insideIds]))
+      }));
+      toast.success(`Auto-selected ${insideIds.length} micro-zones inside polygon perimeter!`);
+    }
+  };
+
+  // Smart Sync: Fit Map Radius / Polygon around all currently selected PINs
+  const handleFitMapToSelectedPins = () => {
+    const selectedMarkers = quadrantMapMarkers.filter(m => m.isSelected);
+    if (selectedMarkers.length === 0) {
+      toast.error("Please select at least one PINCODE or Quadrant first");
+      return;
+    }
+
+    const sumLat = selectedMarkers.reduce((acc, m) => acc + m.lat, 0);
+    const sumLng = selectedMarkers.reduce((acc, m) => acc + m.lng, 0);
+    const centerLat = sumLat / selectedMarkers.length;
+    const centerLng = sumLng / selectedMarkers.length;
+    const newCenter = { lat: centerLat, lng: centerLng };
+
+    let maxDistKm = 0;
+    selectedMarkers.forEach(m => {
+      const dist = calculateDistance(newCenter, { lat: m.lat, lng: m.lng });
+      if (dist > maxDistKm) maxDistKm = dist;
+    });
+
+    const enclosingRadiusKm = Math.max(5, Math.ceil(maxDistKm + 2));
+
+    if (mapToolMode === "radius") {
+      setNewZone(prev => ({
+        ...prev,
+        center_coordinates: newCenter,
+        radius_km: enclosingRadiusKm
+      }));
+      toast.success(`Map radius fitted to ${enclosingRadiusKm}km around ${selectedMarkers.length} selected areas`);
+    } else {
+      const minLat = Math.min(...selectedMarkers.map(m => m.lat)) - 0.015;
+      const maxLat = Math.max(...selectedMarkers.map(m => m.lat)) + 0.015;
+      const minLng = Math.min(...selectedMarkers.map(m => m.lng)) - 0.015;
+      const maxLng = Math.max(...selectedMarkers.map(m => m.lng)) + 0.015;
+
+      const boundingPoly = [
+        { lat: maxLat, lng: minLng },
+        { lat: maxLat, lng: maxLng },
+        { lat: minLat, lng: maxLng },
+        { lat: minLat, lng: minLng },
+      ];
+
+      setNewZone(prev => ({
+        ...prev,
+        center_coordinates: newCenter,
+        polygon_coordinates: boundingPoly
+      }));
+      toast.success(`Map polygon perimeter fitted around ${selectedMarkers.length} selected areas`);
+    }
+  };
+
+  // Gap Filler: Claim all remaining uncovered (Red) quadrants
+  const handleClaimAllUncovered = () => {
+    const uncoveredIds = quadrantMapMarkers.filter(m => !m.isSelected).map(m => m.id);
+    if (uncoveredIds.length === 0) {
+      toast.info("All areas in this list are already covered!");
+      return;
+    }
+
+    setNewZone(prev => ({
+      ...prev,
+      pincodes: Array.from(new Set([...(prev.pincodes || []), ...uncoveredIds]))
+    }));
+    toast.success(`Claimed ${uncoveredIds.length} uncovered micro-zones! All are now covered.`);
+  };
 
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -1357,6 +1582,11 @@ export default function SalespersonsClient() {
                       }}
                       height="340px"
                       allowModeSwitch={true}
+                      quadrantMarkers={quadrantMapMarkers}
+                      onToggleQuadrantMarker={handleToggleQuadrantMarker}
+                      onAutoSelectInsideMap={handleAutoSelectInsideMap}
+                      onFitMapToSelectedPins={handleFitMapToSelectedPins}
+                      onClaimAllUncovered={handleClaimAllUncovered}
                     />
                   </div>
                 )}
@@ -1475,14 +1705,24 @@ export default function SalespersonsClient() {
                                     }}
                                     className="mt-0.5 rounded border-input text-primary focus:ring-primary h-4 w-4" 
                                   />
-                                  <div className="flex flex-col">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="text-sm font-semibold tracking-wide">ALL OF {p.pincode}</span>
-                                      {selectedSubCount > 0 && !isParentSelected && (
-                                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded">
-                                          {selectedSubCount} areas selected
-                                        </span>
-                                      )}
+                                  <div className="flex flex-col flex-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm font-semibold tracking-wide">ALL OF {p.pincode}</span>
+                                        {isParentSelected ? (
+                                          <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 text-[10px] font-bold rounded flex items-center gap-1 border border-emerald-300/60">
+                                            ✓ Fully Covered
+                                          </span>
+                                        ) : selectedSubCount > 0 ? (
+                                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 text-[10px] font-bold rounded">
+                                            {selectedSubCount} of {p.quadrants?.length || 4} Covered
+                                          </span>
+                                        ) : (
+                                          <span className="px-1.5 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 text-[10px] font-bold rounded flex items-center gap-1 border border-rose-300/60">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Uncovered
+                                          </span>
+                                        )}
+                                      </div>
                                       {hasQuadrants ? (
                                         <button
                                           type="button"
@@ -1537,10 +1777,10 @@ export default function SalespersonsClient() {
                                     const isSelected = isParentSelected || (newZone.pincodes || []).includes(areaCode);
                                     
                                     return (
-                                      <label key={areaCode} className={`flex items-start gap-2 p-1.5 rounded-md cursor-pointer transition-all ${
+                                      <label key={areaCode} className={`flex items-start gap-2 p-1.5 rounded-md cursor-pointer transition-all border ${
                                         isSelected 
-                                          ? 'bg-blue-50 text-blue-900 font-medium' 
-                                          : 'hover:bg-muted/40 text-muted-foreground'
+                                          ? 'bg-emerald-500/10 text-emerald-950 dark:text-emerald-200 font-medium border-emerald-500/20' 
+                                          : 'hover:bg-muted/40 text-muted-foreground border-transparent'
                                       }`}>
                                         <input 
                                           type="checkbox" 
@@ -1553,10 +1793,21 @@ export default function SalespersonsClient() {
                                               setNewZone(prev => ({...prev, pincodes: (prev.pincodes || []).filter(code => code !== areaCode)}));
                                             }
                                           }}
-                                          className="mt-0.5 rounded border-blue-300 text-blue-600 focus:ring-blue-500 h-3.5 w-3.5 disabled:opacity-50" 
+                                          className="mt-0.5 rounded border-input text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5 disabled:opacity-50" 
                                         />
-                                        <div className="flex flex-col">
-                                          <span className="text-[11px] font-semibold leading-tight">{q.zone} <span className="opacity-70 font-normal">({q.anchor})</span></span>
+                                        <div className="flex flex-col flex-1 min-w-0">
+                                          <div className="flex items-center justify-between gap-2">
+                                            <span className="text-[11px] font-semibold leading-tight">{q.zone} <span className="opacity-70 font-normal">({q.anchor})</span></span>
+                                            {isSelected ? (
+                                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100/90 dark:text-emerald-300 dark:bg-emerald-900/40 px-1.5 py-0.5 rounded border border-emerald-300/60">
+                                                ✓ Covered
+                                              </span>
+                                            ) : (
+                                              <span className="text-[9px] font-bold text-rose-700 bg-rose-100/90 dark:text-rose-300 dark:bg-rose-900/40 px-1.5 py-0.5 rounded border border-rose-300/60 flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Uncovered
+                                              </span>
+                                            )}
+                                          </div>
                                           <span className="text-[9px] opacity-60 leading-tight mt-0.5">{q.coverage}</span>
                                         </div>
                                       </label>
