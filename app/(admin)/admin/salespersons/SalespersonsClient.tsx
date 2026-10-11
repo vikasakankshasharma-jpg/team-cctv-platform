@@ -57,6 +57,7 @@ function SearchableDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [filterText, setFilterText] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -72,26 +73,38 @@ function SearchableDropdown({
     opt.label.toLowerCase().includes(filterText.toLowerCase())
   );
 
+  const toggleDropdown = () => {
+    if (disabled || loading) return;
+    setIsOpen(prev => {
+      const next = !prev;
+      if (next) {
+        setFilterText("");
+        setTimeout(() => inputRef.current?.focus(), 10);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
         {label}
       </label>
-      <div className="relative">
+      <div 
+        className="relative cursor-pointer"
+        onClick={toggleDropdown}
+      >
         <input
+          ref={inputRef}
           type="text"
           disabled={disabled}
           placeholder={loading ? "Loading..." : placeholder}
           value={isOpen ? filterText : (displayValue || "")}
-          onFocus={() => {
-            setFilterText("");
-            setIsOpen(true);
-          }}
           onChange={(e) => {
             setFilterText(e.target.value);
             if (!isOpen) setIsOpen(true);
           }}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-8"
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-8 cursor-pointer"
         />
         {loading ? (
           <Loader2 className="w-4 h-4 animate-spin absolute right-2.5 top-3 text-muted-foreground pointer-events-none" />
@@ -110,7 +123,8 @@ function SearchableDropdown({
             filteredOptions.map((opt) => (
               <div
                 key={opt.value}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   onSelect(opt.value, opt.label);
                   setIsOpen(false);
                   setFilterText("");
@@ -207,13 +221,11 @@ export default function SalespersonsClient() {
     pincodes: []
   });
 
-  // Geographic Hierarchy State (State -> District -> City -> Pincodes)
+  // Geographic Hierarchy State (State -> District -> Tehsil -> Pincodes)
   const [geoStates, setGeoStates] = useState<{ label: string; value: string }[]>([]);
   const [selectedState, setSelectedState] = useState<{ name: string; slug: string } | null>(null);
   const [geoDistricts, setGeoDistricts] = useState<{ label: string; value: string }[]>([]);
   const [selectedDistrict, setSelectedDistrict] = useState<{ name: string; slug: string } | null>(null);
-  const [geoCities, setGeoCities] = useState<{ label: string; value: string }[]>([]);
-  const [selectedCity, setSelectedCity] = useState<string>("all");
   
   // Tehsils State
   const [geoTehsils, setGeoTehsils] = useState<{ label: string; value: string; pincodes: string[] }[]>([]);
@@ -282,8 +294,6 @@ export default function SalespersonsClient() {
     setSelectedDistrict(null);
     setModalMapQuery(null);
     setGeoDistricts([]);
-    setSelectedCity("all");
-    setGeoCities([]);
     setSelectedTehsil("all");
     setGeoTehsils([]);
     setDistrictOffices([]);
@@ -435,7 +445,6 @@ export default function SalespersonsClient() {
     if (!selectedState) return;
     setSelectedDistrict({ name, slug });
     setModalMapQuery({ type: 'district', query: name });
-    setSelectedCity("all");
     setSelectedTehsil("all");
     setGeoTehsils([]);
     setLoadingOffices(true);
@@ -452,14 +461,6 @@ export default function SalespersonsClient() {
       .then(data => {
         const offices = data?.offices || [];
         setDistrictOffices(offices);
-
-        // Extract sub-cities / divisions
-        const divisions = Array.from(new Set(offices.map((o: any) => o.divisionName).filter(Boolean))) as string[];
-        const cityOpts = [
-          { label: `All in ${name}`, value: "all" },
-          ...divisions.map(d => ({ label: d, value: d }))
-        ];
-        setGeoCities(cityOpts);
 
         // Group Pincodes
         const grouped = computePincodesFromOffices(offices);
@@ -499,17 +500,6 @@ export default function SalespersonsClient() {
         setLoadingTehsils(false);
       })
       .finally(() => setLoadingOffices(false));
-  };
-
-  // Handle City / Division Filter Selection
-  const handleSelectCity = (val: string) => {
-    setSelectedCity(val);
-    const filteredOffices = val === "all" 
-      ? districtOffices 
-      : districtOffices.filter(o => o.divisionName === val);
-    
-    const grouped = computePincodesFromOffices(filteredOffices);
-    setAvailablePincodes(grouped);
   };
 
   useEffect(() => {
@@ -1117,7 +1107,7 @@ export default function SalespersonsClient() {
               <div>
                 <h2 className="text-xl font-semibold text-foreground tracking-tight mb-0.5">{newZone.id ? "Update Coverage Zone" : "Define Coverage Zone"}</h2>
                 <p className="text-xs text-muted-foreground">
-                  Select State, District, and City to view and map all official PINCODEs with single-click Select All.
+                  Select State, District, and Tehsil to view and map all official PINCODEs with single-click Select All.
                 </p>
               </div>
               <button 
@@ -1168,27 +1158,11 @@ export default function SalespersonsClient() {
                 />
               </div>
 
-              {/* 3. City / Sub-Division Filter */}
-              {selectedDistrict && geoCities.length > 1 && (
-                <div className="animate-in fade-in duration-200">
-                  <SearchableDropdown
-                    label="3. Select City / Division"
-                    placeholder="Filter by City / Division or All"
-                    value={selectedCity}
-                    displayValue={selectedCity === "all" ? `All in ${selectedDistrict.name}` : selectedCity}
-                    options={geoCities}
-                    onSelect={handleSelectCity}
-                    disabled={loadingOffices}
-                    loading={loadingOffices}
-                  />
-                </div>
-              )}
-
-              {/* 4. Tehsil Filter (AI Powered) */}
+              {/* 3. Tehsil Filter (AI Powered) */}
               {selectedDistrict && (
                 <div className="animate-in fade-in duration-200">
                   <SearchableDropdown
-                    label="4. Select Tehsil (AI Powered)"
+                    label="3. Select Tehsil (AI Powered)"
                     placeholder={loadingTehsils ? "AI is analyzing PINCODEs..." : "Select Tehsil..."}
                     value={selectedTehsil}
                     displayValue={selectedTehsil === "all" ? `All Tehsils in ${selectedDistrict.name}` : geoTehsils.find(t => t.value === selectedTehsil)?.label || selectedTehsil}
