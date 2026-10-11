@@ -816,6 +816,7 @@ export interface CoverageZone {
   id?: string;
   name: string;                          // e.g. "Jaipur North", "Ajmer East"
   city: string;
+  district?: string;
   state: string;
   pincodes: string[];                    // All pincodes in this zone
   pincodes_data?: any[];                 // Cached lat, lng, radius for each pincode

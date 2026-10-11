@@ -1300,7 +1300,7 @@ export default function SalespersonsClient() {
       )}
 
       {activeTab === "matrix" && (
-        <TerritoryMatrix zones={zones} salespersons={salespersons} isLoaded={isLoaded} />
+        <TerritoryMatrix zones={zones} salespersons={salespersons} isLoaded={isLoaded} onRefresh={fetchData} />
       )}
 
       {/* Modals */}
