@@ -26,7 +26,10 @@ import {
   Phone, 
   Briefcase,
   FileCheck2,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
+  CreditCard
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -86,15 +89,25 @@ export function InstallersClient({
   // Add Installer State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [showBankDetails, setShowBankDetails] = useState(false);
   const [newInstallerForm, setNewInstallerForm] = useState({
     name: "",
     mobile_number: "",
     email: "",
     entity_type: "individual" as "individual" | "firm",
+    company_name: "",
+    years_experience: "",
+    city: "",
+    alternate_phone: "",
+    aadhaar_number: "",
     serviceable_pincodes_raw: "",
     pan_number: "",
     gst_number: "",
     skills: ["cctv_installation", "analog_hd", "ip_cameras"] as string[],
+    kyc_status: "pending" as "pending" | "verified",
+    bank_account: "",
+    bank_ifsc: "",
+    bank_verified_name: "",
   });
 
   // Edit Installer State
@@ -237,10 +250,17 @@ export function InstallersClient({
       return;
     }
 
-    const pins = newInstallerForm.serviceable_pincodes_raw
-      .split(",")
-      .map(p => p.trim())
-      .filter(p => p.length === 6);
+    if (newInstallerForm.entity_type === "firm" && !newInstallerForm.company_name.trim()) {
+      toast.error("Please enter Company / Firm Name for registered agencies.");
+      return;
+    }
+
+    const pins = Array.from(new Set(
+      newInstallerForm.serviceable_pincodes_raw
+        .split(/[\s,]+/)
+        .map(p => p.trim())
+        .filter(p => /^\d{6}$/.test(p))
+    ));
 
     if (pins.length === 0) {
       toast.error("Please enter at least one valid 6-digit serviceable pincode.");
@@ -254,23 +274,42 @@ export function InstallersClient({
         mobile_number: newInstallerForm.mobile_number.trim(),
         email: newInstallerForm.email.trim() || null,
         entity_type: newInstallerForm.entity_type,
+        company_name: newInstallerForm.company_name.trim() || null,
+        years_experience: newInstallerForm.years_experience ? Number(newInstallerForm.years_experience) : null,
+        city: newInstallerForm.city.trim() || null,
+        alternate_phone: newInstallerForm.alternate_phone.trim() || null,
+        aadhaar_number: newInstallerForm.aadhaar_number.trim() || null,
         serviceable_pincodes: pins,
         skills: newInstallerForm.skills,
         pan_number: newInstallerForm.pan_number.trim().toUpperCase() || undefined,
         gst_number: newInstallerForm.gst_number.trim().toUpperCase() || null,
+        bank_account: newInstallerForm.bank_account.trim() || null,
+        bank_ifsc: newInstallerForm.bank_ifsc.trim().toUpperCase() || null,
+        bank_verified_name: newInstallerForm.bank_verified_name.trim() || newInstallerForm.name.trim(),
+        kyc_status: newInstallerForm.kyc_status,
       });
 
       if (res.success) {
         toast.success("Installer successfully added to network!");
+        const hasBank = Boolean(newInstallerForm.bank_account && newInstallerForm.bank_ifsc);
         const newInst: Installer = {
           id: res.id,
           name: newInstallerForm.name.trim(),
           mobile_number: newInstallerForm.mobile_number.trim(),
           email: newInstallerForm.email.trim() || undefined,
           entity_type: newInstallerForm.entity_type,
+          company_name: newInstallerForm.company_name.trim() || undefined,
+          years_experience: newInstallerForm.years_experience ? Number(newInstallerForm.years_experience) : undefined,
+          city: newInstallerForm.city.trim() || undefined,
+          alternate_phone: newInstallerForm.alternate_phone.trim() || undefined,
+          aadhaar_number: newInstallerForm.aadhaar_number.trim() || undefined,
           serviceable_pincodes: pins,
           skills: newInstallerForm.skills,
-          kyc_status: "pending",
+          kyc_status: newInstallerForm.kyc_status,
+          bank_account: newInstallerForm.bank_account.trim() || undefined,
+          bank_ifsc: newInstallerForm.bank_ifsc.trim().toUpperCase() || undefined,
+          bank_account_verified: hasBank,
+          bank_verified_name: hasBank ? (newInstallerForm.bank_verified_name.trim() || newInstallerForm.name.trim()) : undefined,
           is_active: true,
           sla_score: 100,
           avg_rating: 5.0,
@@ -280,15 +319,25 @@ export function InstallersClient({
         };
         setInstallers(prev => [newInst, ...prev]);
         setIsAddModalOpen(false);
+        setShowBankDetails(false);
         setNewInstallerForm({
           name: "",
           mobile_number: "",
           email: "",
           entity_type: "individual",
+          company_name: "",
+          years_experience: "",
+          city: "",
+          alternate_phone: "",
+          aadhaar_number: "",
           serviceable_pincodes_raw: "",
           pan_number: "",
           gst_number: "",
           skills: ["cctv_installation", "analog_hd", "ip_cameras"],
+          kyc_status: "pending",
+          bank_account: "",
+          bank_ifsc: "",
+          bank_verified_name: "",
         });
       }
     } catch (err: any) {
@@ -1013,9 +1062,10 @@ export function InstallersClient({
             </div>
 
             <form onSubmit={handleCreateInstaller} className="space-y-4">
+              {/* Section 1: Basic & Identity */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-foreground mb-1 block">Full Name *</label>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Full Name *</label>
                   <Input
                     required
                     placeholder="e.g. Ramesh Sharma"
@@ -1024,75 +1074,179 @@ export function InstallersClient({
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-foreground mb-1 block">Mobile Number (10 digits) *</label>
-                  <Input
-                    required
-                    maxLength={10}
-                    placeholder="e.g. 9876543210"
-                    value={newInstallerForm.mobile_number}
-                    onChange={(e) => setNewInstallerForm(prev => ({ ...prev, mobile_number: e.target.value.replace(/\D/g, "") }))}
-                  />
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Primary Mobile (10 digits) *</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
+                      +91
+                    </span>
+                    <Input
+                      required
+                      maxLength={10}
+                      placeholder="9876543210"
+                      className="pl-11 font-mono"
+                      value={newInstallerForm.mobile_number}
+                      onChange={(e) => setNewInstallerForm(prev => ({ ...prev, mobile_number: e.target.value.replace(/\D/g, "") }))}
+                    />
+                  </div>
                 </div>
               </div>
 
+              {/* Entity Type & Conditional Firm Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-foreground mb-1 block">Email (Optional)</label>
-                  <Input
-                    type="email"
-                    placeholder="e.g. ramesh@gmail.com"
-                    value={newInstallerForm.email}
-                    onChange={(e) => setNewInstallerForm(prev => ({ ...prev, email: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-foreground mb-1 block">Entity Type</label>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Entity Type</label>
                   <select
                     value={newInstallerForm.entity_type}
                     onChange={(e) => setNewInstallerForm(prev => ({ ...prev, entity_type: e.target.value as any }))}
-                    className="w-full text-sm bg-background border border-border rounded-lg px-3 py-2 text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full text-xs bg-background border border-border rounded-lg px-3 py-2 text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-primary h-9"
                   >
                     <option value="individual">Individual Technician</option>
                     <option value="firm">Registered Firm / Agency</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Alternate Phone (Optional)</label>
+                  <Input
+                    maxLength={10}
+                    placeholder="e.g. 9829012345"
+                    value={newInstallerForm.alternate_phone}
+                    onChange={(e) => setNewInstallerForm(prev => ({ ...prev, alternate_phone: e.target.value.replace(/\D/g, "") }))}
+                  />
+                </div>
               </div>
 
+              {/* Conditional Firm Name */}
+              {newInstallerForm.entity_type === "firm" && (
+                <div className="p-3 rounded-lg border border-primary/20 bg-primary/5 space-y-1 animate-in fade-in duration-200">
+                  <label className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-primary" />
+                    Company / Firm Name *
+                  </label>
+                  <Input
+                    required
+                    placeholder="e.g. Apex Security Solutions Pvt Ltd"
+                    value={newInstallerForm.company_name}
+                    onChange={(e) => setNewInstallerForm(prev => ({ ...prev, company_name: e.target.value }))}
+                  />
+                </div>
+              )}
+
+              {/* Email & Experience & City */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-1">
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Base City (Optional)</label>
+                  <Input
+                    placeholder="e.g. Jaipur"
+                    value={newInstallerForm.city}
+                    onChange={(e) => setNewInstallerForm(prev => ({ ...prev, city: e.target.value }))}
+                  />
+                </div>
+                <div className="sm:col-span-1">
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Experience (Years)</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={50}
+                    placeholder="e.g. 4"
+                    value={newInstallerForm.years_experience}
+                    onChange={(e) => setNewInstallerForm(prev => ({ ...prev, years_experience: e.target.value }))}
+                  />
+                </div>
+                <div className="sm:col-span-1">
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Email (Optional)</label>
+                  <Input
+                    type="email"
+                    placeholder="ramesh@gmail.com"
+                    value={newInstallerForm.email}
+                    onChange={(e) => setNewInstallerForm(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Serviceable Pincodes with Instant Chip Preview */}
               <div>
-                <label className="text-xs font-medium text-foreground mb-1 block">
-                  Serviceable Pincodes * <span className="text-muted-foreground font-normal">(Comma-separated 6-digit codes)</span>
+                <label className="text-xs font-semibold text-foreground mb-1 block">
+                  Serviceable Pincodes * <span className="text-muted-foreground font-normal">(Comma or space-separated 6-digit codes)</span>
                 </label>
                 <Input
                   required
-                  placeholder="e.g. 302001, 302012, 302017"
+                  placeholder="e.g. 302001, 302012, 302017, 302020"
                   value={newInstallerForm.serviceable_pincodes_raw}
                   onChange={(e) => setNewInstallerForm(prev => ({ ...prev, serviceable_pincodes_raw: e.target.value }))}
                 />
+                {/* Live parsed badges */}
+                {(() => {
+                  const detected = Array.from(new Set(
+                    newInstallerForm.serviceable_pincodes_raw
+                      .split(/[\s,]+/)
+                      .map(p => p.trim())
+                      .filter(p => /^\d{6}$/.test(p))
+                  ));
+                  if (detected.length === 0) return null;
+                  return (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-1">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Mapped:</span>
+                      {detected.map(pin => (
+                        <Badge key={pin} variant="secondary" className="font-mono text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
+                          {pin}
+                        </Badge>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* KYC & Identity Numbers */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-foreground mb-1 block">PAN Number (Optional)</label>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">PAN Number</label>
                   <Input
-                    placeholder="e.g. ABCDE1234F"
+                    placeholder="ABCDE1234F"
                     maxLength={10}
+                    className="font-mono uppercase"
                     value={newInstallerForm.pan_number}
                     onChange={(e) => setNewInstallerForm(prev => ({ ...prev, pan_number: e.target.value.toUpperCase() }))}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-foreground mb-1 block">GSTIN (Optional)</label>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">GSTIN (Optional)</label>
                   <Input
-                    placeholder="e.g. 08ABCDE1234F1Z5"
+                    placeholder="08ABCDE1234F1Z5"
                     maxLength={15}
+                    className="font-mono uppercase"
                     value={newInstallerForm.gst_number}
                     onChange={(e) => setNewInstallerForm(prev => ({ ...prev, gst_number: e.target.value.toUpperCase() }))}
                   />
                 </div>
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Aadhaar (Optional)</label>
+                  <Input
+                    placeholder="12-digit Aadhaar"
+                    maxLength={12}
+                    className="font-mono"
+                    value={newInstallerForm.aadhaar_number}
+                    onChange={(e) => setNewInstallerForm(prev => ({ ...prev, aadhaar_number: e.target.value.replace(/\D/g, "") }))}
+                  />
+                </div>
               </div>
 
+              {/* Initial KYC Status */}
               <div>
-                <label className="text-xs font-medium text-foreground mb-1.5 block">Skills & Capabilities</label>
+                <label className="text-xs font-semibold text-foreground mb-1 block">Initial KYC Status</label>
+                <select
+                  value={newInstallerForm.kyc_status}
+                  onChange={(e) => setNewInstallerForm(prev => ({ ...prev, kyc_status: e.target.value as any }))}
+                  className="w-full text-xs bg-background border border-border rounded-lg px-3 py-2 text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-primary h-9"
+                >
+                  <option value="pending">Pending KYC Review (Standard)</option>
+                  <option value="verified">Verified Immediately (Admin Vouched)</option>
+                </select>
+              </div>
+
+              {/* High-Contrast Skills Chips */}
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">Skills & Capabilities</label>
                 <div className="flex flex-wrap gap-1.5">
                   {COMMON_SKILLS.map((skill) => {
                     const isSelected = newInstallerForm.skills.includes(skill);
@@ -1108,27 +1262,83 @@ export function InstallersClient({
                               : [...prev.skills, skill]
                           }));
                         }}
-                        className={`text-[11px] font-medium px-2.5 py-1 rounded-md border transition-all ${
+                        className={`text-xs font-medium px-3 py-1 rounded-lg border transition-all ${
                           isSelected
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-muted text-muted-foreground border-border hover:text-foreground"
+                            ? "bg-blue-600 text-white border-blue-600 shadow-sm font-semibold"
+                            : "bg-background text-foreground border-border hover:border-primary/50 hover:bg-muted/50"
                         }`}
                       >
-                        {skill.replace("_", " ")}
+                        {skill.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+              {/* Optional Collapsible Direct Bank Payout Setup */}
+              <div className="border border-border rounded-xl p-3 bg-muted/20 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowBankDetails(!showBankDetails)}
+                  className="flex items-center justify-between w-full text-xs font-semibold text-foreground hover:text-primary transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <Banknote className="w-4 h-4 text-emerald-500" />
+                    Direct Bank Details for Payouts (Optional)
+                  </span>
+                  <span className="flex items-center gap-1 text-[11px] text-primary">
+                    {showBankDetails ? "Hide" : "+ Add Bank Account"}
+                    {showBankDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </span>
+                </button>
+
+                {showBankDetails && (
+                  <div className="space-y-3 pt-2 border-t border-border animate-in fade-in duration-200">
+                    <p className="text-[11px] text-muted-foreground">
+                      Entering valid bank details now will automatically mark this technician as <b>Bank Verified</b> for payouts.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-foreground mb-1 block">Account Holder Name</label>
+                        <Input
+                          placeholder="e.g. Ramesh Sharma"
+                          value={newInstallerForm.bank_verified_name}
+                          onChange={(e) => setNewInstallerForm(prev => ({ ...prev, bank_verified_name: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-foreground mb-1 block">Account Number</label>
+                        <Input
+                          placeholder="e.g. 026291800001191"
+                          className="font-mono"
+                          value={newInstallerForm.bank_account}
+                          onChange={(e) => setNewInstallerForm(prev => ({ ...prev, bank_account: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-foreground mb-1 block">IFSC Code</label>
+                      <Input
+                        placeholder="e.g. SBIN0001234"
+                        className="font-mono uppercase"
+                        maxLength={11}
+                        value={newInstallerForm.bank_ifsc}
+                        onChange={(e) => setNewInstallerForm(prev => ({ ...prev, bank_ifsc: e.target.value.toUpperCase() }))}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Form Footer */}
+              <div className="flex justify-end gap-3 pt-3 border-t border-border">
                 <Button type="button" variant="ghost" onClick={() => setIsAddModalOpen(false)}>
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isCreating} 
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 font-semibold shadow-sm"
                 >
                   {isCreating && <Loader2 className="w-4 h-4 animate-spin" />}
                   Confirm Onboard

@@ -952,6 +952,10 @@ export interface Installer {
   company_name?: string;
   pan_number?: string;
   gst_number?: string;
+  years_experience?: number;
+  city?: string;
+  alternate_phone?: string;
+  aadhaar_number?: string;
 
   created_at?: unknown;
   updated_at?: unknown;

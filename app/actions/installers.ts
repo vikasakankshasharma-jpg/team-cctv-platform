@@ -13,9 +13,13 @@ export async function createInstaller(data: CreateInstallerInput) {
 
   const validated = CreateInstallerSchema.parse(data);
 
+  const hasBankDetails = Boolean(validated.bank_account && validated.bank_ifsc);
+
   const installerData = {
     ...validated,
-    kyc_status: "pending" as const,
+    kyc_status: validated.kyc_status || ("pending" as const),
+    bank_account_verified: hasBankDetails,
+    bank_verified_name: hasBankDetails ? (validated.bank_verified_name || validated.name) : undefined,
     is_active: true,
     sla_score: 100,
     avg_rating: 5.0,

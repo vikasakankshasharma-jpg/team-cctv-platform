@@ -287,6 +287,15 @@ export const CreateInstallerSchema = z.object({
     pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format").optional(),
     gst_number: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GST format").optional().nullable(),
     entity_type: z.enum(["individual", "firm"]).default("individual"),
+    company_name: z.string().max(100).optional().nullable(),
+    years_experience: z.coerce.number().min(0).max(50).optional().nullable(),
+    city: z.string().max(100).optional().nullable(),
+    alternate_phone: z.string().optional().nullable(),
+    aadhaar_number: z.string().optional().nullable(),
+    bank_account: z.string().max(30).optional().nullable(),
+    bank_ifsc: z.string().max(15).optional().nullable(),
+    bank_verified_name: z.string().max(100).optional().nullable(),
+    kyc_status: z.enum(["pending", "verified", "suspended"]).default("pending").optional(),
 });
 
 export type CreateInstallerInput = z.infer<typeof CreateInstallerSchema>;
