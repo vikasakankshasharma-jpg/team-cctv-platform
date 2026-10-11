@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
+import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
 
 export function ProBuilderClient() {
 
@@ -47,6 +48,8 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   const [checkoutPhone, setCheckoutPhone] = useState("");
   const [checkoutName, setCheckoutName] = useState("");
   const [checkoutPincode, setCheckoutPincode] = useState("");
+  const [checkoutQuadrant, setCheckoutQuadrant] = useState("");
+  const [checkoutCoords, setCheckoutCoords] = useState<{ lat?: number; lng?: number }>({});
   const [checkoutEmail, setCheckoutEmail] = useState("");
   const [checkoutReferral, setCheckoutReferral] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -411,7 +414,13 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
             installation_type: "new",
             camera_count: camCount,
             technology_preference: technology || "IP",
-            is_pro_builder: true, customer_pincode: checkoutPincode, customer_email: checkoutEmail, partner_id: checkoutReferral
+            is_pro_builder: true,
+            customer_pincode: checkoutPincode,
+            quadrant: checkoutQuadrant,
+            lat: checkoutCoords.lat,
+            lng: checkoutCoords.lng,
+            customer_email: checkoutEmail,
+            partner_id: checkoutReferral
           },
           configurationSnapshot: {
             items: quoteItems
@@ -725,14 +734,16 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     {phoneError && <p className="text-red-500 text-xs mt-1.5 font-semibold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {phoneError}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Pincode</label>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      placeholder="302012"
-                      value={checkoutPincode}
-                      onChange={(e) => setCheckoutPincode(e.target.value.replace(/\D/g, ''))}
-                      className="w-full py-2.5 px-3.5 sm:p-3.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#9b8cff] focus:border-[#9b8cff] outline-none transition-all bg-white text-gray-900"
+                    <SmartAddressInput
+                      mode="compact"
+                      pincode={checkoutPincode}
+                      onPincodeChange={setCheckoutPincode}
+                      selectedQuadrant={checkoutQuadrant}
+                      onQuadrantChange={(q, meta) => {
+                        setCheckoutQuadrant(q);
+                        if (meta?.lat) setCheckoutCoords({ lat: meta.lat, lng: meta.lng });
+                      }}
+                      accentColor="#9b8cff"
                     />
                   </div>
                   <div>

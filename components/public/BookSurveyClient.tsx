@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Calendar as CalendarIcon, Clock, MapPin, User, Phone, CheckCircle2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
+
 export function BookSurveyClient() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -15,6 +17,9 @@ export function BookSurveyClient() {
     customer_phone: "",
     address: "",
     pincode: "",
+    quadrant: "",
+    lat: undefined as number | undefined,
+    lng: undefined as number | undefined,
     date: "",
     time_slot: "morning_10_1"
   });
@@ -199,34 +204,21 @@ export function BookSurveyClient() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2">
-          <label className="text-xs font-bold text-gray-700 flex items-center gap-1 mb-1">
-            <MapPin className="w-3 h-3" /> Full Address
-          </label>
-          <input 
-            required
-            type="text" 
-            value={formData.address}
-            onChange={e => setFormData({...formData, address: e.target.value})}
-            className="w-full text-sm p-3 border-2 border-gray-200 rounded-xl outline-none focus:border-blue-500 font-medium"
-            placeholder="House/Flat No, Street Name..."
-          />
-        </div>
-        <div>
-          <label className="text-xs font-bold text-gray-700 flex items-center gap-1 mb-1">
-            Pincode
-          </label>
-          <input 
-            required
-            type="text" 
-            value={formData.pincode}
-            onChange={e => setFormData({...formData, pincode: e.target.value})}
-            className="w-full text-sm p-3 border-2 border-gray-200 rounded-xl outline-none focus:border-blue-500 font-medium"
-            placeholder="110001"
-          />
-        </div>
-      </div>
+      <SmartAddressInput
+        mode="survey"
+        pincode={formData.pincode}
+        onPincodeChange={(pin) => setFormData(prev => ({ ...prev, pincode: pin }))}
+        selectedQuadrant={formData.quadrant}
+        onQuadrantChange={(quadrant, meta) => setFormData(prev => ({ 
+          ...prev, 
+          quadrant,
+          lat: meta?.lat,
+          lng: meta?.lng
+        }))}
+        streetAddress={formData.address}
+        onStreetAddressChange={(addr) => setFormData(prev => ({ ...prev, address: addr }))}
+        required
+      />
 
       <button
         type="submit"

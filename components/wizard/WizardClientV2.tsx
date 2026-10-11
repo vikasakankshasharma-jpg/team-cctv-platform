@@ -16,6 +16,7 @@ import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
 import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
+import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
 
 const GOOGLE_MAPS_LIBRARIES: any = ["places"];
 
@@ -422,7 +423,7 @@ export function WizardClientV2() {
       if (typeof window !== "undefined") {
         const urlParams = new URLSearchParams(window.location.search);
         city = urlParams.get("city") || "";
-        pincode = urlParams.get("pincode") || "";
+        pincode = urlParams.get("pincode") || req.customer_pincode || "";
       }
 
       const payload = {
@@ -1340,38 +1341,25 @@ export function WizardClientV2() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">{t("wz_pincode")}</label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={6}
-                    placeholder={t("wz_eg_pincode")}
-                    value={req.customer_pincode || ''}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '');
-                      setReq(prev => ({ ...prev, customer_pincode: val }));
-                      if (val.length === 6) {
-                        setIsLoadingLocalities(true);
-                        fetch(`/api/pincode/${val}`)
-                          .then(res => res.json())
-                          .then(data => {
-                            if (data.quadrants && data.quadrants.length > 0) {
-                              setLocalities(data.quadrants.map((q: any) => `${q.zone} (${q.anchor}) - ${q.coverage}`));
-                            } else if (data.areas && data.areas.length > 0) {
-                              setLocalities(data.areas);
-                            } else {
-                              setLocalities([]);
-                            }
-                            if (data.lat && data.lng) {
-                              setMapCenter({ lat: data.lat, lng: data.lng });
-                              setReq(prev => ({ ...prev, lat: data.lat, lng: data.lng }));
-                            }
-                          })
-                          .catch(err => console.error("Failed to fetch pincode areas:", err))
-                          .finally(() => setIsLoadingLocalities(false));
+                  <SmartAddressInput
+                    mode="compact"
+                    pincode={req.customer_pincode || ""}
+                    onPincodeChange={(val) => setReq(prev => ({ ...prev, customer_pincode: val }))}
+                    selectedQuadrant={req.quadrant || ""}
+                    onQuadrantChange={(q, meta) => {
+                      setReq(prev => ({
+                        ...prev,
+                        quadrant: q,
+                        locality: meta?.anchor || q,
+                        lat: meta?.lat || prev.lat,
+                        lng: meta?.lng || prev.lng
+                      }));
+                      if (meta?.lat && meta?.lng) {
+                        setMapCenter({ lat: meta.lat, lng: meta.lng });
                       }
                     }}
-                    className="w-full h-11 sm:h-12 px-3 sm:px-4 bg-white border border-gray-300 rounded-xl text-sm sm:text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-gray-400"
+                    accentColor="#2563eb"
+                    required
                   />
                 </div>
                 <div>

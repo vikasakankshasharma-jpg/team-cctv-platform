@@ -56,15 +56,15 @@ export function LocationPickerModal({
         setPincodeResolved(true);
       } else if (initialPincode && initialPincode.length >= 3) {
         if (initialPincode.length === 6) {
-          // Try precise 6-digit geocoding
-          fetch(`https://nominatim.openstreetmap.org/search?postalcode=${initialPincode}&country=india&format=json`)
+          // Try internal pincode API first
+          fetch(`/api/pincode/${initialPincode}`)
             .then(res => res.json())
             .then(data => {
-              if (data && data.length > 0) {
-                setCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+              if (data && data.lat && data.lng) {
+                setCoords({ lat: Number(data.lat), lng: Number(data.lng) });
                 setPincodeResolved(true);
               } else {
-                throw new Error("No exact match");
+                throw new Error("No coordinates");
               }
             })
             .catch(() => {

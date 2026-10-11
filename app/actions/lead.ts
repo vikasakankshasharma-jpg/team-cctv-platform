@@ -51,7 +51,19 @@ export async function createLeadAction(payload: {
     };
     const locationData = PINCODE_CITY_MAP[pincodePrefix] ?? null;
 
-    const mockAddress = { pincode, city, state, full_address: `${city} ${state} ${pincode}`, coordinates: (Number(wizardAnswers?.lat) && Number(wizardAnswers?.lng)) ? { lat: Number(wizardAnswers.lat), lng: Number(wizardAnswers.lng) } : undefined, landmark1: "", landmark2: "" };
+    const quadrant = String(wizardAnswers?.quadrant || "");
+    const locality = String(wizardAnswers?.locality || wizardAnswers?.anchor || "");
+
+    const mockAddress = {
+      pincode,
+      city,
+      state,
+      quadrant: quadrant || undefined,
+      full_address: [locality, quadrant, city, state, pincode].filter(Boolean).join(", "),
+      coordinates: (Number(wizardAnswers?.lat) && Number(wizardAnswers?.lng)) ? { lat: Number(wizardAnswers.lat), lng: Number(wizardAnswers.lng) } : undefined,
+      landmark1: locality || "",
+      landmark2: quadrant || ""
+    };
 
     const salespersonsSnap = await adminDb.collection("salespersons").where("is_active", "==", true).get();
     const allSalespersons = salespersonsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
@@ -157,6 +169,8 @@ export async function createLeadAction(payload: {
       sla_breach_at:         slaBreachAt,
       is_escalated,
       detected_pincode:      pincode || null,
+      quadrant:              quadrant || null,
+      locality:              locality || null,
       detected_city:         (locationData?.city ?? city) || "Unknown",
       detected_city_slug:    locationData?.slug ?? null,
       detected_state:        "Rajasthan",

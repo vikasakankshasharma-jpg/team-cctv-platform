@@ -505,7 +505,26 @@ export function BillingOverviewModal({
                     required
                     maxLength={6}
                     value={pincode}
-                    onChange={(e) => setPincode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
+                      setPincode(val);
+                      if (val.length === 6) {
+                        fetch(`/api/pincode/${val}`)
+                          .then(res => res.json())
+                          .then(data => {
+                            if (data.district || data.city) setCity(data.district || data.city);
+                            if (data.state) {
+                              setState(data.state);
+                              const matched = INDIAN_STATES.find(s => s.name.toLowerCase() === data.state.toLowerCase());
+                              if (matched) setStateCode(matched.code);
+                            }
+                            if (data.lat && data.lng && !coords) {
+                              setCoords({ lat: data.lat, lng: data.lng });
+                            }
+                          })
+                          .catch(() => {});
+                      }
+                    }}
                     placeholder="302001"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                   />
