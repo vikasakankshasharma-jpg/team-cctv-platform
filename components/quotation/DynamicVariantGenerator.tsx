@@ -136,7 +136,6 @@ export function DynamicVariantGenerator({
       sessionStorage.setItem('quote_active_brand', activeBrand);
     }
   }, [activeBrand]);
-  const [sortBy, setSortBy] = useState<string>("price_asc");
   
   const [cameraBuckets, setCameraBuckets] = useState<any[]>(() => {
     // If we are editing a quote that already has mixed requirements, load them!
@@ -407,8 +406,8 @@ export function DynamicVariantGenerator({
       }
     });
 
-    // Default sorting (price ascending) to determine 'recommended' baseline
-    results.sort((a, b) => a.total_price_inr - b.total_price_inr);
+    // Sort packages by price (low to high)
+    results.sort((a, b) => a.total_payable - b.total_payable);
     
     // Tag the recommended item (middle item of default sort, non-economy)
     const recIndex = Math.floor(results.length / 2);
@@ -416,17 +415,8 @@ export function DynamicVariantGenerator({
       (v as any).is_recommended = (idx === recIndex && results.length > 1 && !v.is_economy_storage);
     });
 
-    // Apply active sort
-    if (sortBy === "price_asc") {
-      results.sort((a, b) => a.total_payable - b.total_payable);
-    } else if (sortBy === "price_desc") {
-      results.sort((a, b) => b.total_payable - a.total_payable);
-    } else if (sortBy === "brand") {
-      results.sort((a, b) => (a.camera_device?.brand || "").localeCompare(b.camera_device?.brand || ""));
-    }
-
     return results;
-  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions, sortBy]);
+  }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions]);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -606,20 +596,8 @@ export function DynamicVariantGenerator({
       )}
 
       {variants.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4">
+        <div className="mt-8 mb-4">
           <h2 className="text-xl font-bold text-[#1d1d1f] dark:text-white">{t("wz_available_packages")}</h2>
-          <div className="flex items-center gap-2 mt-3 sm:mt-0">
-            <label className="text-sm font-medium text-slate-500">{t("wz_sort_by")}</label>
-            <select 
-              className="text-sm bg-white border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="price_asc">{t("wz_price_low_to_high")}</option>
-              <option value="price_desc">{t("wz_price_high_to_low")}</option>
-              <option value="brand">{t("wz_brand")}</option>
-            </select>
-          </div>
         </div>
       )}
 
