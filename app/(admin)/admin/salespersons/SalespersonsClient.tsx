@@ -20,7 +20,9 @@ import {
   Check,
   Pencil,
   X,
-  Map as MapIcon
+  Map as MapIcon,
+  CircleDot,
+  Hexagon
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "sonner";
@@ -28,6 +30,7 @@ import type { Salesperson, CoverageZone } from "@/types";
 import { TerritoryMatrix } from "./TerritoryMatrix";
 import { computeDistrictPincodes } from "@/lib/geo-utils";
 import MapplsBoundaryMap from "@/components/MapplsBoundaryMap";
+import { CoverageAreaMapEditor } from "@/components/admin/CoverageAreaMapEditor";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -217,8 +220,12 @@ export default function SalespersonsClient() {
     });
   };
   const [modalMapQuery, setModalMapQuery] = useState<{ type: 'district' | 'pincode'; query: string } | null>(null);
+  const [zoneDefinitionMode, setZoneDefinitionMode] = useState<"pincodes" | "radius" | "polygon" | "hybrid">("pincodes");
   const [newZone, setNewZone] = useState<Partial<CoverageZone>>({
-    pincodes: []
+    pincodes: [],
+    radius_km: 15,
+    center_coordinates: { lat: 26.9124, lng: 75.7873 },
+    polygon_coordinates: []
   });
 
   // Geographic Hierarchy State (State -> District -> Tehsil -> Pincodes)
@@ -577,8 +584,20 @@ export default function SalespersonsClient() {
   }
 
   async function handleAddZone() {
-    if (!newZone.name || (newZone.pincodes?.length === 0)) {
-      toast.error("Name and at least one pincode are required");
+    if (!newZone.name?.trim()) {
+      toast.error("Zone name is required");
+      return;
+    }
+    if (zoneDefinitionMode === "pincodes" && (!newZone.pincodes || newZone.pincodes.length === 0)) {
+      toast.error("Please select at least one PINCODE for this zone");
+      return;
+    }
+    if (zoneDefinitionMode === "radius" && (!newZone.center_coordinates?.lat || !newZone.radius_km)) {
+      toast.error("Please specify center coordinates and radius");
+      return;
+    }
+    if (zoneDefinitionMode === "polygon" && (!newZone.polygon_coordinates || newZone.polygon_coordinates.length < 3)) {
+      toast.error("Please add at least 3 boundary points to complete the polygon");
       return;
     }
     setIsSaving(true);
@@ -587,9 +606,18 @@ export default function SalespersonsClient() {
         .map(pin => availablePincodes.find(p => p.pincode === pin))
         .filter(Boolean);
         
-      const payload = {
-        ...newZone,
-        pincodes_data: enrichedPincodesData
+      const payload: CoverageZone = {
+        name: newZone.name?.trim() || "",
+        city: newZone.city || selectedDistrict?.name || "Jaipur",
+        state: newZone.state || selectedState?.name || "Rajasthan",
+        pincodes: newZone.pincodes || [],
+        pincodes_data: enrichedPincodesData,
+        is_active: newZone.is_active ?? true,
+        coverage_type: zoneDefinitionMode,
+        center_coordinates: newZone.center_coordinates,
+        radius_km: newZone.radius_km || 15,
+        polygon_coordinates: newZone.polygon_coordinates || [],
+        center_address_text: newZone.center_address_text,
       };
 
       const isEditing = !!newZone.id;
@@ -814,7 +842,16 @@ export default function SalespersonsClient() {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-foreground tracking-tight">Coverage Zones</h3>
             <button 
-              onClick={() => { setNewZone({ pincodes: [] }); setShowAddZone(true); }}
+              onClick={() => { 
+                setNewZone({ 
+                  pincodes: [],
+                  radius_km: 15,
+                  center_coordinates: { lat: 26.9124, lng: 75.7873 },
+                  polygon_coordinates: []
+                }); 
+                setZoneDefinitionMode("radius");
+                setShowAddZone(true); 
+              }}
               className="p-2 bg-secondary text-secondary-foreground rounded-full hover:bg-primary/10 hover:text-primary transition-all"
             >
               <Plus className="w-4 h-4" />
@@ -827,22 +864,58 @@ export default function SalespersonsClient() {
                 No coverage zones found.
               </div>
             ) : null}
-            {filteredZones.map(z => (
-              <Card key={z.id} className="p-4 rounded-xl flex items-center justify-between group border-border shadow-sm bg-card cursor-pointer hover:bg-secondary/20 transition-all" onClick={() => { setNewZone(z); setShowAddZone(true); }}>
-                <div className="flex-1">
-                  <h5 className="text-sm font-semibold text-foreground tracking-tight flex items-center gap-2">
-                    {z.name}
-                    <span className="text-[10px] font-medium text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">
-                      {salespersons.filter(s => (s.assigned_zone_ids || []).includes(z.id!)).length} Agents
-                    </span>
-                  </h5>
-                  <p className="text-xs text-muted-foreground font-medium mt-1 truncate max-w-[180px]" title={z.pincodes.join(", ")}>
-                    {z.pincodes.join(", ")}
+            {filteredZones.map(z => {
+              const zoneMode = z.coverage_type || (z.radius_km ? "radius" : (z.polygon_coordinates && z.polygon_coordinates.length > 0 ? "polygon" : "pincodes"));
+              return (
+              <Card 
+                key={z.id} 
+                className="p-4 rounded-xl flex items-center justify-between group border-border shadow-sm bg-card cursor-pointer hover:bg-secondary/20 transition-all" 
+                onClick={() => { 
+                  setNewZone(z); 
+                  setZoneDefinitionMode(zoneMode);
+                  setShowAddZone(true); 
+                }}
+              >
+                <div className="flex-1 min-w-0 pr-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h5 className="text-sm font-semibold text-foreground tracking-tight flex items-center gap-2">
+                      {z.name}
+                      <span className="text-[10px] font-medium text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">
+                        {salespersons.filter(s => (s.assigned_zone_ids || []).includes(z.id!)).length} Agents
+                      </span>
+                    </h5>
+                    {zoneMode === "radius" && (
+                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-blue-500/10 text-blue-600 border-blue-500/30 gap-1 font-semibold">
+                        🎯 {z.radius_km || 15} km Radius
+                      </Badge>
+                    )}
+                    {zoneMode === "polygon" && (
+                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-purple-500/10 text-purple-600 border-purple-500/30 gap-1 font-semibold">
+                        🔷 Polygon ({z.polygon_coordinates?.length || 0} pts)
+                      </Badge>
+                    )}
+                    {zoneMode === "pincodes" && (
+                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1 font-semibold">
+                        📮 {z.pincodes?.length || 0} PINs
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium mt-1 truncate max-w-full" title={zoneMode === "radius" ? (z.center_address_text || `${z.radius_km} km radius`) : (z.pincodes?.join(", ") || "")}>
+                    {zoneMode === "radius" 
+                      ? (z.center_address_text ? `Centered: ${z.center_address_text}` : `Center: ${z.center_coordinates?.lat.toFixed(3) || "26.912"}, ${z.center_coordinates?.lng.toFixed(3) || "75.787"} (${z.radius_km || 15} km)`)
+                      : zoneMode === "polygon"
+                      ? `${z.polygon_coordinates?.length || 0} boundary points defined`
+                      : (z.pincodes?.join(", ") || "No pincodes assigned")}
                   </p>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <button 
-                    onClick={(e) => { e.stopPropagation(); setNewZone(z); setShowAddZone(true); }}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setNewZone(z); 
+                      setZoneDefinitionMode(zoneMode);
+                      setShowAddZone(true); 
+                    }}
                     className="p-2 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
                     title="Edit Zone"
                   >
@@ -857,7 +930,8 @@ export default function SalespersonsClient() {
                   </button>
                 </div>
               </Card>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1131,6 +1205,83 @@ export default function SalespersonsClient() {
                   placeholder="e.g. Jaipur, Rajasthan"
                 />
               </div>
+
+              {/* Coverage Definition Method Selector */}
+              <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-secondary/30 border border-border">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                  Coverage Area Strategy
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setZoneDefinitionMode("radius")}
+                    className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                      zoneDefinitionMode === "radius"
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-card text-muted-foreground hover:bg-secondary border-border"
+                    }`}
+                  >
+                    <CircleDot className="w-4 h-4" />
+                    <span>Radius Tool</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setZoneDefinitionMode("polygon")}
+                    className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                      zoneDefinitionMode === "polygon"
+                        ? "bg-purple-600 text-white border-purple-600 shadow-sm"
+                        : "bg-card text-muted-foreground hover:bg-secondary border-border"
+                    }`}
+                  >
+                    <Hexagon className="w-4 h-4" />
+                    <span>Polygon Tool</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setZoneDefinitionMode("pincodes")}
+                    className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                      zoneDefinitionMode === "pincodes"
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card text-muted-foreground hover:bg-secondary border-border"
+                    }`}
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span>Pincode Matrix</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Strategy A & B: Map Radius / Polygon Tool */}
+              {(zoneDefinitionMode === "radius" || zoneDefinitionMode === "polygon") && (
+                <div className="animate-in fade-in duration-300">
+                  <CoverageAreaMapEditor
+                    mode={zoneDefinitionMode}
+                    onModeChange={(m) => setZoneDefinitionMode(m)}
+                    center={newZone.center_coordinates || { lat: 26.9124, lng: 75.7873 }}
+                    onCenterChange={(centerCoords, addrText) => {
+                      setNewZone(prev => ({
+                        ...prev,
+                        center_coordinates: centerCoords,
+                        center_address_text: addrText || prev.center_address_text
+                      }));
+                    }}
+                    radiusKm={newZone.radius_km || 15}
+                    onRadiusKmChange={(r) => {
+                      setNewZone(prev => ({ ...prev, radius_km: r }));
+                    }}
+                    polygonPoints={newZone.polygon_coordinates || []}
+                    onPolygonPointsChange={(pts) => {
+                      setNewZone(prev => ({ ...prev, polygon_coordinates: pts }));
+                    }}
+                    height="380px"
+                    allowModeSwitch={true}
+                  />
+                </div>
+              )}
+
+              {/* Strategy C: 3-Tier Cascading Geographic Dropdowns & Pincodes list */}
+              {zoneDefinitionMode === "pincodes" && (
+                <div className="space-y-4 animate-in fade-in duration-300">
 
               {/* 3-Tier Cascading Geographic Dropdowns with real-time text filter */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1479,14 +1630,26 @@ export default function SalespersonsClient() {
                   className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Pincodes will auto-populate here from checkboxes above, or you can paste manually..."
                 />
+                </div>
               </div>
+              )}
 
               {/* Sticky Footer */}
               <div className="p-4 border-t border-border bg-card/95 backdrop-blur-sm flex items-center justify-between gap-3 shrink-0">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="font-semibold text-primary px-3 py-1 text-xs">
-                    {(newZone.pincodes || []).length} Selected
-                  </Badge>
+                  {zoneDefinitionMode === "radius" ? (
+                    <Badge variant="secondary" className="font-semibold text-blue-600 px-3 py-1 text-xs bg-blue-500/10 border-blue-500/30">
+                      🎯 {newZone.radius_km || 15} km Radius Area
+                    </Badge>
+                  ) : zoneDefinitionMode === "polygon" ? (
+                    <Badge variant="secondary" className="font-semibold text-purple-600 px-3 py-1 text-xs bg-purple-500/10 border-purple-500/30">
+                      🔷 {(newZone.polygon_coordinates || []).length} Vertices Perimeter
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="font-semibold text-primary px-3 py-1 text-xs">
+                      📮 {(newZone.pincodes || []).length} PINs Selected
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex gap-2.5">
                   <button 
@@ -1499,7 +1662,13 @@ export default function SalespersonsClient() {
                   <button 
                     type="button"
                     onClick={handleAddZone}
-                    disabled={isSaving || (newZone.pincodes?.length === 0)}
+                    disabled={
+                      isSaving || 
+                      !newZone.name?.trim() || 
+                      (zoneDefinitionMode === "pincodes" && (!newZone.pincodes || newZone.pincodes.length === 0)) ||
+                      (zoneDefinitionMode === "radius" && (!newZone.center_coordinates?.lat || !newZone.radius_km)) ||
+                      (zoneDefinitionMode === "polygon" && (!newZone.polygon_coordinates || newZone.polygon_coordinates.length < 3))
+                    }
                     className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                   >
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />} {newZone.id ? "Update Zone" : "Establish Zone"}

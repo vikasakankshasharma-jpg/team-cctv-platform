@@ -18,6 +18,31 @@ function deg2rad(deg: number): number {
   return deg * (Math.PI / 180);
 }
 
+/**
+ * Ray-casting algorithm to determine if a point (lat, lng) lies inside a polygon boundary.
+ * Highly efficient O(n) algorithm with zero external dependencies.
+ */
+export function isPointInPolygon(
+  point: { lat: number; lng: number },
+  polygon: { lat: number; lng: number }[]
+): boolean {
+  if (!point || typeof point.lat !== "number" || typeof point.lng !== "number") return false;
+  if (!polygon || polygon.length < 3) return false;
+
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].lat, yi = polygon[i].lng;
+    const xj = polygon[j].lat, yj = polygon[j].lng;
+
+    const intersect =
+      yi > point.lng !== yj > point.lng &&
+      point.lat < ((xj - xi) * (point.lng - yi)) / (yj - yi) + xi;
+
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
 type PartnerWithTerritory = Salesperson | Installer;
 
 /**
@@ -109,6 +134,24 @@ export async function findEligiblePartners(leadAddress: Address, partners: Partn
 
               if (isEligible) break;
               
+              // Check Zone Custom Polygon boundary
+              if (!isEligible && zone.polygon_coordinates && zone.polygon_coordinates.length >= 3 && leadAddress.coordinates?.lat && leadAddress.coordinates?.lng) {
+                if (isPointInPolygon(leadAddress.coordinates, zone.polygon_coordinates)) {
+                  isEligible = true;
+                }
+              }
+
+              // Check Zone Circular Radius boundary
+              if (!isEligible && zone.center_coordinates?.lat && zone.center_coordinates?.lng && zone.radius_km && leadAddress.coordinates?.lat && leadAddress.coordinates?.lng) {
+                const distToZoneCenter = calculateDistanceKm(
+                  leadAddress.coordinates.lat, leadAddress.coordinates.lng,
+                  zone.center_coordinates.lat, zone.center_coordinates.lng
+                );
+                if (distToZoneCenter <= zone.radius_km) {
+                  isEligible = true;
+                }
+              }
+
               // Intelligent radius overlap match (only apply if we haven't strictly restricted to a different sub-office)
               if (!isEligible && !zoneHasRestrictedSubOffices && zone.pincodes_data && leadAddress.coordinates?.lat && leadAddress.coordinates?.lng) {
                 for (const pData of zone.pincodes_data) {
@@ -154,7 +197,14 @@ export async function findEligiblePartners(leadAddress: Address, partners: Partn
       }
     }
 
-    // 3. Radius Match (Partner's own center radius)
+    // 3. Custom Polygon Match (Partner's own boundary)
+    if (!isEligible && territory.polygon_coordinates && territory.polygon_coordinates.length >= 3 && leadAddress.coordinates?.lat && leadAddress.coordinates?.lng) {
+      if (isPointInPolygon(leadAddress.coordinates, territory.polygon_coordinates)) {
+        isEligible = true;
+      }
+    }
+
+    // 4. Radius Match (Partner's own center radius)
     if (!isEligible && territory.operating_radius_km && territory.base_coordinates) {
       if (leadAddress.coordinates && leadAddress.coordinates.lat && leadAddress.coordinates.lng) {
         const distance = calculateDistanceKm(
@@ -165,6 +215,39 @@ export async function findEligiblePartners(leadAddress: Address, partners: Partn
         );
         if (distance <= territory.operating_radius_km) {
           isEligible = true;
+        }
+      }
+    }
+
+    // 5. Assigned Coverage Zones check (for partners with territory object who also have assigned zones)
+    const sp = partner as Salesperson;
+    if (!isEligible && sp.assigned_zone_ids && sp.assigned_zone_ids.length > 0) {
+      for (const zoneId of sp.assigned_zone_ids) {
+        const zone = allZones.find(z => z.id === zoneId);
+        if (zone) {
+          // Check zone polygon
+          if (zone.polygon_coordinates && zone.polygon_coordinates.length >= 3 && leadAddress.coordinates?.lat && leadAddress.coordinates?.lng) {
+            if (isPointInPolygon(leadAddress.coordinates, zone.polygon_coordinates)) {
+              isEligible = true;
+              break;
+            }
+          }
+          // Check zone radius
+          if (zone.center_coordinates?.lat && zone.center_coordinates?.lng && zone.radius_km && leadAddress.coordinates?.lat && leadAddress.coordinates?.lng) {
+            const dist = calculateDistanceKm(
+              leadAddress.coordinates.lat, leadAddress.coordinates.lng,
+              zone.center_coordinates.lat, zone.center_coordinates.lng
+            );
+            if (dist <= zone.radius_km) {
+              isEligible = true;
+              break;
+            }
+          }
+          // Check zone pincodes
+          if (leadPincode && zone.pincodes?.includes(leadPincode)) {
+            isEligible = true;
+            break;
+          }
         }
       }
     }

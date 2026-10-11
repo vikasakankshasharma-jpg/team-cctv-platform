@@ -820,6 +820,11 @@ export interface CoverageZone {
   pincodes: string[];                    // All pincodes in this zone
   pincodes_data?: any[];                 // Cached lat, lng, radius for each pincode
   is_active: boolean;
+  coverage_type?: "pincodes" | "radius" | "polygon" | "hybrid";
+  center_coordinates?: { lat: number; lng: number };
+  radius_km?: number;
+  polygon_coordinates?: { lat: number; lng: number }[];
+  center_address_text?: string;
   created_at?: unknown;
   updated_at?: unknown;
 }
@@ -847,6 +852,8 @@ export interface Salesperson {
     operating_radius_km?: number;
     base_coordinates?: { lat: number; lng: number };
     base_address_text?: string;
+    polygon_coordinates?: { lat: number; lng: number }[];
+    coverage_type?: "pincodes" | "radius" | "polygon" | "hybrid";
   };
   max_discount_approval_percent?: number;  // Admin-configured: max discount % this salesperson can approve
   
@@ -916,6 +923,8 @@ export interface Installer {
     operating_radius_km?: number;
     base_coordinates?: { lat: number; lng: number };
     base_address_text?: string;
+    polygon_coordinates?: { lat: number; lng: number }[];
+    coverage_type?: "pincodes" | "radius" | "polygon" | "hybrid";
   };
   skills: string[];                      // e.g., ['ip_camera', 'analog']
   
