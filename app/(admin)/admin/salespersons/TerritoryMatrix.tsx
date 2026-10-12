@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import MapplsBoundaryMap from "@/components/MapplsBoundaryMap";
+import regionalHubs from "@/data/pincodes.json";
 import { toast } from "sonner";
 
 // Custom Searchable Dropdown for compact State and District selection
@@ -280,13 +281,34 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
   }, [zones]);
 
   const pincodesInDistrict = useMemo(() => {
-    const map = new Map<string, { pincode: string; areas: string[]; totalAreas: number; coveredAreas: number; status: 'covered' | 'partial' | 'uncovered' }>();
+    const map = new Map<string, { 
+      pincode: string; 
+      areas: string[]; 
+      totalAreas: number; 
+      coveredAreas: number; 
+      status: 'covered' | 'partial' | 'uncovered';
+      lat?: number;
+      lng?: number;
+    }>();
     
     districtOffices.forEach(o => {
+      const latVal = o.latitude ? parseFloat(String(o.latitude)) : (o.lat ? parseFloat(String(o.lat)) : undefined);
+      const lngVal = o.longitude ? parseFloat(String(o.longitude)) : (o.lng ? parseFloat(String(o.lng)) : undefined);
+
       if (!map.has(o.pincode)) {
-        map.set(o.pincode, { pincode: o.pincode, areas: [], totalAreas: 0, coveredAreas: 0, status: 'uncovered' });
+        map.set(o.pincode, { 
+          pincode: o.pincode, 
+          areas: [], 
+          totalAreas: 0, 
+          coveredAreas: 0, 
+          status: 'uncovered',
+          lat: latVal && !isNaN(latVal) ? latVal : undefined,
+          lng: lngVal && !isNaN(lngVal) ? lngVal : undefined,
+        });
       }
       const entry = map.get(o.pincode)!;
+      if (!entry.lat && latVal && !isNaN(latVal)) entry.lat = latVal;
+      if (!entry.lng && lngVal && !isNaN(lngVal)) entry.lng = lngVal;
 
       // Extract and clean area names
       const rawArea = o.officeName || o.office || "";
@@ -307,7 +329,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
       }
     });
     
-    // Determine status & fallback areas
+    // Determine status & fallback areas & fallback coordinates
     Array.from(map.values()).forEach(entry => {
       if (coveredPincodesSet.has(entry.pincode) || (entry.totalAreas > 0 && entry.coveredAreas === entry.totalAreas)) {
         entry.status = 'covered';
@@ -320,10 +342,42 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
       if (entry.areas.length === 0) {
         entry.areas = [`${selectedDistrict?.name || 'Central'} Hub Area`];
       }
+
+      // Fallback coordinate if missing from office
+      if (!entry.lat || !entry.lng) {
+        const prefix = entry.pincode.slice(0, 3);
+        const hub = (regionalHubs as Record<string, { lat: number; lng: number }>)[prefix];
+        if (hub) {
+          const hash = entry.pincode.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+          const angle = (hash % 360) * (Math.PI / 180);
+          const offset = ((hash % 15) + 3) * 0.005;
+          entry.lat = hub.lat + Math.cos(angle) * offset;
+          entry.lng = hub.lng + Math.sin(angle) * offset;
+        }
+      }
     });
 
     return Array.from(map.values()).sort((a, b) => a.pincode.localeCompare(b.pincode));
   }, [districtOffices, coveredPincodesSet, selectedDistrict]);
+
+  // Aggregate map data including assigned agent names
+  const pincodesMapData = useMemo(() => {
+    return pincodesInDistrict.map(p => {
+      const assigned = salespersons.filter(s => {
+        const agentZones = zones.filter(z => (s.assigned_zone_ids || []).includes(z.id!));
+        return agentZones.some(z => (z.pincodes || []).includes(p.pincode) || (z.pincodes || []).some(code => code.startsWith(p.pincode + ":")));
+      });
+
+      return {
+        pincode: p.pincode,
+        status: p.status,
+        lat: p.lat,
+        lng: p.lng,
+        areas: p.areas,
+        agents: assigned.map(a => `${a.name}${a.mobile_number ? ` (${a.mobile_number})` : ''}`),
+      };
+    });
+  }, [pincodesInDistrict, salespersons, zones]);
 
   const totalInDistrict = pincodesInDistrict.length;
   const fullyCoveredInDistrict = pincodesInDistrict.filter(p => p.status === 'covered').length;
@@ -664,7 +718,16 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
               <MapplsBoundaryMap 
                 boundaryType={activeMapQuery.type}
                 boundaryQuery={activeMapQuery.query}
-                height="360px"
+                pincodes={pincodesMapData}
+                selectedPincode={activeMapQuery.type === 'pincode' ? activeMapQuery.query : null}
+                statusFilter={statusFilter}
+                onPincodeClick={(pin) => {
+                  setActiveMapQuery({ type: 'pincode', query: pin, label: pin });
+                }}
+                onResetSelection={() => {
+                  setActiveMapQuery({ type: 'district', query: selectedDistrict.name, label: selectedDistrict.name });
+                }}
+                height="400px"
               />
             </div>
           )}

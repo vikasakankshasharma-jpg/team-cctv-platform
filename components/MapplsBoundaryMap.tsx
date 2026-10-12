@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { MapPin, RotateCcw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 declare global {
   interface Window {
@@ -13,10 +15,24 @@ declare global {
   }
 }
 
+export interface PincodeMapItem {
+  pincode: string;
+  status: 'covered' | 'partial' | 'uncovered';
+  lat?: number;
+  lng?: number;
+  areas?: string[];
+  agents?: string[];
+}
+
 interface MapplsBoundaryMapProps {
   boundaryType?: "district" | "pincode" | "state" | "subDistrict" | "city" | "multi_pincode" | "zone";
   boundaryQuery?: string;
   boundaryData?: any;
+  pincodes?: PincodeMapItem[];
+  selectedPincode?: string | null;
+  statusFilter?: "all" | "covered" | "partial" | "uncovered";
+  onPincodeClick?: (pincode: string) => void;
+  onResetSelection?: () => void;
   height?: string;
   className?: string;
   onLayerLoaded?: (data: any) => void;
@@ -82,6 +98,11 @@ export default function MapplsBoundaryMap({
   boundaryType = "district",
   boundaryQuery = "",
   boundaryData,
+  pincodes,
+  selectedPincode,
+  statusFilter = "all",
+  onPincodeClick,
+  onResetSelection,
   height = "300px",
   className = "",
   onLayerLoaded,
@@ -120,7 +141,7 @@ export default function MapplsBoundaryMap({
   // ── 2. Render coverage (Fallback to markers/circles) ───────────────────────
   const renderBoundary = useCallback(
     async (map: any, type: string, query: string, dataObj?: any) => {
-      if (!window.mappls || !map || (!query && !dataObj)) return;
+      if (!window.mappls || !map) return;
 
       // Remove previous layer/marker/circles
       if (currentLayerRef.current) {
@@ -129,7 +150,7 @@ export default function MapplsBoundaryMap({
           layers.forEach(layer => {
             if (typeof map.removeLayer === "function") {
               map.removeLayer(layer);
-            } else if (window.mappls.remove) {
+            } else if (window.mappls && window.mappls.remove) {
               window.mappls.remove({ map, layer: layer });
             }
           });
@@ -140,6 +161,86 @@ export default function MapplsBoundaryMap({
       if (isMountedRef.current) setIsLoading(true);
 
       try {
+        // ── Priority 1: Render full district coverage (Covered & Uncovered Gaps) ──
+        if (pincodes && pincodes.length > 0) {
+          try {
+            const validPins = pincodes.filter(
+              p => typeof p.lat === "number" && typeof p.lng === "number" && !isNaN(p.lat) && !isNaN(p.lng)
+            );
+            const newLayers: any[] = [];
+
+            if (validPins.length > 0) {
+              const targetPin = selectedPincode ? validPins.find(p => p.pincode === selectedPincode) : null;
+
+              if (targetPin && targetPin.lat && targetPin.lng) {
+                if (map.setCenter) map.setCenter({ lat: targetPin.lat, lng: targetPin.lng });
+                if (map.setZoom) map.setZoom(13);
+              } else {
+                const avgLat = validPins.reduce((sum, p) => sum + (p.lat || 0), 0) / validPins.length;
+                const avgLng = validPins.reduce((sum, p) => sum + (p.lng || 0), 0) / validPins.length;
+                if (map.setCenter) map.setCenter({ lat: avgLat, lng: avgLng });
+                if (map.setZoom) map.setZoom(10);
+              }
+
+              validPins.forEach(p => {
+                const matchesFilter = !statusFilter || statusFilter === "all" || p.status === statusFilter;
+                if (!matchesFilter && selectedPincode !== p.pincode) return;
+
+                const isSelected = selectedPincode === p.pincode;
+                const isCovered = p.status === "covered";
+                const isPartial = p.status === "partial";
+
+                const fillColor = isCovered ? "#10b981" : isPartial ? "#f59e0b" : "#ef4444";
+                const strokeColor = isSelected ? "#2563eb" : (isCovered ? "#059669" : isPartial ? "#d97706" : "#dc2626");
+                const fillOpacity = isSelected ? 0.5 : (isCovered ? 0.35 : isPartial ? 0.35 : 0.22);
+                const strokeWidth = isSelected ? 3.5 : 2;
+                const radius = isSelected ? 2400 : 1800;
+
+                const circle = new window.mappls.Circle({
+                  map: map,
+                  center: { lat: p.lat, lng: p.lng },
+                  radius: radius,
+                  fillColor: fillColor,
+                  fillOpacity: fillOpacity,
+                  strokeColor: strokeColor,
+                  strokeWidth: strokeWidth,
+                });
+
+                try {
+                  if (typeof circle.addListener === "function") {
+                    circle.addListener("click", () => {
+                      onPincodeClick?.(p.pincode);
+                    });
+                  }
+                } catch (_) {}
+
+                newLayers.push(circle);
+
+                if (isSelected && window.mappls.Marker) {
+                  try {
+                    const marker = new window.mappls.Marker({
+                      map: map,
+                      position: { lat: p.lat, lng: p.lng },
+                    });
+                    newLayers.push(marker);
+                  } catch (_) {}
+                }
+              });
+            }
+
+            currentLayerRef.current = newLayers;
+            if (isMountedRef.current) setIsLoading(false);
+            return;
+          } catch (err) {
+            console.warn("Failed to render pincodes on map:", err);
+          }
+        }
+
+        if (!query && !dataObj) {
+          if (isMountedRef.current) setIsLoading(false);
+          return;
+        }
+
         // Fallback: If GeoAnalytics plugin is not enabled for the API key,
         // we can place a circle for Pincodes as a coverage representation.
         if ((type === "pincode" || type === "multi_pincode") && query) {
@@ -385,7 +486,7 @@ export default function MapplsBoundaryMap({
         if (isMountedRef.current) setIsLoading(false);
       }
     },
-    [onLayerLoaded]
+    [onLayerLoaded, pincodes, selectedPincode, statusFilter, onPincodeClick]
   );
 
   // ── 3. Initialize map once SDK is ready ────────────────────────────────────
@@ -406,7 +507,7 @@ export default function MapplsBoundaryMap({
       mapInstanceRef.current = map;
 
       const onLoad = () => {
-        if (isMountedRef.current && boundaryQuery) {
+        if (isMountedRef.current && (boundaryQuery || (pincodes && pincodes.length > 0))) {
           renderBoundary(map, boundaryType, boundaryQuery || "", boundaryData);
         } else {
           if (isMountedRef.current) setIsLoading(false);
@@ -422,14 +523,21 @@ export default function MapplsBoundaryMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sdkReady]);
 
-  // ── 4. Re-render boundary when query/type prop changes ─────────────────────
+  // ── 4. Re-render boundary when query/type/pincodes prop changes ─────────────
   useEffect(() => {
     if (!mapInstanceRef.current) return;
-    // Quick deep compare for boundaryData array to avoid flicker
     const dataStr = JSON.stringify(boundaryData || []);
-    if (!boundaryQuery && dataStr === "[]") return;
+    if (!boundaryQuery && dataStr === "[]" && (!pincodes || pincodes.length === 0)) return;
     renderBoundary(mapInstanceRef.current, boundaryType, boundaryQuery || "", boundaryData);
-  }, [boundaryType, boundaryQuery, JSON.stringify(boundaryData), renderBoundary]);
+  }, [boundaryType, boundaryQuery, JSON.stringify(boundaryData), pincodes, selectedPincode, statusFilter, renderBoundary]);
+
+  const activeSelectedPin = selectedPincode && pincodes 
+    ? pincodes.find(p => p.pincode === selectedPincode) 
+    : null;
+
+  const coveredCount = (pincodes || []).filter(p => p.status === 'covered').length;
+  const uncoveredCount = (pincodes || []).filter(p => p.status === 'uncovered').length;
+  const partialCount = (pincodes || []).filter(p => p.status === 'partial').length;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -438,16 +546,83 @@ export default function MapplsBoundaryMap({
       style={{ height }}
     >
       {(isLoading || error) && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
           {error ? (
             <p className="text-xs text-destructive font-medium px-4 text-center">{error}</p>
           ) : (
             <>
               <span className="w-3 h-3 rounded-full bg-blue-500 animate-ping" />
               <span className="text-xs text-muted-foreground font-medium">
-                {!sdkReady ? "Loading map…" : "Rendering boundary…"}
+                {!sdkReady ? "Loading map…" : "Rendering coverage map…"}
               </span>
             </>
+          )}
+        </div>
+      )}
+
+      {/* Floating Territory Coverage Legend */}
+      {pincodes && pincodes.length > 0 && (
+        <div className="absolute top-3 right-3 z-10 bg-background/90 backdrop-blur-md border border-border rounded-xl p-2.5 shadow-lg text-xs space-y-1.5 pointer-events-auto">
+          <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-border/50">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            Coverage Status
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" />
+              <span className="text-foreground font-semibold">Covered ({coveredCount})</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm" />
+              <span className="text-foreground font-semibold">Gaps ({uncoveredCount})</span>
+            </div>
+            {partialCount > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm" />
+                <span className="text-foreground font-semibold">Partial ({partialCount})</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Floating Selected Pincode Card */}
+      {activeSelectedPin && (
+        <div className="absolute bottom-3 left-3 z-10 bg-background/95 backdrop-blur-md border border-border rounded-xl p-3 shadow-xl max-w-xs text-xs pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-1.5">
+              <MapPin className={`w-3.5 h-3.5 ${activeSelectedPin.status === 'covered' ? 'text-emerald-500' : 'text-rose-500'}`} />
+              <span className="font-mono font-bold text-sm text-foreground">{activeSelectedPin.pincode}</span>
+            </div>
+            <Badge variant="outline" className={`text-[10px] uppercase font-bold ${
+              activeSelectedPin.status === 'covered' 
+                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' 
+                : 'bg-rose-500/10 text-rose-600 border-rose-500/30'
+            }`}>
+              {activeSelectedPin.status === 'covered' ? 'Covered' : 'Unstaffed Gap'}
+            </Badge>
+          </div>
+          {activeSelectedPin.areas && activeSelectedPin.areas.length > 0 && (
+            <p className="text-[11px] text-muted-foreground line-clamp-1 mb-1.5">
+              {activeSelectedPin.areas.slice(0, 3).join(", ")}
+            </p>
+          )}
+          <div className="text-[11px] font-medium text-foreground mb-2">
+            {activeSelectedPin.agents && activeSelectedPin.agents.length > 0 ? (
+              <span className="text-emerald-600 dark:text-emerald-400">👤 {activeSelectedPin.agents.join(", ")}</span>
+            ) : (
+              <span className="text-rose-500">⚠️ No sales agent deployed</span>
+            )}
+          </div>
+          {onResetSelection && (
+            <button
+              type="button"
+              onClick={onResetSelection}
+              className="text-[10px] text-primary hover:underline font-semibold flex items-center gap-1"
+            >
+              <RotateCcw className="w-3 h-3" />
+              Reset to Full District View
+            </button>
           )}
         </div>
       )}
