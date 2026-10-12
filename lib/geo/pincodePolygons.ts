@@ -288,15 +288,73 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
 };
 
 /**
- * Returns a solid-fill polygon boundary for any PIN code.
- * Uses exact high-fidelity GIS polygon if known; otherwise generates a contiguous
- * organic 8-point polygon boundary around the PIN center so it tessellates cleanly
- * without broken lines or empty gaps.
+ * Graham scan monotone chain 2D Convex Hull
+ */
+export function convexHull(points: LatLngPoint[]): LatLngPoint[] {
+  if (points.length <= 2) return points;
+  const sorted = points.slice().sort((a, b) => (a.lng === b.lng ? a.lat - b.lat : a.lng - b.lng));
+  const cross = (o: LatLngPoint, a: LatLngPoint, b: LatLngPoint) =>
+    (a.lng - o.lng) * (b.lat - o.lat) - (a.lat - o.lat) * (b.lng - o.lng);
+
+  const lower: LatLngPoint[] = [];
+  for (const p of sorted) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+      lower.pop();
+    }
+    lower.push(p);
+  }
+
+  const upper: LatLngPoint[] = [];
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const p = sorted[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+      upper.pop();
+    }
+    upper.push(p);
+  }
+
+  upper.pop();
+  lower.pop();
+  return lower.concat(upper);
+}
+
+/**
+ * Expands a polygon outward from its centroid by bufferMeters to simulate delivery beats
+ */
+export function expandPolygon(hull: LatLngPoint[], bufferMeters: number = 1600): LatLngPoint[] {
+  if (hull.length < 3) return hull;
+  const cLat = hull.reduce((s, p) => s + p.lat, 0) / hull.length;
+  const cLng = hull.reduce((s, p) => s + p.lng, 0) / hull.length;
+  const latDelta = bufferMeters / 111320;
+  const lngDelta = bufferMeters / (111320 * Math.cos((cLat * Math.PI) / 180));
+
+  const expanded = hull.map(p => {
+    const dLat = p.lat - cLat;
+    const dLng = p.lng - cLng;
+    const dist = Math.hypot(dLat, dLng) || 0.0001;
+    return {
+      lat: p.lat + (dLat / dist) * latDelta,
+      lng: p.lng + (dLng / dist) * lngDelta,
+    };
+  });
+
+  // Close loop
+  expanded.push({ ...expanded[0] });
+  return expanded;
+}
+
+/**
+ * Returns a solid-fill polygon boundary for any PIN code across India.
+ * Priority 1: High-fidelity curated GIS polygon (if known).
+ * Priority 2: Multi-office Convex Hull with delivery buffer (if 3+ constituent offices).
+ * Priority 3: Oriented corridor capsule (if 2 constituent offices).
+ * Priority 4: Deterministic 8-facet contiguous territory polygon around center.
  */
 export function getTerritoryPolygon(
   pincode: string,
   center: LatLngPoint,
-  radiusMeters: number = 2400
+  radiusMeters: number = 2400,
+  officePoints?: LatLngPoint[]
 ): LatLngPoint[] {
   // 1. Check known high-fidelity polygons
   const cleanedPin = pincode.trim().split(":")[0];
@@ -304,7 +362,32 @@ export function getTerritoryPolygon(
     return KNOWN_PINCODE_POLYGONS[cleanedPin];
   }
 
-  // 2. Deterministic organic polygon generation based on PIN code seed
+  // 2. Dynamic Convex Hull with Delivery Buffer for multi-office PIN codes (3+ offices)
+  if (officePoints && officePoints.length >= 3) {
+    const hull = convexHull(officePoints);
+    if (hull.length >= 3) {
+      return expandPolygon(hull, 1600);
+    }
+  }
+
+  // 3. Oriented Capsule for 2-office PIN codes
+  if (officePoints && officePoints.length === 2) {
+    const [p1, p2] = officePoints;
+    const angle = Math.atan2(p2.lat - p1.lat, p2.lng - p1.lng);
+    const perpAngle = angle + Math.PI / 2;
+    const bufDeg = 1600 / 111320;
+    const dLat = Math.sin(perpAngle) * bufDeg;
+    const dLng = Math.cos(perpAngle) * bufDeg;
+    return [
+      { lat: p1.lat + dLat, lng: p1.lng + dLng },
+      { lat: p2.lat + dLat, lng: p2.lng + dLng },
+      { lat: p2.lat - dLat, lng: p2.lng - dLng },
+      { lat: p1.lat - dLat, lng: p1.lng - dLng },
+      { lat: p1.lat + dLat, lng: p1.lng + dLng },
+    ];
+  }
+
+  // 4. Deterministic organic polygon generation based on PIN code seed
   // Creates an 8-sided polygon that tiles naturally without circular bubbles
   const seed = cleanedPin.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   const numPoints = 8;

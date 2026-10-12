@@ -23,6 +23,7 @@ export interface PincodeMapItem {
   lng?: number;
   areas?: string[];
   agents?: string[];
+  officePoints?: { lat: number; lng: number }[];
 }
 
 interface MapplsBoundaryMapProps {
@@ -205,7 +206,8 @@ export default function MapplsBoundaryMap({
                 const avgLat = validPins.reduce((sum, p) => sum + (p.lat || 0), 0) / validPins.length;
                 const avgLng = validPins.reduce((sum, p) => sum + (p.lng || 0), 0) / validPins.length;
                 if (map.setCenter) map.setCenter({ lat: avgLat, lng: avgLng });
-                if (map.setZoom) map.setZoom(10);
+                const autoZoom = validPins.length < 15 ? 11.5 : (validPins.length < 35 ? 10.5 : 9.5);
+                if (map.setZoom) map.setZoom(autoZoom);
               }
 
               pinsToRender.forEach(p => {
@@ -221,7 +223,7 @@ export default function MapplsBoundaryMap({
                 const radiusMeters = isSelected ? 2600 : 2000;
 
                 // 1. Get exact or organic contiguous territory polygon
-                const polyCoords = getTerritoryPolygon(p.pincode, { lat: p.lat!, lng: p.lng! }, radiusMeters);
+                const polyCoords = getTerritoryPolygon(p.pincode, { lat: p.lat!, lng: p.lng! }, radiusMeters, p.officePoints);
 
                 let territoryLayer: any = null;
 

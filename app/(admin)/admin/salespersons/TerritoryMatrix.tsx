@@ -441,12 +441,20 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
         return agentZones.some(z => (z.pincodes || []).includes(p.pincode) || (z.pincodes || []).some(code => code.startsWith(p.pincode + ":")));
       });
 
+      const validPoints: { lat: number; lng: number }[] = [];
+      if (p.validLats && p.validLngs) {
+        for (let i = 0; i < p.validLats.length; i++) {
+          validPoints.push({ lat: p.validLats[i], lng: p.validLngs[i] });
+        }
+      }
+
       return {
         pincode: p.pincode,
         status: p.status,
         lat: p.lat,
         lng: p.lng,
         areas: p.areas,
+        officePoints: validPoints,
         agents: assigned.map(a => `${a.name}${a.mobile_number ? ` (${a.mobile_number})` : ''}`),
       };
     });
