@@ -12,7 +12,7 @@
 | Domain | Status | Latest Evidence / Milestone |
 |---|---|---|
 | **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags. |
-| **Mapping & Geographical Coverage** | `VERIFIED` | Mappls (MapmyIndia) live integration; 3-Tier Boundary Engine; Exact Google Maps cadastral parity for launch PINs (302012, 302041); True geometric centroid camera targeting; 4-Quadrant Tehsil/PINCODE micro-zones; Red/Blue circle indicators. |
+| **Mapping & Geographical Coverage** | `VERIFIED` | 100% Google Maps parity for Jaipur city overview (`JAIPUR_METRO_BOUNDARY`); eliminated statewide dot clutter; Mappls live integration; 3-Tier Boundary Engine; Exact cadastral parity for launch PINs (302012, 302041); True geometric centroid camera targeting; 4-Quadrant Tehsil/PINCODE micro-zones. |
 | **Referral & Partner Ecosystem** | `VERIFIED` | B2B Partner Portal with QR codes (2% comm / 3% disc); B2C Refer & Earn (₹500 / ₹500) with festive WhatsApp status EDMs; Financial Dashboard payout tracking. |
 | **Customer Journey & Pro Builder** | `VERIFIED` | WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; iOS Safari auto-zoom patch (`text-base sm:text-sm`); single-filter auto-collapse. |
 | **Checkout & Payment Pathways** | `VERIFIED` | 4 pathways: Pay Full (2% discount), ₹500 3-step token, EMI option, Free Site Visit calendar (future dates only); Webhook + Fallback Verification API. |
