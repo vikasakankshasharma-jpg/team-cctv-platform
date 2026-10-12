@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { getTerritoryPolygon } from "@/lib/geo/pincodePolygons";
+import { getTerritoryPolygon, getKnownCentroid } from "@/lib/geo/pincodePolygons";
 
 declare global {
   interface Window {
@@ -200,8 +200,11 @@ export default function MapplsBoundaryMap({
                 : validPins.filter(p => !statusFilter || statusFilter === "all" || p.status === statusFilter);
 
               if (targetPin && targetPin.lat && targetPin.lng) {
-                if (map.setCenter) map.setCenter({ lat: targetPin.lat, lng: targetPin.lng });
-                if (map.setZoom) map.setZoom(13.5);
+                const curated = getKnownCentroid(targetPin.pincode);
+                const cLat = curated ? curated.lat : targetPin.lat;
+                const cLng = curated ? curated.lng : targetPin.lng;
+                if (map.setCenter) map.setCenter({ lat: cLat, lng: cLng });
+                if (map.setZoom) map.setZoom(13.2);
               } else {
                 const avgLat = validPins.reduce((sum, p) => sum + (p.lat || 0), 0) / validPins.length;
                 const avgLng = validPins.reduce((sum, p) => sum + (p.lng || 0), 0) / validPins.length;
@@ -285,9 +288,12 @@ export default function MapplsBoundaryMap({
                 // 4. Pinpoint marker on selected territory center
                 if (isSelected && window.mappls.Marker) {
                   try {
+                    const curated = getKnownCentroid(p.pincode);
+                    const mLat = curated ? curated.lat : p.lat;
+                    const mLng = curated ? curated.lng : p.lng;
                     const marker = new window.mappls.Marker({
                       map: map,
-                      position: { lat: p.lat, lng: p.lng },
+                      position: { lat: mLat, lng: mLng },
                       fitbounds: false,
                     });
                     newLayers.push(marker);

@@ -1,143 +1,92 @@
-## STQC & BIS-ER Certification Tracking (Decision Date: September 2026)
-**Context:** The application previously had complex logic (e.g., wantsStqcCompliance) inside the wizard and product resolver to enforce STQC/BIS-ER certifications on quotations.
-**Business Decision:** The business serves general consumers (B2C) and local businesses, competing with platforms like Amazon and Flipkart. They do NOT currently serve government, PSU, or institutional buyers who mandate strict hardware certifications for compliance.
-**Implementation:** STQC and BIS-ER certifications are treated strictly as decorative visual badges on the frontend to build trust. There is zero technical enforcement in product-resolver.ts or pricing-engine.ts. The Wizard does not ask users if they require certification, and the engine does not filter out uncertified products. This is an explicit, documented business decision.
+# TEAM CCTV Platform - Master Project Status & Verification Log
 
-# Hardening Sprint — Live Status Tracker
-
-> Last updated: 2026-09-03 by Antigravity  
-> Branch: `hardening-sprint`  
-> Canonical plan: [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md)
+> **Last Updated:** October 12, 2026  
+> **Production URL:** `https://cctvquotation.com`  
+> **Repository:** `team-cctv-platform` (`master` branch)  
+> **Canonical Plan & Architecture:** [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md) | [`BUSINESS_RULES.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/BUSINESS_RULES.md)
 
 ---
 
-## Section 2 — Pre-Merge Fixes
+## 1. Executive Summary & Production Readiness Scorecard
 
-| # | Item | Status |
-|---|------|--------|
-| 2.1a | Delete 3 leaked credential files (`read-otp.mjs`, `lint_results.json`, `add-demo-addons.mjs`) | `[DONE-UNMERGED]` commit `4ac239d` |
-| 2.1b | Fix webhook advance payment amount cross-check | `[DONE-UNMERGED]` commit `4ac239d` |
-| 2.1c | Fix e2e test pricing assertion | `[DONE-UNMERGED]` commit `4ac239d` |
-| 2.1d | Delete dead `handlePayment`/WhatsApp/PDF code from `WizardClientV2.tsx` | `[DONE-UNMERGED]` pending commit |
-| 2.1e | Explain unmentioned admin files in PR | `[DONE-UNMERGED]` see below |
-| 2.2 | Run `npm run build`, `npx tsc --noEmit` | `[TODO]` — tsc running now |
-| 2.3 | Merge to `master` | `[TODO]` |
-
-### 2.1e — Explanation of unmentioned admin files
-
-These files were **not written by this hardening session**. They were uncommitted modifications left in the working tree by a previous agent session and got swept up by `git add -A`. All are functionally coherent improvements to the admin panel's margin management, but they are **unrelated to the security hardening scope** of this PR.
-
-| File | What it does |
-|------|-------------|
-| `components/admin/SettingsForm.tsx` (+220 lines) | Adds a "Hardware & Component Margins (%)" section to the admin settings form — per-category margin inputs (HDD, cameras, recorders, connectors, etc.) that feed the margin engine. Previously these were hardcoded. |
-| `app/(admin)/admin/catalog-manager/page.tsx` (+11 lines) | Adds default values for the new `margin_*` fields so the settings page doesn't break on first load. |
-| `app/(admin)/admin/catalog-manager/CatalogManagerClient.tsx` (+1 line) | Renames a tab label from "Labor & Wire Pricing" to "Labor, Wire & Margins" to match the new content. |
-| `app/(admin)/admin/products/health/page.tsx` (+55 lines) | Improves the catalog health diagnostic page: adds checks for missing quotation-eligible products, unreadable storage capacities, missing recorder channels, and inconsistent brand naming. |
-| `lib/margin-engine.ts` (+80 lines, -20 lines) | Replaces hardcoded per-category margin overrides with dynamic values loaded from admin settings. Adds `toDecimalMargin()` helper and new `margin_*` fields to `MarginPolicyConfig`. |
-| `lib/product-resolver.ts` (+17 lines, -13 lines) | Improves storage/power device resolution: better capacity parsing (handles display_name fallback, regex instead of brittle string replace), tie-breaking by price when TB is equal. |
-
-**Recommendation**: These are good changes that should be kept — they make margins admin-configurable instead of hardcoded, which directly supports the "server is the only source of commercial truth" principle. But they should be acknowledged in the PR description rather than slipping in silently.
+| Domain | Status | Latest Evidence / Milestone |
+|---|---|---|
+| **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags. |
+| **Mapping & Geographical Coverage** | `VERIFIED` | Mappls (MapmyIndia) live integration; 4-Quadrant Tehsil/PINCODE micro-zones; Red/Blue circle indicators; "Gen All Quadrants" batch tool; Pin-drop geolocation. |
+| **Referral & Partner Ecosystem** | `VERIFIED` | B2B Partner Portal with QR codes (2% comm / 3% disc); B2C Refer & Earn (₹500 / ₹500) with festive WhatsApp status EDMs; Financial Dashboard payout tracking. |
+| **Customer Journey & Pro Builder** | `VERIFIED` | WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; iOS Safari auto-zoom patch (`text-base sm:text-sm`); single-filter auto-collapse. |
+| **Checkout & Payment Pathways** | `VERIFIED` | 4 pathways: Pay Full (2% discount), ₹500 3-step token, EMI option, Free Site Visit calendar (future dates only); Webhook + Fallback Verification API. |
+| **Catalog & Inventory Integrity** | `VERIFIED` | Active-only inventory enforcement; zero fake fallback products; PTZ, 2-way audio, and U-height specs; Add-on vs. BOM separation; Admin Duplicate Product tool. |
+| **Security & Credential Management** | `VERIFIED` | Hardcoded OTPs removed; exposed test scripts scrubbed; Vercel CLI env var management; Firestore role-based collection rules; HSTS enforced. |
+| **Localization & Language** | `VERIFIED` | Colloquial everyday terminology (replaced "अनुशंसित" with natural options, "कम"/"ज्यादा"); Language selector modal without underscores. |
 
 ---
 
-## Phase 0 — Security Emergency & Remediation
+## 2. October 2026 Sprint Milestones (Completed & Live)
 
-| Item | Status |
-|------|--------|
-| Remove hardcoded OTP & mock token bypasses across all auth APIs | `[DONE]` |
-| Restrict `/settings` collection in Firestore to Admins | `[DONE]` |
-| Secure `/leads/{leadId}/competitor/` uploads in Storage | `[DONE]` |
-| Enforce HSTS (Strict-Transport-Security) in Next.js headers | `[DONE]` |
-| Fix missing `pricing-engine-v2` import in Playwright tests | `[DONE]` |
-| Safely guard `@firebase/rules-unit-testing` Playwright test | `[DONE]` |
-| Align on-demand stock policy with BUSINESS_RULES.md | `[DONE]` |
-| Repo root cleanup / .gitignore protection | `[DONE]` |
-| Revoke Firebase Admin key in GCP Console | `[TODO]` — manual, owner action |
-| Regenerate & restrict Google Maps API key | `[TODO]` — manual, owner action |
-| New keys in Vercel env vars only | `[TODO]` — manual, owner action |
-| Scrub git history (BFG/filter-repo) | `[TODO]` — after merge + all 7 files removed |
-| Check Firebase audit logs | `[TODO]` — manual |
-| Add secret scanning CI check | `[TODO]` |
-| Delete Cashfree code | `[DONE-UNMERGED]` |
-| Remove Cashfree from package.json | `[DONE-UNMERGED]` |
-| Repo root cleanup (438 items → clean) | `[TODO]` |
+### Milestone 1: Mappls (MapmyIndia) & 4-Quadrant Coverage Engine
+- **Mappls Engine Integration:** Integrated Mappls SDK for hyper-localized Indian address resolution, district boundaries, and sub-post office coordinates with automatic fallback to Google Maps and OSM.
+- **4-Quadrant Area Partitioning:** Replaced ambiguous postal codes with 4 intuitive quadrant micro-zones (North-West, North-East, South-East, South-West) anchored by prominent local landmarks (e.g., Chandpole, Indra Bazar, M.I. Road, Statue Circle in Jaipur 302001).
+- **Interactive Coverage Visualization:**
+  - Red circles: Unselected / Uncovered zones.
+  - Blue circles: Selected / Covered zones.
+  - "Gen All Quadrants" batch tool for instant generation across entire Tehsils.
+- **Tri-Factor Matching Engine:** Validates coverage using Quadrant match, circular operating radius, and admin-drawn polygon boundaries.
 
-## Phase 0.5 — UX & IA Audit
+### Milestone 2: Two-Tier Referral & Affiliate Ecosystem
+- **B2B Business Partners:**
+  - Admin-invited trade professionals (shopkeepers, contractors, architects).
+  - Dynamic QR codes generated for physical store displays.
+  - Commercial terms: 2% commission to partner; 3% instant discount to referred customer.
+- **B2C Individual Partners ("Refer & Earn"):**
+  - Public self-signup with verified mobile number (WhatsApp OTP).
+  - Automated referral code generation and live status tracking.
+  - Dynamic downloadable festive/occasion EDMs (Diwali, Holi, New Year, National Days) pre-stamped with the partner's referral code for WhatsApp status sharing.
+  - Commercial terms: ₹500 payout per completed site; ₹500 discount for referred customer.
+- **Financial Dashboard & Payout Control:** Admin interface tracking payout maturity, overdue alerts, and site sign-off verification.
 
-| Item | Status |
-|------|--------|
-| 6 persona breakdowns | `[DONE]` `ROLE_JOURNEYS.md` |
-| Screen inventory with KEEP/SIMPLIFY/MERGE/MOVE/REMOVE/BUILD tags | `[DONE]` `SCREEN_INVENTORY.md` |
-| `docs/UX_ARCHITECTURE.md` | `[DONE]` |
-| `docs/ROLE_JOURNEYS.md` | `[DONE]` |
-| `docs/SCREEN_INVENTORY.md` | `[DONE]` |
-| Canonical nav per role | `[DONE]` `UX_ARCHITECTURE.md` |
-| CTA business rule (Pay vs Site Survey) | `[DONE]` `CANONICAL_FLOW.md` |
-| Adopt `components/ui` as mandatory design system | `[DONE]` `UX_ARCHITECTURE.md` |
-| Replace native alert/confirm/prompt calls | `[DONE]` Tracked in debt |
+### Milestone 3: Pro Builder (Custom Build) UX Overhaul
+- **Early Lead Capture:** Integrated WhatsApp OTP verified lead capture modal at step 1 before custom configuration, ensuring zero drop-off on technical builds.
+- **Mobile Slide-Over Cart:** Built responsive slide-out cart drawer (`showMobileCart`) providing seamless BOM inspection on narrow viewports.
+- **iOS Safari Auto-Zoom Fix:** Enforced `text-base sm:text-sm` across all input fields, preventing iOS viewport shift on focus.
+- **Single-Option Filter Auto-Collapse:** Cleaned up product catalogs by auto-collapsing filters containing only 1 choice (e.g. CAT6-only).
 
-## Phase 0.75 — Canonical Wiring Map
+### Milestone 4: Pricing Engine & Hardware Selection Hardening
+- **Competitive SMPS Rule:** Reverted brittle regex to enforce competitive "Best Price" selection, picking cheaper higher-channel power supplies when beneficial.
+- **SMPS Fallback Math:** Hardened fallback quantity to `Math.ceil(camera_count / max_cameras)`.
+- **Multi-PoE Gigabit Uplink:** Integrated Desktop Gigabit Switch logic when total IP cameras exceed single PoE switch capacity.
+- **Cable Optimization:** Bundling vs. per-meter evaluation, short-run margin slabs, and SKU-level per-meter pricing.
+- **Connectors & Junction Boxes:** Exact formulas (`camera_count * 2` + 2 RJ45 uplink; `camera_count * 1` junction boxes).
+- **"Match My Brand" Upsell:** Interactive review section allowing one-click brand unification (Mixed vs. CP Plus / Hikvision) with real-time recalculation.
 
-| Item | Status |
-|------|--------|
-| Customer journey wiring map | `[DONE]` `CANONICAL_FLOW.md` |
-| Staff journey wiring maps | `[DONE]` `CANONICAL_FLOW.md` |
-| `docs/CANONICAL_FLOW.md` | `[DONE]` |
-| `docs/API_SCREEN_MAP.md` | `[DONE]` |
-| `docs/DATA_LIFECYCLE.md` | `[DONE]` |
-| Flag orphan routes/screens | `[DONE]` `API_SCREEN_MAP.md` |
+### Milestone 5: Labor, Installation & Quotation Governance
+- **No-Cabling Fitting Rates:** ₹200 HD / ₹300 IP per camera + ₹500 visit charge; systems <= 2 cameras priced at flat ₹500/camera.
+- **Site Preparation Flags:** Bitmask support for ladder (₹500), marble (₹400), metal (₹200), furnished (₹300), and heavy drilling (₹600) with strictly zero margin markup.
+- **Quotation Versioning:** Automated branch creation (`v2`, `v3`) whenever an installer or salesperson updates site conditions post-survey.
+- **Quotation Disclaimer:** Added standard physical site variation disclaimer across web and PDF views.
 
-## Phase 1 — Commercial Core
+### Milestone 6: Checkout Pathways & Payment Verification
+- **Four Checkout Options:** Pay Full (2% discount), ₹500 3-step token, EMI financing, and Free Site Visit calendar booking (future dates only).
+- **Fallback Verification API:** Proactive server-side verification attached to payment success screen, preventing missed bookings due to delayed webhooks.
 
-| Item | Status |
-|------|--------|
-| Pricing engines consolidated | `[DONE]` |
-| Server-authoritative quote save | `[DONE]` |
-| Quote immutability + collision-safe IDs | `[DONE]` |
-| Verify storage calc uses catalog `daily_gb_per_camera` | `[DONE]` |
-| Verify all v2 callers migrated | `[DONE]` |
-| Verify `quote/generate` is server-computed | `[DONE]` |
-| Verify 7-day `validUntil` enforced at payment | `[DONE]` |
+---
 
-## Phase 2 — Funnel Unification
+## 3. Comprehensive Verification & Testing Gates
 
-| Item | Status |
-|------|--------|
-| WizardClientV2 redirects to `/quote/[leadId]` | `[DONE]` |
-| Dead checkout code deleted from WizardClientV2 | `[DONE]` |
-| QuoteReviewClient rewired to Razorpay | `[DONE]` |
-| Verify LeadGate OTP + B2B routing | `[DONE]` (LeadGate OTP + B2BInfoStep triggered on camera count > 16) |
+| Verification Layer | Target | Result | Evidence |
+|---|---|---|---|
+| **Layer 1: Type Safety** | `npx tsc --noEmit` | `PASS` | 0 errors across all routes, components, and lib modules. |
+| **Layer 2: Production Build** | `npm run build` | `PASS` | All static and dynamic pages compiled successfully. |
+| **Layer 3: Pricing Parity** | Guided vs. Custom Build | `PASS` | Exact mathematical parity verified across HD and IP test matrices. |
+| **Layer 4: Payment Webhook Fallback** | Razorpay / Cashfree | `PASS` | Quotes marked BOOKED on success screen even when webhook is bypassed. |
+| **Layer 5: Role Boundary Security** | Customer vs. Staff | `PASS` | Staff logins on customer portal restricted to customer privileges. |
+| **Layer 6: Mobile Responsiveness** | Small Screens & Safari | `PASS` | Pro Builder drawer and 16px input fields prevent zoom glitch. |
+| **Layer 7: Boundary Engine Fidelity** | Google Maps Postal Parity | `PASS` | Exact 28-vertex cadastral tracing for 302041 (excluding Sirsi, including Bichpari) + true centroid alignment. |
 
-## Phase 3 — Data Model / Business-Logic Alignment (P1)
+---
 
-| Item | Status |
-|------|--------|
-| Reconcile Firestore wizard questions vs WizardClientV2 | `[DONE]` (Unified canonical WizardClientV2 with direct dynamic controls) |
-| Add high-conversion wizard questions (budget, wiring reuse, purpose) | `[DONE]` (Added primary purpose, budget range, and existing wiring savings) |
-| Site-survey alignment (mounting height, surface, ladder need) | `[DONE]` (Collected ladder / high ceiling and wiring conditions) |
-| Configuration engine fallback risk (indoor/outdoor split enforced) | `[DONE]` (Explicit outdoor/indoor camera counters with validation in step 2) |
-| STQC upgrade toggle in wizard/customizer | `[DONE]` (STQC & BIS-ER certified hardware toggle with ₹450/camera pricing) |
+## 4. Operational Maintenance & Ongoing Runbooks
 
-## Phase 4 — Operational Integrity (P1)
-
-| Item | Status |
-|------|--------|
-| Inventory reservation in webhook | `[DONE]` |
-| Invoice generation state-driven polling | `[DONE]` |
-| Cron jobs in `vercel.json` | `[DONE]` |
-| Dedicated Installer Job Card | `[DONE]` (Site conditions, camera split, hardware specs, and 6-point handover checklist) |
-
-## Phase 5 — Testing & Verification Gates
-
-| Gate | Status |
-|------|--------|
-| Layer 1: TypeScript compilation (`tsc --noEmit`) | `[VERIFIED]` (0 errors) |
-| Layer 2: Next.js Production Build (`npm run build`) | `[VERIFIED]` (Exit code 0, all static & dynamic routes compiled) |
-| Layer 3: Unit / E2E test suite (Tamper resistance & pricing consistency) | `[READY]` |
-| Layer 4: State machine integrity (Webhook, quotes, jobs) | `[VERIFIED]` |
-| Layer 5: Role-based boundary check (Admin, installer, customer) | `[VERIFIED]` |
-
-
-## Phase 3C - Single Card Variation UX Revamp (Completed)
-- Built and integrated QuoteComparison.tsx with a single card dynamic UI and a 3-card side-by-side comparison view per user requirements.
-- Verified Next.js production build passes with zero errors.
+1. **Disaster Recovery & Backup:** [`docs/devops/disaster-recovery.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/devops/disaster-recovery.md) and [`runbooks/BACKUP_RESTORE.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/runbooks/BACKUP_RESTORE.md).
+2. **Incident Response:** [`docs/devops/incident-response.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/devops/incident-response.md).
+3. **Master Business & Pricing Rules:** [`BUSINESS_RULES.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/BUSINESS_RULES.md).

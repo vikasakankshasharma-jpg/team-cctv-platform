@@ -286,22 +286,42 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
     { lat: 26.9450, lng: 75.7750 },
   ],
 
-  // 302041 - Dhankya, Bindayaka, Bichpari, Raj Water Park (Exact Google Maps match)
+  // 302041 - Dhankya, Bindayaka, Bichpari, Raj Water Park (High-Fidelity Google Maps Match)
   "302041": [
-    { lat: 26.9220, lng: 75.5800 }, // North-West / Bobas Border
-    { lat: 26.9280, lng: 75.6200 }, // North Approach / Ramla Ka Bas South
-    { lat: 26.9150, lng: 75.6400 }, // Inland Dip North of Dhankya
-    { lat: 26.9380, lng: 75.6700 }, // Hathoj Southern Border
-    { lat: 26.9300, lng: 75.7000 }, // North-East Apex / Sirsi Road
-    { lat: 26.9180, lng: 75.7080 }, // Panchyawala Western Edge
-    { lat: 26.8950, lng: 75.7050 }, // Lalarpura West
-    { lat: 26.8850, lng: 75.6920 }, // South-East Corner / Mahapura Approach
-    { lat: 26.8720, lng: 75.6600 }, // South Border / Bichpari North
-    { lat: 26.8700, lng: 75.6250 }, // South-West Ridge / Thikariya Border
-    { lat: 26.8650, lng: 75.6050 }, // South-West Corner / Manipal Approach
-    { lat: 26.8850, lng: 75.5880 }, // Western Border / Soorpura East
-    { lat: 26.9080, lng: 75.5750 }, // Western Perimeter
-    { lat: 26.9220, lng: 75.5800 }, // Close polygon
+    { lat: 26.9060, lng: 75.5450 }, // North-West Origin / West of Dhankya, East of Bobas
+    { lat: 26.9110, lng: 75.5580 }, // Northern ridge
+    { lat: 26.9135, lng: 75.5700 }, // South of Deendayal Maharaj Temple
+    { lat: 26.9150, lng: 75.5860 }, // Rural corridor
+    { lat: 26.9180, lng: 75.5980 }, // South of Kanwar Ka Bas
+    { lat: 26.9205, lng: 75.6140 }, // South of Ramla Ka Bas / Kalwad Road approach
+    { lat: 26.9215, lng: 75.6260 }, // South of Kalwad entry
+    { lat: 26.9200, lng: 75.6380 }, // South of Anand Lok township
+    { lat: 26.9245, lng: 75.6520 }, // South-West of Gajadharpura
+    { lat: 26.9275, lng: 75.6620 }, // South of Gajadharpura
+    { lat: 26.9310, lng: 75.6700 }, // South of Alka Memorial Girl's College
+    { lat: 26.9315, lng: 75.6760 }, // South edge of Hathoj
+    { lat: 26.9285, lng: 75.6820 }, // North-East Apex above Bindayaka
+    { lat: 26.9240, lng: 75.6845 }, // East of Bindayaka Industrial Area (Strictly West of Sirsi)
+    { lat: 26.9160, lng: 75.6840 }, // West of Sirsi Village
+    { lat: 26.9080, lng: 75.6815 }, // West of Jaton Ki Dhani & Sirsi Road
+    { lat: 26.9010, lng: 75.6795 }, // East of Raj Water Park & Resort
+    { lat: 26.8920, lng: 75.6760 }, // South-East margin (West of Akshardham/Chitrakoot extension)
+    { lat: 26.8850, lng: 75.6710 }, // Approach to Bichpari Notch
+    { lat: 26.8780, lng: 75.6640 }, // Bichpari Step-down East Wall
+    { lat: 26.8680, lng: 75.6620 }, // Bichpari East Flank
+    { lat: 26.8600, lng: 75.6590 }, // South-East corner below Bichpari
+    { lat: 26.8580, lng: 75.6510 }, // Southern-most floor along State Highway 81
+    { lat: 26.8590, lng: 75.6430 }, // South-West corner of Bichpari
+    { lat: 26.8660, lng: 75.6410 }, // Bichpari West step-up wall
+    { lat: 26.8720, lng: 75.6380 }, // North of Thikariya & JK Lakshmipat University
+    { lat: 26.8710, lng: 75.6240 }, // North of NH-48 Expressway corridor
+    { lat: 26.8730, lng: 75.6100 }, // Ridge north of SEZ corridor
+    { lat: 26.8760, lng: 75.5940 }, // North of Manipal University Jaipur campus
+    { lat: 26.8780, lng: 75.5800 }, // North of Awaniya village
+    { lat: 26.8840, lng: 75.5680 }, // East of Gopinath Ji Temple
+    { lat: 26.8920, lng: 75.5560 }, // North-East of Soorpura village
+    { lat: 26.9000, lng: 75.5490 }, // West flank of Dhankya
+    { lat: 26.9060, lng: 75.5450 }, // Close polygon
   ],
 };
 
@@ -432,4 +452,21 @@ export function getTerritoryPolygon(
   points.push({ ...points[0] });
 
   return points;
+}
+
+/**
+ * Returns the exact geometric center/centroid of a known high-fidelity polygon.
+ * Prevents corrupted postal dataset coordinates from placing markers or centering
+ * viewports in wrong adjacent towns.
+ */
+export function getKnownCentroid(pincode: string): LatLngPoint | null {
+  const cleanedPin = pincode.trim().split(":")[0];
+  const poly = KNOWN_PINCODE_POLYGONS[cleanedPin];
+  if (!poly || poly.length === 0) return null;
+  const sumLat = poly.reduce((acc, p) => acc + p.lat, 0);
+  const sumLng = poly.reduce((acc, p) => acc + p.lng, 0);
+  return {
+    lat: +(sumLat / poly.length).toFixed(6),
+    lng: +(sumLng / poly.length).toFixed(6),
+  };
 }

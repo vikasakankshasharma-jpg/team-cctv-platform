@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import MapplsBoundaryMap from "@/components/MapplsBoundaryMap";
 import regionalHubs from "@/data/pincodes.json";
 import { toast } from "sonner";
+import { getKnownCentroid } from "@/lib/geo/pincodePolygons";
 
 // Custom Searchable Dropdown for compact State and District selection
 function SearchableDropdown({
@@ -402,8 +403,12 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
         entry.areas = [`${selectedDistrict?.name || 'Central'} Hub Area`];
       }
 
-      // 1. Refined centroid from verified valid office coordinates
-      if (entry.validLats.length > 0 && entry.validLngs.length > 0) {
+      // 1. Curated high-fidelity polygon centroid if available
+      const knownCentroid = getKnownCentroid(entry.pincode);
+      if (knownCentroid) {
+        entry.lat = knownCentroid.lat;
+        entry.lng = knownCentroid.lng;
+      } else if (entry.validLats.length > 0 && entry.validLngs.length > 0) {
         entry.lat = entry.validLats.reduce((a, b) => a + b, 0) / entry.validLats.length;
         entry.lng = entry.validLngs.reduce((a, b) => a + b, 0) / entry.validLngs.length;
       } else {

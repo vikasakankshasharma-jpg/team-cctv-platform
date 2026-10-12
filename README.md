@@ -3,60 +3,110 @@
 [![Quality Gates](https://github.com/team/cctv-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/team/cctv-platform/actions/workflows/ci.yml)
 [![Production Ready](https://img.shields.io/badge/Status-100%25_Production_Ready-success.svg)](#)
 
-> **Important:** Please see [HANDOVER.md](./HANDOVER.md) for complete technical handover documentation, architecture overview, and deployment procedures.
-TEAM is a high-fidelity, production-hardened SaaS platform designed for professional CCTV sales automation, franchise lead management, and customer referral tracking.
+> **Live Production Platform:** [`https://cctvquotation.com`](https://cctvquotation.com)  
+> **Documentation Hub:** [`BUSINESS_RULES.md`](./BUSINESS_RULES.md) | [`STATUS.md`](./STATUS.md) | [`HANDOVER.md`](./HANDOVER.md) | [`docs/CANONICAL_FLOW.md`](./docs/CANONICAL_FLOW.md)
 
-## 🚀 Key Features
+**TEAM CCTV** is a high-performance, full-stack enterprise SaaS platform for CCTV quotation generation, geolocation-driven territory routing, franchise/installer job management, and automated two-tier affiliate/referral distribution.
 
-- **Expert Configurator**: A modular, state-driven quotation engine with server-side price recalculation.
-- **Franchise Portal**: Territory-based lead routing and subscription-based partner management.
-- **Enterprise Security**: Strict CSP/HSTS headers, Session-based RBAC, and Immutable Audit Logging.
-- **Sales Intelligence**: Real-time KPI dashboards with performance-based visual coding.
-- **Inventory Health**: Automated catalog deduplication and structural repair tools.
+---
+
+## 🚀 Core Platform Capabilities
+
+### 1. Dual Quotation Engines with 100% Parity
+- **Guided Setup (Customer Wizard):** 5-step intuitive flow with dynamic recommendation algorithms (Standard, Professional, Elite) and real-time "Match My Brand" dynamic brand unification.
+- **Custom Build (Pro Builder):** Full itemized component customizer with early WhatsApp OTP lead capture, responsive mobile slide-out cart drawer, and single-filter auto-collapse.
+- **Server-Authoritative Parity:** Both engines share 100% mathematical parity via `lib/pricing-engine.ts` and `app/api/quote/save/route.ts`. The client is untrusted.
+
+### 2. Intelligent Pricing & Hardware Architecture
+- **Competitive "Best Price" Hardware Selection:** Selects compatible higher-channel power supplies (e.g., 8Ch SMPS for 4 cameras) when cheaper than lower-capacity units.
+- **Multi-PoE & Gigabit Aggregation:** Automatically allocates interconnecting Desktop Gigabit Switches for large IP camera topologies.
+- **Cable Bundling & Margin Slabs:** Evaluates 305m/100m bundles vs. per-meter pricing, with admin-configured short-run margin slabs.
+- **Formulas:** Connectors (`camera_count * 2` + 2 for IP uplink), Junction Boxes (`1:1`).
+
+### 3. Transparent Labor & Site Survey Rules
+- **Zero Margin on Labor:** Labor costs strictly reflect local market rates with 0% margin markup.
+- **Full Installation:** ₹500/IP camera, ₹400/HD camera with 15m free cable pulling per camera (excess cable ₹15/m).
+- **Fitting-Only (No Cabling):** ₹200/HD, ₹300/IP + ₹500 site visit charge (flat ₹500/camera for setups <= 2 cameras).
+- **Site Preparation Flags:** Bitmask support for ladder (₹500), marble (₹400), metal (₹200), furnished (₹300), and heavy drilling (₹600).
+- **Quotation Versioning:** Post-survey changes by installers/salespeople automatically create a new quotation version (`v2`, `v3`).
+- **Site Disclaimer:** Prominent notice on all quotes that physical site conditions may adjust final totals.
+
+### 4. Mappls Geolocation & 4-Quadrant Territory Routing
+- **MapmyIndia (Mappls) Integration:** High-accuracy Indian address geocoding, boundary polygons, and fallback to Google Maps/OSM.
+- **4-Quadrant Area Partitioning:** PINCODEs are divided into 4 landmark-anchored quadrants (North-West, North-East, South-East, South-West) for granular sales and technician dispatch.
+- **Visual Territory Map:** Red circles indicate uncovered/unselected zones; blue circles indicate active coverage. Includes "Gen All Quadrants" batch tool.
+- **Tri-Factor Matching:** Matches lead addresses against Quadrant, circular radius, and polygon boundaries.
+
+### 5. Two-Tier Referral & Affiliate Ecosystem
+- **B2B Business Partners:** Admin-invited trade professionals (shopkeepers, contractors, architects) receive branded QR codes. Partners earn 2% commission; customers receive a 3% discount.
+- **B2C Individual Partners ("Refer & Earn"):** Public self-signup with mobile OTP. Generates instant referral codes and downloadable occasion/festival EDMs (Diwali, Holi, New Year) for WhatsApp status sharing. ₹500 referrer reward; ₹500 referee discount.
+- **Financial Dashboard:** Admin payout management with maturity/overdue tracking for installers, promoters, and referrers.
+
+### 6. Four Checkout Pathways & Payment Resilience
+- **Pay Full Upfront:** 2% instant discount on total quotation.
+- **3-Step Milestone Booking:** ₹500 advance token reserves installation slot.
+- **EMI Financing:** Featured zero/low-cost EMI financing plans.
+- **Free Site Visit Booking:** Date & time picker (future dates only) for on-site consultation.
+- **Fallback Verification API:** Server-side verification on payment success screen guarantees quote status transitions even if webhooks face network timeouts.
+
+---
 
 ## 🛠 Tech Stack
 
-- **Framework**: Next.js 16.2 (App Router)
-- **State Management**: Zustand (Client) / Server Components (Server)
-- **Database**: Firebase Firestore (Enterprise Rules Enforced)
-- **Auth**: Firebase Auth (OTP-based)
-- **Payments**: Cashfree (Subscriptions & EMI Orders)
-- **Mailing**: Resend API
-- **Styling**: Tailwind CSS 4.0
+- **Framework:** Next.js 16.2 (App Router, Server Components, Route Handlers)
+- **State Management:** Zustand (Client Store) & React Hooks
+- **Database & Storage:** Firebase Firestore (Enterprise Security Rules) & Firebase Storage
+- **Authentication:** Firebase Auth (Phone OTP / WhatsApp OTP) with strict portal separation
+- **Payments:** Razorpay & Cashfree (Webhooks + Server-Side Fallback Verification)
+- **Maps & Geocoding:** Mappls (MapmyIndia) SDK with Google Maps & OpenStreetMap fallbacks
+- **Styling:** Tailwind CSS 4.0 (Fully responsive from narrow mobile to 4K displays)
+- **PDF Generation:** React-PDF (`lib/pdf/quote-pdf.tsx`) matching web hierarchy
 
-## 🔒 Security & Compliance
+---
 
-### Audit Logging
-All administrative actions are tracked in the `audit_logs` collection. Each log includes:
-- `actor_id` / `actor_email`
-- `action` (e.g., `FRANCHISE_CREATE`, `PRODUCT_UPDATE`)
-- `ip_address` & `user_agent`
-- `metadata` (Diff of changes)
+## 🔒 Security & Access Control
 
-### Zero-Trust Pricing
-The system ignores client-side pricing calculations during checkout. Every quote is re-validated and recalculated on the server using authoritative database values to prevent tampering.
+- **Portal Isolation:** Strict boundary between Customer Portal (`/portal`), Staff CRM (`/staff`), Installer App (`/installer`), and Admin Console (`/admin`). Staff logging into the customer portal receive only customer privileges.
+- **Zero-Trust Pricing:** Client prices are strictly ignored; server-side recalculation protects against parameter tampering.
+- **Network Security:** HSTS, strict Content Security Policy (whitelisting Mappls, Razorpay, Firebase), and session token validation.
+- **Audit Logging:** Administrative events logged in Firestore `audit_logs` with actor details, timestamps, and diffs.
 
-### Security & Access Control
-- **HSTS & CSP**: Configured in `next.config.ts` enforcing strict transport security and fine-grained Content Security Policy (whitelisting Razorpay, Google Maps, Firebase, Mappls, etc.).
-- **RBAC**: Enforced via server layouts (`verifySession`) across `/admin`, `/partner`, `/installer`, and `/salesperson`.
-- **Path Tracking**: Global `middleware.ts` injects `x-pathname` request headers for context-aware layout navigation.
+---
 
 ## 📦 Operational Commands
 
-### Catalog Maintenance
-The platform uses a deduplicated 732-item master catalog.
-- **Verification**: `npx tsx scratch/verify_db.ts`
-- **Regeneration**: `npx tsx scratch/gen_markdown_catalog.ts`
-- **Sync**: `python scratch/update_seeder_data.py`
+### Development & Build
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# TypeScript type check
+npx tsc --noEmit
+
+# Production build
+npm run build
+```
+
+### Database & Catalog Management
+```bash
+# Verify catalog integrity
+npx tsx scratch/verify_db.ts
+
+# Generate markdown catalog
+npx tsx scratch/gen_markdown_catalog.ts
+```
 
 ### Testing & QA
-- **E2E Flow**: `npx tsx scratch/verify_quotation_flow.ts`
-- **Playwright (E2E & A11y)**: `npx playwright test`
-- **CI Pipeline**: Automatically runs on PRs via `.github/workflows/ci.yml`.
+```bash
+# Run Playwright end-to-end tests
+npx playwright test
 
-## 📈 KPIs & Dashboards
-The **Sales Dashboard** tracks conversion performance:
-- **Conversion Rate**: Emerald (>20%) or Amber (<20%) indicators based on Won/Total leads ratio.
+# Verify quotation engine parity
+npx tsx scratch/verify_quotation_flow.ts
+```
 
 ---
-© 2026 TEAM CCTV. All Rights Reserved.
+© 2026 TEAM CCTV Platform. All Rights Reserved.

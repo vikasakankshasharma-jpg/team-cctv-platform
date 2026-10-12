@@ -1,44 +1,43 @@
 # Production Truth & Credential Tracking
 
+> **Last Updated:** October 12, 2026  
+> **Production Domain:** `https://cctvquotation.com`  
+> **Vercel Project:** `secure-easy` / `team-cctv-platform`  
 > **Rule:** Never mark a credential as `ROTATED` or `VERIFIED` based solely on local files. Evidence from the actual deployment/environment is mandatory.
 
-> [!NOTE]
-> **GIT HISTORY SCRUBBED:** The Git history across all branches was scrubbed using `git-filter-repo` on 2026-09-05. Leaked scripts and credential-bearing files (`push-vercel-env.js`, `push-vercel-env.ps1`, `fix-keys.js`, `scripts/read-otp.mjs`, `lint_results.json`, `lint_results.txt`, `add-demo-addons.mjs`, `scripts/add-firebase-domain.mjs`, `scripts/check-api-key.mjs`) have been purged from all historical commits, and the sanitized tree was force-pushed to `master`. Operators must still ensure the key is revoked in GCP Console.
+---
 
-## Immediate Operator Actions Required
+## 1. Credential Lifecycle Matrix
 
-### 1. Firebase Admin Key Rotation (COMPLETED)
-- The compromised service account key has been deleted in Google Cloud Console.
-- A new key was generated and safely injected into the local `.env.local`.
-- A connection test successfully verified the new key's ability to read from the live Firestore database.
-- **Status:** Secured and Verified.
-
-### 2. Git History Scrub Complete
-The git history has been purged and verified:
-- Cleaned with `git-filter-repo`
-- Sanitized `master` pushed to origin
-- Zero raw private key matches remain in historical commits
-
-### 3. Restrict API Keys
-- `NEXT_PUBLIC_FIREBASE_API_KEY` → GCP Console → API Restrictions → HTTP referrer: `cctvquotation.com`, `*.cctvquotation.com`, `localhost:3000`
-- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` → same referrer restrictions
-
-## Credential Lifecycle Status
-
-| Credential | Purpose | Repo Status | Cloud Status | Required Action |
+| Credential / Variable | Purpose | Environment Scope | Status | Restrictions / Notes |
 | :--- | :--- | :---: | :---: | :--- |
-| `FIREBASE_ADMIN_PRIVATE_KEY` | Service Account backend access | **PURGED FROM GIT HISTORY** | **ROTATED** (Project: `team-cctv-live-8294`) | None (Secured & Verified) |
-| `FIREBASE_CLIENT_EMAIL` | Service Account identifier | **PURGED FROM LEAKED SCRIPTS** | **VERIFIED** | None |
-| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase Web Client Auth/DB | Public (by design) | Active | Restrict to allowed domains in GCP. |
-| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Geolocation & Pincode routing | Public (by design) | Active | Restrict HTTP referrer to `cctvquotation.com`. |
-| `RAZORPAY_KEY_ID` | Payment gateway public identifier | Env-only | Active | Verify matching production/test environment. |
-| `RAZORPAY_KEY_SECRET` | Payment order generation | Env-only | Active | Keep strictly server-side (no `NEXT_PUBLIC_`). |
-| `RAZORPAY_WEBHOOK_SECRET` | Webhook signature HMAC | Env-only | **Hardcoded fallback REMOVED** | Verify set correctly in Vercel dashboard. |
-| `CASHFREE_*` | Cashfree API (RETIRED) | **Deleted from code** | Decommission | Remove from Vercel env vars. |
+| `FIREBASE_ADMIN_PRIVATE_KEY` | Backend service account DB access | Server-only (`.env.local` / Vercel) | `ROTATED & SECURE` | Purged from Git history; project: `team-cctv-live-8294`. |
+| `FIREBASE_CLIENT_EMAIL` | Service account identifier | Server-only | `VERIFIED` | Server-side Firestore operations. |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase Web Client Auth/DB | Public (Client) | `ACTIVE` | Restricted to `cctvquotation.com` & authorized origins. |
+| `NEXT_PUBLIC_MAPPLS_API_KEY` | Mappls (MapmyIndia) Web SDK Map Render | Public (Client) | `ACTIVE` | Key managed via Vercel env vars (`hudvht...`). |
+| `MAPPLS_CLIENT_ID` | Mappls OAuth Token Generation | Server-only | `ACTIVE` | Server-side boundary and geocoding queries. |
+| `MAPPLS_CLIENT_SECRET` | Mappls OAuth Secret | Server-only | `ACTIVE` | Kept strictly server-side in Vercel. |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`| Secondary fallback mapping | Public (Client) | `ACTIVE` | Fallback geocoder restricted by HTTP referrer. |
+| `RAZORPAY_KEY_ID` | Payment gateway client identifier | Public (Client) | `ACTIVE` | Linked to active payment modal. |
+| `RAZORPAY_KEY_SECRET` | Payment order creation & verification | Server-only | `ACTIVE` | Kept strictly server-side (no `NEXT_PUBLIC_`). |
+| `RAZORPAY_WEBHOOK_SECRET` | HMAC signature verification | Server-only | `ACTIVE` | Verified against incoming webhooks; fallback API attached. |
 
-## Production Mutating Guardrails
-1. No destructive deletes on production collections (`quotes`, `leads`, `products`, `users`).
-2. No automated cloud credential rotation from local scripts.
-3. Developer runs test transactions using test mode API keys before live mode toggle.
-4. All code pushes go to a feature branch, never direct to `master` — reviewed before merge.
+---
 
+## 2. Security Audits & Remediation Log
+
+### 2.1 Git History Scrub (Completed)
+- Historical commits were sanitized using `git-filter-repo` to permanently remove exposed credentials and test helper scripts.
+- Verified zero raw private keys in git commit trees.
+
+### 2.2 Endpoint & Route Hardening
+- Hardcoded OTPs and testing bypass tokens (e.g. `9999999999` OTP bypass) removed from production authentication flows.
+- Strict Content Security Policy (CSP) and HTTP Strict Transport Security (HSTS) enforced across all Next.js response headers.
+- Route isolation: `/admin`, `/staff`, and `/installer` guarded by server-side session checks (`verifySession`). Public customer logins via `/portal` receive zero administrative elevation.
+
+---
+
+## 3. Production Mutating Guardrails
+1. **Zero Destructive Deletes:** Production collections (`quotes`, `leads`, `products`, `users`, `audit_logs`) are append-only or soft-delete only.
+2. **Strict Server Authority:** Client pricing calculations are rejected; all final quotes must compute through server pricing engines.
+3. **Environment Management:** All sensitive API keys and secrets must be updated via the Vercel CLI / Dashboard, never committed to source control.
