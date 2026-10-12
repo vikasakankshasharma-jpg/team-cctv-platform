@@ -95,6 +95,20 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
     { lat: 26.9350, lng: 75.7960 },
   ],
 
+  // 302013 - Harmada S.O, Vishwakarma Industrial Area (VKIA), Akhepura B.O
+  "302013": [
+    { lat: 26.9750, lng: 75.7580 }, // VKIA Road 14 Junction
+    { lat: 26.9680, lng: 75.7720 }, // Sikar Road Entry / Dadi Ka Phatak
+    { lat: 26.9650, lng: 75.7880 }, // Vidhyadhar Nagar North Border
+    { lat: 26.9850, lng: 75.8150 }, // Akhepura / Nahargarh Hills West
+    { lat: 27.0250, lng: 75.8300 }, // Kukas Approach / Delhi Road
+    { lat: 27.0420, lng: 75.8050 }, // Daulatpura By-pass Toll
+    { lat: 27.0450, lng: 75.7750 }, // Harmada North / Todi
+    { lat: 27.0200, lng: 75.7500 }, // Baori / Sikar Expressway
+    { lat: 26.9950, lng: 75.7520 }, // Machera Industrial / VKIA Road 17
+    { lat: 26.9750, lng: 75.7580 }, // Close polygon
+  ],
+
   // 302015 - Malviya Nagar, JLN Marg, Calgiri
   "302015": [
     { lat: 26.8650, lng: 75.8050 },
@@ -177,6 +191,91 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
     { lat: 26.7650, lng: 75.7750 },
     { lat: 26.7700, lng: 75.7400 },
     { lat: 26.8100, lng: 75.7550 },
+  ],
+
+  // 302022 - Goner, Kho Nagoriyan, Luniyawas
+  "302022": [
+    { lat: 26.8860, lng: 75.8340 },
+    { lat: 26.8750, lng: 75.8850 },
+    { lat: 26.8350, lng: 75.9100 },
+    { lat: 26.8200, lng: 75.8500 },
+    { lat: 26.8650, lng: 75.8350 },
+    { lat: 26.8860, lng: 75.8340 },
+  ],
+
+  // 302026 - Bhankrota, Jaisinghpura Bas, Ajmer Expressway
+  "302026": [
+    { lat: 26.8750, lng: 75.7100 },
+    { lat: 26.8650, lng: 75.7400 },
+    { lat: 26.8200, lng: 75.7300 },
+    { lat: 26.8100, lng: 75.6800 },
+    { lat: 26.8550, lng: 75.6700 },
+    { lat: 26.8750, lng: 75.7100 },
+  ],
+
+  // 302027 - Saipura, Langariyawas, Agra Road
+  "302027": [
+    { lat: 26.9880, lng: 75.9380 },
+    { lat: 26.9550, lng: 75.9800 },
+    { lat: 26.9050, lng: 75.9600 },
+    { lat: 26.9150, lng: 75.9000 },
+    { lat: 26.9650, lng: 75.8900 },
+    { lat: 26.9880, lng: 75.9380 },
+  ],
+
+  // 302031 - Luniawas, Jamdoli
+  "302031": [
+    { lat: 26.9120, lng: 75.8800 },
+    { lat: 26.9250, lng: 75.9200 },
+    { lat: 26.8850, lng: 75.9300 },
+    { lat: 26.8650, lng: 75.8900 },
+    { lat: 26.9120, lng: 75.8800 },
+  ],
+
+  // 302033 - Pratap Nagar Housing Board, Sanganer East
+  "302033": [
+    { lat: 26.7900, lng: 75.7950 },
+    { lat: 26.7850, lng: 75.8200 },
+    { lat: 26.7550, lng: 75.8150 },
+    { lat: 26.7600, lng: 75.7850 },
+    { lat: 26.7900, lng: 75.7950 },
+  ],
+
+  // 302034 - Panchyawala, Sirsi Road
+  "302034": [
+    { lat: 26.9200, lng: 75.7200 },
+    { lat: 26.9350, lng: 75.7400 },
+    { lat: 26.9150, lng: 75.7450 },
+    { lat: 26.8950, lng: 75.7200 },
+    { lat: 26.9050, lng: 75.6950 },
+    { lat: 26.9200, lng: 75.7200 },
+  ],
+
+  // 302037 - Mahindra World City (SEZ)
+  "302037": [
+    { lat: 26.8500, lng: 75.6300 },
+    { lat: 26.8650, lng: 75.6700 },
+    { lat: 26.8200, lng: 75.6600 },
+    { lat: 26.8000, lng: 75.6150 },
+    { lat: 26.8500, lng: 75.6300 },
+  ],
+
+  // 302038 - Kukas, Dhand, Amer North Industrial
+  "302038": [
+    { lat: 27.0400, lng: 75.8900 },
+    { lat: 27.0900, lng: 75.9500 },
+    { lat: 27.0500, lng: 75.9800 },
+    { lat: 27.0100, lng: 75.9200 },
+    { lat: 27.0400, lng: 75.8900 },
+  ],
+
+  // 302039 - Amba Bari, Vidhyadhar Nagar
+  "302039": [
+    { lat: 26.9450, lng: 75.7750 },
+    { lat: 26.9680, lng: 75.7720 },
+    { lat: 26.9650, lng: 75.7980 },
+    { lat: 26.9350, lng: 75.7960 },
+    { lat: 26.9450, lng: 75.7750 },
   ],
 };
 

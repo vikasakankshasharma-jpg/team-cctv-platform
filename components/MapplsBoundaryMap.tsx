@@ -70,6 +70,10 @@ function loadMapplsSDK(cb: () => void) {
   (window as any).initMap1 = () => {
     window._mapplsSDKReady = true;
     window._mapplsSDKLoading = false;
+    // Disable automatic fitbounds overriding our custom viewports
+    if (window.mappls) {
+      window.mappls.bnd_all = false;
+    }
     const cbs = window._mapplsSDKCallbacks || [];
     window._mapplsSDKCallbacks = [];
     cbs.forEach((fn) => fn());
@@ -228,10 +232,12 @@ export default function MapplsBoundaryMap({
                       map: map,
                       paths: polyCoords,
                       fillColor: fillColor,
+                      fillcolor: fillColor,
                       fillOpacity: fillOpacity,
                       strokeColor: strokeColor,
                       strokeOpacity: 1.0,
                       strokeWidth: strokeWidth,
+                      fitbounds: false,
                     });
                   } catch (err) {
                     console.warn("Mappls Polygon init error, falling back to Circle:", err);
@@ -248,6 +254,7 @@ export default function MapplsBoundaryMap({
                     fillOpacity: fillOpacity,
                     strokeColor: strokeColor,
                     strokeWidth: strokeWidth,
+                    fitbounds: false,
                   });
                 }
 
@@ -261,6 +268,16 @@ export default function MapplsBoundaryMap({
                   } catch (_) {}
 
                   newLayers.push(territoryLayer);
+
+                  // If this is the isolated selection, fit nicely to this territory
+                  if (isSelected && typeof territoryLayer.getBounds === "function") {
+                    try {
+                      const b = territoryLayer.getBounds();
+                      if (b && map.fitBounds) {
+                        map.fitBounds(b, { padding: 40, maxZoom: 14 });
+                      }
+                    } catch (_) {}
+                  }
                 }
 
                 // 4. Pinpoint marker on selected territory center
@@ -269,6 +286,7 @@ export default function MapplsBoundaryMap({
                     const marker = new window.mappls.Marker({
                       map: map,
                       position: { lat: p.lat, lng: p.lng },
+                      fitbounds: false,
                     });
                     newLayers.push(marker);
                   } catch (_) {}

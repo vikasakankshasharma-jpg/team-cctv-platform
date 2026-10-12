@@ -331,9 +331,15 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
       totalAreas: number; 
       coveredAreas: number; 
       status: 'covered' | 'partial' | 'uncovered';
+      validLats: number[];
+      validLngs: number[];
       lat?: number;
       lng?: number;
     }>();
+
+    // Determine district reference hub for outlier detection (default to Jaipur hub if unknown)
+    const prefix = districtOffices[0]?.pincode?.slice(0, 3) || "302";
+    const districtHub = (regionalHubs as Record<string, { lat: number; lng: number }>)[prefix] || { lat: 26.9124, lng: 75.7873 };
     
     districtOffices.forEach(o => {
       const latVal = o.latitude ? parseFloat(String(o.latitude)) : (o.lat ? parseFloat(String(o.lat)) : undefined);
@@ -346,13 +352,22 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
           totalAreas: 0, 
           coveredAreas: 0, 
           status: 'uncovered',
-          lat: latVal && !isNaN(latVal) ? latVal : undefined,
-          lng: lngVal && !isNaN(lngVal) ? lngVal : undefined,
+          validLats: [],
+          validLngs: [],
+          lat: undefined,
+          lng: undefined,
         });
       }
       const entry = map.get(o.pincode)!;
-      if (!entry.lat && latVal && !isNaN(latVal)) entry.lat = latVal;
-      if (!entry.lng && lngVal && !isNaN(lngVal)) entry.lng = lngVal;
+
+      // Validate coordinate against district hub to reject outlier typos (e.g. Harmada typo 72.815 in Jodhpur)
+      if (latVal && lngVal && !isNaN(latVal) && !isNaN(lngVal)) {
+        const isNearDistrict = Math.abs(latVal - districtHub.lat) < 0.85 && Math.abs(lngVal - districtHub.lng) < 0.85;
+        if (isNearDistrict) {
+          entry.validLats.push(latVal);
+          entry.validLngs.push(lngVal);
+        }
+      }
 
       // Extract and clean area names
       const rawArea = o.officeName || o.office || "";
@@ -373,7 +388,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
       }
     });
     
-    // Determine status & fallback areas & fallback coordinates
+    // Determine status & fallback areas & refined centroid coordinates
     Array.from(map.values()).forEach(entry => {
       if (coveredPincodesSet.has(entry.pincode) || (entry.totalAreas > 0 && entry.coveredAreas === entry.totalAreas)) {
         entry.status = 'covered';
@@ -387,17 +402,19 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
         entry.areas = [`${selectedDistrict?.name || 'Central'} Hub Area`];
       }
 
-      // Fallback coordinate if missing from office
-      if (!entry.lat || !entry.lng) {
-        const prefix = entry.pincode.slice(0, 3);
-        const hub = (regionalHubs as Record<string, { lat: number; lng: number }>)[prefix];
-        if (hub) {
-          const hash = entry.pincode.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-          const angle = (hash % 360) * (Math.PI / 180);
-          const offset = ((hash % 15) + 3) * 0.005;
-          entry.lat = hub.lat + Math.cos(angle) * offset;
-          entry.lng = hub.lng + Math.sin(angle) * offset;
-        }
+      // 1. Refined centroid from verified valid office coordinates
+      if (entry.validLats.length > 0 && entry.validLngs.length > 0) {
+        entry.lat = entry.validLats.reduce((a, b) => a + b, 0) / entry.validLats.length;
+        entry.lng = entry.validLngs.reduce((a, b) => a + b, 0) / entry.validLngs.length;
+      } else {
+        // 2. Deterministic offset around district hub if postal dataset lacked coordinates
+        const pfx = entry.pincode.slice(0, 3);
+        const hub = (regionalHubs as Record<string, { lat: number; lng: number }>)[pfx] || districtHub;
+        const hash = entry.pincode.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+        const angle = (hash % 360) * (Math.PI / 180);
+        const offset = ((hash % 15) + 3) * 0.005;
+        entry.lat = hub.lat + Math.cos(angle) * offset;
+        entry.lng = hub.lng + Math.sin(angle) * offset;
       }
     });
 
