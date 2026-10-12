@@ -285,6 +285,24 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
     { lat: 26.9350, lng: 75.7960 },
     { lat: 26.9450, lng: 75.7750 },
   ],
+
+  // 302041 - Dhankya, Bindayaka, Bichpari, Raj Water Park (Exact Google Maps match)
+  "302041": [
+    { lat: 26.9220, lng: 75.5800 }, // North-West / Bobas Border
+    { lat: 26.9280, lng: 75.6200 }, // North Approach / Ramla Ka Bas South
+    { lat: 26.9150, lng: 75.6400 }, // Inland Dip North of Dhankya
+    { lat: 26.9380, lng: 75.6700 }, // Hathoj Southern Border
+    { lat: 26.9300, lng: 75.7000 }, // North-East Apex / Sirsi Road
+    { lat: 26.9180, lng: 75.7080 }, // Panchyawala Western Edge
+    { lat: 26.8950, lng: 75.7050 }, // Lalarpura West
+    { lat: 26.8850, lng: 75.6920 }, // South-East Corner / Mahapura Approach
+    { lat: 26.8720, lng: 75.6600 }, // South Border / Bichpari North
+    { lat: 26.8700, lng: 75.6250 }, // South-West Ridge / Thikariya Border
+    { lat: 26.8650, lng: 75.6050 }, // South-West Corner / Manipal Approach
+    { lat: 26.8850, lng: 75.5880 }, // Western Border / Soorpura East
+    { lat: 26.9080, lng: 75.5750 }, // Western Perimeter
+    { lat: 26.9220, lng: 75.5800 }, // Close polygon
+  ],
 };
 
 /**
