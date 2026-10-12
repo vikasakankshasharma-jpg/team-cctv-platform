@@ -144,16 +144,32 @@ export default function MapplsBoundaryMap({
     async (map: any, type: string, query: string, dataObj?: any) => {
       if (!window.mappls || !map) return;
 
-      // Remove previous layer/marker/circles
+      // Remove previous layer/marker/circles cleanly
       if (currentLayerRef.current) {
         try {
           const layers = Array.isArray(currentLayerRef.current) ? currentLayerRef.current : [currentLayerRef.current];
           layers.forEach(layer => {
-            if (typeof map.removeLayer === "function") {
-              map.removeLayer(layer);
-            } else if (window.mappls && window.mappls.remove) {
-              window.mappls.remove({ map, layer: layer });
-            }
+            if (!layer) return;
+            // 1. Official Mappls SDK overlay removal method
+            try {
+              if (window.mappls && typeof window.mappls.remove === "function") {
+                window.mappls.remove({ map: map, layer: layer });
+              }
+            } catch (_) {}
+
+            // 2. Direct instance remove method if present
+            try {
+              if (typeof layer.remove === "function") {
+                layer.remove();
+              }
+            } catch (_) {}
+
+            // 3. Fallback setMap(null) if present
+            try {
+              if (typeof layer.setMap === "function") {
+                layer.setMap(null);
+              }
+            } catch (_) {}
           });
         } catch (_) {}
         currentLayerRef.current = null;
