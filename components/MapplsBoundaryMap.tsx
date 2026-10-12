@@ -173,9 +173,14 @@ export default function MapplsBoundaryMap({
             if (validPins.length > 0) {
               const targetPin = selectedPincode ? validPins.find(p => p.pincode === selectedPincode) : null;
 
+              // ISOLATION MODE: When an admin selects a specific PIN, render ONLY that PIN's territory boundary!
+              const pinsToRender = targetPin
+                ? [targetPin]
+                : validPins.filter(p => !statusFilter || statusFilter === "all" || p.status === statusFilter);
+
               if (targetPin && targetPin.lat && targetPin.lng) {
                 if (map.setCenter) map.setCenter({ lat: targetPin.lat, lng: targetPin.lng });
-                if (map.setZoom) map.setZoom(13);
+                if (map.setZoom) map.setZoom(13.5);
               } else {
                 const avgLat = validPins.reduce((sum, p) => sum + (p.lat || 0), 0) / validPins.length;
                 const avgLng = validPins.reduce((sum, p) => sum + (p.lng || 0), 0) / validPins.length;
@@ -183,10 +188,7 @@ export default function MapplsBoundaryMap({
                 if (map.setZoom) map.setZoom(10);
               }
 
-              validPins.forEach(p => {
-                const matchesFilter = !statusFilter || statusFilter === "all" || p.status === statusFilter;
-                if (!matchesFilter && selectedPincode !== p.pincode) return;
-
+              pinsToRender.forEach(p => {
                 const isSelected = selectedPincode === p.pincode;
                 const isCovered = p.status === "covered";
                 const isPartial = p.status === "partial";
@@ -593,26 +595,53 @@ export default function MapplsBoundaryMap({
       {/* Floating Territory Coverage Legend */}
       {pincodes && pincodes.length > 0 && (
         <div className="absolute top-3 right-3 z-10 bg-background/90 backdrop-blur-md border border-border rounded-xl p-2.5 shadow-lg text-xs space-y-1.5 pointer-events-auto">
-          <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-border/50">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            Choropleth Territory View
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-emerald-500 shadow-sm border border-emerald-600 inline-block" />
-              <span className="text-foreground font-semibold">Covered ({coveredCount})</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-rose-500 shadow-sm border border-rose-600 inline-block" />
-              <span className="text-foreground font-semibold">Gaps ({uncoveredCount})</span>
-            </div>
-            {partialCount > 0 && (
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-sm bg-amber-500 shadow-sm border border-amber-600 inline-block" />
-                <span className="text-foreground font-semibold">Partial ({partialCount})</span>
+          {activeSelectedPin ? (
+            <div className="flex flex-col gap-1.5 min-w-[170px]">
+              <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex items-center justify-between gap-2 pb-1 border-b border-border/50">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                  Isolated Territory
+                </span>
+                <Badge variant="outline" className="font-mono text-[10px] font-bold border-blue-500/30 text-blue-600 bg-blue-500/10">
+                  {activeSelectedPin.pincode}
+                </Badge>
               </div>
-            )}
-          </div>
+              <p className="text-[10px] text-muted-foreground">Isolating boundary for {activeSelectedPin.pincode}</p>
+              {onResetSelection && (
+                <button
+                  type="button"
+                  onClick={onResetSelection}
+                  className="text-[10px] text-primary hover:underline font-bold flex items-center gap-1 pt-0.5 border-t border-border/40"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Show All {pincodes.length} District PINs
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-border/50">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                Choropleth Territory View
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-emerald-500 shadow-sm border border-emerald-600 inline-block" />
+                  <span className="text-foreground font-semibold">Covered ({coveredCount})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-rose-500 shadow-sm border border-rose-600 inline-block" />
+                  <span className="text-foreground font-semibold">Gaps ({uncoveredCount})</span>
+                </div>
+                {partialCount > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-sm bg-amber-500 shadow-sm border border-amber-600 inline-block" />
+                    <span className="text-foreground font-semibold">Partial ({partialCount})</span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 
