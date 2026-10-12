@@ -257,15 +257,15 @@ export default function MapplsBoundaryMap({
                 }
 
               } else {
-                // ── 2. DISTRICT / CITY OVERVIEW MODE (Exact Google Maps Parity) ──
+                // ── 2. DISTRICT / CITY OVERVIEW MODE (100% Google Maps Parity) ──
                 const isJaipur = (boundaryQuery || "").toLowerCase().includes("jaipur") || validPins.some(p => p.pincode.startsWith("302"));
 
                 if (isJaipur) {
-                  // Center directly on Jaipur City at Google Maps zoom (11.4)
-                  if (map.setCenter) map.setCenter({ lat: 26.8811, lng: 75.7898 });
+                  // Lock camera directly on Jaipur City at Google Maps zoom (11.4)
+                  if (map.setCenter) map.setCenter({ lat: 26.8950, lng: 75.7950 });
                   if (map.setZoom) map.setZoom(11.4);
 
-                  // Draw Google Maps Official Jaipur Outer City Boundary (Clean Red Perimeter)
+                  // 1. Draw Google Maps Official Jaipur Outer City Boundary (Clean Red Perimeter with soft fill)
                   if (window.mappls && window.mappls.Polygon) {
                     try {
                       const cityBoundary = new window.mappls.Polygon({
@@ -273,58 +273,79 @@ export default function MapplsBoundaryMap({
                         paths: JAIPUR_METRO_BOUNDARY,
                         fillColor: "#ef4444",
                         fillcolor: "#ef4444",
-                        fillOpacity: 0.05,
+                        fillOpacity: 0.08,
                         strokeColor: "#dc2626", // Google Maps red boundary line
-                        strokeOpacity: 0.9,
-                        strokeWidth: 2.5,
-                        fitbounds: false,
+                        strokeOpacity: 0.95,
+                        strokeWidth: 3,
+                        fitbounds: true,
+                        fitboundOptions: { padding: 35 }
                       });
                       newLayers.push(cityBoundary);
                     } catch (err) {
                       console.warn("City boundary render error:", err);
                     }
                   }
+
+                  // 2. Render ONLY the covered urban PIN code polygons inside Jaipur (NO scattered dots across rural Rajasthan!)
+                  const coveredUrbanPins = validPins.filter(p => p.pincode.startsWith("302") && p.status === "covered");
+                  coveredUrbanPins.forEach(p => {
+                    const polyCoords = getTerritoryPolygon(p.pincode, { lat: p.lat!, lng: p.lng! }, 2000, p.officePoints);
+                    if (window.mappls && window.mappls.Polygon) {
+                      try {
+                        const poly = new window.mappls.Polygon({
+                          map: map,
+                          paths: polyCoords,
+                          fillColor: "#10b981",
+                          fillcolor: "#10b981",
+                          fillOpacity: 0.35,
+                          strokeColor: "#059669",
+                          strokeOpacity: 0.9,
+                          strokeWidth: 1.5,
+                          fitbounds: false,
+                        });
+                        if (typeof poly.addListener === "function") {
+                          poly.addListener("click", () => {
+                            onPincodeClick?.(p.pincode);
+                          });
+                        }
+                        newLayers.push(poly);
+                      } catch (_) {}
+                    }
+                  });
+
                 } else {
+                  // Non-Jaipur district or scoped Tehsil
                   const avgLat = validPins.reduce((sum, p) => sum + (p.lat || 0), 0) / validPins.length;
                   const avgLng = validPins.reduce((sum, p) => sum + (p.lng || 0), 0) / validPins.length;
                   if (map.setCenter) map.setCenter({ lat: avgLat, lng: avgLng });
                   const autoZoom = validPins.length < 15 ? 11.5 : (validPins.length < 35 ? 10.5 : 9.5);
                   if (map.setZoom) map.setZoom(autoZoom);
-                }
 
-                // Render clean, non-clashing interactive territory dots (Green = Covered, Red = Gap)
-                const visiblePins = validPins.filter(p => !statusFilter || statusFilter === "all" || p.status === statusFilter);
-                visiblePins.forEach(p => {
-                  const isCovered = p.status === "covered";
-                  const isPartial = p.status === "partial";
-                  const dotColor = isCovered ? "#10b981" : isPartial ? "#f59e0b" : "#ef4444";
-                  const dotBorder = isCovered ? "#047857" : isPartial ? "#b45309" : "#b91c1c";
-
-                  const curated = getKnownCentroid(p.pincode);
-                  const dLat = curated ? curated.lat : p.lat!;
-                  const dLng = curated ? curated.lng : p.lng!;
-
-                  if (window.mappls && window.mappls.Circle) {
-                    try {
-                      const bubble = new window.mappls.Circle({
-                        map: map,
-                        center: { lat: dLat, lng: dLng },
-                        radius: 850, // Clean 850m circular territory bubble (no clashing/overlapping spikes!)
-                        fillColor: dotColor,
-                        fillOpacity: 0.55,
-                        strokeColor: dotBorder,
-                        strokeWidth: 1.5,
-                        fitbounds: false,
-                      });
-                      if (typeof bubble.addListener === "function") {
-                        bubble.addListener("click", () => {
-                          onPincodeClick?.(p.pincode);
+                  const coveredPins = validPins.filter(p => p.status === "covered");
+                  coveredPins.forEach(p => {
+                    const polyCoords = getTerritoryPolygon(p.pincode, { lat: p.lat!, lng: p.lng! }, 2000, p.officePoints);
+                    if (window.mappls && window.mappls.Polygon) {
+                      try {
+                        const poly = new window.mappls.Polygon({
+                          map: map,
+                          paths: polyCoords,
+                          fillColor: "#10b981",
+                          fillcolor: "#10b981",
+                          fillOpacity: 0.35,
+                          strokeColor: "#059669",
+                          strokeWidth: 1.5,
+                          fitbounds: false,
                         });
-                      }
-                      newLayers.push(bubble);
-                    } catch (_) {}
-                  }
-                });
+                        if (typeof poly.addListener === "function") {
+                          poly.addListener("click", () => {
+                            onPincodeClick?.(p.pincode);
+                          });
+                        }
+                        newLayers.push(poly);
+                      } catch (_) {}
+                    }
+                  });
+                }
               }
             }
 
@@ -599,8 +620,8 @@ export default function MapplsBoundaryMap({
 
     try {
       const map = new window.mappls.Map(containerId, {
-        center: { lat: 20.5937, lng: 78.9629 }, // Centre of India
-        zoom: 5,
+        center: { lat: 26.8950, lng: 75.7950 }, // Jaipur City
+        zoom: 11.4,
         zoomControl: true,
       });
 
