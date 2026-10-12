@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { getTerritoryPolygon } from "@/lib/geo/pincodePolygons";
 
 declare global {
   interface Window {
@@ -190,32 +191,61 @@ export default function MapplsBoundaryMap({
                 const isCovered = p.status === "covered";
                 const isPartial = p.status === "partial";
 
+                // Choropleth Solid Colors (Rich, non-breaking fills)
                 const fillColor = isCovered ? "#10b981" : isPartial ? "#f59e0b" : "#ef4444";
-                const strokeColor = isSelected ? "#2563eb" : (isCovered ? "#059669" : isPartial ? "#d97706" : "#dc2626");
-                const fillOpacity = isSelected ? 0.5 : (isCovered ? 0.35 : isPartial ? 0.35 : 0.22);
+                const strokeColor = isSelected ? "#2563eb" : (isCovered ? "#047857" : isPartial ? "#b45309" : "#b91c1c");
+                const fillOpacity = isSelected ? 0.70 : (isCovered ? 0.50 : isPartial ? 0.50 : 0.40);
                 const strokeWidth = isSelected ? 3.5 : 2;
-                const radius = isSelected ? 2400 : 1800;
+                const radiusMeters = isSelected ? 2600 : 2000;
 
-                const circle = new window.mappls.Circle({
-                  map: map,
-                  center: { lat: p.lat, lng: p.lng },
-                  radius: radius,
-                  fillColor: fillColor,
-                  fillOpacity: fillOpacity,
-                  strokeColor: strokeColor,
-                  strokeWidth: strokeWidth,
-                });
+                // 1. Get exact or organic contiguous territory polygon
+                const polyCoords = getTerritoryPolygon(p.pincode, { lat: p.lat!, lng: p.lng! }, radiusMeters);
 
-                try {
-                  if (typeof circle.addListener === "function") {
-                    circle.addListener("click", () => {
-                      onPincodeClick?.(p.pincode);
+                let territoryLayer: any = null;
+
+                // 2. Render as solid polygon in Mappls
+                if (window.mappls && window.mappls.Polygon) {
+                  try {
+                    territoryLayer = new window.mappls.Polygon({
+                      map: map,
+                      paths: polyCoords,
+                      fillColor: fillColor,
+                      fillOpacity: fillOpacity,
+                      strokeColor: strokeColor,
+                      strokeOpacity: 1.0,
+                      strokeWidth: strokeWidth,
                     });
+                  } catch (err) {
+                    console.warn("Mappls Polygon init error, falling back to Circle:", err);
                   }
-                } catch (_) {}
+                }
 
-                newLayers.push(circle);
+                // 3. Fallback to Circle only if Polygon SDK class is unavailable
+                if (!territoryLayer && window.mappls && window.mappls.Circle) {
+                  territoryLayer = new window.mappls.Circle({
+                    map: map,
+                    center: { lat: p.lat, lng: p.lng },
+                    radius: radiusMeters,
+                    fillColor: fillColor,
+                    fillOpacity: fillOpacity,
+                    strokeColor: strokeColor,
+                    strokeWidth: strokeWidth,
+                  });
+                }
 
+                if (territoryLayer) {
+                  try {
+                    if (typeof territoryLayer.addListener === "function") {
+                      territoryLayer.addListener("click", () => {
+                        onPincodeClick?.(p.pincode);
+                      });
+                    }
+                  } catch (_) {}
+
+                  newLayers.push(territoryLayer);
+                }
+
+                // 4. Pinpoint marker on selected territory center
                 if (isSelected && window.mappls.Marker) {
                   try {
                     const marker = new window.mappls.Marker({
@@ -565,20 +595,20 @@ export default function MapplsBoundaryMap({
         <div className="absolute top-3 right-3 z-10 bg-background/90 backdrop-blur-md border border-border rounded-xl p-2.5 shadow-lg text-xs space-y-1.5 pointer-events-auto">
           <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-border/50">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            Coverage Status
+            Choropleth Territory View
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" />
+              <span className="w-3 h-3 rounded-sm bg-emerald-500 shadow-sm border border-emerald-600 inline-block" />
               <span className="text-foreground font-semibold">Covered ({coveredCount})</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm" />
+              <span className="w-3 h-3 rounded-sm bg-rose-500 shadow-sm border border-rose-600 inline-block" />
               <span className="text-foreground font-semibold">Gaps ({uncoveredCount})</span>
             </div>
             {partialCount > 0 && (
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm" />
+                <span className="w-3 h-3 rounded-sm bg-amber-500 shadow-sm border border-amber-600 inline-block" />
                 <span className="text-foreground font-semibold">Partial ({partialCount})</span>
               </div>
             )}
