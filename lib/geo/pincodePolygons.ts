@@ -34,15 +34,15 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
     { lat: 26.9380, lng: 75.8160 }, // Close polygon
   ],
 
-  // 302002 - Tripolia Bazar, Johari Bazar, Chandpole, Walled City East
+  // 302002 - Tripolia Bazar, Johari Bazar, Chandpole, Govind Nagar, Walled City East
   "302002": [
-    { lat: 26.9280, lng: 75.8260 },
-    { lat: 26.9320, lng: 75.8420 },
-    { lat: 26.9250, lng: 75.8500 },
-    { lat: 26.9150, lng: 75.8450 },
-    { lat: 26.9115, lng: 75.8190 },
-    { lat: 26.9240, lng: 75.8260 },
-    { lat: 26.9280, lng: 75.8260 },
+    { lat: 26.9400, lng: 75.8380 }, // Govind Nagar North
+    { lat: 26.9320, lng: 75.8520 }, // Surajpole Gate / Delhi Road
+    { lat: 26.9150, lng: 75.8480 }, // Sanganeri Gate East / Ghat Gate
+    { lat: 26.9115, lng: 75.8180 }, // Ajmeri Gate / New Gate
+    { lat: 26.9240, lng: 75.8170 }, // Chandpole Bazar
+    { lat: 26.9360, lng: 75.8280 }, // Chogan Stadium / Gangauri Bazar
+    { lat: 26.9400, lng: 75.8380 }, // Close polygon
   ],
 
   // 302003 - Shastri Nagar, Subhash Nagar, Pani Pech
@@ -55,12 +55,14 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
     { lat: 26.9350, lng: 75.7960 },
   ],
 
-  // 302004 - Raja Park, Adarsh Nagar, Tilak Nagar, Jawahar Nagar
+  // 302004 - Raja Park, Adarsh Nagar, Tilak Nagar, Jawahar Nagar, Jhalana Doongri
   "302004": [
     { lat: 26.9115, lng: 75.8190 },
     { lat: 26.9050, lng: 75.8350 },
-    { lat: 26.8920, lng: 75.8380 },
-    { lat: 26.8900, lng: 75.8200 },
+    { lat: 26.8920, lng: 75.8450 },
+    { lat: 26.8650, lng: 75.8350 }, // Jhalana Doongri Southern Edge
+    { lat: 26.8650, lng: 75.8150 }, // Jhalana Doongri West
+    { lat: 26.8900, lng: 75.8100 },
     { lat: 26.8980, lng: 75.8080 },
     { lat: 26.9115, lng: 75.8190 },
   ],
@@ -85,14 +87,19 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
     { lat: 26.9150, lng: 75.7840 },
   ],
 
-  // 302012 - Khatipura, Jhotwara, Niwaru Road
+  // 302012 - Full Coverage Area (Jhotwara, Khatipura, Niwaru, Nangal Jaisabohara, Khora Bisal, Neendar Banar, Baori, Rojda, Kishanpura)
   "302012": [
-    { lat: 26.9350, lng: 75.7960 },
-    { lat: 26.9280, lng: 75.7600 },
-    { lat: 26.9450, lng: 75.7400 },
-    { lat: 26.9600, lng: 75.7650 },
-    { lat: 26.9480, lng: 75.7900 },
-    { lat: 26.9350, lng: 75.7960 },
+    { lat: 26.9200, lng: 75.7550 }, // Khatipura South-East / Station Road
+    { lat: 26.9180, lng: 75.7300 }, // Sirsi Road Border / Khatipura Tiraha
+    { lat: 26.9400, lng: 75.6800 }, // Kalwad Road Approach / Govindpura
+    { lat: 26.9900, lng: 75.6400 }, // Kalwad / Hathoj / Rojda South
+    { lat: 27.0350, lng: 75.6450 }, // Rojda North / Kalwad Boundary
+    { lat: 27.0420, lng: 75.6800 }, // Kishanpura / Lalpura Border
+    { lat: 27.0450, lng: 75.7200 }, // Khora Bisal / Mundota Border
+    { lat: 27.0250, lng: 75.7400 }, // Neendar Banar / Baori / Sikar Road Junction
+    { lat: 26.9750, lng: 75.7500 }, // Nangal Jaisabohara / Dadi Ka Phatak / Murlipura Border
+    { lat: 26.9500, lng: 75.7650 }, // Jhotwara Industrial Area / Tara Nagar
+    { lat: 26.9200, lng: 75.7550 }, // Close polygon
   ],
 
   // 302013 - Harmada S.O, Vishwakarma Industrial Area (VKIA), Akhepura B.O
@@ -109,14 +116,15 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
     { lat: 26.9750, lng: 75.7580 }, // Close polygon
   ],
 
-  // 302015 - Malviya Nagar, JLN Marg, Calgiri
+  // 302015 - Malviya Nagar, Tonk Road, Gandhi Nagar, JLN Marg, Calgiri
   "302015": [
-    { lat: 26.8650, lng: 75.8050 },
-    { lat: 26.8680, lng: 75.8350 },
-    { lat: 26.8450, lng: 75.8300 },
-    { lat: 26.8400, lng: 75.8080 },
-    { lat: 26.8550, lng: 75.7980 },
-    { lat: 26.8650, lng: 75.8050 },
+    { lat: 26.8900, lng: 75.8020 }, // Tonk Road SO / Gandhi Nagar North
+    { lat: 26.8850, lng: 75.8150 }, // JLN Marg / Bajaj Nagar
+    { lat: 26.8680, lng: 75.8350 }, // Malviya Nagar Calgiri Marg
+    { lat: 26.8450, lng: 75.8300 }, // Malviya Industrial Area
+    { lat: 26.8400, lng: 75.8080 }, // Durgapura North / Tonk Road
+    { lat: 26.8650, lng: 75.7950 }, // Nehru Garden / Tonk Road
+    { lat: 26.8900, lng: 75.8020 }, // Close polygon
   ],
 
   // 302016 - Mansarovar, Shipra Path, New Sanganer Road
