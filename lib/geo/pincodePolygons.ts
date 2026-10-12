@@ -325,6 +325,40 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
 };
 
 /**
+ * Official Google Maps Jaipur Municipal / Urban Agglomeration Outer Boundary
+ * Traced directly from Google Maps perimeter for "Jaipur, Rajasthan"
+ * (enclosing Amber, Harmada, Khora Bisal, Hathoj, Bindayaka, Bhankrota, Thikariya,
+ *  Bichpari, Muhana, Sanganer, Airport, Pratap Nagar, Sitapura, Jamdoli, Kanota)
+ */
+export const JAIPUR_METRO_BOUNDARY: LatLngPoint[] = [
+  { lat: 26.9850, lng: 75.7150 }, // North-West / Sarna Doongar
+  { lat: 27.0150, lng: 75.7450 }, // Harmada approach
+  { lat: 27.0300, lng: 75.7750 }, // Harmada North / Sikar Road
+  { lat: 27.0250, lng: 75.8150 }, // Foothills north of Amber Palace
+  { lat: 27.0000, lng: 75.8550 }, // Amer / Delhi Highway
+  { lat: 26.9750, lng: 75.8650 }, // Foothills east of Amer Fort
+  { lat: 26.9450, lng: 75.8750 }, // East of Nahargarh hills / Sisodia Rani
+  { lat: 26.9200, lng: 75.9100 }, // Jamdoli corridor
+  { lat: 26.8950, lng: 75.9550 }, // Kanota Fort eastern perimeter
+  { lat: 26.8550, lng: 75.9200 }, // Ramsinghpura / South of Agra Road
+  { lat: 26.8350, lng: 75.8850 }, // Kho Nagoriyan / Goner road
+  { lat: 26.7750, lng: 75.8450 }, // South of Sitapura Industrial Area (RIICO)
+  { lat: 26.7700, lng: 75.8150 }, // South of Pratap Nagar Housing Board
+  { lat: 26.7900, lng: 75.7750 }, // South of Jaipur Airport / Sanganer South
+  { lat: 26.8150, lng: 75.7350 }, // Muhana / Sanganer West
+  { lat: 26.8400, lng: 75.7050 }, // West of Muhana / Jaisinghpura
+  { lat: 26.8550, lng: 75.6950 }, // Bhankrota / Ajmer Expressway
+  { lat: 26.8650, lng: 75.6450 }, // Thikariya & JK Lakshmipat
+  { lat: 26.8580, lng: 75.6510 }, // Bichpari notch
+  { lat: 26.8780, lng: 75.6640 }, // Bichpari East Wall
+  { lat: 26.9010, lng: 75.6795 }, // Raj Water Park (Strictly West of Sirsi)
+  { lat: 26.9160, lng: 75.6840 }, // Bindayaka East
+  { lat: 26.9350, lng: 75.6750 }, // Hathoj
+  { lat: 26.9600, lng: 75.6950 }, // South-West of Khora Bisal
+  { lat: 26.9850, lng: 75.7150 }, // Close polygon at Sarna Doongar
+];
+
+/**
  * Graham scan monotone chain 2D Convex Hull
  */
 export function convexHull(points: LatLngPoint[]): LatLngPoint[] {

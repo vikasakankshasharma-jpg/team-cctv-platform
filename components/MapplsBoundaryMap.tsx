@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { getTerritoryPolygon, getKnownCentroid } from "@/lib/geo/pincodePolygons";
+import { getTerritoryPolygon, getKnownCentroid, JAIPUR_METRO_BOUNDARY } from "@/lib/geo/pincodePolygons";
 
 declare global {
   interface Window {
@@ -194,43 +194,21 @@ export default function MapplsBoundaryMap({
             if (validPins.length > 0) {
               const targetPin = selectedPincode ? validPins.find(p => p.pincode === selectedPincode) : null;
 
-              // ISOLATION MODE: When an admin selects a specific PIN, render ONLY that PIN's territory boundary!
-              const pinsToRender = targetPin
-                ? [targetPin]
-                : validPins.filter(p => !statusFilter || statusFilter === "all" || p.status === statusFilter);
-
               if (targetPin && targetPin.lat && targetPin.lng) {
+                // ── 1. ISOLATION MODE: Render ONLY the selected PIN code's exact boundary ──
                 const curated = getKnownCentroid(targetPin.pincode);
                 const cLat = curated ? curated.lat : targetPin.lat;
                 const cLng = curated ? curated.lng : targetPin.lng;
                 if (map.setCenter) map.setCenter({ lat: cLat, lng: cLng });
                 if (map.setZoom) map.setZoom(13.2);
-              } else {
-                const avgLat = validPins.reduce((sum, p) => sum + (p.lat || 0), 0) / validPins.length;
-                const avgLng = validPins.reduce((sum, p) => sum + (p.lng || 0), 0) / validPins.length;
-                if (map.setCenter) map.setCenter({ lat: avgLat, lng: avgLng });
-                const autoZoom = validPins.length < 15 ? 11.5 : (validPins.length < 35 ? 10.5 : 9.5);
-                if (map.setZoom) map.setZoom(autoZoom);
-              }
 
-              pinsToRender.forEach(p => {
-                const isSelected = selectedPincode === p.pincode;
-                const isCovered = p.status === "covered";
-                const isPartial = p.status === "partial";
-
-                // Choropleth Solid Colors (Rich, non-breaking fills)
+                const isCovered = targetPin.status === "covered";
+                const isPartial = targetPin.status === "partial";
                 const fillColor = isCovered ? "#10b981" : isPartial ? "#f59e0b" : "#ef4444";
-                const strokeColor = isSelected ? "#2563eb" : (isCovered ? "#047857" : isPartial ? "#b45309" : "#b91c1c");
-                const fillOpacity = isSelected ? 0.70 : (isCovered ? 0.50 : isPartial ? 0.50 : 0.40);
-                const strokeWidth = isSelected ? 3.5 : 2;
-                const radiusMeters = isSelected ? 2600 : 2000;
-
-                // 1. Get exact or organic contiguous territory polygon
-                const polyCoords = getTerritoryPolygon(p.pincode, { lat: p.lat!, lng: p.lng! }, radiusMeters, p.officePoints);
+                const strokeColor = "#2563eb"; // Distinct blue highlight for active territory
+                const polyCoords = getTerritoryPolygon(targetPin.pincode, { lat: targetPin.lat, lng: targetPin.lng }, 2600, targetPin.officePoints);
 
                 let territoryLayer: any = null;
-
-                // 2. Render as solid polygon in Mappls
                 if (window.mappls && window.mappls.Polygon) {
                   try {
                     territoryLayer = new window.mappls.Polygon({
@@ -238,68 +216,116 @@ export default function MapplsBoundaryMap({
                       paths: polyCoords,
                       fillColor: fillColor,
                       fillcolor: fillColor,
-                      fillOpacity: fillOpacity,
+                      fillOpacity: 0.65,
                       strokeColor: strokeColor,
                       strokeOpacity: 1.0,
-                      strokeWidth: strokeWidth,
+                      strokeWidth: 3.5,
                       fitbounds: false,
                     });
                   } catch (err) {
-                    console.warn("Mappls Polygon init error, falling back to Circle:", err);
+                    console.warn("Mappls Polygon error:", err);
                   }
                 }
 
-                // 3. Fallback to Circle only if Polygon SDK class is unavailable
                 if (!territoryLayer && window.mappls && window.mappls.Circle) {
                   territoryLayer = new window.mappls.Circle({
                     map: map,
-                    center: { lat: p.lat, lng: p.lng },
-                    radius: radiusMeters,
+                    center: { lat: cLat, lng: cLng },
+                    radius: 2600,
                     fillColor: fillColor,
-                    fillOpacity: fillOpacity,
+                    fillOpacity: 0.60,
                     strokeColor: strokeColor,
-                    strokeWidth: strokeWidth,
+                    strokeWidth: 3,
                     fitbounds: false,
                   });
                 }
 
                 if (territoryLayer) {
-                  try {
-                    if (typeof territoryLayer.addListener === "function") {
-                      territoryLayer.addListener("click", () => {
-                        onPincodeClick?.(p.pincode);
-                      });
-                    }
-                  } catch (_) {}
-
                   newLayers.push(territoryLayer);
-
-                  // If this is the isolated selection, fit nicely to this territory
-                  if (isSelected && typeof territoryLayer.getBounds === "function") {
-                    try {
-                      const b = territoryLayer.getBounds();
-                      if (b && map.fitBounds) {
-                        map.fitBounds(b, { padding: 40, maxZoom: 14 });
-                      }
-                    } catch (_) {}
-                  }
                 }
 
-                // 4. Pinpoint marker on selected territory center
-                if (isSelected && window.mappls.Marker) {
+                // Pinpoint marker on isolated territory centroid
+                if (window.mappls && window.mappls.Marker) {
                   try {
-                    const curated = getKnownCentroid(p.pincode);
-                    const mLat = curated ? curated.lat : p.lat;
-                    const mLng = curated ? curated.lng : p.lng;
                     const marker = new window.mappls.Marker({
                       map: map,
-                      position: { lat: mLat, lng: mLng },
+                      position: { lat: cLat, lng: cLng },
                       fitbounds: false,
                     });
                     newLayers.push(marker);
                   } catch (_) {}
                 }
-              });
+
+              } else {
+                // ── 2. DISTRICT / CITY OVERVIEW MODE (Exact Google Maps Parity) ──
+                const isJaipur = (boundaryQuery || "").toLowerCase().includes("jaipur") || validPins.some(p => p.pincode.startsWith("302"));
+
+                if (isJaipur) {
+                  // Center directly on Jaipur City at Google Maps zoom (11.4)
+                  if (map.setCenter) map.setCenter({ lat: 26.8811, lng: 75.7898 });
+                  if (map.setZoom) map.setZoom(11.4);
+
+                  // Draw Google Maps Official Jaipur Outer City Boundary (Clean Red Perimeter)
+                  if (window.mappls && window.mappls.Polygon) {
+                    try {
+                      const cityBoundary = new window.mappls.Polygon({
+                        map: map,
+                        paths: JAIPUR_METRO_BOUNDARY,
+                        fillColor: "#ef4444",
+                        fillcolor: "#ef4444",
+                        fillOpacity: 0.05,
+                        strokeColor: "#dc2626", // Google Maps red boundary line
+                        strokeOpacity: 0.9,
+                        strokeWidth: 2.5,
+                        fitbounds: false,
+                      });
+                      newLayers.push(cityBoundary);
+                    } catch (err) {
+                      console.warn("City boundary render error:", err);
+                    }
+                  }
+                } else {
+                  const avgLat = validPins.reduce((sum, p) => sum + (p.lat || 0), 0) / validPins.length;
+                  const avgLng = validPins.reduce((sum, p) => sum + (p.lng || 0), 0) / validPins.length;
+                  if (map.setCenter) map.setCenter({ lat: avgLat, lng: avgLng });
+                  const autoZoom = validPins.length < 15 ? 11.5 : (validPins.length < 35 ? 10.5 : 9.5);
+                  if (map.setZoom) map.setZoom(autoZoom);
+                }
+
+                // Render clean, non-clashing interactive territory dots (Green = Covered, Red = Gap)
+                const visiblePins = validPins.filter(p => !statusFilter || statusFilter === "all" || p.status === statusFilter);
+                visiblePins.forEach(p => {
+                  const isCovered = p.status === "covered";
+                  const isPartial = p.status === "partial";
+                  const dotColor = isCovered ? "#10b981" : isPartial ? "#f59e0b" : "#ef4444";
+                  const dotBorder = isCovered ? "#047857" : isPartial ? "#b45309" : "#b91c1c";
+
+                  const curated = getKnownCentroid(p.pincode);
+                  const dLat = curated ? curated.lat : p.lat!;
+                  const dLng = curated ? curated.lng : p.lng!;
+
+                  if (window.mappls && window.mappls.Circle) {
+                    try {
+                      const bubble = new window.mappls.Circle({
+                        map: map,
+                        center: { lat: dLat, lng: dLng },
+                        radius: 850, // Clean 850m circular territory bubble (no clashing/overlapping spikes!)
+                        fillColor: dotColor,
+                        fillOpacity: 0.55,
+                        strokeColor: dotBorder,
+                        strokeWidth: 1.5,
+                        fitbounds: false,
+                      });
+                      if (typeof bubble.addListener === "function") {
+                        bubble.addListener("click", () => {
+                          onPincodeClick?.(p.pincode);
+                        });
+                      }
+                      newLayers.push(bubble);
+                    } catch (_) {}
+                  }
+                });
+              }
             }
 
             currentLayerRef.current = newLayers;
