@@ -383,6 +383,7 @@ export function expandPolygon(hull: LatLngPoint[], bufferMeters: number = 1600):
 
 /**
  * Returns a solid-fill polygon boundary for any PIN code across India.
+ * Priority 0: Official data.gov.in cadastral boundary (exact government shapefile).
  * Priority 1: High-fidelity curated GIS polygon (if known).
  * Priority 2: Multi-office Convex Hull with delivery buffer (if 3+ constituent offices).
  * Priority 3: Oriented corridor capsule (if 2 constituent offices).
@@ -394,8 +395,17 @@ export function getTerritoryPolygon(
   radiusMeters: number = 2400,
   officePoints?: LatLngPoint[]
 ): LatLngPoint[] {
-  // 1. Check known high-fidelity polygons
   const cleanedPin = pincode.trim().split(":")[0];
+
+  // 0. Official government boundary (data.gov.in / Survey of India)
+  try {
+    const { OFFICIAL_PINCODE_POLYGONS } = require("./officialBoundaries");
+    if (OFFICIAL_PINCODE_POLYGONS[cleanedPin]) {
+      return OFFICIAL_PINCODE_POLYGONS[cleanedPin];
+    }
+  } catch (_) {}
+
+  // 1. Check known high-fidelity polygons
   if (KNOWN_PINCODE_POLYGONS[cleanedPin]) {
     return KNOWN_PINCODE_POLYGONS[cleanedPin];
   }
@@ -461,8 +471,16 @@ export function getTerritoryPolygon(
  */
 export function getKnownCentroid(pincode: string): LatLngPoint | null {
   const cleanedPin = pincode.trim().split(":")[0];
-  const poly = KNOWN_PINCODE_POLYGONS[cleanedPin];
+  
+  // Check official boundaries first, then curated
+  let poly: LatLngPoint[] | undefined;
+  try {
+    const { OFFICIAL_PINCODE_POLYGONS } = require("./officialBoundaries");
+    poly = OFFICIAL_PINCODE_POLYGONS[cleanedPin];
+  } catch (_) {}
+  if (!poly) poly = KNOWN_PINCODE_POLYGONS[cleanedPin];
   if (!poly || poly.length === 0) return null;
+  
   const sumLat = poly.reduce((acc, p) => acc + p.lat, 0);
   const sumLng = poly.reduce((acc, p) => acc + p.lng, 0);
   return {
