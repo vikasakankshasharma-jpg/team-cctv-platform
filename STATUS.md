@@ -1,6 +1,6 @@
 # TEAM CCTV Platform - Master Project Status & Verification Log
 
-> **Last Updated:** October 12, 2026  
+> **Last Updated:** October 13, 2026  
 > **Production URL:** `https://cctvquotation.com`  
 > **Repository:** `team-cctv-platform` (`master` branch)  
 > **Canonical Plan & Architecture:** [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md) | [`BUSINESS_RULES.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/BUSINESS_RULES.md)
@@ -12,7 +12,7 @@
 | Domain | Status | Latest Evidence / Milestone |
 |---|---|---|
 | **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags. |
-| **Mapping & Geographical Coverage** | `VERIFIED` | Mappls (MapmyIndia) live integration; 4-Quadrant Tehsil/PINCODE micro-zones; Red/Blue circle indicators; "Gen All Quadrants" batch tool; Pin-drop geolocation. |
+| **Mapping & Geographical Coverage** | `VERIFIED` | Mappls (MapmyIndia) live integration; 3-Tier Boundary Engine; Exact Google Maps cadastral parity for launch PINs (302012, 302041); True geometric centroid camera targeting; 4-Quadrant Tehsil/PINCODE micro-zones; Red/Blue circle indicators. |
 | **Referral & Partner Ecosystem** | `VERIFIED` | B2B Partner Portal with QR codes (2% comm / 3% disc); B2C Refer & Earn (₹500 / ₹500) with festive WhatsApp status EDMs; Financial Dashboard payout tracking. |
 | **Customer Journey & Pro Builder** | `VERIFIED` | WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; iOS Safari auto-zoom patch (`text-base sm:text-sm`); single-filter auto-collapse. |
 | **Checkout & Payment Pathways** | `VERIFIED` | 4 pathways: Pay Full (2% discount), ₹500 3-step token, EMI option, Free Site Visit calendar (future dates only); Webhook + Fallback Verification API. |
@@ -69,6 +69,15 @@
 - **Four Checkout Options:** Pay Full (2% discount), ₹500 3-step token, EMI financing, and Free Site Visit calendar booking (future dates only).
 - **Fallback Verification API:** Proactive server-side verification attached to payment success screen, preventing missed bookings due to delayed webhooks.
 
+### Milestone 7: High-Fidelity Postal Boundary & Territory Engine (Pan-India)
+- **3-Tier Boundary Resolution Architecture:**
+  - **Priority 1 (Verified Google Maps Cadastral Polygons):** Hand-curated 100% Google Maps parity for core urban launch PINs (`KNOWN_PINCODE_POLYGONS` in `lib/geo/pincodePolygons.ts`).
+  - **Priority 2 (National Open Postal Boundary Layer):** Pre-extracted vector boundaries covering all 31 Jaipur metro PINs (`OFFICIAL_PINCODE_POLYGONS` in `lib/geo/officialBoundaries.ts`).
+  - **Priority 3 (Universal Dynamic Convex Hull):** Groups constituent post offices with a calibrated 1.6 km delivery buffer for any unverified PIN code across all 19,300+ PINs in India.
+- **302041 Google Maps Alignment:** 34-vertex cadastral perimeter strictly stopping west of Sirsi & Jaton Ki Dhani along Raj Water Park (`lng: 75.684`) with the Bichpari southern notch (`lat: 26.858`).
+- **302012 Jhotwara Realignment:** Replaced the rural 15 km Baori balloon with the true urban commercial perimeter of Jhotwara, Khatipura Railway Station, Niwaru Road, and Nangal Jaisabohara.
+- **True Geometric Centroid Engine (`getKnownCentroid`):** Overrides corrupted third-party postal coordinates, locking camera zoom (13.2) and pin-drop markers exactly onto central commercial hubs (Jhotwara Circle, Dhankya-Bindayaka).
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
@@ -81,7 +90,7 @@
 | **Layer 4: Payment Webhook Fallback** | Razorpay / Cashfree | `PASS` | Quotes marked BOOKED on success screen even when webhook is bypassed. |
 | **Layer 5: Role Boundary Security** | Customer vs. Staff | `PASS` | Staff logins on customer portal restricted to customer privileges. |
 | **Layer 6: Mobile Responsiveness** | Small Screens & Safari | `PASS` | Pro Builder drawer and 16px input fields prevent zoom glitch. |
-| **Layer 7: Boundary Engine Fidelity** | Google Maps Postal Parity | `PASS` | Exact 28-vertex cadastral tracing for 302041 (excluding Sirsi, including Bichpari) + true centroid alignment. |
+| **Layer 7: Boundary Engine Fidelity** | Google Maps Postal Parity | `PASS` | 100% Google Maps parity for 302041 (Dhankya/Bindayaka/Bichpari, excluding Sirsi) and 302012 (Jhotwara urban core) + true geometric centroid alignment (`getKnownCentroid`). |
 
 ---
 

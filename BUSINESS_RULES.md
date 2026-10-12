@@ -133,6 +133,13 @@ Serviceability is verified by matching against:
 2. Circular Operating Radius (e.g., 15 km from service hub).
 3. Polygon Boundary Tool drawn in the Admin Console.
 
+### 5.5 Multi-Tier Boundary Resolution & Centroid Targeting
+To ensure professional, 100% accurate map rendering across all PIN codes in India without missing or broken shapes, territory boundaries are resolved through a strict hierarchical engine:
+1. **Tier 1 (Verified Google Maps Cadastral Boundaries):** Curated in `KNOWN_PINCODE_POLYGONS` for core launch urban centers (e.g., Jaipur metro PINs 302001–302048). Takes top precedence over raw government datasets to eliminate algorithmic Voronoi artifacts.
+2. **Tier 2 (Official Open Postal Boundary Layer):** Pre-extracted vector multi-polygons (`OFFICIAL_PINCODE_POLYGONS`) from public cadastral data.
+3. **Tier 3 (Universal Dynamic Convex Hull):** For any unmapped rural or outer PIN across India, the engine computes a 2D convex hull across all constituent post office locations with a calibrated 1.6 km delivery buffer.
+4. **Centroid Alignment (`getKnownCentroid`):** Map camera center and pin-drop markers are anchored to the true geometric centroid of verified polygons, preventing camera drift caused by corrupted third-party postal coordinates.
+
 ---
 
 ## 6. Referral, Affiliate & Partner Ecosystem

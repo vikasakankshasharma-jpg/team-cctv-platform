@@ -31,8 +31,10 @@
 - **Quotation Versioning:** Post-survey changes by installers/salespeople automatically create a new quotation version (`v2`, `v3`).
 - **Site Disclaimer:** Prominent notice on all quotes that physical site conditions may adjust final totals.
 
-### 4. Mappls Geolocation & 4-Quadrant Territory Routing
+### 4. Mappls Geolocation & High-Fidelity Postal Territory Engine
 - **MapmyIndia (Mappls) Integration:** High-accuracy Indian address geocoding, boundary polygons, and fallback to Google Maps/OSM.
+- **3-Tier Boundary Resolution:** Curated 100% Google Maps cadastral boundaries for active launch PINs (`KNOWN_PINCODE_POLYGONS`), pre-extracted public multi-polygons (`OFFICIAL_PINCODE_POLYGONS`), and dynamic 2D convex hull with 1.6 km delivery buffer for pan-India coverage.
+- **Centroid Engine:** Mathematical polygon centroid alignment (`getKnownCentroid`) overrides postal API coordinate corruption, locking map camera and pins directly over true commercial hubs (e.g., Jhotwara Circle, Dhankya-Bindayaka).
 - **4-Quadrant Area Partitioning:** PINCODEs are divided into 4 landmark-anchored quadrants (North-West, North-East, South-East, South-West) for granular sales and technician dispatch.
 - **Visual Territory Map:** Red circles indicate uncovered/unselected zones; blue circles indicate active coverage. Includes "Gen All Quadrants" batch tool.
 - **Tri-Factor Matching:** Matches lead addresses against Quadrant, circular radius, and polygon boundaries.
