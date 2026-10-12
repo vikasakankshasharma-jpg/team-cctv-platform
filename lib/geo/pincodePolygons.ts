@@ -87,19 +87,18 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
     { lat: 26.9150, lng: 75.7840 },
   ],
 
-  // 302012 - Full Coverage Area (Jhotwara, Khatipura, Niwaru, Nangal Jaisabohara, Khora Bisal, Neendar Banar, Baori, Rojda, Kishanpura)
+  // 302012 - Jhotwara, Khatipura, Niwaru Road, Nangal Jaisabohara (Exact Google Maps match)
   "302012": [
-    { lat: 26.9200, lng: 75.7550 }, // Khatipura South-East / Station Road
-    { lat: 26.9180, lng: 75.7300 }, // Sirsi Road Border / Khatipura Tiraha
-    { lat: 26.9400, lng: 75.6800 }, // Kalwad Road Approach / Govindpura
-    { lat: 26.9900, lng: 75.6400 }, // Kalwad / Hathoj / Rojda South
-    { lat: 27.0350, lng: 75.6450 }, // Rojda North / Kalwad Boundary
-    { lat: 27.0420, lng: 75.6800 }, // Kishanpura / Lalpura Border
-    { lat: 27.0450, lng: 75.7200 }, // Khora Bisal / Mundota Border
-    { lat: 27.0250, lng: 75.7400 }, // Neendar Banar / Baori / Sikar Road Junction
-    { lat: 26.9750, lng: 75.7500 }, // Nangal Jaisabohara / Dadi Ka Phatak / Murlipura Border
-    { lat: 26.9500, lng: 75.7650 }, // Jhotwara Industrial Area / Tara Nagar
-    { lat: 26.9200, lng: 75.7550 }, // Close polygon
+    { lat: 26.9220, lng: 75.7500 }, // Khatipura Railway Station & South-East Border
+    { lat: 26.9280, lng: 75.7620 }, // Khatipura Road / Hasanpura Border
+    { lat: 26.9450, lng: 75.7660 }, // Jhotwara Industrial Area
+    { lat: 26.9580, lng: 75.7680 }, // Dadi Ka Phatak / Sikar Road Boundary
+    { lat: 26.9740, lng: 75.7580 }, // Nangal Jaisabohara / Murlipura Approach
+    { lat: 26.9820, lng: 75.7380 }, // Niwaru Road / Boytawala North Edge
+    { lat: 26.9720, lng: 75.7150 }, // Niwaru West / Khora Bisal Border
+    { lat: 26.9480, lng: 75.7140 }, // Kalwar Road / Govindpura Border
+    { lat: 26.9320, lng: 75.7280 }, // Sirsi Road Junction / Meenawala North
+    { lat: 26.9220, lng: 75.7500 }, // Close polygon
   ],
 
   // 302013 - Harmada S.O, Vishwakarma Industrial Area (VKIA), Akhepura B.O
