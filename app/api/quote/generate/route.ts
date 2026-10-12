@@ -1,61 +1,11 @@
 import { getCachedProducts, getCachedAddons } from "@/lib/cached-catalog";
+import { getCachedAdminSettings } from "@/lib/cached-settings";
 import { NextResponse } from "next/server";
 import { CCTVRequirement, AppSettings, Product, Addon } from "@/types";
 import { generateConfiguration } from "@/lib/configuration-engine";
 import { resolveProducts } from "@/lib/product-resolver";
 import { generatePricingSnapshot } from "@/lib/pricing-engine";
-
 import { adminDb } from "@/lib/firebase-admin";
-import { SETTINGS_DOC_ID } from "@/lib/constants";
-
-async function getCachedAdminSettings(): Promise<AppSettings> {
-  const doc = await adminDb.collection("settings").doc(SETTINGS_DOC_ID).get();
-  if (doc.exists) {
-    return doc.data() as AppSettings;
-  }
-  // Fallback if missing
-  return {
-    company_name: "TEAM CCTV",
-    company_logo_url: "",
-    gst_rate: 18,
-    labor_fitting_only_rate: 300,
-    labor_full_installation_rate: 500,
-    wire_cost_per_meter: 12,
-    whatsapp_template: "",
-    pricing_cache_ttl_seconds: 0,
-    otp_provider: "firebase_phone",
-    tier_budget_label: "Lowest",
-    tier_budget_multiplier: 1,
-    tier_recommended_label: "Recommended",
-    tier_recommended_multiplier: 1.2,
-    tier_premium_label: "Premium",
-    tier_premium_multiplier: 1.5,
-    max_supported_cameras: 32,
-    labor_ip_per_camera: 500,
-    labor_hd_per_camera: 400,
-    cable_copper_coated_ip: 12,
-    cable_copper_coated_hd: 8,
-    cable_pure_copper: 20,
-    connector_rj45_cost: 25,
-    connector_bnc_dc_cost: 70,
-    cable_overage_per_mtr: 15,
-    visit_charge: 500,
-    amc_1yr_pct: 15,
-    amc_2yr_pct: 25,
-    amc_3yr_pct: 35,
-    quote_validity_days: 7,
-    margin_hdd: 5,
-    margin_hdd_budget: 10,
-    margin_cctv_camera: 15,
-    margin_cctv_camera_budget: 30,
-    margin_recorder: 15,
-    margin_junction_box: 50,
-    margin_connectors: 50,
-    margin_hdmi_cable: 20,
-    margin_rack: 30,
-    margin_power_supply: 25,
-  } as AppSettings;
-}
 
 async function getActiveProducts(): Promise<Product[]> {
   const snap = await adminDb

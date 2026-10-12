@@ -16,7 +16,8 @@ import {
   UserCheck, 
   X, 
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  Layers
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -165,6 +166,11 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
   
   const [districtOffices, setDistrictOffices] = useState<any[]>([]);
 
+  // Tehsil State (AI Powered)
+  const [geoTehsils, setGeoTehsils] = useState<{ label: string; value: string; pincodes: string[] }[]>([]);
+  const [selectedTehsil, setSelectedTehsil] = useState<string>("all");
+  const [loadingTehsils, setLoadingTehsils] = useState(false);
+
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingOffices, setLoadingOffices] = useState(false);
@@ -220,6 +226,8 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
     if (!selectedState) {
       setGeoDistricts([]);
       setSelectedDistrict(null);
+      setGeoTehsils([]);
+      setSelectedTehsil("all");
       return;
     }
     setLoadingDistricts(true);
@@ -269,6 +277,42 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
       })
       .catch(console.error)
       .finally(() => setLoadingOffices(false));
+  }, [selectedState, selectedDistrict]);
+
+  // Load Tehsils (AI Powered)
+  useEffect(() => {
+    if (!selectedState || !selectedDistrict) {
+      setGeoTehsils([]);
+      setSelectedTehsil("all");
+      return;
+    }
+    setLoadingTehsils(true);
+    setSelectedTehsil("all");
+    fetch(`/api/admin/geo/tehsils?state=${selectedState.slug}&district=${selectedDistrict.slug}&_t=${Date.now()}`)
+      .then(async r => {
+        if (!r.ok) throw new Error("Failed to load tehsils");
+        return r.json();
+      })
+      .then(tehsilData => {
+        if (tehsilData && !tehsilData.error && typeof tehsilData === "object") {
+          const tehsilOpts = [
+            { label: `All Tehsils in ${selectedDistrict.name}`, value: "all", pincodes: [] },
+            ...Object.keys(tehsilData).map(tName => ({
+              label: `${tName} (${tehsilData[tName].length} PINs)`,
+              value: tName,
+              pincodes: tehsilData[tName] || []
+            }))
+          ];
+          setGeoTehsils(tehsilOpts);
+        } else {
+          setGeoTehsils([]);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load tehsils", err);
+        setGeoTehsils([]);
+      })
+      .finally(() => setLoadingTehsils(false));
   }, [selectedState, selectedDistrict]);
 
   // Aggregate current coverage
@@ -360,9 +404,21 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
     return Array.from(map.values()).sort((a, b) => a.pincode.localeCompare(b.pincode));
   }, [districtOffices, coveredPincodesSet, selectedDistrict]);
 
-  // Aggregate map data including assigned agent names
+  const activeTehsilData = useMemo(() => {
+    if (!selectedTehsil || selectedTehsil === "all") return null;
+    return geoTehsils.find(t => t.value === selectedTehsil) || null;
+  }, [selectedTehsil, geoTehsils]);
+
+  // Scoped Pincodes: either all district PINs or filtered by selected Tehsil
+  const scopedPincodes = useMemo(() => {
+    if (!activeTehsilData) return pincodesInDistrict;
+    const pinSet = new Set(activeTehsilData.pincodes);
+    return pincodesInDistrict.filter(p => pinSet.has(p.pincode));
+  }, [pincodesInDistrict, activeTehsilData]);
+
+  // Aggregate map data including assigned agent names (scoped to active Tehsil or entire district)
   const pincodesMapData = useMemo(() => {
-    return pincodesInDistrict.map(p => {
+    return scopedPincodes.map(p => {
       const assigned = salespersons.filter(s => {
         const agentZones = zones.filter(z => (s.assigned_zone_ids || []).includes(z.id!));
         return agentZones.some(z => (z.pincodes || []).includes(p.pincode) || (z.pincodes || []).some(code => code.startsWith(p.pincode + ":")));
@@ -377,20 +433,20 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
         agents: assigned.map(a => `${a.name}${a.mobile_number ? ` (${a.mobile_number})` : ''}`),
       };
     });
-  }, [pincodesInDistrict, salespersons, zones]);
+  }, [scopedPincodes, salespersons, zones]);
 
-  const totalInDistrict = pincodesInDistrict.length;
-  const fullyCoveredInDistrict = pincodesInDistrict.filter(p => p.status === 'covered').length;
-  const partiallyCoveredInDistrict = pincodesInDistrict.filter(p => p.status === 'partial').length;
-  const uncoveredInDistrict = totalInDistrict - fullyCoveredInDistrict - partiallyCoveredInDistrict;
+  const totalScoped = scopedPincodes.length;
+  const fullyCoveredScoped = scopedPincodes.filter(p => p.status === 'covered').length;
+  const partiallyCoveredScoped = scopedPincodes.filter(p => p.status === 'partial').length;
+  const uncoveredScoped = totalScoped - fullyCoveredScoped - partiallyCoveredScoped;
   
   // Calculate coverage based on areas for more accuracy
-  const totalAreasInDistrict = pincodesInDistrict.reduce((acc, p) => acc + p.totalAreas, 0);
-  const coveredAreasInDistrict = pincodesInDistrict.reduce((acc, p) => acc + p.coveredAreas, 0);
-  const coveragePercentage = totalAreasInDistrict === 0 ? 0 : Math.round((coveredAreasInDistrict / totalAreasInDistrict) * 100);
+  const totalAreasScoped = scopedPincodes.reduce((acc, p) => acc + p.totalAreas, 0);
+  const coveredAreasScoped = scopedPincodes.reduce((acc, p) => acc + p.coveredAreas, 0);
+  const coveragePercentage = totalAreasScoped === 0 ? 0 : Math.round((coveredAreasScoped / totalAreasScoped) * 100);
 
   const filteredPincodes = useMemo(() => {
-    return pincodesInDistrict.filter(p => {
+    return scopedPincodes.filter(p => {
       if (statusFilter !== "all" && p.status !== statusFilter) return false;
       if (!pincodeFilter.trim()) return true;
       const q = pincodeFilter.toLowerCase();
@@ -406,7 +462,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
 
       return false;
     });
-  }, [pincodesInDistrict, statusFilter, pincodeFilter, salespersons, zones]);
+  }, [scopedPincodes, statusFilter, pincodeFilter, salespersons, zones]);
 
   // Handle Quick Assign Agent
   const handleAssignAgentToPincode = async () => {
@@ -505,12 +561,12 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
   return (
     <div className="space-y-6 mt-6 animate-in fade-in duration-500">
       
-      {/* Sleek Territory Command Bar (Replaces the two giant 180px empty boxes) */}
+      {/* Sleek Territory Command Bar (State, District & Tehsil) */}
       <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           
-          {/* State & District Searchable Dropdowns */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 max-w-2xl">
+          {/* State, District & Tehsil Searchable Dropdowns */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 max-w-3xl">
             <SearchableDropdown
               label="1. State"
               placeholder="Select State"
@@ -520,6 +576,8 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
               onChange={(s) => {
                 setSelectedState({ name: s.label, slug: s.value });
                 setSelectedDistrict(null);
+                setSelectedTehsil("all");
+                setGeoTehsils([]);
               }}
               icon={MapPin}
             />
@@ -531,22 +589,40 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
               options={geoDistricts}
               disabled={!selectedState}
               loading={loadingDistricts}
-              onChange={(d) => setSelectedDistrict({ name: d.label, slug: d.value })}
+              onChange={(d) => {
+                setSelectedDistrict({ name: d.label, slug: d.value });
+                setSelectedTehsil("all");
+              }}
               icon={MapIcon}
             />
+
+            {selectedDistrict && (
+              <SearchableDropdown
+                label="3. Tehsil (AI Powered)"
+                placeholder={loadingTehsils ? "Analyzing tehsils..." : "Select Tehsil"}
+                value={selectedTehsil}
+                options={geoTehsils}
+                loading={loadingTehsils}
+                disabled={loadingTehsils || geoTehsils.length === 0}
+                onChange={(t) => setSelectedTehsil(t.value)}
+                icon={Layers}
+              />
+            )}
           </div>
 
-          {/* District Coverage Summary & Map Toggle */}
+          {/* District / Tehsil Coverage Summary & Map Toggle */}
           {selectedDistrict ? (
-            <div className="flex items-center gap-3 self-end lg:self-center flex-wrap pt-2 lg:pt-0">
+            <div className="flex items-center gap-3 self-end xl:self-center flex-wrap pt-2 xl:pt-0">
               <div className="flex items-center gap-2 bg-secondary/50 px-3 py-2 rounded-lg border border-border text-xs">
-                <span className="font-semibold text-foreground">{totalInDistrict} PINs</span>
+                <span className="font-semibold text-foreground">
+                  {totalScoped} PINs {activeTehsilData ? `in ${activeTehsilData.value}` : `in ${selectedDistrict.name}`}
+                </span>
                 <span className="text-muted-foreground">•</span>
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400">{coveragePercentage}% Covered</span>
-                {uncoveredInDistrict > 0 && (
+                {uncoveredScoped > 0 && (
                   <>
                     <span className="text-muted-foreground">•</span>
-                    <span className="font-semibold text-rose-500">{uncoveredInDistrict} Gaps</span>
+                    <span className="font-semibold text-rose-500">{uncoveredScoped} Gaps</span>
                   </>
                 )}
               </div>
@@ -591,16 +667,16 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
           <div className="p-4 md:p-6 border-b border-border bg-secondary/20 flex flex-col gap-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 flex-wrap">
                   <h3 className="text-lg font-bold text-foreground tracking-tight">
-                    Coverage Breakdown • {selectedDistrict.name}, {selectedState?.name}
+                    Coverage Breakdown • {activeTehsilData ? `${activeTehsilData.value} Tehsil, ` : ''}{selectedDistrict.name}, {selectedState?.name}
                   </h3>
                   <Badge variant="outline" className="font-mono text-xs bg-primary/5 text-primary border-primary/20">
-                    {fullyCoveredInDistrict + partiallyCoveredInDistrict}/{totalInDistrict} PINs Active
+                    {fullyCoveredScoped + partiallyCoveredScoped}/{totalScoped} PINs Active
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Pin-level assignment and density breakdown for on-ground sales force
+                  Pin-level assignment and density breakdown for on-ground sales force {activeTehsilData ? `in ${activeTehsilData.value} tehsil` : `in ${selectedDistrict.name}`}
                 </p>
               </div>
               
@@ -638,7 +714,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
                     : "bg-background text-muted-foreground border-border hover:text-foreground"
                 }`}
               >
-                All PINs ({totalInDistrict})
+                All PINs ({totalScoped})
               </button>
               <button
                 onClick={() => setStatusFilter("covered")}
@@ -648,7 +724,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
                     : "bg-background text-muted-foreground border-border hover:text-foreground"
                 }`}
               >
-                Covered ({fullyCoveredInDistrict})
+                Covered ({fullyCoveredScoped})
               </button>
               <button
                 onClick={() => setStatusFilter("partial")}
@@ -658,7 +734,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
                     : "bg-background text-muted-foreground border-border hover:text-foreground"
                 }`}
               >
-                Partial ({partiallyCoveredInDistrict})
+                Partial ({partiallyCoveredScoped})
               </button>
               <button
                 onClick={() => setStatusFilter("uncovered")}
@@ -668,7 +744,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
                     : "bg-background text-rose-500 border-rose-500/30 hover:bg-rose-500/10"
                 }`}
               >
-                Uncovered Gaps ({uncoveredInDistrict})
+                Uncovered Gaps ({uncoveredScoped})
               </button>
             </div>
           </div>
@@ -787,15 +863,23 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
                         'bg-destructive/5 border-destructive/20 hover:border-destructive/40'
                       }`}
                     >
-                      {/* Pincode and Status Badge */}
+                      {/* Pincode, Tehsil and Status Badge */}
                       <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <MapPin className={`w-4 h-4 ${
                             p.status === 'covered' ? 'text-success' : 
                             p.status === 'partial' ? 'text-amber-500' : 
                             'text-destructive'
                           }`} />
                           <h4 className="font-mono font-bold text-foreground text-base">{p.pincode}</h4>
+                          {(() => {
+                            const tehsil = geoTehsils.find(t => t.value !== "all" && t.pincodes.includes(p.pincode));
+                            return tehsil ? (
+                              <Badge variant="secondary" className="text-[10px] py-0 px-1.5 font-normal text-muted-foreground bg-secondary/80">
+                                {tehsil.value}
+                              </Badge>
+                            ) : null;
+                          })()}
                         </div>
                         {p.status === 'covered' ? (
                           <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-[10px] uppercase font-semibold">Covered</Badge>

@@ -24,6 +24,18 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     margin_hdmi_cable: initialSettings.margin_hdmi_cable ?? 20,
     margin_rack: initialSettings.margin_rack ?? 30,
     margin_power_supply: initialSettings.margin_power_supply ?? 25,
+    labor_hd_fitting_only: initialSettings.labor_hd_fitting_only ?? 200,
+    labor_ip_fitting_only: initialSettings.labor_ip_fitting_only ?? 300,
+    labor_no_cabling_visit_charge: initialSettings.labor_no_cabling_visit_charge ?? 500,
+    labor_no_cabling_small_job_threshold: initialSettings.labor_no_cabling_small_job_threshold ?? 2,
+    labor_no_cabling_small_job_rate: initialSettings.labor_no_cabling_small_job_rate ?? 500,
+    site_preparation: {
+      ladderArrangementFee: initialSettings.site_preparation?.ladderArrangementFee ?? 500,
+      marbleLaborSurcharge: initialSettings.site_preparation?.marbleLaborSurcharge ?? 400,
+      metalInstallationSurcharge: initialSettings.site_preparation?.metalInstallationSurcharge ?? 200,
+      furnishedSiteSurcharge: initialSettings.site_preparation?.furnishedSiteSurcharge ?? 300,
+      heavyWallDrillingSurcharge: initialSettings.site_preparation?.heavyWallDrillingSurcharge ?? 600,
+    },
     tds_194c_individual_rate: initialSettings.tds_194c_individual_rate ?? 1,
     tds_194c_firm_rate: initialSettings.tds_194c_firm_rate ?? 2,
     tds_194c_single_threshold: initialSettings.tds_194c_single_threshold ?? 30000,
@@ -99,6 +111,17 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       default_sla_operating_hours: {
         ...prev.default_sla_operating_hours!,
         [name]: value
+      }
+    }));
+  };
+
+  const handleSitePrepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      site_preparation: {
+        ...(prev.site_preparation || {}),
+        [name]: Number(value)
       }
     }));
   };
@@ -288,6 +311,198 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                   className="w-full bg-background border border-border text-foreground rounded-xl pl-8 pr-4 py-2.5 focus:ring-2 focus:ring-success/20 outline-none transition-all font-medium shadow-sm" 
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">/ Cam</span>
+              </div>
+            </div>
+
+            {/* Fitting-Only (No Cabling Required) Labor Rules */}
+            <div className="sm:col-span-2 mt-2 pt-4 border-t border-border/60">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 rounded-full bg-primary" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  Fitting-Only Labor Rules (Site Already Cabled / No Cabling Required)
+                </h3>
+              </div>
+              <p className="text-[11px] text-muted-foreground mb-4">
+                Configures installer charges when customer has existing cabling. If camera count is ≤ small job threshold, flat rate applies per camera. When camera count exceeds threshold, per-camera rate plus site visit mobilization charge applies.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">HD Fitting Rate</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                    <input 
+                      required
+                      type="number" 
+                      name="labor_hd_fitting_only"
+                      value={formData.labor_hd_fitting_only ?? 200}
+                      onChange={handleChange}
+                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold shadow-sm" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">/ Cam</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">IP Fitting Rate</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                    <input 
+                      required
+                      type="number" 
+                      name="labor_ip_fitting_only"
+                      value={formData.labor_ip_fitting_only ?? 300}
+                      onChange={handleChange}
+                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold shadow-sm" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">/ Cam</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Visit / Mobilization Fee</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                    <input 
+                      required
+                      type="number" 
+                      name="labor_no_cabling_visit_charge"
+                      value={formData.labor_no_cabling_visit_charge ?? 500}
+                      onChange={handleChange}
+                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold shadow-sm" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Small Job Threshold</label>
+                  <div className="relative">
+                    <input 
+                      required
+                      type="number" 
+                      name="labor_no_cabling_small_job_threshold"
+                      value={formData.labor_no_cabling_small_job_threshold ?? 2}
+                      onChange={handleChange}
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold shadow-sm" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Cams</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Small Job Flat Rate</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                    <input 
+                      required
+                      type="number" 
+                      name="labor_no_cabling_small_job_rate"
+                      value={formData.labor_no_cabling_small_job_rate ?? 500}
+                      onChange={handleChange}
+                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold shadow-sm" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">/ Cam</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Site Preparation Difficulty Surcharges (0% Margin Pass-Through) */}
+            <div className="sm:col-span-2 mt-2 pt-4 border-t border-border/60">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    Site Preparation & Difficulty Surcharges (0% Margin Pass-Through)
+                  </h3>
+                </div>
+                <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                  32 Bitmask Permutations (Exact Cost Pass-Through)
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground mb-4">
+                Master rates for physical site preparation challenges identified by Installer or Salesperson. Mandated by BUSINESS_RULES.md with ₹0 margin markup (100% reimbursed to technician/logistics).
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Ladder / Scaffolding Fee</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                    <input 
+                      required
+                      type="number" 
+                      name="ladderArrangementFee"
+                      value={formData.site_preparation?.ladderArrangementFee ?? 500}
+                      onChange={handleSitePrepChange}
+                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm font-semibold shadow-sm" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Marble / Stone Drilling</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                    <input 
+                      required
+                      type="number" 
+                      name="marbleLaborSurcharge"
+                      value={formData.site_preparation?.marbleLaborSurcharge ?? 400}
+                      onChange={handleSitePrepChange}
+                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm font-semibold shadow-sm" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Metal / Pole Installation</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                    <input 
+                      required
+                      type="number" 
+                      name="metalInstallationSurcharge"
+                      value={formData.site_preparation?.metalInstallationSurcharge ?? 200}
+                      onChange={handleSitePrepChange}
+                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm font-semibold shadow-sm" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Furnished Site Care</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                    <input 
+                      required
+                      type="number" 
+                      name="furnishedSiteSurcharge"
+                      value={formData.site_preparation?.furnishedSiteSurcharge ?? 300}
+                      onChange={handleSitePrepChange}
+                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm font-semibold shadow-sm" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Heavy Wall Drilling</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+                    <input 
+                      required
+                      type="number" 
+                      name="heavyWallDrillingSurcharge"
+                      value={formData.site_preparation?.heavyWallDrillingSurcharge ?? 600}
+                      onChange={handleSitePrepChange}
+                      className="w-full bg-background border border-border text-foreground rounded-xl pl-7 pr-4 py-2 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm font-semibold shadow-sm" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] font-medium uppercase tracking-wider">Flat</span>
+                  </div>
+                </div>
               </div>
             </div>
 

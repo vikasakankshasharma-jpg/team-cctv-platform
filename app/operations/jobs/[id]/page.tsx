@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { Job, InvoiceItemSnapshot } from "@/types";
+import { SiteSurveyRevisionModal } from "@/components/operations/SiteSurveyRevisionModal";
 
 export default function JobCardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -20,6 +21,9 @@ export default function JobCardPage({ params }: { params: Promise<{ id: string }
     site_clean: false,
     customer_handover: false
   });
+
+  // Site survey revision modal state
+  const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
 
   useEffect(() => {
     fetchJobCard();
@@ -117,6 +121,16 @@ export default function JobCardPage({ params }: { params: Promise<{ id: string }
           ) : (
             <p className="text-gray-500 text-sm">No site survey data available.</p>
           )}
+
+          <div className="pt-2 border-t border-gray-700">
+            <button
+              type="button"
+              onClick={() => setIsRevisionModalOpen(true)}
+              className="w-full bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded text-sm transition shadow-sm"
+            >
+              Report Site Difficulties & Revise Quote
+            </button>
+          </div>
         </div>
 
         {/* Right Col: Materials */}
@@ -202,6 +216,20 @@ export default function JobCardPage({ params }: { params: Promise<{ id: string }
         )}
       </div>
 
+      {job && isRevisionModalOpen && (
+        <SiteSurveyRevisionModal
+          isOpen={isRevisionModalOpen}
+          onClose={() => setIsRevisionModalOpen(false)}
+          leadId={job.lead_id}
+          parentQuoteId={(job as any).quote_id || (job as any).latest_quote_id || job.id!}
+          currentVersion={(job as any).quote_version || 1}
+          initialFlags={(job.site_survey as any)?.site_surcharge_flags}
+          onSuccess={() => {
+            fetchJobCard();
+            setIsRevisionModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

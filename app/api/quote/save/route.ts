@@ -1,4 +1,5 @@
 import { getCachedProducts, getCachedAddons } from "@/lib/cached-catalog";
+import { getCachedAdminSettings } from "@/lib/cached-settings";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { adminDb, serverTimestamp, arrayUnion } from "@/lib/firebase-admin";
@@ -6,29 +7,7 @@ import { QuoteSnapshot, Product, Addon, AppSettings } from "@/types";
 import { generateConfiguration } from "@/lib/configuration-engine";
 import { resolveProducts } from "@/lib/product-resolver";
 import { generatePricingSnapshot } from "@/lib/pricing-engine";
-import { SETTINGS_DOC_ID } from "@/lib/constants";
 import { MarginEngine, DEFAULT_MARGIN_POLICY } from "@/lib/margin-engine";
-
-async function getCachedAdminSettings(): Promise<AppSettings> {
-  const doc = await adminDb.collection("settings").doc(SETTINGS_DOC_ID).get();
-  if (doc.exists) {
-    return doc.data() as AppSettings;
-  }
-  return {
-    company_name: "TEAM CCTV",
-    gst_rate: 18,
-    labor_fitting_only_rate: 300,
-    labor_full_installation_rate: 500,
-    wire_cost_per_meter: 12,
-    labor_ip_per_camera: 500,
-    labor_hd_per_camera: 400,
-    cable_copper_coated_ip: 12,
-    cable_copper_coated_hd: 8,
-    connector_rj45_cost: 25,
-    connector_bnc_dc_cost: 70,
-    quote_validity_days: 7,
-  } as AppSettings;
-}
 
 export async function POST(request: Request) {
   try {
@@ -130,9 +109,24 @@ export async function POST(request: Request) {
       }
       
       const cablingDone = requirementSnapshot.cabling_done ?? false;
-      const strictLaborRate = cablingDone 
-          ? (settings.labor_fitting_only_rate || 300)
-          : (isIPSystem ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500) : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400));
+      const smallJobThreshold = (settings as any).labor_no_cabling_small_job_threshold ?? 2;
+      const smallJobFlatRate = (settings as any).labor_no_cabling_small_job_rate ?? 500;
+      const visitCharge = (settings as any).labor_no_cabling_visit_charge ?? 500;
+      const hdFittingRate = (settings as any).labor_hd_fitting_only ?? 200;
+      const ipFittingRate = (settings as any).labor_ip_fitting_only ?? 300;
+
+      let strictLaborRate = 400;
+      if (cablingDone) {
+        if (totalWiredCameras <= smallJobThreshold) {
+          strictLaborRate = smallJobFlatRate;
+        } else {
+          strictLaborRate = isIPSystem ? ipFittingRate : hdFittingRate;
+        }
+      } else {
+        strictLaborRate = isIPSystem
+          ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500)
+          : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400);
+      }
 
       let subtotal = 0;
       const verifiedItems: any[] = [];
@@ -152,11 +146,13 @@ export async function POST(request: Request) {
           } else if (item.product_id === "labor_install") {
             dbProduct = { id: "labor_install", display_name: "Installation & Labor", category: "labor", unit_price: settings.labor_ip_per_camera || 500 };
           } else if (item.product_id === "PRO_INSTALL_HD") {
-            dbProduct = { id: "PRO_INSTALL_HD", display_name: "Standard Installation (HD)", category: "installation", unit_price: 600 };
+            dbProduct = { id: "PRO_INSTALL_HD", display_name: "Standard Installation (HD)", category: "installation", unit_price: settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400 };
           } else if (item.product_id === "PRO_INSTALL_IP") {
-            dbProduct = { id: "PRO_INSTALL_IP", display_name: "Standard Installation (IP)", category: "installation", unit_price: 800 };
+            dbProduct = { id: "PRO_INSTALL_IP", display_name: "Standard Installation (IP)", category: "installation", unit_price: settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500 };
           } else if (item.product_id?.startsWith("PRO_INSTALL_")) {
-            dbProduct = { id: item.product_id, display_name: item.display_name || item.name || "Standard Installation", category: "installation", unit_price: item.product_id.includes("HD") ? 600 : 800 };
+            const isHd = item.product_id.includes("HD");
+            const fallbackRate = isHd ? (settings.labor_hd_per_camera || 400) : (settings.labor_ip_per_camera || 500);
+            dbProduct = { id: item.product_id, display_name: item.display_name || item.name || "Standard Installation", category: "installation", unit_price: fallbackRate };
           } else if (item.product_id?.startsWith("surcharge_")) {
             dbProduct = { id: item.product_id, display_name: item.name || item.display_name || "Site Surcharge", category: "labor", unit_price: 500 };
           } else if (item.product_id === "SYS_GIGABIT_SWITCH") {
@@ -182,7 +178,11 @@ export async function POST(request: Request) {
             verifiedUnitPrice = Math.round(baseCost * (1 + cableMarginPct / 100));
         } else if (cat === "labor" || cat === "installation") {
             // Strict rule: Overwrite any catalog price with the strict market rate
-            verifiedUnitPrice = Math.round(strictLaborRate);
+            if (item.product_id === "labor_visit_charge") {
+              verifiedUnitPrice = Math.round(visitCharge);
+            } else {
+              verifiedUnitPrice = Math.round(strictLaborRate);
+            }
         } else if (cat.includes("surcharge")) {
             // Surcharges have no margin
             verifiedUnitPrice = Math.round(baseCost);
@@ -210,6 +210,22 @@ export async function POST(request: Request) {
           line_total: lineTotal,
           // Deliberately omit any client-sent discount, coupon, or override fields
         });
+      }
+
+      // Existing Cabling: Ensure Site Visit & Mobilization Charge is included for > 2 cameras
+      if (cablingDone && totalWiredCameras > smallJobThreshold && visitCharge > 0) {
+        const hasVisitCharge = verifiedItems.some(i => i.product_id === "labor_visit_charge");
+        if (!hasVisitCharge) {
+          subtotal += visitCharge;
+          verifiedItems.push({
+            product_id: "labor_visit_charge",
+            name: "Technician Site Visit & Mobilization Fee",
+            category: "labor",
+            unit_price: visitCharge,
+            qty: 1,
+            line_total: visitCharge
+          });
+        }
       }
 
       // Strict Rule: Excess Cabling Labor

@@ -88,6 +88,9 @@ export function resolveProducts(
 
       const recorder = resolveRecorderForPermutation(permConfig, pool, brandFilter);
       const storage = resolveStorageForPermutation(permConfig, pool, brandFilter, cameras);
+      if ((storage as any)?.is_downgraded) {
+        lifecycleWarnings.push(`STORAGE_DOWNGRADE_WARNING [${combo}]: ${(storage as any).downgrade_note}`);
+      }
       const power = resolvePowerForPermutation(permConfig, pool, brandFilter);
 
       plans[combo] = {
@@ -248,29 +251,44 @@ function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[]
   };
 
   let valid = storageItems.filter(p => getTb(p) * 1024 >= reqStorageGb);
+  let isDowngraded = false;
+  let shortfallGb = 0;
   
   if (valid.length === 0 && storageItems.length > 0) {
     valid = [...storageItems].sort((a, b) => getTb(b) - getTb(a)).slice(0, 1);
+    isDowngraded = true;
+    shortfallGb = Math.max(0, Math.round(reqStorageGb - (getTb(valid[0]) * 1024)));
   }
   
   if (valid.length === 0) return undefined;
   
+  let chosen = valid.sort((a, b) => {
+    const tbDiff = getTb(a) - getTb(b);
+    if (tbDiff !== 0) return tbDiff;
+    return (a.unit_price || 0) - (b.unit_price || 0);
+  })[0];
+
   if (brandFilter && brandFilter !== "Budget" && brandFilter !== "All Brands") {
     const brandStorage = valid.filter(p => isBrandMatch(p, brandFilter));
     if (brandStorage.length > 0) {
-      return brandStorage.sort((a, b) => {
+      chosen = brandStorage.sort((a, b) => {
         const tbDiff = getTb(a) - getTb(b);
         if (tbDiff !== 0) return tbDiff;
         return (a.unit_price || 0) - (b.unit_price || 0);
       })[0];
     }
   }
+
+  if (isDowngraded && chosen) {
+    return {
+      ...chosen,
+      is_downgraded: true,
+      shortfall_gb: shortfallGb,
+      downgrade_note: `Required ${Math.round(reqStorageGb)}GB storage, largest available HDD is ${Math.round(getTb(chosen) * 1024)}GB (${chosen.display_name}).`
+    };
+  }
   
-  return valid.sort((a, b) => {
-    const tbDiff = getTb(a) - getTb(b);
-    if (tbDiff !== 0) return tbDiff;
-    return (a.unit_price || 0) - (b.unit_price || 0);
-  })[0];
+  return chosen;
 }
 
 function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string) {

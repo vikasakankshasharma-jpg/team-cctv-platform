@@ -61,6 +61,13 @@ export interface PricingEngineParams {
     city?: string;
     state?: string;
   };
+  site_surcharge_flags?: {
+    requiresLadderFee?: boolean;
+    requiresMarbleSurcharge?: boolean;
+    requiresMetalSurcharge?: boolean;
+    requiresFurnishedSurcharge?: boolean;
+    requiresHeavyDrillingSurcharge?: boolean;
+  };
 }
 
 /**
@@ -68,7 +75,7 @@ export interface PricingEngineParams {
  */
 export function calculatePricing(params: PricingEngineParams): PricingResult {
   const {
-    selection,
+    selection: rawSelection,
     products,
     addons,
     settings,
@@ -78,8 +85,15 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     referralDiscountFlat = 0,
     activeOffer,
     geoRules = [],
-    locationParams
+    locationParams,
+    site_surcharge_flags
   } = params;
+
+  // Clone selection to guarantee input immutability
+  const selection: ConfiguratorSelection = { ...rawSelection };
+  if (cablingDone !== undefined && selection.cabling_done === undefined) {
+    selection.cabling_done = cablingDone;
+  }
 
   // Evaluate Geo-Pricing Matrix (Surge > Pincode > City > State)
   let effectiveLaborMultiplier = 1.0;
@@ -207,6 +221,36 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     });
     baseHardwareCost += effectiveTravelFee;
   }
+
+  // 4b. Site Preparation Difficulty Surcharges (0% Margin Pass-Through as mandated by BUSINESS_RULES.md)
+  const effectiveSurchargeFlags = site_surcharge_flags || selection.site_surcharge_flags || (selection as any).site_surcharges || {};
+  const prepCfg = settings.site_preparation || {
+    ladderArrangementFee: 500,
+    marbleLaborSurcharge: 400,
+    metalInstallationSurcharge: 200,
+    furnishedSiteSurcharge: 300,
+    heavyWallDrillingSurcharge: 600
+  };
+
+  const addSurcharge = (id: string, name: string, cost: number) => {
+    const price = Math.round(cost);
+    lineItems.push({
+      product_id: id,
+      display_name: name,
+      qty: 1,
+      unit_price: price,
+      line_total: price,
+      base_cost_at_quote: cost
+    });
+    baseHardwareCost += price;
+    totalPurchaseCost += cost; // Exactly ₹0 margin markup (base_cost === price)
+  };
+
+  if (effectiveSurchargeFlags.requiresLadderFee) addSurcharge("surcharge_ladder", "Ladder / Scaffolding Arrangement Fee", prepCfg.ladderArrangementFee ?? 500);
+  if (effectiveSurchargeFlags.requiresMarbleSurcharge) addSurcharge("surcharge_marble", "Specialized Drilling (Marble/Stone)", prepCfg.marbleLaborSurcharge ?? 400);
+  if (effectiveSurchargeFlags.requiresMetalSurcharge) addSurcharge("surcharge_metal", "Metal/Pole Installation Surcharge", prepCfg.metalInstallationSurcharge ?? 200);
+  if (effectiveSurchargeFlags.requiresFurnishedSurcharge) addSurcharge("surcharge_furnished", "Furnished Site Care & Cleanup Premium", prepCfg.furnishedSiteSurcharge ?? 300);
+  if (effectiveSurchargeFlags.requiresHeavyDrillingSurcharge) addSurcharge("surcharge_wall_drilling", "Heavy Wall/Floor Penetration Surcharge", prepCfg.heavyWallDrillingSurcharge ?? 600);
 
   // 5. Final Financial Aggregation & Taxes
   const grossSubtotal = baseHardwareCost + addonsTotal;
@@ -546,10 +590,6 @@ function calculateLabor(
   const items: QuoteLineItem[] = [];
   let totalRetail = 0;
 
-  const baseRate = selection.cabling_done 
-      ? (settings.labor_fitting_only_rate || 300)
-      : (tech === "IP" ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500) : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400));
-  const rate = Math.round(baseRate * locationMultiplier);
   // Only charge labor for wired cameras - wireless cameras don't need cable termination work
   let qty = Number(selection.camera_count) || 0;
   if (tech === "WiFi" || tech === "Wireless") {
@@ -565,6 +605,65 @@ function calculateLabor(
     qty = (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0) || Number(selection.camera_count);
   }
   if (qty <= 0) return { items, totalRetail: 0 };
+
+  const isCablingDone = Boolean(selection.cabling_done);
+
+  if (isCablingDone) {
+    // ── Scenario: Site does NOT require cabling (Customer existing cabling / fitting only) ──
+    const smallJobThreshold = settings.labor_no_cabling_small_job_threshold ?? 2;
+    const smallJobFlatRate = settings.labor_no_cabling_small_job_rate ?? 500;
+    const visitCharge = settings.labor_no_cabling_visit_charge ?? 500;
+    const hdFittingRate = settings.labor_hd_fitting_only ?? 200;
+    const ipFittingRate = settings.labor_ip_fitting_only ?? 300;
+
+    if (qty <= smallJobThreshold) {
+      // Small job rule: flat rate per camera (e.g. 1 cam = ₹500, 2 cams = ₹1,000)
+      const unitRate = Math.round(smallJobFlatRate * locationMultiplier);
+      const lineTotal = unitRate * qty;
+      items.push({
+        product_id: "labor_small_job_minimum",
+        display_name: `Camera Installation & Setup (Small Job Flat Rate: ₹${unitRate}/cam)${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
+        qty,
+        unit_price: unitRate,
+        line_total: lineTotal
+      });
+      totalRetail += lineTotal;
+    } else {
+      // Standard installation (> 2 cameras):
+      // HD: ₹200/cam, IP: ₹300/cam, plus ₹500 site visit charge
+      const basePerCamRate = (tech === "IP" ? ipFittingRate : hdFittingRate);
+      const unitRate = Math.round(basePerCamRate * locationMultiplier);
+      const lineTotal = unitRate * qty;
+      items.push({
+        product_id: "labor_fitting_only",
+        display_name: `${tech} Camera Mounting & Termination (Existing Cabling)${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
+        qty,
+        unit_price: unitRate,
+        line_total: lineTotal
+      });
+      totalRetail += lineTotal;
+
+      const effectiveVisit = Math.round(visitCharge * locationMultiplier);
+      if (effectiveVisit > 0) {
+        items.push({
+          product_id: "labor_visit_charge",
+          display_name: `Technician Site Visit & Mobilization Fee${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
+          qty: 1,
+          unit_price: effectiveVisit,
+          line_total: effectiveVisit
+        });
+        totalRetail += effectiveVisit;
+      }
+    }
+
+    return { items, totalRetail };
+  }
+
+  // ── Scenario: Site REQUIRES cabling (Full Installation & Cabling) ──
+  const baseRate = tech === "IP" 
+    ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500) 
+    : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400);
+  const rate = Math.round(baseRate * locationMultiplier);
   const lineTotal = rate * qty;
 
   items.push({
@@ -597,9 +696,6 @@ function calculateLabor(
     });
     totalRetail += excessLineTotal;
   }
-
-  // Note: High Reach Fee is no longer automatically added.
-  // Instead, a UI warning is shown so installers can quote it post-visit.
 
   return { items, totalRetail };
 }
@@ -1713,24 +1809,76 @@ export function generatePricingSnapshot(
 
   if (wiredCameraCount > 0) {
     const isIP = resolvedSystem.plan_type?.includes("IP");
-    const baseRate = req.cabling_done 
-        ? (settings.labor_fitting_only_rate || 300)
-        : (isIP 
-          ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500)
-          : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400));
-    const rate = Math.round(baseRate);
-    const laborTotal = rate * wiredCameraCount;
+    const isCablingDone = Boolean(req.cabling_done);
 
-    lineItems.push({
-      product_id: "labor_install",
-      display_name: `Installation & Termination (${resolvedSystem.plan_type?.split("_")[0] || "HD"})`,
-      qty: wiredCameraCount,
-      unit_price: rate,
-      line_total: laborTotal,
-      base_cost_at_quote: baseRate
-    });
-    laborCost += laborTotal;
-    totalPurchaseCost += baseRate * wiredCameraCount;
+    if (isCablingDone) {
+      const smallJobThreshold = settings.labor_no_cabling_small_job_threshold ?? 2;
+      const smallJobFlatRate = settings.labor_no_cabling_small_job_rate ?? 500;
+      const visitCharge = settings.labor_no_cabling_visit_charge ?? 500;
+      const hdFittingRate = settings.labor_hd_fitting_only ?? 200;
+      const ipFittingRate = settings.labor_ip_fitting_only ?? 300;
+
+      if (wiredCameraCount <= smallJobThreshold) {
+        const unitRate = Math.round(smallJobFlatRate);
+        const lineTotal = unitRate * wiredCameraCount;
+        lineItems.push({
+          product_id: "labor_small_job_minimum",
+          display_name: `Camera Installation & Setup (Small Job Flat Rate: ₹${unitRate}/cam)`,
+          qty: wiredCameraCount,
+          unit_price: unitRate,
+          line_total: lineTotal,
+          base_cost_at_quote: unitRate
+        });
+        laborCost += lineTotal;
+        totalPurchaseCost += unitRate * wiredCameraCount;
+      } else {
+        const baseRate = isIP ? ipFittingRate : hdFittingRate;
+        const rate = Math.round(baseRate);
+        const laborTotal = rate * wiredCameraCount;
+
+        lineItems.push({
+          product_id: "labor_fitting_only",
+          display_name: `${isIP ? "IP" : "HD"} Camera Mounting & Termination (Existing Cabling)`,
+          qty: wiredCameraCount,
+          unit_price: rate,
+          line_total: laborTotal,
+          base_cost_at_quote: baseRate
+        });
+        laborCost += laborTotal;
+        totalPurchaseCost += baseRate * wiredCameraCount;
+
+        if (visitCharge > 0) {
+          const visitPrice = Math.round(visitCharge);
+          lineItems.push({
+            product_id: "labor_visit_charge",
+            display_name: "Technician Site Visit & Mobilization Fee",
+            qty: 1,
+            unit_price: visitPrice,
+            line_total: visitPrice,
+            base_cost_at_quote: visitCharge
+          });
+          laborCost += visitPrice;
+          totalPurchaseCost += visitCharge;
+        }
+      }
+    } else {
+      const baseRate = isIP 
+        ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500)
+        : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400);
+      const rate = Math.round(baseRate);
+      const laborTotal = rate * wiredCameraCount;
+
+      lineItems.push({
+        product_id: "labor_install",
+        display_name: `Installation & Termination (${resolvedSystem.plan_type?.split("_")[0] || "HD"})`,
+        qty: wiredCameraCount,
+        unit_price: rate,
+        line_total: laborTotal,
+        base_cost_at_quote: baseRate
+      });
+      laborCost += laborTotal;
+      totalPurchaseCost += baseRate * wiredCameraCount;
+    }
   }
 
   // 8. Site Prep Surcharges
@@ -1757,11 +1905,11 @@ export function generatePricingSnapshot(
     totalPurchaseCost += cost;
   };
 
-  if (flags.requiresLadderFee) addSurcharge("surcharge_ladder", "Ladder / Scaffolding Arrangement Fee", prepCfg.ladderArrangementFee);
-  if (flags.requiresMarbleSurcharge) addSurcharge("surcharge_marble", "Specialized Drilling (Marble/Stone)", prepCfg.marbleLaborSurcharge);
-  if (flags.requiresMetalSurcharge) addSurcharge("surcharge_metal", "Metal/Pole Installation Surcharge", prepCfg.metalInstallationSurcharge);
-  if (flags.requiresFurnishedSurcharge) addSurcharge("surcharge_furnished", "Furnished Site Care & Cleanup Premium", prepCfg.furnishedSiteSurcharge);
-  if (flags.requiresHeavyDrillingSurcharge) addSurcharge("surcharge_wall_drilling", "Heavy Wall/Floor Penetration Surcharge", prepCfg.heavyWallDrillingSurcharge);
+  if (flags.requiresLadderFee) addSurcharge("surcharge_ladder", "Ladder / Scaffolding Arrangement Fee", prepCfg.ladderArrangementFee ?? 500);
+  if (flags.requiresMarbleSurcharge) addSurcharge("surcharge_marble", "Specialized Drilling (Marble/Stone)", prepCfg.marbleLaborSurcharge ?? 400);
+  if (flags.requiresMetalSurcharge) addSurcharge("surcharge_metal", "Metal/Pole Installation Surcharge", prepCfg.metalInstallationSurcharge ?? 200);
+  if (flags.requiresFurnishedSurcharge) addSurcharge("surcharge_furnished", "Furnished Site Care & Cleanup Premium", prepCfg.furnishedSiteSurcharge ?? 300);
+  if (flags.requiresHeavyDrillingSurcharge) addSurcharge("surcharge_wall_drilling", "Heavy Wall/Floor Penetration Surcharge", prepCfg.heavyWallDrillingSurcharge ?? 600);
 
   // 9. Add-ons (CRITICAL FIX: Support Addons - Do Not Drop!)
   if (selectedAddonIds && selectedAddonIds.length > 0 && addons && addons.length > 0) {

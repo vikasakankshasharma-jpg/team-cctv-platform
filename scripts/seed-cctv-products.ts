@@ -16,39 +16,55 @@ import * as path from "path";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
-if (!admin.apps.length) {
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID!,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-      privateKey,
-    }),
-  });
+function getDb() {
+  if (!admin.apps.length) {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID!,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+        privateKey,
+      }),
+    });
+  }
+  return {
+    db: admin.firestore(),
+    ts: admin.firestore.FieldValue.serverTimestamp(),
+  };
 }
-
-const db = admin.firestore();
-const ts = admin.firestore.FieldValue.serverTimestamp();
 
 // ─────────────────────────────────────────────
 // Product Catalog
 // ─────────────────────────────────────────────
 
-type Category = "camera" | "recorder" | "accessory";
-type Technology = "HD" | "IP" | "BOTH";
+type Category =
+  | "cctv_camera"
+  | "recorder"
+  | "storage"
+  | "power_device"
+  | "cable"
+  | "connector"
+  | "accessories";
+type Technology = "HD" | "IP" | "BOTH" | "Common";
 
 interface Product {
+  id?: string;
+  sku?: string;
   display_name: string;
   technical_name: string;
   brand: string;
   category: Category;
   technology: Technology;
+  technologies?: string[];
   unit_price: number;
   base_cost: number;
   is_active: boolean;
   resolution_mp?: number;
+  form_factor?: "dome" | "bullet" | "ptz";
   channels?: number;
   max_cameras?: number;
+  storage_capacity_tb?: number;
+  storage_type?: string;
   features?: string[];
   tags?: string[];
   description?: string;
@@ -68,7 +84,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "cctv_camera",
     technology: "IP",
+    technologies: ["IP"],
     resolution_mp: 2,
+    form_factor: "bullet",
     unit_price: 1850,
     base_cost: 1400,
     is_active: true,
@@ -85,7 +103,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "cctv_camera",
     technology: "IP",
+    technologies: ["IP"],
     resolution_mp: 2,
+    form_factor: "dome",
     unit_price: 1950,
     base_cost: 1480,
     is_active: true,
@@ -102,7 +122,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "cctv_camera",
     technology: "IP",
+    technologies: ["IP"],
     resolution_mp: 4,
+    form_factor: "bullet",
     unit_price: 3200,
     base_cost: 2450,
     is_active: true,
@@ -119,7 +141,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "cctv_camera",
     technology: "IP",
+    technologies: ["IP"],
     resolution_mp: 5,
+    form_factor: "dome",
     unit_price: 3800,
     base_cost: 2900,
     is_active: true,
@@ -136,7 +160,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "cctv_camera",
     technology: "IP",
+    technologies: ["IP"],
     resolution_mp: 5,
+    form_factor: "bullet",
     unit_price: 4100,
     base_cost: 3100,
     is_active: true,
@@ -153,7 +179,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "cctv_camera",
     technology: "IP",
+    technologies: ["IP"],
     resolution_mp: 8,
+    form_factor: "bullet",
     unit_price: 6500,
     base_cost: 5000,
     is_active: true,
@@ -174,7 +202,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "prama",
     category: "cctv_camera",
     technology: "IP",
+    technologies: ["IP"],
     resolution_mp: 2,
+    form_factor: "dome",
     unit_price: 1900,
     base_cost: 1450,
     is_active: true,
@@ -191,7 +221,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "prama",
     category: "cctv_camera",
     technology: "IP",
+    technologies: ["IP"],
     resolution_mp: 4,
+    form_factor: "bullet",
     unit_price: 3100,
     base_cost: 2380,
     is_active: true,
@@ -212,7 +244,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "cctv_camera",
     technology: "HD",
+    technologies: ["HD"],
     resolution_mp: 2,
+    form_factor: "dome",
     unit_price: 950,
     base_cost: 720,
     is_active: true,
@@ -229,7 +263,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "cctv_camera",
     technology: "HD",
+    technologies: ["HD"],
     resolution_mp: 2,
+    form_factor: "bullet",
     unit_price: 1050,
     base_cost: 800,
     is_active: true,
@@ -246,7 +282,9 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "cctv_camera",
     technology: "HD",
+    technologies: ["HD"],
     resolution_mp: 5,
+    form_factor: "bullet",
     unit_price: 2200,
     base_cost: 1680,
     is_active: true,
@@ -267,6 +305,7 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "recorder",
     technology: "IP",
+    technologies: ["IP"],
     channels: 4,
     max_cameras: 4,
     unit_price: 3500,
@@ -282,6 +321,7 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "recorder",
     technology: "IP",
+    technologies: ["IP"],
     channels: 8,
     max_cameras: 8,
     unit_price: 5500,
@@ -297,6 +337,7 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "recorder",
     technology: "IP",
+    technologies: ["IP"],
     channels: 16,
     max_cameras: 16,
     unit_price: 9800,
@@ -316,6 +357,7 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "recorder",
     technology: "HD",
+    technologies: ["HD"],
     channels: 4,
     max_cameras: 4,
     unit_price: 2800,
@@ -331,6 +373,7 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "recorder",
     technology: "HD",
+    technologies: ["HD"],
     channels: 8,
     max_cameras: 8,
     unit_price: 4200,
@@ -346,6 +389,7 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "recorder",
     technology: "HD",
+    technologies: ["HD"],
     channels: 16,
     max_cameras: 16,
     unit_price: 7200,
@@ -364,7 +408,10 @@ const PRODUCTS: Record<string, Product> = {
     technical_name: "WD10PURZ-1TB",
     brand: "wd",
     category: "storage",
-    technology: "BOTH",
+    technology: "Common",
+    technologies: ["Common"],
+    storage_capacity_tb: 1,
+    storage_type: "HDD",
     unit_price: 3800,
     base_cost: 3200,
     is_active: true,
@@ -377,7 +424,10 @@ const PRODUCTS: Record<string, Product> = {
     technical_name: "WD20PURZ-2TB",
     brand: "wd",
     category: "storage",
-    technology: "BOTH",
+    technology: "Common",
+    technologies: ["Common"],
+    storage_capacity_tb: 2,
+    storage_type: "HDD",
     unit_price: 5500,
     base_cost: 4600,
     is_active: true,
@@ -390,7 +440,10 @@ const PRODUCTS: Record<string, Product> = {
     technical_name: "ST4000VX013-4TB",
     brand: "seagate",
     category: "storage",
-    technology: "BOTH",
+    technology: "Common",
+    technologies: ["Common"],
+    storage_capacity_tb: 4,
+    storage_type: "HDD",
     unit_price: 8800,
     base_cost: 7400,
     is_active: true,
@@ -403,7 +456,10 @@ const PRODUCTS: Record<string, Product> = {
     technical_name: "ST6000VX001-6TB",
     brand: "seagate",
     category: "storage",
-    technology: "BOTH",
+    technology: "Common",
+    technologies: ["Common"],
+    storage_capacity_tb: 6,
+    storage_type: "HDD",
     unit_price: 13500,
     base_cost: 11200,
     is_active: true,
@@ -421,6 +477,8 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "power_device",
     technology: "IP",
+    technologies: ["IP"],
+    channels: 4,
     max_cameras: 4,
     unit_price: 1800,
     base_cost: 1400,
@@ -435,6 +493,8 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "power_device",
     technology: "IP",
+    technologies: ["IP"],
+    channels: 8,
     max_cameras: 8,
     unit_price: 3200,
     base_cost: 2500,
@@ -449,6 +509,8 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "power_device",
     technology: "IP",
+    technologies: ["IP"],
+    channels: 16,
     max_cameras: 16,
     unit_price: 6500,
     base_cost: 5000,
@@ -467,6 +529,8 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "power_device",
     technology: "HD",
+    technologies: ["HD"],
+    channels: 4,
     max_cameras: 4,
     unit_price: 650,
     base_cost: 480,
@@ -481,6 +545,8 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "power_device",
     technology: "HD",
+    technologies: ["HD"],
+    channels: 8,
     max_cameras: 8,
     unit_price: 1100,
     base_cost: 820,
@@ -495,6 +561,8 @@ const PRODUCTS: Record<string, Product> = {
     brand: "cpplus",
     category: "power_device",
     technology: "HD",
+    technologies: ["HD"],
+    channels: 16,
     max_cameras: 16,
     unit_price: 1900,
     base_cost: 1450,
@@ -513,32 +581,51 @@ async function seedProducts() {
   console.log(`   Project: ${process.env.FIREBASE_PROJECT_ID}`);
   console.log(`   Products to seed: ${Object.keys(PRODUCTS).length}`);
 
+  const { db, ts } = getDb();
   const batch = db.batch();
   let count = 0;
 
   for (const [productId, productData] of Object.entries(PRODUCTS)) {
     const ref = db.collection("products").doc(productId);
-    batch.set(ref, { ...productData, created_at: ts, updated_at: ts }, { merge: true });
+    batch.set(
+      ref,
+      {
+        ...productData,
+        id: productId,
+        sku: productId,
+        is_quotation_eligible: true,
+        stock_status: "in_stock",
+        created_at: ts,
+        updated_at: ts
+      },
+      { merge: true }
+    );
     count++;
     process.stdout.write(`   ✓ ${productData.display_name}\n`);
   }
 
   await batch.commit();
 
-  const cameras = Object.values(PRODUCTS).filter(p => p.category === "camera");
+  const cameras = Object.values(PRODUCTS).filter(p => p.category === "cctv_camera");
   const recorders = Object.values(PRODUCTS).filter(p => p.category === "recorder");
-  const accessories = Object.values(PRODUCTS).filter(p => p.category === "accessory");
+  const storage = Object.values(PRODUCTS).filter(p => p.category === "storage");
+  const power = Object.values(PRODUCTS).filter(p => p.category === "power_device");
 
   console.log(`\n✅ Done! Seeded ${count} products:`);
-  console.log(`   📷 Cameras:     ${cameras.length} (${cameras.filter(c => c.technology === "IP").length} IP, ${cameras.filter(c => c.technology === "HD").length} HD)`);
-  console.log(`   📼 Recorders:   ${recorders.length} (${recorders.filter(r => r.technology === "IP").length} NVR, ${recorders.filter(r => r.technology === "HD").length} DVR)`);
-  console.log(`   🔧 Accessories: ${accessories.length} (${accessories.filter(a => a.tags?.includes("hdd")).length} HDD, PoE/PSU included)`);
+  console.log(`   📷 Cameras:        ${cameras.length} (${cameras.filter(c => c.technology === "IP").length} IP, ${cameras.filter(c => c.technology === "HD").length} HD)`);
+  console.log(`   📼 Recorders:      ${recorders.length} (${recorders.filter(r => r.technology === "IP").length} NVR, ${recorders.filter(r => r.technology === "HD").length} DVR)`);
+  console.log(`   💾 Storage:        ${storage.length} HDDs`);
+  console.log(`   ⚡ Power Devices:  ${power.length} (PoE switches & SMPS)`);
   console.log(`\n   Brands: CP Plus, Prama, WD, Seagate`);
 
   process.exit(0);
 }
 
-seedProducts().catch((err) => {
-  console.error("❌ Products seed failed:", err);
-  process.exit(1);
-});
+export { PRODUCTS, seedProducts };
+
+if (require.main === module) {
+  seedProducts().catch((err) => {
+    console.error("❌ Products seed failed:", err);
+    process.exit(1);
+  });
+}

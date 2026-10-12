@@ -8,6 +8,7 @@ import { Product, Addon, AppSettings, Lead } from "@/types";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { ApiResponse } from "@/lib/api-response";
 import { isMaintenanceMode } from "@/lib/kill-switch";
+import { mergeAppSettings } from "@/lib/cached-settings";
 
 /** 
  * ENTERPRISE-GRADE QUOTE PERSISTENCE
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
     const geoRules = geoRulesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
 
-    const settings = settingsSnap.data() as AppSettings;
+    const settings = mergeAppSettings(settingsSnap.data() as AppSettings);
 
     const wizardAnswers = (leadData.wizard_answers || {}) as Record<string, unknown>;
     const siteSurvey = (leadData as any).site_survey || {};
@@ -146,6 +147,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const effectiveSurchargeFlags = (selection as any).site_surcharge_flags || (leadData as any).site_surcharge_flags || (selection as any).site_surcharges || {};
+
     const pricing = calculatePricing({
       selection: selection as any, // Cast to any to bypass strict null checking from Zod schema vs internal type
       products,
@@ -153,6 +156,7 @@ export async function POST(request: NextRequest) {
       settings,
       cablingDone: leadData.cabling_done || false,
       cablingMeters,              // FIX: Now matches the client cabling calculation exactly
+      site_surcharge_flags: effectiveSurchargeFlags,
       referralDiscountPercent: appliedReferralDiscountPercent, // Injected via global settings
       referralDiscountFlat: 0,
       activeOffer: leadData.active_offer,

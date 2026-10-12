@@ -35,9 +35,7 @@ export function getCatalogCapacity(products: Product[]): CatalogCapacity {
     (p) => p.category === "recorder" &&
       p.is_active &&
       p.unit_price > 0 &&
-      p.stock_status !== "out_of_stock" &&
-      p.stock_status !== "on_order" &&
-      p.stock_status !== "discontinued"
+      p.is_quotation_eligible !== false
   );
 
   const maxChannelsFor = (tech: string): number => {

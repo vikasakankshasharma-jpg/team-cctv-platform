@@ -28,6 +28,10 @@ const RATE_FIELDS: { key: keyof AppSettings; label: string; unit: string; descri
   { key: "high_reach_fee",             label: "High-Reach Fee",            unit: "₹",  description: "Extra fee for ceiling > 12ft" },
   { key: "amc_1yr_pct",                label: "AMC 1-Year %",              unit: "%",  description: "% of hardware cost for annual AMC" },
   { key: "gst_rate",                   label: "GST Rate",                  unit: "%",  description: "GST applied on net taxable amount" },
+  { key: "labor_hd_fitting_only",      label: "HD Fitting (No Cabling)",   unit: "₹",  description: "Fitting rate per HD camera when site is pre-cabled" },
+  { key: "labor_ip_fitting_only",      label: "IP Fitting (No Cabling)",   unit: "₹",  description: "Fitting rate per IP camera when site is pre-cabled" },
+  { key: "labor_no_cabling_visit_charge", label: "Visit Fee (Pre-Cabled)", unit: "₹",  description: "Visit mobilization fee when site is pre-cabled" },
+  { key: "labor_no_cabling_small_job_rate", label: "Small Job Flat Rate",  unit: "₹",  description: "Per-camera flat rate when camera count ≤ 2" },
   { key: "minimum_margin_threshold",   label: "Min Margin Alert",          unit: "%",  description: "Below this margin, cells turn red" },
 ];
 

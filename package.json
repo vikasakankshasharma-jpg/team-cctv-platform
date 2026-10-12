@@ -11,6 +11,8 @@
     "lint": "eslint",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
+    "test:oracle": "ts-node --project tsconfig.scripts.json --transpile-only scripts/run-quotation-oracle.ts",
+    "reconcile:prices": "ts-node --project tsconfig.scripts.json --transpile-only scripts/reconcile-price-list.ts",
     "seed:wizard": "ts-node --project tsconfig.scripts.json --transpile-only scripts/seed-wizard-steps.ts",
     "seed:products": "ts-node --project tsconfig.scripts.json --transpile-only scripts/seed-cctv-products.ts",
     "import:mega-products": "ts-node --project tsconfig.scripts.json --transpile-only scripts/import-mega-products.ts",

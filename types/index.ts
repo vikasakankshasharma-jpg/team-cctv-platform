@@ -478,6 +478,13 @@ export interface ConfiguratorSelection {
   partner_id?: string;
   utm_source?: string;
   utm_campaign?: string;
+  site_surcharge_flags?: {
+    requiresLadderFee?: boolean;
+    requiresMarbleSurcharge?: boolean;
+    requiresMetalSurcharge?: boolean;
+    requiresFurnishedSurcharge?: boolean;
+    requiresHeavyDrillingSurcharge?: boolean;
+  };
 }
 
 export interface QuoteLineItem {
@@ -487,6 +494,7 @@ export interface QuoteLineItem {
   qty: number;
   unit_price: number;
   line_total: number;
+  base_cost_at_quote?: number;
 }
 
 export interface QuoteAddon {
@@ -579,6 +587,11 @@ export interface AppSettings {
   gemini_api_keys?: string[];
   labor_ip_per_camera: number;
   labor_hd_per_camera: number;
+  labor_hd_fitting_only?: number;
+  labor_ip_fitting_only?: number;
+  labor_no_cabling_visit_charge?: number;
+  labor_no_cabling_small_job_threshold?: number;
+  labor_no_cabling_small_job_rate?: number;
   cable_copper_coated_ip: number;
   cable_copper_coated_hd: number;
   cable_pure_copper: number;
@@ -638,6 +651,15 @@ export interface AppSettings {
   // Launch Kill Switch & Operational Controls
   system_mode?: "LIVE" | "MAINTENANCE";
   payments_enabled?: boolean;
+  
+  // Site Preparation & Difficulty Surcharges (0% Margin Pass-Through)
+  site_preparation?: {
+    ladderArrangementFee?: number;
+    marbleLaborSurcharge?: number;
+    metalInstallationSurcharge?: number;
+    furnishedSiteSurcharge?: number;
+    heavyWallDrillingSurcharge?: number;
+  };
 }
 
 export interface Promoter {

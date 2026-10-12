@@ -7,7 +7,8 @@ import { GenerateQuoteSchema } from "@/lib/validators";
 import { Product, Addon, AppSettings, Lead } from "@/types";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logs";
 import { ApiResponse } from "@/lib/api-response";
-import { requireAdminApi } from "@/lib/auth-server";
+import { requireRoleApi } from "@/lib/auth-server";
+import { mergeAppSettings } from "@/lib/cached-settings";
 
 /**
  * ADMIN QUOTE REVISION API
@@ -20,10 +21,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const session = await requireAdminApi();
+    const session = await requireRoleApi(["super_admin", "admin", "sales_staff", "salesperson", "installer", "operations_manager"]);
 
     const body = await request.json();
-    const { lead_id, parent_quote_id, revision_notes, status } = body;
+    const { lead_id, parent_quote_id, revision_notes, status, site_surcharge_flags } = body;
 
     // 1. Validate Input Structure
     const validation = GenerateQuoteSchema.safeParse(body.selection);
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     
     const addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Addon[];
     const geoRules = geoRulesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-    const settings = settingsSnap.data() as AppSettings;
+    const settings = mergeAppSettings(settingsSnap.data() as AppSettings);
 
     if (!selection.resolution_preference && selection.picture_quality) {
       if (selection.picture_quality === "good") selection.resolution_preference = "2MP";
@@ -84,12 +85,15 @@ export async function POST(request: NextRequest) {
       appliedReferralDiscountPercent = settings.customer_referral_discount_percent ?? 3;
     }
 
+    const effectiveFlags = site_surcharge_flags || (selection as any).site_surcharge_flags || (selection as any).site_surcharges || {};
+
     const pricing = calculatePricing({
       selection: selection as any,
       products,
       addons,
       settings,
-      cablingDone: leadData.cabling_done || false,
+      cablingDone: (selection as any).cabling_done ?? leadData.cabling_done ?? false,
+      site_surcharge_flags: effectiveFlags,
       referralDiscountPercent: appliedReferralDiscountPercent,
       referralDiscountFlat: 0,
       activeOffer: leadData.active_offer,
@@ -101,10 +105,10 @@ export async function POST(request: NextRequest) {
 
     const cleanPricing = JSON.parse(JSON.stringify(pricing));
     
-    // 4. PERSIST NEW QUOTE TO DATABASE
+    // 4. PERSIST NEW QUOTE TO DATABASE (IMMUTABLE VERSIONING)
     const quoteRef = adminDb.collection("leads").doc(lead_id).collection("quotes").doc();
 
-    const quotePromise = quoteRef.set({
+    const quotePayload = {
       ...cleanPricing,
       plan_type: selection.plan_type,
       technology: selection.technology,
@@ -115,22 +119,41 @@ export async function POST(request: NextRequest) {
       version: newVersion,
       parent_quote_id: parent_quote_id,
       is_revision: true,
-      revision_notes: revision_notes || "Revised by admin after site visit",
+      revision_notes: revision_notes || `Revised after site visit by ${session.role || "staff"}`,
+      revised_by: {
+        uid: session.user?.uid || "unknown",
+        role: session.role || "staff",
+        email: session.user?.email || null
+      },
+      site_surcharge_flags: effectiveFlags,
       
       status: status || "draft",
       created_at: new Date().toISOString(),
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       recalculated_on_server: true,
+    };
+
+    const quotePromise = quoteRef.set(quotePayload);
+    const rootQuotePromise = adminDb.collection("quotes").doc(quoteRef.id).set({
+      ...quotePayload,
+      id: quoteRef.id,
+      lead_id
     });
 
-    // 5. Update Lead Status
-    const leadPromise = adminDb.collection("leads").doc(lead_id).update({ 
+    // 5. Update Lead Status & Survey Flags
+    const leadUpdatePayload: Record<string, any> = { 
       status: "quoted",
       last_quote_id: quoteRef.id,
       updated_at: serverTimestamp()
-    });
+    };
+    if (effectiveFlags && Object.keys(effectiveFlags).length > 0) {
+      leadUpdatePayload.site_surcharge_flags = effectiveFlags;
+      leadUpdatePayload["site_survey.ladder_required"] = !!effectiveFlags.requiresLadderFee;
+      leadUpdatePayload["site_survey.surface_type"] = effectiveFlags.requiresMarbleSurcharge ? "marble" : (effectiveFlags.requiresMetalSurcharge ? "metal" : "standard");
+    }
+    const leadPromise = adminDb.collection("leads").doc(lead_id).update(leadUpdatePayload);
 
-    await Promise.all([quotePromise, leadPromise]);
+    await Promise.all([quotePromise, rootQuotePromise, leadPromise]);
 
     // 6. Enterprise Audit Logging
     const { ip, ua } = getRequestMetadata(request);

@@ -40,6 +40,23 @@ export default async function SettingsAdminPage() {
     max_supported_cameras: 16,
     labor_ip_per_camera: 500,
     labor_hd_per_camera: 400,
+
+    // Existing Cabling (No Cabling Required) Labor & Visit Charges
+    labor_hd_fitting_only: 200,
+    labor_ip_fitting_only: 300,
+    labor_no_cabling_visit_charge: 500,
+    labor_no_cabling_small_job_threshold: 2,
+    labor_no_cabling_small_job_rate: 500,
+
+    // Site Preparation & Difficulty Surcharges (0% Margin Pass-Through)
+    site_preparation: {
+      ladderArrangementFee: 500,
+      marbleLaborSurcharge: 400,
+      metalInstallationSurcharge: 200,
+      furnishedSiteSurcharge: 300,
+      heavyWallDrillingSurcharge: 600,
+    },
+
     cable_copper_coated_ip: 40,
     cable_copper_coated_hd: 25,
     cable_pure_copper: 65,
@@ -89,6 +106,10 @@ export default async function SettingsAdminPage() {
         settings = {
           ...defaultSettings,
           ...data,
+          site_preparation: {
+            ...defaultSettings.site_preparation,
+            ...(data.site_preparation || {})
+          },
           updated_at: (data.updated_at as any)?.toDate?.()?.toISOString() || data.updated_at || null,
         } as AppSettings;
       }

@@ -4,6 +4,8 @@ import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { SiteSurveyRevisionModal } from "@/components/operations/SiteSurveyRevisionModal";
+
 export default function Lead360Page({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const leadId = resolvedParams.id;
@@ -19,6 +21,9 @@ export default function Lead360Page({ params }: { params: Promise<{ id: string }
   const [actionType, setActionType] = useState("MARK_CONTACTED");
   const [actionNote, setActionNote] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Site Survey & Quotation Revision state
+  const [selectedQuoteForRevision, setSelectedQuoteForRevision] = useState<any | null>(null);
 
   useEffect(() => {
     fetchLead360();
@@ -131,13 +136,43 @@ export default function Lead360Page({ params }: { params: Promise<{ id: string }
             <div className="space-y-4">
               {quotes?.map((q: any) => (
                 <div key={q.id} className="p-4 border rounded-lg hover:shadow-sm">
-                  <div className="flex justify-between mb-2">
-                    <h4 className="font-medium text-gray-900">Quote {q.id}</h4>
-                    <span className="font-bold text-green-700">₹{q.total_payable}</span>
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-gray-900">Quote {q.id}</h4>
+                        <span className="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">
+                          v{q.version || 1}
+                        </span>
+                        {q.is_revision && (
+                          <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-medium">
+                            Revision
+                          </span>
+                        )}
+                      </div>
+                      {q.revision_notes && (
+                        <p className="text-xs text-gray-500 italic mt-0.5">{q.revision_notes}</p>
+                      )}
+                    </div>
+                    <span className="font-bold text-green-700 text-base">₹{q.total_payable?.toLocaleString("en-IN")}</span>
                   </div>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p>Status: {q.status || 'draft'}</p>
-                    <p>Items: {q.items?.length || 0}</p>
+                  <div className="text-sm text-gray-600 space-y-1 mb-3">
+                    <p>Status: <span className="font-semibold uppercase text-xs">{q.status || 'draft'}</span></p>
+                    <p>Line Items: {q.items?.length || q.configuration_snapshot?.length || 0}</p>
+                  </div>
+                  <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                    <Link 
+                      href={`/quote/${leadId}/review/${q.id}`} 
+                      className="text-xs text-blue-600 hover:underline font-semibold"
+                    >
+                      View Quotation &rarr;
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedQuoteForRevision(q)}
+                      className="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm"
+                    >
+                      Site Survey & Revise Quote
+                    </button>
                   </div>
                 </div>
               ))}
@@ -215,6 +250,22 @@ export default function Lead360Page({ params }: { params: Promise<{ id: string }
             </form>
           </div>
         </div>
+      )}
+
+      {selectedQuoteForRevision && (
+        <SiteSurveyRevisionModal
+          isOpen={!!selectedQuoteForRevision}
+          onClose={() => setSelectedQuoteForRevision(null)}
+          leadId={leadId}
+          parentQuoteId={selectedQuoteForRevision.id}
+          currentVersion={selectedQuoteForRevision.version || 1}
+          initialFlags={selectedQuoteForRevision.site_surcharge_flags || lead?.site_surcharge_flags}
+          selection={selectedQuoteForRevision.selection}
+          onSuccess={() => {
+            fetchLead360();
+            setSelectedQuoteForRevision(null);
+          }}
+        />
       )}
     </div>
   );

@@ -1,74 +1,2023 @@
 [
-  { "skuId": "CPPLUS-CAMERA_HD-2MP-BW-AUDIO-DOME", "brand": "CP Plus", "category": "CAMERA_HD", "display_name": "CP Plus 2MP B&W Night Vision Dome", "technical_name": "CP Plus 2MP B&W NV Audio Dome", "specifications": { "mp": "2MP", "features": "Black & White Night Vision, Audio IN", "formFactor": "DOME" }, "baseCost": 1000, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_HD-2MP-BW-AUDIO-BULLET", "brand": "CP Plus", "category": "CAMERA_HD", "display_name": "CP Plus 2MP B&W Night Vision Bullet", "technical_name": "CP Plus 2MP B&W NV Audio Bullet", "specifications": { "mp": "2MP", "features": "Black & White Night Vision, Audio IN", "formFactor": "BULLET" }, "baseCost": 1050, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_HD-2MP-COLOR-AUDIO-DOME", "brand": "CP Plus", "category": "CAMERA_HD", "display_name": "CP Plus 2MP Color Night Vision Dome", "technical_name": "CP Plus 2MP Color NV Audio Dome", "specifications": { "mp": "2MP", "features": "Color Night Vision, Audio IN", "formFactor": "DOME" }, "baseCost": 1250, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_HD-2MP-COLOR-AUDIO-BULLET", "brand": "CP Plus", "category": "CAMERA_HD", "display_name": "CP Plus 2MP Color Night Vision Bullet", "technical_name": "CP Plus 2MP Color NV Audio Bullet", "specifications": { "mp": "2MP", "features": "Color Night Vision, Audio IN", "formFactor": "BULLET" }, "baseCost": 1300, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_HD-5MP-COLOR-AUDIO-DOME", "brand": "CP Plus", "category": "CAMERA_HD", "display_name": "CP Plus 5MP Color Night Vision Dome", "technical_name": "CP Plus 5MP Color NV Audio Dome", "specifications": { "mp": "5MP", "features": "Color Night Vision, Audio IN", "formFactor": "DOME" }, "baseCost": 1600, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_HD-5MP-COLOR-AUDIO-BULLET", "brand": "CP Plus", "category": "CAMERA_HD", "display_name": "CP Plus 5MP Color Night Vision Bullet", "technical_name": "CP Plus 5MP Color NV Audio Bullet", "specifications": { "mp": "5MP", "features": "Color Night Vision, Audio IN", "formFactor": "BULLET" }, "baseCost": 1650, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CAMERA_HD-2MP-COLOR-AUDIO-DOME", "brand": "Budget Brand", "category": "CAMERA_HD", "display_name": "Budget 2MP Color Night Vision Dome", "technical_name": "Budget 2MP Color NV Audio Dome", "specifications": { "mp": "2MP", "features": "Color Night Vision, Audio IN", "formFactor": "DOME" }, "baseCost": 700, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CAMERA_HD-2MP-COLOR-AUDIO-BULLET", "brand": "Budget Brand", "category": "CAMERA_HD", "display_name": "Budget 2MP Color Night Vision Bullet", "technical_name": "Budget 2MP Color NV Audio Bullet", "specifications": { "mp": "2MP", "features": "Color Night Vision, Audio IN", "formFactor": "BULLET" }, "baseCost": 750, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "CPPLUS-DVR-4CH-2MP-1SATA", "brand": "CP Plus", "category": "DVR", "display_name": "CP Plus 4Ch 2MP DVR 1SATA", "technical_name": "CP Plus 4Ch 2MP DVR", "specifications": { "channels": 4, "mpSupported": "2MP", "sata": 1 }, "baseCost": 3700, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-DVR-8CH-2MP-1SATA", "brand": "CP Plus", "category": "DVR", "display_name": "CP Plus 8Ch 2MP DVR 1SATA", "technical_name": "CP Plus 8Ch 2MP DVR", "specifications": { "channels": 8, "mpSupported": "2MP", "sata": 1 }, "baseCost": 4800, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-DVR-16CH-2MP-1SATA", "brand": "CP Plus", "category": "DVR", "display_name": "CP Plus 16Ch 2MP DVR 1SATA", "technical_name": "CP Plus 16Ch 2MP DVR", "specifications": { "channels": 16, "mpSupported": "2MP", "sata": 1 }, "baseCost": 8100, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-DVR-4CH-5MP-1SATA", "brand": "CP Plus", "category": "DVR", "display_name": "CP Plus 4Ch 5MP DVR 1SATA", "technical_name": "CP Plus 4Ch 5MP DVR", "specifications": { "channels": 4, "mpSupported": "5MP", "sata": 1 }, "baseCost": 5750, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-DVR-8CH-5MP-1SATA", "brand": "CP Plus", "category": "DVR", "display_name": "CP Plus 8Ch 5MP DVR 1SATA", "technical_name": "CP Plus 8Ch 5MP DVR", "specifications": { "channels": 8, "mpSupported": "5MP", "sata": 1 }, "baseCost": 8100, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-DVR-16CH-5MP-1SATA", "brand": "CP Plus", "category": "DVR", "display_name": "CP Plus 16Ch 5MP DVR 1SATA", "technical_name": "CP Plus 16Ch 5MP DVR", "specifications": { "channels": 16, "mpSupported": "5MP", "sata": 1 }, "baseCost": 13300, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "CPPLUS-SMPS-8CH", "brand": "CP Plus", "category": "POWER_SUPPLY", "display_name": "CP Plus 8Ch SMPS", "technical_name": "CP Plus SMPS 8Ch", "specifications": { "channels": 8 }, "baseCost": 600, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-SMPS-8CH", "brand": "Budget Brand", "category": "POWER_SUPPLY", "display_name": "Budget 8Ch SMPS", "technical_name": "Budget SMPS 8Ch", "specifications": { "channels": 8 }, "baseCost": 350, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "CPPLUS-CABLE_3PLUS1-90M-COPPER", "brand": "CP Plus", "category": "CABLE", "display_name": "CP Plus 3+1 Cable 90m Copper", "technical_name": "CP Plus 3+1 90m Pure Copper", "specifications": { "lengthMeters": 90, "type": "3+1", "material": "Copper" }, "baseCost": 1350, "marginRule": "CABLE", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CABLE_3PLUS1-70M-COATED", "brand": "Budget Brand", "category": "CABLE", "display_name": "Budget 3+1 Cable 70m Copper Coated", "technical_name": "Budget 3+1 70m CCA", "specifications": { "lengthMeters": 70, "type": "3+1", "material": "Copper Coated" }, "baseCost": 600, "marginRule": "CABLE", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "CPPLUS-CABLE_CAT6-305M-COPPER", "brand": "CP Plus", "category": "CABLE", "display_name": "CP Plus CAT6 305m Copper", "technical_name": "CP Plus CAT6 305m Pure Copper", "specifications": { "lengthMeters": 305, "type": "CAT6", "material": "Copper" }, "baseCost": 9500, "marginRule": "CABLE", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CABLE_CAT6-305M-COATED", "brand": "CP Plus", "category": "CABLE", "display_name": "CP Plus CAT6 305m Copper Coated", "technical_name": "CP Plus CAT6 305m CCA", "specifications": { "lengthMeters": 305, "type": "CAT6", "material": "Copper Coated" }, "baseCost": 3700, "marginRule": "CABLE", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CABLE_CAT6-100M-COPPER", "brand": "Budget Brand", "category": "CABLE", "display_name": "Budget CAT6 100m Copper", "technical_name": "Budget CAT6 100m Pure Copper", "specifications": { "lengthMeters": 100, "type": "CAT6", "material": "Copper" }, "baseCost": 1200, "marginRule": "CABLE", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CABLE_CAT6-305M-COATED", "brand": "Budget Brand", "category": "CABLE", "display_name": "Budget CAT6 305m Copper Coated", "technical_name": "Budget CAT6 305m CCA", "specifications": { "lengthMeters": 305, "type": "CAT6", "material": "Copper Coated" }, "baseCost": 3200, "marginRule": "CABLE", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "BUDGET-CONN-BNC", "brand": "Budget Brand", "category": "CONNECTOR", "display_name": "BNC Connector", "technical_name": "BNC Connector", "specifications": { "type": "BNC" }, "baseCost": 15, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CONN-DC", "brand": "Budget Brand", "category": "CONNECTOR", "display_name": "DC Connector", "technical_name": "DC Connector", "specifications": { "type": "DC" }, "baseCost": 5, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CONN-RJ45", "brand": "Budget Brand", "category": "CONNECTOR", "display_name": "RJ45 Connector", "technical_name": "RJ45 Connector", "specifications": { "type": "RJ45" }, "baseCost": 5, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "BUDGET-HDMI-1.5M", "brand": "Budget Brand", "category": "CABLE", "display_name": "HDMI Cable 1.5m", "technical_name": "HDMI 1.5m", "specifications": { "lengthMeters": 1.5, "type": "HDMI" }, "baseCost": 60, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-HDMI-3M", "brand": "Budget Brand", "category": "CABLE", "display_name": "HDMI Cable 3m", "technical_name": "HDMI 3m", "specifications": { "lengthMeters": 3, "type": "HDMI" }, "baseCost": 120, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-HDMI-5M", "brand": "Budget Brand", "category": "CABLE", "display_name": "HDMI Cable 5m", "technical_name": "HDMI 5m", "specifications": { "lengthMeters": 5, "type": "HDMI" }, "baseCost": 180, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-HDMI-10M", "brand": "Budget Brand", "category": "CABLE", "display_name": "HDMI Cable 10m", "technical_name": "HDMI 10m", "specifications": { "lengthMeters": 10, "type": "HDMI" }, "baseCost": 300, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "BUDGET-HDD-500GB", "brand": "Budget Brand", "category": "HDD", "display_name": "Budget HDD 500GB", "technical_name": "Budget 500GB Surveillance HDD", "specifications": { "storage": "500GB" }, "baseCost": 1800, "marginRule": "HDD", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-HDD-1TB", "brand": "Budget Brand", "category": "HDD", "display_name": "Budget HDD 1TB", "technical_name": "Budget 1TB Surveillance HDD", "specifications": { "storage": "1TB" }, "baseCost": 4700, "marginRule": "HDD", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-HDD-2TB", "brand": "Budget Brand", "category": "HDD", "display_name": "Budget HDD 2TB", "technical_name": "Budget 2TB Surveillance HDD", "specifications": { "storage": "2TB" }, "baseCost": 7800, "marginRule": "HDD", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-HDD-4TB", "brand": "Budget Brand", "category": "HDD", "display_name": "Budget HDD 4TB", "technical_name": "Budget 4TB Surveillance HDD", "specifications": { "storage": "4TB" }, "baseCost": 14500, "marginRule": "HDD", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "SEAGATE-HDD-1TB", "brand": "Seagate", "category": "HDD", "display_name": "Seagate 1TB Surveillance", "technical_name": "Seagate Skyhawk 1TB", "specifications": { "storage": "1TB" }, "baseCost": 9500, "marginRule": "HDD", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "SEAGATE-HDD-2TB", "brand": "Seagate", "category": "HDD", "display_name": "Seagate 2TB Surveillance", "technical_name": "Seagate Skyhawk 2TB", "specifications": { "storage": "2TB" }, "baseCost": 10900, "marginRule": "HDD", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "SEAGATE-HDD-4TB", "brand": "Seagate", "category": "HDD", "display_name": "Seagate 4TB Surveillance", "technical_name": "Seagate Skyhawk 4TB", "specifications": { "storage": "4TB" }, "baseCost": 18500, "marginRule": "HDD", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "BUDGET-POE-4CH", "brand": "Budget Brand", "category": "POE_SWITCH", "display_name": "Budget PoE Switch 4Ch", "technical_name": "Budget 4Ch PoE Switch", "specifications": { "channels": 4 }, "baseCost": 900, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-POE-8CH", "brand": "Budget Brand", "category": "POE_SWITCH", "display_name": "Budget PoE Switch 8Ch", "technical_name": "Budget 8Ch PoE Switch", "specifications": { "channels": 8 }, "baseCost": 1200, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "DLINK-POE-16CH", "brand": "D-Link", "category": "POE_SWITCH", "display_name": "D-Link PoE Switch 16Ch", "technical_name": "D-Link 16Ch PoE Switch", "specifications": { "channels": 16 }, "baseCost": 9500, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "CPPLUS-NVR-4CH-1SATA", "brand": "CP Plus", "category": "NVR", "display_name": "CP Plus 4Ch NVR 1SATA", "technical_name": "CP Plus 4Ch NVR", "specifications": { "channels": 4, "sata": 1 }, "baseCost": 4900, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-NVR-8CH-1SATA", "brand": "CP Plus", "category": "NVR", "display_name": "CP Plus 8Ch NVR 1SATA", "technical_name": "CP Plus 8Ch NVR", "specifications": { "channels": 8, "sata": 1 }, "baseCost": 5500, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-NVR-16CH-1SATA", "brand": "CP Plus", "category": "NVR", "display_name": "CP Plus 16Ch NVR 1SATA", "technical_name": "CP Plus 16Ch NVR", "specifications": { "channels": 16, "sata": 1 }, "baseCost": 8300, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-NVR-32CH-2SATA", "brand": "CP Plus", "category": "NVR", "display_name": "CP Plus 32Ch NVR 2SATA", "technical_name": "CP Plus 32Ch NVR", "specifications": { "channels": 32, "sata": 2 }, "baseCost": 15000, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "CPPLUS-CAMERA_IP-2MP-ECO-DOME", "brand": "CP Plus", "category": "CAMERA_IP", "display_name": "CP Plus 2MP IP Camera ECO Dome", "technical_name": "CP Plus 2MP IP ECO Dome", "specifications": { "mp": "2MP", "tier": "ECO", "formFactor": "DOME" }, "baseCost": 3200, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_IP-2MP-ECO-BULLET", "brand": "CP Plus", "category": "CAMERA_IP", "display_name": "CP Plus 2MP IP Camera ECO Bullet", "technical_name": "CP Plus 2MP IP ECO Bullet", "specifications": { "mp": "2MP", "tier": "ECO", "formFactor": "BULLET" }, "baseCost": 3250, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_IP-4MP-NORMAL-DOME", "brand": "CP Plus", "category": "CAMERA_IP", "display_name": "CP Plus 4MP IP Camera Normal Dome", "technical_name": "CP Plus 4MP IP Normal Dome", "specifications": { "mp": "4MP", "tier": "NORMAL", "formFactor": "DOME" }, "baseCost": 4000, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_IP-4MP-NORMAL-BULLET", "brand": "CP Plus", "category": "CAMERA_IP", "display_name": "CP Plus 4MP IP Camera Normal Bullet", "technical_name": "CP Plus 4MP IP Normal Bullet", "specifications": { "mp": "4MP", "tier": "NORMAL", "formFactor": "BULLET" }, "baseCost": 4050, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_IP-6MP-NORMAL-DOME", "brand": "CP Plus", "category": "CAMERA_IP", "display_name": "CP Plus 6MP IP Camera Normal Dome", "technical_name": "CP Plus 6MP IP Normal Dome", "specifications": { "mp": "6MP", "tier": "NORMAL", "formFactor": "DOME" }, "baseCost": 5200, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_IP-6MP-NORMAL-BULLET", "brand": "CP Plus", "category": "CAMERA_IP", "display_name": "CP Plus 6MP IP Camera Normal Bullet", "technical_name": "CP Plus 6MP IP Normal Bullet", "specifications": { "mp": "6MP", "tier": "NORMAL", "formFactor": "BULLET" }, "baseCost": 5250, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "CPPLUS-CAMERA_IP-8MP-PREMIUM-DOME", "brand": "CP Plus", "category": "CAMERA_IP", "display_name": "CP Plus 8MP IP Camera Premium Dome", "technical_name": "CP Plus 8MP IP Premium Dome", "specifications": { "mp": "8MP", "tier": "PREMIUM", "formFactor": "DOME" }, "baseCost": null, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "on_demand" },
-  { "skuId": "CPPLUS-CAMERA_IP-8MP-PREMIUM-BULLET", "brand": "CP Plus", "category": "CAMERA_IP", "display_name": "CP Plus 8MP IP Camera Premium Bullet", "technical_name": "CP Plus 8MP IP Premium Bullet", "specifications": { "mp": "8MP", "tier": "PREMIUM", "formFactor": "BULLET" }, "baseCost": 7500, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CAMERA_IP-5MP-ECO-DOME", "brand": "Budget Brand", "category": "CAMERA_IP", "display_name": "Budget 5MP IP Camera ECO Dome", "technical_name": "Budget 5MP IP ECO Dome", "specifications": { "mp": "5MP", "tier": "ECO", "formFactor": "DOME" }, "baseCost": 1400, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CAMERA_IP-5MP-ECO-BULLET", "brand": "Budget Brand", "category": "CAMERA_IP", "display_name": "Budget 5MP IP Camera ECO Bullet", "technical_name": "Budget 5MP IP ECO Bullet", "specifications": { "mp": "5MP", "tier": "ECO", "formFactor": "BULLET" }, "baseCost": 1450, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CAMERA_IP-5MP-PREMIUM-DOME", "brand": "Budget Brand", "category": "CAMERA_IP", "display_name": "Budget 5MP IP Camera Premium Dome", "technical_name": "Budget 5MP IP Premium Dome", "specifications": { "mp": "5MP", "tier": "PREMIUM", "formFactor": "DOME" }, "baseCost": 2000, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-CAMERA_IP-5MP-PREMIUM-BULLET", "brand": "Budget Brand", "category": "CAMERA_IP", "display_name": "Budget 5MP IP Camera Premium Bullet", "technical_name": "Budget 5MP IP Premium Bullet", "specifications": { "mp": "5MP", "tier": "PREMIUM", "formFactor": "BULLET" }, "baseCost": 2050, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-
-  { "skuId": "BUDGET-ACC-JUNCTION_BOX", "brand": "Budget Brand", "category": "ACCESSORY", "display_name": "Junction Box for Camera", "technical_name": "Junction Box", "specifications": { "type": "Junction Box for Camera" }, "baseCost": 20, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-ACC-2U_RACK_RECORDER", "brand": "Budget Brand", "category": "ACCESSORY", "display_name": "2U Rack for 4Ch & 8Ch Recorder", "technical_name": "2U Rack Recorder", "specifications": { "type": "2U Rack for 4Ch & 8Ch Recorder" }, "baseCost": 350, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-ACC-4U_RACK_RECORDER", "brand": "Budget Brand", "category": "ACCESSORY", "display_name": "4U Rack for Recorder", "technical_name": "4U Rack Recorder", "specifications": { "type": "4U Rack for Recorder" }, "baseCost": 600, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-ACC-2U_PVC_RACK_POE", "brand": "Budget Brand", "category": "ACCESSORY", "display_name": "2U PVC Rack for PoE Switch", "technical_name": "2U PVC Rack PoE", "specifications": { "type": "2U PVC Rack for PoE Switch" }, "baseCost": 450, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-ACC-4G_ROUTER", "brand": "Budget Brand", "category": "ACCESSORY", "display_name": "4G Router", "technical_name": "4G Router", "specifications": { "type": "4G Router" }, "baseCost": 1450, "marginRule": "ACCESSORY", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" },
-  { "skuId": "BUDGET-ACC-DISPLAY_19", "brand": "Budget Brand", "category": "ACCESSORY", "display_name": "Display Monitor 19\"", "technical_name": "Display 19 inch", "specifications": { "type": "Display 19\"" }, "baseCost": 2100, "marginRule": "ANCHOR", "is_active": true, "is_quotation_eligible": true, "stock_status": "in_stock" }
+  {
+    "skuId": "CPPLUS-CAMERA_HD-2MP-BW-AUDIO-DOME",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 2MP B&W Night Vision Dome",
+    "technical_name": "CP Plus 2MP B&W NV Audio Dome",
+    "specifications": {
+      "mp": "2MP",
+      "features": "Black & White Night Vision, Audio IN",
+      "formFactor": "DOME"
+    },
+    "baseCost": 1000,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_HD-2MP-BW-AUDIO-DOME",
+    "sku": "CPPLUS-CAMERA_HD-2MP-BW-AUDIO-DOME",
+    "legacy_category": "CAMERA_HD",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "resolution_mp": 2,
+    "form_factor": "dome",
+    "features": [
+      "night_vision",
+      "audio"
+    ],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "2mp",
+      "dome",
+      "night_vision",
+      "audio"
+    ],
+    "unit_price": 1000
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_HD-2MP-BW-AUDIO-BULLET",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 2MP B&W Night Vision Bullet",
+    "technical_name": "CP Plus 2MP B&W NV Audio Bullet",
+    "specifications": {
+      "mp": "2MP",
+      "features": "Black & White Night Vision, Audio IN",
+      "formFactor": "BULLET"
+    },
+    "baseCost": 1050,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_HD-2MP-BW-AUDIO-BULLET",
+    "sku": "CPPLUS-CAMERA_HD-2MP-BW-AUDIO-BULLET",
+    "legacy_category": "CAMERA_HD",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "resolution_mp": 2,
+    "form_factor": "bullet",
+    "features": [
+      "night_vision",
+      "audio"
+    ],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "2mp",
+      "bullet",
+      "night_vision",
+      "audio"
+    ],
+    "unit_price": 1050
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_HD-2MP-COLOR-AUDIO-DOME",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 2MP Color Night Vision Dome",
+    "technical_name": "CP Plus 2MP Color NV Audio Dome",
+    "specifications": {
+      "mp": "2MP",
+      "features": "Color Night Vision, Audio IN",
+      "formFactor": "DOME"
+    },
+    "baseCost": 1250,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_HD-2MP-COLOR-AUDIO-DOME",
+    "sku": "CPPLUS-CAMERA_HD-2MP-COLOR-AUDIO-DOME",
+    "legacy_category": "CAMERA_HD",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "resolution_mp": 2,
+    "form_factor": "dome",
+    "features": [
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "2mp",
+      "dome",
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "unit_price": 1250
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_HD-2MP-COLOR-AUDIO-BULLET",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 2MP Color Night Vision Bullet",
+    "technical_name": "CP Plus 2MP Color NV Audio Bullet",
+    "specifications": {
+      "mp": "2MP",
+      "features": "Color Night Vision, Audio IN",
+      "formFactor": "BULLET"
+    },
+    "baseCost": 1300,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_HD-2MP-COLOR-AUDIO-BULLET",
+    "sku": "CPPLUS-CAMERA_HD-2MP-COLOR-AUDIO-BULLET",
+    "legacy_category": "CAMERA_HD",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "resolution_mp": 2,
+    "form_factor": "bullet",
+    "features": [
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "2mp",
+      "bullet",
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "unit_price": 1300
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_HD-5MP-COLOR-AUDIO-DOME",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 5MP Color Night Vision Dome",
+    "technical_name": "CP Plus 5MP Color NV Audio Dome",
+    "specifications": {
+      "mp": "5MP",
+      "features": "Color Night Vision, Audio IN",
+      "formFactor": "DOME"
+    },
+    "baseCost": 1600,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_HD-5MP-COLOR-AUDIO-DOME",
+    "sku": "CPPLUS-CAMERA_HD-5MP-COLOR-AUDIO-DOME",
+    "legacy_category": "CAMERA_HD",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "resolution_mp": 5,
+    "form_factor": "dome",
+    "features": [
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "5mp",
+      "dome",
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "unit_price": 1600
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_HD-5MP-COLOR-AUDIO-BULLET",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 5MP Color Night Vision Bullet",
+    "technical_name": "CP Plus 5MP Color NV Audio Bullet",
+    "specifications": {
+      "mp": "5MP",
+      "features": "Color Night Vision, Audio IN",
+      "formFactor": "BULLET"
+    },
+    "baseCost": 1650,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_HD-5MP-COLOR-AUDIO-BULLET",
+    "sku": "CPPLUS-CAMERA_HD-5MP-COLOR-AUDIO-BULLET",
+    "legacy_category": "CAMERA_HD",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "resolution_mp": 5,
+    "form_factor": "bullet",
+    "features": [
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "5mp",
+      "bullet",
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "unit_price": 1650
+  },
+  {
+    "skuId": "BUDGET-CAMERA_HD-2MP-COLOR-AUDIO-DOME",
+    "brand": "Budget Brand",
+    "category": "cctv_camera",
+    "display_name": "Budget 2MP Color Night Vision Dome",
+    "technical_name": "Budget 2MP Color NV Audio Dome",
+    "specifications": {
+      "mp": "2MP",
+      "features": "Color Night Vision, Audio IN",
+      "formFactor": "DOME"
+    },
+    "baseCost": 700,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CAMERA_HD-2MP-COLOR-AUDIO-DOME",
+    "sku": "BUDGET-CAMERA_HD-2MP-COLOR-AUDIO-DOME",
+    "legacy_category": "CAMERA_HD",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "resolution_mp": 2,
+    "form_factor": "dome",
+    "features": [
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "tags": [
+      "budget_brand",
+      "hd",
+      "2mp",
+      "dome",
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "unit_price": 700
+  },
+  {
+    "skuId": "BUDGET-CAMERA_HD-2MP-COLOR-AUDIO-BULLET",
+    "brand": "Budget Brand",
+    "category": "cctv_camera",
+    "display_name": "Budget 2MP Color Night Vision Bullet",
+    "technical_name": "Budget 2MP Color NV Audio Bullet",
+    "specifications": {
+      "mp": "2MP",
+      "features": "Color Night Vision, Audio IN",
+      "formFactor": "BULLET"
+    },
+    "baseCost": 750,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CAMERA_HD-2MP-COLOR-AUDIO-BULLET",
+    "sku": "BUDGET-CAMERA_HD-2MP-COLOR-AUDIO-BULLET",
+    "legacy_category": "CAMERA_HD",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "resolution_mp": 2,
+    "form_factor": "bullet",
+    "features": [
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "tags": [
+      "budget_brand",
+      "hd",
+      "2mp",
+      "bullet",
+      "color_night",
+      "night_vision",
+      "audio"
+    ],
+    "unit_price": 750
+  },
+  {
+    "skuId": "CPPLUS-DVR-4CH-2MP-1SATA",
+    "brand": "CP Plus",
+    "category": "recorder",
+    "display_name": "CP Plus 4Ch 2MP DVR 1SATA",
+    "technical_name": "CP Plus 4Ch 2MP DVR",
+    "specifications": {
+      "channels": 4,
+      "mpSupported": "2MP",
+      "sata": 1
+    },
+    "baseCost": 3700,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-DVR-4CH-2MP-1SATA",
+    "sku": "CPPLUS-DVR-4CH-2MP-1SATA",
+    "legacy_category": "DVR",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "channels": 4,
+    "max_cameras": 4,
+    "hdd_slots": 1,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "4ch"
+    ],
+    "unit_price": 3700
+  },
+  {
+    "skuId": "CPPLUS-DVR-8CH-2MP-1SATA",
+    "brand": "CP Plus",
+    "category": "recorder",
+    "display_name": "CP Plus 8Ch 2MP DVR 1SATA",
+    "technical_name": "CP Plus 8Ch 2MP DVR",
+    "specifications": {
+      "channels": 8,
+      "mpSupported": "2MP",
+      "sata": 1
+    },
+    "baseCost": 4800,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-DVR-8CH-2MP-1SATA",
+    "sku": "CPPLUS-DVR-8CH-2MP-1SATA",
+    "legacy_category": "DVR",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "channels": 8,
+    "max_cameras": 8,
+    "hdd_slots": 1,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "8ch"
+    ],
+    "unit_price": 4800
+  },
+  {
+    "skuId": "CPPLUS-DVR-16CH-2MP-1SATA",
+    "brand": "CP Plus",
+    "category": "recorder",
+    "display_name": "CP Plus 16Ch 2MP DVR 1SATA",
+    "technical_name": "CP Plus 16Ch 2MP DVR",
+    "specifications": {
+      "channels": 16,
+      "mpSupported": "2MP",
+      "sata": 1
+    },
+    "baseCost": 8100,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-DVR-16CH-2MP-1SATA",
+    "sku": "CPPLUS-DVR-16CH-2MP-1SATA",
+    "legacy_category": "DVR",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "channels": 16,
+    "max_cameras": 16,
+    "hdd_slots": 1,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "16ch"
+    ],
+    "unit_price": 8100
+  },
+  {
+    "skuId": "CPPLUS-DVR-4CH-5MP-1SATA",
+    "brand": "CP Plus",
+    "category": "recorder",
+    "display_name": "CP Plus 4Ch 5MP DVR 1SATA",
+    "technical_name": "CP Plus 4Ch 5MP DVR",
+    "specifications": {
+      "channels": 4,
+      "mpSupported": "5MP",
+      "sata": 1
+    },
+    "baseCost": 5750,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-DVR-4CH-5MP-1SATA",
+    "sku": "CPPLUS-DVR-4CH-5MP-1SATA",
+    "legacy_category": "DVR",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "channels": 4,
+    "max_cameras": 4,
+    "hdd_slots": 1,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "4ch"
+    ],
+    "unit_price": 5750
+  },
+  {
+    "skuId": "CPPLUS-DVR-8CH-5MP-1SATA",
+    "brand": "CP Plus",
+    "category": "recorder",
+    "display_name": "CP Plus 8Ch 5MP DVR 1SATA",
+    "technical_name": "CP Plus 8Ch 5MP DVR",
+    "specifications": {
+      "channels": 8,
+      "mpSupported": "5MP",
+      "sata": 1
+    },
+    "baseCost": 8100,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-DVR-8CH-5MP-1SATA",
+    "sku": "CPPLUS-DVR-8CH-5MP-1SATA",
+    "legacy_category": "DVR",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "channels": 8,
+    "max_cameras": 8,
+    "hdd_slots": 1,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "8ch"
+    ],
+    "unit_price": 8100
+  },
+  {
+    "skuId": "CPPLUS-DVR-16CH-5MP-1SATA",
+    "brand": "CP Plus",
+    "category": "recorder",
+    "display_name": "CP Plus 16Ch 5MP DVR 1SATA",
+    "technical_name": "CP Plus 16Ch 5MP DVR",
+    "specifications": {
+      "channels": 16,
+      "mpSupported": "5MP",
+      "sata": 1
+    },
+    "baseCost": 13300,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-DVR-16CH-5MP-1SATA",
+    "sku": "CPPLUS-DVR-16CH-5MP-1SATA",
+    "legacy_category": "DVR",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "channels": 16,
+    "max_cameras": 16,
+    "hdd_slots": 1,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "16ch"
+    ],
+    "unit_price": 13300
+  },
+  {
+    "skuId": "CPPLUS-SMPS-8CH",
+    "brand": "CP Plus",
+    "category": "power_device",
+    "display_name": "CP Plus 8Ch SMPS",
+    "technical_name": "CP Plus SMPS 8Ch",
+    "specifications": {
+      "channels": 8
+    },
+    "baseCost": 600,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-SMPS-8CH",
+    "sku": "CPPLUS-SMPS-8CH",
+    "legacy_category": "POWER_SUPPLY",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "channels": 8,
+    "max_cameras": 8,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "hd",
+      "8ch"
+    ],
+    "unit_price": 600
+  },
+  {
+    "skuId": "BUDGET-SMPS-8CH",
+    "brand": "Budget Brand",
+    "category": "power_device",
+    "display_name": "Budget 8Ch SMPS",
+    "technical_name": "Budget SMPS 8Ch",
+    "specifications": {
+      "channels": 8
+    },
+    "baseCost": 350,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-SMPS-8CH",
+    "sku": "BUDGET-SMPS-8CH",
+    "legacy_category": "POWER_SUPPLY",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "channels": 8,
+    "max_cameras": 8,
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "hd",
+      "8ch"
+    ],
+    "unit_price": 350
+  },
+  {
+    "skuId": "CPPLUS-CABLE_3PLUS1-90M-COPPER",
+    "brand": "CP Plus",
+    "category": "cable",
+    "display_name": "CP Plus 3+1 Cable 90m Copper",
+    "technical_name": "CP Plus 3+1 90m Pure Copper",
+    "specifications": {
+      "lengthMeters": 90,
+      "type": "3+1",
+      "material": "Copper"
+    },
+    "baseCost": 1350,
+    "marginRule": "CABLE",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CABLE_3PLUS1-90M-COPPER",
+    "sku": "CPPLUS-CABLE_3PLUS1-90M-COPPER",
+    "legacy_category": "CABLE",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "cable_length_m": 90,
+    "cable_type": "3+1",
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "hd"
+    ],
+    "unit_price": 1350
+  },
+  {
+    "skuId": "BUDGET-CABLE_3PLUS1-70M-COATED",
+    "brand": "Budget Brand",
+    "category": "cable",
+    "display_name": "Budget 3+1 Cable 70m Copper Coated",
+    "technical_name": "Budget 3+1 70m CCA",
+    "specifications": {
+      "lengthMeters": 70,
+      "type": "3+1",
+      "material": "Copper Coated"
+    },
+    "baseCost": 600,
+    "marginRule": "CABLE",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CABLE_3PLUS1-70M-COATED",
+    "sku": "BUDGET-CABLE_3PLUS1-70M-COATED",
+    "legacy_category": "CABLE",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "cable_length_m": 70,
+    "cable_type": "3+1",
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "hd"
+    ],
+    "unit_price": 600
+  },
+  {
+    "skuId": "CPPLUS-CABLE_CAT6-305M-COPPER",
+    "brand": "CP Plus",
+    "category": "cable",
+    "display_name": "CP Plus CAT6 305m Copper",
+    "technical_name": "CP Plus CAT6 305m Pure Copper",
+    "specifications": {
+      "lengthMeters": 305,
+      "type": "CAT6",
+      "material": "Copper"
+    },
+    "baseCost": 9500,
+    "marginRule": "CABLE",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CABLE_CAT6-305M-COPPER",
+    "sku": "CPPLUS-CABLE_CAT6-305M-COPPER",
+    "legacy_category": "CABLE",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "cable_length_m": 305,
+    "cable_type": "CAT6",
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "ip"
+    ],
+    "unit_price": 9500
+  },
+  {
+    "skuId": "CPPLUS-CABLE_CAT6-305M-COATED",
+    "brand": "CP Plus",
+    "category": "cable",
+    "display_name": "CP Plus CAT6 305m Copper Coated",
+    "technical_name": "CP Plus CAT6 305m CCA",
+    "specifications": {
+      "lengthMeters": 305,
+      "type": "CAT6",
+      "material": "Copper Coated"
+    },
+    "baseCost": 3700,
+    "marginRule": "CABLE",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CABLE_CAT6-305M-COATED",
+    "sku": "CPPLUS-CABLE_CAT6-305M-COATED",
+    "legacy_category": "CABLE",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "cable_length_m": 305,
+    "cable_type": "CAT6",
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "ip"
+    ],
+    "unit_price": 3700
+  },
+  {
+    "skuId": "BUDGET-CABLE_CAT6-100M-COPPER",
+    "brand": "Budget Brand",
+    "category": "cable",
+    "display_name": "Budget CAT6 100m Copper",
+    "technical_name": "Budget CAT6 100m Pure Copper",
+    "specifications": {
+      "lengthMeters": 100,
+      "type": "CAT6",
+      "material": "Copper"
+    },
+    "baseCost": 1200,
+    "marginRule": "CABLE",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CABLE_CAT6-100M-COPPER",
+    "sku": "BUDGET-CABLE_CAT6-100M-COPPER",
+    "legacy_category": "CABLE",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "cable_length_m": 100,
+    "cable_type": "CAT6",
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "ip"
+    ],
+    "unit_price": 1200
+  },
+  {
+    "skuId": "BUDGET-CABLE_CAT6-305M-COATED",
+    "brand": "Budget Brand",
+    "category": "cable",
+    "display_name": "Budget CAT6 305m Copper Coated",
+    "technical_name": "Budget CAT6 305m CCA",
+    "specifications": {
+      "lengthMeters": 305,
+      "type": "CAT6",
+      "material": "Copper Coated"
+    },
+    "baseCost": 3200,
+    "marginRule": "CABLE",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CABLE_CAT6-305M-COATED",
+    "sku": "BUDGET-CABLE_CAT6-305M-COATED",
+    "legacy_category": "CABLE",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "cable_length_m": 305,
+    "cable_type": "CAT6",
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "ip"
+    ],
+    "unit_price": 3200
+  },
+  {
+    "skuId": "BUDGET-CONN-BNC",
+    "brand": "Budget Brand",
+    "category": "connector",
+    "display_name": "BNC Connector",
+    "technical_name": "BNC Connector",
+    "specifications": {
+      "type": "BNC"
+    },
+    "baseCost": 15,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CONN-BNC",
+    "sku": "BUDGET-CONN-BNC",
+    "legacy_category": "CONNECTOR",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "hd"
+    ],
+    "unit_price": 15
+  },
+  {
+    "skuId": "BUDGET-CONN-DC",
+    "brand": "Budget Brand",
+    "category": "connector",
+    "display_name": "DC Connector",
+    "technical_name": "DC Connector",
+    "specifications": {
+      "type": "DC"
+    },
+    "baseCost": 5,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CONN-DC",
+    "sku": "BUDGET-CONN-DC",
+    "legacy_category": "CONNECTOR",
+    "technologies": [
+      "HD"
+    ],
+    "technology": "HD",
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "hd"
+    ],
+    "unit_price": 5
+  },
+  {
+    "skuId": "BUDGET-CONN-RJ45",
+    "brand": "Budget Brand",
+    "category": "connector",
+    "display_name": "RJ45 Connector",
+    "technical_name": "RJ45 Connector",
+    "specifications": {
+      "type": "RJ45"
+    },
+    "baseCost": 5,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CONN-RJ45",
+    "sku": "BUDGET-CONN-RJ45",
+    "legacy_category": "CONNECTOR",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "ip"
+    ],
+    "unit_price": 5
+  },
+  {
+    "skuId": "BUDGET-HDMI-1.5M",
+    "brand": "Budget Brand",
+    "category": "cable",
+    "display_name": "HDMI Cable 1.5m",
+    "technical_name": "HDMI 1.5m",
+    "specifications": {
+      "lengthMeters": 1.5,
+      "type": "HDMI"
+    },
+    "baseCost": 60,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-HDMI-1.5M",
+    "sku": "BUDGET-HDMI-1.5M",
+    "legacy_category": "CABLE",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "cable_length_m": 1.5,
+    "cable_type": "HDMI",
+    "features": [],
+    "tags": [
+      "budget_brand"
+    ],
+    "unit_price": 60
+  },
+  {
+    "skuId": "BUDGET-HDMI-3M",
+    "brand": "Budget Brand",
+    "category": "cable",
+    "display_name": "HDMI Cable 3m",
+    "technical_name": "HDMI 3m",
+    "specifications": {
+      "lengthMeters": 3,
+      "type": "HDMI"
+    },
+    "baseCost": 120,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-HDMI-3M",
+    "sku": "BUDGET-HDMI-3M",
+    "legacy_category": "CABLE",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "cable_length_m": 3,
+    "cable_type": "HDMI",
+    "features": [],
+    "tags": [
+      "budget_brand"
+    ],
+    "unit_price": 120
+  },
+  {
+    "skuId": "BUDGET-HDMI-5M",
+    "brand": "Budget Brand",
+    "category": "cable",
+    "display_name": "HDMI Cable 5m",
+    "technical_name": "HDMI 5m",
+    "specifications": {
+      "lengthMeters": 5,
+      "type": "HDMI"
+    },
+    "baseCost": 180,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-HDMI-5M",
+    "sku": "BUDGET-HDMI-5M",
+    "legacy_category": "CABLE",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "cable_length_m": 5,
+    "cable_type": "HDMI",
+    "features": [],
+    "tags": [
+      "budget_brand"
+    ],
+    "unit_price": 180
+  },
+  {
+    "skuId": "BUDGET-HDMI-10M",
+    "brand": "Budget Brand",
+    "category": "cable",
+    "display_name": "HDMI Cable 10m",
+    "technical_name": "HDMI 10m",
+    "specifications": {
+      "lengthMeters": 10,
+      "type": "HDMI"
+    },
+    "baseCost": 300,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-HDMI-10M",
+    "sku": "BUDGET-HDMI-10M",
+    "legacy_category": "CABLE",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "cable_length_m": 10,
+    "cable_type": "HDMI",
+    "features": [],
+    "tags": [
+      "budget_brand"
+    ],
+    "unit_price": 300
+  },
+  {
+    "skuId": "BUDGET-HDD-500GB",
+    "brand": "Budget Brand",
+    "category": "storage",
+    "display_name": "Budget HDD 500GB",
+    "technical_name": "Budget 500GB Surveillance HDD",
+    "specifications": {
+      "storage": "500GB"
+    },
+    "baseCost": 1800,
+    "marginRule": "HDD",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-HDD-500GB",
+    "sku": "BUDGET-HDD-500GB",
+    "legacy_category": "HDD",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "storage_capacity_tb": 0.5,
+    "storage_type": "Hard Disk",
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "0.5tb"
+    ],
+    "unit_price": 1800
+  },
+  {
+    "skuId": "BUDGET-HDD-1TB",
+    "brand": "Budget Brand",
+    "category": "storage",
+    "display_name": "Budget HDD 1TB",
+    "technical_name": "Budget 1TB Surveillance HDD",
+    "specifications": {
+      "storage": "1TB"
+    },
+    "baseCost": 4700,
+    "marginRule": "HDD",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-HDD-1TB",
+    "sku": "BUDGET-HDD-1TB",
+    "legacy_category": "HDD",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "storage_capacity_tb": 1,
+    "storage_type": "Hard Disk",
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "1tb"
+    ],
+    "unit_price": 4700
+  },
+  {
+    "skuId": "BUDGET-HDD-2TB",
+    "brand": "Budget Brand",
+    "category": "storage",
+    "display_name": "Budget HDD 2TB",
+    "technical_name": "Budget 2TB Surveillance HDD",
+    "specifications": {
+      "storage": "2TB"
+    },
+    "baseCost": 7800,
+    "marginRule": "HDD",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-HDD-2TB",
+    "sku": "BUDGET-HDD-2TB",
+    "legacy_category": "HDD",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "storage_capacity_tb": 2,
+    "storage_type": "Hard Disk",
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "2tb"
+    ],
+    "unit_price": 7800
+  },
+  {
+    "skuId": "BUDGET-HDD-4TB",
+    "brand": "Budget Brand",
+    "category": "storage",
+    "display_name": "Budget HDD 4TB",
+    "technical_name": "Budget 4TB Surveillance HDD",
+    "specifications": {
+      "storage": "4TB"
+    },
+    "baseCost": 14500,
+    "marginRule": "HDD",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-HDD-4TB",
+    "sku": "BUDGET-HDD-4TB",
+    "legacy_category": "HDD",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "storage_capacity_tb": 4,
+    "storage_type": "Hard Disk",
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "4tb"
+    ],
+    "unit_price": 14500
+  },
+  {
+    "skuId": "SEAGATE-HDD-1TB",
+    "brand": "Seagate",
+    "category": "storage",
+    "display_name": "Seagate 1TB Surveillance",
+    "technical_name": "Seagate Skyhawk 1TB",
+    "specifications": {
+      "storage": "1TB"
+    },
+    "baseCost": 9500,
+    "marginRule": "HDD",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "SEAGATE-HDD-1TB",
+    "sku": "SEAGATE-HDD-1TB",
+    "legacy_category": "HDD",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "storage_capacity_tb": 1,
+    "storage_type": "Hard Disk",
+    "features": [],
+    "tags": [
+      "seagate",
+      "1tb"
+    ],
+    "unit_price": 9500
+  },
+  {
+    "skuId": "SEAGATE-HDD-2TB",
+    "brand": "Seagate",
+    "category": "storage",
+    "display_name": "Seagate 2TB Surveillance",
+    "technical_name": "Seagate Skyhawk 2TB",
+    "specifications": {
+      "storage": "2TB"
+    },
+    "baseCost": 10900,
+    "marginRule": "HDD",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "SEAGATE-HDD-2TB",
+    "sku": "SEAGATE-HDD-2TB",
+    "legacy_category": "HDD",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "storage_capacity_tb": 2,
+    "storage_type": "Hard Disk",
+    "features": [],
+    "tags": [
+      "seagate",
+      "2tb"
+    ],
+    "unit_price": 10900
+  },
+  {
+    "skuId": "SEAGATE-HDD-4TB",
+    "brand": "Seagate",
+    "category": "storage",
+    "display_name": "Seagate 4TB Surveillance",
+    "technical_name": "Seagate Skyhawk 4TB",
+    "specifications": {
+      "storage": "4TB"
+    },
+    "baseCost": 18500,
+    "marginRule": "HDD",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "SEAGATE-HDD-4TB",
+    "sku": "SEAGATE-HDD-4TB",
+    "legacy_category": "HDD",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "storage_capacity_tb": 4,
+    "storage_type": "Hard Disk",
+    "features": [],
+    "tags": [
+      "seagate",
+      "4tb"
+    ],
+    "unit_price": 18500
+  },
+  {
+    "skuId": "BUDGET-POE-4CH",
+    "brand": "Budget Brand",
+    "category": "power_device",
+    "display_name": "Budget PoE Switch 4Ch",
+    "technical_name": "Budget 4Ch PoE Switch",
+    "specifications": {
+      "channels": 4
+    },
+    "baseCost": 900,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-POE-4CH",
+    "sku": "BUDGET-POE-4CH",
+    "legacy_category": "POE_SWITCH",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "channels": 4,
+    "max_cameras": 4,
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "ip",
+      "4ch"
+    ],
+    "unit_price": 900
+  },
+  {
+    "skuId": "BUDGET-POE-8CH",
+    "brand": "Budget Brand",
+    "category": "power_device",
+    "display_name": "Budget PoE Switch 8Ch",
+    "technical_name": "Budget 8Ch PoE Switch",
+    "specifications": {
+      "channels": 8
+    },
+    "baseCost": 1200,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-POE-8CH",
+    "sku": "BUDGET-POE-8CH",
+    "legacy_category": "POE_SWITCH",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "channels": 8,
+    "max_cameras": 8,
+    "features": [],
+    "tags": [
+      "budget_brand",
+      "ip",
+      "8ch"
+    ],
+    "unit_price": 1200
+  },
+  {
+    "skuId": "DLINK-POE-16CH",
+    "brand": "D-Link",
+    "category": "power_device",
+    "display_name": "D-Link PoE Switch 16Ch",
+    "technical_name": "D-Link 16Ch PoE Switch",
+    "specifications": {
+      "channels": 16
+    },
+    "baseCost": 9500,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "DLINK-POE-16CH",
+    "sku": "DLINK-POE-16CH",
+    "legacy_category": "POE_SWITCH",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "channels": 16,
+    "max_cameras": 16,
+    "features": [],
+    "tags": [
+      "d-link",
+      "ip",
+      "16ch"
+    ],
+    "unit_price": 9500
+  },
+  {
+    "skuId": "CPPLUS-NVR-4CH-1SATA",
+    "brand": "CP Plus",
+    "category": "recorder",
+    "display_name": "CP Plus 4Ch NVR 1SATA",
+    "technical_name": "CP Plus 4Ch NVR",
+    "specifications": {
+      "channels": 4,
+      "sata": 1
+    },
+    "baseCost": 4900,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-NVR-4CH-1SATA",
+    "sku": "CPPLUS-NVR-4CH-1SATA",
+    "legacy_category": "NVR",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "channels": 4,
+    "max_cameras": 4,
+    "hdd_slots": 1,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "4ch"
+    ],
+    "unit_price": 4900
+  },
+  {
+    "skuId": "CPPLUS-NVR-8CH-1SATA",
+    "brand": "CP Plus",
+    "category": "recorder",
+    "display_name": "CP Plus 8Ch NVR 1SATA",
+    "technical_name": "CP Plus 8Ch NVR",
+    "specifications": {
+      "channels": 8,
+      "sata": 1
+    },
+    "baseCost": 5500,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-NVR-8CH-1SATA",
+    "sku": "CPPLUS-NVR-8CH-1SATA",
+    "legacy_category": "NVR",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "channels": 8,
+    "max_cameras": 8,
+    "hdd_slots": 1,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "8ch"
+    ],
+    "unit_price": 5500
+  },
+  {
+    "skuId": "CPPLUS-NVR-16CH-1SATA",
+    "brand": "CP Plus",
+    "category": "recorder",
+    "display_name": "CP Plus 16Ch NVR 1SATA",
+    "technical_name": "CP Plus 16Ch NVR",
+    "specifications": {
+      "channels": 16,
+      "sata": 1
+    },
+    "baseCost": 8300,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-NVR-16CH-1SATA",
+    "sku": "CPPLUS-NVR-16CH-1SATA",
+    "legacy_category": "NVR",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "channels": 16,
+    "max_cameras": 16,
+    "hdd_slots": 1,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "16ch"
+    ],
+    "unit_price": 8300
+  },
+  {
+    "skuId": "CPPLUS-NVR-32CH-2SATA",
+    "brand": "CP Plus",
+    "category": "recorder",
+    "display_name": "CP Plus 32Ch NVR 2SATA",
+    "technical_name": "CP Plus 32Ch NVR",
+    "specifications": {
+      "channels": 32,
+      "sata": 2
+    },
+    "baseCost": 15000,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-NVR-32CH-2SATA",
+    "sku": "CPPLUS-NVR-32CH-2SATA",
+    "legacy_category": "NVR",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "channels": 32,
+    "max_cameras": 32,
+    "hdd_slots": 2,
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "32ch"
+    ],
+    "unit_price": 15000
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_IP-2MP-ECO-DOME",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 2MP IP Camera ECO Dome",
+    "technical_name": "CP Plus 2MP IP ECO Dome",
+    "specifications": {
+      "mp": "2MP",
+      "tier": "ECO",
+      "formFactor": "DOME"
+    },
+    "baseCost": 3200,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_IP-2MP-ECO-DOME",
+    "sku": "CPPLUS-CAMERA_IP-2MP-ECO-DOME",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 2,
+    "form_factor": "dome",
+    "features": [
+      "eco"
+    ],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "2mp",
+      "dome",
+      "eco"
+    ],
+    "unit_price": 3200
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_IP-2MP-ECO-BULLET",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 2MP IP Camera ECO Bullet",
+    "technical_name": "CP Plus 2MP IP ECO Bullet",
+    "specifications": {
+      "mp": "2MP",
+      "tier": "ECO",
+      "formFactor": "BULLET"
+    },
+    "baseCost": 3250,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_IP-2MP-ECO-BULLET",
+    "sku": "CPPLUS-CAMERA_IP-2MP-ECO-BULLET",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 2,
+    "form_factor": "bullet",
+    "features": [
+      "eco"
+    ],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "2mp",
+      "bullet",
+      "eco"
+    ],
+    "unit_price": 3250
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_IP-4MP-NORMAL-DOME",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 4MP IP Camera Normal Dome",
+    "technical_name": "CP Plus 4MP IP Normal Dome",
+    "specifications": {
+      "mp": "4MP",
+      "tier": "NORMAL",
+      "formFactor": "DOME"
+    },
+    "baseCost": 4000,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_IP-4MP-NORMAL-DOME",
+    "sku": "CPPLUS-CAMERA_IP-4MP-NORMAL-DOME",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 4,
+    "form_factor": "dome",
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "4mp",
+      "dome"
+    ],
+    "unit_price": 4000
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_IP-4MP-NORMAL-BULLET",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 4MP IP Camera Normal Bullet",
+    "technical_name": "CP Plus 4MP IP Normal Bullet",
+    "specifications": {
+      "mp": "4MP",
+      "tier": "NORMAL",
+      "formFactor": "BULLET"
+    },
+    "baseCost": 4050,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_IP-4MP-NORMAL-BULLET",
+    "sku": "CPPLUS-CAMERA_IP-4MP-NORMAL-BULLET",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 4,
+    "form_factor": "bullet",
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "4mp",
+      "bullet"
+    ],
+    "unit_price": 4050
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_IP-6MP-NORMAL-DOME",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 6MP IP Camera Normal Dome",
+    "technical_name": "CP Plus 6MP IP Normal Dome",
+    "specifications": {
+      "mp": "6MP",
+      "tier": "NORMAL",
+      "formFactor": "DOME"
+    },
+    "baseCost": 5200,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_IP-6MP-NORMAL-DOME",
+    "sku": "CPPLUS-CAMERA_IP-6MP-NORMAL-DOME",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 6,
+    "form_factor": "dome",
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "6mp",
+      "dome"
+    ],
+    "unit_price": 5200
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_IP-6MP-NORMAL-BULLET",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 6MP IP Camera Normal Bullet",
+    "technical_name": "CP Plus 6MP IP Normal Bullet",
+    "specifications": {
+      "mp": "6MP",
+      "tier": "NORMAL",
+      "formFactor": "BULLET"
+    },
+    "baseCost": 5250,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_IP-6MP-NORMAL-BULLET",
+    "sku": "CPPLUS-CAMERA_IP-6MP-NORMAL-BULLET",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 6,
+    "form_factor": "bullet",
+    "features": [],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "6mp",
+      "bullet"
+    ],
+    "unit_price": 5250
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_IP-8MP-PREMIUM-DOME",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 8MP IP Camera Premium Dome",
+    "technical_name": "CP Plus 8MP IP Premium Dome",
+    "specifications": {
+      "mp": "8MP",
+      "tier": "PREMIUM",
+      "formFactor": "DOME"
+    },
+    "baseCost": null,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "on_demand",
+    "id": "CPPLUS-CAMERA_IP-8MP-PREMIUM-DOME",
+    "sku": "CPPLUS-CAMERA_IP-8MP-PREMIUM-DOME",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 8,
+    "form_factor": "dome",
+    "features": [
+      "premium"
+    ],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "8mp",
+      "dome",
+      "premium"
+    ],
+    "unit_price": 0
+  },
+  {
+    "skuId": "CPPLUS-CAMERA_IP-8MP-PREMIUM-BULLET",
+    "brand": "CP Plus",
+    "category": "cctv_camera",
+    "display_name": "CP Plus 8MP IP Camera Premium Bullet",
+    "technical_name": "CP Plus 8MP IP Premium Bullet",
+    "specifications": {
+      "mp": "8MP",
+      "tier": "PREMIUM",
+      "formFactor": "BULLET"
+    },
+    "baseCost": 7500,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "CPPLUS-CAMERA_IP-8MP-PREMIUM-BULLET",
+    "sku": "CPPLUS-CAMERA_IP-8MP-PREMIUM-BULLET",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 8,
+    "form_factor": "bullet",
+    "features": [
+      "premium"
+    ],
+    "tags": [
+      "cp_plus",
+      "ip",
+      "8mp",
+      "bullet",
+      "premium"
+    ],
+    "unit_price": 7500
+  },
+  {
+    "skuId": "BUDGET-CAMERA_IP-5MP-ECO-DOME",
+    "brand": "Budget Brand",
+    "category": "cctv_camera",
+    "display_name": "Budget 5MP IP Camera ECO Dome",
+    "technical_name": "Budget 5MP IP ECO Dome",
+    "specifications": {
+      "mp": "5MP",
+      "tier": "ECO",
+      "formFactor": "DOME"
+    },
+    "baseCost": 1400,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CAMERA_IP-5MP-ECO-DOME",
+    "sku": "BUDGET-CAMERA_IP-5MP-ECO-DOME",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 5,
+    "form_factor": "dome",
+    "features": [
+      "eco"
+    ],
+    "tags": [
+      "budget_brand",
+      "ip",
+      "5mp",
+      "dome",
+      "eco"
+    ],
+    "unit_price": 1400
+  },
+  {
+    "skuId": "BUDGET-CAMERA_IP-5MP-ECO-BULLET",
+    "brand": "Budget Brand",
+    "category": "cctv_camera",
+    "display_name": "Budget 5MP IP Camera ECO Bullet",
+    "technical_name": "Budget 5MP IP ECO Bullet",
+    "specifications": {
+      "mp": "5MP",
+      "tier": "ECO",
+      "formFactor": "BULLET"
+    },
+    "baseCost": 1450,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CAMERA_IP-5MP-ECO-BULLET",
+    "sku": "BUDGET-CAMERA_IP-5MP-ECO-BULLET",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 5,
+    "form_factor": "bullet",
+    "features": [
+      "eco"
+    ],
+    "tags": [
+      "budget_brand",
+      "ip",
+      "5mp",
+      "bullet",
+      "eco"
+    ],
+    "unit_price": 1450
+  },
+  {
+    "skuId": "BUDGET-CAMERA_IP-5MP-PREMIUM-DOME",
+    "brand": "Budget Brand",
+    "category": "cctv_camera",
+    "display_name": "Budget 5MP IP Camera Premium Dome",
+    "technical_name": "Budget 5MP IP Premium Dome",
+    "specifications": {
+      "mp": "5MP",
+      "tier": "PREMIUM",
+      "formFactor": "DOME"
+    },
+    "baseCost": 2000,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CAMERA_IP-5MP-PREMIUM-DOME",
+    "sku": "BUDGET-CAMERA_IP-5MP-PREMIUM-DOME",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 5,
+    "form_factor": "dome",
+    "features": [
+      "premium"
+    ],
+    "tags": [
+      "budget_brand",
+      "ip",
+      "5mp",
+      "dome",
+      "premium"
+    ],
+    "unit_price": 2000
+  },
+  {
+    "skuId": "BUDGET-CAMERA_IP-5MP-PREMIUM-BULLET",
+    "brand": "Budget Brand",
+    "category": "cctv_camera",
+    "display_name": "Budget 5MP IP Camera Premium Bullet",
+    "technical_name": "Budget 5MP IP Premium Bullet",
+    "specifications": {
+      "mp": "5MP",
+      "tier": "PREMIUM",
+      "formFactor": "BULLET"
+    },
+    "baseCost": 2050,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-CAMERA_IP-5MP-PREMIUM-BULLET",
+    "sku": "BUDGET-CAMERA_IP-5MP-PREMIUM-BULLET",
+    "legacy_category": "CAMERA_IP",
+    "technologies": [
+      "IP"
+    ],
+    "technology": "IP",
+    "resolution_mp": 5,
+    "form_factor": "bullet",
+    "features": [
+      "premium"
+    ],
+    "tags": [
+      "budget_brand",
+      "ip",
+      "5mp",
+      "bullet",
+      "premium"
+    ],
+    "unit_price": 2050
+  },
+  {
+    "skuId": "BUDGET-ACC-JUNCTION_BOX",
+    "brand": "Budget Brand",
+    "category": "camera_mount",
+    "display_name": "Junction Box for Camera",
+    "technical_name": "Junction Box",
+    "specifications": {
+      "type": "Junction Box for Camera"
+    },
+    "baseCost": 20,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-ACC-JUNCTION_BOX",
+    "sku": "BUDGET-ACC-JUNCTION_BOX",
+    "legacy_category": "ACCESSORY",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "features": [],
+    "tags": [
+      "budget_brand"
+    ],
+    "unit_price": 20
+  },
+  {
+    "skuId": "BUDGET-ACC-2U_RACK_RECORDER",
+    "brand": "Budget Brand",
+    "category": "rack",
+    "display_name": "2U Rack for 4Ch & 8Ch Recorder",
+    "technical_name": "2U Rack Recorder",
+    "specifications": {
+      "type": "2U Rack for 4Ch & 8Ch Recorder"
+    },
+    "baseCost": 350,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-ACC-2U_RACK_RECORDER",
+    "sku": "BUDGET-ACC-2U_RACK_RECORDER",
+    "legacy_category": "ACCESSORY",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "features": [
+      "eco"
+    ],
+    "tags": [
+      "budget_brand",
+      "eco"
+    ],
+    "unit_price": 350
+  },
+  {
+    "skuId": "BUDGET-ACC-4U_RACK_RECORDER",
+    "brand": "Budget Brand",
+    "category": "rack",
+    "display_name": "4U Rack for Recorder",
+    "technical_name": "4U Rack Recorder",
+    "specifications": {
+      "type": "4U Rack for Recorder"
+    },
+    "baseCost": 600,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-ACC-4U_RACK_RECORDER",
+    "sku": "BUDGET-ACC-4U_RACK_RECORDER",
+    "legacy_category": "ACCESSORY",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "features": [
+      "eco"
+    ],
+    "tags": [
+      "budget_brand",
+      "eco"
+    ],
+    "unit_price": 600
+  },
+  {
+    "skuId": "BUDGET-ACC-2U_PVC_RACK_POE",
+    "brand": "Budget Brand",
+    "category": "rack",
+    "display_name": "2U PVC Rack for PoE Switch",
+    "technical_name": "2U PVC Rack PoE",
+    "specifications": {
+      "type": "2U PVC Rack for PoE Switch"
+    },
+    "baseCost": 450,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-ACC-2U_PVC_RACK_POE",
+    "sku": "BUDGET-ACC-2U_PVC_RACK_POE",
+    "legacy_category": "ACCESSORY",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "features": [],
+    "tags": [
+      "budget_brand"
+    ],
+    "unit_price": 450
+  },
+  {
+    "skuId": "BUDGET-ACC-4G_ROUTER",
+    "brand": "Budget Brand",
+    "category": "network",
+    "display_name": "4G Router",
+    "technical_name": "4G Router",
+    "specifications": {
+      "type": "4G Router"
+    },
+    "baseCost": 1450,
+    "marginRule": "ACCESSORY",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-ACC-4G_ROUTER",
+    "sku": "BUDGET-ACC-4G_ROUTER",
+    "legacy_category": "ACCESSORY",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "features": [],
+    "tags": [
+      "budget_brand"
+    ],
+    "unit_price": 1450
+  },
+  {
+    "skuId": "BUDGET-ACC-DISPLAY_19",
+    "brand": "Budget Brand",
+    "category": "display",
+    "display_name": "Display Monitor 19\"",
+    "technical_name": "Display 19 inch",
+    "specifications": {
+      "type": "Display 19\""
+    },
+    "baseCost": 2100,
+    "marginRule": "ANCHOR",
+    "is_active": true,
+    "is_quotation_eligible": true,
+    "stock_status": "in_stock",
+    "id": "BUDGET-ACC-DISPLAY_19",
+    "sku": "BUDGET-ACC-DISPLAY_19",
+    "legacy_category": "ACCESSORY",
+    "technologies": [
+      "Common"
+    ],
+    "technology": "Common",
+    "features": [],
+    "tags": [
+      "budget_brand"
+    ],
+    "unit_price": 2100
+  }
 ]
