@@ -803,7 +803,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
                 onResetSelection={() => {
                   setActiveMapQuery({ type: 'district', query: selectedDistrict.name, label: selectedDistrict.name });
                 }}
-                height="400px"
+                height="380px"
               />
             </div>
           )}
@@ -823,16 +823,35 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
             </div>
           )}
 
-          {/* Cards Grid */}
-          <div className="p-4">
-            {loadingOffices ? (
-               <div className="p-12 flex flex-col items-center justify-center text-muted-foreground gap-3">
-                 <Loader2 className="w-8 h-8 animate-spin" />
-                 <span>Scanning territory data...</span>
-               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredPincodes.map(p => {
+          {/* Independently Scrollable PINCODE Cards Area (Option 1: Fixed Map + Scrollable Cards) */}
+          <div className="border-t border-border bg-card">
+            {/* Header for Cards Area */}
+            <div className="px-4 py-2.5 bg-secondary/20 border-b border-border/60 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-foreground">
+                  PINCODE Territories ({filteredPincodes.length})
+                </span>
+                <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                  • Scroll below to browse all cards while keeping Map fixed above
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground text-[11px]">
+                <span className="bg-secondary px-2.5 py-0.5 rounded border border-border font-medium flex items-center gap-1 text-[11px]">
+                  <span>↕</span> Scrollable Box
+                </span>
+              </div>
+            </div>
+
+            {/* Scrollable Cards Grid Container */}
+            <div className={`p-4 ${showMap ? "max-h-[500px] overflow-y-auto overscroll-contain pr-3" : ""}`}>
+              {loadingOffices ? (
+                <div className="p-12 flex flex-col items-center justify-center text-muted-foreground gap-3">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <span>Scanning territory data...</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
+                  {filteredPincodes.map(p => {
                   
                   // Find which agents are assigned to this pincode via zones
                   const assignedAgents = salespersons.filter(s => {
@@ -965,6 +984,7 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
             )}
           </div>
         </div>
+      </div>
       )}
 
       {/* Quick Assign / Reassign Agent Modal */}
