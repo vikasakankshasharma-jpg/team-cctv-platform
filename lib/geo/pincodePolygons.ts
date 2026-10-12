@@ -397,18 +397,18 @@ export function getTerritoryPolygon(
 ): LatLngPoint[] {
   const cleanedPin = pincode.trim().split(":")[0];
 
-  // 0. Official government boundary (data.gov.in / Survey of India)
+  // 1. Verified Google Maps high-fidelity polygon (traced directly from Google Maps cadastral boundary)
+  if (KNOWN_PINCODE_POLYGONS[cleanedPin]) {
+    return KNOWN_PINCODE_POLYGONS[cleanedPin];
+  }
+
+  // 2. Official data.gov.in boundary (Voronoi postal partition)
   try {
     const { OFFICIAL_PINCODE_POLYGONS } = require("./officialBoundaries");
     if (OFFICIAL_PINCODE_POLYGONS[cleanedPin]) {
       return OFFICIAL_PINCODE_POLYGONS[cleanedPin];
     }
   } catch (_) {}
-
-  // 1. Check known high-fidelity polygons
-  if (KNOWN_PINCODE_POLYGONS[cleanedPin]) {
-    return KNOWN_PINCODE_POLYGONS[cleanedPin];
-  }
 
   // 2. Dynamic Convex Hull with Delivery Buffer for multi-office PIN codes (3+ offices)
   if (officePoints && officePoints.length >= 3) {
@@ -472,13 +472,14 @@ export function getTerritoryPolygon(
 export function getKnownCentroid(pincode: string): LatLngPoint | null {
   const cleanedPin = pincode.trim().split(":")[0];
   
-  // Check official boundaries first, then curated
-  let poly: LatLngPoint[] | undefined;
-  try {
-    const { OFFICIAL_PINCODE_POLYGONS } = require("./officialBoundaries");
-    poly = OFFICIAL_PINCODE_POLYGONS[cleanedPin];
-  } catch (_) {}
-  if (!poly) poly = KNOWN_PINCODE_POLYGONS[cleanedPin];
+  // Check verified Google Maps polygons first, then Voronoi
+  let poly: LatLngPoint[] | undefined = KNOWN_PINCODE_POLYGONS[cleanedPin];
+  if (!poly) {
+    try {
+      const { OFFICIAL_PINCODE_POLYGONS } = require("./officialBoundaries");
+      poly = OFFICIAL_PINCODE_POLYGONS[cleanedPin];
+    } catch (_) {}
+  }
   if (!poly || poly.length === 0) return null;
   
   const sumLat = poly.reduce((acc, p) => acc + p.lat, 0);
