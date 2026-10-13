@@ -213,3 +213,12 @@ To ensure professional, 100% accurate map rendering across all PIN codes in Indi
 - **Jaipur City Boundary:** Rendered using the official Survey of India / Municipal Corporation administrative boundary fetched via Mappls GeoAnalytics SDK (`filters: "district_name='Jaipur' AND state_name='Rajasthan'"`), falling back to the 34-vertex cadastral perimeter in `lib/geo/pincodePolygons.ts`.
 - **Zero Rural Clutter:** District overview maps must never render nationwide or statewide point markers. Only urban municipal PINs (e.g., `302xxx`) with active `covered` status are displayed as filled green territory polygons.
 - **Centroid Locking:** Camera targeting must lock to geometric commercial centroids (`getKnownCentroid`) at zoom 11.8 for district overviews, and zoom 13.2 for individual PIN isolation.
+
+### 9.3 4-Tier Administrative Geo Hierarchy (State → District → Tehsil → PINCODE)
+- **Hierarchical Governance Architecture:** Operational serviceability is strictly organized into four tiers:
+  `State` → `District` → `Tehsil / Taluka` → `PINCODE (Active vs Inactive)`.
+- **Active vs. Inactive PIN Policy:** A PINCODE is marked `active` if and only if TEAM CCTV has verified installer coverage capable of 24-48h site survey and physical delivery. PINs without verified installer coverage must remain `inactive`.
+- **Granular Serviceability Resolution (`/api/pincode/[pin]`):** Serviceability (`served: true`) is determined exclusively by the individual PIN's active status (via Firestore `geo_pincodes` override or the verified urban launch set). Blanket district-wide checks (e.g., treating all of Jaipur district or other cities as automatically served) are strictly prohibited.
+- **Tehsil Metadata Propagation:** All public lookups, waitlist submissions, and traffic impressions MUST record the resolved `tehsil`, `district`, and `state`.
+- **Bulk Tehsil Activation:** Administrators can toggle an entire Tehsil's PIN codes between `active` and `inactive` in a single batch operation from the Regional Expansion Hub (`/admin/expansion`).
+- **Dynamic PINCODE Expansion:** Admins can register any new 6-digit Indian PIN code into the administrative hierarchy with custom locality, sub-district/tehsil, and activation status.

@@ -3,14 +3,7 @@ import { adminDb, serverTimestamp, increment } from "@/lib/firebase-admin";
 
 export const dynamic = 'force-dynamic';
 
-const ACTIVE_HUBS: Record<string, string> = {
-  "jaipur": "jaipur",
-  "jodhpur": "jodhpur",
-  "kota": "kota",
-  "ajmer": "ajmer",
-  "new delhi": "new-delhi",
-  "delhi": "new-delhi"
-};
+import { isPincodeActiveByDefault, resolveStaticHierarchy } from "@/lib/geo/geoHierarchy";
 
 const formatAreaName = (name: string) => name.replace(/\s+(S\.O|B\.O|H\.O|G\.P\.O\.|S\.O\.|B\.O\.|H\.O\.)(\s+|$)/gi, ' ').replace(/\s*\([^)]*\)/g, '').trim();
 
@@ -79,20 +72,35 @@ export async function GET(
     const locationName = firstOffice.Name;
     const formattedAreas = postOffices.map((po: any) => formatAreaName(po.Name));
 
+    // 2. Check Geo Hierarchy for Active status and Tehsil
     let served = false;
-    let citySlug = "";
-    
-    for (const [hubKey, slug] of Object.entries(ACTIVE_HUBS)) {
-      if (districtName.includes(hubKey) || stateName.includes(hubKey)) {
-        served = true;
-        citySlug = slug;
-        break;
+    let tehsil = "";
+
+    try {
+      const geoPinSnap = await adminDb.collection("geo_pincodes").doc(pin).get();
+      if (geoPinSnap.exists) {
+        const geoData = geoPinSnap.data();
+        served = geoData?.status === "active";
+        tehsil = geoData?.tehsil || "";
+      } else {
+        served = isPincodeActiveByDefault(pin);
+        const staticMeta = resolveStaticHierarchy(pin);
+        tehsil = staticMeta?.tehsil || firstOffice.Block || firstOffice.District || "Central";
       }
+    } catch (geoCheckErr) {
+      served = isPincodeActiveByDefault(pin);
+      const staticMeta = resolveStaticHierarchy(pin);
+      tehsil = staticMeta?.tehsil || firstOffice.District;
     }
 
-    if (!served) {
-      citySlug = "jaipur"; // Fallback to nearest hub for reference quote
-    }
+    let citySlug = "jaipur";
+    if (districtName.includes("jaipur")) citySlug = "jaipur";
+    else if (districtName.includes("jodhpur")) citySlug = "jodhpur";
+    else if (districtName.includes("kota")) citySlug = "kota";
+    else if (districtName.includes("ajmer")) citySlug = "ajmer";
+    else if (districtName.includes("udaipur")) citySlug = "udaipur";
+    else if (districtName.includes("delhi")) citySlug = "new-delhi";
+    else citySlug = districtName.replace(/\s+/g, '-').toLowerCase();
 
     // 2. Check cache for coords/radius
     let lat: number | undefined;
@@ -277,9 +285,22 @@ Example:
       const impressionRef = adminDb.collection("city_impressions").doc(districtName.replace(/\s+/g, '-'));
       batch.set(impressionRef, {
         city: firstOffice.District,
+        district: firstOffice.District,
+        tehsil: tehsil,
         state: firstOffice.State,
         pincode: pin,
         served: served,
+        total_lookups: increment(1),
+        last_lookup: serverTimestamp(),
+      }, { merge: true });
+
+      const demandImpRef = adminDb.collection("demand_impressions").doc(`${pin}_${districtName.replace(/\s+/g, '-')}`);
+      batch.set(demandImpRef, {
+        pincode: pin,
+        city: firstOffice.District,
+        district: firstOffice.District,
+        tehsil: tehsil,
+        state: firstOffice.State,
         total_lookups: increment(1),
         last_lookup: serverTimestamp(),
       }, { merge: true });
@@ -302,6 +323,7 @@ Example:
         district: firstOffice.District, 
         state: firstOffice.State, 
         city: locationName, 
+        tehsil: tehsil,
         served: served, 
         citySlug: citySlug,
         lat,

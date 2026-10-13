@@ -56,3 +56,17 @@
 4. **Day-0 UAT Reset:**
    - Prior to general commercial traffic, execute `npm run reset:uat` (`scripts/reset-uat.ts`) or call `/api/admin/cleanup-test-data` to purge development fixtures.
 
+---
+
+## 5. Administrative Geo Hierarchy & Serviceability Truth
+1. **4-Tier Territorial Model:**
+   - Hierarchy: `State` → `District` → `Tehsil` → `PINCODE (Active vs Inactive)`.
+   - Core launch: Urban Jaipur (`302001`, `302012`, `302017`, `302029`, etc.) is operational for immediate 24-48h site installation.
+   - Peripheral rural tehsils (`Chomu`, `Chaksu`, `Bassi`, `Kotputli`) and other districts (`Jodhpur`, `Kota`, `Ajmer`, `New Delhi`, `Nashik`) remain `inactive` by default until installer hubs are appointed.
+2. **Hierarchical Serviceability Resolution:**
+   - Route `/api/pincode/[pin]` checks Firestore collection `geo_pincodes` overrides and static baseline hierarchy in `lib/geo/geoHierarchy.ts`.
+   - Blanket district-wide checks are prohibited; individual PIN status dictates `served: true/false`.
+   - Lookups and leads are enriched with resolved `tehsil`, `district`, and `state`.
+3. **Regional Expansion Hub (`/admin/expansion`):**
+   - Managed via `ExpansionClient.tsx` with single-PIN toggle switches and bulk Tehsil activation actions backed by `/api/admin/geo/hierarchy`.
+

@@ -1,6 +1,7 @@
 "use server";
 
 import { adminDb, arrayUnion, serverTimestamp, increment } from "@/lib/firebase-admin";
+import { isPincodeActiveByDefault, resolveStaticHierarchy } from "@/lib/geo/geoHierarchy";
 import { CreateLeadSchema } from "@/lib/validators";
 import { calculateSlaDeadline } from "@/lib/sla-engine";
 
@@ -50,6 +51,8 @@ export async function createLeadAction(payload: {
       "313": { city: "Udaipur", slug: "udaipur", served: false },
     };
     const locationData = PINCODE_CITY_MAP[pincodePrefix] ?? null;
+    const staticMeta = pincode ? resolveStaticHierarchy(pincode) : null;
+    const isServed = pincode ? isPincodeActiveByDefault(pincode) : Boolean(locationData?.served);
 
     const quadrant = String(wizardAnswers?.quadrant || "");
     const locality = String(wizardAnswers?.locality || wizardAnswers?.anchor || "");
@@ -171,11 +174,13 @@ export async function createLeadAction(payload: {
       detected_pincode:      pincode || null,
       quadrant:              quadrant || null,
       locality:              locality || null,
-      detected_city:         (locationData?.city ?? city) || "Unknown",
-      detected_city_slug:    locationData?.slug ?? null,
-      detected_state:        "Rajasthan",
-      service_status:        locationData?.served ? "active" : "waitlist",
-      is_reference_quote:    locationData ? !locationData.served : false,
+      detected_tehsil:       staticMeta?.tehsil || null,
+      detected_city:         staticMeta?.district || (locationData?.city ?? city) || "Unknown",
+      detected_district:     staticMeta?.district || (locationData?.city ?? city) || "Unknown",
+      detected_city_slug:    locationData?.slug ?? (staticMeta?.district ? staticMeta.district.toLowerCase().replace(/\s+/g, '-') : null),
+      detected_state:        staticMeta?.state || state || "Rajasthan",
+      service_status:        isServed ? "active" : "waitlist",
+      is_reference_quote:    !isServed,
       waitlist_confirmed:    false,
       source:                leadData.wizard_answers?.utm_source || payload.source || "wizard",
       utm_campaign:          leadData.wizard_answers?.utm_campaign || null,

@@ -94,6 +94,13 @@
 - **Dedicated Test Purge API (`/api/admin/cleanup-test-data`):** Implemented an authenticated admin endpoint to purge orphaned test fixtures and maintain Day-0 database cleanliness.
 - **PDF Template Resilience:** Hardened `QuotePDFDocument` in `lib/pdf/quote-pdf.tsx` with fallback subtotal derivation, graceful date formatting, and labor line-item deduplication.
 
+### Milestone 10: Administrative Geo Hierarchy Engine (State → District → Tehsil → PINCODE)
+- **4-Tier Administrative Structure:** Replaced flat, arbitrary city strings with a structured 4-level Indian administrative model (`State` → `District` → `Tehsil` → `PINCODE (Active vs Inactive)`).
+- **Core Active Set & Granular Serviceability:** Locked core urban Jaipur launch PINs (`302001`, `302012`, `302017`, `302029`, etc.) as active, while accurately designating peripheral/rural tehsils (`303702` Chomu, `303901` Chaksu, `303108` Kotputli, `303301` Bassi) and unserved expansion hubs (`342xxx` Jodhpur, `324xxx` Kota, `305xxx` Ajmer, `110041` Nangloi, `422305` Dindori) as inactive.
+- **Public API Resolution (`/api/pincode/[pin]`):** Upgraded to check Firestore collection `geo_pincodes` overrides and static baseline hierarchy. Eliminates blind district-wide serviceability assumptions and attaches resolved `tehsil`, `district`, and `state` metadata to all impressions and quotes.
+- **Regional Expansion Hub (`/admin/expansion`):** Upgraded `ExpansionClient.tsx` with an interactive 4-tier tree explorer featuring single-PIN active/inactive toggle switches, 1-click bulk Tehsil activation/deactivation, demand density scores, and a "+ Add PIN Code" registration modal.
+- **Enriched Waitlist CRM:** Enhanced the unserved waitlist database with dedicated columns for State, District, and Tehsil alongside individual PIN codes.
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
@@ -109,6 +116,7 @@
 | **Layer 7: Boundary Engine Fidelity** | Google Maps Postal Parity | `PASS` | 100% Google Maps parity for 302041 (Dhankya/Bindayaka/Bichpari, excluding Sirsi) and 302012 (Jhotwara urban core) + true geometric centroid alignment (`getKnownCentroid`). |
 | **Layer 8: City Boundary & Framing** | Google Maps Jaipur Parity | `PASS` | Mappls GeoAnalytics official boundary + 34-vertex fallback; camera locked at zoom 11.8 on Jaipur city core; zero rural scatter. |
 | **Layer 9: Catalog & Data Hygiene** | Zero Fake Products & Teardown | `PASS` | 68 active genuine products; 0 fake SKUs; test teardown hooks attached; Admin test records hidden by default. |
+| **Layer 10: Administrative Geo Hierarchy** | 4-Tier PIN/Tehsil Hierarchy | `PASS` | Granular active vs inactive PIN enforcement; single PIN toggle & bulk Tehsil activation verified; 0 TS errors. |
 
 ---
 
