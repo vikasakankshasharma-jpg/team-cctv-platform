@@ -47,16 +47,15 @@ This document serves as the master engineering and operational handover for the 
 - **Quotation Versioning:** Changes made by installers or salespeople after a site survey automatically spawn a new version (`v2`, `v3`).
 - **Quotation Disclaimer:** Standard notice indicating final quotes may adjust based on actual site conditions.
 
-### 2.4 Territory Mapping, Boundaries & 4-Quadrant Micro-Zones
-- **Hierarchy:** State → District → Tehsil → PINCODE → 4 Quadrants.
-- **3-Tier Boundary Engine:**
-  - `Tier 1`: Verified Google Maps cadastral polygons (`KNOWN_PINCODE_POLYGONS` in `lib/geo/pincodePolygons.ts`) for core launch urban centers (Jaipur metro PINs 302001–302048, including exact contours for 302012 and 302041).
-  - `Tier 2`: Pre-extracted public cadastral vector boundaries (`OFFICIAL_PINCODE_POLYGONS` in `lib/geo/officialBoundaries.ts`).
-  - `Tier 3`: Dynamic 2D convex hull with 1.6 km delivery buffer covering all other PINs nationwide.
+### 2.4 Territory Mapping, Boundaries & Delivery Micro-Hubs
+- **Hierarchy:** State → District → Tehsil → PINCODE → Sub-Post Office Delivery Micro-Hubs.
+- **3-Tier Layered Geography Standard:**
+  - `Tier 1`: City & Zone Solid Polygons (Mappls GeoAnalytics SDK / municipal boundary).
+  - `Tier 2`: Cadastral PINCODE Boundary Polygons (`KNOWN_PINCODE_POLYGONS` in `lib/geo/pincodePolygons.ts` for core launch urban centers, `OFFICIAL_PINCODE_POLYGONS`, and dynamic 2D convex hull with 1.6 km delivery buffer covering all other PINs nationwide).
+  - `Tier 3`: Sub-Post Office Delivery Hubs & Halos (Official `S.O.` / `B.O.` postal delivery beats mapped to authentic local communicating names e.g. `Niwaru Road`, `Lata Circle`, `Khatipura Tiraha`).
 - **Centroid Engine (`getKnownCentroid`):** Camera viewport and pinpoint markers lock onto the true mathematical center of verified polygons, eliminating third-party postal coordinate corruption.
-- **4 Quadrants:** Replaces postal names with landmark-anchored quadrants (North-West, North-East, South-East, South-West).
-- **Visual Status:** Red circles = Unselected/Uncovered; Blue circles = Active coverage. Includes "Gen All Quadrants" batch tool in Admin.
-- **Tri-Factor Boundary:** Matches leads against assigned Quadrant, operating radius (e.g. 15km), and polygon boundaries.
+- **Visual Status:** Dynamic 2-letter shortcode badges (`[✓ NR]`, `[✓ LC]`) with 850m translucent coverage halos (`#22c55e` covered, `#ef4444` dashed uncovered). Solid green polygons render active PINCODE coverage.
+- **Tri-Factor Boundary:** Matches leads against assigned Delivery Hub (tokenized string matching against customer street/colony addresses), operating radius (e.g. 15km), and polygon boundaries.
 
 ### 2.5 Two-Tier Referral & Affiliate System
 - **B2B Business Partners:** Admin-invited trade professionals receive branded QR codes. Earn 2% commission; customers receive 3% discount.

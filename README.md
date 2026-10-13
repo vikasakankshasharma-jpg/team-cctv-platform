@@ -35,9 +35,9 @@
 - **MapmyIndia (Mappls) Integration:** High-accuracy Indian address geocoding, boundary polygons, and fallback to Google Maps/OSM.
 - **3-Tier Boundary Resolution:** Curated 100% Google Maps cadastral boundaries for active launch PINs (`KNOWN_PINCODE_POLYGONS`), pre-extracted public multi-polygons (`OFFICIAL_PINCODE_POLYGONS`), and dynamic 2D convex hull with 1.6 km delivery buffer for pan-India coverage.
 - **Centroid Engine:** Mathematical polygon centroid alignment (`getKnownCentroid`) overrides postal API coordinate corruption, locking map camera and pins directly over true commercial hubs (e.g., Jhotwara Circle, Dhankya-Bindayaka).
-- **4-Quadrant Area Partitioning:** PINCODEs are divided into 4 landmark-anchored quadrants (North-West, North-East, South-East, South-West) for granular sales and technician dispatch.
-- **Visual Territory Map:** Red circles indicate uncovered/unselected zones; blue circles indicate active coverage. Includes "Gen All Quadrants" batch tool.
-- **Tri-Factor Matching:** Matches lead addresses against Quadrant, circular radius, and polygon boundaries.
+- **Sub-Post Office Delivery Micro-Hubs & Halos:** Authentic India Post Sub-Post Offices (`S.O.`) and Branch Offices (`B.O.`) mapped to local communicating names (e.g., Niwaru Road, Lata Circle, Khatipura, Bandra West, Koramangala). Replaces rigid cardinal compass assumptions with 1 to 8 dynamic delivery beats.
+- **3-Tier Layered Territory Map:** City solid perimeter, filled green cadastral PINCODE boundaries, and delivery micro-hubs with 2-letter shortcode badges (`[✓ NR]`, `[✓ LC]`) and 850m translucent coverage halos.
+- **Tri-Factor Matching:** Matches lead addresses against delivery hub local tokens, circular radius, and polygon boundaries.
 
 ### 5. Two-Tier Referral & Affiliate Ecosystem
 - **B2B Business Partners:** Admin-invited trade professionals (shopkeepers, contractors, architects) receive branded QR codes. Partners earn 2% commission; customers receive a 3% discount.

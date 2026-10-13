@@ -109,7 +109,7 @@ Exactly 5 site difficulty flags can be set by the Installer, Salesperson, or Adm
 
 ---
 
-## 5. Geographical Coverage, Mapping & Tehsil Quadrants
+## 5. Geographical Coverage, Mapping & Tehsil Delivery Micro-Hubs
 
 ### 5.1 Mapping Infrastructure
 - **Mappls (MapmyIndia):** Primary mapping provider for Indian address accuracy, district/tehsil boundaries, and pincode mapping.
@@ -117,22 +117,23 @@ Exactly 5 site difficulty flags can be set by the Installer, Salesperson, or Adm
 - **Map Pin-Drop:** Customers drop a pin to capture their exact geolocation, auto-populating address fields.
 
 ### 5.2 Administrative Hierarchy
-- `State` → `District` → `Tehsil` → `PINCODE` → `4 Quadrants / Micro-Zones`.
+- `State` → `District` → `Tehsil` → `PINCODE` → `Sub-Post Office Delivery Micro-Hubs`.
 
-### 5.3 4-Quadrant Partitioning Strategy
-- Government sub-post office names are converted into 4 intuitive, equal-partition quadrants anchored by well-known local landmarks:
-  1. **North-West Zone**
-  2. **North-East Zone**
-  3. **South-East Zone**
-  4. **South-West Zone**
+### 5.3 3-Tier Layered Geography & Delivery Micro-Hub Strategy
+- **3-Tier Layered Geography Standard:**
+  1. **Tier 1 (City & Zone Solid Polygons):** Mappls GeoAnalytics / Municipal boundary defining the macro urban perimeter.
+  2. **Tier 2 (Cadastral PINCODE Boundary Polygons):** Closed vector polygons (`KNOWN_PINCODE_POLYGONS` / `OFFICIAL_PINCODE_POLYGONS`) rendering the verified municipal service territory filled in green.
+  3. **Tier 3 (Sub-Post Office Delivery Hubs & Halos):** Official Sub-Post Offices (`S.O.`) and Branch Offices (`B.O.`) extracted from India Post data and mapped to authentic local communicating names (e.g., `Niwaru Road`, `Lata Circle`, `Khatipura Tiraha`, `Amrapali Circle`).
 - **Visual Map Indicators:**
-  - Red circles: Unselected / Uncovered zones.
-  - Blue circles: Selected / Serviceable zones.
-- **Batch Tools:** Admin console provides a "Gen All Quadrants" tool to automatically generate quadrant partitions for all PINCODEs in a selected Tehsil/District.
+  - Red badges & dashed red halos: Unassigned / uncovered delivery hubs.
+  - Green badges & translucent 850m halos: Active / serviceable delivery hubs with 2-letter shortcode pills (`[✓ NR]`, `[✓ LC]`, `[✓ BW]`, etc.).
+  - Polygons: Solid fill indicates active PINCODE boundary coverage; individual hubs do not render disjoint micro-polygons to avoid boundary clipping and visual clutter.
+- **Dynamic Hub Capacity:** Supports 1 to 8 natural delivery hubs per PINCODE based on actual India Post beats rather than artificial 4-box cardinal grids.
+- **Batch Tools:** Admin console provides dynamic hub discovery and verified hub injection for all PINCODEs across selected Tehsils/Districts.
 
 ### 5.4 Tri-Factor Coverage Enforcement
 Serviceability is verified by matching against:
-1. Assigned 4-Quadrant micro-zone.
+1. Assigned Sub-Post Office Delivery Micro-Hub (via tokenized string matching of customer street/colony addresses against local communicating names).
 2. Circular Operating Radius (e.g., 15 km from service hub).
 3. Polygon Boundary Tool drawn in the Admin Console.
 
@@ -206,7 +207,7 @@ To ensure professional, 100% accurate map rendering across all PIN codes in Indi
 ### 9.1 Zero External Dependency for Coverage Data
 - **Self-Contained Operating Record:** All operational coverage boundaries, serviceability definitions, and sales partner assignments are persisted directly in the project's internal Firestore database and static geo modules.
 - **Coverage Zones Collection (`coverage_zones`):** Stores polygon coordinates, circular operating radii, and associated PIN code sets. Lead routing (`lib/territory.ts`) queries this collection first.
-- **Pincode Knowledge Base (`pincode_cache`):** Stores validated latitude, longitude, sub-post office local names, and 4-quadrant micro-zones (`North-West`, `North-East`, `South-East`, `South-West`).
+- **Pincode Knowledge Base (`pincode_cache`):** Stores validated latitude, longitude, and sub-post office delivery micro-hubs with authentic local communicating names.
 - **Internal Admin Matrix (`/admin/salespersons`):** All territory inspections, gap detections (uncovered PINs in red), and one-click assignments are performed internally without requiring external Google Maps lookups or third-party mapping subscriptions.
 
 ### 9.2 Administrative Boundary Parity & Display Rules

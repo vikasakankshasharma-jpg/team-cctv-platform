@@ -7,9 +7,9 @@
 ---
 
 ## 1. Geographical Expansion & Geocoding Intelligence
-1. **AI-Powered Tehsil & Quadrant Auto-Generation:**
-   - Universal Indian geography engine generating 4 landmark-anchored quadrants for every Tehsil across all 28 states and 8 union territories.
-   - Built-in rate-limiting controls and persistent caching to avoid external API quota exhaustion.
+1. **Universal Sub-Post Office Delivery Micro-Hub Engine & Dynamic Postal Caching:**
+   - Universal Indian geography engine caching authentic Sub-Post Offices (`S.O.`) and Branch Offices (`B.O.`) for all 19,000+ PIN codes across all 28 states and 8 union territories.
+   - Built-in rate-limiting controls, local communicating name extraction, and persistent caching to avoid external API quota exhaustion.
 2. **Interactive 2D Floor Plan & Blueprint Visualizer:**
    - Property floor plan preset selector with clickable camera placement.
    - Dynamic visualization of covered vs. uncovered visual field-of-view (FOV) cones on map/blueprint layouts.

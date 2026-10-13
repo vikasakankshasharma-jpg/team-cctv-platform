@@ -24,7 +24,7 @@ flowchart TD
     H2 --> I
     I --> J["Webhook + Fallback Verification API"]
     J --> K["Quote Status: BOOKED / PAID"]
-    K --> L["Mappls 4-Quadrant Territory Lead Dispatch"]
+    K --> L["Mappls Sub-Post Office Delivery Hub Lead Dispatch"]
     L --> M["Installer Site Visit & Job Card Execution"]
     M --> N{"Site Survey Adjustments Needed?"}
     N -- Yes --> O["Generate New Quotation Version (v2/v3)"]
@@ -69,9 +69,9 @@ flowchart TD
 4. **Option 4: Free Site Survey Booking:** Embedded calendar date/time picker (restricted to future dates) for on-site consultation.
 - **Payment Verification:** Razorpay/Cashfree webhook + client-side **Fallback Verification API** attached to payment success screen guarantees immediate status transition to `BOOKED` / `PAID`.
 
-### 6. Geolocation Dispatch & 4-Quadrant Territory Routing
-- **Territory Matching:** Matches customer address against the 4-Quadrant micro-zone (North-West, North-East, South-East, South-West) anchored by landmarks, operating radius, and polygon boundaries.
-- **Visual Status:** Displays active technician coverage in blue circles, unassigned areas in red circles.
+### 6. Geolocation Dispatch & Sub-Post Office Delivery Micro-Hub Routing
+- **Territory Matching:** Matches customer address tokens against authentic Sub-Post Office Delivery Micro-Hubs (with local communicating names), operating radius, and cadastral polygon boundaries.
+- **Visual Status:** Displays active technician coverage with green pill shortcodes (`[✓ NR]`, `[✓ LC]`) and 850m halos, unassigned areas in red dashed halos.
 - **Installer Assignment:** Automatically dispatches lead to authorized local installer.
 
 ### 7. Installer Job Execution & Quotation Versioning

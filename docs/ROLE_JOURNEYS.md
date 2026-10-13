@@ -25,7 +25,7 @@ The platform serves distinct personas with strict route boundaries, tailored cap
 - **Profile:** Certified local technician contracted to execute on-site installation and cabling.
 - **Entry Point:** `/installer/dashboard`
 - **Core Journey:**
-  1. **Territory Dispatch:** Receives assigned job leads routed via Mappls 4-Quadrant micro-zone matching.
+  1. **Territory Dispatch:** Receives assigned job leads routed via Sub-Post Office Delivery Micro-Hub matching.
   2. **Job Card Execution (`/installer/jobs/[id]`):** Reviews equipment BOM, required camera positions, and site preparation conditions.
   3. **Site Survey Adjustments & Quotation Versioning:**
      - Inspects physical site conditions.
@@ -79,10 +79,10 @@ The platform serves distinct personas with strict route boundaries, tailored cap
 - **Core Journey:**
   1. **Global Control & Analytics:** Monitors real-time revenue, active bookings, conversion rates, and geographic demand heatmaps.
   2. **Catalog & Margin Engine (`/admin/catalog-manager`, `/admin/settings`):** Configures dynamic category margins (`margin_hdd`, `margin_cctv_camera`, etc.), adds/duplicates products, and manages inventory status.
-  3. **Geographic Coverage & 4-Quadrant Management (`/admin/coverage`):**
+  3. **Geographic Coverage & Delivery Micro-Hubs Management (`/admin/coverage`):**
      - Manages State → District → Tehsil → PINCODE hierarchy.
-     - Runs the **"Gen All Quadrants"** batch tool to partition PINCODEs into 4 equal landmark-anchored micro-zones.
-     - Adjusts Red (uncovered) and Blue (covered) serviceability toggles.
+     - Maps official Sub-Post Offices (`S.O.`) and Branch Offices (`B.O.`) to local communicating names.
+     - Inspects active coverage with 2-letter shortcode badges (`[✓ NR]`, `[✓ LC]`), 850m halos, and cadastral PIN polygons.
   4. **Dispatch Management (`/admin/dispatch`):** Oversees technician territory assignments and escalated job issues.
   5. **Financial Dashboard & Payout Approval (`/admin/finance`):**
      - Reviews and authorizes payouts for Installers, B2B Partners, and B2C Referrers based on verified site completion with zero open punch-list items.

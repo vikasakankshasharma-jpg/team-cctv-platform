@@ -24,9 +24,10 @@
 
 ## 2. October 2026 Sprint Milestones (Completed & Live)
 
-### Milestone 1: Mappls (MapmyIndia) & 4-Quadrant Coverage Engine
+### Milestone 1: Mappls (MapmyIndia) Coverage Foundation (Superseded by Milestone 12)
+> *Historical Note: The initial v1 4-quadrant prototype described below was superseded in Milestone 12 by the Universal Sub-Post Office Delivery Micro-Hubs & 3-Tier Layered Geography Standard.*
 - **Mappls Engine Integration:** Integrated Mappls SDK for hyper-localized Indian address resolution, district boundaries, and sub-post office coordinates with automatic fallback to Google Maps and OSM.
-- **4-Quadrant Area Partitioning:** Replaced ambiguous postal codes with 4 intuitive quadrant micro-zones (North-West, North-East, South-East, South-West) anchored by prominent local landmarks (e.g., Chandpole, Indra Bazar, M.I. Road, Statue Circle in Jaipur 302001).
+- **Historical Area Partitioning:** Initially prototyped with 4 quadrant zones (North-West, North-East, South-East, South-West) anchored by prominent local landmarks.
 - **Interactive Coverage Visualization:**
   - Red circles: Unselected / Uncovered zones.
   - Blue circles: Selected / Covered zones.
@@ -84,7 +85,7 @@
 - **Urban Framing Camera Engine:** Initial map camera locked at coordinates `lat: 26.8950, lng: 75.8100` with zoom `11.8`, providing a tight, focused view of the municipal core matching Google Maps search for Jaipur.
 - **Self-Contained Coverage Architecture:**
   - All coverage zones stored in Firestore collection `coverage_zones` with custom polygon vertices and operational radii.
-  - All pincode coordinates, sub-post offices, and 4 micro-quadrants cached permanently in `pincode_cache`.
+  - All pincode coordinates, sub-post offices, and verified delivery micro-hubs cached permanently in `pincode_cache`.
   - Admin Territory Matrix (`/admin/salespersons`) provides an internal, self-sufficient interface to inspect coverage, identify gaps, and assign zones without consulting external tools.
 
 ### Milestone 9: Zero Fake Products & Test Teardown Governance
@@ -130,6 +131,8 @@
 | **Layer 8: City Boundary & Framing** | Google Maps Jaipur Parity | `PASS` | Mappls GeoAnalytics official boundary + 34-vertex fallback; camera locked at zoom 11.8 on Jaipur city core; zero rural scatter. |
 | **Layer 9: Catalog & Data Hygiene** | Zero Fake Products & Teardown | `PASS` | 68 active genuine products; 0 fake SKUs; test teardown hooks attached; Admin test records hidden by default. |
 | **Layer 10: Administrative Geo Hierarchy** | 4-Tier PIN/Tehsil Hierarchy | `PASS` | Granular active vs inactive PIN enforcement; single PIN toggle & bulk Tehsil activation verified; 0 TS errors. |
+| **Layer 11: Universal Delivery Micro-Hubs & Halos** | Sub-Post Offices & 3-Tier Geography | `PASS` | Dynamic S.O./B.O. hubs with 850m halos, tokenized address matching, radial dispersion, and 100% India Post coverage. |
+| **Layer 12: Production Live Deployment** | https://cctvquotation.com | `PASS` | Live production verified with HTTP 200, fast SSL handshake, and verified delivery micro-hubs. |
 
 ---
 
