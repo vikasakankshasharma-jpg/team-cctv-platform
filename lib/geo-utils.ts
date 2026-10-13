@@ -110,6 +110,7 @@ export interface PincodeGroupedData {
   areas: string[];
   allAreas: string[];
   quadrants?: any[];
+  delivery_hubs?: any[];
   lat?: number;
   lng?: number;
   radius: number;
@@ -239,6 +240,7 @@ export function computeDistrictPincodes(offices: any[]): PincodeGroupedData[] {
         areas: Array.from(data.areas).slice(0, 4),
         allAreas: Array.from(data.areas),
         quadrants: data.quadrants,
+        delivery_hubs: data.quadrants,
         ...(lat && lng ? { lat, lng } : {}), // Omit lat/lng if not found to trigger client geocoding
         radius: 4000
       };

@@ -221,15 +221,17 @@ function QuadrantMarkerItem({
     const isSel = marker.isSelected;
     const bg = isSel ? "#16a34a" : "#dc2626";
     const symbol = isSel ? "✓" : "⭕";
-    const label = marker.quadrantName ? marker.quadrantName.charAt(0) : "P";
+    const shortCode = marker.quadrantName
+      ? marker.quadrantName.split(/[\s/&-]+/).map(w => w.charAt(0)).slice(0, 2).join('').toUpperCase()
+      : "PO";
 
     return L.divIcon({
       className: `quadrant-marker-icon`,
       html: `
         <div style="
-          min-width: 24px;
+          min-width: 28px;
           height: 24px;
-          padding: 0 4px;
+          padding: 0 5px;
           background: ${bg};
           color: white;
           border-radius: 12px;
@@ -245,11 +247,11 @@ function QuadrantMarkerItem({
           transition: transform 0.15s ease, background 0.2s ease;
         " title="${marker.pincode} ${marker.quadrantName || ''}">
           <span style="font-size: 9px; margin-right: 2px;">${symbol}</span>
-          <span>${label}</span>
+          <span>${shortCode}</span>
         </div>
       `,
-      iconSize: [26, 26],
-      iconAnchor: [13, 13]
+      iconSize: [30, 24],
+      iconAnchor: [15, 12]
     });
   }, [marker.isSelected, marker.quadrantName, marker.pincode]);
 
@@ -267,20 +269,20 @@ function QuadrantMarkerItem({
 
   return (
     <>
-      {/* Visual circle indicating quadrant micro-zone perimeter */}
+      {/* Visual circle indicating delivery hub coverage halo perimeter */}
       <Circle
         center={[marker.lat, marker.lng]}
-        radius={750}
+        radius={850}
         eventHandlers={eventHandlers}
         pathOptions={{
           color: marker.isSelected ? "#16a34a" : "#dc2626",
           fillColor: marker.isSelected ? "#22c55e" : "#ef4444",
-          fillOpacity: marker.isSelected ? 0.32 : 0.18,
+          fillOpacity: marker.isSelected ? 0.28 : 0.14,
           weight: 1.5,
           dashArray: marker.isSelected ? undefined : "4, 4"
         }}
       />
-      {/* Clickable pill marker at quadrant position */}
+      {/* Clickable pill marker at delivery hub position */}
       <Marker
         position={[marker.lat, marker.lng]}
         icon={icon}
@@ -296,7 +298,7 @@ function QuadrantMarkerItem({
             </div>
             {marker.quadrantName && (
               <div style={{ fontWeight: 600, marginTop: "2px", color: "#111827" }}>
-                {marker.quadrantName} Quadrant
+                {marker.quadrantName} <span style={{ fontSize: "10px", fontWeight: 500, color: "#6b7280" }}>(Delivery Hub)</span>
               </div>
             )}
             {marker.areaName && (

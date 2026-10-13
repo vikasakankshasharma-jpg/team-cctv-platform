@@ -323,7 +323,7 @@ export function CoverageAreaMapEditor({
         <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-secondary/50 border border-border text-xs">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-foreground text-xs">
-              Quadrants:
+              Delivery Hubs:
             </span>
             <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[11px]">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
