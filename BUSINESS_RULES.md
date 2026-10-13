@@ -195,3 +195,18 @@ To ensure professional, 100% accurate map rendering across all PIN codes in Indi
 - Languages: English (default), Hindi, regional languages.
 - Everyday colloquial vocabulary is required over archaic bookish terms (e.g., using "कम" for Low and "ज्यादा" for High instead of formal Hindi words like "अनुशंसित").
 - Language selection modal appears on first visit with clean labels (no underscores).
+
+---
+
+## 9. Territory, Coverage & Boundary Governance
+
+### 9.1 Zero External Dependency for Coverage Data
+- **Self-Contained Operating Record:** All operational coverage boundaries, serviceability definitions, and sales partner assignments are persisted directly in the project's internal Firestore database and static geo modules.
+- **Coverage Zones Collection (`coverage_zones`):** Stores polygon coordinates, circular operating radii, and associated PIN code sets. Lead routing (`lib/territory.ts`) queries this collection first.
+- **Pincode Knowledge Base (`pincode_cache`):** Stores validated latitude, longitude, sub-post office local names, and 4-quadrant micro-zones (`North-West`, `North-East`, `South-East`, `South-West`).
+- **Internal Admin Matrix (`/admin/salespersons`):** All territory inspections, gap detections (uncovered PINs in red), and one-click assignments are performed internally without requiring external Google Maps lookups or third-party mapping subscriptions.
+
+### 9.2 Administrative Boundary Parity & Display Rules
+- **Jaipur City Boundary:** Rendered using the official Survey of India / Municipal Corporation administrative boundary fetched via Mappls GeoAnalytics SDK (`filters: "district_name='Jaipur' AND state_name='Rajasthan'"`), falling back to the 34-vertex cadastral perimeter in `lib/geo/pincodePolygons.ts`.
+- **Zero Rural Clutter:** District overview maps must never render nationwide or statewide point markers. Only urban municipal PINs (e.g., `302xxx`) with active `covered` status are displayed as filled green territory polygons.
+- **Centroid Locking:** Camera targeting must lock to geometric commercial centroids (`getKnownCentroid`) at zoom 11.8 for district overviews, and zoom 13.2 for individual PIN isolation.
