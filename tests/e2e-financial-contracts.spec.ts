@@ -153,4 +153,16 @@ test.describe.serial('Phase 3: Canonical Financial Contracts', () => {
     expect(ledgerSnap.empty).toBe(true);
   });
 
+  test.afterAll(async () => {
+    // Automated Teardown: Clean up test fixtures immediately so no orphaned test quotes or fake products remain in DB
+    try {
+      await adminDb.collection("quotes").doc(quoteId).delete();
+      if (invoiceId) await adminDb.collection("invoices").doc(invoiceId).delete();
+      if (jobId) await adminDb.collection("jobs").doc(jobId).delete();
+      if (changeOrderId) await adminDb.collection("change_orders").doc(changeOrderId).delete();
+    } catch (cleanupErr) {
+      console.warn("[Teardown Error] Failed to clean up test fixtures:", cleanupErr);
+    }
+  });
+
 });
