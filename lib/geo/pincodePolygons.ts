@@ -331,31 +331,41 @@ export const KNOWN_PINCODE_POLYGONS: Record<string, LatLngPoint[]> = {
  *  Bichpari, Muhana, Sanganer, Airport, Pratap Nagar, Sitapura, Jamdoli, Kanota)
  */
 export const JAIPUR_METRO_BOUNDARY: LatLngPoint[] = [
-  { lat: 26.9850, lng: 75.7150 }, // North-West / Sarna Doongar
-  { lat: 27.0150, lng: 75.7450 }, // Harmada approach
-  { lat: 27.0300, lng: 75.7750 }, // Harmada North / Sikar Road
-  { lat: 27.0250, lng: 75.8150 }, // Foothills north of Amber Palace
-  { lat: 27.0000, lng: 75.8550 }, // Amer / Delhi Highway
-  { lat: 26.9750, lng: 75.8650 }, // Foothills east of Amer Fort
-  { lat: 26.9450, lng: 75.8750 }, // East of Nahargarh hills / Sisodia Rani
-  { lat: 26.9200, lng: 75.9100 }, // Jamdoli corridor
-  { lat: 26.8950, lng: 75.9550 }, // Kanota Fort eastern perimeter
-  { lat: 26.8550, lng: 75.9200 }, // Ramsinghpura / South of Agra Road
-  { lat: 26.8350, lng: 75.8850 }, // Kho Nagoriyan / Goner road
-  { lat: 26.7750, lng: 75.8450 }, // South of Sitapura Industrial Area (RIICO)
-  { lat: 26.7700, lng: 75.8150 }, // South of Pratap Nagar Housing Board
-  { lat: 26.7900, lng: 75.7750 }, // South of Jaipur Airport / Sanganer South
-  { lat: 26.8150, lng: 75.7350 }, // Muhana / Sanganer West
-  { lat: 26.8400, lng: 75.7050 }, // West of Muhana / Jaisinghpura
-  { lat: 26.8550, lng: 75.6950 }, // Bhankrota / Ajmer Expressway
-  { lat: 26.8650, lng: 75.6450 }, // Thikariya & JK Lakshmipat
-  { lat: 26.8580, lng: 75.6510 }, // Bichpari notch
-  { lat: 26.8780, lng: 75.6640 }, // Bichpari East Wall
-  { lat: 26.9010, lng: 75.6795 }, // Raj Water Park (Strictly West of Sirsi)
-  { lat: 26.9160, lng: 75.6840 }, // Bindayaka East
-  { lat: 26.9350, lng: 75.6750 }, // Hathoj
-  { lat: 26.9600, lng: 75.6950 }, // South-West of Khora Bisal
-  { lat: 26.9850, lng: 75.7150 }, // Close polygon at Sarna Doongar
+  // ── Starting at North-West (Sarna Doongar / Amer Road near NH-48 bypass) and going clockwise ──
+  { lat: 26.9750, lng: 75.7100 }, // NW: Sarna Doongar / Nehrugram
+  { lat: 26.9900, lng: 75.7350 }, // N-NW: Khori Bisal / NH-48 inner
+  { lat: 26.9980, lng: 75.7650 }, // N: Harmada approach / Ring Road north spur
+  { lat: 26.9950, lng: 75.7900 }, // N: Shyam Nagar / near Chomu Puliya flyover
+  { lat: 26.9870, lng: 75.8050 }, // N: Jhotwara junction with Sikar Road (NH-52)
+  { lat: 26.9800, lng: 75.8250 }, // N-NE: Vidyadhar Nagar North / 200ft Bypass
+  { lat: 26.9750, lng: 75.8480 }, // NE: Amer foothills approach
+  { lat: 26.9680, lng: 75.8600 }, // NE: Amer Fort ridge / Aravalli scarp
+  { lat: 26.9580, lng: 75.8700 }, // NE: South of Amer / Jaigarh Fort area
+  { lat: 26.9420, lng: 75.8780 }, // E: Nahargarh hills / Hathikhana Chowk area
+  { lat: 26.9250, lng: 75.8880 }, // E: Sisodia Rani Bagh / 200ft bypass eastern arm
+  { lat: 26.9100, lng: 75.9050 }, // E: Jamdoli / Agra Road (NH-21) eastern boundary
+  { lat: 26.8900, lng: 75.9200 }, // E-SE: Kanota eastern edge / Agra-Jaipur highway
+  { lat: 26.8700, lng: 75.9100 }, // SE: Ramsinghpura / Mauzamabad
+  { lat: 26.8500, lng: 75.8950 }, // SE: Durgapura / Goner Road
+  { lat: 26.8350, lng: 75.8800 }, // SE: Kho Nagoriyan
+  { lat: 26.8200, lng: 75.8650 }, // S-SE: Vatika Road / Sirsi
+  { lat: 26.8050, lng: 75.8600 }, // S: Pratap Nagar south / Sitapura RIICO approach
+  { lat: 26.7800, lng: 75.8500 }, // S: South of Sitapura Industrial Area
+  { lat: 26.7700, lng: 75.8350 }, // S: Sitapura outer limit / EPIP Zone
+  { lat: 26.7680, lng: 75.8100 }, // S: Sanganer Airport southern perimeter
+  { lat: 26.7750, lng: 75.7850 }, // S-SW: Airport western end / Todi Mode
+  { lat: 26.7850, lng: 75.7600 }, // SW: Sanganer west / Chaksu Road
+  { lat: 26.8000, lng: 75.7400 }, // SW: Muhana wholesale market
+  { lat: 26.8200, lng: 75.7200 }, // W-SW: Jaisinghpura / Bindayaka approach
+  { lat: 26.8380, lng: 75.7050 }, // W: Bindayaka / Vaayu Vihar
+  { lat: 26.8500, lng: 75.6950 }, // W: Bhankrota / Ajmer Expressway (NH-48)
+  { lat: 26.8600, lng: 75.6850 }, // W: 200ft Bypass western node / Ajmer Road
+  { lat: 26.8700, lng: 75.6900 }, // W-NW: Sirsi junction
+  { lat: 26.8900, lng: 75.6850 }, // W-NW: Shiv Daspura / Uttam Nagar area
+  { lat: 26.9100, lng: 75.6870 }, // NW: Vishwakarma Industrial Area west
+  { lat: 26.9300, lng: 75.6900 }, // NW: Hathoj / Chomu Road junction
+  { lat: 26.9500, lng: 75.6950 }, // NW: Kalwad Road / Kukas approach
+  { lat: 26.9750, lng: 75.7100 }, // Close polygon at NW start
 ];
 
 /**

@@ -261,57 +261,91 @@ export default function MapplsBoundaryMap({
                 const isJaipur = (boundaryQuery || "").toLowerCase().includes("jaipur") || validPins.some(p => p.pincode.startsWith("302"));
 
                 if (isJaipur) {
-                  // Lock camera directly on Jaipur City at Google Maps zoom (11.4)
-                  if (map.setCenter) map.setCenter({ lat: 26.8950, lng: 75.7950 });
-                  if (map.setZoom) map.setZoom(11.4);
+                  // Lock camera on Jaipur City — tight frame matching Google Maps view
+                  if (map.setCenter) map.setCenter({ lat: 26.8950, lng: 75.8100 });
+                  if (map.setZoom) map.setZoom(11.8);
 
-                  // 1. Draw Google Maps Official Jaipur Outer City Boundary (Clean Red Perimeter with soft fill)
-                  if (window.mappls && window.mappls.Polygon) {
+                  // Helper: render covered territory polygons inside the city
+                  const renderCoveredPins = () => {
+                    const coveredUrbanPins = validPins.filter(p => p.pincode.startsWith("302") && p.status === "covered");
+                    coveredUrbanPins.forEach(p => {
+                      const polyCoords = getTerritoryPolygon(p.pincode, { lat: p.lat!, lng: p.lng! }, 2000, p.officePoints);
+                      if (window.mappls && window.mappls.Polygon) {
+                        try {
+                          const poly = new window.mappls.Polygon({
+                            map: map,
+                            paths: polyCoords,
+                            fillColor: "#10b981",
+                            fillcolor: "#10b981",
+                            fillOpacity: 0.35,
+                            strokeColor: "#059669",
+                            strokeOpacity: 0.9,
+                            strokeWidth: 1.5,
+                            fitbounds: false,
+                          });
+                          if (typeof poly.addListener === "function") {
+                            poly.addListener("click", () => {
+                              onPincodeClick?.(p.pincode);
+                            });
+                          }
+                          newLayers.push(poly);
+                        } catch (_) {}
+                      }
+                    });
+                  };
+
+                  // ── Try GeoAnalytics API for the OFFICIAL Mappls Jaipur district boundary ──
+                  // This fetches the same official government boundary shown on Google Maps / MapmyIndia
+                  let geoAnalyticsUsed = false;
+                  if (window.mappls && typeof (window.mappls as any).GeoAnalytics === "function") {
                     try {
-                      const cityBoundary = new window.mappls.Polygon({
+                      (window.mappls as any).GeoAnalytics({
                         map: map,
-                        paths: JAIPUR_METRO_BOUNDARY,
+                        layerName: "district",
+                        attributes: "district_name,state_name",
+                        geometry: true,
+                        filters: "district_name='Jaipur' AND state_name='Rajasthan'",
                         fillColor: "#ef4444",
-                        fillcolor: "#ef4444",
-                        fillOpacity: 0.08,
-                        strokeColor: "#dc2626", // Google Maps red boundary line
+                        fillOpacity: 0.06,
+                        strokeColor: "#dc2626",
                         strokeOpacity: 0.95,
                         strokeWidth: 3,
                         fitbounds: true,
-                        fitboundOptions: { padding: 35 }
+                        fitboundOptions: { padding: 40 },
+                        callback: (data: any) => {
+                          if (data && data.layer) newLayers.push(data.layer);
+                          renderCoveredPins();
+                        },
                       });
-                      newLayers.push(cityBoundary);
-                    } catch (err) {
-                      console.warn("City boundary render error:", err);
+                      geoAnalyticsUsed = true;
+                    } catch (geoErr) {
+                      console.warn("GeoAnalytics API unavailable, falling back to polygon:", geoErr);
                     }
                   }
 
-                  // 2. Render ONLY the covered urban PIN code polygons inside Jaipur (NO scattered dots across rural Rajasthan!)
-                  const coveredUrbanPins = validPins.filter(p => p.pincode.startsWith("302") && p.status === "covered");
-                  coveredUrbanPins.forEach(p => {
-                    const polyCoords = getTerritoryPolygon(p.pincode, { lat: p.lat!, lng: p.lng! }, 2000, p.officePoints);
+                  // ── Fallback: hand-crafted JAIPUR_METRO_BOUNDARY polygon ──
+                  if (!geoAnalyticsUsed) {
                     if (window.mappls && window.mappls.Polygon) {
                       try {
-                        const poly = new window.mappls.Polygon({
+                        const cityBoundary = new window.mappls.Polygon({
                           map: map,
-                          paths: polyCoords,
-                          fillColor: "#10b981",
-                          fillcolor: "#10b981",
-                          fillOpacity: 0.35,
-                          strokeColor: "#059669",
-                          strokeOpacity: 0.9,
-                          strokeWidth: 1.5,
-                          fitbounds: false,
+                          paths: JAIPUR_METRO_BOUNDARY,
+                          fillColor: "#ef4444",
+                          fillcolor: "#ef4444",
+                          fillOpacity: 0.08,
+                          strokeColor: "#dc2626",
+                          strokeOpacity: 0.95,
+                          strokeWidth: 3,
+                          fitbounds: true,
+                          fitboundOptions: { padding: 40 },
                         });
-                        if (typeof poly.addListener === "function") {
-                          poly.addListener("click", () => {
-                            onPincodeClick?.(p.pincode);
-                          });
-                        }
-                        newLayers.push(poly);
-                      } catch (_) {}
+                        newLayers.push(cityBoundary);
+                      } catch (err) {
+                        console.warn("City boundary render error:", err);
+                      }
                     }
-                  });
+                    renderCoveredPins();
+                  }
 
                 } else {
                   // Non-Jaipur district or scoped Tehsil
@@ -620,8 +654,8 @@ export default function MapplsBoundaryMap({
 
     try {
       const map = new window.mappls.Map(containerId, {
-        center: { lat: 26.8950, lng: 75.7950 }, // Jaipur City
-        zoom: 11.4,
+        center: { lat: 26.8950, lng: 75.8100 }, // Jaipur City (slightly east to include Amer)
+        zoom: 11.8,
         zoomControl: true,
       });
 
