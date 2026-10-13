@@ -1,6 +1,6 @@
 # Production Truth & Credential Tracking
 
-> **Last Updated:** October 12, 2026  
+> **Last Updated:** October 13, 2026  
 > **Production Domain:** `https://cctvquotation.com`  
 > **Vercel Project:** `secure-easy` / `team-cctv-platform`  
 > **Rule:** Never mark a credential as `ROTATED` or `VERIFIED` based solely on local files. Evidence from the actual deployment/environment is mandatory.
@@ -41,3 +41,18 @@
 1. **Zero Destructive Deletes:** Production collections (`quotes`, `leads`, `products`, `users`, `audit_logs`) are append-only or soft-delete only.
 2. **Strict Server Authority:** Client pricing calculations are rejected; all final quotes must compute through server pricing engines.
 3. **Environment Management:** All sensitive API keys and secrets must be updated via the Vercel CLI / Dashboard, never committed to source control.
+
+---
+
+## 4. Catalog Integrity & Test Hygiene Guardrails
+1. **Zero Fake Products Policy:**
+   - No mock/placeholder SKUs (e.g. `"Test Camera"`, `"TEST-CAM"`) are permitted in the catalog or quotation pipeline.
+   - All 68 active products must represent genuine hardware from verified OEMs (CP Plus, Hikvision, Dahua).
+   - Any test suite that exercises quoting, invoicing, or inventory must use genuine catalog SKUs.
+2. **Mandatory Automated Test Teardown (`afterAll`):**
+   - Any test creating transient fixtures (`QT-E2E-...`, `L_REV_...`, `INV-TEST-...`) must include an `afterAll()` hook that automatically cleans up its created entities.
+3. **Admin View Separation:**
+   - Synthetic test records (`is_test: true`, `QT-E2E-...`, `9999999999`) are hidden by default in the Admin Leads table to maintain clean staff visibility.
+4. **Day-0 UAT Reset:**
+   - Prior to general commercial traffic, execute `npm run reset:uat` (`scripts/reset-uat.ts`) or call `/api/admin/cleanup-test-data` to purge development fixtures.
+

@@ -34,6 +34,7 @@ Apply these to every task below, not just the ones that mention them explicitly:
 4. **Quotes are immutable once generated.** A revision is a new document, never an overwrite.
 5. **No feature is "done" without: data model + UI + API + business logic + security/RBAC + failure states + a passing E2E test.** A TypeScript interface or an unused component is "designed," not "done." Use this as your personal Definition of Done for every checkbox below.
 6. **Don't add new customer-facing features until Phase 0–2 below are complete and verified.** This includes anything from the "growth ideas" backlog in Phase 6 — that's intentionally last.
+7. **Zero fake products & mandatory test teardown.** The active catalog and customer quotation pipelines must never contain placeholder or mock products (e.g. `"Test Camera"`, `"TEST-CAM"`). Automated tests must test exclusively against genuine active catalog SKUs and must implement an automated `test.afterAll()` teardown hook to delete all created test entities immediately. Synthetic test records must remain hidden by default from production staff views.
 
 ### Status tags used in this document
 A plain `[x]` doesn't distinguish "someone says it's done" from "it's actually safe to build on top of." Use these instead, and update them as a task's real status changes — don't leave a tag stale:

@@ -87,6 +87,13 @@
   - All pincode coordinates, sub-post offices, and 4 micro-quadrants cached permanently in `pincode_cache`.
   - Admin Territory Matrix (`/admin/salespersons`) provides an internal, self-sufficient interface to inspect coverage, identify gaps, and assign zones without consulting external tools.
 
+### Milestone 9: Zero Fake Products & Test Teardown Governance
+- **Strict Real-Catalog Invariant:** Verified zero dummy/placeholder items in the active product catalog (68/68 genuine SKUs from CP Plus, Hikvision, Dahua). Prohibited seeding artificial products (e.g. `"Test Camera"`) directly into quote/order pipelines.
+- **Mandatory Automated Test Teardown (`afterAll`):** Integrated automatic cleanup blocks across all E2E specs (`e2e-financial-contracts.spec.ts`) to immediately delete test quotes, leads, and invoice fixtures upon completion.
+- **Admin UI Test Isolation:** Configured `/admin/leads` to automatically hide synthetic test records (`is_test: true`, `QT-E2E-...`, `9999999999`) by default with an on-demand inspection toggle.
+- **Dedicated Test Purge API (`/api/admin/cleanup-test-data`):** Implemented an authenticated admin endpoint to purge orphaned test fixtures and maintain Day-0 database cleanliness.
+- **PDF Template Resilience:** Hardened `QuotePDFDocument` in `lib/pdf/quote-pdf.tsx` with fallback subtotal derivation, graceful date formatting, and labor line-item deduplication.
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
@@ -101,6 +108,7 @@
 | **Layer 6: Mobile Responsiveness** | Small Screens & Safari | `PASS` | Pro Builder drawer and 16px input fields prevent zoom glitch. |
 | **Layer 7: Boundary Engine Fidelity** | Google Maps Postal Parity | `PASS` | 100% Google Maps parity for 302041 (Dhankya/Bindayaka/Bichpari, excluding Sirsi) and 302012 (Jhotwara urban core) + true geometric centroid alignment (`getKnownCentroid`). |
 | **Layer 8: City Boundary & Framing** | Google Maps Jaipur Parity | `PASS` | Mappls GeoAnalytics official boundary + 34-vertex fallback; camera locked at zoom 11.8 on Jaipur city core; zero rural scatter. |
+| **Layer 9: Catalog & Data Hygiene** | Zero Fake Products & Teardown | `PASS` | 68 active genuine products; 0 fake SKUs; test teardown hooks attached; Admin test records hidden by default. |
 
 ---
 

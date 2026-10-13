@@ -10,6 +10,9 @@
 
 ### 1.1 Active Products Only
 - **Zero-Tolerance for Mock / Fake Products:** The system must NEVER inject hardcoded, artificial, or "fallback" products (e.g., legacy fallback 500GB HDD, mock sensors, or fictitious SKUs). If a product does not exist with an active record in the Admin Database, it MUST NEVER be quoted.
+- **Strict Prohibition of Synthetic Products in Test Fixtures:** Test suites, developer scripts, and CI runners must NEVER inject dummy products (e.g., `"Test Camera"`, `"TEST-CAM"`) into production collections or quote documents. All automated and manual testing must use genuine active catalog SKUs.
+- **Mandatory Automated Teardown (`afterAll`):** Any test script that generates transient records (`QT-E2E-...`, `L_REV_...`, dummy POs) MUST implement an automated `test.afterAll()` teardown hook that immediately purges its created entities from Firestore, ensuring zero test pollution.
+- **Admin View Separation:** Synthetic test records (`is_test: true`, `QT-E2E-...`, `9999999999`) must remain filtered and hidden by default from staff lead and quotation tables.
 - **Stock Status vs. Active Status:** If a product has `is_active = true`, it is **fully eligible for quotation** regardless of whether `stock_status` is marked as `"out_of_stock"` or `"backordered"`. TEAM CCTV maintains verified vendor tie-ups and procures inventory on demand. Out-of-stock items must NOT be hidden or skipped if `is_active = true`.
 - **Add-on vs. Routine BOM Products:** Products flagged with `is_addon = true` are strictly designated as optional upsell accessories (e.g., display monitors, HDMI splitters, 4G Wi-Fi routers) in "Add-ons & Accessories For Your System" and are excluded from routine automatic BOM generation.
 

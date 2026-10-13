@@ -28,8 +28,14 @@ type LeadListRow = {
   quoteId?: string;
 };
 
-export default async function LeadsPage() {
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ show_test?: string }>;
+}) {
   await requireAdmin();
+  const params = searchParams ? await searchParams : {};
+  const showTest = params.show_test === "true";
 
   // Fetch quotes and leads concurrently
   const [quotesSnap, leadsSnap] = await Promise.all([
@@ -139,6 +145,24 @@ export default async function LeadsPage() {
   const leads = [...resolvedLeads, ...standaloneQuotes];
   leads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
+  const isTestLead = (l: LeadListRow) => {
+    const qId = (l.quoteId || l.id || "").toUpperCase();
+    const name = (l.customer_name || "").toLowerCase();
+    const phone = l.customer_mobile || "";
+    return (
+      qId.startsWith("QT-E2E-") ||
+      qId.startsWith("TEST-") ||
+      name.includes("test user") ||
+      name.includes("e2e test") ||
+      name.includes("e2e lifecycle") ||
+      phone === "9999999999"
+    );
+  };
+
+  const totalAllLeads = leads.length;
+  const displayLeads = showTest ? leads : leads.filter((l) => !isTestLead(l));
+  const hiddenTestCount = totalAllLeads - displayLeads.length;
+
   const getStatusBadge = (status: string, isPaid?: boolean) => {
     if (isPaid || status === "WON" || status === "PAID" || status === "BOOKED") {
       return <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white">Won / Paid</Badge>;
@@ -167,12 +191,26 @@ export default async function LeadsPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Recent Leads & Inquiries ({leads.length})</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div>
+            <CardTitle>Recent Leads & Inquiries ({displayLeads.length})</CardTitle>
+            {hiddenTestCount > 0 && !showTest && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {hiddenTestCount} synthetic test record{hiddenTestCount > 1 ? "s" : ""} hidden by default.
+              </p>
+            )}
+          </div>
+          {hiddenTestCount > 0 && (
+            <Link href={showTest ? "/admin/leads" : "/admin/leads?show_test=true"}>
+              <Button variant="outline" size="sm" className="text-xs">
+                {showTest ? "Hide Test Records" : `Show Test Records (${hiddenTestCount})`}
+              </Button>
+            </Link>
+          )}
         </CardHeader>
         <CardContent>
-          {leads.length === 0 ? (
-            <p className="text-muted-foreground py-4 md:py-8 text-center">No leads found.</p>
+          {displayLeads.length === 0 ? (
+            <p className="text-muted-foreground py-4 md:py-8 text-center">No genuine leads found.</p>
           ) : (
             <div className="rounded-md border overflow-x-auto">
               <Table>
@@ -189,7 +227,7 @@ export default async function LeadsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leads.map((lead) => {
+                  {displayLeads.map((lead) => {
                     const hasSurvey = !!lead.site_visit_date;
                     const isB2B = lead.is_business || !!lead.gstin || !!lead.company_name;
 
