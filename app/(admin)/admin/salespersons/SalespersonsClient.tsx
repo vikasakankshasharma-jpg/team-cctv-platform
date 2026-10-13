@@ -278,7 +278,13 @@ export default function SalespersonsClient() {
 
       const isParentSelected = selectedSet.has(p.pincode);
       const verified = getVerifiedQuadrants(p.pincode);
-      const activeQuadrants = verified || p.quadrants;
+      const isCompass = (quads: any[]) =>
+        Array.isArray(quads) && quads.some((q: any) =>
+          ['north-west', 'north-east', 'south-east', 'south-west', 'north west', 'north east', 'south west', 'south east'].includes(
+            String(q.zone || '').trim().toLowerCase()
+          )
+        );
+      const activeQuadrants = verified || (p.quadrants && !isCompass(p.quadrants) ? p.quadrants : null);
       const hasQuadrants = activeQuadrants && activeQuadrants.length > 0;
 
       if (hasQuadrants) {
@@ -714,7 +720,7 @@ export default function SalespersonsClient() {
             }
             return o;
           }));
-          toast.success(`Generated quadrants for ${pin}`);
+          toast.success(`Discovered delivery hubs for ${pin}`);
         }
         if (selectedState && selectedDistrict) {
           await handleSelectDistrict(selectedDistrict.slug, selectedDistrict.name, true);
@@ -746,11 +752,11 @@ export default function SalespersonsClient() {
     }
 
     if (targetPins.length === 0) {
-      toast.success("Target pincodes already have quadrants generated!");
+      toast.success("Target pincodes already have delivery hubs discovered!");
       return;
     }
     
-    toast.loading(`Generating quadrants for ${targetPins.length} pincodes... This may take up to ${Math.ceil(targetPins.length * 4.5 / 60)} minutes.`, { id: "genAll" });
+    toast.loading(`Discovering delivery hubs for ${targetPins.length} pincodes... This may take up to ${Math.ceil(targetPins.length * 4.5 / 60)} minutes.`, { id: "genAll" });
     
     // Process sequentially to stay strictly under Gemini 15 RPM free tier limit
     const batchSize = 1;
@@ -796,7 +802,7 @@ export default function SalespersonsClient() {
       }
     }
     
-    toast.success("Finished generating quadrants!", { id: "genAll" });
+    toast.success("Finished discovering delivery hubs!", { id: "genAll" });
     if (selectedState && selectedDistrict) {
       await handleSelectDistrict(selectedDistrict.slug, selectedDistrict.name, true);
     }
@@ -1761,7 +1767,7 @@ export default function SalespersonsClient() {
                         onClick={handleGenerateAllQuadrants}
                         className="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1"
                       >
-                          ✨ Gen Quadrants {(newZone.pincodes && newZone.pincodes.length > 0) ? "(Selected)" : "(All)"}
+                          ✨ Discover Hubs {(newZone.pincodes && newZone.pincodes.length > 0) ? "(Selected)" : "(All)"}
                         </button>
                       <span className="text-muted-foreground text-xs">•</span>
                       <button 
@@ -1805,7 +1811,7 @@ export default function SalespersonsClient() {
                         }}
                         className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1"
                       >
-                        {filteredAvailablePincodes.length > 0 && filteredAvailablePincodes.every(p => expandedPincodes.has(p.pincode)) ? "Collapse All" : "Expand All Quadrants"}
+                        {filteredAvailablePincodes.length > 0 && filteredAvailablePincodes.every(p => expandedPincodes.has(p.pincode)) ? "Collapse All" : "Expand All Hubs"}
                       </button>
                     </div>
                   )}
@@ -1838,7 +1844,13 @@ export default function SalespersonsClient() {
                         ) : filteredAvailablePincodes.map(p => {
                           const isParentSelected = (newZone.pincodes || []).includes(p.pincode);
                           const verified = getVerifiedQuadrants(p.pincode);
-                          const effectiveQuadrants = verified || ((p.quadrants && p.quadrants.length > 0)
+                          const isCompass = (quads: any[]) =>
+                            Array.isArray(quads) && quads.some((q: any) =>
+                              ['north-west', 'north-east', 'south-east', 'south-west', 'north west', 'north east', 'south west', 'south east'].includes(
+                                String(q.zone || '').trim().toLowerCase()
+                              )
+                            );
+                          const effectiveQuadrants = verified || ((p.quadrants && p.quadrants.length > 0 && !isCompass(p.quadrants))
                             ? p.quadrants
                             : (p.allAreas && p.allAreas.length > 0)
                               ? (p.allAreas.slice(0, 6) as string[]).map((a: string) => ({ zone: a, anchor: `${a} Post Office`, coverage: `${a} and surrounding beats` }))

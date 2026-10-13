@@ -221,9 +221,24 @@ function QuadrantMarkerItem({
     const isSel = marker.isSelected;
     const bg = isSel ? "#16a34a" : "#dc2626";
     const symbol = isSel ? "✓" : "⭕";
-    const shortCode = marker.quadrantName
-      ? marker.quadrantName.split(/[\s/&-]+/).map(w => w.charAt(0)).slice(0, 2).join('').toUpperCase()
-      : "PO";
+    const isCompass = (name?: string) =>
+      !name ||
+      ['north-west', 'north-east', 'south-east', 'south-west', 'north west', 'north east', 'south west', 'south east', 'nw', 'ne', 'sw', 'se'].includes(
+        String(name).trim().toLowerCase()
+      );
+
+    const nameToUse: string = (!isCompass(marker.quadrantName) && marker.quadrantName)
+      ? marker.quadrantName
+      : (!isCompass(marker.areaName) && marker.areaName)
+        ? marker.areaName
+        : "Hub";
+
+    const shortCode = nameToUse
+      .split(/[\s/&-]+/)
+      .map(w => w.charAt(0))
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || "HB";
 
     return L.divIcon({
       className: `quadrant-marker-icon`,

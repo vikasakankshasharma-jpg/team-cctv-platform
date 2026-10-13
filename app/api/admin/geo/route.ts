@@ -55,14 +55,22 @@ export async function GET(req: Request) {
         if (chunk.length === 0) continue;
         try {
            const snap = await adminDb.collection("pincode_cache").where("__name__", "in", chunk).get();
+           const isCompass = (qList: any[]) =>
+             Array.isArray(qList) && qList.some((q: any) =>
+               ['north-west', 'north-east', 'south-east', 'south-west', 'north west', 'north east', 'south west', 'south east'].includes(
+                 String(q.zone || '').trim().toLowerCase()
+               )
+             );
+
            snap.docs.forEach(doc => {
              const d = doc.data();
              const payload: any = {};
              if (d.ai_areas && Array.isArray(d.ai_areas)) {
                payload.ai_areas = d.ai_areas;
              }
-             if (d.quadrants && Array.isArray(d.quadrants)) {
+             if (d.quadrants && Array.isArray(d.quadrants) && !isCompass(d.quadrants)) {
                payload.quadrants = d.quadrants;
+               payload.delivery_hubs = d.quadrants;
              }
              if (Object.keys(payload).length > 0) {
                aiCacheMap.set(doc.id, payload);

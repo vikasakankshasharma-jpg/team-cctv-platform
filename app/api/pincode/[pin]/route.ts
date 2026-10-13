@@ -220,13 +220,21 @@ export async function GET(
 
     const { getVerifiedQuadrants } = await import("@/lib/geo/jaipurQuadrants");
     const verifiedQuadrants = getVerifiedQuadrants(pin);
-    let quadrants = verifiedQuadrants || (cacheSnap.exists && cacheSnap.data()?.quadrants ? cacheSnap.data()?.quadrants : undefined);
+    const isLegacyCompass = (quads: any[]) =>
+      Array.isArray(quads) && quads.some((q: any) =>
+        ['north-west', 'north-east', 'south-east', 'south-west', 'north west', 'north east', 'south west', 'south east'].includes(
+          String(q.zone || '').trim().toLowerCase()
+        )
+      );
+
+    const cachedQuads = cacheSnap.exists && cacheSnap.data()?.quadrants ? cacheSnap.data()?.quadrants : undefined;
+    let quadrants = verifiedQuadrants || (cachedQuads && !isLegacyCompass(cachedQuads) ? cachedQuads : undefined);
     
     // If verified quadrants are available, ensure cache is updated with authentic data
     if (verifiedQuadrants) {
       const existingData = cacheSnap.exists ? cacheSnap.data() : null;
       if (!existingData?.quadrants || JSON.stringify(existingData.quadrants) !== JSON.stringify(verifiedQuadrants)) {
-        await cacheRef.set({ quadrants: verifiedQuadrants }, { merge: true }).catch(() => {});
+        await cacheRef.set({ quadrants: verifiedQuadrants, delivery_hubs: verifiedQuadrants }, { merge: true }).catch(() => {});
       }
     }
 
