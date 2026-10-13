@@ -227,8 +227,9 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
     customer_mobile, 
   } = quote;
 
-  const validUntil = quote.validUntil || quote.expires_at;
-  const createdAt = quote.createdAt || quote.created_at;
+  const validUntil = quote.validUntil || quote.valid_until || quote.expires_at;
+  const createdAt = quote.createdAt || quote.created_at || (quote._serverCreatedAt?.toDate ? quote._serverCreatedAt.toDate() : null) || new Date();
+  const effectiveValidUntil = validUntil || new Date(new Date(createdAt).getTime() + 14 * 24 * 60 * 60 * 1000);
 
   let rawItems: any[] = [];
   if (Array.isArray(quote?.items) && quote.items.length > 0) {
@@ -245,17 +246,42 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
     rawItems = quote.configuration_snapshot;
   }
 
+  // Check if labor is already included inside rawItems to avoid duplicate rows
+  const hasLaborInItems = rawItems.some((item: any) => {
+    const pid = (item.product_id || item.id || "").toLowerCase();
+    const cat = (item.category || "").toLowerCase();
+    const title = (item.display_name || item.name || "").toLowerCase();
+    return pid.includes("labor") || pid.includes("install") || cat === "labor" || cat === "installation" || title.includes("installation") || title.includes("labor");
+  });
+
+  const calculatedItemsTotal = rawItems.reduce((acc: number, item: any) => {
+    const qty = item.qty || item.quantity || 1;
+    const price = item.unit_price || item.unitPrice || item.price || 0;
+    return acc + (item.line_total || item.lineTotal || (qty * price));
+  }, 0);
+
+  const resolvedSubtotal = quote?.pricingSnapshot?.gross_subtotal
+    ?? quote?.gross_subtotal
+    ?? quote?.pricingSnapshot?.net_taxable_amount
+    ?? quote?.net_taxable_amount
+    ?? quote?.pricingSnapshot?.taxable_amount
+    ?? calculatedItemsTotal;
+
+  const resolvedTotal = quote?.pricingSnapshot?.total_payable
+    ?? quote?.total_payable
+    ?? (resolvedSubtotal + (quote?.pricingSnapshot?.gst_amount ?? quote?.gst_amount ?? Math.round(resolvedSubtotal * 0.18)));
+
   const pricing = {
-    total_payable: quote?.pricingSnapshot?.total_payable ?? quote?.total_payable ?? 0,
+    total_payable: resolvedTotal,
     items: rawItems,
     addons: Array.isArray(quote?.addons) ? quote.addons : (quote?.pricingSnapshot?.addons || quote?.addons_snapshot || []),
-    labor_cost: quote?.pricingSnapshot?.labor_cost ?? quote?.labor_cost ?? 0,
-    gross_subtotal: quote?.pricingSnapshot?.gross_subtotal ?? quote?.gross_subtotal ?? 0,
+    labor_cost: hasLaborInItems ? 0 : (quote?.pricingSnapshot?.labor_cost ?? quote?.labor_cost ?? 0),
+    gross_subtotal: resolvedSubtotal,
     gst_rate: quote?.pricingSnapshot?.gst_rate ?? quote?.gst_rate ?? 18,
-    gst_amount: quote?.pricingSnapshot?.gst_amount ?? quote?.gst_amount ?? 0
+    gst_amount: quote?.pricingSnapshot?.gst_amount ?? quote?.gst_amount ?? Math.round(resolvedSubtotal * 0.18)
   };
 
-  const validDate = validUntil ? new Date(validUntil).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
+  const validDate = effectiveValidUntil ? new Date(effectiveValidUntil).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
   const createdDate = createdAt ? new Date(createdAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
 
   const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString('en-IN')}`;
