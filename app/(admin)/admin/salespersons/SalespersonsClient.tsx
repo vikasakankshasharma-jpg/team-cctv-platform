@@ -243,7 +243,7 @@ export default function SalespersonsClient() {
   const [loadingTehsils, setLoadingTehsils] = useState(false);
 
   const [districtOffices, setDistrictOffices] = useState<any[]>([]);
-  const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string; areas: string[]; quadrants?: any[]; lat?: number; lng?: number; radius?: number }[]>([]);
+  const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string; areas: string[]; allAreas?: string[]; quadrants?: any[]; lat?: number; lng?: number; radius?: number }[]>([]);
 
   const [zonePincodeSearch, setZonePincodeSearch] = useState("");
   
@@ -282,18 +282,26 @@ export default function SalespersonsClient() {
       const hasQuadrants = activeQuadrants && activeQuadrants.length > 0;
 
       if (hasQuadrants) {
-        activeQuadrants.forEach((q: any) => {
+        const count = activeQuadrants.length;
+        activeQuadrants.forEach((q: any, idx: number) => {
           const zoneName = q.zone || "Central";
           const tag = `${p.pincode}:${zoneName}`;
           const isQuadSelected = isParentSelected || selectedSet.has(tag);
 
           let dLat = 0;
           let dLng = 0;
-          const zLower = zoneName.toLowerCase();
+          const zLower = (q.compassZone || zoneName).toLowerCase();
           if (zLower.includes("north")) dLat += 0.012;
           if (zLower.includes("south")) dLat -= 0.012;
           if (zLower.includes("east")) dLng += 0.012;
           if (zLower.includes("west")) dLng -= 0.012;
+
+          // If no compass match, distribute radially around centroid so markers never overlap
+          if (dLat === 0 && dLng === 0 && count > 1) {
+            const angle = (2 * Math.PI * idx) / count;
+            dLat = 0.013 * Math.cos(angle);
+            dLng = 0.013 * Math.sin(angle);
+          }
 
           markers.push({
             id: tag,
@@ -306,24 +314,27 @@ export default function SalespersonsClient() {
           });
         });
       } else {
-        // Guarantee 4 distinct cardinal micro-zones for every single pincode!
-        const cardinalZones = [
-          { name: "North-West", dLat: 0.012, dLng: -0.012, area: p.areas?.[0] || `${p.pincode} North-West` },
-          { name: "North-East", dLat: 0.012, dLng: 0.012, area: p.areas?.[1] || `${p.pincode} North-East` },
-          { name: "South-West", dLat: -0.012, dLng: -0.012, area: p.areas?.[2] || `${p.pincode} South-West` },
-          { name: "South-East", dLat: 0.012, dLng: 0.012, area: p.areas?.[3] || `${p.pincode} South-East` },
-        ];
+        const subList = (p.allAreas && p.allAreas.length > 0)
+          ? p.allAreas.slice(0, 6)
+          : (p.areas && p.areas.length > 0)
+            ? p.areas
+            : [p.pincode];
+        const count = subList.length;
 
-        cardinalZones.forEach(z => {
-          const tag = `${p.pincode}:${z.name}`;
+        subList.forEach((areaName: string, idx: number) => {
+          const tag = `${p.pincode}:${areaName}`;
           const isQuadSelected = isParentSelected || selectedSet.has(tag);
+          const angle = count > 1 ? (2 * Math.PI * idx) / count : 0;
+          const dLat = count > 1 ? 0.013 * Math.cos(angle) : 0;
+          const dLng = count > 1 ? 0.013 * Math.sin(angle) : 0;
+
           markers.push({
             id: tag,
             pincode: p.pincode,
-            quadrantName: z.name,
-            areaName: z.area,
-            lat: baseCoords.lat + z.dLat,
-            lng: baseCoords.lng + z.dLng,
+            quadrantName: areaName,
+            areaName: areaName,
+            lat: baseCoords.lat + dLat,
+            lng: baseCoords.lng + dLng,
             isSelected: isQuadSelected
           });
         });
@@ -357,12 +368,12 @@ export default function SalespersonsClient() {
         } else {
           // Was uncovered (Red) -> now covered (Green)
           current.add(id);
-          // If all 4 quadrants for this pincode are now covered, consolidate into parent
+          // If all hubs for this pincode are now covered, consolidate into parent
           const pData = availablePincodes.find(p => p.pincode === pin);
           const activeQuads = getVerifiedQuadrants(pin) || pData?.quadrants;
-          if (activeQuads && activeQuads.length === 4) {
-            const all4Selected = activeQuads.every(q => current.has(`${pin}:${q.zone}`));
-            if (all4Selected) {
+          if (activeQuads && activeQuads.length > 0) {
+            const allSelected = activeQuads.every(q => current.has(`${pin}:${q.zone}`));
+            if (allSelected) {
               activeQuads.forEach(q => current.delete(`${pin}:${q.zone}`));
               current.add(pin);
             }
@@ -540,12 +551,14 @@ export default function SalespersonsClient() {
       const addedBasePins = new Set<string>();
       insideIds.forEach(id => {
         const [pin, q] = id.split(":");
-        if (q && pinCountMap[pin] >= 4) {
+        const pData = availablePincodes.find(p => p.pincode === pin);
+        const totalHubs = (getVerifiedQuadrants(pin) || pData?.quadrants)?.length || 4;
+        if (q && pinCountMap[pin] >= totalHubs) {
           if (!addedBasePins.has(pin)) {
             consolidated.push(pin);
             addedBasePins.add(pin);
           }
-        } else if (!q && pinCountMap[pin] >= 4) {
+        } else if (!q && pinCountMap[pin] >= totalHubs) {
           if (!addedBasePins.has(pin)) {
             consolidated.push(pin);
             addedBasePins.add(pin);
@@ -578,12 +591,14 @@ export default function SalespersonsClient() {
       const addedBasePins = new Set<string>();
       insideIds.forEach(id => {
         const [pin, q] = id.split(":");
-        if (q && pinCountMap[pin] >= 4) {
+        const pData = availablePincodes.find(p => p.pincode === pin);
+        const totalHubs = (getVerifiedQuadrants(pin) || pData?.quadrants)?.length || 4;
+        if (q && pinCountMap[pin] >= totalHubs) {
           if (!addedBasePins.has(pin)) {
             consolidated.push(pin);
             addedBasePins.add(pin);
           }
-        } else if (!q && pinCountMap[pin] >= 4) {
+        } else if (!q && pinCountMap[pin] >= totalHubs) {
           if (!addedBasePins.has(pin)) {
             consolidated.push(pin);
             addedBasePins.add(pin);
@@ -1825,12 +1840,13 @@ export default function SalespersonsClient() {
                           const verified = getVerifiedQuadrants(p.pincode);
                           const effectiveQuadrants = verified || ((p.quadrants && p.quadrants.length > 0)
                             ? p.quadrants
-                            : [
-                                { zone: "North-West", anchor: p.areas?.[0] || `${p.pincode} North-West`, coverage: "North-Western micro-zone" },
-                                { zone: "North-East", anchor: p.areas?.[1] || `${p.pincode} North-East`, coverage: "North-Eastern micro-zone" },
-                                { zone: "South-West", anchor: p.areas?.[2] || `${p.pincode} South-West`, coverage: "South-Western micro-zone" },
-                                { zone: "South-East", anchor: p.areas?.[3] || `${p.pincode} South-East`, coverage: "South-Eastern micro-zone" },
-                              ]);
+                            : (p.allAreas && p.allAreas.length > 0)
+                              ? (p.allAreas.slice(0, 6) as string[]).map((a: string) => ({ zone: a, anchor: `${a} Post Office`, coverage: `${a} and surrounding beats` }))
+                              : (p.areas && p.areas.length > 0)
+                                ? p.areas.map((a: string) => ({ zone: a, anchor: `${a} Post Office`, coverage: `${a} and surrounding beats` }))
+                                : [
+                                    { zone: p.pincode, anchor: `${p.pincode} Main Office`, coverage: `All areas in ${p.pincode}` }
+                                  ]);
                           const isExpanded = expandedPincodes.has(p.pincode);
                           const selectedSubCount = effectiveQuadrants.filter((q: any) => (newZone.pincodes || []).includes(`${p.pincode}:${q.zone}`)).length;
 
@@ -1895,9 +1911,9 @@ export default function SalespersonsClient() {
                                           className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded transition-colors flex items-center gap-1"
                                         >
                                           {isExpanded ? (
-                                            <>Hide {effectiveQuadrants.length} Quadrants <ChevronUp className="w-3 h-3" /></>
+                                            <>Hide {effectiveQuadrants.length} Hubs <ChevronUp className="w-3 h-3" /></>
                                           ) : (
-                                            <>View {effectiveQuadrants.length} Quadrants <ChevronDown className="w-3 h-3" /></>
+                                            <>View {effectiveQuadrants.length} Hubs <ChevronDown className="w-3 h-3" /></>
                                           )}
                                         </button>
                                         {(!p.quadrants || p.quadrants.length === 0) && (

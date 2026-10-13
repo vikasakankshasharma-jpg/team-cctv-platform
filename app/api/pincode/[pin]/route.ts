@@ -230,58 +230,37 @@ export async function GET(
       }
     }
 
-    // Attempt inline lazy generation of AI Quadrants if still missing
-    if (!quadrants && process.env.GEMINI_API_KEY) {
-      try {
-        const { GoogleGenAI } = await import("@google/genai");
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        const prompt = `You are a geographic expert of India. I have the following delivery locations/sub-post offices for PINCODE ${pin} in ${firstOffice.District}, ${firstOffice.State}:
-${formattedAreas.join(", ")}
-
-Divide these EXACT locations into exactly 4 geographic quadrants (North-West, North-East, South-East, South-West) based on their real-world geographic distribution within the pincode.
-Do NOT invent any new places, landmarks, or anchors. ONLY use the location names provided above.
-For each quadrant, provide:
-1. "zone": The quadrant name (e.g., "North-West").
-2. "anchor": The most prominent location from the provided list for this quadrant.
-3. "coverage": A comma-separated string of the locations from the list that fall into this quadrant. Ensure all provided locations are distributed across the 4 quadrants.
-Return ONLY a valid JSON array of 4 objects. 
-Example:
-[
-  { "zone": "North-West", "anchor": "Location A", "coverage": "Location A, Location B" },
-  { "zone": "North-East", "anchor": "Location C", "coverage": "Location C" },
-  { "zone": "South-East", "anchor": "Location D", "coverage": "Location D, Location E" },
-  { "zone": "South-West", "anchor": "Location F", "coverage": "Location F, Location G" }
-]`;
-        const aiRes = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          config: { responseMimeType: "application/json" },
+    // Universal Delivery Hubs Generator for ANY PINCODE across India:
+    // Derives authentic delivery micro-hubs directly from official Sub-Post Offices (S.O.) and Branch Offices (B.O.)
+    if (!quadrants || !Array.isArray(quadrants) || quadrants.length === 0) {
+      if (postOffices && postOffices.length > 0) {
+        // Sort: Delivery offices and Sub Post Offices / Head Post Offices first
+        const sorted = [...postOffices].sort((a, b) => {
+          const aDel = a.DeliveryStatus === "Delivery" ? 1 : 0;
+          const bDel = b.DeliveryStatus === "Delivery" ? 1 : 0;
+          if (aDel !== bDel) return bDel - aDel;
+          const aSO = (a.BranchType === "Sub Post Office" || a.BranchType === "Head Post Office") ? 1 : 0;
+          const bSO = (b.BranchType === "Sub Post Office" || b.BranchType === "Head Post Office") ? 1 : 0;
+          return bSO - aSO;
         });
-        const text = aiRes.text?.replace(/```json|```/g, '').trim() || "";
-        const parsed = JSON.parse(text);
-        if (Array.isArray(parsed) && parsed.length === 4) {
-          quadrants = parsed;
-          await cacheRef.set({ quadrants }, { merge: true });
-        }
-      } catch (err) {
-        console.error("Failed to generate AI quadrants for pin:", pin, err);
+        const topOffices = sorted.slice(0, 8);
+        quadrants = topOffices.map((po: any) => {
+          const cleanName = formatAreaName(po.Name);
+          const branchLabel = po.BranchType ? ` (${po.BranchType})` : '';
+          return {
+            zone: cleanName,
+            anchor: `${po.Name}${branchLabel}`,
+            coverage: `${cleanName} and surrounding delivery beats`
+          };
+        });
+      } else {
+        const areaList = formattedAreas && formattedAreas.length > 0 ? formattedAreas : [locationName];
+        quadrants = areaList.slice(0, 6).map((a: string) => ({
+          zone: a,
+          anchor: `${a} Post Office`,
+          coverage: `${a} and surrounding localities`
+        }));
       }
-    }
-
-    // Deterministic fallback: guarantee every pincode in India has 4 quadrants
-    if (!quadrants || !Array.isArray(quadrants) || quadrants.length !== 4) {
-      const areaList = formattedAreas && formattedAreas.length > 0 ? formattedAreas : [locationName];
-      const p1 = areaList[0] || `${firstOffice.District} Central`;
-      const p2 = areaList[1] || `${p1} North`;
-      const p3 = areaList[2] || `${p1} South`;
-      const p4 = areaList[3] || `${p1} Extension`;
-
-      quadrants = [
-        { zone: "North-West", anchor: `${p1} Sector / Chowk`, coverage: `${p1}, ${p2}` },
-        { zone: "North-East", anchor: `${p2} Main Market`, coverage: `${p2}, Surrounding areas` },
-        { zone: "South-West", anchor: `${p3} Intersection`, coverage: `${p3}, Adjacent blocks` },
-        { zone: "South-East", anchor: `${p4} Circle`, coverage: `${p4}, Outer limits` }
-      ];
 
       try {
         await cacheRef.set({ quadrants }, { merge: true });
@@ -342,6 +321,7 @@ Example:
         areas: aiAreas && aiAreas.length > 0 ? aiAreas : formattedAreas,
         sub_areas: subAreas,
         quadrants: quadrants,
+        delivery_hubs: quadrants,
         message: served ? "" : "Nearest serviceable area shown as reference."
       },
       { status: 200 }

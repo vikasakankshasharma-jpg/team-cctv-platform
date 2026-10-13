@@ -101,7 +101,9 @@ export async function findEligiblePartners(leadAddress: Address, partners: Partn
                     zoneHasRestrictedSubOffices = true;
                     const specificArea = code.split(':')[1];
                     const addressText = leadAddress.full_address?.toLowerCase() || "";
-                    if (addressText.includes(specificArea.toLowerCase())) {
+                    const areaLower = specificArea.toLowerCase();
+                    const areaTokens = specificArea.split(/[\/&,]/).map(p => p.trim().toLowerCase()).filter(p => p.length >= 3);
+                    if (addressText.includes(areaLower) || areaTokens.some(tok => addressText.includes(tok))) {
                       isEligible = true;
                       subOfficeMatched = true;
                       break;

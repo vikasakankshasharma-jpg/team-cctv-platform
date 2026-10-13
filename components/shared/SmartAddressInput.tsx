@@ -282,12 +282,12 @@ export function SmartAddressInput({
         )}
       </div>
 
-      {/* Quadrant / Area Selector Chips */}
+      {/* Delivery Hub / Area Selector Chips */}
       {geoInfo?.quadrants && geoInfo.quadrants.length > 0 && (
         <div className="animate-in slide-in-from-top-1 duration-200 space-y-1.5 bg-slate-50/70 dark:bg-zinc-900/50 p-2.5 sm:p-3 rounded-2xl border border-slate-200/70 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400 flex items-center gap-1">
-              <Compass className="w-3.5 h-3.5 text-[#9b8cff]" /> Select Your Area / Landmark
+              <MapPin className="w-3.5 h-3.5 text-[#9b8cff]" /> Select Your Local Area / Delivery Hub
             </label>
             <span className="text-[10px] text-muted-foreground">Helps assign nearest technician</span>
           </div>
@@ -316,7 +316,9 @@ export function SmartAddressInput({
                 >
                   <div className="flex items-center justify-between w-full">
                     <span className="text-xs font-bold leading-tight">
-                      {q.zone} <span className="text-[11px] font-semibold text-slate-500">({q.anchor})</span>
+                      {q.zone} {q.anchor && q.anchor !== q.zone && (
+                        <span className="text-[11px] font-semibold text-slate-500">({q.anchor})</span>
+                      )}
                     </span>
                     {isSelected && (
                       <CheckCircle2 className="w-3.5 h-3.5 text-[#9b8cff] shrink-0" />

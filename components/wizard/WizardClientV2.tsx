@@ -264,7 +264,8 @@ export function WizardClientV2() {
           .then(res => res.json())
           .then(data => {
             if (data.quadrants && data.quadrants.length > 0) {
-              setLocalities(data.quadrants.map((q: any) => `${q.zone} (${q.anchor}) - ${q.coverage}`));
+              const formatHubLabel = (q: any) => q.anchor && q.anchor !== q.zone ? `${q.zone} (${q.anchor}) - ${q.coverage}` : `${q.zone} - ${q.coverage}`;
+              setLocalities(data.quadrants.map(formatHubLabel));
             } else if (data.areas && data.areas.length > 0) {
               setLocalities(data.areas);
             }

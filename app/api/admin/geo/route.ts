@@ -81,7 +81,7 @@ export async function GET(req: Request) {
         return {
           ...o,
           ...cached,
-          ...(verified ? { quadrants: verified } : {})
+          ...(verified ? { quadrants: verified, delivery_hubs: verified } : {})
         };
       });
     }

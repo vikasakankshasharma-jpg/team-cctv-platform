@@ -223,9 +223,15 @@ To ensure professional, 100% accurate map rendering across all PIN codes in Indi
 - **Bulk Tehsil Activation:** Administrators can toggle an entire Tehsil's PIN codes between `active` and `inactive` in a single batch operation from the Regional Expansion Hub (`/admin/expansion`).
 - **Dynamic PINCODE Expansion:** Admins can register any new 6-digit Indian PIN code into the administrative hierarchy with custom locality, sub-district/tehsil, and activation status.
 
-### 9.4 Authoritative 4-Quadrant Micro-Zone & Coordinate Sanity Governance
-- **Authoritative Static Registry (`lib/geo/jaipurQuadrants.ts`):** 4-Quadrant micro-zones (`North-West`, `North-East`, `South-East`, `South-West`) for urban launch PIN codes MUST originate from the verified local landmark registry. LLM prompts and automated scripts are strictly prohibited from generating synthetic or ungrounded landmark names.
-- **Cross-Pincode Landmark Bleed Prevention:** Generic central city government landmarks (e.g., Vidhan Sabha, Raj Bhawan, 22 Godown, Ambedkar Circle) must NEVER be assigned to peripheral or non-central PIN codes (e.g., Jhotwara `302012`, Mansarovar `302019`, Vaishali Nagar `302021`). Every PIN code's quadrants must represent real residential colonies, main intersections (tirahas/chaurahas), commercial roads, or prominent local establishments within that specific postal code's delivery envelope.
-- **Strict Geofenced Coordinate Bounding:** All quadrant markers and sub-office coordinates must pass geographical boundary sanity checks:
+### 9.4 Universal Sub-Post Office Delivery Micro-Hubs & Coordinate Sanity Governance
+- **Replacement of Artificial Compass Quadrants with Real Delivery Hubs:** The platform strictly replaces artificial 4-quadrant compass conventions (`North-West`, `North-East`, `South-West`, `South-East`) with **Official Sub-Post Office Locations & Local Communicating Names** (e.g., `Niwaru Road`, `Lata Circle`, `Khatipura`, `Bandra West`, `Koramangala`, `Talwandi`).
+- **All-India Applicability Across 19,000+ PIN Codes:**
+  - For curated launch PIN codes (Jaipur urban launch), authoritative micro-hubs originate from `lib/geo/jaipurQuadrants.ts`.
+  - For ANY other PIN code in India, micro-hubs are dynamically extracted directly from official India Post Sub-Post Offices (`S.O.`) and Branch Offices (`B.O.`) via `https://api.postalpincode.in/pincode/{pin}`.
+  - LLM prompts and synthetic landmark generators are strictly banned from generating fake quadrant labels.
+- **Dynamic Hub Capacity (1 to 8 Natural Hubs):** Micro-zones are never artificially forced into a 4-cardinal grid. Single-facility PINs (e.g. `400050` Bandra West, `302005` SMS Hospital) cleanly represent their actual delivery count, while multi-beat tehsils support up to 8 primary postal delivery hubs.
+- **Lead Routing Accuracy:** Lead address matching in `lib/territory.ts` directly compares customer street and colony address tokens against the local communicating name, enabling automated beat-level salesperson assignment.
+- **Cross-Pincode Landmark Bleed Prevention:** Generic central city government landmarks (e.g., Vidhan Sabha, Raj Bhawan, 22 Godown, Ambedkar Circle) must NEVER be assigned to peripheral or non-central PIN codes.
+- **Strict Geofenced Coordinate Bounding:** All hub markers and sub-office coordinates must pass geographical boundary sanity checks:
   - Latitude must strictly fall within `[26.50, 27.50]°N` and Longitude within `[75.40, 76.20]°E` for the Jaipur urban agglomeration.
   - Any coordinates outside these bounds (e.g., Lucknow, Delhi, Gujarat, Telangana coordinate bleed from ungrounded geocoding) are strictly rejected and automatically scrubbed to prevent map viewport distortion.
