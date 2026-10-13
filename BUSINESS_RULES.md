@@ -222,3 +222,10 @@ To ensure professional, 100% accurate map rendering across all PIN codes in Indi
 - **Tehsil Metadata Propagation:** All public lookups, waitlist submissions, and traffic impressions MUST record the resolved `tehsil`, `district`, and `state`.
 - **Bulk Tehsil Activation:** Administrators can toggle an entire Tehsil's PIN codes between `active` and `inactive` in a single batch operation from the Regional Expansion Hub (`/admin/expansion`).
 - **Dynamic PINCODE Expansion:** Admins can register any new 6-digit Indian PIN code into the administrative hierarchy with custom locality, sub-district/tehsil, and activation status.
+
+### 9.4 Authoritative 4-Quadrant Micro-Zone & Coordinate Sanity Governance
+- **Authoritative Static Registry (`lib/geo/jaipurQuadrants.ts`):** 4-Quadrant micro-zones (`North-West`, `North-East`, `South-East`, `South-West`) for urban launch PIN codes MUST originate from the verified local landmark registry. LLM prompts and automated scripts are strictly prohibited from generating synthetic or ungrounded landmark names.
+- **Cross-Pincode Landmark Bleed Prevention:** Generic central city government landmarks (e.g., Vidhan Sabha, Raj Bhawan, 22 Godown, Ambedkar Circle) must NEVER be assigned to peripheral or non-central PIN codes (e.g., Jhotwara `302012`, Mansarovar `302019`, Vaishali Nagar `302021`). Every PIN code's quadrants must represent real residential colonies, main intersections (tirahas/chaurahas), commercial roads, or prominent local establishments within that specific postal code's delivery envelope.
+- **Strict Geofenced Coordinate Bounding:** All quadrant markers and sub-office coordinates must pass geographical boundary sanity checks:
+  - Latitude must strictly fall within `[26.50, 27.50]°N` and Longitude within `[75.40, 76.20]°E` for the Jaipur urban agglomeration.
+  - Any coordinates outside these bounds (e.g., Lucknow, Delhi, Gujarat, Telangana coordinate bleed from ungrounded geocoding) are strictly rejected and automatically scrubbed to prevent map viewport distortion.
