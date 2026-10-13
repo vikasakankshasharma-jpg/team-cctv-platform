@@ -63,8 +63,8 @@ export function resolveProducts(
   const combinations = new Set<string>(); // e.g. "HD_2MP", "IP_5MP"
   
   allCameras.forEach(c => {
-     let tech = c.technology || "HD";
-     let res = (c.specifications as any)?.resolution || c.resolution;
+     let tech = c.technology || (c.technologies && c.technologies[0]) || (c.display_name?.toUpperCase().includes("IP") ? "IP" : "HD");
+     let res = (c.specifications as any)?.resolution || c.resolution || (c.resolution_mp ? `${c.resolution_mp}MP` : undefined);
      if (!res) {
         if (c.display_name?.toLowerCase().includes("2mp")) res = "2MP";
         else if (c.display_name?.toLowerCase().includes("4mp")) res = "4MP";

@@ -259,7 +259,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   const referralDiscount = Math.round(grossSubtotal * (referralDiscountPercent / 100)) + referralDiscountFlat;
   const netTaxableAmount = Math.max(0, grossSubtotal - referralDiscount);
   
-  const gstRate = settings.gst_rate || 18;
+  const gstRate = settings.gst_rate !== undefined ? settings.gst_rate : 18;
   const gstAmount = Math.round(netTaxableAmount * (gstRate / 100));
   const totalPayable = netTaxableAmount + gstAmount;
 
@@ -303,7 +303,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     } else {
       // Validate recorder capacity
       const recorderItem = lineItems.find(item => products.some(p => p.id === item.product_id && p.category === "recorder"));
-      if (!recorderItem && effectiveTech !== "Wireless") {
+      if (!recorderItem && effectiveTech.toUpperCase() !== "WIRELESS") {
         error = true;
         errorMessage = "Missing required recorder hardware in catalog.";
       } else if (recorderItem) {
@@ -1169,10 +1169,11 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
     amcTotal = Math.round(baseHardware * (pct / 100));
   }
 
-  const grossSubtotal = baseHardware + laborTotal + cableTotal + amcTotal;
-  const gstAmount = Math.round(grossSubtotal * ((settings.gst_rate || 18) / 100));
+  const subtotal = baseHardware + laborTotal + cableTotal + amcTotal;
+  const gstRate = settings.gst_rate !== undefined ? settings.gst_rate : 18;
+  const gstAmount = Math.round(subtotal * (gstRate / 100));
   
-  return grossSubtotal + gstAmount;
+  return subtotal + gstAmount;
 }
 
 function resolveCamera(selection: ConfiguratorSelection, products: Product[], addons: Addon[], settings: AppSettings, tech: string) {

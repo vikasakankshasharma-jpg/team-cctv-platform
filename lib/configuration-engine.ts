@@ -193,6 +193,8 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
     outdoor_cameras: outdoorCameras,
     wired_cameras: wiredCameras,
     wireless_cameras: wirelessCameras,
+    recording_days: req.recording_days,
+    recording_mode: req.recording_mode,
     recorder_channels: recorderChannels || 0,
     storage_gb: storageGb,
     storage_tb: Math.ceil(storageGb / 1000),

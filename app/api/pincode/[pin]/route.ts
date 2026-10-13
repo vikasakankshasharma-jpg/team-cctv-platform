@@ -218,9 +218,19 @@ export async function GET(
        }
     }
 
-    let quadrants = cacheSnap.exists && cacheSnap.data()?.quadrants ? cacheSnap.data()?.quadrants : undefined;
+    const { getVerifiedQuadrants } = await import("@/lib/geo/jaipurQuadrants");
+    const verifiedQuadrants = getVerifiedQuadrants(pin);
+    let quadrants = verifiedQuadrants || (cacheSnap.exists && cacheSnap.data()?.quadrants ? cacheSnap.data()?.quadrants : undefined);
     
-    // Attempt inline lazy generation of AI Quadrants
+    // If verified quadrants are available, ensure cache is updated with authentic data
+    if (verifiedQuadrants) {
+      const existingData = cacheSnap.exists ? cacheSnap.data() : null;
+      if (!existingData?.quadrants || JSON.stringify(existingData.quadrants) !== JSON.stringify(verifiedQuadrants)) {
+        await cacheRef.set({ quadrants: verifiedQuadrants }, { merge: true }).catch(() => {});
+      }
+    }
+
+    // Attempt inline lazy generation of AI Quadrants if still missing
     if (!quadrants && process.env.GEMINI_API_KEY) {
       try {
         const { GoogleGenAI } = await import("@google/genai");

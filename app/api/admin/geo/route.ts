@@ -73,12 +73,16 @@ export async function GET(req: Request) {
         }
       }
       
-      // Map back to data
+      // Map back to data with verified quadrants prioritized for Jaipur
+      const { getVerifiedQuadrants } = await import("@/lib/geo/jaipurQuadrants");
       data.offices = data.offices.map((o: any) => {
-        if (o.pincode && aiCacheMap.has(o.pincode)) {
-          return { ...o, ...aiCacheMap.get(o.pincode) };
-        }
-        return o;
+        const verified = o.pincode ? getVerifiedQuadrants(o.pincode) : null;
+        const cached = o.pincode && aiCacheMap.has(o.pincode) ? aiCacheMap.get(o.pincode) : {};
+        return {
+          ...o,
+          ...cached,
+          ...(verified ? { quadrants: verified } : {})
+        };
       });
     }
 

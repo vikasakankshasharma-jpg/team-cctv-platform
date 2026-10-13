@@ -31,6 +31,7 @@ import { TerritoryMatrix } from "./TerritoryMatrix";
 import { computeDistrictPincodes, getPincodeCoordinates, calculateDistance, isPointInPolygon } from "@/lib/geo-utils";
 import { CoverageAreaMapEditor } from "@/components/admin/CoverageAreaMapEditor";
 import type { QuadrantMapMarker } from "@/components/admin/CoverageMapCanvas";
+import { getVerifiedQuadrants } from "@/lib/geo/jaipurQuadrants";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -276,10 +277,12 @@ export default function SalespersonsClient() {
       if (!baseCoords) return;
 
       const isParentSelected = selectedSet.has(p.pincode);
-      const hasQuadrants = p.quadrants && p.quadrants.length > 0;
+      const verified = getVerifiedQuadrants(p.pincode);
+      const activeQuadrants = verified || p.quadrants;
+      const hasQuadrants = activeQuadrants && activeQuadrants.length > 0;
 
       if (hasQuadrants) {
-        p.quadrants!.forEach((q: any) => {
+        activeQuadrants.forEach((q: any) => {
           const zoneName = q.zone || "Central";
           const tag = `${p.pincode}:${zoneName}`;
           const isQuadSelected = isParentSelected || selectedSet.has(tag);
@@ -308,7 +311,7 @@ export default function SalespersonsClient() {
           { name: "North-West", dLat: 0.012, dLng: -0.012, area: p.areas?.[0] || `${p.pincode} North-West` },
           { name: "North-East", dLat: 0.012, dLng: 0.012, area: p.areas?.[1] || `${p.pincode} North-East` },
           { name: "South-West", dLat: -0.012, dLng: -0.012, area: p.areas?.[2] || `${p.pincode} South-West` },
-          { name: "South-East", dLat: -0.012, dLng: 0.012, area: p.areas?.[3] || `${p.pincode} South-East` },
+          { name: "South-East", dLat: 0.012, dLng: 0.012, area: p.areas?.[3] || `${p.pincode} South-East` },
         ];
 
         cardinalZones.forEach(z => {
@@ -341,8 +344,9 @@ export default function SalespersonsClient() {
           if (current.has(pin)) {
             current.delete(pin);
             const pData = availablePincodes.find(p => p.pincode === pin);
-            if (pData?.quadrants) {
-              pData.quadrants.forEach(q => {
+            const activeQuads = getVerifiedQuadrants(pin) || pData?.quadrants;
+            if (activeQuads) {
+              activeQuads.forEach(q => {
                 const qTag = `${pin}:${q.zone}`;
                 if (qTag !== id) current.add(qTag);
               });
@@ -355,10 +359,11 @@ export default function SalespersonsClient() {
           current.add(id);
           // If all 4 quadrants for this pincode are now covered, consolidate into parent
           const pData = availablePincodes.find(p => p.pincode === pin);
-          if (pData?.quadrants && pData.quadrants.length === 4) {
-            const all4Selected = pData.quadrants.every(q => current.has(`${pin}:${q.zone}`));
+          const activeQuads = getVerifiedQuadrants(pin) || pData?.quadrants;
+          if (activeQuads && activeQuads.length === 4) {
+            const all4Selected = activeQuads.every(q => current.has(`${pin}:${q.zone}`));
             if (all4Selected) {
-              pData.quadrants.forEach(q => current.delete(`${pin}:${q.zone}`));
+              activeQuads.forEach(q => current.delete(`${pin}:${q.zone}`));
               current.add(pin);
             }
           }
@@ -1817,14 +1822,15 @@ export default function SalespersonsClient() {
                           </div>
                         ) : filteredAvailablePincodes.map(p => {
                           const isParentSelected = (newZone.pincodes || []).includes(p.pincode);
-                          const effectiveQuadrants = (p.quadrants && p.quadrants.length > 0)
+                          const verified = getVerifiedQuadrants(p.pincode);
+                          const effectiveQuadrants = verified || ((p.quadrants && p.quadrants.length > 0)
                             ? p.quadrants
                             : [
                                 { zone: "North-West", anchor: p.areas?.[0] || `${p.pincode} North-West`, coverage: "North-Western micro-zone" },
                                 { zone: "North-East", anchor: p.areas?.[1] || `${p.pincode} North-East`, coverage: "North-Eastern micro-zone" },
                                 { zone: "South-West", anchor: p.areas?.[2] || `${p.pincode} South-West`, coverage: "South-Western micro-zone" },
                                 { zone: "South-East", anchor: p.areas?.[3] || `${p.pincode} South-East`, coverage: "South-Eastern micro-zone" },
-                              ];
+                              ]);
                           const isExpanded = expandedPincodes.has(p.pincode);
                           const selectedSubCount = effectiveQuadrants.filter((q: any) => (newZone.pincodes || []).includes(`${p.pincode}:${q.zone}`)).length;
 
