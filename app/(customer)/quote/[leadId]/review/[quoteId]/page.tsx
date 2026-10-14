@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { QuoteReviewClient, QuoteData } from "./QuoteReviewClient";
 import type { Metadata } from "next";
 import { serializeDoc } from "@/lib/serialize";
+import { getCachedAdminSettings } from "@/lib/cached-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export default async function QuoteReviewPage({
   params: Promise<{ leadId: string; quoteId: string }>
 }) {
   const { leadId, quoteId } = await params;
+  const settings = await getCachedAdminSettings();
 
   let quoteData: QuoteData | null = null;
 
@@ -69,7 +71,7 @@ export default async function QuoteReviewPage({
         ],
         gstPercent: 18,
         advancePercent: 30,
-        companyGstin: "08AABCT1234A1ZS",
+        companyGstin: settings.company_gstin || "",
         version: 1,
         isRevision: false,
         notes: "Mock quotation for testing.",
@@ -207,7 +209,7 @@ export default async function QuoteReviewPage({
         lineItems,
         gstPercent: quote?.pricingSnapshot?.gst_rate || quote?.gst_rate || 18,
         advancePercent: quote?.advance_percent || 30, 
-        companyGstin: "08AABCT1234A1ZS",
+        companyGstin: settings.company_gstin || "",
         billing_details: {
           is_business: !!(quote?.billing_details?.is_business ?? (lead?.is_b2b || quote?.company_name || quote?.gstin || quote?.gst_number || lead?.gst_number)),
           company_name: quote?.billing_details?.company_name || quote?.company_name || lead?.company_name || "",

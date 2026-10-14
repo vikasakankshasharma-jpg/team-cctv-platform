@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { renderToStream } from "@react-pdf/renderer";
 import { InvoicePDFDocument } from "@/lib/pdf/invoice-pdf";
+import { getCachedAdminSettings } from "@/lib/cached-settings";
 import React from "react";
 
 export const dynamic = "force-dynamic";
@@ -81,7 +82,9 @@ export async function GET(
       ...quoteData
     };
 
-    const pdfStream = await renderToStream(React.createElement(InvoicePDFDocument, { quote }) as any);
+    const settings = await getCachedAdminSettings();
+
+    const pdfStream = await renderToStream(React.createElement(InvoicePDFDocument, { quote, settings }) as any);
     
     const readableStream = new ReadableStream({
       start(controller) {

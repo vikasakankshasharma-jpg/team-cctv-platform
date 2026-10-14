@@ -234,11 +234,24 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
     year: 'numeric'
   });
 
-  const companyName = settings?.company_name || "TEAM CCTV";
+  const companyName = settings?.company_legal_name || settings?.company_name || "TEAM CCTV";
+  const tagline = settings?.company_tagline || "Premium Security Solutions";
+  const gstinDisplay = settings?.company_gstin && settings.company_gstin.trim().length > 0
+    ? `GSTIN: ${settings.company_gstin.trim()}`
+    : "GST Registration Pending";
+  const emailDisplay = settings?.company_email || "sales@teamcctv.com";
+  const phoneDisplay = settings?.company_phone ? `\nPh: ${settings.company_phone}` : "";
+  const addressParts = [
+    settings?.company_address_line1,
+    settings?.company_address_line2,
+    settings?.company_city,
+    settings?.company_state ? `${settings.company_state}${settings.company_pincode ? ` - ${settings.company_pincode}` : ''}` : settings?.company_pincode
+  ].filter(Boolean);
+  const addressDisplay = addressParts.length > 0 ? `\n${addressParts.join(", ")}` : "";
   const logoUrl = settings?.pdf_logo_url || settings?.company_logo_url;
   
   // Default terms tailored for CCTV quotation
-  const defaultTerms = "1. Prices are valid for 7 days from the date of this quotation.\n2. Standard 1-Year Warranty on all hardware items unless specified otherwise.\n3. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.\n4. Additional cabling beyond the estimated requirement will be charged at ₹" + (settings?.wire_cost_per_meter || 20) + "/meter.\n5. 50% advance payment required for order confirmation, balance on completion of installation.";
+  const defaultTerms = "1. Prices are valid for " + (settings?.quote_validity_days || 7) + " days from the date of this quotation.\n2. Standard 1-Year Warranty on all hardware items unless specified otherwise.\n3. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.\n4. Additional cabling beyond the estimated requirement will be charged at ₹" + (settings?.wire_cost_per_meter || 20) + "/meter.\n5. 50% advance payment required for order confirmation, balance on completion of installation.";
   
   const termsText = settings?.pdf_terms || defaultTerms;
 
@@ -257,9 +270,10 @@ export function QuotePDFDocument({ lead, quote, settings, issueDate, validUntilD
               <Text style={styles.logoText}>{companyName}</Text>
             )}
             <Text style={styles.companyDetails}>
-              Premium Security Solutions
-              {'\n'}GSTIN: {settings?.gst_rate ? "APPLIED" : "PENDING"}
-              {'\n'}sales@teamcctv.com
+              {tagline}
+              {addressDisplay}
+              {'\n'}{gstinDisplay}
+              {'\n'}{emailDisplay}{phoneDisplay}
             </Text>
           </View>
           

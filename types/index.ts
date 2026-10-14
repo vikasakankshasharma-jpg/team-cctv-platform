@@ -561,6 +561,33 @@ export interface AppSettings {
   whatsapp_template: string;
   pricing_cache_ttl_seconds: number;
   otp_provider: "firebase_phone" | "other";
+
+  // Company Profile & Invoicing Details
+  company_legal_name?: string;
+  company_tagline?: string;
+  company_address_line1?: string;
+  company_address_line2?: string;
+  company_city?: string;
+  company_state?: string;
+  company_state_code?: string;
+  company_pincode?: string;
+  company_gstin?: string;
+  company_pan?: string;
+  company_phone?: string;
+  company_email?: string;
+  company_website?: string;
+
+  // Bank & Settlement Details
+  bank_name?: string;
+  bank_account_name?: string;
+  bank_account_no?: string;
+  bank_ifsc?: string;
+  bank_branch?: string;
+  bank_upi_id?: string;
+
+  // Signatory & Legal Jurisdiction
+  authorized_signatory_label?: string;
+  jurisdiction_city?: string;
   
   // Taxation & TDS Engine
   tds_194c_individual_rate?: number;

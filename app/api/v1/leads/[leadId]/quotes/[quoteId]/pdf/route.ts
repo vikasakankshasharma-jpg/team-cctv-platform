@@ -21,6 +21,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb as adminFirestore, adminStorage } from "@/lib/firebase-admin";
 import { generateQuotePdfBuffer } from "@/components/quote/QuotePDF";
+import { getCachedAdminSettings } from "@/lib/cached-settings";
 
 export const maxDuration = 60; // Vercel Pro â€” keep in sync with vercel.json
 
@@ -264,9 +265,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   // â”€â”€ 4. Generate PDF â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Fetch settings for custom PDF logo and terms
-  const settingsSnap = await adminFirestore.collection("settings").doc("app_settings").get();
-  const settings = settingsSnap.exists ? settingsSnap.data() : undefined;
+  // Fetch authoritative admin settings for company profile, logo, and terms
+  const settings = await getCachedAdminSettings();
 
   let pdfBuffer: Buffer;
   try {

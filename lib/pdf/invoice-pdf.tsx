@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { AppSettings } from '@/types';
 
 // Create styles optimized for professional single-page layout
 const styles = StyleSheet.create({
@@ -285,12 +286,29 @@ const styles = StyleSheet.create({
   },
 });
 
-export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
+export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?: AppSettings }) => {
   const {
     id = '',
     customer_name = '',
     customer_mobile = '',
   } = quote || {};
+
+  const companyName = settings?.company_legal_name || settings?.company_name || "TEAM CCTV";
+  const tagline = settings?.company_tagline || "Security Systems & Surveillance Automation";
+  const sellerGstin = settings?.company_gstin && settings.company_gstin.trim().length > 0 ? settings.company_gstin.trim() : "";
+  const sellerState = settings?.company_state || "Rajasthan";
+  const sellerStateCode = settings?.company_state_code || (sellerGstin.length >= 2 ? sellerGstin.substring(0, 2) : "08");
+  const sellerEmail = settings?.company_email || "sales@teamcctv.com";
+  const sellerPhone = settings?.company_phone ? ` | Ph: ${settings.company_phone}` : "";
+  const sellerWeb = settings?.company_website || "cctvquotation.com";
+
+  const addressParts = [
+    settings?.company_address_line1,
+    settings?.company_address_line2,
+    settings?.company_city,
+    settings?.company_state ? `${settings.company_state}${settings.company_pincode ? ` - ${settings.company_pincode}` : ''}` : settings?.company_pincode
+  ].filter(Boolean);
+  const sellerAddress = addressParts.length > 0 ? addressParts.join(", ") : "";
 
   const createdAt = quote?.createdAt || quote?.created_at;
   const paidAt = quote?.paid_at || quote?.paidAt || quote?.payment_date || createdAt;
@@ -428,9 +446,9 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
     billing.pincode || quote?.requirementSnapshot?.lead_pincode || quote?.pincode
   ].filter(Boolean).join(', ');
 
-  const stateCode = billing.state_code || (billing.gstin && billing.gstin.length >= 2 ? billing.gstin.substring(0, 2) : '08');
-  const isInterState = stateCode !== '08';
-  const placeOfSupply = `${billing.state || 'Rajasthan'} (${stateCode})`;
+  const stateCode = billing.state_code || (billing.gstin && billing.gstin.length >= 2 ? billing.gstin.substring(0, 2) : sellerStateCode);
+  const isInterState = stateCode !== sellerStateCode;
+  const placeOfSupply = `${billing.state || sellerState} (${stateCode})`;
 
   // Authoritative document title, badges and status
   let documentTitle = 'TAX INVOICE';
@@ -470,10 +488,13 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
         {/* Header */}
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            <Text style={styles.logoText}>TEAM CCTV</Text>
-            <Text style={styles.companyInfo}>Security Systems & Surveillance Automation</Text>
-            <Text style={styles.companyInfo}>GSTIN: 08AABCT1234A1ZS | State: Rajasthan (08)</Text>
-            <Text style={styles.companyInfo}>Email: sales@teamcctv.com | Web: cctvquotation.com</Text>
+            <Text style={styles.logoText}>{companyName}</Text>
+            {tagline ? <Text style={styles.companyInfo}>{tagline}</Text> : null}
+            {sellerAddress ? <Text style={styles.companyInfo}>{sellerAddress}</Text> : null}
+            <Text style={styles.companyInfo}>
+              {sellerGstin ? `GSTIN: ${sellerGstin}` : 'GST Registration Pending'} | State: {sellerState} ({sellerStateCode})
+            </Text>
+            <Text style={styles.companyInfo}>Email: {sellerEmail}{sellerPhone} | Web: {sellerWeb}</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={[styles.invoiceTitle, { color: invoiceStatusColor }]}>{documentTitle}</Text>
@@ -607,7 +628,17 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
             <Text style={styles.termsText}>1. Standard 1-Year Warranty on all hardware items unless specified otherwise.</Text>
             <Text style={styles.termsText}>2. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.</Text>
             <Text style={styles.termsText}>3. Our installation team will contact you shortly to coordinate site arrival time.</Text>
-            <Text style={styles.termsText}>4. For any questions or support, please contact us at sales@teamcctv.com.</Text>
+            <Text style={styles.termsText}>4. For any questions or support, please contact us at {sellerEmail}.</Text>
+            {settings?.bank_account_no && (
+              <View style={{ marginTop: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: '#e5e7eb' }}>
+                <Text style={[styles.termsText, { fontWeight: 'bold', color: '#1f2937' }]}>
+                  Bank Details: {settings.bank_name || 'Bank'} | A/c: {settings.bank_account_no} | IFSC: {settings.bank_ifsc || ''}
+                </Text>
+                <Text style={styles.termsText}>
+                  A/c Name: {settings.bank_account_name || companyName} {settings.bank_upi_id ? `| UPI: ${settings.bank_upi_id}` : ''}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.totalsBox}>
@@ -687,7 +718,7 @@ export const InvoicePDFDocument = ({ quote }: { quote: any }) => {
         )}
         {/* Micro Footer */}
         <Text style={styles.footerMicroText}>
-          Computer-generated document. No signature required. | TEAM CCTV (cctvquotation.com) | Support: sales@teamcctv.com
+          Computer-generated document. {settings?.authorized_signatory_label || "No signature required."} | {companyName} ({sellerWeb}) | Support: {sellerEmail}
         </Text>
       </Page>
     </Document>

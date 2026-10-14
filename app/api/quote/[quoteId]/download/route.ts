@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { renderToStream } from "@react-pdf/renderer";
 import { QuotePDFDocument } from "@/lib/pdf/quote-pdf";
+import { getCachedAdminSettings } from "@/lib/cached-settings";
 import React from "react";
 
 export const dynamic = "force-dynamic";
@@ -59,8 +60,10 @@ export async function GET(
       ...qData
     };
 
+    const settings = await getCachedAdminSettings();
+
     // Generate PDF directly in memory
-    const pdfStream = await renderToStream(React.createElement(QuotePDFDocument, { quote }) as any);
+    const pdfStream = await renderToStream(React.createElement(QuotePDFDocument, { quote, settings }) as any);
     
     // Convert Node.js stream to Web ReadableStream
     const readableStream = new ReadableStream({

@@ -473,6 +473,15 @@ const s = StyleSheet.create({
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, settings?: any, isInvoice?: boolean }) {
+  const companyName = settings?.company_legal_name || settings?.company_name || "TEAM CCTV";
+  const tagline = settings?.company_tagline || "Smart Security Solutions · Jaipur";
+  const gstinDisplay = settings?.company_gstin && settings.company_gstin.trim().length > 0
+    ? `GSTIN: ${settings.company_gstin.trim()}`
+    : (quote.companyGstin ? `GSTIN: ${quote.companyGstin}` : "GST Registration Pending");
+  const phoneDisplay = settings?.company_phone || "+91 98290 00000";
+  const emailDisplay = settings?.company_email || "support@cctvquotation.com";
+  const webDisplay = settings?.company_website || "cctvquotation.com";
+
   const subtotal  = quote.lineItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
   const total     = subtotal + (subtotal * quote.gstPercent / 100);
   const halfGst   = (subtotal * quote.gstPercent / 100) / 2;
@@ -482,8 +491,8 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
 
   return (
     <Document
-      title={`TEAM CCTV — ${docTitle} #${quote.quoteNumber}`}
-      author="TEAM CCTV"
+      title={`${companyName} — ${docTitle} #${quote.quoteNumber}`}
+      author={companyName}
       subject={`CCTV Installation ${docTitle}`}
     >
       <Page size="A4" style={s.page}>
@@ -493,18 +502,18 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           <View style={s.headerTop}>
             <View style={s.brandRow}>
               <View style={s.brandIconBox}>
-                {settings?.pdf_logo_url ? (
+                {settings?.pdf_logo_url || settings?.company_logo_url ? (
                   <>
                     {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                    <Image src={settings.pdf_logo_url} style={s.brandIconImage} />
+                    <Image src={settings.pdf_logo_url || settings.company_logo_url} style={s.brandIconImage} />
                   </>
                 ) : (
                   <Text style={s.brandIconText}>T</Text>
                 )}
               </View>
               <View>
-                <Text style={s.brandName}>TEAM CCTV</Text>
-                <Text style={s.brandTagline}>Smart Security Solutions · Jaipur</Text>
+                <Text style={s.brandName}>{companyName}</Text>
+                <Text style={s.brandTagline}>{tagline}</Text>
               </View>
             </View>
             <View style={s.quoteLabel}>
@@ -649,10 +658,14 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
           </View>
 
           {/* Bank Details */}
-          {isInvoice && settings?.bank_details && (
+          {isInvoice && (settings?.bank_account_no || settings?.bank_details) && (
             <View style={s.bankBox}>
               <Text style={s.bankTitle}>Bank Details for Payment</Text>
-              <Text style={s.noteBody}>{settings.bank_details}</Text>
+              <Text style={s.noteBody}>
+                {settings?.bank_account_no
+                  ? `Bank: ${settings.bank_name || 'Bank'} | A/c No: ${settings.bank_account_no} | IFSC: ${settings.bank_ifsc || ''}\nA/c Name: ${settings.bank_account_name || companyName}${settings.bank_upi_id ? ` | UPI ID: ${settings.bank_upi_id}` : ''}`
+                  : settings.bank_details}
+              </Text>
             </View>
           )}
 
@@ -670,7 +683,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
               <Text style={s.noteTitle}>Important Note</Text>
               <Text style={s.noteBody}>
                 {quote.notes}
-                {"\n"}GSTIN: {quote.companyGstin}
+                {"\n"}{gstinDisplay}
               </Text>
             </View>
           )}
@@ -681,7 +694,7 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
               <Text style={s.sigLabel}>Customer Signature &amp; Date</Text>
             </View>
             <View style={s.sigBox}>
-              <Text style={s.sigLabel}>Authorised Signatory — TEAM CCTV</Text>
+              <Text style={s.sigLabel}>{settings?.authorized_signatory_label || `Authorised Signatory — ${companyName}`}</Text>
             </View>
           </View>
 
@@ -690,12 +703,12 @@ export function QuotePDF({ quote, settings, isInvoice }: { quote: QuoteData, set
         {/* ── FOOTER ──────────────────────────────────────────────────── */}
         <View style={s.footer} fixed>
           <Text style={s.footerLeft}>
-            <Text style={s.footerBrand}>TEAM CCTV</Text>
-            {" "}· GSTIN: {quote.companyGstin}
+            <Text style={s.footerBrand}>{companyName}</Text>
+            {" "}· {gstinDisplay}
           </Text>
           <View style={s.footerRight}>
-            <Text style={s.footerContact}>+91 98290 00000</Text>
-            <Text style={s.footerContact}>support@cctvquotation.com</Text>
+            <Text style={s.footerContact}>{phoneDisplay}</Text>
+            <Text style={s.footerContact}>{emailDisplay}</Text>
           </View>
         </View>
 

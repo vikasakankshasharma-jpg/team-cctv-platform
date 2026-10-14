@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Save, Settings2, Image as ImageIcon, Loader2, CheckCircle2, BadgePercent, Ruler, HardHat, MessageSquare, Zap } from "lucide-react";
+import { Save, Settings2, Image as ImageIcon, Loader2, CheckCircle2, BadgePercent, Ruler, HardHat, MessageSquare, Zap, Building2, MapPin, Receipt, Phone, Globe, Landmark, ShieldCheck, Eye } from "lucide-react";
 import type { AppSettings } from "@/types";
 import { updateSettings } from "@/app/actions/settings";
 import Image from "next/image";
@@ -14,6 +14,29 @@ interface SettingsFormProps {
 export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [formData, setFormData] = useState<AppSettings>({
     ...initialSettings,
+    company_name: initialSettings.company_name ?? "TEAM CCTV",
+    company_legal_name: initialSettings.company_legal_name ?? initialSettings.company_name ?? "TEAM CCTV",
+    company_tagline: initialSettings.company_tagline ?? "Premium Security Solutions",
+    company_logo_url: initialSettings.company_logo_url ?? "",
+    company_address_line1: initialSettings.company_address_line1 ?? "",
+    company_address_line2: initialSettings.company_address_line2 ?? "",
+    company_city: initialSettings.company_city ?? "Jaipur",
+    company_state: initialSettings.company_state ?? "Rajasthan",
+    company_state_code: initialSettings.company_state_code ?? "08",
+    company_pincode: initialSettings.company_pincode ?? "302001",
+    company_gstin: initialSettings.company_gstin ?? "",
+    company_pan: initialSettings.company_pan ?? "",
+    company_phone: initialSettings.company_phone ?? "+91 98290 00000",
+    company_email: initialSettings.company_email ?? "sales@teamcctv.com",
+    company_website: initialSettings.company_website ?? "cctvquotation.com",
+    bank_name: initialSettings.bank_name ?? "HDFC Bank",
+    bank_account_name: initialSettings.bank_account_name ?? "TEAM CCTV SOLUTIONS",
+    bank_account_no: initialSettings.bank_account_no ?? "50200062325372",
+    bank_ifsc: initialSettings.bank_ifsc ?? "HDFC0001844",
+    bank_branch: initialSettings.bank_branch ?? "Jaipur",
+    bank_upi_id: initialSettings.bank_upi_id ?? "teamcctv@okhdfc",
+    authorized_signatory_label: initialSettings.authorized_signatory_label ?? "Authorised Signatory — TEAM CCTV",
+    jurisdiction_city: initialSettings.jurisdiction_city ?? "Jaipur",
     margin_hdd: initialSettings.margin_hdd ?? 5,
     margin_hdd_budget: initialSettings.margin_hdd_budget ?? 10,
     margin_cctv_camera: initialSettings.margin_cctv_camera ?? 15,
@@ -100,7 +123,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? Number(value) : value
+      [name]: (name === 'company_gstin' || name === 'company_pan' || name === 'bank_ifsc') ? value.toUpperCase() : (type === 'number' ? Number(value) : value)
     }));
   };
 
@@ -149,63 +172,445 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Section: Company Profile */}
-        <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-              <Settings2 className="w-5 h-5" />
+                {/* Section: Company Profile & Invoicing Authority */}
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm group hover:border-primary/20 transition-all space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/80">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-foreground tracking-tight">Company Profile & Invoicing Authority</h2>
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">
+                  Official branding, registered address, GSTIN, and bank settlement details for Quotations & Invoices
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-semibold text-foreground tracking-tight">Company Identity</h2>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Brand Branding & Assets</p>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/80 text-xs font-medium text-muted-foreground border border-border/50">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <span>Reflects Realtime in PDF & Web</span>
             </div>
           </div>
-          
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Company Name</label>
-              <input 
-                required
-                type="text" 
-                name="company_name"
-                value={formData.company_name}
-                onChange={handleChange}
-                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium shadow-sm" 
-              />
+
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+            {/* Form Inputs */}
+            <div className="xl:col-span-7 space-y-6">
+              {/* Subsection: Brand Identity */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                  <span className="w-2 h-2 rounded-full bg-primary" />
+                  Brand & Legal Identity
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Brand Name *</label>
+                    <input
+                      required
+                      type="text"
+                      name="company_name"
+                      value={formData.company_name}
+                      onChange={handleChange}
+                      placeholder="e.g. TEAM CCTV"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Legal Entity / Billing Name</label>
+                    <input
+                      type="text"
+                      name="company_legal_name"
+                      value={formData.company_legal_name || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. TEAM CCTV & Security Systems"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Business Tagline</label>
+                    <input
+                      type="text"
+                      name="company_tagline"
+                      value={formData.company_tagline || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. Premium Security Solutions"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Brand Logo URL</label>
+                    <input
+                      type="text"
+                      name="company_logo_url"
+                      value={formData.company_logo_url || ""}
+                      onChange={handleChange}
+                      placeholder="https://your-domain.com/logo.png"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-medium shadow-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Subsection: Registered Address */}
+              <div className="space-y-4 pt-4 border-t border-border/60">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                  <MapPin className="w-3.5 h-3.5 text-primary" />
+                  Registered Business Address & Jurisdiction
+                </div>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Address Line 1</label>
+                    <input
+                      type="text"
+                      name="company_address_line1"
+                      value={formData.company_address_line1 || ""}
+                      onChange={handleChange}
+                      placeholder="Office/Shop No., Building Name, Complex"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Address Line 2 (Street / Locality)</label>
+                    <input
+                      type="text"
+                      name="company_address_line2"
+                      value={formData.company_address_line2 || ""}
+                      onChange={handleChange}
+                      placeholder="Street, Landmark, Area"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">City</label>
+                      <input
+                        type="text"
+                        name="company_city"
+                        value={formData.company_city || ""}
+                        onChange={handleChange}
+                        placeholder="Jaipur"
+                        className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">PIN Code</label>
+                      <input
+                        type="text"
+                        name="company_pincode"
+                        value={formData.company_pincode || ""}
+                        onChange={handleChange}
+                        placeholder="302001"
+                        className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Jurisdiction</label>
+                      <input
+                        type="text"
+                        name="jurisdiction_city"
+                        value={formData.jurisdiction_city || ""}
+                        onChange={handleChange}
+                        placeholder="Jaipur"
+                        className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">State</label>
+                      <input
+                        type="text"
+                        name="company_state"
+                        value={formData.company_state || ""}
+                        onChange={handleChange}
+                        placeholder="Rajasthan"
+                        className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">State Code (2 Digits)</label>
+                      <input
+                        type="text"
+                        maxLength={2}
+                        name="company_state_code"
+                        value={formData.company_state_code || ""}
+                        onChange={handleChange}
+                        placeholder="08"
+                        className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subsection: Tax Identifiers */}
+              <div className="space-y-4 pt-4 border-t border-border/60">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                  <Receipt className="w-3.5 h-3.5 text-primary" />
+                  Tax & Regulatory Identifiers
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Company GSTIN
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={15}
+                      name="company_gstin"
+                      value={formData.company_gstin || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. 08AABCT1234A1ZS"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono font-medium text-sm shadow-sm tracking-wider uppercase"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Leave empty to display &quot;GST Registration Pending&quot; on quotations.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Company PAN</label>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      name="company_pan"
+                      value={formData.company_pan || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. AABCT1234A"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono font-medium text-sm shadow-sm tracking-wider uppercase"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Used for B2B input tax credit and TDS compliances.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subsection: Official Contacts */}
+              <div className="space-y-4 pt-4 border-t border-border/60">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                  <Phone className="w-3.5 h-3.5 text-primary" />
+                  Official Contact Details
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Phone / Helpline</label>
+                    <input
+                      type="text"
+                      name="company_phone"
+                      value={formData.company_phone || ""}
+                      onChange={handleChange}
+                      placeholder="+91 98290 00000"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Official Email</label>
+                    <input
+                      type="email"
+                      name="company_email"
+                      value={formData.company_email || ""}
+                      onChange={handleChange}
+                      placeholder="sales@teamcctv.com"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Official Website</label>
+                    <input
+                      type="text"
+                      name="company_website"
+                      value={formData.company_website || ""}
+                      onChange={handleChange}
+                      placeholder="cctvquotation.com"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Subsection: Bank & Settlement */}
+              <div className="space-y-4 pt-4 border-t border-border/60">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                  <Landmark className="w-3.5 h-3.5 text-primary" />
+                  Bank & Payment Settlement Details
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Bank Name</label>
+                    <input
+                      type="text"
+                      name="bank_name"
+                      value={formData.bank_name || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. HDFC Bank"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Account Number</label>
+                    <input
+                      type="text"
+                      name="bank_account_no"
+                      value={formData.bank_account_no || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. 50200062325372"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Beneficiary / Account Name</label>
+                    <input
+                      type="text"
+                      name="bank_account_name"
+                      value={formData.bank_account_name || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. TEAM CCTV SOLUTIONS"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">IFSC Code</label>
+                    <input
+                      type="text"
+                      maxLength={11}
+                      name="bank_ifsc"
+                      value={formData.bank_ifsc || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. HDFC0001844"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono font-medium text-sm shadow-sm uppercase tracking-wider"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Branch Name</label>
+                    <input
+                      type="text"
+                      name="bank_branch"
+                      value={formData.bank_branch || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. Tonk Road, Jaipur"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">UPI ID / VPA</label>
+                    <input
+                      type="text"
+                      name="bank_upi_id"
+                      value={formData.bank_upi_id || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. teamcctv@okhdfc"
+                      className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Authorized Signatory Designation</label>
+                  <input
+                    type="text"
+                    name="authorized_signatory_label"
+                    value={formData.authorized_signatory_label || ""}
+                    onChange={handleChange}
+                    placeholder="Authorised Signatory — TEAM CCTV"
+                    className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm shadow-sm"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Brand Logo URL</label>
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0 overflow-hidden shadow-sm group-hover:border-primary/30 transition-all">
-                  {formData.company_logo_url ? (
-                    <Image 
-                      src={formData.company_logo_url} 
-                      alt="Logo" 
-                      width={64}
-                      height={64}
-                      unoptimized={true}
-                      className="w-full h-full object-contain p-2" 
-                    />
-                  ) : (
-                    <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                  )}
+            {/* Right Column: Live Document Preview */}
+            <div className="xl:col-span-5 flex flex-col space-y-4">
+              <div className="flex items-center justify-between text-xs font-bold text-foreground uppercase tracking-wider">
+                <span className="flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-primary" />
+                  Live Document Header Preview
+                </span>
+                <span className="text-[10px] font-normal text-muted-foreground">Simulated Output</span>
+              </div>
+
+              {/* Quotation & Invoice Header Card */}
+              <div className="bg-background border-2 border-border/80 rounded-2xl p-5 shadow-sm space-y-4 font-sans text-xs">
+                <div className="flex items-start justify-between pb-3 border-b border-border/60">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      {formData.company_logo_url ? (
+                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-secondary border border-border shrink-0">
+                          <Image
+                            src={formData.company_logo_url}
+                            alt="Logo"
+                            width={32}
+                            height={32}
+                            unoptimized
+                            className="w-full h-full object-contain p-1"
+                          />
+                        </div>
+                      ) : null}
+                      <span className="text-base font-black tracking-tight text-foreground">
+                        {formData.company_legal_name || formData.company_name || "TEAM CCTV"}
+                      </span>
+                    </div>
+                    {formData.company_tagline ? (
+                      <p className="text-[11px] text-muted-foreground font-medium">{formData.company_tagline}</p>
+                    ) : null}
+                    {formData.company_address_line1 || formData.company_city ? (
+                      <p className="text-[10.5px] text-muted-foreground leading-snug">
+                        {[
+                          formData.company_address_line1,
+                          formData.company_address_line2,
+                          formData.company_city,
+                          formData.company_state ? `${formData.company_state}${formData.company_pincode ? ` - ${formData.company_pincode}` : ''}` : formData.company_pincode
+                        ].filter(Boolean).join(", ")}
+                      </p>
+                    ) : null}
+                    <div className="pt-1 flex flex-wrap items-center gap-2 text-[10.5px]">
+                      {formData.company_gstin && formData.company_gstin.trim().length > 0 ? (
+                        <span className="font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                          GSTIN: {formData.company_gstin.trim()}
+                        </span>
+                      ) : (
+                        <span className="font-semibold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                          GST Registration Pending
+                        </span>
+                      )}
+                      {formData.company_state_code ? (
+                        <span className="text-muted-foreground">State Code: {formData.company_state_code}</span>
+                      ) : null}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground pt-0.5">
+                      {formData.company_email || "sales@teamcctv.com"} {formData.company_phone ? `| Ph: ${formData.company_phone}` : ""} | Web: {formData.company_website || "cctvquotation.com"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="px-2.5 py-1 rounded bg-primary/10 text-primary font-bold text-[10px] tracking-wider uppercase border border-primary/20">
+                      QUOTATION / INVOICE
+                    </span>
+                  </div>
                 </div>
-                <div className="flex-1 space-y-2">
-                  <input 
-                    type="text" 
-                    name="company_logo_url"
-                    value={formData.company_logo_url || ""}
-                    onChange={handleChange}
-                    placeholder="https://your-domain.com/logo.png"
-                    className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-medium shadow-sm" 
-                  />
-                  <p className="text-[10px] font-medium text-muted-foreground italic">Recommended: Transparent PNG, 512x512px</p>
+
+                {/* Bank Preview */}
+                <div className="bg-secondary/40 rounded-xl p-3 border border-border/50 space-y-1.5">
+                  <p className="text-[10px] font-bold text-foreground uppercase tracking-wider">Settlement & Bank Details</p>
+                  <p className="text-[10.5px] text-foreground font-medium">
+                    Bank: <span className="font-semibold">{formData.bank_name || "HDFC Bank"}</span> | A/c No: <span className="font-mono font-semibold">{formData.bank_account_no || "50200062325372"}</span>
+                  </p>
+                  <p className="text-[10.5px] text-muted-foreground">
+                    A/c Name: <span className="text-foreground font-medium">{formData.bank_account_name || formData.company_name}</span> | IFSC: <span className="font-mono font-semibold text-foreground">{formData.bank_ifsc || "HDFC0001844"}</span>
+                  </p>
+                  {formData.bank_upi_id ? (
+                    <p className="text-[10.5px] text-muted-foreground">
+                      UPI ID: <span className="font-mono font-semibold text-primary">{formData.bank_upi_id}</span>
+                    </p>
+                  ) : null}
+                </div>
+
+                {/* Footer preview */}
+                <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[9.5px] text-muted-foreground">
+                  <span>Valid for {formData.quote_validity_days || 7} Days</span>
+                  <span>{formData.authorized_signatory_label || "Authorised Signatory"}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
 
         {/* Section: Pricing & Taxes */}
         <div className="bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-success/20 transition-all">

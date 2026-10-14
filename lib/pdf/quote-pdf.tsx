@@ -1,6 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
-import { QuoteSnapshot, PricingResult, QuoteLineItem } from '@/types';
+import { QuoteSnapshot, PricingResult, QuoteLineItem, AppSettings } from '@/types';
 
 // Create styles optimized for professional single-page layout
 const styles = StyleSheet.create({
@@ -220,12 +220,29 @@ const styles = StyleSheet.create({
   },
 });
 
-export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
+export const QuotePDFDocument = ({ quote, settings }: { quote: QuoteSnapshot; settings?: AppSettings }) => {
   const { 
     id, 
     customer_name, 
     customer_mobile, 
   } = quote;
+
+  const companyName = settings?.company_legal_name || settings?.company_name || "TEAM CCTV";
+  const tagline = settings?.company_tagline || "Premium Security Solutions";
+  const gstinDisplay = settings?.company_gstin && settings.company_gstin.trim().length > 0
+    ? `GSTIN: ${settings.company_gstin.trim()}`
+    : "GST Registration Pending";
+  const emailDisplay = settings?.company_email || "sales@teamcctv.com";
+  const phoneDisplay = settings?.company_phone ? ` | Ph: ${settings.company_phone}` : "";
+  const webDisplay = settings?.company_website || "cctvquotation.com";
+
+  const addressParts = [
+    settings?.company_address_line1,
+    settings?.company_address_line2,
+    settings?.company_city,
+    settings?.company_state ? `${settings.company_state}${settings.company_pincode ? ` - ${settings.company_pincode}` : ''}` : settings?.company_pincode
+  ].filter(Boolean);
+  const addressDisplay = addressParts.length > 0 ? addressParts.join(", ") : "";
 
   const validUntil = quote.validUntil || quote.valid_until || quote.expires_at;
   const createdAt = quote.createdAt || quote.created_at || (quote._serverCreatedAt?.toDate ? quote._serverCreatedAt.toDate() : null) || new Date();
@@ -294,10 +311,11 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
         {/* Header */}
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            <Text style={styles.logoText}>TEAM CCTV</Text>
-            <Text style={styles.companyInfo}>Premium Security Solutions</Text>
-            <Text style={styles.companyInfo}>GST Registration Pending</Text>
-            <Text style={styles.companyInfo}>sales@teamcctv.com</Text>
+            <Text style={styles.logoText}>{companyName}</Text>
+            {tagline ? <Text style={styles.companyInfo}>{tagline}</Text> : null}
+            {addressDisplay ? <Text style={styles.companyInfo}>{addressDisplay}</Text> : null}
+            <Text style={styles.companyInfo}>{gstinDisplay}</Text>
+            <Text style={styles.companyInfo}>{emailDisplay}{phoneDisplay}</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.quoteTitle}>QUOTATION</Text>
@@ -393,11 +411,21 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
         <View style={styles.bottomSection} wrap={false}>
           <View style={styles.termsBox}>
             <Text style={styles.termsTitle}>Terms & Conditions</Text>
-            <Text style={styles.termsText}>1. Prices are valid for 7 days from the date of this quotation.</Text>
+            <Text style={styles.termsText}>1. Prices are valid for {settings?.quote_validity_days || 7} days from the date of this quotation.</Text>
             <Text style={styles.termsText}>2. Standard 1-Year Warranty on all hardware items unless specified otherwise.</Text>
             <Text style={styles.termsText}>3. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.</Text>
             <Text style={styles.termsText}>4. Additional cabling beyond the estimated requirement will be charged at actual per-meter rate as quoted above.</Text>
             <Text style={styles.termsText}>5. Booking advance required for order confirmation, balance on completion of installation.</Text>
+            {settings?.bank_account_no && (
+              <View style={{ marginTop: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: '#e2e8f0' }}>
+                <Text style={[styles.termsText, { fontWeight: 'bold', color: '#1e293b' }]}>
+                  Bank Details: {settings.bank_name || 'Bank'} | A/c: {settings.bank_account_no} | IFSC: {settings.bank_ifsc || ''}
+                </Text>
+                <Text style={styles.termsText}>
+                  A/c Name: {settings.bank_account_name || companyName} {settings.bank_upi_id ? `| UPI: ${settings.bank_upi_id}` : ''}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.totalsBox}>
@@ -423,7 +451,7 @@ export const QuotePDFDocument = ({ quote }: { quote: QuoteSnapshot }) => {
 
         {/* Micro Footer */}
         <Text style={styles.footerMicroText}>
-          Computer-generated quotation. Valid for 7 days. | TEAM CCTV (cctvquotation.com) | Support: sales@teamcctv.com
+          Computer-generated quotation. Valid for {settings?.quote_validity_days || 7} days. | {companyName} ({webDisplay}) | Support: {emailDisplay}
         </Text>
       </Page>
     </Document>
