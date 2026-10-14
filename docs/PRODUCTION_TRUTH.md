@@ -76,9 +76,11 @@
 1. **Modal Invalidation Architecture:**
    - Next.js modal transitions mount DOM elements while unmeasured (`clientWidth = 0`).
    - `MapViewController` in `components/admin/CoverageMapCanvas.tsx` registers an automated `ResizeObserver` on the map container and fires staggered `map.invalidateSize()` calls (0ms, 100ms, 300ms, 700ms) to guarantee instant tile rasterization without gray canvas freezing.
-2. **High-Performance CDN Tile Provider:**
-   - Standard OpenStreetMap unbuffered tile servers (`tile.openstreetmap.org`) are replaced with CartoDB Voyager (`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png`).
-   - Fastly edge caching guarantees sub-50ms tile delivery in India with complete English/Hindi road labels and zero rate-limiting.
+2. **Google Maps & High-Performance Tile Provider:**
+   - Powered directly by the configured `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
+   - Default roadmap: `https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${googleKey}` with subdomains `["0", "1", "2", "3"]`.
+   - Admin-selectable basemaps: Google Roads, Google Satellite Hybrid (`lyrs=y`), and OpenStreetMap (`osm`).
+   - 100% clean cartography with zero watermarks (completely purged CartoDB), authentic Indian highway/colony labels, and Google global edge CDN caching.
 3. **Delivery Micro-Hub Halos & Territory Tools:**
    - 850m micro-service radii halos default to visible, but can be toggled OFF with 1 click via the `Halos: ON/OFF` button.
    - Closed polygon territories can be generated in 1 click from covered hubs via `⚡ Auto-Trace Territory` using monotone chain convex hull computation (`lib/geo/pincodePolygons.ts`).

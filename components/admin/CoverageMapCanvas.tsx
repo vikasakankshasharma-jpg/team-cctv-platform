@@ -38,6 +38,8 @@ export interface QuadrantMapMarker {
   isSelected: boolean; // true = Green (Covered), false = Red (Uncovered)
 }
 
+export type BasemapType = "google_roads" | "google_satellite" | "osm";
+
 interface CoverageMapCanvasProps {
   center: MapPoint;
   zoom: number;
@@ -50,6 +52,7 @@ interface CoverageMapCanvasProps {
   quadrantMarkers?: QuadrantMapMarker[];
   onToggleQuadrantMarker?: (id: string, currentlySelected: boolean) => void;
   showHalos?: boolean;
+  basemap?: BasemapType;
 }
 
 // Map Center & Fly Controller with automated size invalidation for modals
@@ -376,8 +379,42 @@ export default function CoverageMapCanvas({
   onUpdatePolygonPoint,
   quadrantMarkers,
   onToggleQuadrantMarker,
-  showHalos = true
+  showHalos = true,
+  basemap = "google_roads"
 }: CoverageMapCanvasProps) {
+  const googleApiKey = (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim();
+
+  const tileConfig = useMemo(() => {
+    const keyParam = googleApiKey ? `&key=${encodeURIComponent(googleApiKey)}` : "";
+    switch (basemap) {
+      case "google_satellite":
+        return {
+          key: "google_satellite",
+          url: `https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}${keyParam}`,
+          subdomains: ["0", "1", "2", "3"],
+          attribution: '&copy; <a href="https://maps.google.com" target="_blank" rel="noreferrer">Google Maps</a>',
+          maxZoom: 20
+        };
+      case "osm":
+        return {
+          key: "osm",
+          url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          subdomains: ["a", "b", "c"],
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        };
+      case "google_roads":
+      default:
+        return {
+          key: "google_roads",
+          url: `https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}${keyParam}`,
+          subdomains: ["0", "1", "2", "3"],
+          attribution: '&copy; <a href="https://maps.google.com" target="_blank" rel="noreferrer">Google Maps</a>',
+          maxZoom: 20
+        };
+    }
+  }, [basemap, googleApiKey]);
+
   return (
     <MapContainer
       center={[center.lat, center.lng]}
@@ -386,10 +423,11 @@ export default function CoverageMapCanvas({
       scrollWheelZoom={true}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        subdomains={["a", "b", "c", "d"]}
-        maxZoom={20}
+        key={tileConfig.key}
+        attribution={tileConfig.attribution}
+        url={tileConfig.url}
+        subdomains={tileConfig.subdomains}
+        maxZoom={tileConfig.maxZoom}
       />
 
       <MapViewController center={center} zoom={zoom} />

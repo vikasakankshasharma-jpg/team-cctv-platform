@@ -94,6 +94,7 @@ export function CoverageAreaMapEditor({
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
   const [isLocatingGPS, setIsLocatingGPS] = useState(false);
   const [showHalos, setShowHalos] = useState(true);
+  const [basemap, setBasemap] = useState<"google_roads" | "google_satellite" | "osm">("google_roads");
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Close search dropdown on outside click
@@ -436,6 +437,7 @@ export function CoverageAreaMapEditor({
           radiusKm={radiusKm}
           polygonPoints={polygonPoints}
           showHalos={showHalos}
+          basemap={basemap}
           onCenterChange={(newCenter) => onCenterChange(newCenter)}
           onAddPolygonPoint={handleAddPolygonPoint}
           onUpdatePolygonPoint={handleUpdatePolygonPoint}
@@ -468,25 +470,67 @@ export function CoverageAreaMapEditor({
           )}
         </div>
 
-        {/* On-Map Floating Status Pill (Top-Right) */}
-        <div className="absolute top-3 right-3 z-[400] bg-card/95 backdrop-blur-md rounded-full px-3 py-1 shadow-md border border-border text-[11px] font-semibold flex items-center gap-1.5">
-          {mode === "radius" ? (
-            <>
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-              <span>{radiusKm} km Radius (~{approxAreaKm2} km²)</span>
-            </>
-          ) : (
-            <>
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  polygonPoints.length >= 3 ? "bg-emerald-500" : "bg-amber-500 animate-pulse"
-                }`}
-              />
-              <span>
-                {polygonPoints.length} Points {polygonPoints.length >= 3 ? "(Closed)" : "(Incomplete)"}
-              </span>
-            </>
-          )}
+        {/* On-Map Floating Controls (Top-Right): Status Pill + Basemap Switcher */}
+        <div className="absolute top-3 right-3 z-[400] flex flex-col items-end gap-1.5 pointer-events-auto">
+          <div className="bg-card/95 backdrop-blur-md rounded-full px-3 py-1 shadow-md border border-border text-[11px] font-semibold flex items-center gap-1.5">
+            {mode === "radius" ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span>{radiusKm} km Radius (~{approxAreaKm2} km²)</span>
+              </>
+            ) : (
+              <>
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    polygonPoints.length >= 3 ? "bg-emerald-500" : "bg-amber-500 animate-pulse"
+                  }`}
+                />
+                <span>
+                  {polygonPoints.length} Points {polygonPoints.length >= 3 ? "(Closed)" : "(Incomplete)"}
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Quick Basemap Layer Toggle */}
+          <div className="bg-card/95 backdrop-blur-md rounded-lg p-0.5 shadow-md border border-border flex items-center gap-0.5 text-[10px] font-medium">
+            <button
+              type="button"
+              onClick={() => setBasemap("google_roads")}
+              className={`px-2 py-0.5 rounded-md transition-all ${
+                basemap === "google_roads"
+                  ? "bg-blue-600 text-white font-bold shadow-xs"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+              title="Google Maps Standard Road Map"
+            >
+              Google Roads
+            </button>
+            <button
+              type="button"
+              onClick={() => setBasemap("google_satellite")}
+              className={`px-2 py-0.5 rounded-md transition-all ${
+                basemap === "google_satellite"
+                  ? "bg-blue-600 text-white font-bold shadow-xs"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+              title="Google Maps Satellite Hybrid Imagery"
+            >
+              Satellite
+            </button>
+            <button
+              type="button"
+              onClick={() => setBasemap("osm")}
+              className={`px-2 py-0.5 rounded-md transition-all ${
+                basemap === "osm"
+                  ? "bg-blue-600 text-white font-bold shadow-xs"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+              title="OpenStreetMap Standard"
+            >
+              OSM
+            </button>
+          </div>
         </div>
       </div>
 
