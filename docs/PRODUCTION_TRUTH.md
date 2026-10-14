@@ -91,4 +91,11 @@
      - Territory Boundary Matrix (`TerritoryMatrix`): 1-click 'Full Map View' button expanding the Mappls district boundary to `100vw x 100vh`.
      - `MapplsBoundaryMap`: Built-in full-screen toggle icon in the floating legend for all embedded views.
      - `LeafletMapFallback`: Upgraded to Google Maps tile infrastructure.
+5. **Delivery Hub Footprint Isolation & Filtering:**
+   - Supported in `CoverageAreaMapEditor`:
+     - 3-state segmented filter tabs: `All ({total})`, `Covered ({covered})`, `Uncovered ({uncovered})`.
+     - Instant visual marker isolation on the Leaflet/Google Maps canvas via reactive React props with zero map re-render lag.
+     - Bi-directional toggling (clicking active tab deselects back to "All").
+     - On-canvas floating filter badge (`Showing X Hubs [✕]`) with instant clear action.
+     - Direct integration with `Claim All Uncovered` and `⚡ Auto-Trace Territory`.
 

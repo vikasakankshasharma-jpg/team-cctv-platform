@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { 
   CircleDot, 
@@ -98,7 +98,28 @@ export function CoverageAreaMapEditor({
   const [showHalos, setShowHalos] = useState(true);
   const [basemap, setBasemap] = useState<"google_roads" | "google_satellite" | "osm">("google_roads");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hubStatusFilter, setHubStatusFilter] = useState<"all" | "covered" | "uncovered">("all");
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Filter delivery hub markers based on selected tab: All, Covered, or Uncovered
+  const filteredQuadrantMarkers = useMemo(() => {
+    if (!quadrantMarkers || quadrantMarkers.length === 0) return [];
+    if (hubStatusFilter === "covered") {
+      return quadrantMarkers.filter(m => m.isSelected);
+    }
+    if (hubStatusFilter === "uncovered") {
+      return quadrantMarkers.filter(m => !m.isSelected);
+    }
+    return quadrantMarkers;
+  }, [quadrantMarkers, hubStatusFilter]);
+
+  const coveredCount = useMemo(() => {
+    return quadrantMarkers ? quadrantMarkers.filter(m => m.isSelected).length : 0;
+  }, [quadrantMarkers]);
+
+  const uncoveredCount = useMemo(() => {
+    return quadrantMarkers ? quadrantMarkers.filter(m => !m.isSelected).length : 0;
+  }, [quadrantMarkers]);
 
   // Close search dropdown on outside click
   useEffect(() => {
@@ -381,18 +402,87 @@ export function CoverageAreaMapEditor({
       {quadrantMarkers && quadrantMarkers.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-secondary/50 border border-border text-xs">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-foreground text-xs">
+            <span className="font-semibold text-foreground text-xs shrink-0">
               Delivery Hubs:
             </span>
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              {quadrantMarkers.filter(m => m.isSelected).length} Covered (Green)
-            </span>
-            <span className="inline-flex items-center gap-1 font-semibold text-rose-600 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-              {quadrantMarkers.filter(m => !m.isSelected).length} Uncovered (Red)
-            </span>
-            <span className="text-[10px] text-muted-foreground hidden lg:inline italic">
+
+            {/* Interactive Hub Filter Tabs: All, Covered (Green), Uncovered (Red) */}
+            <div className="inline-flex items-center p-0.5 rounded-lg bg-background border border-border shadow-2xs gap-1">
+              <button
+                type="button"
+                onClick={() => setHubStatusFilter("all")}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  hubStatusFilter === "all"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                }`}
+                title="Show all delivery hubs on map"
+              >
+                <span>All</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  hubStatusFilter === "all"
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                }`}>
+                  {quadrantMarkers.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHubStatusFilter(prev => prev === "covered" ? "all" : "covered")}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  hubStatusFilter === "covered"
+                    ? "bg-emerald-600 text-white shadow-xs ring-1 ring-emerald-600/30"
+                    : "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20"
+                }`}
+                title="Filter map to only Covered (Green) hubs. Click again to unfilter."
+              >
+                <span className={`w-2 h-2 rounded-full ${hubStatusFilter === "covered" ? "bg-white" : "bg-emerald-500"} animate-pulse`} />
+                <span>Covered</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  hubStatusFilter === "covered"
+                    ? "bg-white/20 text-white"
+                    : "bg-emerald-600/20 text-emerald-800 dark:text-emerald-300"
+                }`}>
+                  {coveredCount}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHubStatusFilter(prev => prev === "uncovered" ? "all" : "uncovered")}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  hubStatusFilter === "uncovered"
+                    ? "bg-rose-600 text-white shadow-xs ring-1 ring-rose-600/30"
+                    : "text-rose-700 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20"
+                }`}
+                title="Filter map to only Uncovered (Red) hubs. Click again to unfilter."
+              >
+                <span className={`w-2 h-2 rounded-full ${hubStatusFilter === "uncovered" ? "bg-white" : "bg-rose-500"}`} />
+                <span>Uncovered</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  hubStatusFilter === "uncovered"
+                    ? "bg-white/20 text-white"
+                    : "bg-rose-600/20 text-rose-800 dark:text-rose-300"
+                }`}>
+                  {uncoveredCount}
+                </span>
+              </button>
+            </div>
+
+            {hubStatusFilter !== "all" && (
+              <button
+                type="button"
+                onClick={() => setHubStatusFilter("all")}
+                className="text-[11px] text-primary hover:underline font-semibold cursor-pointer ml-1"
+                title="Reset filter to show all hubs"
+              >
+                Reset Filter
+              </button>
+            )}
+
+            <span className="text-[10px] text-muted-foreground hidden xl:inline italic">
               • Click any circle to toggle/revert
             </span>
           </div>
@@ -491,7 +581,7 @@ export function CoverageAreaMapEditor({
           onCenterChange={(newCenter) => onCenterChange(newCenter)}
           onAddPolygonPoint={handleAddPolygonPoint}
           onUpdatePolygonPoint={handleUpdatePolygonPoint}
-          quadrantMarkers={quadrantMarkers}
+          quadrantMarkers={filteredQuadrantMarkers}
           onToggleQuadrantMarker={onToggleQuadrantMarker}
         />
 
@@ -520,8 +610,31 @@ export function CoverageAreaMapEditor({
           )}
         </div>
 
-        {/* On-Map Floating Controls (Top-Right): Status Pill + Basemap Switcher + Fullscreen */}
+        {/* On-Map Floating Controls (Top-Right): Active Filter Tag + Status Pill + Basemap Switcher + Fullscreen */}
         <div className="absolute top-3 right-3 z-[400] flex flex-col items-end gap-1.5 pointer-events-auto">
+          {hubStatusFilter !== "all" && (
+            <div className={`backdrop-blur-md rounded-full px-2.5 py-1 shadow-md border text-[11px] font-bold flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-150 ${
+              hubStatusFilter === "covered"
+                ? "bg-emerald-600/95 text-white border-emerald-500 shadow-emerald-500/20"
+                : "bg-rose-600/95 text-white border-rose-500 shadow-rose-500/20"
+            }`}>
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span>
+                {hubStatusFilter === "covered"
+                  ? `${coveredCount} Covered Hubs Shown`
+                  : `${uncoveredCount} Uncovered Gaps Shown`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setHubStatusFilter("all")}
+                className="ml-1 hover:bg-white/20 rounded-full px-1 text-[10px] cursor-pointer"
+                title="Reset to show all hubs"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           <div className="bg-card/95 backdrop-blur-md rounded-full px-3 py-1 shadow-md border border-border text-[11px] font-semibold flex items-center gap-1.5">
             {mode === "radius" ? (
               <>

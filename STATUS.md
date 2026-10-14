@@ -123,12 +123,21 @@
 - **1-Click ⚡ Auto-Trace Polygon Territory:** Integrated `handleAutoTracePolygon` (using monotone chain `convexHull` from `lib/geo/pincodePolygons.ts`). Admins can select any combination of delivery hubs and click one button to instantly enclose them in a tight convex polygon (8-14 vertices), eliminating tedious manual perimeter clicking.
 - **100% Database Sanitization:** Purged all remaining legacy compass records across Firestore `pincode_cache`, establishing a 0-compass invariant across the entire system.
 
-### Milestone 14: Universal Full Map View Architecture Across Platform
+### Milestone 15: Universal Full Map View Architecture Across Platform
 - **Universal Fullscreen Experience:** Implemented synchronized Full Map View toggles across every map interface in the platform (`CoverageAreaMapEditor`, `CoverageMapCanvas`, `SalespersonsClient` Coverage Modal, `TerritoryMatrix`, and `MapplsBoundaryMap`).
 - **Coverage Modal Maximization (`SalespersonsClient`):** Added a dedicated modal maximize/restore icon button in the dialog header, expanding the zone creation dialog to `97vw x 96vh` with a `560px` canvas.
 - **Coverage Editor Fullscreen Canvas (`CoverageAreaMapEditor`):** 1-click 'Full Map View' button in both the top toolbar and on the map canvas, instantly expanding the editor into a panoramic workspace (`fixed inset-0 z-[9999]`) with an Escape key listener and exit banner.
 - **District Boundary Fullscreen View (`TerritoryMatrix` & `MapplsBoundaryMap`):** 1-click full-screen expansion for Mappls choropleth maps, automatically invoking `.resize()` on Mappls/Leaflet instances to fill 100% of the display.
 - **Google Maps Infrastructure Standardization:** Upgraded all fallback maps (`LeafletMapFallback.tsx`) to authentic Google Maps tiles using `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
+
+### Milestone 16: Interactive Delivery Hub Filtering & Footprint Isolation (All / Covered / Uncovered)
+- **Eliminated Marker Clutter:** In dense urban districts with 100+ delivery hubs (e.g. 104 hubs in Jaipur), intermixed green and red markers created cognitive overload when planning or auditing technician territories.
+- **3-State Interactive Hub Filter Control:** Converted static text chips into an interactive segmented tab control in `CoverageAreaMapEditor.tsx`:
+  - `All ({totalCount})`: Displays entire district delivery hub network.
+  - `Covered ({coveredCount})`: Isolates active, claimed delivery hubs with green pulse indicators; suppresses red uncovered hubs to inspect verified service continuity.
+  - `Uncovered ({uncoveredCount})`: Isolates unassigned colonies and coverage gaps with red indicators; suppresses green hubs so expansion targets and service holes stand out clearly.
+- **Bi-directional Toggle & Instant Reset:** Clicking an active filter tab toggles it back to "All"; an explicit `Reset Filter` link provides 1-click reset; and a floating badge on the map canvas (`Showing X Hubs [✕]`) gives full situational awareness even in fullscreen mode.
+- **Seamless Action Synergy:** Works synchronously with `⚡ Auto-Trace Territory` (enclosing covered hubs) and `🛡️ Claim All Uncovered` (batch-claiming the visible uncovered set).
 
 ---
 
@@ -151,6 +160,7 @@
 | **Layer 13: Map Canvas & Street Tile Rendering** | Google Maps Tiles & Layer Switcher | `PASS` | Zero gray canvas freezes; authentic Google Roads, Satellite, and OSM basemaps with 0 watermarks. |
 | **Layer 14: Territory Enclosure Automation** | 1-Click Auto-Trace Polygon & Halos Toggle | `PASS` | Convex hull enclosing covered delivery hubs in 1 click; 850m halos toggleable between ON and OFF. |
 | **Layer 15: Universal Full Map View** | Fullscreen Across All Maps | `PASS` | 1-click full screen with Escape key listeners across Coverage Area Editor, Zone Modal, and Territory Boundary Matrix. |
+| **Layer 16: Delivery Hub Footprint Isolation** | Interactive Hub Filtering (All/Covered/Uncovered) | `PASS` | Dynamic marker filtering with live count badges, floating map indicators, and 0 canvas latency. |
 
 ---
 
