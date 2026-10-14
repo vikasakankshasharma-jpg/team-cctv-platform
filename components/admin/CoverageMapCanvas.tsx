@@ -49,14 +49,44 @@ interface CoverageMapCanvasProps {
   onUpdatePolygonPoint?: (index: number, point: MapPoint) => void;
   quadrantMarkers?: QuadrantMapMarker[];
   onToggleQuadrantMarker?: (id: string, currentlySelected: boolean) => void;
+  showHalos?: boolean;
 }
 
-// Map Center & Fly Controller
+// Map Center & Fly Controller with automated size invalidation for modals
 function MapViewController({ center, zoom }: { center: MapPoint; zoom: number }) {
   const map = useMap();
+
+  useEffect(() => {
+    // Invalidate size immediately and with multiple delays to accommodate modal transitions
+    map.invalidateSize();
+    const t1 = setTimeout(() => map.invalidateSize(), 100);
+    const t2 = setTimeout(() => map.invalidateSize(), 300);
+    const t3 = setTimeout(() => map.invalidateSize(), 700);
+
+    const onResize = () => map.invalidateSize();
+    window.addEventListener("resize", onResize);
+
+    const container = map.getContainer();
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined" && container) {
+      observer = new ResizeObserver(() => {
+        map.invalidateSize();
+      });
+      observer.observe(container);
+    }
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      window.removeEventListener("resize", onResize);
+      if (observer) observer.disconnect();
+    };
+  }, [map]);
+
   useEffect(() => {
     if (center?.lat && center?.lng) {
-      map.flyTo([center.lat, center.lng], zoom, { duration: 0.8 });
+      map.flyTo([center.lat, center.lng], zoom, { duration: 0.6 });
     }
   }, [center.lat, center.lng, zoom, map]);
   return null;
@@ -212,10 +242,12 @@ function PolygonVertexMarker({
 // Interactive Quadrant micro-zone circle marker
 function QuadrantMarkerItem({
   marker,
-  onToggle
+  onToggle,
+  showHalos = true
 }: {
   marker: QuadrantMapMarker;
   onToggle?: (id: string, currentlySelected: boolean) => void;
+  showHalos?: boolean;
 }) {
   const icon = useMemo(() => {
     const isSel = marker.isSelected;
@@ -285,18 +317,20 @@ function QuadrantMarkerItem({
   return (
     <>
       {/* Visual circle indicating delivery hub coverage halo perimeter */}
-      <Circle
-        center={[marker.lat, marker.lng]}
-        radius={850}
-        eventHandlers={eventHandlers}
-        pathOptions={{
-          color: marker.isSelected ? "#16a34a" : "#dc2626",
-          fillColor: marker.isSelected ? "#22c55e" : "#ef4444",
-          fillOpacity: marker.isSelected ? 0.28 : 0.14,
-          weight: 1.5,
-          dashArray: marker.isSelected ? undefined : "4, 4"
-        }}
-      />
+      {showHalos && (
+        <Circle
+          center={[marker.lat, marker.lng]}
+          radius={850}
+          eventHandlers={eventHandlers}
+          pathOptions={{
+            color: marker.isSelected ? "#16a34a" : "#dc2626",
+            fillColor: marker.isSelected ? "#22c55e" : "#ef4444",
+            fillOpacity: marker.isSelected ? 0.28 : 0.14,
+            weight: 1.5,
+            dashArray: marker.isSelected ? undefined : "4, 4"
+          }}
+        />
+      )}
       {/* Clickable pill marker at delivery hub position */}
       <Marker
         position={[marker.lat, marker.lng]}
@@ -341,7 +375,8 @@ export default function CoverageMapCanvas({
   onAddPolygonPoint,
   onUpdatePolygonPoint,
   quadrantMarkers,
-  onToggleQuadrantMarker
+  onToggleQuadrantMarker,
+  showHalos = true
 }: CoverageMapCanvasProps) {
   return (
     <MapContainer
@@ -351,8 +386,10 @@ export default function CoverageMapCanvas({
       scrollWheelZoom={true}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        subdomains={["a", "b", "c", "d"]}
+        maxZoom={20}
       />
 
       <MapViewController center={center} zoom={zoom} />
@@ -423,6 +460,7 @@ export default function CoverageMapCanvas({
           key={marker.id}
           marker={marker}
           onToggle={onToggleQuadrantMarker}
+          showHalos={showHalos}
         />
       ))}
     </MapContainer>

@@ -14,12 +14,16 @@ import {
   Info, 
   CheckCircle2, 
   AlertCircle, 
-  Loader2 
+  Loader2,
+  Sparkles,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { convexHull } from "@/lib/geo/pincodePolygons";
 import type { MapPoint, QuadrantMapMarker } from "./CoverageMapCanvas";
 
 // Client-only dynamic import of Leaflet Canvas
@@ -89,6 +93,7 @@ export function CoverageAreaMapEditor({
   const [localityText, setLocalityText] = useState<string>("");
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
   const [isLocatingGPS, setIsLocatingGPS] = useState(false);
+  const [showHalos, setShowHalos] = useState(true);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Close search dropdown on outside click
@@ -228,6 +233,22 @@ export function CoverageAreaMapEditor({
     toast.info("Cleared all polygon points");
   };
 
+  const handleAutoTracePolygon = () => {
+    const selected = (quadrantMarkers || []).filter(m => m.isSelected);
+    if (selected.length < 3) {
+      toast.error("Please select at least 3 delivery hubs or PINs first to auto-trace a polygon territory");
+      return;
+    }
+    const points = selected.map(s => ({ lat: s.lat, lng: s.lng }));
+    const hull = convexHull(points);
+    if (hull.length >= 3) {
+      onPolygonPointsChange(hull);
+      toast.success(`Auto-traced ${hull.length}-point boundary from ${selected.length} covered hubs!`);
+    } else {
+      toast.error("Could not construct closed polygon from selected points");
+    }
+  };
+
   const approxAreaKm2 = Math.round(Math.PI * radiusKm * radiusKm);
 
   return (
@@ -359,6 +380,19 @@ export function CoverageAreaMapEditor({
                 🎯 Fit Map to PINs
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setShowHalos(!showHalos)}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all shadow-xs flex items-center gap-1 ${
+                showHalos 
+                  ? "bg-secondary text-secondary-foreground border-border hover:bg-muted" 
+                  : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/20"
+              }`}
+              title={showHalos ? "Hide 850m micro-service delivery halos" : "Show 850m micro-service delivery halos"}
+            >
+              {showHalos ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+              {showHalos ? "Halos: ON" : "Halos: OFF"}
+            </button>
             {onClaimAllUncovered && quadrantMarkers.some(m => !m.isSelected) && (
               <button
                 type="button"
@@ -401,6 +435,7 @@ export function CoverageAreaMapEditor({
           mode={mode}
           radiusKm={radiusKm}
           polygonPoints={polygonPoints}
+          showHalos={showHalos}
           onCenterChange={(newCenter) => onCenterChange(newCenter)}
           onAddPolygonPoint={handleAddPolygonPoint}
           onUpdatePolygonPoint={handleUpdatePolygonPoint}
@@ -555,8 +590,20 @@ export function CoverageAreaMapEditor({
               </span>
             </div>
 
-            {/* Undo / Clear Actions */}
+            {/* Undo / Clear / Auto-Trace Actions */}
             <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAutoTracePolygon}
+                disabled={!quadrantMarkers || quadrantMarkers.filter(m => m.isSelected).length < 3}
+                className="h-8 px-2.5 text-xs gap-1 bg-purple-600/10 border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-600 hover:text-white"
+                title="Automatically creates a closed polygon enclosing all currently covered delivery hubs"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                ⚡ Auto-Trace Territory
+              </Button>
               <Button
                 type="button"
                 variant="outline"
