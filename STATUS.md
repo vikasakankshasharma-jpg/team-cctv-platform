@@ -131,11 +131,15 @@
 - **Google Maps Infrastructure Standardization:** Upgraded all fallback maps (`LeafletMapFallback.tsx`) to authentic Google Maps tiles using `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
 
 ### Milestone 16: Interactive Delivery Hub Filtering & Footprint Isolation (All / Covered / Uncovered)
-- **Eliminated Marker Clutter:** In dense urban districts with 100+ delivery hubs (e.g. 104 hubs in Jaipur), intermixed green and red markers created cognitive overload when planning or auditing technician territories.
-- **3-State Interactive Hub Filter Control:** Converted static text chips into an interactive segmented tab control in `CoverageAreaMapEditor.tsx`:
+- **Eliminated Marker Clutter:** In dense urban districts with 100+ delivery hubs (e.g. 104 hubs in Jaipur, 463 hubs in district searches), intermixed green and red markers created cognitive overload when planning or auditing technician territories.
+- **3-State Interactive Hub Filter Control:** Converted static text chips into interactive pill buttons in `CoverageAreaMapEditor.tsx` with identical visual labels matching user workflows:
   - `All ({totalCount})`: Displays entire district delivery hub network.
-  - `Covered ({coveredCount})`: Isolates active, claimed delivery hubs with green pulse indicators; suppresses red uncovered hubs to inspect verified service continuity.
-  - `Uncovered ({uncoveredCount})`: Isolates unassigned colonies and coverage gaps with red indicators; suppresses green hubs so expansion targets and service holes stand out clearly.
+  - `● {coveredCount} Covered (Green)`: Isolates active, claimed delivery hubs with green pulse indicators; suppresses red uncovered hubs to inspect verified service continuity.
+  - `● {uncoveredCount} Uncovered (Red)`: Isolates unassigned colonies and coverage gaps with red indicators; suppresses green hubs so expansion targets and service holes stand out clearly.
+- **Synchronized Dual-Layer Filtering (`SalespersonsClient.tsx`):** Filter state is seamlessly synchronized between the Map Canvas and the PINCODE / Hub Matrix below the map:
+  - Filtering to `Covered (Green)` filters both map markers and the PIN table to only show covered PINs and delivery beats.
+  - Filtering to `Uncovered (Red)` isolates uncovered gaps on the map and shows only unassigned PINs/beats in the list below.
+  - Quick filter buttons added directly into the "Available PINCODEs" section header for 1-click filtering anywhere in the modal.
 - **Bi-directional Toggle & Instant Reset:** Clicking an active filter tab toggles it back to "All"; an explicit `Reset Filter` link provides 1-click reset; and a floating badge on the map canvas (`Showing X Hubs [✕]`) gives full situational awareness even in fullscreen mode.
 - **Seamless Action Synergy:** Works synchronously with `⚡ Auto-Trace Territory` (enclosing covered hubs) and `🛡️ Claim All Uncovered` (batch-claiming the visible uncovered set).
 

@@ -249,6 +249,7 @@ export default function SalespersonsClient() {
   const [availablePincodes, setAvailablePincodes] = useState<{ pincode: string; areas: string[]; allAreas?: string[]; quadrants?: any[]; lat?: number; lng?: number; radius?: number }[]>([]);
 
   const [zonePincodeSearch, setZonePincodeSearch] = useState("");
+  const [hubFilter, setHubFilter] = useState<"all" | "covered" | "uncovered">("all");
   
   const filteredAvailablePincodes = useMemo(() => {
     let result = availablePincodes;
@@ -267,6 +268,39 @@ export default function SalespersonsClient() {
     }
     return result;
   }, [availablePincodes, zonePincodeSearch, selectedTehsil, geoTehsils]);
+
+  // Filtered PINCODEs list based on hubFilter (all, covered, uncovered)
+  const displayedAvailablePincodes = useMemo(() => {
+    if (hubFilter === "all") return filteredAvailablePincodes;
+    return filteredAvailablePincodes.filter(p => {
+      const isParentSelected = (newZone.pincodes || []).includes(p.pincode);
+      const verified = getVerifiedQuadrants(p.pincode);
+      const isCompass = (quads: any[]) =>
+        Array.isArray(quads) && quads.some((q: any) =>
+          ['north-west', 'north-east', 'south-east', 'south-west', 'north west', 'north east', 'south west', 'south east'].includes(
+            String(q.zone || '').trim().toLowerCase()
+          )
+        );
+      const effectiveQuadrants = verified || ((p.quadrants && p.quadrants.length > 0 && !isCompass(p.quadrants))
+        ? p.quadrants
+        : (p.allAreas && p.allAreas.length > 0)
+          ? (p.allAreas.slice(0, 6) as string[]).map((a: string) => ({ zone: a, anchor: `${a} Post Office`, coverage: `${a} and surrounding beats` }))
+          : (p.areas && p.areas.length > 0)
+            ? p.areas.map((a: string) => ({ zone: a, anchor: `${a} Post Office`, coverage: `${a} and surrounding beats` }))
+            : [
+                { zone: p.pincode, anchor: `${p.pincode} Main Office`, coverage: `All areas in ${p.pincode}` }
+              ]);
+      const selectedSubCount = effectiveQuadrants.filter((q: any) => (newZone.pincodes || []).includes(`${p.pincode}:${q.zone}`)).length;
+
+      if (hubFilter === "covered") {
+        return isParentSelected || selectedSubCount > 0;
+      }
+      if (hubFilter === "uncovered") {
+        return !isParentSelected || selectedSubCount < effectiveQuadrants.length;
+      }
+      return true;
+    });
+  }, [filteredAvailablePincodes, newZone.pincodes, hubFilter]);
 
   const [liveAutoSync, setLiveAutoSync] = useState<boolean>(true);
 
@@ -1763,6 +1797,8 @@ export default function SalespersonsClient() {
                       onAutoSelectInsideMap={handleAutoSelectInsideMap}
                       onFitMapToSelectedPins={handleFitMapToSelectedPins}
                       onClaimAllUncovered={handleClaimAllUncovered}
+                      hubStatusFilter={hubFilter}
+                      onHubStatusFilterChange={setHubFilter}
                     />
                   </div>
                 )}
@@ -1771,11 +1807,53 @@ export default function SalespersonsClient() {
               {/* Strategy 2: 4-Quadrant & PINCODE Matrix */}
               <div className="space-y-4 pt-1">
                 <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                  <div className="flex items-center gap-3">
+                  <div className="flex justify-between items-center mb-1.5 flex-wrap gap-2">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                      Available PINCODEs {availablePincodes.length > 0 && `(${filteredAvailablePincodes.length !== availablePincodes.length ? `${filteredAvailablePincodes.length} of ${availablePincodes.length}` : availablePincodes.length} Found)`}
+                      Available PINCODEs {availablePincodes.length > 0 && `(${displayedAvailablePincodes.length !== availablePincodes.length ? `${displayedAvailablePincodes.length} of ${availablePincodes.length}` : availablePincodes.length} Found)`}
                     </label>
+
+                    {/* Quick Hub Status Filter Pills for List */}
+                    <div className="inline-flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setHubFilter("all")}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
+                          hubFilter === "all"
+                            ? "bg-primary text-primary-foreground shadow-2xs font-bold"
+                            : "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/50"
+                        }`}
+                        title="Show all PINCODEs"
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHubFilter(hubFilter === "covered" ? "all" : "covered")}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all flex items-center gap-1 cursor-pointer ${
+                          hubFilter === "covered"
+                            ? "bg-emerald-600 text-white shadow-2xs font-bold"
+                            : "text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20"
+                        }`}
+                        title="Filter list to covered PINCODEs & hubs"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Covered
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHubFilter(hubFilter === "uncovered" ? "all" : "uncovered")}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all flex items-center gap-1 cursor-pointer ${
+                          hubFilter === "uncovered"
+                            ? "bg-rose-600 text-white shadow-2xs font-bold"
+                            : "text-rose-700 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20"
+                        }`}
+                        title="Filter list to uncovered PINCODEs & hubs"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                        Uncovered
+                      </button>
+                    </div>
                   </div>
                   {availablePincodes.length > 0 && (
                     <div className="flex items-center gap-3">
@@ -1854,11 +1932,11 @@ export default function SalespersonsClient() {
                 ) : availablePincodes.length > 0 ? (
                     <div className="p-3 border rounded-xl bg-muted/20 animate-in slide-in-from-top-1">
                       <div className="max-h-64 overflow-y-auto space-y-1.5 pr-2">
-                        {filteredAvailablePincodes.length === 0 ? (
+                        {displayedAvailablePincodes.length === 0 ? (
                           <div className="text-center p-4 text-xs text-muted-foreground italic">
-                            No matching PINCODEs found for "{zonePincodeSearch}".
+                            No matching PINCODEs found for "{zonePincodeSearch}"{hubFilter !== "all" ? ` with filter "${hubFilter}"` : ""}.
                           </div>
-                        ) : filteredAvailablePincodes.map(p => {
+                        ) : displayedAvailablePincodes.map(p => {
                           const isParentSelected = (newZone.pincodes || []).includes(p.pincode);
                           const verified = getVerifiedQuadrants(p.pincode);
                           const isCompass = (quads: any[]) =>
@@ -1964,9 +2042,17 @@ export default function SalespersonsClient() {
 
                               {isExpanded && (
                                 <div className="pl-7 pr-2 pb-2 flex flex-col gap-1 border-t pt-2 mt-1">
-                                  {effectiveQuadrants.map((q: any) => {
-                                    const areaCode = `${p.pincode}:${q.zone}`;
-                                    const isSelected = isParentSelected || (newZone.pincodes || []).includes(areaCode);
+                                  {effectiveQuadrants
+                                    .filter((q: any) => {
+                                      const areaCode = `${p.pincode}:${q.zone}`;
+                                      const isSelected = isParentSelected || (newZone.pincodes || []).includes(areaCode);
+                                      if (hubFilter === "covered") return isSelected;
+                                      if (hubFilter === "uncovered") return !isSelected;
+                                      return true;
+                                    })
+                                    .map((q: any) => {
+                                      const areaCode = `${p.pincode}:${q.zone}`;
+                                      const isSelected = isParentSelected || (newZone.pincodes || []).includes(areaCode);
                                     
                                     return (
                                       <label key={areaCode} className={`flex items-start gap-2 p-1.5 rounded-md cursor-pointer transition-all border ${
