@@ -122,4 +122,20 @@ test.describe.serial('Phase 4B: Sales CRM API Authorization & Integration', () =
     expect(Array.isArray(json.data.jobs)).toBe(true);
     expect(Array.isArray(json.data.invoices)).toBe(true);
   });
+
+  test.afterAll(async () => {
+    // Teardown test fixtures
+    await adminDb.collection("leads").doc(leadId).delete().catch(() => {});
+    await adminDb.collection("quotes").doc(quoteId).delete().catch(() => {});
+    await adminDb.collection("followup_tasks").doc(taskId).delete().catch(() => {});
+    const auditSnap = await adminDb.collection("audit_logs")
+      .where("entity_id", "==", taskId)
+      .get()
+      .catch(() => null);
+    if (auditSnap && !auditSnap.empty) {
+      const batch = adminDb.batch();
+      auditSnap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit().catch(() => {});
+    }
+  });
 });
