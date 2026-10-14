@@ -22,7 +22,9 @@ import {
   X,
   Map as MapIcon,
   CircleDot,
-  Hexagon
+  Hexagon,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "sonner";
@@ -210,6 +212,7 @@ export default function SalespersonsClient() {
   });
 
   const [showAddZone, setShowAddZone] = useState(false);
+  const [isModalMaximized, setIsModalMaximized] = useState(false);
   const [showZoneMap, setShowZoneMap] = useState(false);
   const [expandedPincodes, setExpandedPincodes] = useState<Set<string>>(new Set());
   const togglePincodeExpand = (pincode: string) => {
@@ -1561,25 +1564,39 @@ export default function SalespersonsClient() {
       )}
 
       {showAddZone && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); }} />
-          <div className="relative bg-card w-full max-w-3xl max-h-[92vh] flex flex-col rounded-2xl shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); setIsModalMaximized(false); }} />
+          <div className={`relative bg-card w-full flex flex-col rounded-2xl shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200 overflow-hidden transition-all ${
+            isModalMaximized 
+              ? "max-w-[97vw] h-[96vh]" 
+              : "max-w-3xl max-h-[92vh]"
+          }`}>
             {/* Modal Header */}
-            <div className="p-5 pb-4 border-b border-border flex items-center justify-between shrink-0 bg-card">
+            <div className="p-4 sm:p-5 pb-3 sm:pb-4 border-b border-border flex items-center justify-between shrink-0 bg-card">
               <div>
                 <h2 className="text-xl font-semibold text-foreground tracking-tight mb-0.5">{newZone.id ? "Update Coverage Zone" : "Define Coverage Zone"}</h2>
                 <p className="text-xs text-muted-foreground">
                   Select State, District, and Tehsil to view and map all official PINCODEs with single-click Select All.
                 </p>
               </div>
-              <button 
-                type="button"
-                onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); }}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                title="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button 
+                  type="button"
+                  onClick={() => setIsModalMaximized(prev => !prev)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title={isModalMaximized ? "Restore Window Size" : "Maximize Modal to Full Screen"}
+                >
+                  {isModalMaximized ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => { setShowAddZone(false); setNewZone({ pincodes: [] }); setIsModalMaximized(false); }}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
             
             {/* Scrollable Modal Body */}
@@ -1739,7 +1756,7 @@ export default function SalespersonsClient() {
                           syncPincodesFromMap(undefined, undefined, pts, "polygon");
                         }
                       }}
-                      height="340px"
+                      height={isModalMaximized ? "560px" : "380px"}
                       allowModeSwitch={false}
                       quadrantMarkers={quadrantMapMarkers}
                       onToggleQuadrantMarker={handleToggleQuadrantMarker}

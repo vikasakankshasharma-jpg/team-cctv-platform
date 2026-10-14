@@ -123,6 +123,13 @@
 - **1-Click ⚡ Auto-Trace Polygon Territory:** Integrated `handleAutoTracePolygon` (using monotone chain `convexHull` from `lib/geo/pincodePolygons.ts`). Admins can select any combination of delivery hubs and click one button to instantly enclose them in a tight convex polygon (8-14 vertices), eliminating tedious manual perimeter clicking.
 - **100% Database Sanitization:** Purged all remaining legacy compass records across Firestore `pincode_cache`, establishing a 0-compass invariant across the entire system.
 
+### Milestone 14: Universal Full Map View Architecture Across Platform
+- **Universal Fullscreen Experience:** Implemented synchronized Full Map View toggles across every map interface in the platform (`CoverageAreaMapEditor`, `CoverageMapCanvas`, `SalespersonsClient` Coverage Modal, `TerritoryMatrix`, and `MapplsBoundaryMap`).
+- **Coverage Modal Maximization (`SalespersonsClient`):** Added a dedicated modal maximize/restore icon button in the dialog header, expanding the zone creation dialog to `97vw x 96vh` with a `560px` canvas.
+- **Coverage Editor Fullscreen Canvas (`CoverageAreaMapEditor`):** 1-click 'Full Map View' button in both the top toolbar and on the map canvas, instantly expanding the editor into a panoramic workspace (`fixed inset-0 z-[9999]`) with an Escape key listener and exit banner.
+- **District Boundary Fullscreen View (`TerritoryMatrix` & `MapplsBoundaryMap`):** 1-click full-screen expansion for Mappls choropleth maps, automatically invoking `.resize()` on Mappls/Leaflet instances to fill 100% of the display.
+- **Google Maps Infrastructure Standardization:** Upgraded all fallback maps (`LeafletMapFallback.tsx`) to authentic Google Maps tiles using `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
@@ -141,8 +148,9 @@
 | **Layer 10: Administrative Geo Hierarchy** | 4-Tier PIN/Tehsil Hierarchy | `PASS` | Granular active vs inactive PIN enforcement; single PIN toggle & bulk Tehsil activation verified; 0 TS errors. |
 | **Layer 11: Universal Delivery Micro-Hubs & Halos** | Sub-Post Offices & 3-Tier Geography | `PASS` | Dynamic S.O./B.O. hubs with 850m halos, tokenized address matching, radial dispersion, and 100% India Post coverage. |
 | **Layer 12: Production Live Deployment** | https://cctvquotation.com | `PASS` | Live production verified with HTTP 200, fast SSL handshake, and verified delivery micro-hubs. |
-| **Layer 13: Map Canvas & Street Tile Rendering** | Leaflet Modal Invalidation & CartoDB CDN | `PASS` | Zero gray canvas freezes; automatic `invalidateSize()` with ResizeObserver; sub-50ms CartoDB Voyager tiles. |
+| **Layer 13: Map Canvas & Street Tile Rendering** | Google Maps Tiles & Layer Switcher | `PASS` | Zero gray canvas freezes; authentic Google Roads, Satellite, and OSM basemaps with 0 watermarks. |
 | **Layer 14: Territory Enclosure Automation** | 1-Click Auto-Trace Polygon & Halos Toggle | `PASS` | Convex hull enclosing covered delivery hubs in 1 click; 850m halos toggleable between ON and OFF. |
+| **Layer 15: Universal Full Map View** | Fullscreen Across All Maps | `PASS` | 1-click full screen with Escape key listeners across Coverage Area Editor, Zone Modal, and Territory Boundary Matrix. |
 
 ---
 

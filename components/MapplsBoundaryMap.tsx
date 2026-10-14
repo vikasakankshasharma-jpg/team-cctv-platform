@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { MapPin, RotateCcw } from "lucide-react";
+import { MapPin, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getTerritoryPolygon, getKnownCentroid, JAIPUR_METRO_BOUNDARY } from "@/lib/geo/pincodePolygons";
 
@@ -121,6 +121,30 @@ export default function MapplsBoundaryMap({
   const [sdkReady, setSdkReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Exit fullscreen on Escape key
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen]);
+
+  // Trigger map resize when toggling fullscreen
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        if (mapInstanceRef.current && typeof mapInstanceRef.current.resize === "function") {
+          mapInstanceRef.current.resize();
+        }
+      } catch (_) {}
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [isFullscreen]);
 
   // ── 1. Load SDK ──────────────────────────────────────────────
   useEffect(() => {
@@ -697,8 +721,12 @@ export default function MapplsBoundaryMap({
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div
-      className={`relative w-full rounded-xl overflow-hidden bg-muted/20 ${className}`}
-      style={{ height }}
+      className={`relative w-full rounded-xl overflow-hidden bg-muted/20 transition-all ${
+        isFullscreen 
+          ? "fixed inset-0 z-[9999] w-screen h-screen rounded-none p-3 bg-card shadow-2xl animate-in fade-in duration-200" 
+          : className
+      }`}
+      style={{ height: isFullscreen ? "100vh" : height }}
     >
       {(isLoading || error) && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
@@ -715,7 +743,7 @@ export default function MapplsBoundaryMap({
         </div>
       )}
 
-      {/* Floating Territory Coverage Legend */}
+      {/* Floating Territory Coverage Legend & Fullscreen Button */}
       {pincodes && pincodes.length > 0 && (
         <div className="absolute top-3 right-3 z-10 bg-background/90 backdrop-blur-md border border-border rounded-xl p-2.5 shadow-lg text-xs space-y-1.5 pointer-events-auto">
           {activeSelectedPin ? (
@@ -725,9 +753,19 @@ export default function MapplsBoundaryMap({
                   <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                   Isolated Territory
                 </span>
-                <Badge variant="outline" className="font-mono text-[10px] font-bold border-blue-500/30 text-blue-600 bg-blue-500/10">
-                  {activeSelectedPin.pincode}
-                </Badge>
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline" className="font-mono text-[10px] font-bold border-blue-500/30 text-blue-600 bg-blue-500/10">
+                    {activeSelectedPin.pincode}
+                  </Badge>
+                  <button
+                    type="button"
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                    className="p-1 rounded-md text-foreground hover:bg-muted transition-colors"
+                    title={isFullscreen ? "Exit Fullscreen View (Esc)" : "Expand to Full Map View"}
+                  >
+                    {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 text-purple-600" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
               <p className="text-[10px] text-muted-foreground">Isolating boundary for {activeSelectedPin.pincode}</p>
               {onResetSelection && (
@@ -743,9 +781,20 @@ export default function MapplsBoundaryMap({
             </div>
           ) : (
             <>
-              <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-border/50">
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                Choropleth Territory View
+              <div className="font-bold text-[11px] text-foreground uppercase tracking-wider flex items-center justify-between gap-2 pb-1 border-b border-border/50">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Choropleth Territory View
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="px-1.5 py-0.5 rounded-md text-foreground hover:bg-muted transition-colors flex items-center gap-1 font-semibold text-[10px]"
+                  title={isFullscreen ? "Exit Fullscreen View (Esc)" : "Expand to Full Map View"}
+                >
+                  {isFullscreen ? <Minimize2 className="w-3 h-3 text-purple-600" /> : <Maximize2 className="w-3 h-3" />}
+                  <span>{isFullscreen ? "Exit Full" : "Full Map"}</span>
+                </button>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5">

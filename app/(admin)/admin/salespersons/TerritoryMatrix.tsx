@@ -17,7 +17,9 @@ import {
   X, 
   SlidersHorizontal,
   ChevronDown,
-  Layers
+  Layers,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -181,6 +183,18 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
 
   const [activeMapQuery, setActiveMapQuery] = useState<{ type: 'district' | 'pincode'; query: string; label: string } | null>(null);
   const [showMap, setShowMap] = useState<boolean>(true);
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
+
+  // Exit fullscreen on Escape key
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && isMapFullscreen) {
+        setIsMapFullscreen(false);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isMapFullscreen]);
 
   // Quick Assign Modal State
   const [assignModalPincode, setAssignModalPincode] = useState<string | null>(null);
@@ -781,8 +795,12 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
 
           {/* MapmyIndia Territory Boundary Map */}
           {showMap && activeMapQuery && (
-            <div className="p-4 border-b border-border bg-secondary/10">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div className={`transition-all ${
+              isMapFullscreen 
+                ? "fixed inset-0 z-[9999] w-screen h-screen bg-card p-4 flex flex-col shadow-2xl animate-in fade-in duration-200 overflow-hidden" 
+                : "p-4 border-b border-border bg-secondary/10"
+            }`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 shrink-0">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
                     <MapIcon className="w-4 h-4" />
@@ -793,12 +811,31 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
                       <Badge variant="secondary" className="font-mono text-xs text-primary bg-primary/10 border-primary/20">
                         {activeMapQuery.type === 'district' ? `District: ${activeMapQuery.label}` : `Pincode: ${activeMapQuery.label}`}
                       </Badge>
+                      {isMapFullscreen && (
+                        <Badge className="bg-purple-600 text-white text-[10px]">
+                          Full Map View
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-[11px] text-muted-foreground">Click any PIN card below to isolate that specific pincode polygon boundary.</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className={`h-7 text-xs flex items-center gap-1.5 ${
+                      isMapFullscreen 
+                        ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700" 
+                        : "border-border text-foreground hover:bg-secondary"
+                    }`}
+                    onClick={() => setIsMapFullscreen(!isMapFullscreen)}
+                    title={isMapFullscreen ? "Exit Fullscreen View (Esc)" : "Expand Map to Full Screen"}
+                  >
+                    {isMapFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                    <span>{isMapFullscreen ? "Exit Full Map (Esc)" : "Full Map View"}</span>
+                  </Button>
                   {activeMapQuery.type === 'pincode' && (
                     <Button 
                       variant="outline" 
@@ -810,31 +847,35 @@ export function TerritoryMatrix({ zones, salespersons, isLoaded, onRefresh }: Pr
                       Reset to District
                     </Button>
                   )}
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowMap(false)}
-                  >
-                    Hide Map
-                  </Button>
+                  {!isMapFullscreen && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowMap(false)}
+                    >
+                      Hide Map
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              <MapplsBoundaryMap 
-                boundaryType={activeMapQuery.type}
-                boundaryQuery={activeMapQuery.query}
-                pincodes={pincodesMapData}
-                selectedPincode={activeMapQuery.type === 'pincode' ? activeMapQuery.query : null}
-                statusFilter={statusFilter}
-                onPincodeClick={(pin) => {
-                  setActiveMapQuery({ type: 'pincode', query: pin, label: pin });
-                }}
-                onResetSelection={() => {
-                  setActiveMapQuery({ type: 'district', query: selectedDistrict.name, label: selectedDistrict.name });
-                }}
-                height="380px"
-              />
+              <div className="flex-1 min-h-0 relative rounded-xl overflow-hidden border border-border/60">
+                <MapplsBoundaryMap 
+                  boundaryType={activeMapQuery.type}
+                  boundaryQuery={activeMapQuery.query}
+                  pincodes={pincodesMapData}
+                  selectedPincode={activeMapQuery.type === 'pincode' ? activeMapQuery.query : null}
+                  statusFilter={statusFilter}
+                  onPincodeClick={(pin) => {
+                    setActiveMapQuery({ type: 'pincode', query: pin, label: pin });
+                  }}
+                  onResetSelection={() => {
+                    setActiveMapQuery({ type: 'district', query: selectedDistrict.name, label: selectedDistrict.name });
+                  }}
+                  height={isMapFullscreen ? "calc(100vh - 90px)" : "380px"}
+                />
+              </div>
             </div>
           )}
 

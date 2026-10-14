@@ -98,8 +98,14 @@ export default function LeafletMapFallback({ center, zoom, markers, polylines, o
     >
       <MapUpdater center={center} zoom={zoom} />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://maps.google.com" target="_blank" rel="noreferrer">Google Maps</a>'
+        url={
+          (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim()
+            ? `https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${encodeURIComponent((process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim())}`
+            : "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+        }
+        subdomains={["0", "1", "2", "3"]}
+        maxZoom={20}
       />
       <MapClickHandler onClick={onClick} />
       {markers.map((marker) => (

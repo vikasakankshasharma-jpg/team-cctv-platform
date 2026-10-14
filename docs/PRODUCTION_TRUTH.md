@@ -84,4 +84,11 @@
 3. **Delivery Micro-Hub Halos & Territory Tools:**
    - 850m micro-service radii halos default to visible, but can be toggled OFF with 1 click via the `Halos: ON/OFF` button.
    - Closed polygon territories can be generated in 1 click from covered hubs via `⚡ Auto-Trace Territory` using monotone chain convex hull computation (`lib/geo/pincodePolygons.ts`).
+4. **Universal Full Map View Architecture:**
+   - Supported across all map components:
+     - `CoverageAreaMapEditor`: 1-click 'Full Map View' expanding the canvas to a panoramic workspace (`fixed inset-0 z-[9999]`) with Escape key listener and exit banner.
+     - Coverage Zone Modal (`SalespersonsClient`): Maximize modal header button expanding dialog to `97vw x 96vh` with dynamic `560px` canvas.
+     - Territory Boundary Matrix (`TerritoryMatrix`): 1-click 'Full Map View' button expanding the Mappls district boundary to `100vw x 100vh`.
+     - `MapplsBoundaryMap`: Built-in full-screen toggle icon in the floating legend for all embedded views.
+     - `LeafletMapFallback`: Upgraded to Google Maps tile infrastructure.
 
