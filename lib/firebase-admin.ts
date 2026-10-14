@@ -147,6 +147,11 @@ export const adminApp = getAdminApp();
 
 /** Firestore Admin instance — use for all server-side DB operations */
 export const adminDb = getFirestore(adminApp);
+try {
+  adminDb.settings({ ignoreUndefinedProperties: true });
+} catch {
+  // Settings already initialized or frozen
+}
 
 /** Firebase Auth Admin instance — use to verify ID tokens and set custom claims */
 export const adminAuth = getAuth(adminApp);

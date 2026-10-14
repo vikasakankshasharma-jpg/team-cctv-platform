@@ -22,10 +22,10 @@ export async function verifySession(portalType?: 'customer' | 'admin' | 'install
     sessionCookie = cookieStore.get(`${portalType}_session`)?.value;
   } else {
     // Fallback if no portal type specified (checks all)
-    sessionCookie = cookieStore.get("customer_session")?.value || 
-                    cookieStore.get("admin_session")?.value || 
+    sessionCookie = cookieStore.get("admin_session")?.value || 
                     cookieStore.get("installer_session")?.value || 
-                    cookieStore.get("partner_session")?.value;
+                    cookieStore.get("partner_session")?.value || 
+                    cookieStore.get("customer_session")?.value;
   }
 
   if (!sessionCookie) {
@@ -57,7 +57,10 @@ import { redirect } from "next/navigation";
  * Useful for rapid authorization in sensitive API routes or pages.
  */
 export async function requireSuperAdmin() {
-  const session = await verifySession();
+  let session = await verifySession('admin');
+  if (!session.isAuthenticated) {
+    session = await verifySession();
+  }
   if (!session.isAuthenticated || session.role !== "super_admin") {
     redirect("/admin/login");
   }
@@ -70,7 +73,10 @@ const EXTERNAL_ROLES = ["customer", "installer", "partner"];
  * Enforces any internal staff role. Redirects if not authorized.
  */
 export async function requireAdmin() {
-  const session = await verifySession();
+  let session = await verifySession('admin');
+  if (!session.isAuthenticated) {
+    session = await verifySession();
+  }
   // Dynamic RBAC Check: If authenticated and role is not an external role, grant access
   if (!session.isAuthenticated || !session.role || EXTERNAL_ROLES.includes(session.role)) {
     redirect("/admin/login");
@@ -83,7 +89,10 @@ export async function requireAdmin() {
  * Returns a 401 response instead of redirecting.
  */
 export async function requireAdminApi() {
-  const session = await verifySession();
+  let session = await verifySession('admin');
+  if (!session.isAuthenticated) {
+    session = await verifySession();
+  }
   // Dynamic RBAC Check: If authenticated and role is not an external role, grant access
   if (!session.isAuthenticated || !session.role || EXTERNAL_ROLES.includes(session.role)) {
     throw new Error("Unauthorized"); // This will be caught by the API route and returned as 401

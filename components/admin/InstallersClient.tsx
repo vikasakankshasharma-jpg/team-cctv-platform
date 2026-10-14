@@ -193,10 +193,15 @@ export function InstallersClient({
         return;
       }
 
-      await updateInstaller(editingInstaller.id, {
+      const res = await updateInstaller(editingInstaller.id, {
         serviceable_pincodes: pins,
         skills: editSkills,
       });
+
+      if (!res.success) {
+        toast.error(res.error || "Failed to update installer");
+        return;
+      }
 
       setInstallers(prev => prev.map(i => {
         if (i.id === editingInstaller.id) {
@@ -223,7 +228,11 @@ export function InstallersClient({
     if (!installer.id) return;
     const newStatus = !installer.is_active;
     try {
-      await toggleInstallerActive(installer.id, newStatus);
+      const res = await toggleInstallerActive(installer.id, newStatus);
+      if (!res.success) {
+        toast.error(res.error || "Failed to update status");
+        return;
+      }
       setInstallers(prev => prev.map(i => i.id === installer.id ? { ...i, is_active: newStatus } : i));
       toast.success(`${installer.name} marked as ${newStatus ? "Active" : "Inactive"}`);
     } catch (err: any) {
@@ -235,7 +244,11 @@ export function InstallersClient({
   const handleUpdateKyc = async (installer: Installer, status: "pending" | "verified" | "suspended") => {
     if (!installer.id) return;
     try {
-      await updateInstallerKyc(installer.id, status);
+      const res = await updateInstallerKyc(installer.id, status);
+      if (!res.success) {
+        toast.error(res.error || "Failed to update KYC status");
+        return;
+      }
       setInstallers(prev => prev.map(i => i.id === installer.id ? { ...i, kyc_status: status } : i));
       toast.success(`KYC status updated to: ${status}`);
     } catch (err: any) {
@@ -290,57 +303,60 @@ export function InstallersClient({
         kyc_status: newInstallerForm.kyc_status,
       });
 
-      if (res.success) {
-        toast.success("Installer successfully added to network!");
-        const hasBank = Boolean(newInstallerForm.bank_account && newInstallerForm.bank_ifsc);
-        const newInst: Installer = {
-          id: res.id,
-          name: newInstallerForm.name.trim(),
-          mobile_number: newInstallerForm.mobile_number.trim(),
-          email: newInstallerForm.email.trim() || undefined,
-          entity_type: newInstallerForm.entity_type,
-          company_name: newInstallerForm.company_name.trim() || undefined,
-          years_experience: newInstallerForm.years_experience ? Number(newInstallerForm.years_experience) : undefined,
-          city: newInstallerForm.city.trim() || undefined,
-          alternate_phone: newInstallerForm.alternate_phone.trim() || undefined,
-          aadhaar_number: newInstallerForm.aadhaar_number.trim() || undefined,
-          serviceable_pincodes: pins,
-          skills: newInstallerForm.skills,
-          kyc_status: newInstallerForm.kyc_status,
-          bank_account: newInstallerForm.bank_account.trim() || undefined,
-          bank_ifsc: newInstallerForm.bank_ifsc.trim().toUpperCase() || undefined,
-          bank_account_verified: hasBank,
-          bank_verified_name: hasBank ? (newInstallerForm.bank_verified_name.trim() || newInstallerForm.name.trim()) : undefined,
-          is_active: true,
-          sla_score: 100,
-          avg_rating: 5.0,
-          jobs_completed: 0,
-          sla_breaches: 0,
-          wallet_balance: 0,
-        };
-        setInstallers(prev => [newInst, ...prev]);
-        setIsAddModalOpen(false);
-        setShowBankDetails(false);
-        setNewInstallerForm({
-          name: "",
-          mobile_number: "",
-          email: "",
-          entity_type: "individual",
-          company_name: "",
-          years_experience: "",
-          city: "",
-          alternate_phone: "",
-          aadhaar_number: "",
-          serviceable_pincodes_raw: "",
-          pan_number: "",
-          gst_number: "",
-          skills: ["cctv_installation", "analog_hd", "ip_cameras"],
-          kyc_status: "pending",
-          bank_account: "",
-          bank_ifsc: "",
-          bank_verified_name: "",
-        });
+      if (!res.success) {
+        toast.error(res.error || "Failed to add installer");
+        return;
       }
+
+      toast.success("Installer successfully added to network!");
+      const hasBank = Boolean(newInstallerForm.bank_account && newInstallerForm.bank_ifsc);
+      const newInst: Installer = {
+        id: res.id || Math.random().toString(36).substring(7),
+        name: newInstallerForm.name.trim(),
+        mobile_number: newInstallerForm.mobile_number.trim(),
+        email: newInstallerForm.email.trim() || undefined,
+        entity_type: newInstallerForm.entity_type,
+        company_name: newInstallerForm.company_name.trim() || undefined,
+        years_experience: newInstallerForm.years_experience ? Number(newInstallerForm.years_experience) : undefined,
+        city: newInstallerForm.city.trim() || undefined,
+        alternate_phone: newInstallerForm.alternate_phone.trim() || undefined,
+        aadhaar_number: newInstallerForm.aadhaar_number.trim() || undefined,
+        serviceable_pincodes: pins,
+        skills: newInstallerForm.skills,
+        kyc_status: newInstallerForm.kyc_status,
+        bank_account: newInstallerForm.bank_account.trim() || undefined,
+        bank_ifsc: newInstallerForm.bank_ifsc.trim().toUpperCase() || undefined,
+        bank_account_verified: hasBank,
+        bank_verified_name: hasBank ? (newInstallerForm.bank_verified_name.trim() || newInstallerForm.name.trim()) : undefined,
+        is_active: true,
+        sla_score: 100,
+        avg_rating: 5.0,
+        jobs_completed: 0,
+        sla_breaches: 0,
+        wallet_balance: 0,
+      };
+      setInstallers(prev => [newInst, ...prev]);
+      setIsAddModalOpen(false);
+      setShowBankDetails(false);
+      setNewInstallerForm({
+        name: "",
+        mobile_number: "",
+        email: "",
+        entity_type: "individual",
+        company_name: "",
+        years_experience: "",
+        city: "",
+        alternate_phone: "",
+        aadhaar_number: "",
+        serviceable_pincodes_raw: "",
+        pan_number: "",
+        gst_number: "",
+        skills: ["cctv_installation", "analog_hd", "ip_cameras"],
+        kyc_status: "pending",
+        bank_account: "",
+        bank_ifsc: "",
+        bank_verified_name: "",
+      });
     } catch (err: any) {
       toast.error(err.message || "Failed to add installer");
     } finally {
@@ -354,28 +370,31 @@ export function InstallersClient({
     setProcessingAppId(app.id);
     try {
       const res = await approveInstallerApplication(app.id);
-      if (res.success) {
-        toast.success(`Approved ${app.name} into verified network!`);
-        // Update applications list
-        setApplications(prev => prev.map(a => a.id === app.id ? { ...a, status: "approved" } : a));
-        // Add to installers list
-        const newInst: Installer = {
-          id: res.installerId,
-          name: app.name,
-          mobile_number: app.mobile_number,
-          serviceable_pincodes: app.primary_pincode ? [app.primary_pincode] : [],
-          skills: ["cctv_installation", "wiring", "mounting"],
-          entity_type: app.gstin ? "firm" : "individual",
-          kyc_status: "pending",
-          is_active: true,
-          sla_score: 100,
-          avg_rating: 5.0,
-          jobs_completed: 0,
-          sla_breaches: 0,
-          wallet_balance: 0,
-        };
-        setInstallers(prev => [newInst, ...prev]);
+      if (!res.success) {
+        toast.error(res.error || "Failed to approve application");
+        return;
       }
+
+      toast.success(`Approved ${app.name} into verified network!`);
+      // Update applications list
+      setApplications(prev => prev.map(a => a.id === app.id ? { ...a, status: "approved" } : a));
+      // Add to installers list
+      const newInst: Installer = {
+        id: res.installerId || app.id,
+        name: app.name,
+        mobile_number: app.mobile_number,
+        serviceable_pincodes: app.primary_pincode ? [app.primary_pincode] : [],
+        skills: ["cctv_installation", "wiring", "mounting"],
+        entity_type: app.gstin ? "firm" : "individual",
+        kyc_status: "pending",
+        is_active: true,
+        sla_score: 100,
+        avg_rating: 5.0,
+        jobs_completed: 0,
+        sla_breaches: 0,
+        wallet_balance: 0,
+      };
+      setInstallers(prev => [newInst, ...prev]);
     } catch (err: any) {
       toast.error(err.message || "Failed to approve application");
     } finally {
@@ -389,7 +408,11 @@ export function InstallersClient({
     if (!confirm(`Are you sure you want to reject the application from ${app.name}?`)) return;
     setProcessingAppId(app.id);
     try {
-      await rejectInstallerApplication(app.id);
+      const res = await rejectInstallerApplication(app.id);
+      if (!res.success) {
+        toast.error(res.error || "Failed to reject application");
+        return;
+      }
       toast.success(`Application from ${app.name} rejected.`);
       setApplications(prev => prev.map(a => a.id === app.id ? { ...a, status: "rejected" } : a));
     } catch (err: any) {
