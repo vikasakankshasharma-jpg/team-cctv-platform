@@ -42,6 +42,7 @@ import {
   approveInstallerApplication, 
   rejectInstallerApplication 
 } from "@/app/actions/installers";
+import { TerritoryPincodeSelector } from "@/components/admin/TerritoryPincodeSelector";
 
 interface InstallersClientProps {
   initialInstallers?: Installer[];
@@ -1045,7 +1046,7 @@ export function InstallersClient({
       {/* Modal 1: Onboard New Installer */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-lg w-full p-6 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-2xl w-full p-6 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-5 pb-3 border-b border-border">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
@@ -1164,38 +1165,26 @@ export function InstallersClient({
                 </div>
               </div>
 
-              {/* Serviceable Pincodes with Instant Chip Preview */}
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">
-                  Serviceable Pincodes * <span className="text-muted-foreground font-normal">(Comma or space-separated 6-digit codes)</span>
-                </label>
-                <Input
-                  required
-                  placeholder="e.g. 302001, 302012, 302017, 302020"
-                  value={newInstallerForm.serviceable_pincodes_raw}
-                  onChange={(e) => setNewInstallerForm(prev => ({ ...prev, serviceable_pincodes_raw: e.target.value }))}
-                />
-                {/* Live parsed badges */}
-                {(() => {
-                  const detected = Array.from(new Set(
+              {/* Serviceable Pincodes via 4-Tier Geographic Cascader */}
+              <TerritoryPincodeSelector
+                selectedPincodes={
+                  Array.from(new Set(
                     newInstallerForm.serviceable_pincodes_raw
                       .split(/[\s,]+/)
                       .map(p => p.trim())
                       .filter(p => /^\d{6}$/.test(p))
-                  ));
-                  if (detected.length === 0) return null;
-                  return (
-                    <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-1">
-                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Mapped:</span>
-                      {detected.map(pin => (
-                        <Badge key={pin} variant="secondary" className="font-mono text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
-                          {pin}
-                        </Badge>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
+                  ))
+                }
+                onChange={(pincodes) => {
+                  setNewInstallerForm(prev => ({
+                    ...prev,
+                    serviceable_pincodes_raw: pincodes.join(", ")
+                  }));
+                }}
+                required
+                label="Serviceable Pincodes & Coverage Territory"
+                helperText="Select State, District, and Tehsil to choose PINCODEs, or toggle manual paste."
+              />
 
               {/* KYC & Identity Numbers */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1352,7 +1341,7 @@ export function InstallersClient({
       {/* Modal 2: Edit Profile & Territory */}
       {isEditModalOpen && editingInstaller && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-2xl w-full p-6 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4 pb-2 border-b border-border">
               <h3 className="text-base font-semibold text-foreground">
                 Edit {editingInstaller.name}
@@ -1363,16 +1352,23 @@ export function InstallersClient({
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="text-xs font-medium text-foreground mb-1 block">
-                  Serviceable Pincodes (Comma-separated)
-                </label>
-                <Input
-                  value={editPincodesRaw}
-                  onChange={(e) => setEditPincodesRaw(e.target.value)}
-                  placeholder="e.g. 302001, 302012"
-                />
-              </div>
+              {/* Serviceable Pincodes via 4-Tier Geographic Cascader */}
+              <TerritoryPincodeSelector
+                selectedPincodes={
+                  Array.from(new Set(
+                    editPincodesRaw
+                      .split(/[\s,]+/)
+                      .map(p => p.trim())
+                      .filter(p => /^\d{6}$/.test(p))
+                  ))
+                }
+                onChange={(pincodes) => {
+                  setEditPincodesRaw(pincodes.join(", "));
+                }}
+                required
+                label="Serviceable Pincodes & Coverage Zone"
+                helperText="Select State, District, and Tehsil to update assigned PINCODEs, or toggle manual paste."
+              />
 
               <div>
                 <label className="text-xs font-medium text-foreground mb-1.5 block">Skills</label>

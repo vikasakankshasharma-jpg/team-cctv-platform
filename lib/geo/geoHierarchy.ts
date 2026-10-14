@@ -337,7 +337,7 @@ export const BASELINE_GEO_HIERARCHY: SeedStateDefinition[] = [
 /**
  * Fast in-memory lookup index for PIN -> Hierarchy mapping
  */
-const PIN_METADATA_INDEX = new Map<string, {
+export const PIN_METADATA_INDEX = new Map<string, {
   name: string;
   defaultStatus: PincodeStatus;
   tehsil: string;

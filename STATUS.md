@@ -143,6 +143,22 @@
 - **Bi-directional Toggle & Instant Reset:** Clicking an active filter tab toggles it back to "All"; an explicit `Reset Filter` link provides 1-click reset; and a floating badge on the map canvas (`Showing X Hubs [✕]`) gives full situational awareness even in fullscreen mode.
 - **Seamless Action Synergy:** Works synchronously with `⚡ Auto-Trace Territory` (enclosing covered hubs) and `🛡️ Claim All Uncovered` (batch-claiming the visible uncovered set).
 
+### Milestone 17: 4-Tier Geographic Cascader for Technician Onboarding & Profile Management (State → District → Tehsil → PINCODEs)
+- **Eliminated Manual PIN Entry Bottlenecks:** Replaced flat, error-prone manual 6-digit text inputs (`serviceable_pincodes_raw`) with a structured 4-tier geographic cascader component (`TerritoryPincodeSelector.tsx`).
+- **Comprehensive Modal Integration:** Embedded into both Modal 1 (Onboard Technician Modal) and Modal 2 (Edit Profile & Territory Modal) in `InstallersClient.tsx`, expanding modal dialogs to `max-w-2xl` for spacious, modern ergonomics.
+- **Dynamic 4-Tier Administrative Flow:**
+  - **Tier 1 (State):** Searchable dropdown loaded from `/api/admin/geo?type=states`, defaulting to Rajasthan with static hierarchy fallback.
+  - **Tier 2 (District):** Searchable dropdown loaded from `/api/admin/geo?type=districts&state={slug}`, defaulting to Jaipur with static fallback.
+  - **Tier 3 (Tehsil):** Searchable dropdown loaded from `/api/admin/geo/tehsils?state={slug}&district={slug}`, showing `All Tehsils in {District} ({total} PINs)` and individual revenue tehsils (e.g. `Jaipur Urban (17 PINs)`, `Sanganer (4 PINs)`, `Amer (3 PINs)`).
+  - **Tier 4 (PINCODEs):** Interactive card grid displaying 6-digit codes enriched with authentic colony anchors from `JAIPUR_VERIFIED_QUADRANTS` and postal office data (e.g. `302012 (Khatipura / Jhotwara)`, `302019 (Mansarovar / VT Road)`, `302020 (Vaishali Nagar / Chitrakoot)`).
+- **1-Click Batch Actions & Productivity:**
+  - `+ Select All ({count})`: Instantly claims all currently filtered PINs in the tehsil/district.
+  - `Deselect in View`: Removes visible PINs from technician territory.
+  - `✕ Clear All`: Resets assigned territory with 1 click.
+  - Quick Search Filter: Real-time search across PIN codes and colony names.
+- **Two-Way Synchronized Manual Paste Fallback:** Collapsible `[Paste PINs / Raw Editor]` allows pasting raw comma, space, or newline-separated PIN lists (e.g. from WhatsApp or spreadsheets) that automatically parses and syncs with the interactive chips in real time.
+- **Assigned Pincodes Badge Bar:** Live wrap of assigned PIN badges with 1-click `✕` removal buttons.
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
@@ -165,6 +181,7 @@
 | **Layer 14: Territory Enclosure Automation** | 1-Click Auto-Trace Polygon & Halos Toggle | `PASS` | Convex hull enclosing covered delivery hubs in 1 click; 850m halos toggleable between ON and OFF. |
 | **Layer 15: Universal Full Map View** | Fullscreen Across All Maps | `PASS` | 1-click full screen with Escape key listeners across Coverage Area Editor, Zone Modal, and Territory Boundary Matrix. |
 | **Layer 16: Delivery Hub Footprint Isolation** | Interactive Hub Filtering (All/Covered/Uncovered) | `PASS` | Dynamic marker filtering with live count badges, floating map indicators, and 0 canvas latency. |
+| **Layer 17: Technician Territory Cascader** | 4-Tier Cascader (State/District/Tehsil/PINs) | `PASS` | Live bidirectional sync between chips, tehsil batch actions, and raw paste fallback; verified with zero TS errors and successful Next.js build. |
 
 ---
 

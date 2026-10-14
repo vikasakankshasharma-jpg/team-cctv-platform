@@ -99,3 +99,24 @@
      - On-canvas floating filter badge (`Showing X Hubs [✕]`) with instant clear action.
      - Direct integration with `Claim All Uncovered` and `⚡ Auto-Trace Territory`.
 
+---
+
+## 7. Technician Territory Assignment & Onboarding
+1. **4-Tier Geographic Cascader (`TerritoryPincodeSelector.tsx`):**
+   - Replaced flat, error-prone manual 6-digit text inputs with an administrative 4-tier cascader: `State` → `District` → `Tehsil` → `PINCODEs`.
+   - Used across both `Onboard Technician Modal` and `Edit Profile & Territory Modal` in `InstallersClient.tsx`.
+   - Dynamically loads states and districts via `/api/admin/geo`, defaulting to Rajasthan / Jaipur with static baseline fallback.
+   - Dynamically loads revenue tehsils via `/api/admin/geo/tehsils`, grouping PINs with exact counts (e.g. `Jaipur Urban (17 PINs)`, `Sanganer (4 PINs)`, `Amer (3 PINs)`).
+   - Displays matching PINCODEs as interactive cards enriched with major colony and commercial anchor names from `JAIPUR_VERIFIED_QUADRANTS` and postal office data (e.g., `302012 (Khatipura / Jhotwara)`, `302019 (Mansarovar / VT Road)`, `302020 (Vaishali Nagar / Chitrakoot)`).
+2. **Productivity Batch Controls & Search:**
+   - `+ Select All ({count})`: Batch assigns all filtered PINs in the tehsil/district to the technician with 1 click.
+   - `Deselect in View`: Removes visible PINs from technician territory.
+   - `✕ Clear All`: Resets assigned territory with 1 click.
+   - Real-time search filter: Instantly searches PINs by 6-digit number or locality name.
+3. **Bi-directional Synchronized Manual Paste Fallback:**
+   - Collapsible raw text editor allows pasting comma, space, or newline-separated PIN lists (e.g. from WhatsApp or spreadsheets).
+   - Automatically synchronizes two-way with the visual chips and assigned badges in real time.
+4. **Assigned Pincodes Badge Area:**
+   - Interactive badge wrap displaying currently assigned PINs with 1-click `✕` removal buttons.
+
+
