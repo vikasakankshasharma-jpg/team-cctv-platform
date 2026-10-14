@@ -18,6 +18,7 @@
 - **Server-Authoritative Parity:** Both engines share 100% mathematical parity via `lib/pricing-engine.ts` and `app/api/quote/save/route.ts`. The client is untrusted.
 
 ### 2. Intelligent Pricing & Hardware Architecture
+- **Recorder (DVR/NVR) Resolution Compatibility & Best-Price Optimization:** Sizes recorders dynamically to ensure $\text{recMaxMP} \ge \max(\text{Camera MP})$. If a higher-spec recorder (e.g., 5MP DVR) is cheaper than a lower-spec recorder (e.g., 2MP DVR), the engine selects the cheaper higher-spec recorder to deliver maximum customer savings. Lower-spec (2MP) recorders are strictly disqualified for 4MP, 5MP, and 8MP cameras. Mixed setups size to the highest resolution camera.
 - **Competitive "Best Price" Hardware Selection:** Selects compatible higher-channel power supplies (e.g., 8Ch SMPS for 4 cameras) when cheaper than lower-capacity units.
 - **Multi-PoE & Gigabit Aggregation:** Automatically allocates interconnecting Desktop Gigabit Switches for large IP camera topologies.
 - **Cable Bundling & Margin Slabs:** Evaluates 305m/100m bundles vs. per-meter pricing, with admin-configured short-run margin slabs.

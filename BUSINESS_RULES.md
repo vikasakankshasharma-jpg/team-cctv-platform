@@ -71,6 +71,29 @@
 - On the Quotation Review screen, customers can click **"Match My Brand"** to dynamically unify all hardware under a single preferred brand (e.g., CP Plus, Hikvision) if active stock exists. The engine recalculates the quotation on the fly.
 - Redundant brand sort dropdowns are removed from pages containing dedicated brand selector tabs.
 
+### 3.6 Recorder (DVR/NVR) Resolution Compatibility & Best-Price Selection Rules
+- **Technical Resolution Compatibility Invariant:**
+  - A recorder's maximum supported camera resolution ($\text{recMaxMP}$) must be greater than or equal to the highest resolution camera in the quote ($\text{targetMaxMP}$):  
+    $$\text{Recorder Max MP} \ge \max(\text{Camera MP})$$
+  - **Camera 2MP Setup:** Minimum 2MP DVR/NVR required.
+  - **Camera 4MP / 5MP Setup:** Minimum 5MP DVR/NVR required (2MP recorders are strictly disqualified).
+  - **Camera 8MP (4K) Setup:** Minimum 8MP DVR/NVR required.
+  - **Mixed Resolution Setups (e.g., 3x 2MP + 1x 5MP):** Sized to the highest resolution camera in the configuration ($\ge 5\text{MP}$), ensuring all cameras record at full native resolution without down-sampling or blackouts.
+- **Cost Optimization ("Cheaper Higher-Spec" Priority):**
+  - If a higher-resolution recorder (e.g., 5MP DVR) is priced **cheaper** than a lower-resolution recorder (e.g., 2MP DVR) within the same channel tier and brand preference, the pricing engine selects the cheaper higher-spec recorder.
+  - *Commercial Rationale:* A 5MP DVR runs 2MP cameras natively. Delivering the cheaper option maximizes customer savings and quotation competitiveness without violating technical compatibility.
+  - *Hard Invariant:* Conversely, a cheaper 2MP recorder can NEVER be selected for 4MP, 5MP, or 8MP cameras because it cannot process higher-resolution signals.
+- **Technology Isolation:**
+  - Analog HD cameras strictly pair with DVRs (`HD`).
+  - IP cameras strictly pair with NVRs (`IP`).
+  - Technology filtering executes before resolution and price evaluation.
+  - NVRs default to 8MP/4K support unless specified lower in catalog specs.
+- **Channel Sizing Tier & Sorting:**
+  - Recorders are bucketed by channel tier ($4\text{Ch}$, $8\text{Ch}$, $16\text{Ch}$, $32\text{Ch}$) where $\text{channel\_count} \ge \text{total\_cameras}$.
+  - Candidates meeting both technology and resolution compatibility ($\text{recMaxMP} \ge \text{targetMaxMP}$) are sorted:
+    1. Primary: Channel capacity ascending (smallest viable channel tier).
+    2. Secondary: Unit retail price ascending (cheapest eligible recorder selected).
+
 ---
 
 ## 4. Installation, Labor & Site Survey Rules

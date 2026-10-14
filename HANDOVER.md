@@ -34,6 +34,7 @@ This document serves as the master engineering and operational handover for the 
 3. **Parity Engine:** Both funnels calculate totals through `lib/pricing-engine.ts` and `app/api/quote/save/route.ts` ensuring 100% mathematical parity.
 
 ### 2.2 Pricing & Hardware Mechanics
+- **Recorder (DVR/NVR) Resolution Compatibility & Cost Optimization:** Recorders are dynamically sized to ensure maximum supported camera resolution meets or exceeds the highest camera in the configuration: $\text{recMaxMP} \ge \max(\text{Camera MP})$. If a 5MP recorder is priced lower than a 2MP recorder in the catalog, the engine chooses the cheaper 5MP unit for 2MP cameras. For 4MP/5MP/8MP cameras, 2MP recorders are strictly disqualified. Mixed camera installations automatically size to the highest resolution camera.
 - **Competitive SMPS Rule:** The engine selects the cheapest compatible power supply, even if it has higher channel capacity (e.g., 8Ch SMPS for 4 cameras), to ensure maximum price competitiveness. Fallback quantity uses `Math.ceil(camera_count / max_cameras)`.
 - **Multi-PoE Gigabit Uplink:** Automatically includes an interconnecting Desktop Gigabit Switch when total IP cameras exceed single PoE switch capacity.
 - **Cabling & Margin Slabs:** Evaluates whether required cable length is cheaper as full bundles (305m / 100m) + balance per meter, or purely per-meter rates. Cable pulling labor is free up to 15m/camera; cable material is billed. Admin short-run margin slabs protect low-volume runs.

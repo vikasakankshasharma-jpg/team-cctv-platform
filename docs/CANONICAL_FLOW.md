@@ -51,6 +51,7 @@ flowchart TD
 - **Zero-Trust Client Pricing:** Client calculations are strictly discarded. All line items, margins, taxes, and labor rates are recomputed server-side in `lib/pricing-engine.ts`.
 - **100% Mathematical Parity:** Guided Setup and Pro Builder configurations yield identical totals for identical Bills of Materials.
 - **Component Rules:**
+  - Recorder (DVR/NVR) Resolution Sizing & Cost Optimization: $\text{recMaxMP} \ge \max(\text{Camera MP})$. If a 5MP recorder is cheaper than a 2MP recorder, the system picks the cheaper 5MP recorder. 2MP recorders are strictly disqualified for 4MP, 5MP, and 8MP cameras. Mixed setups size to the highest resolution camera.
   - Competitive SMPS Selection: Lower price takes precedence even with higher channels.
   - Multi-PoE Gigabit Uplink Switch: Automatically attached when camera count exceeds single switch capacity.
   - Cable Bundling: Bundles (305m/100m) + per-meter balance evaluated against pure per-meter rates.

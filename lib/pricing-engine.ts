@@ -4,7 +4,7 @@
  * Decomposed into modular, testable units with zero-trust server validation.
  */
 
-import { isBrandMatch } from "./product-resolver";
+import { isBrandMatch, parseResolutionMP, getRecorderMaxSupportedMP } from "./product-resolver";
 import type {
   Product,
   Addon,
@@ -482,16 +482,28 @@ function calculateHardware(
   }
 
   // 2. Recorder Selection
-  let recorderSelection = selection;
+  let requiredMaxMP = 2;
   if (mixedReqs && mixedReqs.length > 0) {
-    const resList = mixedReqs.map(r => String(r.resolution || selection.resolution_preference || "").toUpperCase());
-    if (resList.some(r => r.includes("8MP") || r.includes("4K") || r.includes("12MP"))) {
-      recorderSelection = { ...selection, resolution_preference: "8MP" };
-    } else if (resList.some(r => r.includes("5MP") || r.includes("4MP") || r.includes("6MP") || r.includes("3MP"))) {
-      recorderSelection = { ...selection, resolution_preference: "5MP" };
+    const mpList = mixedReqs.map(r => parseResolutionMP(r.resolution || selection.resolution_preference));
+    requiredMaxMP = Math.max(...mpList, 2);
+  } else {
+    const cameraItems = items.filter(i => {
+      const p = products.find(prod => prod.id === i.product_id);
+      return p?.category === "cctv_camera" || i.display_name?.toLowerCase().includes("camera");
+    });
+    if (cameraItems.length > 0) {
+      const mpList = cameraItems.map(c => parseResolutionMP(c.display_name));
+      requiredMaxMP = Math.max(...mpList, 2);
+    } else if (selection.resolution_preference) {
+      requiredMaxMP = parseResolutionMP(selection.resolution_preference);
     }
   }
-  const recorder = resolveRecorder(recorderSelection, products, tech);
+
+  const recorderSelection = {
+    ...selection,
+    resolution_preference: `${requiredMaxMP}MP`
+  };
+  const recorder = resolveRecorder(recorderSelection, products, tech, requiredMaxMP);
   if (recorder) {
     items.push({
       product_id: recorder.id!,
@@ -1135,7 +1147,8 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
   const qty = selection.camera_count;
   const camTotal = resolveUnitPrice(cam, qty) * qty;
   
-  const recorder = resolveRecorder(selection, products, tech);
+  const camMP = parseResolutionMP(cam);
+  const recorder = resolveRecorder({ ...selection, resolution_preference: `${camMP}MP` }, products, tech, camMP);
   const recTotal = recorder ? recorder.unit_price : 0;
   
   const hdd = resolveHDD(selection, [...products, ...addons] as any[], tech, recorder);
@@ -1357,7 +1370,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
   }
 }
 
-function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: string) {
+function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: string, requiredMaxMP?: number) {
   const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued" && (p.stock_quantity === undefined || p.stock_quantity > 0);
 
   if (selection.selected_recorder_id) {
@@ -1371,23 +1384,55 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
   const targetUpper = String(tech || "HD").toUpperCase();
   if (targetUpper === "WIFI" || targetUpper === "WIRELESS") return undefined;
 
-  const recorders = products.filter(p => {
+  const targetMP = requiredMaxMP || parseResolutionMP(selection.resolution_preference || "2MP");
+
+  const compatibleRecorders = products.filter(p => {
     if (p.category !== "recorder" || !isAvailable(p)) return false;
     if (!isTechMatch(p, tech)) return false;
     if ((p.max_cameras || p.channels || 0) < selection.camera_count) return false;
 
-    // Filter HD DVR by resolution if applicable
-    if (targetUpper === "HD" && selection.resolution_preference) {
-        const resPref = String(selection.resolution_preference).toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
-        const dvrName = String(p.display_name || "").toUpperCase().replace(/\s+/g, "");
-        if ((resPref === "5MP" || resPref === "8MP" || resPref === "4MP" || resPref === "6MP") && (dvrName.includes("2MPSUPPORTED") || dvrName.includes("UPTO2MP"))) {
-            return false; // Don't use a 2MP DVR for 5MP cameras
-        }
+    // Technical Compatibility: Recorder must support at least the camera's resolution
+    const recMaxMP = getRecorderMaxSupportedMP(p);
+    if (recMaxMP < targetMP) {
+      return false; // Cannot run higher MP camera on a lower MP recorder
     }
+
     return true;
   });
-  recorders.sort((a, b) => (a.max_cameras || a.channels || 0) - (b.max_cameras || b.channels || 0));
-  return recorders[0];
+
+  if (compatibleRecorders.length === 0) return undefined;
+
+  // Handle Brand Matching
+  const brandPref = selection.brand_preference;
+  const isBudget = brandPref === "Budget" || brandPref === "Budget Brand";
+  const isSpecificBrand = brandPref && brandPref !== "all" && brandPref !== "Budget" && brandPref !== "Budget Brand";
+
+  let candidates = compatibleRecorders;
+
+  if (isSpecificBrand) {
+    const brandMatched = compatibleRecorders.filter(p => isBrandMatch(p, brandPref!));
+    if (brandMatched.length > 0) {
+      candidates = brandMatched;
+    }
+  } else if (isBudget) {
+    const budgetMatched = compatibleRecorders.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));
+    if (budgetMatched.length > 0) {
+      candidates = budgetMatched;
+    }
+  }
+
+  // Sort strategy:
+  // 1. Channel count (smallest channel tier that fits: 4Ch < 8Ch < 16Ch < 32Ch)
+  // 2. Lowest Price: If a 5MP recorder is cheaper than a 2MP recorder, it will naturally be chosen here!
+  candidates.sort((a, b) => {
+    const aCh = a.max_cameras || a.channels || 0;
+    const bCh = b.max_cameras || b.channels || 0;
+    if (aCh !== bCh) return aCh - bCh;
+
+    return (a.unit_price || 0) - (b.unit_price || 0);
+  });
+
+  return candidates[0];
 }
 
 /** Safely resolves storage capacity in TB from a product.

@@ -11,7 +11,7 @@
 
 | Domain | Status | Latest Evidence / Milestone |
 |---|---|---|
-| **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags. |
+| **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; Recorder (DVR/NVR) resolution compatibility ($\text{recMaxMP} \ge \text{targetMaxMP}$) & best-price tie-break; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags. |
 | **Mapping & Geographical Coverage** | `VERIFIED` | 100% Google Maps parity via Mappls GeoAnalytics API + 34-vertex fallback `JAIPUR_METRO_BOUNDARY`; CartoDB Voyager CDN tile engine with sub-50ms latency; automated Leaflet modal resize engine (`ResizeObserver` + staggered `invalidateSize`); 1-click delivery halo toggle (`Halos: ON/OFF`); 1-click `⚡ Auto-Trace Territory` convex hull enclosure; 0 legacy compass labels in Firestore. |
 | **Referral & Partner Ecosystem** | `VERIFIED` | B2B Partner Portal with QR codes (2% comm / 3% disc); B2C Refer & Earn (₹500 / ₹500) with festive WhatsApp status EDMs; Financial Dashboard payout tracking. |
 | **Customer Journey & Pro Builder** | `VERIFIED` | WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; iOS Safari auto-zoom patch (`text-base sm:text-sm`); single-filter auto-collapse. |
@@ -53,6 +53,11 @@
 - **Single-Option Filter Auto-Collapse:** Cleaned up product catalogs by auto-collapsing filters containing only 1 choice (e.g. CAT6-only).
 
 ### Milestone 4: Pricing Engine & Hardware Selection Hardening
+- **Recorder (DVR/NVR) Resolution Compatibility & Best-Price Tie-Break:**
+  - Engineered `parseResolutionMP` and `getRecorderMaxSupportedMP` in `lib/product-resolver.ts` and wired into `lib/pricing-engine.ts`.
+  - Recorders are strictly filtered by resolution capability: $\text{recMaxMP} \ge \max(\text{Camera MP})$. 2MP camera setups pair with $\ge 2\text{MP}$ recorders; 4MP/5MP cameras require $\ge 5\text{MP}$ recorders (2MP DVRs strictly disqualified); 8MP cameras require $\ge 8\text{MP}$ recorders; mixed camera setups size to the highest resolution camera.
+  - Cost Optimization Rule: If a 5MP recorder is cheaper than a 2MP recorder in the catalog for a 2MP camera setup, the engine selects the cheaper 5MP recorder (since 5MP recorders backward-compatibly run 2MP cameras). When the 2MP recorder is cheaper (e.g. ₹4,255 vs ₹6,613), the engine selects the 2MP recorder.
+  - 100% test pass rate across all 238 permutation tests (`scripts/execute-all-238-tests.ts`).
 - **Competitive SMPS Rule:** Reverted brittle regex to enforce competitive "Best Price" selection, picking cheaper higher-channel power supplies when beneficial.
 - **SMPS Fallback Math:** Hardened fallback quantity to `Math.ceil(camera_count / max_cameras)`.
 - **Multi-PoE Gigabit Uplink:** Integrated Desktop Gigabit Switch logic when total IP cameras exceed single PoE switch capacity.
@@ -201,6 +206,7 @@
 | **Layer 16: Delivery Hub Footprint Isolation** | Interactive Hub Filtering (All/Covered/Uncovered) | `PASS` | Dynamic marker filtering with live count badges, floating map indicators, and 0 canvas latency. |
 | **Layer 17: Technician Territory Cascader** | 4-Tier Cascader (State/District/Tehsil/PINs) | `PASS` | Live bidirectional sync between chips, tehsil batch actions, and raw paste fallback; verified with zero TS errors and successful Next.js build. |
 | **Layer 18: On-Demand State & District Provisioning** | 4-Tier Expansion Network & Modals | `PASS` | Inactive states/districts removed from baseline; on-demand +Add State and +Add District modals with postal API & AI tehsil auto-generation verified; deployed live to https://cctvquotation.com. |
+| **Layer 19: Recorder Resolution & Best-Price Matrix** | 238 Permutations Matrix (`execute-all-238-tests.ts`) | `PASS` | 238/238 passed (100%). Sizing rule $\text{recMaxMP} \ge \text{targetMaxMP}$ + cheaper higher-spec selection verified across 2MP, 4MP, 5MP, 8MP, and mixed cameras. |
 
 ---
 

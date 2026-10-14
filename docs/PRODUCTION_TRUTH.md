@@ -41,6 +41,7 @@
 1. **Zero Destructive Deletes:** Production collections (`quotes`, `leads`, `products`, `users`, `audit_logs`) are append-only or soft-delete only.
 2. **Strict Server Authority:** Client pricing calculations are rejected; all final quotes must compute through server pricing engines.
 3. **Environment Management:** All sensitive API keys and secrets must be updated via the Vercel CLI / Dashboard, never committed to source control.
+4. **Hardware Resolution Compatibility & Best-Price Tie-Break:** Recorders (DVR/NVR) must strictly satisfy $\text{recMaxMP} \ge \max(\text{Camera MP})$. When a higher-resolution recorder is priced lower than a lower-resolution recorder, the pricing engine selects the cheaper unit to optimize customer savings while ensuring full technical compatibility.
 
 ---
 

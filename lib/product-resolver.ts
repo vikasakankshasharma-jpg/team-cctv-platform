@@ -41,6 +41,56 @@ export function isBrandMatch(p: Product, brandFilter: string): boolean {
   return false;
 }
 
+export function parseResolutionMP(item: any): number {
+  if (!item) return 2;
+  if (typeof item === "number") return item;
+  if (typeof item.resolution_mp === "number" && item.resolution_mp > 0) return item.resolution_mp;
+  
+  const text = (
+    (typeof item === "string" ? item : "") + " " +
+    (item.resolution || "") + " " +
+    (item.specifications?.resolution || "") + " " +
+    (item.technical_name || "") + " " +
+    (item.display_name || "")
+  ).toUpperCase();
+
+  if (text.includes("8MP") || text.includes("4K") || text.includes("12MP")) return 8;
+  if (text.includes("6MP")) return 6;
+  if (text.includes("5MP") || text.includes("3K")) return 5;
+  if (text.includes("4MP") || text.includes("2K")) return 4;
+  if (text.includes("3MP")) return 3;
+  if (text.includes("2MP") || text.includes("1080P") || text.includes("1080")) return 2;
+  return 2;
+}
+
+export function getRecorderMaxSupportedMP(recorder: Product): number {
+  if (!recorder) return 2;
+  const isIP = String(recorder.technology || "").toUpperCase().includes("IP") ||
+               (recorder.technologies || []).some((t: any) => String(t).toUpperCase().includes("IP")) ||
+               String(recorder.display_name || "").toUpperCase().includes("IP") ||
+               String(recorder.display_name || "").toUpperCase().includes("NVR");
+  
+  const text = (
+    (recorder.resolution || "") + " " +
+    (recorder.specifications?.resolution || "") + " " +
+    (recorder.technical_name || "") + " " +
+    (recorder.display_name || "")
+  ).toUpperCase();
+
+  if (text.includes("8MP") || text.includes("4K") || text.includes("12MP")) return 8;
+  if (text.includes("6MP")) return 6;
+  if (text.includes("5MP") || text.includes("3K")) return 5;
+  if (text.includes("4MP") || text.includes("2K")) return 4;
+  if (text.includes("3MP")) return 3;
+  if (text.includes("2MP") || text.includes("1080P") || text.includes("UPTO2MP")) return 2;
+
+  // Commercial IP NVRs support at least 8MP/4K by default unless stated otherwise
+  if (isIP) return 8;
+
+  // HD DVRs default to 2MP
+  return 2;
+}
+
 export function resolveProducts(
   config: CCTVConfiguration,
   req: CCTVRequirement,
@@ -86,7 +136,7 @@ export function resolveProducts(
       const cameras = resolveCamerasForPermutation(permConfig, res, allCameras, brandFilter);
       if (cameras.length === 0) return; // Skip if we can't find a complete set
 
-      const recorder = resolveRecorderForPermutation(permConfig, pool, brandFilter);
+      const recorder = resolveRecorderForPermutation(permConfig, pool, brandFilter, res);
       const storage = resolveStorageForPermutation(permConfig, pool, brandFilter, cameras);
       if ((storage as any)?.is_downgraded) {
         lifecycleWarnings.push(`STORAGE_DOWNGRADE_WARNING [${combo}]: ${(storage as any).downgrade_note}`);
@@ -181,18 +231,21 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
   return res;
 }
 
-function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string) {
+function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string, targetResolution?: string) {
   if (!config.recorder_channels) return undefined;
   const isBudget = !brandFilter || brandFilter === "Budget";
+  const requiredMaxMP = parseResolutionMP(targetResolution || "2MP");
   
   const recs = pool.filter(p => {
     if (p.category !== "recorder") return false;
     if ((p.channels || p.max_cameras || 0) < config.recorder_channels) return false;
     if (!isTechMatch(p, config.technology)) return false;
-      return true;
-    });
-    if (recs.length === 0) return undefined;
-  // Sort ascending by channel count (prefer smallest that fits), then by price
+    if (getRecorderMaxSupportedMP(p) < requiredMaxMP) return false;
+    return true;
+  });
+  if (recs.length === 0) return undefined;
+  // Sort ascending by channel count (prefer smallest that fits), then by price (cheapest first)
+  // If a 5MP recorder is cheaper than 2MP, it will be naturally chosen!
   recs.sort((a, b) => {
     const aCh = (a.channels || a.max_cameras || 0);
     const bCh = (b.channels || b.max_cameras || 0);
