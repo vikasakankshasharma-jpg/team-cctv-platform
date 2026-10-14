@@ -112,8 +112,9 @@ Exactly 5 site difficulty flags can be set by the Installer, Salesperson, or Adm
 ## 5. Geographical Coverage, Mapping & Tehsil Delivery Micro-Hubs
 
 ### 5.1 Mapping Infrastructure
-- **Mappls (MapmyIndia):** Primary mapping provider for Indian address accuracy, district/tehsil boundaries, and pincode mapping.
-- **Google Maps & OpenStreetMap (OSM):** Automatic secondary fallbacks.
+- **Mappls (MapmyIndia):** Primary cadastral and boundary provider for Indian administrative accuracy, district/tehsil vector boundaries (`MapplsBoundaryMap.tsx`), and geo analytics.
+- **Google Maps High-Performance Tile Engine:** Modal editor canvases and territory tools connect directly to Google Maps using the project's authenticated `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (`lyrs=m` for road network, `lyrs=y` for satellite hybrid). Completely eliminates third-party tile providers (e.g. CartoDB) and guarantees zero watermarks.
+- **Dynamic Basemap Layer Switcher:** Every interactive map canvas provides a 1-click toggle between **Google Roads** (default street and colony view), **Google Satellite** (high-resolution aerial imagery for site survey and CCTV line-of-sight inspection), and **OpenStreetMap (OSM)**.
 - **Map Pin-Drop:** Customers drop a pin to capture their exact geolocation, auto-populating address fields.
 
 ### 5.2 Administrative Hierarchy
@@ -128,16 +129,25 @@ Exactly 5 site difficulty flags can be set by the Installer, Salesperson, or Adm
   - Red badges & dashed red halos: Unassigned / uncovered delivery hubs.
   - Green badges & translucent 850m halos: Active / serviceable delivery hubs with 2-letter shortcode pills (`[✓ NR]`, `[✓ LC]`, `[✓ BW]`, etc.).
   - Polygons: Solid fill indicates active PINCODE boundary coverage; individual hubs do not render disjoint micro-polygons to avoid boundary clipping and visual clutter.
+- **Micro-Hub Halo Decluttering (`Halos: ON / OFF`):** Admin console provides a 1-click toggle to suppress the 850m circular beat halos, giving an unobstructed view when inspecting street geometry or drawing manual boundaries.
+- **1-Click ⚡ Auto-Trace Territory:** Uses monotone chain convex hull computation (`lib/geo/pincodePolygons.ts`) to instantly generate a tight, closed polygon perimeter enclosing all covered delivery hubs in 1 click, eliminating manual point-by-point drawing.
 - **Dynamic Hub Capacity:** Supports 1 to 8 natural delivery hubs per PINCODE based on actual India Post beats rather than artificial 4-box cardinal grids.
 - **Batch Tools:** Admin console provides dynamic hub discovery and verified hub injection for all PINCODEs across selected Tehsils/Districts.
 
-### 5.4 Tri-Factor Coverage Enforcement
+### 5.4 Universal Full Map View Architecture
+All mapping views across the entire platform must provide a synchronized Fullscreen / Expanded workspace:
+1. **Coverage Area Map Editor (`CoverageAreaMapEditor.tsx`):** 1-click "Full Map View" button in the toolbar and on-map header, expanding canvas to panoramic workspace (`fixed inset-0 z-[9999]`) with an ESC key listener and dedicated exit banner.
+2. **Coverage Zone Modal (`SalespersonsClient.tsx`):** Dedicated modal maximize/restore button in dialog header, expanding to `97vw x 96vh` with `560px` canvas.
+3. **Territory Boundary Matrix (`TerritoryMatrix.tsx`):** 1-click "Full Map View" button expanding Mappls district choropleth map to `100vw x 100vh` with automated SDK resize.
+4. **Embedded Maps (`MapplsBoundaryMap.tsx`):** Built-in full-screen toggle icon in the floating legend for all embedded views.
+
+### 5.5 Tri-Factor Coverage Enforcement
 Serviceability is verified by matching against:
 1. Assigned Sub-Post Office Delivery Micro-Hub (via tokenized string matching of customer street/colony addresses against local communicating names).
 2. Circular Operating Radius (e.g., 15 km from service hub).
 3. Polygon Boundary Tool drawn in the Admin Console.
 
-### 5.5 Multi-Tier Boundary Resolution & Centroid Targeting
+### 5.6 Multi-Tier Boundary Resolution & Centroid Targeting
 To ensure professional, 100% accurate map rendering across all PIN codes in India without missing or broken shapes, territory boundaries are resolved through a strict hierarchical engine:
 1. **Tier 1 (Verified Google Maps Cadastral Boundaries):** Curated in `KNOWN_PINCODE_POLYGONS` for core launch urban centers (e.g., Jaipur metro PINs 302001–302048). Takes top precedence over raw government datasets to eliminate algorithmic Voronoi artifacts.
 2. **Tier 2 (Official Open Postal Boundary Layer):** Pre-extracted vector multi-polygons (`OFFICIAL_PINCODE_POLYGONS`) from public cadastral data.
