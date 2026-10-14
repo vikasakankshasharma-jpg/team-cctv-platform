@@ -164,6 +164,18 @@
   - Quick Search Filter: Real-time search across PIN codes and colony names.
 - **Two-Way Synchronized Manual Paste Fallback:** Collapsible `[Paste PINs / Raw Editor]` allows pasting raw comma, space, or newline-separated PIN lists (e.g. from WhatsApp or spreadsheets) that automatically parses and syncs with the interactive chips in real time.
 - **Assigned Pincodes Badge Bar:** Live wrap of assigned PIN badges with 1-click `✕` removal buttons.
+ 
+### Milestone 14: On-Demand State & District Provisioning & Zero Inactive Clutter Baseline
+- **Clean Operational Baseline:** Removed mock placeholder states (Delhi, Maharashtra) and unlaunched districts from the default baseline. Only operational launch state (Rajasthan) and active district (Jaipur) appear by default.
+- **Top Action Toolbar:** Added `+ Add State`, `+ Add District`, and `+ Add PIN Code` buttons.
+- **Contextual State & District Actions:**
+  - `+ Add District` directly on any State header card (pre-selects that state in the import modal).
+  - Remove State (`Trash2`) for custom imported states.
+  - Remove District (`Trash2`) for custom imported districts.
+- **Automated 4-Tier Provisioning Modals:**
+  - **Add State Modal:** Admin selects from all 36 Indian states & union territories, selects the launch district, and provisions all official PIN codes and AI-classified tehsils with full 4-tier architecture.
+  - **Add District Modal:** Admin selects an active state, picks from unadded official districts in that state, and instantly generates the 4-tier tree with 1-click bulk Tehsil activation switches.
+- **Installer Territory Cascader Integration:** Any newly provisioned state, district, or PIN automatically becomes available in the installer assignment tool once active.
 
 ---
 
@@ -188,6 +200,7 @@
 | **Layer 15: Universal Full Map View** | Fullscreen Across All Maps | `PASS` | 1-click full screen with Escape key listeners across Coverage Area Editor, Zone Modal, and Territory Boundary Matrix. |
 | **Layer 16: Delivery Hub Footprint Isolation** | Interactive Hub Filtering (All/Covered/Uncovered) | `PASS` | Dynamic marker filtering with live count badges, floating map indicators, and 0 canvas latency. |
 | **Layer 17: Technician Territory Cascader** | 4-Tier Cascader (State/District/Tehsil/PINs) | `PASS` | Live bidirectional sync between chips, tehsil batch actions, and raw paste fallback; verified with zero TS errors and successful Next.js build. |
+| **Layer 18: On-Demand State & District Provisioning** | 4-Tier Expansion Network & Modals | `PASS` | Inactive states/districts removed from baseline; on-demand +Add State and +Add District modals with postal API & AI tehsil auto-generation verified; deployed live to https://cctvquotation.com. |
 
 ---
 
