@@ -105,8 +105,10 @@
 1. **4-Tier Geographic Cascader (`TerritoryPincodeSelector.tsx`):**
    - Replaced flat, error-prone manual 6-digit text inputs with an administrative 4-tier cascader: `State` → `District` → `Tehsil` → `PINCODEs`.
    - Used across both `Onboard Technician Modal` and `Edit Profile & Territory Modal` in `InstallersClient.tsx`.
-   - Dynamically loads states and districts via `/api/admin/geo`, defaulting to Rajasthan / Jaipur with static baseline fallback.
-   - Dynamically loads revenue tehsils via `/api/admin/geo/tehsils`, grouping PINs with exact counts (e.g. `Jaipur Urban (17 PINs)`, `Sanganer (4 PINs)`, `Amer (3 PINs)`).
+   - Connected directly to the Authoritative Geo Hierarchy Engine (`/api/admin/geo/hierarchy`).
+   - **Operational Truth (Active-Only by Default):** Filters out non-operational regions. States, districts, and tehsils without active PINs are excluded by default, preventing accidental assignment to unserved markets.
+   - **On-Demand Expansion:** When an admin activates a state or tehsil in the **Regional Expansion Hub (`/admin/expansion`)**, it immediately lights up in the installer cascader with zero latency.
+   - **Expansion / Pre-launch Mode:** An interactive pill toggle allows admins to view and provision upcoming expansion hubs before city launches.
    - Displays matching PINCODEs as interactive cards enriched with major colony and commercial anchor names from `JAIPUR_VERIFIED_QUADRANTS` and postal office data (e.g., `302012 (Khatipura / Jhotwara)`, `302019 (Mansarovar / VT Road)`, `302020 (Vaishali Nagar / Chitrakoot)`).
 2. **Productivity Batch Controls & Search:**
    - `+ Select All ({count})`: Batch assigns all filtered PINs in the tehsil/district to the technician with 1 click.
@@ -118,5 +120,6 @@
    - Automatically synchronizes two-way with the visual chips and assigned badges in real time.
 4. **Assigned Pincodes Badge Area:**
    - Interactive badge wrap displaying currently assigned PINs with 1-click `✕` removal buttons.
+
 
 

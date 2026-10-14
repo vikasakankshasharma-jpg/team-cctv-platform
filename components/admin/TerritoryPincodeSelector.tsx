@@ -11,18 +11,25 @@ import {
   Check, 
   X, 
   ChevronDown, 
-  ChevronUp, 
   Plus, 
   Trash2, 
   Loader2, 
   Edit3,
-  CheckCircle2,
-  Building
+  Building,
+  ExternalLink,
+  ShieldCheck,
+  Compass,
+  Sparkles
 } from "lucide-react";
 import { 
   BASELINE_GEO_HIERARCHY, 
-  PIN_METADATA_INDEX, 
-  resolveStaticHierarchy 
+  CORE_ACTIVE_PINCODES,
+  type StateItem,
+  type DistrictItem,
+  type TehsilItem,
+  type PincodeItem,
+  type PincodeStatus,
+  resolveStaticHierarchy
 } from "@/lib/geo/geoHierarchy";
 import { JAIPUR_VERIFIED_QUADRANTS } from "@/lib/geo/jaipurQuadrants";
 
@@ -38,15 +45,9 @@ interface DropdownOption {
   label: string;
   value: string;
   sublabel?: string;
-}
-
-interface PincodeDetail {
-  pincode: string;
-  name: string;
-  tehsil: string;
-  district: string;
-  state: string;
-  areas?: string[];
+  activeCount?: number;
+  totalCount?: number;
+  isActive?: boolean;
 }
 
 /**
@@ -98,10 +99,17 @@ function SearchableDropdown({
   const selectedItem = options.find(o => o.value === value || o.label === value);
 
   return (
-    <div className="relative flex-1 min-w-[160px]" ref={dropdownRef}>
-      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1.5">
-        <Icon className="w-3.5 h-3.5 text-primary" />
-        {label}
+    <div className="relative flex-1 min-w-[170px]" ref={dropdownRef}>
+      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 flex items-center justify-between">
+        <span className="flex items-center gap-1.5">
+          <Icon className="w-3.5 h-3.5 text-primary" />
+          {label}
+        </span>
+        {options.length > 0 && (
+          <span className="text-[10px] text-muted-foreground font-normal">
+            ({options.length})
+          </span>
+        )}
       </label>
       <button
         type="button"
@@ -110,7 +118,7 @@ function SearchableDropdown({
           setIsOpen(!isOpen);
           setSearch("");
         }}
-        className={`w-full flex items-center justify-between px-3 py-2 bg-background border rounded-lg text-xs font-medium transition-all shadow-sm ${
+        className={`w-full flex items-center justify-between px-3 py-2 bg-background border rounded-lg text-xs font-medium transition-all shadow-xs ${
           disabled ? 'opacity-50 cursor-not-allowed bg-muted/40 border-border' :
           isOpen ? 'border-primary ring-2 ring-primary/20 bg-background' :
           'border-border hover:border-border/80 hover:bg-secondary/20'
@@ -167,7 +175,18 @@ function SearchableDropdown({
                     }`}
                   >
                     <div className="flex flex-col truncate pr-2">
-                      <span className="truncate">{item.label}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate">{item.label}</span>
+                        {item.isActive ? (
+                          <span className="text-[9px] px-1 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold rounded">
+                            Active
+                          </span>
+                        ) : item.activeCount !== undefined && item.activeCount === 0 ? (
+                          <span className="text-[9px] px-1 py-0.2 bg-muted text-muted-foreground font-normal rounded">
+                            Expansion
+                          </span>
+                        ) : null}
+                      </div>
                       {item.sublabel && (
                         <span className="text-[10px] text-muted-foreground truncate">{item.sublabel}</span>
                       )}
@@ -185,315 +204,286 @@ function SearchableDropdown({
 }
 
 /**
+ * Builds a fast client-side baseline hierarchy tree from BASELINE_GEO_HIERARCHY
+ */
+function buildClientBaselineTree(): StateItem[] {
+  return BASELINE_GEO_HIERARCHY.map(state => {
+    const districtItems: DistrictItem[] = state.districts.map(district => {
+      const tehsilItems: TehsilItem[] = district.tehsils.map(tehsil => {
+        const pincodeItems: PincodeItem[] = tehsil.pincodes.map(pin => {
+          const isCoreActive = CORE_ACTIVE_PINCODES.has(pin.pincode);
+          const status: PincodeStatus = isCoreActive ? "active" : pin.defaultStatus;
+          return {
+            pincode: pin.pincode,
+            name: pin.name,
+            status,
+            tehsil: tehsil.name,
+            district: district.name,
+            state: state.name,
+            waitlist_count: 0,
+            demand_score: 0
+          };
+        });
+
+        const activeCount = pincodeItems.filter(p => p.status === "active").length;
+        const totalCount = pincodeItems.length;
+        return {
+          name: tehsil.name,
+          status: activeCount === totalCount ? "active" : activeCount > 0 ? "partial" : "inactive",
+          active_count: activeCount,
+          total_count: totalCount,
+          waitlist_count: 0,
+          demand_score: 0,
+          pincodes: pincodeItems
+        };
+      });
+
+      const districtActiveCount = tehsilItems.reduce((acc, t) => acc + t.active_count, 0);
+      const districtTotalCount = tehsilItems.reduce((acc, t) => acc + t.total_count, 0);
+      return {
+        name: district.name,
+        state: state.name,
+        status: districtActiveCount === districtTotalCount ? "active" : districtActiveCount > 0 ? "partial" : "inactive",
+        active_count: districtActiveCount,
+        total_count: districtTotalCount,
+        waitlist_count: 0,
+        demand_score: 0,
+        tehsils: tehsilItems
+      };
+    });
+
+    const stateActiveCount = districtItems.reduce((acc, d) => acc + d.active_count, 0);
+    const stateTotalCount = districtItems.reduce((acc, d) => acc + d.total_count, 0);
+    return {
+      name: state.name,
+      status: stateActiveCount === stateTotalCount ? "active" : stateActiveCount > 0 ? "partial" : "inactive",
+      active_count: stateActiveCount,
+      total_count: stateTotalCount,
+      waitlist_count: 0,
+      demand_score: 0,
+      districts: districtItems
+    };
+  });
+}
+
+/**
  * 4-Tier Territory Cascader: State -> District -> Tehsil -> PINCODEs
+ * Connected directly to the Authoritative Geo Hierarchy Engine.
+ * Filters strictly to Active Territories by default with an optional toggle for expansion zones.
  */
 export function TerritoryPincodeSelector({
   selectedPincodes,
   onChange,
   required = false,
   label = "Serviceable Territory & PIN Codes",
-  helperText = "Select State, District, and Tehsil to choose PINCODEs, or toggle manual paste."
+  helperText = "Select State, District, and Tehsil to assign serviceable PINCODEs."
 }: TerritoryPincodeSelectorProps) {
-  // Cascader State
-  const [geoStates, setGeoStates] = useState<DropdownOption[]>([]);
-  const [selectedState, setSelectedState] = useState<DropdownOption | null>(null);
-  const [loadingStates, setLoadingStates] = useState(false);
+  // Master Geo Hierarchy Tree (initialized synchronously from baseline for 0ms mount)
+  const [geoTree, setGeoTree] = useState<StateItem[]>(() => buildClientBaselineTree());
+  const [isLoadingHierarchy, setIsLoadingHierarchy] = useState(false);
 
-  const [geoDistricts, setGeoDistricts] = useState<DropdownOption[]>([]);
-  const [selectedDistrict, setSelectedDistrict] = useState<DropdownOption | null>(null);
-  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  // Operational filter: true = show only active territories with active PINs (Default), false = show expansion/pre-launch zones
+  const [activeOnlyMode, setActiveOnlyMode] = useState<boolean>(true);
 
-  const [geoTehsils, setGeoTehsils] = useState<{ label: string; value: string; pincodes: string[] }[]>([]);
-  const [selectedTehsil, setSelectedTehsil] = useState<string>("all");
-  const [loadingTehsils, setLoadingTehsils] = useState(false);
+  // Cascader Selection State
+  const [selectedStateName, setSelectedStateName] = useState<string>("Rajasthan");
+  const [selectedDistrictName, setSelectedDistrictName] = useState<string>("Jaipur");
+  const [selectedTehsilName, setSelectedTehsilName] = useState<string>("all");
 
-  // Available Pincodes for current district/state
-  const [districtPins, setDistrictPins] = useState<PincodeDetail[]>([]);
-  const [loadingOffices, setLoadingOffices] = useState(false);
-
-  // Filter & Search inside Pincode grid
+  // Search filter inside PINCODEs matrix
   const [pinFilterSearch, setPinFilterSearch] = useState("");
 
-  // Manual Paste Fallback Toggle
+  // Manual Paste Direct Editor
   const [showManualPaste, setShowManualPaste] = useState(false);
   const [manualText, setManualText] = useState("");
 
-  // Sync manualText when selectedPincodes changes externally
+  // Keep manual text in sync with external selection changes
   useEffect(() => {
     setManualText(selectedPincodes.join(", "));
   }, [selectedPincodes]);
 
-  // ── 1. Load States ──
+  // ── 1. Fetch Live Geo Hierarchy from `/api/admin/geo/hierarchy` ──
   useEffect(() => {
-    setLoadingStates(true);
-    fetch(`/api/admin/geo?type=states&_t=${Date.now()}`)
+    setIsLoadingHierarchy(true);
+    fetch("/api/admin/geo/hierarchy")
       .then(async r => {
-        if (!r.ok) throw new Error("States error");
-        const data = await r.json();
-        if (data.error || !Array.isArray(data)) throw new Error(data.error || "Invalid format");
-        return data;
-      })
-      .catch(() => {
-        // Fallback to baseline hierarchy
-        return BASELINE_GEO_HIERARCHY.map(s => ({
-          name: s.name,
-          slug: s.name.toLowerCase()
-        }));
-      })
-      .then(data => {
-        if (Array.isArray(data)) {
-          const sorted = data
-            .map((s: any) => ({ label: s.name, value: s.slug }))
-            .sort((a, b) => a.label.localeCompare(b.label));
-          setGeoStates(sorted);
-
-          // Default to Rajasthan
-          const rajasthan = sorted.find((s: any) => s.label.toLowerCase() === "rajasthan");
-          if (rajasthan) {
-            setSelectedState(rajasthan);
-          } else if (sorted.length > 0) {
-            setSelectedState(sorted[0]);
-          }
-        }
-      })
-      .catch(console.error)
-      .finally(() => setLoadingStates(false));
-  }, []);
-
-  // ── 2. Load Districts ──
-  useEffect(() => {
-    if (!selectedState) {
-      setGeoDistricts([]);
-      setSelectedDistrict(null);
-      setGeoTehsils([]);
-      setSelectedTehsil("all");
-      setDistrictPins([]);
-      return;
-    }
-
-    setLoadingDistricts(true);
-    fetch(`/api/admin/geo?type=districts&state=${selectedState.value}&_t=${Date.now()}`)
-      .then(async r => {
-        if (!r.ok) throw new Error("Districts error");
-        const data = await r.json();
-        if (data.error || !data.districts || !Array.isArray(data.districts)) throw new Error("Invalid format");
-        return data.districts;
-      })
-      .catch(() => {
-        // Fallback to baseline
-        const stateDef = BASELINE_GEO_HIERARCHY.find(s => s.name.toLowerCase() === selectedState.value.toLowerCase());
-        if (stateDef) {
-          return stateDef.districts.map(d => ({
-            name: d.name,
-            slug: d.name.toLowerCase()
-          }));
-        }
-        return [];
-      })
-      .then(districts => {
-        if (Array.isArray(districts)) {
-          const sorted = districts
-            .map((d: any) => ({ label: d.name, value: d.slug }))
-            .sort((a, b) => a.label.localeCompare(b.label));
-          setGeoDistricts(sorted);
-
-          // Default to Jaipur if present, else first district
-          const jaipur = sorted.find((d: any) => d.label.toLowerCase() === "jaipur");
-          if (jaipur) {
-            setSelectedDistrict(jaipur);
-          } else if (sorted.length > 0) {
-            setSelectedDistrict(sorted[0]);
-          } else {
-            setSelectedDistrict(null);
-          }
-        }
-      })
-      .catch(console.error)
-      .finally(() => setLoadingDistricts(false));
-  }, [selectedState]);
-
-  // ── 3. Load Tehsils & Offices (Pincodes) ──
-  useEffect(() => {
-    if (!selectedState || !selectedDistrict) {
-      setGeoTehsils([]);
-      setSelectedTehsil("all");
-      setDistrictPins([]);
-      return;
-    }
-
-    setLoadingTehsils(true);
-    setLoadingOffices(true);
-    setSelectedTehsil("all");
-
-    // Fetch tehsils mapping
-    const fetchTehsilsPromise = fetch(`/api/admin/geo/tehsils?state=${selectedState.value}&district=${selectedDistrict.value}&_t=${Date.now()}`)
-      .then(async r => {
-        if (!r.ok) throw new Error("Tehsils error");
+        if (!r.ok) throw new Error("Hierarchy fetch failed");
         return r.json();
       })
-      .catch(() => {
-        // Fallback to static hierarchy
-        const stateDef = BASELINE_GEO_HIERARCHY.find(s => s.name.toLowerCase() === selectedState.value.toLowerCase());
-        const distDef = stateDef?.districts.find(d => d.name.toLowerCase() === selectedDistrict.value.toLowerCase());
-        if (distDef) {
-          const map: Record<string, string[]> = {};
-          distDef.tehsils.forEach(t => {
-            map[t.name] = t.pincodes.map(p => p.pincode);
-          });
-          return map;
-        }
-        return {};
-      });
+      .then(data => {
+        if (data?.success && Array.isArray(data.tree) && data.tree.length > 0) {
+          setGeoTree(data.tree);
 
-    // Fetch district offices for pincodes & colony names
-    const fetchOfficesPromise = fetch(`/api/admin/geo?type=offices&state=${selectedState.value}&district=${selectedDistrict.value}&_t=${Date.now()}`)
-      .then(async r => {
-        if (!r.ok) throw new Error("Offices error");
-        const data = await r.json();
-        return data?.offices || [];
+          // Find first state with active PINs if current selected state has none
+          const activeState = data.tree.find((s: StateItem) => s.active_count > 0);
+          if (activeState && (!selectedStateName || !data.tree.some((s: StateItem) => s.name === selectedStateName && s.active_count > 0))) {
+            setSelectedStateName(activeState.name);
+            const activeDistrict = activeState.districts.find((d: DistrictItem) => d.active_count > 0);
+            if (activeDistrict) {
+              setSelectedDistrictName(activeDistrict.name);
+            }
+          }
+        }
       })
-      .catch(() => {
-        return [];
-      });
-
-    Promise.all([fetchTehsilsPromise, fetchOfficesPromise])
-      .then(([tehsilData, offices]) => {
-        // Build reverse map of pincode -> tehsil
-        const pinToTehsilMap = new Map<string, string>();
-        const tehsilOptions: { label: string; value: string; pincodes: string[] }[] = [];
-
-        if (tehsilData && typeof tehsilData === "object" && !tehsilData.error) {
-          let totalPinsAcrossTehsils = 0;
-          Object.entries(tehsilData).forEach(([tehsilName, pins]) => {
-            if (Array.isArray(pins)) {
-              totalPinsAcrossTehsils += pins.length;
-              pins.forEach(pin => pinToTehsilMap.set(String(pin), tehsilName));
-              tehsilOptions.push({
-                label: `${tehsilName} (${pins.length} PINs)`,
-                value: tehsilName,
-                pincodes: pins.map(String)
-              });
-            }
-          });
-
-          // Add 'All' option at top
-          tehsilOptions.unshift({
-            label: `All Tehsils in ${selectedDistrict.label} (${totalPinsAcrossTehsils} PINs)`,
-            value: "all",
-            pincodes: []
-          });
-        }
-        setGeoTehsils(tehsilOptions);
-
-        // Map offices to unique PINCODEs with major colony names
-        const pinMap = new Map<string, PincodeDetail>();
-
-        // 1. First populate from offices API
-        if (Array.isArray(offices)) {
-          offices.forEach((o: any) => {
-            const pin = String(o.pincode || "").trim();
-            if (!/^\d{6}$/.test(pin)) return;
-
-            const rawName = String(o.officeName || o.office || "").replace(/\s+(S\.O|B\.O|H\.O|G\.P\.O\.|S\.O\.|B\.O\.|H\.O\.)(\s+|$)/gi, ' ').trim();
-
-            if (!pinMap.has(pin)) {
-              pinMap.set(pin, {
-                pincode: pin,
-                name: rawName || `${selectedDistrict.label} Hub`,
-                tehsil: pinToTehsilMap.get(pin) || "District Central",
-                district: selectedDistrict.label,
-                state: selectedState.label,
-                areas: rawName ? [rawName] : []
-              });
-            } else {
-              const item = pinMap.get(pin)!;
-              if (rawName && !item.areas?.includes(rawName)) {
-                item.areas?.push(rawName);
-              }
-            }
-          });
-        }
-
-        // 2. Enrich with static BASELINE_GEO_HIERARCHY & JAIPUR_VERIFIED_QUADRANTS for maximum local authenticity
-        const stateDef = BASELINE_GEO_HIERARCHY.find(s => s.name.toLowerCase() === selectedState.value.toLowerCase());
-        const distDef = stateDef?.districts.find(d => d.name.toLowerCase() === selectedDistrict.value.toLowerCase());
-        if (distDef && stateDef) {
-          distDef.tehsils.forEach(t => {
-            t.pincodes.forEach(p => {
-              const existing = pinMap.get(p.pincode);
-              if (!existing) {
-                pinMap.set(p.pincode, {
-                  pincode: p.pincode,
-                  name: p.name,
-                  tehsil: t.name,
-                  district: distDef.name,
-                  state: stateDef.name,
-                  areas: [p.name]
-                });
-              } else {
-                existing.name = p.name;
-                if (!existing.tehsil || existing.tehsil === "District Central") {
-                  existing.tehsil = t.name;
-                }
-              }
-            });
-          });
-        }
-
-        // 3. Check Jaipur verified quadrants for prominent anchors
-        if (selectedDistrict.value.toLowerCase() === "jaipur") {
-          pinMap.forEach((item, pin) => {
-            const quads = JAIPUR_VERIFIED_QUADRANTS[pin];
-            if (quads && quads.length > 0) {
-              const keyAnchors = quads.map(q => q.anchor || q.zone).filter(Boolean);
-              if (keyAnchors.length > 0) {
-                item.name = keyAnchors.slice(0, 3).join(", ");
-              }
-            }
-          });
-        }
-
-        // Convert to sorted array
-        const sortedPins = Array.from(pinMap.values()).sort((a, b) => a.pincode.localeCompare(b.pincode));
-        setDistrictPins(sortedPins);
+      .catch(err => {
+        console.warn("Using baseline geo hierarchy:", err.message);
       })
-      .catch(console.error)
       .finally(() => {
-        setLoadingTehsils(false);
-        setLoadingOffices(false);
+        setIsLoadingHierarchy(false);
       });
-  }, [selectedState, selectedDistrict]);
+  }, []);
 
-  // ── Filtered PINCODEs based on Tehsil & Search ──
-  const filteredPins = useMemo(() => {
-    let result = districtPins;
+  // ── 2. Filtered States based on Active Mode ──
+  const availableStates = useMemo(() => {
+    const list = activeOnlyMode 
+      ? geoTree.filter(s => s.active_count > 0)
+      : geoTree;
 
-    // Filter by Tehsil
-    if (selectedTehsil !== "all") {
-      const tehsilObj = geoTehsils.find(t => t.value === selectedTehsil);
-      if (tehsilObj && tehsilObj.pincodes.length > 0) {
-        const pinSet = new Set(tehsilObj.pincodes);
-        result = result.filter(p => pinSet.has(p.pincode) || p.tehsil === selectedTehsil);
-      } else {
-        result = result.filter(p => p.tehsil === selectedTehsil);
+    return list.map(s => ({
+      label: `${s.name} (${s.active_count} Active)`,
+      value: s.name,
+      sublabel: `${s.districts.length} Districts, ${s.total_count} PINs`,
+      activeCount: s.active_count,
+      totalCount: s.total_count,
+      isActive: s.active_count > 0
+    }));
+  }, [geoTree, activeOnlyMode]);
+
+  // Ensure selectedState is valid
+  useEffect(() => {
+    if (availableStates.length > 0 && !availableStates.some(s => s.value === selectedStateName)) {
+      setSelectedStateName(availableStates[0].value);
+    }
+  }, [availableStates, selectedStateName]);
+
+  // ── 3. Selected State Object & Available Districts ──
+  const currentStateObj = useMemo(() => {
+    return geoTree.find(s => s.name.toLowerCase() === selectedStateName.toLowerCase()) || null;
+  }, [geoTree, selectedStateName]);
+
+  const availableDistricts = useMemo(() => {
+    if (!currentStateObj) return [];
+    const distList = activeOnlyMode
+      ? currentStateObj.districts.filter(d => d.active_count > 0)
+      : currentStateObj.districts;
+
+    return distList.map(d => ({
+      label: `${d.name} (${d.active_count} Active)`,
+      value: d.name,
+      sublabel: `${d.tehsils.length} Tehsils, ${d.total_count} PINs`,
+      activeCount: d.active_count,
+      totalCount: d.total_count,
+      isActive: d.active_count > 0
+    }));
+  }, [currentStateObj, activeOnlyMode]);
+
+  // Ensure selectedDistrict is valid
+  useEffect(() => {
+    if (availableDistricts.length > 0 && !availableDistricts.some(d => d.value === selectedDistrictName)) {
+      setSelectedDistrictName(availableDistricts[0].value);
+    }
+  }, [availableDistricts, selectedDistrictName]);
+
+  // ── 4. Selected District Object & Available Tehsils ──
+  const currentDistrictObj = useMemo(() => {
+    if (!currentStateObj) return null;
+    return currentStateObj.districts.find(d => d.name.toLowerCase() === selectedDistrictName.toLowerCase()) || null;
+  }, [currentStateObj, selectedDistrictName]);
+
+  const availableTehsils = useMemo(() => {
+    if (!currentDistrictObj) return [];
+    const tehList = activeOnlyMode
+      ? currentDistrictObj.tehsils.filter(t => t.active_count > 0)
+      : currentDistrictObj.tehsils;
+
+    const totalActivePinsInDistrict = tehList.reduce((sum, t) => sum + (activeOnlyMode ? t.active_count : t.total_count), 0);
+
+    const opts: DropdownOption[] = [
+      {
+        label: `All ${activeOnlyMode ? "Active " : ""}Tehsils (${totalActivePinsInDistrict} PINs)`,
+        value: "all",
+        sublabel: `${tehList.length} tehsils in ${currentDistrictObj.name}`
+      },
+      ...tehList.map(t => ({
+        label: `${t.name} (${activeOnlyMode ? t.active_count : t.total_count} PINs)`,
+        value: t.name,
+        sublabel: `${t.active_count} active of ${t.total_count} total`,
+        activeCount: t.active_count,
+        totalCount: t.total_count,
+        isActive: t.active_count > 0
+      }))
+    ];
+
+    return opts;
+  }, [currentDistrictObj, activeOnlyMode]);
+
+  // Ensure selectedTehsil is valid
+  useEffect(() => {
+    if (selectedTehsilName !== "all" && !availableTehsils.some(t => t.value === selectedTehsilName)) {
+      setSelectedTehsilName("all");
+    }
+  }, [availableTehsils, selectedTehsilName]);
+
+  // ── 5. PINCODEs in Selected District / Tehsil ──
+  const rawPincodesInScope = useMemo(() => {
+    if (!currentDistrictObj) return [];
+
+    let tehsils = currentDistrictObj.tehsils;
+    if (activeOnlyMode) {
+      tehsils = tehsils.filter(t => t.active_count > 0);
+    }
+
+    if (selectedTehsilName !== "all") {
+      tehsils = tehsils.filter(t => t.name.toLowerCase() === selectedTehsilName.toLowerCase());
+    }
+
+    const pins: PincodeItem[] = [];
+    tehsils.forEach(t => {
+      t.pincodes.forEach(p => {
+        if (!activeOnlyMode || p.status === "active") {
+          pins.push(p);
+        }
+      });
+    });
+
+    return pins;
+  }, [currentDistrictObj, activeOnlyMode, selectedTehsilName]);
+
+  // Enrich PINs with Authentic Colony Names and Quadrants
+  const enrichedPins = useMemo(() => {
+    return rawPincodesInScope.map(pin => {
+      let displayName = pin.name;
+
+      // Check Jaipur verified quadrants for prominent colony anchors
+      if (pin.district.toLowerCase() === "jaipur") {
+        const quads = JAIPUR_VERIFIED_QUADRANTS[pin.pincode];
+        if (quads && quads.length > 0) {
+          const anchors = quads.map(q => q.anchor || q.zone).filter(Boolean);
+          if (anchors.length > 0) {
+            displayName = anchors.slice(0, 3).join(", ");
+          }
+        }
       }
-    }
 
-    // Filter by Search text (PIN or Colony name)
-    if (pinFilterSearch.trim()) {
-      const q = pinFilterSearch.trim().toLowerCase();
-      result = result.filter(p => 
-        p.pincode.includes(q) || 
-        p.name.toLowerCase().includes(q) ||
-        p.tehsil.toLowerCase().includes(q) ||
-        (p.areas && p.areas.some(a => a.toLowerCase().includes(q)))
-      );
-    }
+      return {
+        ...pin,
+        displayName
+      };
+    });
+  }, [rawPincodesInScope]);
 
-    return result;
-  }, [districtPins, selectedTehsil, geoTehsils, pinFilterSearch]);
+  // Filter by Search Query
+  const filteredPins = useMemo(() => {
+    if (!pinFilterSearch.trim()) return enrichedPins;
+    const q = pinFilterSearch.trim().toLowerCase();
+    return enrichedPins.filter(p => 
+      p.pincode.includes(q) ||
+      p.displayName.toLowerCase().includes(q) ||
+      p.tehsil.toLowerCase().includes(q)
+    );
+  }, [enrichedPins, pinFilterSearch]);
 
-  // Set of selected pincodes for O(1) lookups
+  // Lookup set for selected PINs
   const selectedPincodesSet = useMemo(() => new Set(selectedPincodes), [selectedPincodes]);
 
   // ── Toggle Individual PIN ──
@@ -522,7 +512,7 @@ export function TerritoryPincodeSelector({
     onChange([]);
   };
 
-  // ── Manual Paste Parser ──
+  // ── Manual Paste Sync ──
   const handleManualTextChange = (text: string) => {
     setManualText(text);
     const detected = Array.from(new Set(
@@ -536,25 +526,62 @@ export function TerritoryPincodeSelector({
 
   return (
     <div className="space-y-3.5 bg-muted/20 border border-border rounded-xl p-3.5 transition-all">
-      {/* Header & Helper */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-border">
+      {/* Top Header: Title + Mode Toggle + Link to Expansion */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-border">
         <div>
-          <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-            <Building className="w-3.5 h-3.5 text-primary" />
-            {label}
-            {required && <span className="text-red-500 font-bold">*</span>}
-          </label>
-          <p className="text-[11px] text-muted-foreground">{helperText}</p>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <Building className="w-3.5 h-3.5 text-primary" />
+              {label}
+              {required && <span className="text-red-500 font-bold">*</span>}
+            </label>
+
+            {/* Operational Truth Mode Pill Toggle */}
+            <button
+              type="button"
+              onClick={() => setActiveOnlyMode(!activeOnlyMode)}
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all flex items-center gap-1 ${
+                activeOnlyMode
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
+              }`}
+              title={activeOnlyMode ? "Showing only operational active territories" : "Showing all expansion zones"}
+            >
+              {activeOnlyMode ? (
+                <>
+                  <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                  Active Territories Only
+                </>
+              ) : (
+                <>
+                  <Compass className="w-3 h-3 text-amber-500" />
+                  Showing Expansion Zones
+                </>
+              )}
+            </button>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-0.5">{helperText}</p>
         </div>
 
-        {/* Selected Count & Manual Paste Toggle */}
-        <div className="flex items-center gap-2">
+        {/* Right side: Action Hub & Expansion Link */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <a
+            href="/admin/expansion"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-primary hover:underline flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-md border border-primary/20 hover:bg-primary/10 transition-colors"
+          >
+            <span>Expansion Hub</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
+
           <Badge 
             variant={selectedPincodes.length > 0 ? "default" : "secondary"}
             className="text-xs font-semibold px-2 py-0.5"
           >
-            {selectedPincodes.length} PIN{selectedPincodes.length === 1 ? "" : "s"} Selected
+            {selectedPincodes.length} PIN{selectedPincodes.length === 1 ? "" : "s"} Assigned
           </Badge>
+
           <Button
             type="button"
             variant="outline"
@@ -593,41 +620,39 @@ export function TerritoryPincodeSelector({
         <SearchableDropdown
           label="1. State"
           placeholder="Select State"
-          value={selectedState?.value}
-          options={geoStates}
-          loading={loadingStates}
-          onChange={(opt) => setSelectedState(opt)}
+          value={selectedStateName}
+          options={availableStates}
+          loading={isLoadingHierarchy && availableStates.length === 0}
+          onChange={(opt) => setSelectedStateName(opt.value)}
           icon={MapPin}
         />
 
         {/* Tier 2: District */}
         <SearchableDropdown
           label="2. District"
-          placeholder={!selectedState ? "Select state..." : "Select District"}
-          value={selectedDistrict?.value}
-          options={geoDistricts}
-          loading={loadingDistricts}
-          disabled={!selectedState || loadingDistricts}
-          onChange={(opt) => setSelectedDistrict(opt)}
+          placeholder={availableDistricts.length === 0 ? "No districts" : "Select District"}
+          value={selectedDistrictName}
+          options={availableDistricts}
+          disabled={availableDistricts.length === 0}
+          onChange={(opt) => setSelectedDistrictName(opt.value)}
           icon={MapPin}
         />
 
         {/* Tier 3: Tehsil */}
         <SearchableDropdown
           label="3. Tehsil"
-          placeholder={loadingTehsils ? "Loading tehsils..." : "All Tehsils"}
-          value={selectedTehsil}
-          options={geoTehsils.map(t => ({ label: t.label, value: t.value }))}
-          loading={loadingTehsils}
-          disabled={!selectedDistrict || loadingTehsils || geoTehsils.length === 0}
-          onChange={(opt) => setSelectedTehsil(opt.value)}
+          placeholder={availableTehsils.length === 0 ? "No tehsils" : "All Tehsils"}
+          value={selectedTehsilName}
+          options={availableTehsils}
+          disabled={availableTehsils.length === 0}
+          onChange={(opt) => setSelectedTehsilName(opt.value)}
           icon={Layers}
         />
       </div>
 
-      {/* Tier 4: PINCODEs Chips Section */}
+      {/* Tier 4: PINCODEs Interactive Chips Grid */}
       <div className="bg-background border border-border rounded-lg p-3 space-y-2.5">
-        {/* Toolbar: Search inside PINs + Batch Action Buttons */}
+        {/* Toolbar: Quick Filter + Batch Actions */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
           {/* Quick Filter Input */}
           <div className="relative flex-1 max-w-xs">
@@ -636,7 +661,7 @@ export function TerritoryPincodeSelector({
               type="text"
               value={pinFilterSearch}
               onChange={(e) => setPinFilterSearch(e.target.value)}
-              placeholder="Filter by PIN (e.g. 302012) or colony..."
+              placeholder={`Filter ${filteredPins.length} PINs or colonies...`}
               className="w-full pl-8 pr-7 py-1 text-xs bg-muted/30 border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
             {pinFilterSearch && (
@@ -689,23 +714,38 @@ export function TerritoryPincodeSelector({
         </div>
 
         {/* PINCODE Chips Grid */}
-        {loadingOffices ? (
-          <div className="py-8 flex flex-col items-center justify-center text-xs text-muted-foreground gap-2">
-            <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            <span>Loading postal network for {selectedDistrict?.label || "District"}...</span>
-          </div>
-        ) : filteredPins.length === 0 ? (
+        {filteredPins.length === 0 ? (
           <div className="py-6 text-center text-xs text-muted-foreground italic bg-muted/10 rounded-lg border border-dashed border-border p-4">
             {pinFilterSearch ? (
               <span>No pincodes matching "{pinFilterSearch}". Try clearing the search.</span>
+            ) : activeOnlyMode ? (
+              <div className="space-y-1">
+                <p>No active pincodes found in this selection.</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Switch to{" "}
+                  <button 
+                    type="button"
+                    onClick={() => setActiveOnlyMode(false)}
+                    className="text-primary underline font-medium"
+                  >
+                    Show Expansion Zones
+                  </button>{" "}
+                  or activate PINs in the{" "}
+                  <a href="/admin/expansion" target="_blank" className="text-primary underline font-medium">
+                    Expansion Hub
+                  </a>.
+                </p>
+              </div>
             ) : (
-              <span>No pincodes found for the selected tehsil. Select "All Tehsils" or change district.</span>
+              <span>No pincodes registered in this tehsil yet. Add new PINs via the Expansion Hub.</span>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-[220px] overflow-y-auto p-1 border border-border/50 rounded-lg bg-muted/10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-[230px] overflow-y-auto p-1 border border-border/50 rounded-lg bg-muted/10">
             {filteredPins.map((item) => {
               const isSelected = selectedPincodesSet.has(item.pincode);
+              const isActive = item.status === "active";
+
               return (
                 <button
                   key={item.pincode}
@@ -718,18 +758,25 @@ export function TerritoryPincodeSelector({
                   }`}
                 >
                   <div className="flex flex-col min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-mono font-bold tracking-tight text-xs text-foreground">
                         {item.pincode}
                       </span>
-                      {item.tehsil && item.tehsil !== "District Central" && (
-                        <span className="text-[9px] px-1 py-0.2 bg-muted text-muted-foreground rounded font-normal truncate max-w-[90px]">
-                          {item.tehsil}
+                      <span className="text-[9px] px-1 py-0.2 bg-muted text-muted-foreground rounded font-normal truncate max-w-[85px]">
+                        {item.tehsil}
+                      </span>
+                      {isActive ? (
+                        <span className="text-[8px] px-1 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold rounded">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="text-[8px] px-1 py-0.2 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold rounded">
+                          Expansion
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-muted-foreground truncate block mt-0.5" title={item.name}>
-                      {item.name}
+                    <span className="text-[11px] text-muted-foreground truncate block mt-0.5" title={item.displayName}>
+                      {item.displayName}
                     </span>
                   </div>
 
@@ -769,7 +816,6 @@ export function TerritoryPincodeSelector({
         ) : (
           <div className="flex flex-wrap items-center gap-1.5 max-h-[100px] overflow-y-auto p-1.5 bg-background border border-border rounded-lg">
             {selectedPincodes.map((pin) => {
-              // Try to find locality name for tooltip
               const staticMeta = resolveStaticHierarchy(pin);
               const jaipurQuads = JAIPUR_VERIFIED_QUADRANTS[pin];
               const tooltipName = jaipurQuads?.[0]?.anchor || staticMeta?.name || "Service Area";

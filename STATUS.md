@@ -146,11 +146,17 @@
 ### Milestone 17: 4-Tier Geographic Cascader for Technician Onboarding & Profile Management (State → District → Tehsil → PINCODEs)
 - **Eliminated Manual PIN Entry Bottlenecks:** Replaced flat, error-prone manual 6-digit text inputs (`serviceable_pincodes_raw`) with a structured 4-tier geographic cascader component (`TerritoryPincodeSelector.tsx`).
 - **Comprehensive Modal Integration:** Embedded into both Modal 1 (Onboard Technician Modal) and Modal 2 (Edit Profile & Territory Modal) in `InstallersClient.tsx`, expanding modal dialogs to `max-w-2xl` for spacious, modern ergonomics.
+- **Operational Truth Filtering (Active-Only by Default):**
+  - **Single Source of Truth:** Connected directly to the Authoritative Geo Hierarchy Engine (`/api/admin/geo/hierarchy`).
+  - **Zero-Clutter Active Flow:** By default, filters out all non-operational states and inactive districts. Shows only States with `active_count > 0` (currently Rajasthan), Districts with active coverage (Jaipur), Tehsils with active PINs (Jaipur Urban, Sanganer, Amer, Jhotwara), and the 20 core urban launch PINCODEs.
+  - **Seamless On-Demand Expansion:** When an admin activates a new state, district, or tehsil via `/admin/expansion` (e.g. bulk activating Nashik in Maharashtra or South Delhi), that territory immediately lights up in the installer cascader with 0 code changes.
+  - **Expansion / Pre-launch Mode Toggle:** An interactive header pill (`[ShieldCheck: Active Territories Only] <-> [Compass: Showing Expansion Zones]`) enables admins to provision technicians in upcoming expansion hubs ahead of city launches.
+  - **Direct Expansion Hub Link:** Integrated quick link `[Expansion Hub ↗]` directly to `/admin/expansion` for 1-click territory activation.
 - **Dynamic 4-Tier Administrative Flow:**
-  - **Tier 1 (State):** Searchable dropdown loaded from `/api/admin/geo?type=states`, defaulting to Rajasthan with static hierarchy fallback.
-  - **Tier 2 (District):** Searchable dropdown loaded from `/api/admin/geo?type=districts&state={slug}`, defaulting to Jaipur with static fallback.
-  - **Tier 3 (Tehsil):** Searchable dropdown loaded from `/api/admin/geo/tehsils?state={slug}&district={slug}`, showing `All Tehsils in {District} ({total} PINs)` and individual revenue tehsils (e.g. `Jaipur Urban (17 PINs)`, `Sanganer (4 PINs)`, `Amer (3 PINs)`).
-  - **Tier 4 (PINCODEs):** Interactive card grid displaying 6-digit codes enriched with authentic colony anchors from `JAIPUR_VERIFIED_QUADRANTS` and postal office data (e.g. `302012 (Khatipura / Jhotwara)`, `302019 (Mansarovar / VT Road)`, `302020 (Vaishali Nagar / Chitrakoot)`).
+  - **Tier 1 (State):** Searchable dropdown loaded from Geo Hierarchy (`/api/admin/geo/hierarchy`), defaulting to Rajasthan with active PIN count badge.
+  - **Tier 2 (District):** Searchable dropdown showing active operational districts (Jaipur).
+  - **Tier 3 (Tehsil):** Searchable dropdown showing active revenue tehsils with live counts (`Jaipur Urban (17 PINs)`, `Sanganer (1 PIN)`, etc.).
+  - **Tier 4 (PINCODEs):** Interactive card grid displaying 6-digit codes enriched with authentic colony anchors from `JAIPUR_VERIFIED_QUADRANTS` and postal office data (e.g., `302012 (Khatipura / Jhotwara)`, `302019 (Mansarovar / VT Road)`, `302020 (Vaishali Nagar / Chitrakoot)`).
 - **1-Click Batch Actions & Productivity:**
   - `+ Select All ({count})`: Instantly claims all currently filtered PINs in the tehsil/district.
   - `Deselect in View`: Removes visible PINs from technician territory.
