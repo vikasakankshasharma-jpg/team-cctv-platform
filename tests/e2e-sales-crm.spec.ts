@@ -83,4 +83,10 @@ test.describe('P1 Sales / CRM Chain E2E (Row 21-25)', () => {
     expect(updatedQuote?.status).toBe('pending_customer_approval');
     expect(updatedQuote?.negotiated_discount).toBe(100);
   });
+
+  test.afterAll(async () => {
+    if (QUOTE_ID) await adminDb.collection('quotes').doc(QUOTE_ID).delete().catch(() => {});
+    if (LEAD_ID) await adminDb.collection('leads').doc(LEAD_ID).delete().catch(() => {});
+  });
 });
+

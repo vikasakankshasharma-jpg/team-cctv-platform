@@ -7,6 +7,7 @@ test.describe.serial('Phase 3: Inventory Ledger API (Production Readiness)', () 
   const productId1 = `PROD-INV-A-${Date.now()}`;
   const productId2 = `PROD-INV-B-${Date.now()}`;
   const invoiceId = `INV-MOCK-${Date.now()}`;
+  let reversalId = "";
 
   test.beforeAll(async () => {
     // Seed Inventory
@@ -94,7 +95,7 @@ test.describe.serial('Phase 3: Inventory Ledger API (Production Readiness)', () 
   });
 
   test('3. Successful Reversal Transaction', async () => {
-    const reversalId = `REV-MOCK-${Date.now()}`;
+    reversalId = `REV-MOCK-${Date.now()}`;
 
     // Reverse the 3 items of P1 and 1 item of P2 from test 1
     await adminDb.runTransaction(async (t) => {
@@ -128,4 +129,18 @@ test.describe.serial('Phase 3: Inventory Ledger API (Production Readiness)', () 
     expect(prod1Entry?.qty).toBe(3); // Positive amount for reversal
   });
 
+  test.afterAll(async () => {
+    await adminDb.collection("inventory").doc(productId1).delete().catch(() => {});
+    await adminDb.collection("inventory").doc(productId2).delete().catch(() => {});
+    const ledgerSnap = await adminDb.collection("inventory_ledger")
+      .where("reference_entity_id", "in", [invoiceId, reversalId].filter(Boolean))
+      .get()
+      .catch(() => null);
+    if (ledgerSnap && !ledgerSnap.empty) {
+      const batch = adminDb.batch();
+      ledgerSnap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit().catch(() => {});
+    }
+  });
 });
+

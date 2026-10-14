@@ -163,4 +163,16 @@ test.describe('P1 Operations + Financial Chain E2E', () => {
     expect(profitResult.costs.purchase).toBe(2000);
     expect(profitResult.grossProfit).toBe(2237.29);
   });
+
+  test.afterAll(async () => {
+    await adminDb.collection('products').doc(SKU_ID).delete().catch(() => {});
+    await adminDb.collection('inventory').doc(SKU_ID).delete().catch(() => {});
+    await adminDb.collection('serial_assets').doc(`serial_${SERIAL_NUM}`).delete().catch(() => {});
+    await adminDb.collection('leads').doc(LEAD_ID).collection('quotes').doc(`QUOTE_${TEST_ID}`).delete().catch(() => {});
+    await adminDb.collection('leads').doc(LEAD_ID).delete().catch(() => {});
+    if (DEAL_ID) await adminDb.collection('deals').doc(DEAL_ID).delete().catch(() => {});
+    if (JOB_ID) await adminDb.collection('jobs').doc(JOB_ID).delete().catch(() => {});
+    if (INVOICE_ID) await adminDb.collection('invoices').doc(INVOICE_ID).delete().catch(() => {});
+  });
 });
+

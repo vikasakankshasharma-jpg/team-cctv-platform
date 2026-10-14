@@ -79,7 +79,18 @@ export async function createLeadAction(payload: {
     let assigned_salesperson_id: string | null = null;
     let broadcasted_to_salesperson_ids: string[] = [];
 
-    const isTestLead = leadData.mobile_number === "9999999999" || leadData.customer_name?.toLowerCase().includes("e2e test");
+    const phone = leadData.mobile_number || "";
+    const name = (leadData.customer_name || "").toLowerCase();
+    const isTestLead =
+      phone === "9999999999" ||
+      phone.startsWith("999999999") ||
+      phone === "7777777777" ||
+      phone === "0000000000" ||
+      phone === "1234567890" ||
+      name.includes("test") ||
+      name.includes("e2e") ||
+      name.includes("walk-in") ||
+      name.includes("dummy");
 
     if (eligibleSalespersons.length === 1) {
       assigned_salesperson_id = eligibleSalespersons[0];

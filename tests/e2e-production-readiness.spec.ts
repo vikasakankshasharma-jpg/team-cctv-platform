@@ -142,5 +142,12 @@ test.describe("Capstone Production Readiness: End-to-End Flow & Immutability", (
     });
     expect(hackRes2.status()).toBe(403);
   });
+
+  test.afterAll(async () => {
+    await adminDb.collection("products").doc(productId).delete().catch(() => {});
+    await adminDb.collection("inventory").doc(productId).delete().catch(() => {});
+    await adminDb.collection("quotes").doc(quoteId).delete().catch(() => {});
+    await adminDb.collection("invoices").doc(invoiceId).delete().catch(() => {});
+  });
 });
 

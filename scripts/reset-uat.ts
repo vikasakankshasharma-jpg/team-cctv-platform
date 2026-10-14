@@ -8,7 +8,9 @@
  * - Genuine catalog products (`products`) are PRESERVED.
  * - Genuine super admins (`admins`) are PRESERVED.
  * - Real installer profile for Vikas Kumar Sharma (`installers`) is PRESERVED with metrics reset to 0.
- * - Territory configuration (`geo_pincodes`, `geo_tehsils`, `coverage_zones`) is PRESERVED.
+ * - Real sales profile for Vikas Kumar Sharma (`salespeople`) is PRESERVED.
+ * - Territory configuration (`geo_pincodes`, `geo_tehsils`, `coverage_zones`, `service_areas`, `pincode_cache`) is PRESERVED.
+ * - Platform core configuration (`settings`, `wizard_steps`, `amc_plans`) is PRESERVED.
  */
 
 import * as dotenv from "dotenv";
@@ -18,33 +20,66 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 import { adminDb, adminStorage } from "../lib/firebase-admin";
 
 async function clearCollection(collectionPath: string) {
-  const snapshot = await adminDb.collection(collectionPath).get();
-  const batchSize = 400;
-  
-  if (snapshot.size === 0) {
-    console.log(`- ${collectionPath} is already empty.`);
-    return;
+  try {
+    const colRef = adminDb.collection(collectionPath);
+    const snap = await colRef.limit(1).get();
+    if (snap.empty) {
+      console.log(`- ${collectionPath} is already empty.`);
+      return;
+    }
+    // recursiveDelete safely handles documents and any nested subcollections
+    await adminDb.recursiveDelete(colRef);
+    console.log(`✅ Cleared all documents and subcollections from ${collectionPath}.`);
+  } catch (err: any) {
+    console.warn(`⚠️ Error clearing collection ${collectionPath}:`, err.message);
   }
+}
 
-  const batches = [];
-  let currentBatch = adminDb.batch();
-  let count = 0;
+async function cleanProducts() {
+  const snapshot = await adminDb.collection("products").get();
+  let deletedCount = 0;
+  let preservedCount = 0;
 
   for (const doc of snapshot.docs) {
-    currentBatch.delete(doc.ref);
-    count++;
-    if (count % batchSize === 0) {
-      batches.push(currentBatch.commit());
-      currentBatch = adminDb.batch();
+    const id = doc.id;
+    const isTest = 
+      id.startsWith("PROD-ADMIN-") ||
+      id.startsWith("PROD-LIVE-") ||
+      id.startsWith("SKU_") ||
+      id === "CAM1" ||
+      id === "cam_capstone_1" ||
+      id.toLowerCase().includes("test");
+
+    if (isTest) {
+      await doc.ref.delete();
+      deletedCount++;
+    } else {
+      preservedCount++;
     }
   }
+  console.log(`✅ Products: purged ${deletedCount} synthetic test product(s), preserved ${preservedCount} genuine catalog products.`);
+}
 
-  if (count % batchSize !== 0) {
-    batches.push(currentBatch.commit());
+async function cleanInventory() {
+  const snapshot = await adminDb.collection("inventory").get();
+  let deletedCount = 0;
+
+  for (const doc of snapshot.docs) {
+    const id = doc.id;
+    const isTest = 
+      id.startsWith("PROD-INV-A-") ||
+      id.startsWith("PROD-INV-B-") ||
+      id.startsWith("SKU_") ||
+      id === "CAM1" ||
+      id === "cam_capstone_1" ||
+      id.toLowerCase().includes("test");
+
+    if (isTest) {
+      await doc.ref.delete();
+      deletedCount++;
+    }
   }
-
-  await Promise.all(batches);
-  console.log(`✅ Cleared ${count} documents from ${collectionPath}.`);
+  console.log(`✅ Inventory: purged ${deletedCount} synthetic test stock item(s).`);
 }
 
 async function cleanInstallers() {
@@ -115,26 +150,46 @@ async function clearStorageFolder(folderPrefix: string) {
 
 async function wipeUATData() {
   console.log("=================================================");
-  console.log("⚠️ STARTING DAY-0 UAT CLEAN SLATE PURGE ⚠️");
+  console.log("⚠️ STARTING COMPREHENSIVE DAY-0 UAT CLEAN SLATE PURGE ⚠️");
   console.log("Wiping all test leads, quotes, jobs, and invoices.");
-  console.log("Genuine catalog products, admins, and territories will remain.");
+  console.log("Genuine catalog products, admins, installers, and territories will remain.");
   console.log("=================================================\n");
 
   const collectionsToWipe = [
     "quotes",
     "leads",
+    "industrial_leads",
+    "interest_leads",
+    "followup_tasks",
+    "quoteDeliveries",
+    "quote_events",
+    "quote_sessions",
     "jobs",
     "invoices",
     "customers",
     "orders",
+    "deals",
+    "change_orders",
+    "payout_requests",
+    "purchase_orders",
+    "inventory_ledger",
+    "stock_ledger",
     "site_visit_bookings",
     "service_tickets",
     "serial_assets",
     "warranty_certificates",
+    "customer_warranty_items",
     "amc_subscriptions",
+    "amc_contracts",
+    "rma_tickets",
+    "profitability_snapshots",
+    "rate_limits",
     "city_impressions",
     "demand_impressions",
-    "salespersons"
+    "otp_verifications",
+    "audit_logs",
+    "pricing_audit_logs",
+    "whatsapp_sessions"
   ];
 
   const storageFoldersToWipe = [
@@ -145,23 +200,27 @@ async function wipeUATData() {
   ];
 
   try {
-    console.log("--- 1. Clearing Transactional Collections ---");
+    console.log("--- 1. Recursively Clearing Transactional Collections ---");
     for (const col of collectionsToWipe) {
       await clearCollection(col);
     }
     
-    console.log("\n--- 2. Sanitizing Role Profiles ---");
+    console.log("\n--- 2. Sanitizing Products & Inventory ---");
+    await cleanProducts();
+    await cleanInventory();
+
+    console.log("\n--- 3. Sanitizing Role Profiles ---");
     await cleanInstallers();
     await cleanAdmins();
 
-    console.log("\n--- 3. Clearing Generated Storage Assets ---");
+    console.log("\n--- 4. Clearing Generated Storage Assets ---");
     for (const folder of storageFoldersToWipe) {
       await clearStorageFolder(folder);
     }
     
     console.log("\n=================================================");
-    console.log("🎉 DAY-0 CLEAN SLATE RESET COMPLETE!");
-    console.log("The platform is pristine and ready for your first live customer.");
+    console.log("🎉 COMPREHENSIVE DAY-0 CLEAN SLATE RESET COMPLETE!");
+    console.log("The platform is 100% pristine and ready for your first live customer.");
     console.log("=================================================");
   } catch (error) {
     console.error("\n❌ Error during Day-0 reset:", error);

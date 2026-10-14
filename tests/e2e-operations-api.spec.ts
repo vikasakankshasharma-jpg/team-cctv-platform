@@ -4,6 +4,7 @@ import { adminDb } from '../lib/firebase-admin';
 test.describe.serial('Phase 4C: Operations & Job State Machine', () => {
   const jobId1 = `JOB-OPS-1-${Date.now()}`;
   const jobId2 = `JOB-OPS-2-${Date.now()}`;
+  let freshJobId = "";
   
   const installerA = "mock-installerA-id";
   const installerB = "mock-installerB-id";
@@ -77,7 +78,7 @@ test.describe.serial('Phase 4C: Operations & Job State Machine', () => {
   });
 
   test('4. State Machine: Prevent Invalid Transitions (PENDING -> COMPLETED)', async ({ request }) => {
-    const freshJobId = `JOB-OPS-FAIL-${Date.now()}`;
+    freshJobId = `JOB-OPS-FAIL-${Date.now()}`;
     await adminDb.collection("jobs").doc(freshJobId).set({
       id: freshJobId, status: "PENDING_DISPATCH", created_at: new Date().toISOString()
     });
@@ -104,4 +105,11 @@ test.describe.serial('Phase 4C: Operations & Job State Machine', () => {
     const json = await res.json();
     expect(json.message).toContain("Unauthorized to mutate unassigned job");
   });
+
+  test.afterAll(async () => {
+    await adminDb.collection("jobs").doc(jobId1).delete().catch(() => {});
+    await adminDb.collection("jobs").doc(jobId2).delete().catch(() => {});
+    if (freshJobId) await adminDb.collection("jobs").doc(freshJobId).delete().catch(() => {});
+  });
 });
+

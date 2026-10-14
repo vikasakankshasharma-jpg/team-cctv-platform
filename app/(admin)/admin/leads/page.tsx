@@ -148,14 +148,28 @@ export default async function LeadsPage({
   const isTestLead = (l: LeadListRow) => {
     const qId = (l.quoteId || l.id || "").toUpperCase();
     const name = (l.customer_name || "").toLowerCase();
-    const phone = l.customer_mobile || "";
+    const phone = (l.customer_mobile || "").trim();
     return (
       qId.startsWith("QT-E2E-") ||
+      qId.startsWith("QT-ADMIN-") ||
+      qId.startsWith("QT-CRM-") ||
       qId.startsWith("TEST-") ||
+      qId.startsWith("LEAD-CRM-") ||
+      qId.includes("CAPSTONE") ||
       name.includes("test user") ||
       name.includes("e2e test") ||
       name.includes("e2e lifecycle") ||
-      phone === "9999999999"
+      name.includes("crm test") ||
+      name.includes("test wizard") ||
+      name.includes("test payment") ||
+      name.includes("prospective client") ||
+      name.includes("manual walk-in") ||
+      name.includes("dummy") ||
+      phone === "9999999999" ||
+      phone.startsWith("999999999") ||
+      phone === "7777777777" ||
+      phone === "0000000000" ||
+      phone === "1234567890"
     );
   };
 

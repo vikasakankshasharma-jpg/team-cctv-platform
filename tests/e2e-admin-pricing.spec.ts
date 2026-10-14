@@ -97,4 +97,10 @@ test.describe.serial('Phase 4D: Admin Pricing API & Immutable Contracts', () => 
     
     expect(json.data.site_preparation.ladderArrangementFee).toBe(700);
   });
+
+  test.afterAll(async () => {
+    await adminDb.collection("products").doc(productId).delete().catch(() => {});
+    await adminDb.collection("quotes").doc(oldQuoteId).delete().catch(() => {});
+  });
 });
+
