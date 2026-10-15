@@ -19,7 +19,7 @@ export function JsonLd() {
     name: "TEAM SECURE SYSTEMS PVT LTD",
     alternateName: ["CCTVQuotation", "TEAM CCTV"],
     url: baseUrl,
-    logo: `${baseUrl}/favicon.ico`,
+    logo: `${baseUrl}/logo-horizontal.jpg`,
     image: `${baseUrl}/og-image.png`,
     sameAs: [
       "https://www.justdial.com/Jaipur/Team-Cctv",

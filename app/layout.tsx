@@ -18,6 +18,17 @@ const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 export const metadata: Metadata = {
   metadataBase: new URL("https://cctvquotation.com"),
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
   description: "Get an instant free CCTV quotation online. We offer CCTV on EMI with the lowest price guaranteed for premium cameras like CP Plus & Hikvision.",
   keywords: ["Instant free CCTV quotation", "CCTV on EMI", "Lowest Price Guaranteed CCTV", "CCTV Quotation", "Security Systems India", "CCTV Installation"],
