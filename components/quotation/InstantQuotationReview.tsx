@@ -72,6 +72,15 @@ export function InstantQuotationReview({
   const techName = (activePricing.technology || selection.technology || "HD").toUpperCase();
   const camCount = selection.camera_count || 4;
 
+  const recItem = activePricing.items?.find((i: any) => 
+    products.find(p => p.id === i.product_id)?.category === "recorder" ||
+    i.display_name?.toLowerCase().includes("nvr") ||
+    i.display_name?.toLowerCase().includes("dvr")
+  );
+  const recorderDisplayName = recItem 
+    ? (recItem.brand ? `${recItem.brand} ${techName === "IP" ? "NVR" : "DVR"}` : recItem.display_name)
+    : `${brandName} ${techName === "IP" ? "NVR" : "DVR"}`;
+
   // Find accessory products available in catalog
   const availableAccessories = [
     {
@@ -258,7 +267,7 @@ export function InstantQuotationReview({
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Server className="w-4 h-4 text-indigo-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_recorder")}</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{brandName} {techName === "IP" ? "NVR" : "DVR"}</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{recorderDisplayName}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <HardDrive className="w-4 h-4 text-emerald-600 mx-auto mb-1" />

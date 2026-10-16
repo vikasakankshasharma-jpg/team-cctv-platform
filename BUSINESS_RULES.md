@@ -15,6 +15,7 @@
 - **Admin View Separation:** Synthetic test records (`is_test: true`, `QT-E2E-...`, `9999999999`) must remain filtered and hidden by default from staff lead and quotation tables.
 - **Stock Status vs. Active Status:** If a product has `is_active = true`, it is **fully eligible for quotation** regardless of whether `stock_status` is marked as `"out_of_stock"` or `"backordered"`. TEAM CCTV maintains verified vendor tie-ups and procures inventory on demand. Out-of-stock items must NOT be hidden or skipped if `is_active = true`.
 - **Add-on vs. Routine BOM Products:** Products flagged with `is_addon = true` are strictly designated as optional upsell accessories (e.g., display monitors, HDMI splitters, 4G Wi-Fi routers) in "Add-ons & Accessories For Your System" and are excluded from routine automatic BOM generation.
+- **Firestore Soft-Deletion Query Invariant:** Firestore query filters must NEVER query `where("is_deleted", "==", false)` on collections containing legacy documents. In Firestore, querying inequality or equality on a field strictly omits all documents where that field is absent/undefined. Queries must fetch active items (`where("is_active", "==", true)`) and filter out soft-deleted items in application memory (`.filter(p => p.is_deleted !== true)`).
 
 ### 1.2 Product Specifications & Attributes
 - **Pan-Tilt-Zoom (PTZ) Cameras:** Must explicitly specify Form Factor (`PTZ`), Pan capabilities, Tilt range, Optical Zoom factor (e.g., 4x, 10x, 25x), and Digital Zoom factor.
@@ -49,6 +50,11 @@
 - **Multi-PoE Switch Architecture & Gigabit Uplink:**
   - For IP camera setups where total camera count exceeds the port capacity of a single PoE switch (e.g., 15 cameras on 8-port PoE switches), multiple PoE switches are allocated.
   - An interconnecting Desktop Gigabit Switch is required and added as an upgrade/accessory to aggregate all PoE switches into a single high-speed uplink to the NVR.
+- **Strict IP vs. HD Transmission Hardware Isolation:**
+  - IP camera setups MUST ALWAYS select PoE Switches (`POE-BUD-4CH`, `POE-BUD-8CH`, etc.). Under no circumstances can an Analog SMPS be assigned to an IP system.
+  - HD camera setups strictly use CCTV SMPS Power Supplies.
+- **Concatenated Model Code Keyword Parsing:**
+  - Keyword and attribute recognition in inventory parsing checks both `technical_name` (e.g., `BB-PES4`, `CP-UNR-104-1P`) AND `display_name` concatenated (i.e. `${technical_name || ""} ${display_name || ""}`). This guarantees manufacturer model codes never mask component type keywords such as "PoE", "NVR", or "DVR".
 
 ### 3.3 Cabling Calculation & Margin Slabs
 - **Material Billing vs. Free Pulling Labor:** Cable installation labor is FREE (up to 15m/camera), but the cable material itself is billed to the customer.
@@ -93,6 +99,9 @@
   - Candidates meeting both technology and resolution compatibility ($\text{recMaxMP} \ge \text{targetMaxMP}$) are sorted:
     1. Primary: Channel capacity ascending (smallest viable channel tier).
     2. Secondary: Unit retail price ascending (cheapest eligible recorder selected).
+- **Dynamic Reset of Pinned Recorder:**
+  - In configurator state and pricing engine calculations, if a customer or admin reduces camera count (e.g. from 16 to 2 cameras) or changes the brand/technology, any previously selected or pinned `selected_recorder_id` is automatically reset if it exceeds the new required channel capacity or violates technology/brand constraints.
+  - This prevents high-capacity recorders (e.g. 16-channel or 32-channel units) from unintentionally persisting on small-scale configurations (e.g. 1 to 4 cameras) when smaller, economical 4-channel units are available.
 
 ---
 

@@ -23,6 +23,23 @@ export async function POST(request: Request) {
           paid_at: new Date().toISOString()
         });
       }
+
+      const leadId = data?.lead_id || data?.leadId;
+      if (leadId) {
+        const leadRef = adminDb.collection("leads").doc(leadId);
+        const leadSnap = await leadRef.get();
+        if (leadSnap.exists) {
+          await leadRef.update({
+            status: "booked",
+            payment_status: "advance_paid",
+            amount_paid: data?.amount_paid || 500,
+            booking_amount: 500,
+            payment_id: paymentId,
+            paid_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }).catch(() => {});
+        }
+      }
     }
 
     return NextResponse.json({ success: true });

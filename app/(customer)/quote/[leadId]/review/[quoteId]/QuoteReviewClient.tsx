@@ -5,7 +5,7 @@ import Image from "next/image";
 import { auth } from "@/lib/firebase-client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check, MessageCircle, Building2, Edit3, Calendar, MapPin, RefreshCw, Download, Sparkles, CheckCircle } from "lucide-react";
+import { ShieldCheck, Clock, CreditCard, ChevronRight, FileText, CheckCircle2, ChevronLeft, Image as ImageIcon, Check, MessageCircle, Building2, Edit3, Calendar, MapPin, RefreshCw, Download, Sparkles, CheckCircle, Zap } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { RevisionBanner } from "@/components/quote/RevisionBanner";
 import { BillingOverviewModal, BillingFormData } from "@/components/checkout/BillingOverviewModal";
@@ -217,6 +217,26 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const redirectToPaymentLink = async (type: "advance" | "advance_500" | "advance_500_cod" | "full" | "full_discount" | "emi", method: "all" | "emi", returnUrlOnly = false) => {
     try {
       const backendType = (type === "advance" || type === "advance_500" || type === "advance_500_cod") ? "booking" : type;
+      if (returnUrlOnly) {
+        const toastId = toast.loading("Generating secure payment link...");
+        const res = await fetch("/api/payment/razorpay-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            quoteId: quote.id,
+            leadId: quote.leadId,
+            paymentType: backendType,
+          }),
+        });
+        const data = await res.json();
+        toast.dismiss(toastId);
+        if (data.success && data.payment_url) {
+          return data.payment_url;
+        }
+        toast.error(data.error || "Failed to generate payment link");
+        return null;
+      }
+
       const toastId = toast.loading("Initializing secure payment gateway...");
       
       const res = await fetch("/api/payment/razorpay-order", {
@@ -252,25 +272,32 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         order_id: data.orderId,
         handler: function (response: any) {
           toast.success("Payment Successful! Verifying...");
-          window.location.href = `/payment-success?quoteId=${quote.id}&payment_id=${response.razorpay_payment_id}`;
+          window.location.href = `/payment-success?quoteId=${quote.id}&paymentId=${response.razorpay_payment_id}`;
         },
         prefill: {
           name: quote.customer.name,
           contact: quote.customer.phone,
-          email: quote.customer.email || ""
+          email: quote.customer.email || "",
         },
         theme: { color: "#000000" }
       };
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any){
-         toast.error(response.error.description || "Payment failed or cancelled.");
+         toast.error(response.error?.description || "Payment failed or cancelled.");
       });
       rzp.open();
 
     } catch (e: any) {
       toast.error("An error occurred loading the payment gateway.");
       console.error(e);
+    }
+  };
+
+  const openHostedPaymentLink = async (type: "advance" | "advance_500" | "advance_500_cod" | "full" | "full_discount" | "emi") => {
+    const url = await redirectToPaymentLink(type, "all", true);
+    if (typeof url === "string") {
+      window.location.href = url;
     }
   };
 
@@ -400,6 +427,9 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
       };
 
       const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any){
+        toast.error(response.error?.description || "Payment failed or cancelled.");
+      });
       rzp.open();
     } catch (err: any) {
       toast.error(err.message || "Payment initiation failed");
@@ -838,9 +868,10 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
                     </div>
 
+
                     <div className="flex flex-col items-center justify-center gap-2 pt-2">
                     <button 
-                      onClick={() => redirectToPaymentLink("advance_500", "all")}
+                      onClick={() => openHostedPaymentLink("advance_500")}
                       className="text-xs text-zinc-500 hover:text-blue-600 underline underline-offset-2 transition-colors text-center"
                     >
                       Trouble with the payment window? Click here to pay securely.

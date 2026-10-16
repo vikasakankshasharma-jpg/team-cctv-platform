@@ -8,11 +8,11 @@ export function useRealtimeInventory(initialProducts: Product[], initialAddons: 
   const [addons, setAddons] = useState<Addon[]>(initialAddons);
 
   useEffect(() => {
-    // We only care about active products
+    // We only care about active products - do not filter where is_deleted == false in Firestore query
+    // because Firestore excludes documents where the field is missing/undefined.
     const q = query(
       collection(db, "products"),
-      where("is_active", "==", true),
-      where("is_deleted", "==", false)
+      where("is_active", "==", true)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -27,7 +27,7 @@ export function useRealtimeInventory(initialProducts: Product[], initialAddons: 
         } as Product;
       });
       
-      setProducts(updatedProducts.filter(p => p.is_quotation_eligible !== false));
+      setProducts(updatedProducts.filter(p => p.is_deleted !== true && p.is_quotation_eligible !== false));
     }, (error) => {
       console.error("Error syncing products:", error);
     });

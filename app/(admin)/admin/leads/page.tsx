@@ -174,8 +174,9 @@ export default async function LeadsPage({
   };
 
   const totalAllLeads = leads.length;
-  const displayLeads = showTest ? leads : leads.filter((l) => !isTestLead(l));
-  const hiddenTestCount = totalAllLeads - displayLeads.length;
+  const filteredNonTest = showTest ? leads : leads.filter((l) => !isTestLead(l));
+  const displayLeads = filteredNonTest.filter((l) => l.leadStatus !== "ARCHIVED" && l.status !== "ARCHIVED");
+  const hiddenTestCount = totalAllLeads - filteredNonTest.length;
 
   const getStatusBadge = (status: string, isPaid?: boolean) => {
     if (isPaid || status === "WON" || status === "PAID" || status === "BOOKED") {
@@ -188,6 +189,7 @@ export default async function LeadsPage({
       case "QUOTATION_SENT": return <Badge variant="outline" className="border-blue-400 text-blue-700 bg-blue-50">Quote Sent</Badge>;
       case "NEGOTIATION": return <Badge variant="outline" className="border-amber-400 text-amber-700 bg-amber-50">Negotiation</Badge>;
       case "LOST": return <Badge variant="destructive">Lost</Badge>;
+      case "ARCHIVED": return <Badge variant="outline" className="border-zinc-400 text-zinc-500 bg-zinc-100 dark:bg-zinc-800">Archived</Badge>;
       default: return <Badge variant="outline">{status || "New"}</Badge>;
     }
   };

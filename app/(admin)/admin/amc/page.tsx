@@ -20,7 +20,7 @@ export default async function AdminAmcPage() {
         icon={ShieldCheck}
       />
       
-      <div className="max-w-5xl">
+      <div className="w-full">
         <AdminAmcClient />
       </div>
     </div>

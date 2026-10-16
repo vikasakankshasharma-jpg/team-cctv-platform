@@ -233,7 +233,7 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
 
 function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string, targetResolution?: string) {
   if (!config.recorder_channels) return undefined;
-  const isBudget = !brandFilter || brandFilter === "Budget";
+  const isBudget = !brandFilter || brandFilter === "Budget" || brandFilter === "Budget Brand";
   const requiredMaxMP = parseResolutionMP(targetResolution || "2MP");
   
   const recs = pool.filter(p => {
@@ -244,29 +244,36 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
     return true;
   });
   if (recs.length === 0) return undefined;
-  // Sort ascending by channel count (prefer smallest that fits), then by price (cheapest first)
-  // If a 5MP recorder is cheaper than 2MP, it will be naturally chosen!
-  recs.sort((a, b) => {
-    const aCh = (a.channels || a.max_cameras || 0);
-    const bCh = (b.channels || b.max_cameras || 0);
-    if (aCh !== bCh) return aCh - bCh;
-    return (a.unit_price || 0) - (b.unit_price || 0);
-  });
+
+  // Channel-tier sorter: prioritize smallest channel count that fits (e.g. 4ch before 8ch before 32ch),
+  // then lowest price (so cheaper 5MP is picked over 2MP when channel tier is the same).
+  const sortRecorders = (arr: Product[]) => {
+    return arr.sort((a, b) => {
+      const aCh = (a.channels || a.max_cameras || 0);
+      const bCh = (b.channels || b.max_cameras || 0);
+      if (aCh !== bCh) return aCh - bCh;
+      return (a.unit_price || 0) - (b.unit_price || 0);
+    });
+  };
+
+  sortRecorders(recs);
 
   if (isBudget) {
     const budgetRecs = recs.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));
-    if (budgetRecs.length > 0) return budgetRecs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
-    return recs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+    if (budgetRecs.length > 0) return sortRecorders(budgetRecs)[0];
+    return recs[0];
   }
 
   if (brandFilter) {
     const brandRecs = recs.filter(p => isBrandMatch(p, brandFilter));
-    if (brandRecs.length > 0) return brandRecs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
-    return undefined; // Strictly enforce recorder brand
+    if (brandRecs.length > 0) return sortRecorders(brandRecs)[0];
+    if (brandFilter.toLowerCase().includes("budget")) {
+      return recs[0];
+    }
+    return undefined; // Strictly enforce recorder brand for specific named brands
   }
 
-  // Fallback if no specific brand was requested
-  return recs.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+  return recs[0];
 }
 
 function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string, resolvedCameras?: { product: Product, qty: number }[]) {
@@ -346,28 +353,28 @@ function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[]
 
 function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string) {
   if (config.wired_cameras === 0) return undefined;
-  const isBudget = !brandFilter || brandFilter === "Budget";
+  const isBudget = !brandFilter || brandFilter === "Budget" || brandFilter === "Budget Brand";
 
-  const powerItems = pool.filter(p => p.category === "power_device");
+  const powerItems = pool.filter(p => p.category === "power_device" || (p.category as any) === "network");
   
   const getPowerCh = (p: Product) => {
     if (p.max_cameras && p.max_cameras > 0) return p.max_cameras;
     if (p.channels && p.channels > 0) return p.channels;
     
-    const name = (p.technical_name || p.display_name || "").toLowerCase();
+    const name = `${p.technical_name || ""} ${p.display_name || ""}`.toLowerCase();
     const match = name.match(/(\d+)\s*(ch|port|channels|ports)/i);
     if (match) return parseInt(match[1]);
     return 0;
   };
   
   const isPoe = (p: Product) => {
-    const name = (p.technical_name || p.display_name || "").toLowerCase();
+    const name = `${p.technical_name || ""} ${p.display_name || ""}`.toLowerCase();
     const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
     return (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !name.includes("adapter") && !isRouterOrAccessory;
   };
 
   const isSmps = (p: Product) => {
-    const name = (p.technical_name || p.display_name || "").toLowerCase();
+    const name = `${p.technical_name || ""} ${p.display_name || ""}`.toLowerCase();
     const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
     return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !(name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !isRouterOrAccessory;
   };
@@ -396,7 +403,13 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
       });
   }
   
-  if (valid.length === 0) valid = powerItems;
+  if (valid.length === 0) {
+    if (config.technology === "IP") {
+      valid = powerItems.filter(p => isPoe(p));
+    } else {
+      valid = powerItems.filter(p => isSmps(p));
+    }
+  }
   if (valid.length === 0) return undefined;
 
   if (isBudget) {

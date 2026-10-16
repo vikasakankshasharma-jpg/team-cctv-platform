@@ -156,11 +156,18 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
         nextSelection.selected_power_id = undefined;
       }
 
+      // If brand changed, clear pinned hardware so new brand resolves cleanly
+      if (patch.brand_preference && patch.brand_preference !== state.selection.brand_preference) {
+        nextSelection.selected_recorder_id = undefined;
+        nextSelection.selected_power_id = undefined;
+      }
+
       // If camera_count changed, verify capacity of current recorder and power
       if (patch.camera_count && patch.camera_count !== state.selection.camera_count) {
         if (nextSelection.selected_recorder_id) {
           const rec = state.products.find(p => p.id === nextSelection.selected_recorder_id);
-          if (rec && (rec.max_cameras || rec.channels || 0) < nextSelection.camera_count) {
+          const ch = rec ? (rec.max_cameras || rec.channels || 0) : 0;
+          if (!rec || ch < nextSelection.camera_count || (nextSelection.camera_count <= 4 && ch >= 16)) {
             nextSelection.selected_recorder_id = undefined;
           }
         }

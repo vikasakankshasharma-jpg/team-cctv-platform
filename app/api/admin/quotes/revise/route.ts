@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import { adminDb, serverTimestamp, arrayUnion } from "@/lib/firebase-admin";
 import { rateLimit } from "@/lib/rate-limit";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { SETTINGS_DOC_ID } from "@/lib/firebase-client";
@@ -43,11 +43,15 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Fetch Authoritative Data
-    const [leadDoc, parentQuoteDoc, productsSnap, addonsSnap, settingsSnap, geoRulesSnap] = await Promise.all([
+    let parentQuoteDoc = await adminDb.collection("leads").doc(lead_id).collection("quotes").doc(parent_quote_id).get();
+    if (!parentQuoteDoc.exists) {
+      parentQuoteDoc = await adminDb.collection("quotes").doc(parent_quote_id).get();
+    }
+
+    const [leadDoc, productsSnap, addonsSnap, settingsSnap, geoRulesSnap] = await Promise.all([
       adminDb.collection("leads").doc(lead_id).get(),
-      adminDb.collection("leads").doc(lead_id).collection("quotes").doc(parent_quote_id).get(),
-      adminDb.collection("products").where("is_active", "==", true).where("is_deleted", "==", false).get(),
-      adminDb.collection("addons").where("is_active", "==", true).where("is_deleted", "==", false).get(),
+      adminDb.collection("products").where("is_active", "==", true).get(),
+      adminDb.collection("addons").where("is_active", "==", true).get(),
       adminDb.collection("settings").doc(SETTINGS_DOC_ID).get(),
       adminDb.collection("geo_pricing_rules").where("is_active", "==", true).get()
     ]);
@@ -67,9 +71,9 @@ export async function POST(request: NextRequest) {
         data.technologies = data.technology ? [data.technology] : ["Common"];
       }
       return { id: d.id, ...data };
-    }) as Product[];
+    }).filter(p => (p as any).is_deleted !== true) as Product[];
     
-    const addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Addon[];
+    const addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => (a as any).is_deleted !== true) as Addon[];
     const geoRules = geoRulesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
     const settings = mergeAppSettings(settingsSnap.data() as AppSettings);
 
@@ -144,6 +148,8 @@ export async function POST(request: NextRequest) {
     const leadUpdatePayload: Record<string, any> = { 
       status: "quoted",
       last_quote_id: quoteRef.id,
+      latest_quote_id: quoteRef.id,
+      quote_ids: arrayUnion(quoteRef.id),
       updated_at: serverTimestamp()
     };
     if (effectiveFlags && Object.keys(effectiveFlags).length > 0) {

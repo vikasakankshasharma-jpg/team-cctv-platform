@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 
 export default async function PaymentSuccessPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const params = await searchParams;
-  const quoteId = params?.quoteId as string;
-  const paymentId = params?.paymentId as string;
+  const quoteId = (params?.quoteId || params?.quote_id) as string;
+  const paymentId = (params?.paymentId || params?.payment_id) as string;
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 to-white">

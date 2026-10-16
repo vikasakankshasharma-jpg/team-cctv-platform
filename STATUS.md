@@ -182,6 +182,22 @@
   - **Add District Modal:** Admin selects an active state, picks from unadded official districts in that state, and instantly generates the 4-tier tree with 1-click bulk Tehsil activation switches.
 - **Installer Territory Cascader Integration:** Any newly provisioned state, district, or PIN automatically becomes available in the installer assignment tool once active.
 
+### Milestone 18: Comprehensive Recorder Resolution & Cost Optimization Engine
+- **Technical Resolution Compatibility:** Enforced $\text{recMaxMP} \ge \max(\text{Camera MP})$ invariant across all hardware selection workflows.
+  - Camera 2MP $\rightarrow$ Minimum 2MP DVR/NVR (or cheaper 5MP if available).
+  - Camera 4MP / 5MP $\rightarrow$ Minimum 5MP DVR/NVR (2MP units strictly disqualified).
+  - Camera 8MP (4K) $\rightarrow$ Minimum 8MP DVR/NVR.
+  - Mixed setups (e.g., 3x 2MP + 1x 5MP) $\rightarrow$ Minimum 5MP DVR/NVR (sized to the highest camera resolution in the quote).
+- **Cost Optimization Tie-Break:** Cheaper higher-spec recorders take precedence (e.g. 5MP DVR chosen over 2MP DVR if priced lower, saving customer cost while running 2MP cameras natively).
+- **238 Permutations Pass:** Validated with 238/238 automated matrix tests in `scripts/execute-all-238-tests.ts`.
+
+### Milestone 19: IP Quotation Engine Resilience (4-Channel NVR, PoE Switches & IP Labor)
+- **Firestore Soft-Deletion Query Fix:** In `hooks/useRealtimeInventory.ts`, removed `where("is_deleted", "==", false)` from the live Firestore snapshot query. Because Firestore indexes omit documents missing the `is_deleted` property, 4Ch, 8Ch, and 16Ch NVRs and PoE switches were previously invisible to clients. Switched to fetching active items and filtering soft deletions in memory (`.filter(p => p.is_deleted !== true)`). Backfilled `is_deleted: false` to all Firestore catalog products.
+- **PoE Switch String Parsing:** In `lib/pricing-engine.ts` and `lib/product-resolver.ts`, fixed PoE keyword detection by concatenating both `technical_name` and `display_name` (`${a.technical_name || ""} ${a.display_name || ""}`). Prevented manufacturer model codes (e.g. `BB-PES4`) from masking PoE keywords and misidentifying PoE switches as Analog SMPS.
+- **Standard IP Labor Baseline:** Set baseline IP installation and termination rate to ₹500/camera in `lib/pricing-engine.ts`, correctly billing IP labor instead of defaulting to the HD rate of ₹400/camera.
+- **Dynamic Pinned Recorder Reset:** Configurator store (`store/configurator.ts`) and pricing engine automatically reset `selected_recorder_id` if the user adjusts camera counts downwards or switches technology, preventing oversized 16Ch/32Ch units from sticking to small 2-camera quotes.
+- **Top Summary Card Brand Dynamic Resolution:** Derives recorder name directly from resolved BOM item (`recItem.display_name`) in `InstantQuotationReview.tsx` rather than blindly prepending selected brand strings.
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
@@ -207,6 +223,7 @@
 | **Layer 17: Technician Territory Cascader** | 4-Tier Cascader (State/District/Tehsil/PINs) | `PASS` | Live bidirectional sync between chips, tehsil batch actions, and raw paste fallback; verified with zero TS errors and successful Next.js build. |
 | **Layer 18: On-Demand State & District Provisioning** | 4-Tier Expansion Network & Modals | `PASS` | Inactive states/districts removed from baseline; on-demand +Add State and +Add District modals with postal API & AI tehsil auto-generation verified; deployed live to https://cctvquotation.com. |
 | **Layer 19: Recorder Resolution & Best-Price Matrix** | 238 Permutations Matrix (`execute-all-238-tests.ts`) | `PASS` | 238/238 passed (100%). Sizing rule $\text{recMaxMP} \ge \text{targetMaxMP}$ + cheaper higher-spec selection verified across 2MP, 4MP, 5MP, 8MP, and mixed cameras. |
+| **Layer 20: IP Hardware & Labor Engine Verification** | 2-Cam IP Quotation Simulation | `PASS` | CP Plus 4Ch NVR resolved (₹5,405); PoE Switch resolved (`POE-BUD-4CH` @ ₹1,080); IP Labor billed at ₹500/cam; 0 TS errors; 100% build pass. |
 
 ---
 

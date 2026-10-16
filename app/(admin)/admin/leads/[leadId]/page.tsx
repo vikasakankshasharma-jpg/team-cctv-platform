@@ -5,12 +5,31 @@ import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FollowUpManager } from "@/components/admin/leads/FollowUpManager";
 import { QuoteVersionHistory } from "@/components/admin/leads/QuoteVersionHistory";
+import { CompleteQuoteModal } from "@/components/admin/leads/CompleteQuoteModal";
+import { QuotationRevisionModal } from "@/components/admin/leads/QuotationRevisionModal";
+import { DeleteQuoteModal } from "@/components/admin/leads/DeleteQuoteModal";
 import LeadIntelligencePanel from "@/components/admin/leads/LeadIntelligencePanel";
 import DispatchPanel from "@/components/admin/leads/DispatchPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Download, Calendar, MapPin, Building2, Phone, MessageSquare, ShieldCheck, CheckCircle2, Clock, Truck } from "lucide-react";
+import { 
+  FileText, 
+  Download, 
+  Calendar, 
+  MapPin, 
+  Building2, 
+  Phone, 
+  MessageSquare, 
+  ShieldCheck, 
+  CheckCircle2, 
+  Clock, 
+  Truck,
+  Zap,
+  Trash2,
+  Layers,
+  Lock
+} from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -21,8 +40,14 @@ export default function LeadDetailPage() {
   const [lead, setLead] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Modals for quotation lifecycle management
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showRevisionModal, setShowRevisionModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   useEffect(() => {
     fetchLead();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quoteId]);
 
   const fetchLead = async () => {
@@ -135,6 +160,41 @@ export default function LeadDetailPage() {
               <span>WhatsApp</span>
             </a>
           )}
+
+          {/* Complete Uncompleted Quote Action */}
+          {!isPaid && (
+            <Button
+              size="sm"
+              onClick={() => setShowCompleteModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>Complete Quote</span>
+            </Button>
+          )}
+
+          {/* Create Revision for Completed Quotes */}
+          {isPaid && (
+            <Button
+              size="sm"
+              onClick={() => setShowRevisionModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Create Revision (v{(lead.currentVersion || 1) + 1})</span>
+            </Button>
+          )}
+
+          {/* Delete / Archive Button */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowDeleteModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/30 text-red-700 dark:text-red-400 text-xs font-bold transition-all"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete</span>
+          </Button>
 
           {/* Status Dropdown */}
           <div className="flex items-center gap-2 ml-auto lg:ml-0">
@@ -324,7 +384,19 @@ export default function LeadDetailPage() {
           {/* Requirement Context */}
           <Card>
             <CardHeader className="pb-3 border-b">
-              <CardTitle className="text-base font-bold">CCTV Requirement Context</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-bold">CCTV Requirement Context</CardTitle>
+                {!isPaid && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowCompleteModal(true)}
+                    className="h-7 text-xs font-bold text-emerald-700 dark:text-emerald-400 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  >
+                    <Zap className="w-3 h-3 mr-1" /> Edit Requirements
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="pt-4">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
@@ -343,7 +415,7 @@ export default function LeadDetailPage() {
                 <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                   <p className="text-muted-foreground font-semibold">Technology</p>
                   <p className="text-base font-black text-foreground mt-0.5">
-                    {lead.requirementSnapshot?.technology_preference || lead.requirementSnapshot?.existing_technology || "IP / HD"}
+                    {lead.requirementSnapshot?.technology_preference || lead.requirementSnapshot?.existing_technology || "HD"}
                   </p>
                 </div>
                 <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
@@ -356,12 +428,19 @@ export default function LeadDetailPage() {
             </CardContent>
           </Card>
 
+          {/* Quotation Version History & Changelog */}
           <Card>
             <CardContent className="pt-6">
-              <QuoteVersionHistory currentQuote={lead} />
+              <QuoteVersionHistory 
+                currentQuote={lead} 
+                versions={lead.versions || []}
+                onCreateRevision={() => setShowRevisionModal(true)}
+                onRefresh={fetchLead}
+              />
             </CardContent>
           </Card>
 
+          {/* Follow-up Manager */}
           <Card>
             <CardContent className="pt-6">
               <FollowUpManager 
@@ -386,6 +465,13 @@ export default function LeadDetailPage() {
               <CardContent className="text-xs text-emerald-900 dark:text-emerald-200 space-y-3">
                 <p>This quotation has been booked with advance payment. Equipment allocation is active.</p>
                 <div className="pt-2 flex flex-col gap-2">
+                  <Button
+                    onClick={() => setShowRevisionModal(true)}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 py-2.5 rounded-xl shadow-xs"
+                  >
+                    <Layers className="w-3.5 h-3.5" />
+                    <span>Create Revision (v{(lead.currentVersion || 1) + 1})</span>
+                  </Button>
                   <a
                     href={`/api/invoice/${quoteId}/download`}
                     target="_blank"
@@ -409,11 +495,20 @@ export default function LeadDetailPage() {
               </CardHeader>
               <CardContent className="text-xs text-blue-900 dark:text-blue-200 space-y-3">
                 <p>Convert this active quote into a deal with commercial margin controls and custom discounts.</p>
-                <Link href={`/admin/leads/${quoteId}/deal`}>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">
-                    Convert to Deal
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={() => setShowCompleteModal(true)}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 py-2.5 rounded-xl shadow-xs"
+                  >
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>⚡ Complete & Finalize Quote</span>
                   </Button>
-                </Link>
+                  <Link href={`/admin/leads/${quoteId}/deal`}>
+                    <Button variant="outline" className="w-full text-xs font-bold border-blue-300 text-blue-700 hover:bg-blue-50">
+                      Convert to Deal
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -451,6 +546,38 @@ export default function LeadDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Modals for Complete, Revision, and Delete */}
+      <CompleteQuoteModal
+        isOpen={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+        leadId={lead.leadId || quoteId}
+        quoteId={lead.quoteId || quoteId}
+        customerName={lead.customer_name || "Customer"}
+        customerMobile={lead.customer_mobile || ""}
+        initialRequirement={lead.requirementSnapshot}
+        onSuccess={() => fetchLead()}
+      />
+
+      <QuotationRevisionModal
+        isOpen={showRevisionModal}
+        onClose={() => setShowRevisionModal(false)}
+        leadId={lead.leadId || quoteId}
+        parentQuoteId={lead.quoteId || quoteId}
+        currentVersion={lead.currentVersion || 1}
+        initialRequirements={lead.requirementSnapshot}
+        initialFlags={lead.site_surcharge_flags}
+        onSuccess={() => fetchLead()}
+      />
+
+      <DeleteQuoteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        quoteId={quoteId}
+        customerName={lead.customer_name || "Customer"}
+        isCompleted={isPaid}
+        onSuccess={() => {}}
+      />
     </div>
   );
 }

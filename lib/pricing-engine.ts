@@ -672,9 +672,10 @@ function calculateLabor(
   }
 
   // ── Scenario: Site REQUIRES cabling (Full Installation & Cabling) ──
+  const defaultRate = tech === "IP" ? 500 : 400;
   const baseRate = tech === "IP" 
-    ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500) 
-    : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400);
+    ? (settings.labor_ip_per_camera ?? defaultRate) 
+    : (settings.labor_hd_per_camera ?? settings.labor_full_installation_rate ?? defaultRate);
   const rate = Math.round(baseRate * locationMultiplier);
   const lineTotal = rate * qty;
 
@@ -1371,13 +1372,28 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
 }
 
 function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: string, requiredMaxMP?: number) {
-  const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued" && (p.stock_quantity === undefined || p.stock_quantity > 0);
+  const isAvailable = (p: Product) => p.is_active && p.stock_status !== "discontinued" && p.is_deleted !== true;
 
   if (selection.selected_recorder_id) {
     if (selection.selected_recorder_id === "none") return undefined;
     const rec = products.find(p => p.id === selection.selected_recorder_id);
-    if (rec && isAvailable(rec) && isTechMatch(rec, tech) && (rec.max_cameras || rec.channels || 0) >= selection.camera_count) {
-      return rec;
+    if (rec && isAvailable(rec) && isTechMatch(rec, tech)) {
+      const recChannels = rec.max_cameras || rec.channels || 0;
+      if (recChannels >= selection.camera_count) {
+        // If camera count is small (<= 4) and recorder is >= 16ch, check if smaller compatible recorders exist
+        if (selection.camera_count <= 4 && recChannels >= 16) {
+          const smallerExists = products.some(p => 
+            p.category === "recorder" && 
+            isAvailable(p) && 
+            isTechMatch(p, tech) && 
+            (p.max_cameras || p.channels || 0) >= selection.camera_count && 
+            (p.max_cameras || p.channels || 0) < recChannels
+          );
+          if (!smallerExists) return rec;
+        } else {
+          return rec;
+        }
+      }
     }
   }
 
@@ -1589,7 +1605,7 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
   }
 
   const options = addons.filter(a => {
-    const name = (a.technical_name || a.display_name || "").toLowerCase();
+    const name = `${a.technical_name || ""} ${a.display_name || ""}`.toLowerCase();
     const cat = (a.category || "").toLowerCase();
 
     // Must be in a plausible category
@@ -1610,7 +1626,7 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
 
   const getCapacity = (a: any) => {
     if (a.max_cameras && a.max_cameras > 0) return a.max_cameras;
-    const name = (a.technical_name || a.display_name || "").toLowerCase();
+    const name = `${a.technical_name || ""} ${a.display_name || ""}`.toLowerCase();
     const match = name.match(/(\d+)\s*(ch|port|channels|ports)/i);
     if (match) return parseInt(match[1]);
     return 999; // If unknown, push it to the end
@@ -1620,9 +1636,12 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     // Fallback: If strict filters fail, find ANY power supply that is definitely NOT a router or repair adapter
     const fallbackOptions = addons.filter(a => {
       const cat = (a.category || "").toLowerCase();
-      const name = (a.technical_name || a.display_name || "").toLowerCase();
+      const name = `${a.technical_name || ""} ${a.display_name || ""}`.toLowerCase();
       const isRouter = name.includes("router") || name.includes("4g") || name.includes("sim");
-      return (cat.includes("power") || name.includes("power") || name.includes("smps") || (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e"))) && !name.includes("adapter") && !isRouter;
+      if (tech === "IP") {
+        return (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !name.includes("adapter") && !isRouter;
+      }
+      return (cat.includes("power") || name.includes("power") || name.includes("smps")) && !name.includes("adapter") && !isRouter;
     });
     
     if (fallbackOptions.length === 0) return undefined;
@@ -1908,9 +1927,10 @@ export function generatePricingSnapshot(
         }
       }
     } else {
+      const defaultRate = isIP ? 500 : 400;
       const baseRate = isIP 
-        ? (settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500)
-        : (settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400);
+        ? (settings.labor_ip_per_camera ?? defaultRate)
+        : (settings.labor_hd_per_camera ?? settings.labor_full_installation_rate ?? defaultRate);
       const rate = Math.round(baseRate);
       const laborTotal = rate * wiredCameraCount;
 
