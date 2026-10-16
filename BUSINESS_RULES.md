@@ -142,6 +142,18 @@
 - **Strict Currency Symbol Encoding:**
   - All customer-facing bills of materials, cable remainders, unit rates, and totals must strictly render the Indian Rupee symbol (`₹`) and never corrupted ASCII question marks (`?`).
 
+### 3.9 Multi-Camera Quantity Scaling (1 to 32+ Cameras) & Industrial Threshold Defense
+- **Channel Tier Invariant Matrix:**
+  - $1 \text{ to } 4\text{ Cameras:}$ Strictly sizes to 4-Channel recorder and 4-Port PoE Switch (or 4/8Ch SMPS). Never overquotes 8Ch, 16Ch, or 32Ch hardware.
+  - $5 \text{ to } 8\text{ Cameras:}$ Strictly sizes to 8-Channel recorder and 8-Port PoE Switch (or 8Ch SMPS) at quantity 1. Never quotes multiple 4-port switches when an 8-port switch exists.
+  - $9 \text{ to } 16\text{ Cameras:}$ Strictly sizes to 16-Channel recorder and 16-Port PoE Switch (or 16Ch SMPS) at quantity 1. Never quotes duplicate 8-port switches when a 16-port switch exists.
+  - $17 \text{ to } 32\text{ Cameras:}$ Sizes to 32-Channel NVR for IP. Transmission dynamically scales to multiple 16-port PoE switches with core Gigabit desktop switch uplink.
+- **Dynamic Industrial Boundary Routing:**
+  - Quotable threshold is determined dynamically per technology via `getCatalogCapacity(products)`:
+    - HD: capped at the highest active DVR in catalog (currently 16Ch). Quotes $> 16\text{ HD cameras}$ cleanly route to `requiresIndustrialQuote: true`.
+    - IP: capped at the highest active NVR in catalog (currently 32Ch). Quotes $> 32\text{ IP cameras}$ route to `requiresIndustrialQuote: true`.
+    - Wireless: capped at 16 if wireless cameras are active in catalog, or 0 if unstocked, routing custom enterprise inquiries cleanly without throwing spurious missing-hardware exceptions.
+
 ---
 
 ## 4. Installation, Labor & Site Survey Rules

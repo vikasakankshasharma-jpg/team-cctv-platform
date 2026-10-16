@@ -13,7 +13,7 @@
  */
 
 import type { Product } from "@/types";
-import { isTechMatch } from "./product-resolver";
+import { isTechMatch, getProductChannelCapacity } from "./product-resolver";
 
 export type TechnologyKey = "HD" | "IP" | "Wireless";
 
@@ -41,13 +41,15 @@ export function getCatalogCapacity(products: Product[]): CatalogCapacity {
   const maxChannelsFor = (tech: string): number => {
     const recs = activeRecorders.filter((p) => isTechMatch(p, tech));
     if (recs.length === 0) return 16; // safe default
-    return Math.max(...recs.map((p) => p.channels || p.max_cameras || 0));
+    return Math.max(...recs.map((p) => getProductChannelCapacity(p) || p.channels || p.max_cameras || 0));
   };
+
+  const hasWirelessCams = products.some(p => p.category === "cctv_camera" && p.is_active && isTechMatch(p, "Wireless"));
 
   return {
     HD: maxChannelsFor("HD") || 16,
     IP: maxChannelsFor("IP") || 16,
-    Wireless: 16, // No recorder required; platform cap
+    Wireless: hasWirelessCams ? 16 : 0,
   };
 }
 

@@ -296,7 +296,7 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   if (unavailableItems.length > 0) {
     error = true;
     errorMessage = `One or more selected items are currently inactive in catalog: ${unavailableItems.map(i => i.display_name).join(', ')}`;
-  } else if (selection.camera_count > 0) {
+  } else if (!isIndustrial && selection.camera_count > 0) {
     const hasCamera = lineItems.some(item => products.some(p => p.id === item.product_id && p.category === "cctv_camera"));
     if (!hasCamera) {
       error = true;

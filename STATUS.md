@@ -236,6 +236,7 @@
 | **Layer 20: IP Hardware & Labor Engine Verification** | 2-Cam IP Quotation Simulation | `PASS` | CP Plus 4Ch NVR resolved (₹5,405); PoE Switch resolved (`POE-BUD-4CH` @ ₹1,080); IP Labor billed at ₹500/cam; 0 TS errors; 100% build pass. |
 | **Layer 21: Cross-Tech Hardware Isolation & Zero-Trust Pinned Defense** | Invariant Suite (`test-invariants.ts`) & 238 Matrix | `PASS` | 100% invariant pass: IP quotes never receive Analog SMPS, 4-cam quotes never receive 32Ch NVR; mismatched pinned overrides instantly rejected and auto-healed. |
 | **Layer 22: Mixed Camera Sizing & Brand Matching Defense** | Live Quote Suite (`verify-quote-fixes.ts`) | `PASS` | 5-cam mixed setup (3 bullet + 2 dome) correctly selects 8Ch NVR, 1x 8-port PoE switch, ₹500 labor/cam, and clean ₹ currency symbol with 100% build pass. |
+| **Layer 23: All-Camera-Count Scaling & Industrial Boundary Matrix** | Matrix Suite (`test-all-counts-matrix.ts`) | `PASS` | 432/432 passed (100.0%). Every camera count 1 to 32 across HD, IP, and Wireless cleanly validates channel capacity, port scaling, and dynamic industrial routing with 0 errors. |
 
 ---
 
