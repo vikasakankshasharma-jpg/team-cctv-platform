@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/googlec3126e482d87823c.html',
+        destination: '/api/google-verify',
+      },
+    ];
+  },
   async headers() {
     return [
       // ── Explicit Cache Bypass for Root & City Routes ─────────────────────
