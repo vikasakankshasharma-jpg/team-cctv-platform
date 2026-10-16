@@ -202,6 +202,12 @@
 - **PoE Switch Port Tier Sizing:** Enforced strict port-tier ascending sorting for IP PoE switches ($4\text{-port} < 8\text{-port} < 16\text{-port}$) before price, ensuring 4-camera setups resolve to a 4-port PoE switch (₹1,080 / ₹1,350) and never a 16-port switch. HD SMPS units prioritize lowest cost within qualifying capacities.
 - **100% Invariant & Matrix Verification:** Validated 238/238 automated matrix test permutations and dedicated resolution invariant test suite covering IP/HD separation, pinned misconfiguration recovery, and recorder resolution sizing.
 
+### Milestone 22: Mixed Camera Count Synchronization, Power Brand Matching & Currency Precision
+- **Total Camera Count Truth Invariant:** Fixed critical desynchronization where mixed camera configurations (e.g., 3 Outdoor Bullet + 2 Indoor Dome = 5 cameras) passed initial 2-camera counts into hardware resolvers. Now, total active cameras are automatically calculated and synchronized across `calculateHardware`, `resolveRecorder` (sizing to 8Ch NVR), `resolveHDD` (daily GB for 5 cameras), `resolveTransmission` (sizing to 8-port PoE switch at qty 1), and `InstantQuotationReview` top card and labor badges.
+- **Power Device Brand Matching:** Enhanced `resolveTransmission` to evaluate `selection.brand_preference`. Quotes with CP Plus selected now cleanly resolve to CP Plus PoE switches (e.g. CP Plus 8-Port PoE Switch @ ₹2,875) instead of defaulting to Budget Brand.
+- **Currency Symbol Encoding:** Eliminated corrupted `?` character in cable remainder line items (`@ ?30/m`), replacing it with standard Indian Rupee symbol `₹` (`@ ₹30/m`).
+- **Labor Rate Alignment:** Updated Firestore `settings/app_config` to peg IP installation labor at ₹500/camera and HD labor at ₹400/camera in strict accordance with `BUSINESS_RULES.md`.
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
@@ -229,6 +235,7 @@
 | **Layer 19: Recorder Resolution & Best-Price Matrix** | 238 Permutations Matrix (`execute-all-238-tests.ts`) | `PASS` | 238/238 passed (100%). Sizing rule $\text{recMaxMP} \ge \text{targetMaxMP}$ + cheaper higher-spec selection verified across 2MP, 4MP, 5MP, 8MP, and mixed cameras. |
 | **Layer 20: IP Hardware & Labor Engine Verification** | 2-Cam IP Quotation Simulation | `PASS` | CP Plus 4Ch NVR resolved (₹5,405); PoE Switch resolved (`POE-BUD-4CH` @ ₹1,080); IP Labor billed at ₹500/cam; 0 TS errors; 100% build pass. |
 | **Layer 21: Cross-Tech Hardware Isolation & Zero-Trust Pinned Defense** | Invariant Suite (`test-invariants.ts`) & 238 Matrix | `PASS` | 100% invariant pass: IP quotes never receive Analog SMPS, 4-cam quotes never receive 32Ch NVR; mismatched pinned overrides instantly rejected and auto-healed. |
+| **Layer 22: Mixed Camera Sizing & Brand Matching Defense** | Live Quote Suite (`verify-quote-fixes.ts`) | `PASS` | 5-cam mixed setup (3 bullet + 2 dome) correctly selects 8Ch NVR, 1x 8-port PoE switch, ₹500 labor/cam, and clean ₹ currency symbol with 100% build pass. |
 
 ---
 

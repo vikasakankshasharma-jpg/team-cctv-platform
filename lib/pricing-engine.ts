@@ -123,6 +123,19 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
   else if (rawTech === "wifi" || rawTech === "4g" || rawTech === "wireless") selection.technology = "Wireless";
   else selection.technology = "IP";
 
+  // Derive and synchronize totalCameraCount from mixed_camera_requirements or indoor/outdoor counts
+  if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+    const mixedSum = selection.mixed_camera_requirements.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
+    if (mixedSum > 0) {
+      selection.camera_count = mixedSum;
+    }
+  } else if (!selection.selected_camera_id && (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined)) {
+    const sum = (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0);
+    if (sum > 0) {
+      selection.camera_count = sum;
+    }
+  }
+
   // 0. Industrial Threshold Check — dynamic based on recorder catalog capacity
   const catalogCapacity = getCatalogCapacity(products);
   const techKey = selection.technology as "HD" | "IP" | "Wireless";
@@ -487,8 +500,13 @@ function calculateHardware(
     }
   }
 
+  const totalHardwareCameraCount = mixedReqs && mixedReqs.length > 0
+    ? mixedReqs.reduce((sum, r) => sum + (Number(r.count) || 0), 0)
+    : (Number(selection.camera_count) || 1);
+
   const recorderSelection = {
     ...selection,
+    camera_count: totalHardwareCameraCount,
     resolution_preference: `${requiredMaxMP}MP`
   };
   const recorder = resolveRecorder(recorderSelection, products, tech, requiredMaxMP);
@@ -506,14 +524,18 @@ function calculateHardware(
   }
 
   // 3. Storage (HDD / SD Card)
-  const hdd = resolveHDD(selection, [...products, ...addons] as any[], tech, recorder);
+  const hddSelection = {
+    ...selection,
+    camera_count: totalHardwareCameraCount
+  };
+  const hdd = resolveHDD(hddSelection, [...products, ...addons] as any[], tech, recorder);
   if (hdd) {
     const unitPrice = hdd.unit_price || hdd.price || 0;
     
     // WiFi cameras use 1 SD Card per camera. HDDs are shared (qty 1).
     const nameStr = hdd.display_name.toLowerCase();
     const isSdCard = (hdd as any).storage_type === "Micro SD" || nameStr.includes("sd card") || nameStr.includes("micro sd") || nameStr.includes("memory card");
-    const qty = isSdCard ? selection.camera_count : 1;
+    const qty = isSdCard ? totalHardwareCameraCount : 1;
 
     items.push({
       product_id: hdd.id!,
@@ -528,9 +550,13 @@ function calculateHardware(
   }
 
   // 4. Transmission (PoE/PSU)
-  const transmission = resolveTransmission(selection, [...products, ...addons] as any[], tech);
+  const transmissionSelection = {
+    ...selection,
+    camera_count: totalHardwareCameraCount
+  };
+  const transmission = resolveTransmission(transmissionSelection, [...products, ...addons] as any[], tech);
   if (transmission) {
-    let wiredCameraCount = Number(selection.camera_count) || 0;
+    let wiredCameraCount = totalHardwareCameraCount;
     if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
       wiredCameraCount = selection.mixed_camera_requirements
         .filter(req => {
@@ -892,7 +918,7 @@ function calculateCabling(
   if (bestCombination.remainderMeters > 0) {
     items.push({
       product_id: perMeterProductId,
-      display_name: `${typeLabelStr} (~${bestCombination.remainderMeters}m) @ ?${finalRatePerMeter}/m`,
+      display_name: `${typeLabelStr} (~${bestCombination.remainderMeters}m) @ ₹${finalRatePerMeter}/m`,
       qty: bestCombination.remainderMeters,
       unit_price: finalRatePerMeter,
       line_total: bestCombination.remainderMeters * finalRatePerMeter
@@ -1702,8 +1728,26 @@ function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], 
     return finalTrans;
   }
 
-  sortPowerDevices(validOptions);
-  const finalTrans = validOptions[0];
+  // Handle Brand Matching for Power Supplies / PoE
+  const brandPref = selection.brand_preference;
+  const isBudget = brandPref === "Budget" || brandPref === "Budget Brand";
+  const isSpecificBrand = brandPref && brandPref !== "all" && brandPref !== "Budget" && brandPref !== "Budget Brand";
+
+  let candidates = validOptions;
+  if (isSpecificBrand) {
+    const brandMatched = validOptions.filter(p => isBrandMatch(p as Product, brandPref!));
+    if (brandMatched.length > 0) {
+      candidates = brandMatched;
+    }
+  } else if (isBudget) {
+    const budgetMatched = validOptions.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));
+    if (budgetMatched.length > 0) {
+      candidates = budgetMatched;
+    }
+  }
+
+  sortPowerDevices(candidates);
+  const finalTrans = candidates[0];
   if (finalTrans) (finalTrans as any).max_cameras = getCapacity(finalTrans);
   return finalTrans;
 }

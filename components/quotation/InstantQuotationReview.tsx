@@ -70,7 +70,8 @@ export function InstantQuotationReview({
   );
   const brandName = camItem?.brand || selection.brand_preference || "Budget Brand";
   const techName = (activePricing.technology || selection.technology || "HD").toUpperCase();
-  const camCount = selection.camera_count || 4;
+  const mixedCount = selection.mixed_camera_requirements?.reduce((sum, r) => sum + Number(r.count || 0), 0) || 0;
+  const camCount = mixedCount > 0 ? mixedCount : (selection.camera_count || 4);
 
   const recItem = activePricing.items?.find((i: any) => 
     products.find(p => p.id === i.product_id)?.category === "recorder" ||

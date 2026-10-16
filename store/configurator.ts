@@ -155,6 +155,14 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
     set((state) => {
       const nextSelection = { ...state.selection, ...patch };
 
+      // Ensure camera_count is synchronized with mixed_camera_requirements if present
+      if (nextSelection.mixed_camera_requirements && nextSelection.mixed_camera_requirements.length > 0) {
+        const total = nextSelection.mixed_camera_requirements.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
+        if (total > 0) {
+          nextSelection.camera_count = total;
+        }
+      }
+
       // If technology changed, clear all hardware selections to prevent cross-tech hardware mixing
       if (patch.technology && patch.technology !== state.selection.technology) {
         nextSelection.selected_camera_id = undefined;
@@ -183,7 +191,7 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
       }
 
       // If camera_count changed, verify capacity of current recorder and power
-      if (patch.camera_count && patch.camera_count !== state.selection.camera_count) {
+      if (nextSelection.camera_count !== state.selection.camera_count) {
         if (nextSelection.selected_recorder_id) {
           const rec = state.products.find(p => p.id === nextSelection.selected_recorder_id);
           const ch = rec ? getProductChannelCapacity(rec) : 0;

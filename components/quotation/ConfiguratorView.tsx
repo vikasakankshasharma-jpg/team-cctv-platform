@@ -439,18 +439,25 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
     const tech = ((pricing.technology || selection.technology || "HD") as string).toUpperCase() as "HD" | "IP";
 
+    const mixedReqs = pricing.mixed_camera_requirements || selection.mixed_camera_requirements;
+    const totalCams = mixedReqs && mixedReqs.length > 0
+      ? mixedReqs.reduce((sum: number, r: any) => sum + (Number(r.count) || 0), 0)
+      : (pricing.camera_count || selection.camera_count || 4);
+
     // 1. Lock selected package configuration into store
     setActiveCheckoutOption({ technology: tech, option: pricing.plan_type, storage_days: pricing.storage_days });
-      updateSelection({
-        selected_camera_id: undefined,
-        selected_recorder_id: undefined,
-        selected_storage_id: undefined,
-        technology: tech,
-        plan_type: pricing.plan_type,
-        brand_preference: pricing.camera_device?.brand || selection.brand_preference,
-        resolution_preference: pricing.mixed_camera_requirements?.[0]?.resolution || selection.resolution_preference,
-        mixed_camera_requirements: pricing.mixed_camera_requirements || selection.mixed_camera_requirements,
-      });
+    updateSelection({
+      selected_camera_id: undefined,
+      selected_recorder_id: undefined,
+      selected_power_id: undefined,
+      selected_storage_id: undefined,
+      technology: tech,
+      plan_type: pricing.plan_type,
+      camera_count: totalCams,
+      brand_preference: pricing.camera_device?.brand || selection.brand_preference,
+      resolution_preference: pricing.mixed_camera_requirements?.[0]?.resolution || selection.resolution_preference,
+      mixed_camera_requirements: mixedReqs,
+    });
 
     // 2. Open Instant Quotation Review & Add-ons view
     setViewMode("addons");

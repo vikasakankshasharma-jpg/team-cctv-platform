@@ -130,6 +130,18 @@
   - Storage selection dynamically sizes surveillance-rated HDDs based on daily GB requirements, camera count, and compression.
   - Pinned storage (`selected_storage_id`) is strictly verified to ensure the drive is active and not soft-deleted (`is_deleted !== true`) before quoting.
 
+### 3.8 Mixed Camera Count Synchronization & Unified Brand Matching Invariants
+- **Total Camera Count Truth Invariant:**
+  - Whenever mixed cameras (e.g. 3 Outdoor Bullet + 2 Indoor Dome = 5 cameras) or indoor/outdoor counts are selected, the pricing engine, configurator store, and UI views MUST automatically synchronize and evaluate `camera_count` as the strict sum of all active camera buckets.
+  - A recorder tier MUST size to the sum of all mixed cameras (e.g., 5 cameras must strictly select an 8-Channel NVR/DVR, NEVER an undersized 4-Channel unit).
+  - Storage calculation (daily GB, backup duration) MUST size to the sum of all mixed cameras.
+  - Power supplies (PoE Switches, SMPS) MUST size to the sum of all mixed cameras (e.g., 5 cameras size to an 8-port switch at qty 1, NEVER duplicate 4-port switches).
+  - Installation labor, junction boxes, and connectors MUST bill against the sum of all mixed cameras.
+- **Power Supply Brand Matching:**
+  - When a brand preference is active (e.g., CP Plus, Hikvision, Dahua), `resolveTransmission` prioritizes power supplies matching the selected brand (e.g., CP Plus PoE Switch for CP Plus IP setups) before falling back to generic/budget options.
+- **Strict Currency Symbol Encoding:**
+  - All customer-facing bills of materials, cable remainders, unit rates, and totals must strictly render the Indian Rupee symbol (`₹`) and never corrupted ASCII question marks (`?`).
+
 ---
 
 ## 4. Installation, Labor & Site Survey Rules
