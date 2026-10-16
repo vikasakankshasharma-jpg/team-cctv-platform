@@ -111,7 +111,7 @@ export const testProducts: Product[] = [
   { id: "prod_active_non_quotable", display_name: "Internal Calibration Target", category: "cctv_camera" as any, brand: "CP Plus", unit_price: 9999, base_cost: 8000, stock_status: "in_stock" as any, is_active: true, is_quotation_eligible: false },
 ];
 
-const testAddons: Addon[] = [
+export const testAddons: Addon[] = [
   // Storage HDDs (Seagate)
   { id: "hdd_500gb", display_name: "Seagate 500GB Surveillance HDD", brand: "Seagate", category: "storage", addon_type: "hardware", unit_price: 2340, base_cost: 1800, storage_tb: 0.5, is_active: true } as any,
   { id: "hdd_1tb", display_name: "Seagate 1TB SkyHawk Surveillance HDD", brand: "Seagate", category: "storage", addon_type: "hardware", unit_price: 6760, base_cost: 5200, storage_tb: 1.0, is_active: true } as any,

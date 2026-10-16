@@ -8,14 +8,29 @@ export function isTechMatch(p: any, targetTech: string): boolean {
   if (targetUpper.includes("ANALOG")) targetUpper = "HD";
   
   const techs = (p.technologies || [p.technology]).filter(Boolean).map((t: any) => String(t).toUpperCase());
-  if (techs.length === 0 || techs.includes("COMMON")) return true;
-  
-  return techs.some((t: string) => {
-    if (targetUpper === "IP") return t.includes("IP") || t.includes("DIGITAL IP") || t.includes("NETWORK");
-    if (targetUpper === "HD") return t.includes("HD") || t.includes("ANALOG");
-    if (targetUpper === "WIFI" || targetUpper === "WIRELESS") return t.includes("WIFI") || t.includes("WIRELESS");
-    return t === targetUpper;
-  });
+  if (techs.length > 0) {
+    if (techs.includes("COMMON") || techs.includes("BOTH")) return true;
+    return techs.some((t: string) => {
+      if (targetUpper === "IP") return t.includes("IP") || t.includes("DIGITAL IP") || t.includes("NETWORK");
+      if (targetUpper === "HD") return t.includes("HD") || t.includes("ANALOG");
+      if (targetUpper === "WIFI" || targetUpper === "WIRELESS") return t.includes("WIFI") || t.includes("WIRELESS");
+      return t === targetUpper;
+    });
+  }
+
+  // If no explicit tech field, infer safely from technical name, display name, and tags
+  const name = `${p.technical_name || ""} ${p.display_name || ""} ${(p.tags || []).join(" ")}`.toUpperCase();
+  if (targetUpper === "IP") {
+    if (name.includes("DVR") && !name.includes("NVR")) return false;
+    if (name.includes("SMPS") || name.includes("BNC")) return false;
+    return name.includes("IP") || name.includes("NVR") || name.includes("POE") || name.includes("CAT6") || name.includes("RJ45");
+  }
+  if (targetUpper === "HD") {
+    if (name.includes("NVR") && !name.includes("DVR")) return false;
+    if (name.includes("POE") || name.includes("RJ45")) return false;
+    return name.includes("HD") || name.includes("DVR") || name.includes("SMPS") || name.includes("COAXIAL") || name.includes("3+1") || name.includes("BNC");
+  }
+  return true;
 }
 
 export function isBrandMatch(p: Product, brandFilter: string): boolean {
@@ -91,6 +106,18 @@ export function getRecorderMaxSupportedMP(recorder: Product): number {
   return 2;
 }
 
+export function getProductChannelCapacity(p: any): number {
+  if (!p) return 0;
+  if (typeof p.channels === "number" && p.channels > 0) return p.channels;
+  if (typeof p.max_cameras === "number" && p.max_cameras > 0) return p.max_cameras;
+  if (typeof p.network_ports === "number" && p.network_ports > 0) return p.network_ports;
+  
+  const text = `${p.technical_name || ""} ${p.display_name || ""} ${(p.tags || []).join(" ")} ${p.sku || ""}`.toLowerCase();
+  const match = text.match(/(\d+)\s*(?:ch|port|channel|channels|ports)\b/i);
+  if (match) return parseInt(match[1], 10);
+  return 0;
+}
+
 export function resolveProducts(
   config: CCTVConfiguration,
   req: CCTVRequirement,
@@ -100,7 +127,7 @@ export function resolveProducts(
   
   const lifecycleWarnings: string[] = [];
   const pool = catalog.filter(p => {
-    if (!p.is_active || p.is_quotation_eligible === false) return false;
+    if (!p.is_active || p.is_quotation_eligible === false || p.is_deleted === true) return false;
     // Allow out_of_stock products as per vendor tie-up, rely strictly on is_active
     if ((p.stock_status as string) === "on_demand") {
       lifecycleWarnings.push(`ON_DEMAND_WARNING: Product [${p.id}] ${p.display_name} is on-demand.`);
@@ -235,11 +262,18 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
   if (!config.recorder_channels) return undefined;
   const isBudget = !brandFilter || brandFilter === "Budget" || brandFilter === "Budget Brand";
   const requiredMaxMP = parseResolutionMP(targetResolution || "2MP");
+  const isIP = String(config.technology || "").toUpperCase() === "IP";
   
   const recs = pool.filter(p => {
-    if (p.category !== "recorder") return false;
-    if ((p.channels || p.max_cameras || 0) < config.recorder_channels) return false;
+    if (p.category !== "recorder" || p.is_deleted === true) return false;
+    if (getProductChannelCapacity(p) < config.recorder_channels!) return false;
     if (!isTechMatch(p, config.technology)) return false;
+    
+    // Strict hardware separation: DVR for HD, NVR for IP
+    const name = `${p.technical_name || ""} ${p.display_name || ""} ${(p.tags || []).join(" ")}`.toLowerCase();
+    if (isIP && name.includes("dvr") && !name.includes("nvr")) return false;
+    if (!isIP && name.includes("nvr") && !name.includes("dvr")) return false;
+
     if (getRecorderMaxSupportedMP(p) < requiredMaxMP) return false;
     return true;
   });
@@ -249,8 +283,8 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
   // then lowest price (so cheaper 5MP is picked over 2MP when channel tier is the same).
   const sortRecorders = (arr: Product[]) => {
     return arr.sort((a, b) => {
-      const aCh = (a.channels || a.max_cameras || 0);
-      const bCh = (b.channels || b.max_cameras || 0);
+      const aCh = getProductChannelCapacity(a);
+      const bCh = getProductChannelCapacity(b);
       if (aCh !== bCh) return aCh - bCh;
       return (a.unit_price || 0) - (b.unit_price || 0);
     });
@@ -368,7 +402,7 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
   };
   
   const isPoe = (p: Product) => {
-    const name = `${p.technical_name || ""} ${p.display_name || ""}`.toLowerCase();
+    const name = `${p.technical_name || ""} ${p.display_name || ""} ${(p.tags || []).join(" ")} ${p.sku || ""}`.toLowerCase();
     const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
     return (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !name.includes("adapter") && !isRouterOrAccessory;
   };
@@ -379,51 +413,73 @@ function resolvePowerForPermutation(config: CCTVConfiguration, pool: Product[], 
     return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !(name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !isRouterOrAccessory;
   };
 
+  const isIP = String(config.technology || "").toUpperCase() === "IP";
+
   let valid = powerItems.filter(p => {
+      if (p.is_deleted === true) return false;
       const matchTech = isTechMatch(p, config.technology);
-      const matchHardware = config.technology === "IP" ? isPoe(p) : isSmps(p);
-      const matchCams = getPowerCh(p) === config.recorder_channels;
+      const matchHardware = isIP ? isPoe(p) : isSmps(p);
+      const matchCams = getProductChannelCapacity(p) === config.recorder_channels;
       return matchTech && matchHardware && matchCams;
   });
 
   if (valid.length === 0) {
       valid = powerItems.filter(p => {
+          if (p.is_deleted === true) return false;
           const matchTech = isTechMatch(p, config.technology);
-          const matchHardware = config.technology === "IP" ? isPoe(p) : isSmps(p);
-          const matchCams = getPowerCh(p) >= config.recorder_channels;
+          const matchHardware = isIP ? isPoe(p) : isSmps(p);
+          const matchCams = getProductChannelCapacity(p) >= config.recorder_channels!;
           return matchTech && matchHardware && matchCams;
       });
   }
 
   if (valid.length === 0) {
       valid = powerItems.filter(p => {
+          if (p.is_deleted === true) return false;
           const matchTech = isTechMatch(p, config.technology);
-          const matchHardware = config.technology === "IP" ? isPoe(p) : isSmps(p);
+          const matchHardware = isIP ? isPoe(p) : isSmps(p);
           return matchTech && matchHardware;
       });
   }
   
   if (valid.length === 0) {
-    if (config.technology === "IP") {
-      valid = powerItems.filter(p => isPoe(p));
+    if (isIP) {
+      valid = powerItems.filter(p => p.is_deleted !== true && isPoe(p));
     } else {
-      valid = powerItems.filter(p => isSmps(p));
+      valid = powerItems.filter(p => p.is_deleted !== true && isSmps(p));
     }
   }
   if (valid.length === 0) return undefined;
 
+  const sortPowerDevices = (arr: Product[]) => {
+    return arr.sort((a, b) => {
+      const aCh = getProductChannelCapacity(a);
+      const bCh = getProductChannelCapacity(b);
+      if (isIP) {
+        if (aCh !== bCh) return aCh - bCh;
+        return (a.unit_price || 0) - (b.unit_price || 0);
+      } else {
+        const priceDiff = (a.unit_price || 0) - (b.unit_price || 0);
+        if (priceDiff !== 0) return priceDiff;
+        return aCh - bCh;
+      }
+    });
+  };
+
+  sortPowerDevices(valid);
+
   if (isBudget) {
     const budgetPsu = valid.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));
-    if (budgetPsu.length > 0) return budgetPsu.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
-    return valid.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+    if (budgetPsu.length > 0) return sortPowerDevices(budgetPsu)[0];
+    return valid[0];
   }
 
   if (brandFilter) {
     const brandPsu = valid.filter(p => isBrandMatch(p, brandFilter));
-    if (brandPsu.length > 0) return brandPsu.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+    if (brandPsu.length > 0) return sortPowerDevices(brandPsu)[0];
   }
 
-  return valid.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
+  return valid[0];
 }
 
 

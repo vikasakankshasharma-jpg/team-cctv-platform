@@ -4,7 +4,7 @@
  * Decomposed into modular, testable units with zero-trust server validation.
  */
 
-import { isBrandMatch, parseResolutionMP, getRecorderMaxSupportedMP } from "./product-resolver";
+import { isBrandMatch, parseResolutionMP, getRecorderMaxSupportedMP, getProductChannelCapacity, isTechMatch } from "./product-resolver";
 import type {
   Product,
   Addon,
@@ -22,21 +22,6 @@ import type {
 } from "../types";
 import { getCatalogCapacity } from "./catalog-capacity";
 import { MarginEngine, DEFAULT_MARGIN_POLICY } from "./margin-engine";
-
-function isTechMatch(p: any, targetTech: string): boolean {
-  if (!targetTech) return true;
-  let targetUpper = String(targetTech).toUpperCase();
-  if (targetUpper.includes("DIGITAL IP") || targetUpper.includes("NETWORK")) targetUpper = "IP";
-  if (targetUpper.includes("ANALOG")) targetUpper = "HD";
-  const techs = (p.technologies || [p.technology]).filter(Boolean).map((t: any) => String(t).toUpperCase());
-  if (techs.length === 0) return true;
-  return techs.some((t: string) => {
-    if (targetUpper === "IP") return t.includes("IP") || t.includes("DIGITAL IP") || t.includes("NETWORK");
-    if (targetUpper === "HD") return t.includes("HD") || t.includes("ANALOG");
-    if (targetUpper === "WIFI" || targetUpper === "WIRELESS") return t.includes("WIFI") || t.includes("WIRELESS");
-    return t === targetUpper;
-  });
-}
 
 export interface PricingEngineParams {
   selection: ConfiguratorSelection;
@@ -76,9 +61,9 @@ export interface PricingEngineParams {
 export function calculatePricing(params: PricingEngineParams): PricingResult {
   const {
     selection: rawSelection,
-    products,
-    addons,
-    settings,
+    products: rawProducts = [],
+    addons: rawAddons = [],
+    settings = {} as any,
     cablingDone,
     cablingMeters,
     referralDiscountPercent = 0,
@@ -88,6 +73,9 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     locationParams,
     site_surcharge_flags
   } = params;
+
+  const products = rawProducts || [];
+  const addons = rawAddons || [];
 
   // Clone selection to guarantee input immutability
   const selection: ConfiguratorSelection = { ...rawSelection };
@@ -362,8 +350,8 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
 
 function calculateHardware(
   selection: ConfiguratorSelection, 
-  products: Product[], 
-  addons: Addon[],
+  products: Product[] = [], 
+  addons: Addon[] = [],
   settings: AppSettings,
   tech: string
 ) {
@@ -1191,8 +1179,8 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
 }
 
 function resolveCamera(selection: ConfiguratorSelection, products: Product[], addons: Addon[], settings: AppSettings, tech: string) {
-  // Exclude products that are out of stock or on order — they are deactivated from quoting
-  const isAvailable = (p: Product) => p.is_active && p.stock_status !== "out_of_stock" && p.stock_status !== "on_order" && p.stock_status !== "discontinued" && (p.stock_quantity === undefined || p.stock_quantity > 0);
+  // Comply strictly with BUSINESS_RULES.md Section 1.1: Active products are quotation eligible regardless of stock status
+  const isAvailable = (p: Product) => p.is_active && p.stock_status !== "discontinued" && p.is_deleted !== true && p.is_quotation_eligible !== false;
 
   if (selection.selected_camera_id) {
     const cam = products.find(p => p.id === selection.selected_camera_id);
@@ -1372,22 +1360,30 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
 }
 
 function resolveRecorder(selection: ConfiguratorSelection, products: Product[], tech: string, requiredMaxMP?: number) {
-  const isAvailable = (p: Product) => p.is_active && p.stock_status !== "discontinued" && p.is_deleted !== true;
+  const isAvailable = (p: Product) => p.is_active && p.stock_status !== "discontinued" && p.is_deleted !== true && p.is_quotation_eligible !== false;
+  const isIP = String(tech || "").toUpperCase() === "IP";
+  const targetMP = requiredMaxMP || parseResolutionMP(selection.resolution_preference || "2MP");
 
   if (selection.selected_recorder_id) {
     if (selection.selected_recorder_id === "none") return undefined;
     const rec = products.find(p => p.id === selection.selected_recorder_id);
     if (rec && isAvailable(rec) && isTechMatch(rec, tech)) {
-      const recChannels = rec.max_cameras || rec.channels || 0;
-      if (recChannels >= selection.camera_count) {
-        // If camera count is small (<= 4) and recorder is >= 16ch, check if smaller compatible recorders exist
-        if (selection.camera_count <= 4 && recChannels >= 16) {
+      const recChannels = getProductChannelCapacity(rec);
+      const recMaxMP = getRecorderMaxSupportedMP(rec);
+      const name = `${rec.technical_name || ""} ${rec.display_name || ""} ${(rec.tags || []).join(" ")}`.toLowerCase();
+      const techMismatch = (isIP && name.includes("dvr") && !name.includes("nvr")) || (!isIP && name.includes("nvr") && !name.includes("dvr"));
+
+      // Strictly verify hardware separation, resolution compatibility, and camera count capacity
+      if (!techMismatch && recMaxMP >= targetMP && recChannels >= selection.camera_count) {
+        // If camera count is small (<= 4) and recorder is >= 8ch, check if smaller compatible recorders exist
+        if (selection.camera_count <= 4 && recChannels >= 8) {
           const smallerExists = products.some(p => 
             p.category === "recorder" && 
             isAvailable(p) && 
             isTechMatch(p, tech) && 
-            (p.max_cameras || p.channels || 0) >= selection.camera_count && 
-            (p.max_cameras || p.channels || 0) < recChannels
+            getRecorderMaxSupportedMP(p) >= targetMP &&
+            getProductChannelCapacity(p) >= selection.camera_count && 
+            getProductChannelCapacity(p) < recChannels
           );
           if (!smallerExists) return rec;
         } else {
@@ -1395,17 +1391,22 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
         }
       }
     }
+    // Disqualified or incompatible pinned recorder - fall through to auto-resolution!
   }
 
   const targetUpper = String(tech || "HD").toUpperCase();
   if (targetUpper === "WIFI" || targetUpper === "WIRELESS") return undefined;
 
-  const targetMP = requiredMaxMP || parseResolutionMP(selection.resolution_preference || "2MP");
-
   const compatibleRecorders = products.filter(p => {
     if (p.category !== "recorder" || !isAvailable(p)) return false;
     if (!isTechMatch(p, tech)) return false;
-    if ((p.max_cameras || p.channels || 0) < selection.camera_count) return false;
+
+    // Strict hardware separation: DVR for HD, NVR for IP
+    const name = `${p.technical_name || ""} ${p.display_name || ""} ${(p.tags || []).join(" ")}`.toLowerCase();
+    if (isIP && name.includes("dvr") && !name.includes("nvr")) return false;
+    if (!isIP && name.includes("nvr") && !name.includes("dvr")) return false;
+
+    if (getProductChannelCapacity(p) < selection.camera_count) return false;
 
     // Technical Compatibility: Recorder must support at least the camera's resolution
     const recMaxMP = getRecorderMaxSupportedMP(p);
@@ -1441,8 +1442,8 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
   // 1. Channel count (smallest channel tier that fits: 4Ch < 8Ch < 16Ch < 32Ch)
   // 2. Lowest Price: If a 5MP recorder is cheaper than a 2MP recorder, it will naturally be chosen here!
   candidates.sort((a, b) => {
-    const aCh = a.max_cameras || a.channels || 0;
-    const bCh = b.max_cameras || b.channels || 0;
+    const aCh = getProductChannelCapacity(a);
+    const bCh = getProductChannelCapacity(b);
     if (aCh !== bCh) return aCh - bCh;
 
     return (a.unit_price || 0) - (b.unit_price || 0);
@@ -1484,13 +1485,16 @@ function resolveHDDCapacity(product: Addon & { storage_tb?: number; storage_capa
 function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: string, recorder?: Product, cameraProduct?: Product) {
   if (selection.selected_storage_id) {
     if (selection.selected_storage_id === "none") return undefined; // Explicit no-storage request
-    return addons.find(a => a.id === selection.selected_storage_id);
+    const pinned = addons.find(a => a.id === selection.selected_storage_id);
+    if (pinned && pinned.is_active !== false && (pinned as any).is_deleted !== true) {
+      return pinned;
+    }
   }
 
   const recordingDays = selection.recording_days ?? 7;
   if (recordingDays === 0) return undefined;
 
-  const hdds = addons.filter(a => a.category === "storage");
+  const hdds = addons.filter(a => a.category === "storage" && a.is_active !== false && (a as any).is_deleted !== true);
   if (hdds.length === 0) return undefined;
 
   if (tech === "WiFi") {
@@ -1539,6 +1543,7 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   // 5. In-stock hard disks only
   const isAvailable = (p: any) => 
     p.is_active !== false && 
+    (p as any).is_deleted !== true &&
     p.stock_status !== "out_of_stock" && 
     p.stock_status !== "on_order" && 
     p.stock_status !== "discontinued" && 
@@ -1600,97 +1605,106 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
 }
 
 function resolveTransmission(selection: ConfiguratorSelection, addons: Addon[], tech: string) {
+  const isIP = String(tech || "").toUpperCase() === "IP";
+
+  const isPoe = (p: Addon | Product) => {
+    const item = p as any;
+    const name = `${item.technical_name || ""} ${item.display_name || ""} ${(item.tags || []).join(" ")} ${item.sku || ""}`.toLowerCase();
+    const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
+    return (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !name.includes("adapter") && !isRouterOrAccessory;
+  };
+
+  const isSmps = (p: Addon | Product) => {
+    const item = p as any;
+    const name = `${item.technical_name || ""} ${item.display_name || ""} ${(item.tags || []).join(" ")} ${item.sku || ""}`.toLowerCase();
+    const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
+    return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !(name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !isRouterOrAccessory;
+  };
+
+  const getCapacity = (a: any) => {
+    const cap = getProductChannelCapacity(a);
+    return cap > 0 ? cap : (a.max_cameras && a.max_cameras > 0 ? a.max_cameras : 999);
+  };
+
   if (selection.selected_power_id) {
-    return addons.find(a => a.id === selection.selected_power_id);
+    const pinned = addons.find(a => a.id === selection.selected_power_id);
+    if (pinned && pinned.is_active !== false && (pinned as any).is_deleted !== true) {
+      const matchTech = isTechMatch(pinned, tech);
+      const matchHardware = isIP ? isPoe(pinned) : isSmps(pinned);
+      const cap = getCapacity(pinned);
+      if (matchTech && matchHardware && cap >= selection.camera_count) {
+        (pinned as any).max_cameras = cap;
+        return pinned;
+      }
+    }
+    // Disqualified or incompatible pinned power supply - fall through to auto-resolution!
   }
 
   const options = addons.filter(a => {
-    const name = `${a.technical_name || ""} ${a.display_name || ""}`.toLowerCase();
+    if (a.is_active === false || (a as any).is_deleted === true) return false;
     const cat = (a.category || "").toLowerCase();
-
-    // Must be in a plausible category
-    const isPowerCat = cat.includes("power") || cat.includes("transmission") || cat.includes("switch") || cat.includes("network");
+    const isPowerCat = cat.includes("power") || cat.includes("transmission") || cat.includes("switch") || cat.includes("network") || cat.includes("addon");
     if (!isPowerCat) return false;
     
-    // EXPLICIT BLACKLIST: Never select these as core power supplies
-    const isRouterOrAccessory = name.includes("router") || name.includes("4g") || name.includes("sim") || name.includes("injector") || name.includes("cable") || name.includes("splitter");
-
-    if (tech === "IP") {
-      // IP Cameras need a dedicated PoE Switch
-      return (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !name.includes("adapter") && !isRouterOrAccessory;
+    if (isIP) {
+      return isPoe(a) && isTechMatch(a, "IP");
     } else {
-      // HD Cameras need an SMPS or PSU
-      return (name.includes("psu") || name.includes("smps") || name.includes("power")) && !(name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !isRouterOrAccessory;
+      return isSmps(a) && isTechMatch(a, "HD");
     }
   });
 
-  const getCapacity = (a: any) => {
-    if (a.max_cameras && a.max_cameras > 0) return a.max_cameras;
-    const name = `${a.technical_name || ""} ${a.display_name || ""}`.toLowerCase();
-    const match = name.match(/(\d+)\s*(ch|port|channels|ports)/i);
-    if (match) return parseInt(match[1]);
-    return 999; // If unknown, push it to the end
+  const sortPowerDevices = (arr: any[]) => {
+    return arr.sort((a, b) => {
+      const aCh = getCapacity(a);
+      const bCh = getCapacity(b);
+      if (isIP) {
+        if (aCh !== bCh) return aCh - bCh;
+        return (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0);
+      } else {
+        const pDiff = (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0);
+        if (pDiff !== 0) return pDiff;
+        return aCh - bCh;
+      }
+    });
   };
 
   if (options.length === 0) {
-    // Fallback: If strict filters fail, find ANY power supply that is definitely NOT a router or repair adapter
+    // Fallback: If strict category filters fail, search all addons
     const fallbackOptions = addons.filter(a => {
-      const cat = (a.category || "").toLowerCase();
-      const name = `${a.technical_name || ""} ${a.display_name || ""}`.toLowerCase();
-      const isRouter = name.includes("router") || name.includes("4g") || name.includes("sim");
-      if (tech === "IP") {
-        return (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e")) && !name.includes("adapter") && !isRouter;
-      }
-      return (cat.includes("power") || name.includes("power") || name.includes("smps")) && !name.includes("adapter") && !isRouter;
+      if (a.is_active === false || (a as any).is_deleted === true) return false;
+      if (isIP) return isPoe(a);
+      return isSmps(a);
     });
     
     if (fallbackOptions.length === 0) return undefined;
     
-    // STRATEGIC PRICING: Find options that meet capacity, then sort by CHEAPEST price to fight competitors
     const validFallbacks = fallbackOptions.filter(o => getCapacity(o) >= selection.camera_count);
     if (validFallbacks.length > 0) {
-      validFallbacks.sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
+      sortPowerDevices(validFallbacks);
       const fallback = validFallbacks[0];
-      fallback.max_cameras = getCapacity(fallback);
+      (fallback as any).max_cameras = getCapacity(fallback);
       return fallback;
     }
     
-    // If no fallback meets capacity, take the largest one available
     fallbackOptions.sort((a, b) => getCapacity(b) - getCapacity(a));
     const fallback = fallbackOptions[0];
-    fallback.max_cameras = getCapacity(fallback);
+    (fallback as any).max_cameras = getCapacity(fallback);
     return fallback;
   }
 
-  // STRATEGIC PRICING: Filter for capacity, then sort by CHEAPEST price to maintain competitive edge
   const validOptions = options.filter(o => getCapacity(o) >= selection.camera_count);
   
   if (validOptions.length === 0) {
     // If none meet capacity, pick the largest one available
     options.sort((a, b) => getCapacity(b) - getCapacity(a));
     const finalTrans = options[0];
-    finalTrans.max_cameras = getCapacity(finalTrans);
+    (finalTrans as any).max_cameras = getCapacity(finalTrans);
     return finalTrans;
   }
 
-  // Sort valid options by cheapest price ascending
-  validOptions.sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
-
-  let finalTrans = undefined;
-
-  if (tech === "IP") {
-    // For IP, we prefer standardizing on 4-ch or 8-ch switches if possible
-    const preferredOptions = validOptions.filter(o => getCapacity(o) <= 8);
-    if (preferredOptions.length > 0) {
-      finalTrans = preferredOptions[0];
-    }
-  }
-
-  if (!finalTrans) {
-    finalTrans = validOptions[0];
-  }
-
-  if (finalTrans) finalTrans.max_cameras = getCapacity(finalTrans);
+  sortPowerDevices(validOptions);
+  const finalTrans = validOptions[0];
+  if (finalTrans) (finalTrans as any).max_cameras = getCapacity(finalTrans);
   return finalTrans;
 }
 

@@ -14,6 +14,12 @@ import type {
   PricingResult,
   ConfiguratorSelection,
 } from "@/types";
+import {
+  getProductChannelCapacity,
+  getRecorderMaxSupportedMP,
+  parseResolutionMP,
+  isTechMatch,
+} from "@/lib/product-resolver";
 
 // ─────────────────────────────────────────────
 // Full Store Shape
@@ -149,7 +155,7 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
     set((state) => {
       const nextSelection = { ...state.selection, ...patch };
 
-      // If technology changed, clear all hardware selections to prevent mixing
+      // If technology changed, clear all hardware selections to prevent cross-tech hardware mixing
       if (patch.technology && patch.technology !== state.selection.technology) {
         nextSelection.selected_camera_id = undefined;
         nextSelection.selected_recorder_id = undefined;
@@ -162,20 +168,49 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
         nextSelection.selected_power_id = undefined;
       }
 
+      // If resolution changed, verify pinned recorder supports the new resolution
+      if (patch.resolution_preference && patch.resolution_preference !== state.selection.resolution_preference) {
+        if (nextSelection.selected_recorder_id) {
+          const rec = state.products.find(p => p.id === nextSelection.selected_recorder_id);
+          if (rec) {
+            const recMaxMP = getRecorderMaxSupportedMP(rec);
+            const targetMP = parseResolutionMP(patch.resolution_preference);
+            if (recMaxMP < targetMP) {
+              nextSelection.selected_recorder_id = undefined;
+            }
+          }
+        }
+      }
+
       // If camera_count changed, verify capacity of current recorder and power
       if (patch.camera_count && patch.camera_count !== state.selection.camera_count) {
         if (nextSelection.selected_recorder_id) {
           const rec = state.products.find(p => p.id === nextSelection.selected_recorder_id);
-          const ch = rec ? (rec.max_cameras || rec.channels || 0) : 0;
-          if (!rec || ch < nextSelection.camera_count || (nextSelection.camera_count <= 4 && ch >= 16)) {
+          const ch = rec ? getProductChannelCapacity(rec) : 0;
+          if (!rec || ch < nextSelection.camera_count || (nextSelection.camera_count <= 4 && ch >= 8)) {
             nextSelection.selected_recorder_id = undefined;
           }
         }
         if (nextSelection.selected_power_id) {
           const pwr = [...state.products, ...state.addons].find(a => a.id === nextSelection.selected_power_id);
-          if (pwr && (pwr.max_cameras || 0) < nextSelection.camera_count) {
+          const ch = pwr ? getProductChannelCapacity(pwr) : 0;
+          if (!pwr || ch < nextSelection.camera_count) {
             nextSelection.selected_power_id = undefined;
           }
+        }
+      }
+
+      // Invariant sanity check: Disallow technology mismatches on pinned devices
+      if (nextSelection.selected_recorder_id) {
+        const rec = state.products.find(p => p.id === nextSelection.selected_recorder_id);
+        if (rec && !isTechMatch(rec, nextSelection.technology)) {
+          nextSelection.selected_recorder_id = undefined;
+        }
+      }
+      if (nextSelection.selected_power_id) {
+        const pwr = [...state.products, ...state.addons].find(a => a.id === nextSelection.selected_power_id);
+        if (pwr && !isTechMatch(pwr, nextSelection.technology)) {
+          nextSelection.selected_power_id = undefined;
         }
       }
 

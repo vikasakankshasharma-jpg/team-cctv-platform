@@ -103,6 +103,33 @@
   - In configurator state and pricing engine calculations, if a customer or admin reduces camera count (e.g. from 16 to 2 cameras) or changes the brand/technology, any previously selected or pinned `selected_recorder_id` is automatically reset if it exceeds the new required channel capacity or violates technology/brand constraints.
   - This prevents high-capacity recorders (e.g. 16-channel or 32-channel units) from unintentionally persisting on small-scale configurations (e.g. 1 to 4 cameras) when smaller, economical 4-channel units are available.
 
+### 3.7 Power, Transmission & Storage Hardware Isolation and Zero-Trust Invariants
+- **Strict Technology Isolation for Power Devices:**
+  - IP setups MUST ALWAYS resolve to PoE Switches (`technology: ["IP"]`).
+  - HD setups MUST ALWAYS resolve to SMPS power supplies (`technology: ["HD"]`).
+  - An Analog SMPS (e.g. ₹490) can NEVER be selected for an IP quotation under any circumstance, and a PoE Switch (e.g. ₹1,080) can never be paired with an HD coaxial setup.
+- **Canonical Channel & Port Capacity Resolver (`getProductChannelCapacity`):**
+  - All power supplies and recorders derive their true hardware camera capacity through a canonical 4-tier resolver:
+    1. `channels` (explicit integer)
+    2. `max_cameras` (explicit integer)
+    3. `network_ports` (explicit integer)
+    4. Deterministic regex extraction from combined product identifiers: `(\d+)\s*(?:ch|port|channel|channels|ports)\b`
+  - Eliminates bugs where Firestore documents with missing schema properties fall back to `undefined` or 0.
+- **Power Device Port Tier Sizing & Sorting:**
+  - **IP PoE Switches:** Port tier matches camera counts in strictly ascending channel capacity ($4\text{-port} < 8\text{-port} < 16\text{-port}$) before price. An oversized switch is never auto-selected when a smaller compliant switch exists.
+  - **HD SMPS Units:** Unit price takes precedence within qualifying capacities ($\text{capacity} \ge \text{camera\_count}$). For example, an 8-channel SMPS priced at ₹490 is valid for a 4-camera setup if it is cheaper than a 4-channel unit.
+- **Zero-Trust Validation of Pinned Hardware Overrides:**
+  - If a user, draft quote, or external client supplies a pinned `selected_power_id` or `selected_recorder_id`:
+    1. Must exist, be active (`is_active === true`), and not soft-deleted (`is_deleted !== true`).
+    2. Technology MUST match configuration (`isTechMatch(device, tech)`). Any cross-technology mismatch (e.g. Analog SMPS pinned for IP cameras) is immediately rejected.
+    3. Hardware capacity must be adequate ($\text{capacity} \ge \text{camera\_count}$).
+    4. Recorders must meet resolution requirements ($\text{recMaxMP} \ge \text{targetMaxMP}$).
+    5. Recorders $\ge 8\text{Ch}$ pinned on small setups ($\le 4$ cameras) are automatically reset when compliant smaller tier units exist.
+    6. If any check fails, the invalid pinned ID is dropped and the system gracefully auto-resolves the optimal compliant hardware.
+- **Surveillance Storage Hardening:**
+  - Storage selection dynamically sizes surveillance-rated HDDs based on daily GB requirements, camera count, and compression.
+  - Pinned storage (`selected_storage_id`) is strictly verified to ensure the drive is active and not soft-deleted (`is_deleted !== true`) before quoting.
+
 ---
 
 ## 4. Installation, Labor & Site Survey Rules
