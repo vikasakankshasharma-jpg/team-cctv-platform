@@ -16,8 +16,8 @@ interface QuoteComparisonProps {
 
 export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfiguration }: QuoteComparisonProps) {
   const lockedTech = requirement.installation_type === "addon" && requirement.existing_technology ? requirement.existing_technology as "HD" | "IP" : null;
-  const defaultTech = (requirement.technology_choice || requirement.technology_preference || "HD") as "HD" | "IP";
-  const [activeTech, setActiveTech] = useState<"HD" | "IP">(lockedTech || defaultTech);
+  const defaultTech = (requirement.technology_choice || requirement.technology_preference || "HD") as "HD" | "IP" | "Wireless";
+  const [activeTech, setActiveTech] = useState<"HD" | "IP" | "Wireless">((lockedTech as any) || defaultTech);
   const [activeBrand, setActiveBrand] = useState<string>("All");
   
   // State for side-by-side comparison mode
@@ -98,11 +98,21 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
     const tech = keyParts[1];
     const mp = keyParts.length > 2 ? keyParts[2] : "";
     
+    const isWireless = tech === "Wireless" || tech === "WiFi";
     const storageItem = plan.items.find((i: any) => i.category === "storage");
-    const storageDisplay = storageItem ? storageItem.display_name.match(/\d+TB|\d+GB/)?.[0] || "Included" : "None";
+    const storageCap = storageItem ? storageItem.display_name.match(/\d+TB|\d+GB/)?.[0] || "Included" : "None";
+    const storageDisplay = isWireless && storageItem && storageItem.qty > 1 
+      ? `${storageCap} (${storageItem.qty}x SD Cards)` 
+      : isWireless && storageItem 
+        ? `${storageCap} (MicroSD)` 
+        : storageCap;
     
     const recorderItem = plan.items.find((i: any) => i.category === "recorder");
-    const recorderDisplay = recorderItem ? (recorderItem.display_name.includes("8 Ch") ? "8-Channel" : recorderItem.display_name.includes("16 Ch") ? "16-Channel" : recorderItem.display_name.includes("32 Ch") ? "32-Channel" : "4-Channel") : "Existing";
+    const recorderDisplay = isWireless 
+      ? "Not Required (Wi-Fi App)" 
+      : recorderItem 
+        ? (recorderItem.display_name.includes("8 Ch") ? "8-Channel" : recorderItem.display_name.includes("16 Ch") ? "16-Channel" : recorderItem.display_name.includes("32 Ch") ? "32-Channel" : "4-Channel") 
+        : "Existing";
 
     return (
       <Card key={planKey} className={`flex flex-col transition-all duration-200 ${isMain ? 'border-primary shadow-xl ring-2 ring-primary/20' : 'hover:shadow-md'}`}>
@@ -141,6 +151,14 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
             <li className="flex justify-between">
               <span className="text-gray-500">Installation</span> 
               <span className="font-medium">Included</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-gray-500">Internet Connection</span> 
+              <span className="font-semibold text-xs text-right">
+                {plan.addons?.some((a: any) => a.addon_id === "ACC-4G-ROUTER" || a.display_name?.toLowerCase().includes("router")) || requirement.broadband_status === "sim_router"
+                  ? "4G SIM Router Included"
+                  : "Customer Wi-Fi / Free"}
+              </span>
             </li>
           </ul>
         </CardContent>
@@ -213,14 +231,24 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
                  <tr className="hover:bg-zinc-50/50 transition-colors">
                    <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Storage Drive</td>
                    {comparePlans.map(([key, plan]) => {
+                      const isPlanWireless = key.includes("_Wireless_") || key.includes("_WiFi_");
                       const item = plan.items.find((i: any) => i.category === "storage");
-                      const val = item ? item.display_name.match(/\d+TB|\d+GB/)?.[0] || "Included" : "None (7 Days)";
+                      const cap = item ? item.display_name.match(/\d+TB|\d+GB/)?.[0] || "Included" : "None";
+                      const val = isPlanWireless && item && item.qty > 1
+                        ? `${cap} (${item.qty}x SD Cards)`
+                        : isPlanWireless && item
+                          ? `${cap} (MicroSD)`
+                          : item ? cap : "None (Live view)";
                       return <td key={key} className="p-4 border-b border-r text-center">{val}</td>;
                    })}
                  </tr>
                  <tr className="hover:bg-zinc-50/50 transition-colors">
                    <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Recorder Unit</td>
                    {comparePlans.map(([key, plan]) => {
+                      const isPlanWireless = key.includes("_Wireless_") || key.includes("_WiFi_");
+                      if (isPlanWireless) {
+                        return <td key={key} className="p-4 border-b border-r text-center text-zinc-500 font-medium">Not Required (Wi-Fi App)</td>;
+                      }
                       const item = plan.items.find((i: any) => i.category === "recorder");
                       const val = item ? (item.display_name.includes("8 Ch") ? "8-Channel" : item.display_name.includes("16 Ch") ? "16-Channel" : item.display_name.includes("32 Ch") ? "32-Channel" : "4-Channel") : "Existing";
                       return <td key={key} className="p-4 border-b border-r text-center">{val}</td>;
@@ -229,6 +257,17 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
                  <tr className="hover:bg-zinc-50/50 transition-colors">
                    <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Installation</td>
                    {comparePlans.map(([key]) => <td key={key} className="p-4 border-b border-r text-center text-green-600 font-bold bg-green-50/30">Included</td>)}
+                 </tr>
+                 <tr className="hover:bg-zinc-50/50 transition-colors">
+                   <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Internet / Wi-Fi</td>
+                   {comparePlans.map(([key, p]) => {
+                     const hasRouter = (p as any).addons?.some((a: any) => a.addon_id === "ACC-4G-ROUTER" || a.display_name?.toLowerCase().includes("router")) || requirement.broadband_status === "sim_router";
+                     return (
+                       <td key={key} className="p-4 border-b border-r text-center font-medium">
+                         {hasRouter ? "4G SIM Router Included" : "Customer Wi-Fi"}
+                       </td>
+                     );
+                   })}
                  </tr>
                  <tr className="hover:bg-zinc-50/50 transition-colors">
                    <td className="p-4 border-b border-r font-semibold text-zinc-700 bg-zinc-50/50">Warranty</td>
@@ -274,6 +313,9 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
               </button>
               <button onClick={() => !lockedTech && setActiveTech("IP")} disabled={!!lockedTech && lockedTech !== "IP"} className={`px-4 py-3 rounded-lg text-sm font-bold text-left transition-all border ${activeTech === "IP" ? 'bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-500' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                 Premium IP (Network)
+              </button>
+              <button onClick={() => !lockedTech && setActiveTech("Wireless")} disabled={!!lockedTech && (lockedTech as any) !== "Wireless"} className={`px-4 py-3 rounded-lg text-sm font-bold text-left transition-all border ${activeTech === "Wireless" ? 'bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-500' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                Smart Wireless (Wi-Fi)
               </button>
             </div>
           </div>

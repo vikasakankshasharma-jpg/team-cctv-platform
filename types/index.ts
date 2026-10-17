@@ -471,6 +471,7 @@ export interface ConfiguratorSelection {
   recording_mode?: "continuous" | "motion" | "smart";
   indoor_camera_count?: number;
   outdoor_camera_count?: number;
+  wifi_camera_count?: number;
   power_socket_near_dvr?: boolean;
   router_near_dvr?: boolean;
   include_junction_boxes?: boolean;
@@ -485,6 +486,7 @@ export interface ConfiguratorSelection {
     requiresFurnishedSurcharge?: boolean;
     requiresHeavyDrillingSurcharge?: boolean;
   };
+  installation_preference?: "diy" | "pro";
 }
 
 export interface QuoteLineItem {
@@ -667,6 +669,16 @@ export interface AppSettings {
   updated_at?: unknown;
   updated_by?: string | null;
   admin_notification_phone?: string;
+  
+  // Wireless & Smart Wi-Fi Controls
+  labor_wireless_pro_per_camera?: number;
+  labor_wireless_diy?: number;
+  wireless_auto_multiply_storage?: boolean;
+  wireless_max_sd_capacity_gb?: number;
+  bitrate_daily_gb_2mp?: number;
+  bitrate_daily_gb_4mp?: number;
+  bitrate_daily_gb_8mp?: number;
+  margin_microsd?: number;
   
   // SLA Settings
   default_sla_operating_hours?: {

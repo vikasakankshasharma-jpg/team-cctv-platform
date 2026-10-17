@@ -75,7 +75,7 @@ export function EditConfigurationDrawer({
           <div className="space-y-2">
             <Label>Technology</Label>
             <Select 
-              value={req.technology_preference || "IP"} 
+              value={req.technology_preference === "WiFi" ? "Wireless" : (req.technology_preference || "IP")} 
               onValueChange={(val) => setReq((prev: any) => ({...prev, technology_preference: val}))}
             >
               <SelectTrigger>
@@ -84,7 +84,7 @@ export function EditConfigurationDrawer({
               <SelectContent>
                 <SelectItem value="IP">IP (Digital / Modern)</SelectItem>
                 <SelectItem value="HD">HD (Analog / Cost Effective)</SelectItem>
-                <SelectItem value="WiFi">WiFi (Wireless)</SelectItem>
+                <SelectItem value="Wireless">Smart Wireless (Wi-Fi)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -102,6 +102,23 @@ export function EditConfigurationDrawer({
                 Exceeds {((req.camera_count || 1) * 15)}m free limit. Excess incurs a labor surcharge of ₹15/m.
               </p>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Site Internet / Wi-Fi Connection</Label>
+            <Select 
+              value={req.broadband_status || "yes"} 
+              onValueChange={(val: any) => setReq(prev => ({...prev, broadband_status: val, wants_remote_viewing: val !== "no"}))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select connection" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="yes">Existing Wi-Fi / Broadband (Free)</SelectItem>
+                <SelectItem value="sim_router">No Wi-Fi at Site (Include 4G SIM Router)</SelectItem>
+                <SelectItem value="no">Offline (Local Recording Only)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

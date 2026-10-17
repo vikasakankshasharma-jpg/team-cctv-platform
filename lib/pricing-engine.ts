@@ -375,22 +375,41 @@ function calculateHardware(
   // 1. Camera Selection
   // Synthesize mixed_camera_requirements from indoor/outdoor counts if present and no explicit camera chosen
   let mixedReqs = selection.mixed_camera_requirements;
-  if (!mixedReqs && !selection.selected_camera_id && (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined)) {
+  if (!mixedReqs && !selection.selected_camera_id && (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined || selection.wifi_camera_count !== undefined)) {
     const indoor = Number(selection.indoor_camera_count) || 0;
     const outdoor = Number(selection.outdoor_camera_count) || 0;
-    if (indoor > 0 && outdoor > 0) {
-      mixedReqs = [
-        { type: "Outdoor Bullet Camera", count: outdoor, features: ["bullet"] },
-        { type: "Indoor Dome Camera", count: indoor, features: ["dome"] }
-      ];
-    } else if (outdoor > 0) {
-      mixedReqs = [
-        { type: "Outdoor Bullet Camera", count: outdoor, features: ["bullet"] }
-      ];
-    } else if (indoor > 0) {
-      mixedReqs = [
-        { type: "Indoor Dome Camera", count: indoor, features: ["dome"] }
-      ];
+    const wifi = Number(selection.wifi_camera_count) || 0;
+    const isWirelessMode = tech === "Wireless" || tech === "WiFi";
+
+    if (isWirelessMode) {
+      if (outdoor > 0 && indoor > 0) {
+        mixedReqs = [
+          { type: "Outdoor Wi-Fi Camera", count: outdoor, features: ["bullet", "wireless", "wifi"] },
+          { type: "Indoor Wi-Fi Camera", count: indoor, features: ["dome", "wireless", "wifi", "ptz"] }
+        ];
+      } else if (outdoor > 0) {
+        mixedReqs = [
+          { type: "Outdoor Wi-Fi Camera", count: outdoor, features: ["bullet", "wireless", "wifi"] }
+        ];
+      } else if (indoor > 0) {
+        mixedReqs = [
+          { type: "Indoor Wi-Fi Camera", count: indoor, features: ["dome", "wireless", "wifi", "ptz"] }
+        ];
+      }
+    } else {
+      mixedReqs = [];
+      if (outdoor > 0) {
+        mixedReqs.push({ type: "Outdoor Bullet Camera", count: outdoor, features: ["bullet"] });
+      }
+      if (indoor > 0) {
+        mixedReqs.push({ type: "Indoor Dome Camera", count: indoor, features: ["dome"] });
+      }
+      if (wifi > 0) {
+        mixedReqs.push({ type: "Smart Wi-Fi Camera", count: wifi, features: ["wifi", "ptz"], technology: "Wireless" as any });
+      }
+      if (mixedReqs.length === 0) {
+        mixedReqs = undefined;
+      }
     }
   }
 
@@ -504,42 +523,66 @@ function calculateHardware(
     ? mixedReqs.reduce((sum, r) => sum + (Number(r.count) || 0), 0)
     : (Number(selection.camera_count) || 1);
 
-  const recorderSelection = {
-    ...selection,
-    camera_count: totalHardwareCameraCount,
-    resolution_preference: `${requiredMaxMP}MP`
-  };
-  const recorder = resolveRecorder(recorderSelection, products, tech, requiredMaxMP);
-  if (recorder) {
-    items.push({
-      product_id: recorder.id!,
-      display_name: recorder.display_name,
-      brand: recorder.brand,
-      qty: 1,
-      unit_price: recorder.unit_price,
-      line_total: recorder.unit_price
-    });
-    totalRetail += recorder.unit_price;
-    totalCost += (recorder.base_cost || 0);
+  const isWirelessTech = String(tech || "").toUpperCase() === "WIRELESS" || String(tech || "").toUpperCase() === "WIFI";
+  let wiredCameraCount = totalHardwareCameraCount;
+  let wifiCameraCount = 0;
+
+  if (isWirelessTech) {
+    wiredCameraCount = 0;
+    wifiCameraCount = totalHardwareCameraCount;
+  } else if (selection.wifi_camera_count && Number(selection.wifi_camera_count) > 0) {
+    wifiCameraCount = Number(selection.wifi_camera_count);
+    wiredCameraCount = Math.max(0, totalHardwareCameraCount - wifiCameraCount);
+  } else if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+    wiredCameraCount = selection.mixed_camera_requirements
+      .filter(req => {
+        const t = req.type.toLowerCase();
+        return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
+      })
+      .reduce((sum, req) => sum + Number(req.count), 0);
+    wifiCameraCount = Math.max(0, totalHardwareCameraCount - wiredCameraCount);
+  }
+
+  // 2. Recorder Selection (sized for wired cameras)
+  let recorder: Product | undefined = undefined;
+  if (wiredCameraCount > 0) {
+    const recorderSelection = {
+      ...selection,
+      camera_count: wiredCameraCount,
+      resolution_preference: `${requiredMaxMP}MP`
+    };
+    recorder = resolveRecorder(recorderSelection, products, tech, requiredMaxMP);
+    if (recorder) {
+      items.push({
+        product_id: recorder.id!,
+        display_name: recorder.display_name,
+        brand: recorder.brand,
+        qty: 1,
+        unit_price: recorder.unit_price,
+        line_total: recorder.unit_price
+      });
+      totalRetail += recorder.unit_price;
+      totalCost += (recorder.base_cost || 0);
+    }
   }
 
   // 3. Storage (HDD / SD Card)
   const hddSelection = {
     ...selection,
-    camera_count: totalHardwareCameraCount
+    camera_count: isWirelessTech ? totalHardwareCameraCount : wiredCameraCount
   };
-  const hdd = resolveHDD(hddSelection, [...products, ...addons] as any[], tech, recorder);
+  const hdd = resolveHDD(hddSelection, [...products, ...addons] as any[], tech, recorder, undefined, settings);
   if (hdd) {
     const unitPrice = hdd.unit_price || hdd.price || 0;
     
-    // WiFi cameras use 1 SD Card per camera. HDDs are shared (qty 1).
-    const nameStr = hdd.display_name.toLowerCase();
-    const isSdCard = (hdd as any).storage_type === "Micro SD" || nameStr.includes("sd card") || nameStr.includes("micro sd") || nameStr.includes("memory card");
-    const qty = isSdCard ? totalHardwareCameraCount : 1;
+    // WiFi / Wireless cameras use 1 SD Card per camera. HDDs are shared (qty 1).
+    const nameStr = (hdd.display_name || "").toLowerCase();
+    const isSdCard = (hdd as any).storage_type === "Micro SD" || nameStr.includes("sd card") || nameStr.includes("micro sd") || nameStr.includes("microsd") || nameStr.includes("memory card");
+    const qty = isSdCard ? (isWirelessTech ? totalHardwareCameraCount : wiredCameraCount) : 1;
 
     items.push({
       product_id: hdd.id!,
-      display_name: hdd.display_name,
+      display_name: isSdCard ? `${hdd.display_name} (1 per camera)` : hdd.display_name,
       brand: hdd.brand,
       qty: qty,
       unit_price: unitPrice,
@@ -549,22 +592,36 @@ function calculateHardware(
     totalCost += (hdd.base_cost || 0) * qty;
   }
 
+  // Hybrid setup: If wired system has additional Wi-Fi cameras, add MicroSD card for each Wi-Fi camera
+  if (!isWirelessTech && wifiCameraCount > 0) {
+    const sdSelection = {
+      ...selection,
+      camera_count: wifiCameraCount,
+      technology_preference: "Wireless"
+    };
+    const sdCard = resolveHDD(sdSelection, [...products, ...addons] as any[], "Wireless", undefined, undefined, settings);
+    if (sdCard) {
+      const unitPrice = sdCard.unit_price || (sdCard as any).price || 0;
+      items.push({
+        product_id: sdCard.id!,
+        display_name: `${sdCard.display_name} (For Wi-Fi Cameras, 1 per camera)`,
+        brand: sdCard.brand,
+        qty: wifiCameraCount,
+        unit_price: unitPrice,
+        line_total: unitPrice * wifiCameraCount
+      });
+      totalRetail += unitPrice * wifiCameraCount;
+      totalCost += (sdCard.base_cost || 0) * wifiCameraCount;
+    }
+  }
+
   // 4. Transmission (PoE/PSU)
   const transmissionSelection = {
     ...selection,
-    camera_count: totalHardwareCameraCount
+    camera_count: wiredCameraCount
   };
   const transmission = resolveTransmission(transmissionSelection, [...products, ...addons] as any[], tech);
   if (transmission) {
-    let wiredCameraCount = totalHardwareCameraCount;
-    if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
-      wiredCameraCount = selection.mixed_camera_requirements
-        .filter(req => {
-          const t = req.type.toLowerCase();
-          return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
-        })
-        .reduce((sum, req) => sum + Number(req.count), 0);
-    }
 
     if (wiredCameraCount > 0) {
       const qty = Math.ceil(wiredCameraCount / (transmission.max_cameras || 4));
@@ -616,21 +673,54 @@ function calculateLabor(
   const items: QuoteLineItem[] = [];
   let totalRetail = 0;
 
-  // Only charge labor for wired cameras - wireless cameras don't need cable termination work
+  const upperTech = String(tech || "").toUpperCase();
+  if (upperTech === "WIFI" || upperTech === "WIRELESS") {
+    let wifiQty = Number(selection.camera_count) || 0;
+    if (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined) {
+      wifiQty = (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0) || wifiQty;
+    }
+    const installPref = (selection as any).installation_preference || "pro";
+    if (installPref === "diy" || wifiQty <= 0) {
+      return { items, totalRetail: 0 };
+    }
+    const wirelessRate = settings.labor_wireless_pro_per_camera ?? 349;
+    const unitRate = Math.round(wirelessRate * locationMultiplier);
+    const lineTotal = unitRate * wifiQty;
+    items.push({
+      product_id: "labor_wireless_pro_fitting",
+      display_name: "Wireless Camera Wall Mounting, Power Concealment & App Setup",
+      qty: wifiQty,
+      unit_price: unitRate,
+      line_total: lineTotal
+    });
+    return { items, totalRetail: lineTotal };
+  }
+
+  // Only charge labor for wired cameras - wireless cameras handled above
   let qty = Number(selection.camera_count) || 0;
-  if (tech === "WiFi" || tech === "Wireless") {
-    qty = 0;
-  } else if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+  let hybridWifiQty = 0;
+  if (selection.wifi_camera_count && Number(selection.wifi_camera_count) > 0) {
+    hybridWifiQty = Number(selection.wifi_camera_count);
+    qty = Math.max(0, qty - hybridWifiQty);
+  }
+  if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
     qty = selection.mixed_camera_requirements
       .filter(req => {
         const t = req.type.toLowerCase();
         return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
       })
       .reduce((sum, req) => sum + Number(req.count), 0);
+    const mixedWifi = selection.mixed_camera_requirements
+      .filter(req => {
+        const t = req.type.toLowerCase();
+        return t.includes("solar") || t.includes("4g") || t.includes("wifi") || t.includes("wireless");
+      })
+      .reduce((sum, req) => sum + Number(req.count), 0);
+    if (mixedWifi > 0) hybridWifiQty = mixedWifi;
   } else if (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined) {
-    qty = (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0) || Number(selection.camera_count);
+    qty = (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0);
   }
-  if (qty <= 0) return { items, totalRetail: 0 };
+  if (qty <= 0 && hybridWifiQty <= 0) return { items, totalRetail: 0 };
 
   const isCablingDone = Boolean(selection.cabling_done);
 
@@ -724,6 +814,20 @@ function calculateLabor(
     totalRetail += excessLineTotal;
   }
 
+  if (hybridWifiQty > 0) {
+    const wirelessRate = settings.labor_wireless_pro_per_camera ?? 349;
+    const unitRate = Math.round(wirelessRate * locationMultiplier);
+    const lineTotal = unitRate * hybridWifiQty;
+    items.push({
+      product_id: "labor_wireless_pro_fitting",
+      display_name: "Smart Wi-Fi Camera Wall Mounting & App Pairing",
+      qty: hybridWifiQty,
+      unit_price: unitRate,
+      line_total: lineTotal
+    });
+    totalRetail += lineTotal;
+  }
+
   return { items, totalRetail };
 }
 
@@ -744,7 +848,9 @@ function calculateCabling(
 
   // Exclude Wireless/Solar/4G cameras from cabling meter counts
   let wiredCameraCount = Number(selection.camera_count) || 0;
-  if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+  if (selection.wifi_camera_count && Number(selection.wifi_camera_count) > 0) {
+    wiredCameraCount = Math.max(0, wiredCameraCount - Number(selection.wifi_camera_count));
+  } else if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
     wiredCameraCount = selection.mixed_camera_requirements
       .filter(req => {
         const t = req.type.toLowerCase();
@@ -937,12 +1043,15 @@ function calculateConnectors(
 ) {
   const items: QuoteLineItem[] = [];
   
-  if (tech === "WiFi") {
+  const upperTech = String(tech || "").toUpperCase();
+  if (upperTech === "WIFI" || upperTech === "WIRELESS") {
     return { items, totalRetail: 0, totalCost: 0 };
   }
   
   let wiredCameraCount = Number(selection.camera_count) || 1;
-  if (selection.mixed_camera_requirements && selection.mixed_camera_requirements?.length > 0) {
+  if (selection.wifi_camera_count && Number(selection.wifi_camera_count) > 0) {
+    wiredCameraCount = Math.max(0, wiredCameraCount - Number(selection.wifi_camera_count));
+  } else if (selection.mixed_camera_requirements && selection.mixed_camera_requirements?.length > 0) {
     wiredCameraCount = selection.mixed_camera_requirements
       .filter(req => {
         const t = req.type.toLowerCase();
@@ -1079,17 +1188,18 @@ function calculateAddons(params: {
   // to avoid double-counting (price is % of hardware, not a fixed price).
   let staticAddonIds = [...selectedAddonIds].filter(id => id !== amcAddonId);
 
-  // Conditional injection for SIM Router (No Broadband + Remote Viewing)
-  if (selection.wants_remote_viewing && selection.broadband_status === "sim_router") {
+  // Conditional injection for SIM Router (No Broadband + Remote Viewing or Wireless without Wi-Fi)
+  if (selection.broadband_status === "sim_router") {
     const router = addons.find(a => {
       const name = (a.technical_name || a.display_name || "").toLowerCase();
       return name.includes("sim router") || name.includes("4g router") || name.includes("4g 4 antenna");
     }) || products.find(p => {
       const name = (p.technical_name || p.display_name || "").toLowerCase();
-      return name.includes("sim router") || name.includes("4g router") || name.includes("4g 4 antenna");
+      return p.id === "ACC-4G-ROUTER" || name.includes("sim router") || name.includes("4g router") || name.includes("4g 4 antenna");
     });
-    if (router && router.id && !staticAddonIds.includes(router.id)) {
-      staticAddonIds.push(router.id);
+    const routerId = router?.id || "ACC-4G-ROUTER";
+    if (!staticAddonIds.includes(routerId)) {
+      staticAddonIds.push(routerId);
     }
   }
 
@@ -1526,7 +1636,7 @@ function resolveHDDCapacity(product: Addon & { storage_tb?: number; storage_capa
   return 0;
 }
 
-function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: string, recorder?: Product, cameraProduct?: Product) {
+function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: string, recorder?: Product, cameraProduct?: Product, settings?: AppSettings) {
   if (selection.selected_storage_id) {
     if (selection.selected_storage_id === "none") return undefined; // Explicit no-storage request
     const pinned = addons.find(a => a.id === selection.selected_storage_id);
@@ -1541,19 +1651,66 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
   const hdds = addons.filter(a => a.category === "storage" && a.is_active !== false && (a as any).is_deleted !== true);
   if (hdds.length === 0) return undefined;
 
-  if (tech === "WiFi") {
+  const upperTech = String(tech || "").toUpperCase();
+  if (upperTech === "WIFI" || upperTech === "WIRELESS") {
     const sdCards = hdds.filter(a => {
-      const name = a.display_name.toLowerCase();
-      return (a as any).storage_type === "Micro SD" || name.includes("sd card") || name.includes("sdcard") || name.includes("micro sd") || name.includes("microsd") || name.includes("memory card");
+      const name = (a.display_name || "").toLowerCase();
+      return (a as any).storage_type === "Micro SD" || 
+             name.includes("sd card") || 
+             name.includes("sdcard") || 
+             name.includes("micro sd") || 
+             name.includes("microsd") || 
+             name.includes("memory card");
     });
     if (sdCards.length > 0) {
-      sdCards.sort((a, b) => resolveHDDCapacity(a) - resolveHDDCapacity(b));
-      const requiredGb = recordingDays > 7 ? 128 : 64;
-      return sdCards.find(s => {
-        const tb = resolveHDDCapacity(s);
-        const gb = tb >= 1 ? tb * 1000 : tb; // Rough heuristic since some are listed as 64GB
-        return gb >= requiredGb || s.display_name.includes(`${requiredGb}GB`);
-      }) || sdCards[sdCards.length - 1];
+      // 1. Bitrate determination based on camera resolution (H.265 baseline)
+      let baseGbPerDay = 14; // Default 3MP/4MP baseline (e.g. Tapo C210 / C320WS)
+      const res = String(selection.resolution_preference || "").toUpperCase();
+      if (res.includes("2MP")) baseGbPerDay = settings?.bitrate_daily_gb_2mp ?? 8;
+      else if (res.includes("4MP") || res.includes("3MP") || res.includes("5MP")) baseGbPerDay = settings?.bitrate_daily_gb_4mp ?? 14;
+      else if (res.includes("8MP") || res.includes("4K") || res.includes("6MP")) baseGbPerDay = settings?.bitrate_daily_gb_8mp ?? 22;
+
+      // 2. Recording Mode: Continuous (1.0) vs Smart Motion (0.40)
+      const recordingMode = (selection as any).recording_mode || "motion";
+      const modeMultiplier = recordingMode === "motion" ? 0.40 : 1.0;
+
+      // 3. TARGET FOR SINGLE CAMERA (each camera has independent MicroSD slot)
+      const singleCameraDailyGb = Math.max(2.5, Math.round(baseGbPerDay * modeMultiplier));
+      const requiredCardGb = singleCameraDailyGb * recordingDays;
+
+      const getCardGb = (c: any): number => {
+        if (typeof c.storage_capacity_gb === "number" && c.storage_capacity_gb > 0) {
+          return c.storage_capacity_gb;
+        }
+        const text = `${c.display_name || ""} ${c.technical_name || ""} ${c.capacity || ""}`;
+        const match = text.match(/(\d+)\s*GB/i);
+        if (match) return parseInt(match[1], 10);
+        return 32;
+      };
+
+      // 4. Find cheapest active card that satisfies requiredCardGb
+      const sortedCards = [...sdCards].sort((a, b) => getCardGb(a) - getCardGb(b));
+      let chosenCard = sortedCards.find(c => getCardGb(c) >= requiredCardGb);
+
+      let storageOverflow = false;
+      if (!chosenCard) {
+        // Exceeds max card capacity in catalog (e.g. 256GB limit)
+        chosenCard = sortedCards[sortedCards.length - 1];
+        storageOverflow = true;
+      }
+
+      const chosenCapGb = getCardGb(chosenCard);
+      const approxDays = Math.max(1, Math.floor(chosenCapGb / singleCameraDailyGb));
+      const modeLabel = recordingMode === "motion" ? "Motion" : "24×7";
+
+      return {
+        ...chosenCard,
+        display_name: `${chosenCard.display_name} (Approx. ${approxDays} Days Backup per Camera · ${modeLabel})`,
+        approx_days: approxDays,
+        storage_overflow: storageOverflow,
+        storage_type: "Micro SD",
+        capacity_gb: chosenCapGb
+      };
     }
     return undefined;
   }

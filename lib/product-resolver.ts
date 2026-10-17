@@ -194,12 +194,23 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
         if (!isTechMatch(p, config.technology)) return false;
       
       // Must match Form Factor — use form_factor (primary) with multiple fallbacks
-      const pForm = p.form_factor
+      const pFormRaw = String(
+        p.form_factor
         || (p.specifications as any)?.formFactor
         || (p as any).type
         || (p.display_name?.toLowerCase().includes("bullet") ? "bullet"
-           : (p.display_name?.toLowerCase().includes("dome") ? "dome" : ""));
-      const matchForm = pForm === formFactor || pForm?.toLowerCase() === formFactor.toLowerCase();
+           : (p.display_name?.toLowerCase().includes("dome") ? "dome" : ""))
+      ).toLowerCase();
+      
+      const targetForm = formFactor.toLowerCase();
+      let matchForm = pFormRaw === targetForm;
+      if (!matchForm) {
+        if (targetForm === "dome") {
+          matchForm = pFormRaw.includes("dome") || pFormRaw.includes("turret") || pFormRaw.includes("indoor") || (pFormRaw.includes("ptz") && !pFormRaw.includes("outdoor"));
+        } else if (targetForm === "bullet") {
+          matchForm = pFormRaw.includes("bullet") || pFormRaw.includes("outdoor") || (pFormRaw.includes("ptz") && !pFormRaw.includes("indoor"));
+        }
+      }
       
       // Must match Resolution
       const pRes = (p.specifications as any)?.resolution || (p as any).resolution;
@@ -259,6 +270,8 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
 }
 
 function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string, targetResolution?: string) {
+  const upperTech = String(config.technology || "").toUpperCase();
+  if (upperTech === "WIRELESS" || upperTech === "WIFI") return undefined;
   if (!config.recorder_channels) return undefined;
   const isBudget = !brandFilter || brandFilter === "Budget" || brandFilter === "Budget Brand";
   const requiredMaxMP = parseResolutionMP(targetResolution || "2MP");
@@ -311,8 +324,62 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
 }
 
 function resolveStorageForPermutation(config: CCTVConfiguration, pool: Product[], brandFilter?: string, resolvedCameras?: { product: Product, qty: number }[]) {
-  if (config.storage_gb === 0 || config.storage_gb === undefined) return undefined;
+  if (config.storage_gb === 0) return undefined;
 
+  const isWireless = String(config.technology || "").toUpperCase() === "WIRELESS" || String(config.technology || "").toUpperCase() === "WIFI";
+
+  if (isWireless) {
+    const sdCards = pool.filter(p => {
+      if (p.is_deleted === true || p.is_active === false) return false;
+      const isStorage = p.category === "storage";
+      const name = (p.display_name || "").toLowerCase();
+      const isSd = (p as any).storage_type === "Micro SD" || name.includes("sd card") || name.includes("microsd");
+      return isStorage && isSd;
+    });
+
+    if (sdCards.length === 0) return undefined;
+
+    // Sized for 1 individual camera (MicroSD card in each camera slot)
+    const singleCam = resolvedCameras && resolvedCameras.length > 0 ? resolvedCameras[0] : undefined;
+    const baseDailyGb = singleCam?.product.daily_gb_per_camera || 14;
+    const days = config.recording_days !== undefined ? config.recording_days : 15;
+    const reqCardGb = Math.max(2.5, baseDailyGb * 0.40) * days; // Smart Motion (0.40) default
+
+    const getGb = (p: Product) => {
+      if ((p as any).storage_capacity_gb) return (p as any).storage_capacity_gb;
+      const match = (p.display_name || "").match(/(\d+)\s*GB/i);
+      return match ? parseInt(match[1]) : 0;
+    };
+
+    const sortedCards = [...sdCards].sort((a, b) => getGb(a) - getGb(b));
+    let chosenCard = sortedCards.find(c => getGb(c) >= reqCardGb);
+    let isDowngraded = false;
+    let shortfallGb = 0;
+
+    if (!chosenCard) {
+      chosenCard = sortedCards[sortedCards.length - 1];
+      isDowngraded = true;
+      shortfallGb = Math.max(0, Math.round(reqCardGb - getGb(chosenCard)));
+    }
+
+    if (brandFilter && brandFilter !== "Budget" && brandFilter !== "All Brands") {
+      const brandCard = sortedCards.filter(p => isBrandMatch(p, brandFilter)).find(c => getGb(c) >= reqCardGb);
+      if (brandCard) chosenCard = brandCard;
+    }
+
+    if (isDowngraded && chosenCard) {
+      return {
+        ...chosenCard,
+        is_downgraded: true,
+        shortfall_gb: shortfallGb,
+        downgrade_note: `Required ${Math.round(reqCardGb)}GB storage per camera, largest available MicroSD is ${getGb(chosenCard)}GB (${chosenCard.display_name}).`
+      };
+    }
+
+    return chosenCard;
+  }
+
+  if (config.storage_gb === undefined) return undefined;
   let reqStorageGb = config.storage_gb!;
   if (resolvedCameras && resolvedCameras.length > 0) {
     let preciseDailyGb = 0;

@@ -211,13 +211,23 @@ export default function AdminProductsPage() {
     setIsModalOpen(true);
   };
 
-  const handleAdd = (category: any = "cctv_camera") => {
+  const handleAdd = (category: any = "cctv_camera", tech: string = "HD") => {
+    const isWireless = tech === "Wireless" || tech === "WiFi";
+    const defaultPath = category === "cctv_camera"
+      ? (isWireless ? "cctv_camera/wifi/WiFi Camera" : (tech === "IP" ? "cctv_camera/ip/IP Camera" : "cctv_camera/hd/HD Camera"))
+      : (category === "storage" ? (isWireless ? "storage/microsd/MicroSD Card" : "storage/HDD") : undefined);
+
     setEditingProduct({
       display_name: "",
       technical_name: "",
       brand: "",
       category: category,
-        technologies: ["HD"],
+      technology: (isWireless ? "Wireless" : tech) as any,
+      technologies: [isWireless ? "Wireless" : (tech as any)],
+      catalog_path: defaultPath,
+      group_path: defaultPath,
+      form_factor: isWireless ? "ptz" : "dome",
+      has_wifi: isWireless,
       is_active: true,
       base_cost: 0,
       margin_percentage: 15,
@@ -524,11 +534,11 @@ export default function AdminProductsPage() {
                           onChange={e => setEditingProduct({...editingProduct, category: e.target.value as any})}
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
                         >
-                          <option value="cctv_camera">Camera</option>
-                          <option value="recorder">Recorder Unit</option>
+                          <option value="cctv_camera">Camera (Wired HD, IP & Wireless Wi-Fi)</option>
+                          <option value="recorder">Recorder Unit (DVR / NVR / XVR)</option>
+                          <option value="storage">Storage (Surveillance HDD & MicroSD)</option>
                           <option value="accessories">Hardware Accessory</option>
                           <option value="cable">Transmission Line</option>
-                          <option value="storage">Storage / HDD</option>
                           <option value="power_device">Power Supply / UPS</option>
                           <option value="network">Network & Switches</option>
                           <option value="rack">Rack / Enclosure</option>
@@ -542,14 +552,24 @@ export default function AdminProductsPage() {
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Technology</label>
                         <select 
-                          value={editingProduct.technologies?.[0] || "Common"}
-                          onChange={e => setEditingProduct({...editingProduct, technologies: [e.target.value as any]})}
+                          value={editingProduct.technologies?.[0] || editingProduct.technology || "Common"}
+                          onChange={e => {
+                            const val = e.target.value;
+                            const isW = val === "Wireless";
+                            setEditingProduct({
+                              ...editingProduct,
+                              technology: val as any,
+                              technologies: [val as any],
+                              has_wifi: isW ? true : editingProduct.has_wifi,
+                              form_factor: (isW && (!editingProduct.form_factor || editingProduct.form_factor === "dome")) ? "ptz" : editingProduct.form_factor
+                            });
+                          }}
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
                         >
                           <option value="HD">Analog HD</option>
                           <option value="IP">Digital IP</option>
+                          <option value="Wireless">Smart Wireless (Wi-Fi)</option>
                           <option value="both">Hybrid / Common</option>
-                          <option value="WiFi">WiFi</option>
                         </select>
                       </div>
                       {/* Tally-Style Group Selector */}
@@ -651,9 +671,12 @@ export default function AdminProductsPage() {
                             onChange={e => setEditingProduct({...editingProduct, form_factor: e.target.value as any})}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
                           >
-                            <option value="dome">Dome</option>
-                            <option value="bullet">Bullet</option>
-                            <option value="ptz">PTZ</option>
+                            <option value="dome">Indoor Ceiling Dome</option>
+                            <option value="bullet">Outdoor Bullet (Weatherproof)</option>
+                            <option value="ptz">Indoor / Outdoor 360° PTZ (Pan/Tilt)</option>
+                            <option value="dual_lens">Dual-Lens (Fixed + PTZ)</option>
+                            <option value="wire_free_battery">Wire-Free / Battery Powered</option>
+                            <option value="video_doorbell">Smart Video Doorbell</option>
                             <option value="turret">Turret</option>
                           </select>
                         </div>
@@ -917,26 +940,59 @@ export default function AdminProductsPage() {
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Storage Type</label>
                           <select 
                             value={editingProduct.storage_type || ""}
-                            onChange={e => setEditingProduct({...editingProduct, storage_type: e.target.value})}
+                            onChange={e => {
+                              const val = e.target.value;
+                              const isSd = val === "Micro SD" || val === "MicroSD";
+                              setEditingProduct({
+                                ...editingProduct, 
+                                storage_type: val,
+                                technologies: isSd ? ["Wireless", "Common"] : (editingProduct.technologies || ["Common"])
+                              });
+                            }}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background appearance-none"
                           >
                             <option value="">Select Type...</option>
                             <option value="Surveillance HDD">Surveillance HDD</option>
+                            <option value="Micro SD">Surveillance MicroSD Card</option>
                             <option value="SSD">SSD</option>
-                            <option value="MicroSD">MicroSD</option>
                           </select>
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Capacity (TB)</label>
-                          <input 
-                            type="number" 
-                            step="0.1"
-                            value={editingProduct.storage_capacity_tb || ""}
-                            onChange={e => setEditingProduct({...editingProduct, storage_capacity_tb: e.target.value ? Number(e.target.value) : undefined})}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                            placeholder="e.g. 1, 2, 4, 8"
-                          />
-                        </div>
+                        {editingProduct.storage_type === "Micro SD" || editingProduct.storage_type === "MicroSD" ? (
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Card Capacity (GB)</label>
+                            <select
+                              value={editingProduct.storage_capacity_gb || 64}
+                              onChange={e => {
+                                const gb = Number(e.target.value);
+                                setEditingProduct({
+                                  ...editingProduct, 
+                                  storage_capacity_gb: gb, 
+                                  capacity: `${gb}GB`, 
+                                  storage_capacity_tb: gb / 1000
+                                });
+                              }}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background appearance-none"
+                            >
+                              <option value={32}>32 GB</option>
+                              <option value={64}>64 GB</option>
+                              <option value={128}>128 GB</option>
+                              <option value={256}>256 GB</option>
+                              <option value={512}>512 GB</option>
+                            </select>
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Capacity (TB)</label>
+                            <input 
+                              type="number" 
+                              step="0.1"
+                              value={editingProduct.storage_capacity_tb || ""}
+                              onChange={e => setEditingProduct({...editingProduct, storage_capacity_tb: e.target.value ? Number(e.target.value) : undefined})}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                              placeholder="e.g. 1, 2, 4, 8"
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
 

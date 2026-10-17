@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Save, Settings2, Image as ImageIcon, Loader2, CheckCircle2, BadgePercent, Ruler, HardHat, MessageSquare, Zap, Building2, MapPin, Receipt, Phone, Globe, Landmark, ShieldCheck, Eye } from "lucide-react";
+import { Save, Settings2, Image as ImageIcon, Loader2, CheckCircle2, BadgePercent, Ruler, HardHat, MessageSquare, Zap, Building2, MapPin, Receipt, Phone, Globe, Landmark, ShieldCheck, Eye, Wifi } from "lucide-react";
 import type { AppSettings } from "@/types";
 import { updateSettings } from "@/app/actions/settings";
 import Image from "next/image";
@@ -1152,6 +1152,27 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               </div>
               <p className="text-[10px] text-muted-foreground">Wall-mount 2U, 4U, 6U DVR and networking racks</p>
             </div>
+
+            {/* MicroSD Surveillance Cards */}
+            <div className="space-y-2 p-4 rounded-xl bg-secondary/30 border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">MicroSD Surveillance Cards</label>
+                <span className="text-[10px] uppercase font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded">Wireless Storage</span>
+              </div>
+              <div className="relative">
+                <input 
+                  required
+                  type="number" 
+                  step="0.5"
+                  name="margin_microsd"
+                  value={formData.margin_microsd ?? 20}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold text-base shadow-sm" 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">High-Endurance MicroSD (SanDisk, WD Purple for Wi-Fi cameras)</p>
+            </div>
           </div>
         </div>
 
@@ -1412,6 +1433,77 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 type="number" name="amc_3yr_pct" value={formData.amc_3yr_pct} onChange={handleChange}
                 className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-warning/20 outline-none transition-all font-medium" 
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Section: Wireless & Smart Wi-Fi System Controls */}
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 md:p-8 shadow-sm group hover:border-primary/20 transition-all space-y-6">
+          <div className="flex items-center gap-3 pb-6 border-b border-border/80">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <Wifi className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground tracking-tight">Wireless & Smart CCTV Controls</h2>
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">
+                Manage MicroSD sizing, H.265 bitrates, and wireless installation labor rates
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">Pro Fitting Charge (/Cam)</label>
+              <div className="relative">
+                <input 
+                  type="number"
+                  name="labor_wireless_pro_per_camera"
+                  value={formData.labor_wireless_pro_per_camera ?? 349}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-xs">₹</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Doorstep wall-mount, power wire concealment & app pairing</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">2MP Daily GB (Continuous)</label>
+              <input 
+                type="number"
+                step="0.5"
+                name="bitrate_daily_gb_2mp"
+                value={formData.bitrate_daily_gb_2mp ?? 8.0}
+                onChange={handleChange}
+                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm"
+              />
+              <p className="text-[10px] text-muted-foreground">GB written in 24 hours @ 1080p H.265</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">3MP / 4MP Daily GB (Continuous)</label>
+              <input 
+                type="number"
+                step="0.5"
+                name="bitrate_daily_gb_4mp"
+                value={formData.bitrate_daily_gb_4mp ?? 14.0}
+                onChange={handleChange}
+                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm"
+              />
+              <p className="text-[10px] text-muted-foreground">GB written in 24 hours @ 2K H.265</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">5MP / 8MP Daily GB (Continuous)</label>
+              <input 
+                type="number"
+                step="0.5"
+                name="bitrate_daily_gb_8mp"
+                value={formData.bitrate_daily_gb_8mp ?? 22.0}
+                onChange={handleChange}
+                className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm"
+              />
+              <p className="text-[10px] text-muted-foreground">GB written in 24 hours @ 4K/Dual-Lens H.265</p>
             </div>
           </div>
         </div>

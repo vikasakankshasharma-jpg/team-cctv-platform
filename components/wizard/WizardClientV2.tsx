@@ -241,10 +241,12 @@ export function WizardClientV2() {
     camera_count: 4,
     indoor_camera_count: 2,
     outdoor_camera_count: 2,
+    wifi_camera_count: 0,
     recording_days: 7,
     recording_mode: "motion",
     technology_preference: "HD",
-    wants_remote_viewing: true
+    wants_remote_viewing: true,
+    broadband_status: "yes"
   });
   
   // Auto-capture referral code from URL parameters
@@ -668,14 +670,22 @@ export function WizardClientV2() {
               <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_select_setup_type_calc_wire")}</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <button onClick={() => { updateReq({ installation_type: "new", property_type: "home" }); handleNext(); }}
-                className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "new" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+              <button onClick={() => { updateReq({ installation_type: "new", technology_preference: "HD", property_type: "home" }); handleNext(); }}
+                className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "new" && req.technology_preference !== "Wireless" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
+                <span className="inline-block px-2 py-0.5 mb-2 text-[10px] font-bold uppercase rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">Wired Setup</span>
                 <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-blue-600">{t("wz_completely_new_system")}</span>
-                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">{t("wz_i_dont_have_any_cctv_cameras_i")}</span>
+                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">Central DVR/NVR, dedicated cabling, highest reliability for whole premises.</span>
+              </button>
+              <button onClick={() => { updateReq({ installation_type: "new", technology_preference: "Wireless", cabling_done: true, installation_preference: "pro", property_type: "home" }); handleNext(); }}
+                className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-emerald-500 transition-all cursor-pointer group ${req.installation_type === "new" && req.technology_preference === "Wireless" ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
+                <span className="inline-block px-2 py-0.5 mb-2 text-[10px] font-bold uppercase rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">Smart Wireless</span>
+                <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-emerald-600">Wi-Fi CCTV Cameras</span>
+                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">Zero video cabling, SD Cards per camera, 360° PTZ rotation & mobile app.</span>
               </button>
               <button onClick={() => { updateReq({ installation_type: "addon", existing_system_known: undefined }); }}
                 className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "addon" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
+                <span className="inline-block px-2 py-0.5 mb-2 text-[10px] font-bold uppercase rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">Expansion</span>
                 <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-blue-600">{t("wz_add_to_existing_system")}</span>
                 <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">{t("wz_i_already_have_a_cctv_system_a")}</span>
               </button>
@@ -779,9 +789,11 @@ export function WizardClientV2() {
              </div>
            );
         } else {
-           const currentOutdoor = req.outdoor_camera_count !== undefined ? req.outdoor_camera_count : 2;
-           const currentIndoor = req.indoor_camera_count !== undefined ? req.indoor_camera_count : 2;
-           const totalCams = currentOutdoor + currentIndoor;
+           const currentOutdoor = typeof req.outdoor_camera_count === 'number' ? req.outdoor_camera_count : 2;
+           const currentIndoor = typeof req.indoor_camera_count === 'number' ? req.indoor_camera_count : 2;
+           const currentWifi = typeof req.wifi_camera_count === 'number' ? req.wifi_camera_count : 0;
+           const isPureWireless = req.technology_preference === "Wireless";
+           const totalCams = currentOutdoor + currentIndoor + (isPureWireless ? 0 : currentWifi);
 
             return (
             <div className="space-y-3 sm:space-y-5 animate-in fade-in">
@@ -793,57 +805,97 @@ export function WizardClientV2() {
               <div className="grid grid-cols-1 gap-2.5 sm:gap-4">
                 <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">{t("wz_outdoor_cameras")}</h3>
-                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_weatherproof_bullet")}</p>
+                    <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
+                      {isPureWireless ? "Outdoor Wi-Fi Cameras" : t("wz_outdoor_cameras")}
+                    </h3>
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                      {isPureWireless ? "Weatherproof Bullet (IP66/67)" : t("wz_weatherproof_bullet")}
+                    </p>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, (typeof currentOutdoor === 'number' ? currentOutdoor : 0) - 1), camera_count: Math.max(0, (typeof currentOutdoor === 'number' ? currentOutdoor : 0) - 1) + (typeof currentIndoor === 'number' ? currentIndoor : 0) }))} disabled={currentOutdoor === 0}>-</Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, currentOutdoor - 1), camera_count: Math.max(0, currentOutdoor - 1) + currentIndoor + (isPureWireless ? 0 : currentWifi) }))} disabled={currentOutdoor === 0}>-</Button>
                     <input
                       type="number"
                       min="0"
                       value={currentOutdoor.toString()}
                         onChange={(e) => {
                           if (e.target.value === '') {
-                            setReq(prev => ({ ...prev, outdoor_camera_count: '' as any, camera_count: (typeof currentIndoor === 'number' ? currentIndoor : 0) }));
+                            setReq(prev => ({ ...prev, outdoor_camera_count: '' as any, camera_count: currentIndoor + (isPureWireless ? 0 : currentWifi) }));
                             return;
                           }
                           const val = parseInt(e.target.value);
                           if (!isNaN(val)) {
-                            setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, val), camera_count: Math.max(0, val) + (typeof currentIndoor === 'number' ? currentIndoor : 0) }));
+                            setReq(prev => ({ ...prev, outdoor_camera_count: Math.max(0, val), camera_count: Math.max(0, val) + currentIndoor + (isPureWireless ? 0 : currentWifi) }));
                           }
                         }}
                       className="text-lg sm:text-xl font-black w-10 sm:w-12 text-center text-blue-700 dark:text-blue-400 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + 1, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + 1 + (typeof currentIndoor === 'number' ? currentIndoor : 0) }))}>+</Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, outdoor_camera_count: currentOutdoor + 1, camera_count: currentOutdoor + 1 + currentIndoor + (isPureWireless ? 0 : currentWifi) }))}>+</Button>
                   </div>
                 </div>
 
                 <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">{t("wz_indoor_cameras")}</h3>
-                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">{t("wz_ceiling_dome")}</p>
+                    <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
+                      {isPureWireless ? "Indoor Wi-Fi Cameras" : t("wz_indoor_cameras")}
+                    </h3>
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                      {isPureWireless ? "360° Pan-Tilt / Dome" : t("wz_ceiling_dome")}
+                    </p>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, (typeof currentIndoor === 'number' ? currentIndoor : 0) - 1), camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + Math.max(0, (typeof currentIndoor === 'number' ? currentIndoor : 0) - 1) }))} disabled={currentIndoor === 0}>-</Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, currentIndoor - 1), camera_count: currentOutdoor + Math.max(0, currentIndoor - 1) + (isPureWireless ? 0 : currentWifi) }))} disabled={currentIndoor === 0}>-</Button>
                     <input
                       type="number"
                       min="0"
                       value={currentIndoor.toString()}
                         onChange={(e) => {
                           if (e.target.value === '') {
-                            setReq(prev => ({ ...prev, indoor_camera_count: '' as any, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) }));
+                            setReq(prev => ({ ...prev, indoor_camera_count: '' as any, camera_count: currentOutdoor + (isPureWireless ? 0 : currentWifi) }));
                             return;
                           }
                           const val = parseInt(e.target.value);
                           if (!isNaN(val)) {
-                            setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, val), camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + Math.max(0, val) }));
+                            setReq(prev => ({ ...prev, indoor_camera_count: Math.max(0, val), camera_count: currentOutdoor + Math.max(0, val) + (isPureWireless ? 0 : currentWifi) }));
                           }
                         }}
                       className="text-lg sm:text-xl font-black w-10 sm:w-12 text-center text-blue-700 dark:text-blue-400 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: (typeof currentIndoor === 'number' ? currentIndoor : 0) + 1, camera_count: (typeof currentOutdoor === 'number' ? currentOutdoor : 0) + (typeof currentIndoor === 'number' ? currentIndoor : 0) + 1 }))}>+</Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, indoor_camera_count: currentIndoor + 1, camera_count: currentOutdoor + currentIndoor + 1 + (isPureWireless ? 0 : currentWifi) }))}>+</Button>
                   </div>
                 </div>
+
+                {!isPureWireless && (
+                  <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-dashed border-blue-200 dark:border-blue-900/60 bg-blue-50/30 dark:bg-zinc-900/50 shadow-sm flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">Smart Wi-Fi Cameras</h3>
+                        <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">Optional</span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400">For remote spots, detached gate, or baby room (Zero cabling, 360° PTZ)</p>
+                    </div>
+                    <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 dark:bg-zinc-800 p-1 rounded-xl border border-gray-200 dark:border-zinc-700">
+                      <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-gray-100" onClick={() => setReq(prev => ({ ...prev, wifi_camera_count: Math.max(0, currentWifi - 1), camera_count: currentOutdoor + currentIndoor + Math.max(0, currentWifi - 1) }))} disabled={currentWifi === 0}>-</Button>
+                      <input
+                        type="number"
+                        min="0"
+                        value={currentWifi.toString()}
+                        onChange={(e) => {
+                          if (e.target.value === '') {
+                            setReq(prev => ({ ...prev, wifi_camera_count: '' as any, camera_count: currentOutdoor + currentIndoor }));
+                            return;
+                          }
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val)) {
+                            setReq(prev => ({ ...prev, wifi_camera_count: Math.max(0, val), camera_count: currentOutdoor + currentIndoor + Math.max(0, val) }));
+                          }
+                        }}
+                        className="text-lg sm:text-xl font-black w-10 sm:w-12 text-center text-blue-700 dark:text-blue-400 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 bg-white dark:bg-zinc-900 border text-base font-black hover:bg-blue-50" onClick={() => setReq(prev => ({ ...prev, wifi_camera_count: currentWifi + 1, camera_count: currentOutdoor + currentIndoor + currentWifi + 1 }))}>+</Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="bg-blue-50/80 dark:bg-blue-950/40 p-2.5 sm:p-3 rounded-xl flex justify-between items-center border border-blue-100 dark:border-blue-900">
@@ -994,8 +1046,8 @@ export function WizardClientV2() {
                 </Button>
                 <Button 
                   onClick={handleNext} 
-                  disabled={!req.recording_days || !req.recording_mode}
-                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(!req.recording_days || !req.recording_mode) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
+                  disabled={req.recording_days === undefined || !req.recording_mode}
+                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(req.recording_days === undefined || !req.recording_mode) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
                 >
                   {t("wz_confirm_recording")}
                 </Button>
@@ -1094,6 +1146,32 @@ export function WizardClientV2() {
                   </div>
                 </div>
 
+                {req.technology_preference === "Wireless" ? (
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">3. Installation & Setup Preference</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+                      <button type="button" onClick={() => updateReq({ installation_preference: "pro", cabling_done: true })}
+                        className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${(req.installation_preference || "pro") === "pro" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Pro Installation Fitting</span>
+                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">₹349/cam</span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400">Certified technician visits for physical drill mounting & phone app setup.</p>
+                      </button>
+                      <button type="button" onClick={() => updateReq({ installation_preference: "diy", cabling_done: true })}
+                        className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.installation_preference === "diy" ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">DIY Self-Installation</span>
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">₹0 FREE</span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400">Delivered to your doorstep. Plug into power and pair via mobile app.</p>
+                      </button>
+                    </div>
+                    <div className="mt-2 p-2.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900 text-[11px] text-blue-800 dark:text-blue-300">
+                      ℹ️ <strong>Zero Video Cabling:</strong> Wi-Fi cameras connect directly to your wireless router. Simply plug into a nearby 12V/5V socket.
+                    </div>
+                  </div>
+                ) : (
                 <div>
                   <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">{t("wz_3_existing_cabling")}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
@@ -1214,6 +1292,89 @@ export function WizardClientV2() {
                     );
                   })()}
                 </div>
+                )}
+
+                {/* 4. Internet & Wi-Fi Connection at Site */}
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+                    4. Internet & Wi-Fi Connection at Site
+                  </h3>
+                  
+                  {req.technology_preference === "Wireless" || (Number(req.wifi_camera_count) > 0) ? (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => updateReq({ broadband_status: "yes", wants_remote_viewing: true })}
+                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${(req.broadband_status || "yes") === "yes" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Yes, I Have Wi-Fi at Site</span>
+                            <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">₹0 FREE</span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">JioFiber, Airtel, or local broadband Wi-Fi already installed at premises.</p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => updateReq({ broadband_status: "sim_router", wants_remote_viewing: true })}
+                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "sim_router" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">No Wi-Fi at Site (Need 4G Router)</span>
+                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">+₹1,885</span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">Add 4G SIM Wi-Fi router to quotation so cameras connect and stream to phone.</p>
+                        </button>
+                      </div>
+
+                      <div className="p-2.5 bg-amber-50/80 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2">
+                        <span className="text-sm shrink-0">📶</span>
+                        <span>
+                          <strong>Wi-Fi Connection Required:</strong> Wi-Fi CCTV cameras must have an active Wi-Fi connection to transmit live video and motion alerts to your mobile phone.
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => updateReq({ broadband_status: "yes", wants_remote_viewing: true })}
+                        className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${(req.broadband_status || "yes") === "yes" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-gray-900 dark:text-white text-xs">Have Wi-Fi Router</span>
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">FREE</span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 dark:text-zinc-400">Connect DVR to your Wi-Fi router via LAN cable for mobile viewing.</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => updateReq({ broadband_status: "sim_router", wants_remote_viewing: true })}
+                        className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "sim_router" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-gray-900 dark:text-white text-xs">Add 4G SIM Router</span>
+                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">+₹1,885</span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 dark:text-zinc-400">No broadband at site. Include 4G SIM Wi-Fi router for mobile viewing.</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => updateReq({ broadband_status: "no", wants_remote_viewing: false })}
+                        className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "no" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-gray-900 dark:text-white text-xs">Offline / TV Only</span>
+                          <span className="text-[10px] bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-bold px-1.5 py-0.5 rounded">Offline</span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 dark:text-zinc-400">Local recording only. Connect directly to TV or LED monitor.</p>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
@@ -1222,8 +1383,8 @@ export function WizardClientV2() {
                 </Button>
                 <Button 
                   onClick={handleNext} 
-                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || req.cabling_done === undefined}
-                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || req.cabling_done === undefined) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
+                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || (req.technology_preference !== "Wireless" && req.cabling_done === undefined)}
+                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || (req.technology_preference !== "Wireless" && req.cabling_done === undefined)) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
                 >
                   {t("wz_confirm_details")}
                 </Button>

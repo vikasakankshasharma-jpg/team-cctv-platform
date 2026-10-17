@@ -101,6 +101,16 @@ export default async function SettingsAdminPage() {
     margin_hdmi_cable: 20,
     margin_rack: 30,
     margin_power_supply: 25,
+    margin_microsd: 20,
+
+    // Wireless & Smart Wi-Fi Controls
+    labor_wireless_pro_per_camera: 349,
+    labor_wireless_diy: 0,
+    wireless_auto_multiply_storage: true,
+    wireless_max_sd_capacity_gb: 256,
+    bitrate_daily_gb_2mp: 8.0,
+    bitrate_daily_gb_4mp: 14.0,
+    bitrate_daily_gb_8mp: 22.0,
 
     // NEW: Pincode and Cabling Config
     affordable_pincodes: ["302001", "302002", "302003", "302004", "302005", "302006", "302015", "302016"],

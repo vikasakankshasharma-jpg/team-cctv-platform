@@ -13,12 +13,12 @@ import { Input } from "@/components/ui/input";
 // â”€â”€â”€ Config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const MUST_HAVE_CATEGORIES: Record<string, { label: string; icon: any }> = {
-  cctv_camera:  { label: "Cameras (IP/HD)",         icon: Camera },
-  recorder:     { label: "Recorders (NVR/DVR/XVR)", icon: Monitor },
-  storage:      { label: "Storage (HDD/SD)",        icon: HardDrive },
-  connector:    { label: "Connectors (RJ45/BNC/DC)",icon: Zap },
-  cable:        { label: "Cables (CAT6/3+1)",       icon: Layers },
-  power_device: { label: "Power Device (PoE/SMPS)", icon: Cpu },
+  cctv_camera:  { label: "Cameras (IP / HD / Wi-Fi)", icon: Camera },
+  recorder:     { label: "Recorders (NVR/DVR/XVR)",    icon: Monitor },
+  storage:      { label: "Storage (HDD & MicroSD)",    icon: HardDrive },
+  connector:    { label: "Connectors (RJ45/BNC/DC)",   icon: Zap },
+  cable:        { label: "Cables (CAT6/3+1)",          icon: Layers },
+  power_device: { label: "Power Device (PoE/SMPS)",    icon: Cpu },
 };
 
 const OPTIONAL_CATEGORIES: Record<string, { label: string; icon: any }> = {
@@ -268,7 +268,8 @@ function CategorySection({
   onToggleSelect,
   onSelectAllGroup,
   onDeselectAllGroup,
-  onAddProduct
+  onAddProduct,
+  filterTech = "all"
 }: {
   categoryKey: string;
   products: Product[];
@@ -279,18 +280,34 @@ function CategorySection({
   onToggleSelect?: (id: string) => void;
   onSelectAllGroup?: (ids: string[]) => void;
   onDeselectAllGroup?: (ids: string[]) => void;
-  onAddProduct?: (category: string) => void;
+  onAddProduct?: (category: string, technology?: string) => void;
+  filterTech?: string;
 }) {
   const [open, setOpen] = useState(true);
   const cfg = CATEGORIES[categoryKey] || { label: categoryKey, icon: Package };
   const Icon = cfg.icon;
 
-  // Group by catalog_path (Sub-categories)
+  // Group by catalog_path (Sub-categories) with smart wireless detection
   const subGroups = useMemo(() => {
     const groups: Record<string, Product[]> = {};
     products.forEach(p => {
-      const pathParts = (p.catalog_path || "General").split('/');
-      const subName = pathParts.length > 2 ? pathParts.slice(2).join(' â€º ') : (pathParts[pathParts.length-1] || "General");
+      let path = p.catalog_path || p.group_path;
+      if (!path) {
+        const t = (p.technology || p.technologies?.[0] || "").toLowerCase();
+        if (p.category === "cctv_camera") {
+          if (t === "wireless" || t === "wifi" || (p as any).has_wifi) path = "cctv_camera/wifi/WiFi Camera";
+          else if (t === "ip") path = "cctv_camera/ip/IP Camera";
+          else path = "cctv_camera/hd/HD Camera";
+        } else if (p.category === "storage") {
+          if (t === "wireless" || (p as any).storage_type?.toLowerCase().includes("micro")) path = "storage/microsd/MicroSD Card";
+          else path = "storage/hdd/HDD";
+        } else {
+          path = "General";
+        }
+      }
+      const pathParts = path.split('/');
+      let subName = pathParts.length > 2 ? pathParts.slice(2).join(' - ') : (pathParts[pathParts.length-1] || "General");
+      if (subName === "HDD") subName = "Surveillance HDD";
       if (!groups[subName]) groups[subName] = [];
       groups[subName].push(p);
     });
@@ -321,7 +338,7 @@ function CategorySection({
         <div className="flex items-center gap-3">
            {onAddProduct && (
               <button
-                onClick={(e) => { e.stopPropagation(); onAddProduct(categoryKey); }}
+                onClick={(e) => { e.stopPropagation(); onAddProduct(categoryKey, filterTech === "Wireless" ? "Wireless" : "HD"); }}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors outline-none"
               >
                 <Plus className="w-3.5 h-3.5" /> Add New
@@ -366,7 +383,7 @@ interface ProductInventoryProps {
   onToggleSelect?: (id: string) => void;
   onSelectAllGroup?: (ids: string[]) => void;
   onDeselectAllGroup?: (ids: string[]) => void;
-  onAddProduct?: (category: string) => void;
+  onAddProduct?: (category: string, technology?: string) => void;
 }
 
 export function ProductInventory({ 
@@ -416,7 +433,11 @@ export function ProductInventory({
         p.internal_sku?.toLowerCase().includes(q) ||
         (p.brand || "").toLowerCase().includes(q);
       const matchCat    = filterCat === "all"    || (p.category || "addon") === filterCat;
-      const matchTech   = filterTech === "all"   || p.technologies?.includes(filterTech as any);
+      const matchTech   = filterTech === "all"   
+        || p.technologies?.includes(filterTech as any)
+        || (filterTech === "Wireless" && (p.technologies?.includes("WiFi" as any) || p.technology === "Wireless" || p.technology === "WiFi" || (p as any).has_wifi))
+        || (filterTech === "both" && (p.technologies?.includes("both" as any) || p.technologies?.includes("Common" as any) || p.technology === "Common"))
+        || p.technology === filterTech;
       const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
       const matchBrand  = filterBrand === "all"  || p.brand === filterBrand;
       return matchSearch && matchCat && matchTech && matchStatus && matchBrand;
@@ -487,7 +508,7 @@ export function ProductInventory({
             <option value="all">Any Technology</option>
             <option value="IP">Digital IP System</option>
             <option value="HD">Analog HD System</option>
-            <option value="Wireless">Wireless System</option>
+            <option value="Wireless">Smart Wireless (Wi-Fi)</option>
             <option value="both">Hybrid Tech</option>
           </select>
 
@@ -502,8 +523,12 @@ export function ProductInventory({
       {/* â”€â”€ Category groups â”€â”€ */}
       <div>
         <div className="pt-4 pb-4">
-          <h2 className="text-xl font-bold tracking-tight text-primary">Must Have for Wired Setup</h2>
-          <p className="text-sm text-muted-foreground">Essential core system and labor components.</p>
+          <h2 className="text-xl font-bold tracking-tight text-primary">
+            Core CCTV Hardware
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Essential cameras, recorders, surveillance storage, and power components.
+          </p>
         </div>
         {Object.keys(MUST_HAVE_CATEGORIES).map((cat) => {
           const items = visibleFiltered.filter((p) => {
@@ -524,6 +549,7 @@ export function ProductInventory({
               onSelectAllGroup={onSelectAllGroup}
               onDeselectAllGroup={onDeselectAllGroup}
               onAddProduct={onAddProduct}
+              filterTech={filterTech}
             />
           );
         })}

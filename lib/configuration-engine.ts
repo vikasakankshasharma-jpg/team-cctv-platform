@@ -4,14 +4,19 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   const isLiveOnly = req.recording_mode === "live_only" || req.recording_days === 0;
   const isIndustrial = (req.camera_count && Number(req.camera_count) > 16) || req.property_type === 'industrial';
   
+  // Determine Wireless vs Wired
+  const techLower = (req.technology_preference || "").toLowerCase();
+  const isWireless = techLower.includes("wifi") || techLower.includes("wireless") || techLower.includes("4g");
+
   // Calculate total cameras
   let totalCameras = Number(req.camera_count) || 0;
   let indoorCameras = Number(req.indoor_camera_count) || 0;
   let outdoorCameras = Number(req.outdoor_camera_count) || 0;
+  let wifiCameras = Number(req.wifi_camera_count) || 0;
   
-  // If explicitly provided via indoor/outdoor split
-  if (indoorCameras > 0 || outdoorCameras > 0) {
-    totalCameras = indoorCameras + outdoorCameras;
+  // If explicitly provided via indoor/outdoor/wifi split
+  if (indoorCameras > 0 || outdoorCameras > 0 || wifiCameras > 0) {
+    totalCameras = indoorCameras + outdoorCameras + (!isWireless ? wifiCameras : 0);
   } else if (totalCameras > 0) {
     // Fallback: If only total was provided (old wizard), assume all indoor for safety
     indoorCameras = totalCameras;
@@ -28,16 +33,15 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
     }
   }
 
-  // Determine Wireless vs Wired
-  const techLower = (req.technology_preference || "").toLowerCase();
-  const isWireless = techLower.includes("wifi") || techLower.includes("wireless") || techLower.includes("4g");
-  
   let wiredCameras = totalCameras;
   let wirelessCameras = 0;
 
   if (isWireless) {
     wirelessCameras = totalCameras;
     wiredCameras = 0;
+  } else if (wifiCameras > 0) {
+    wirelessCameras = wifiCameras;
+    wiredCameras = indoorCameras + outdoorCameras > 0 ? (indoorCameras + outdoorCameras) : Math.max(0, totalCameras - wirelessCameras);
   } else if (req.mixed_camera_requirements) {
     wiredCameras = 0;
     wirelessCameras = 0;
@@ -141,7 +145,7 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
     }
   }
 
-  const requiresSimRouter = req.wants_remote_viewing && req.broadband_status === "sim_router";
+  const requiresSimRouter = req.broadband_status === "sim_router";
   
   // Industrial Check (e.g. > 16 cameras)
   // isIndustrial is already defined at the top of the file
