@@ -4,11 +4,63 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useCartStore } from "@/stores/useCartStore";
 import { 
   Loader2, ShoppingCart, Trash2, AlertTriangle, Plus, Minus, Lock, Unlock,
-  Search, X, ArrowUpDown, Filter, Sparkles, ArrowRight
+  Search, X, ArrowUpDown, Filter, Sparkles, ArrowRight, ChevronDown, Wifi
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
+
+function FilterSelect({
+  value,
+  onChange,
+  options,
+  icon,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: { label: string; value: string }[];
+  icon?: React.ReactNode;
+  ariaLabel?: string;
+}) {
+  const isActive = value !== "all" && value !== "recommended";
+  return (
+    <div className="relative flex items-center flex-1 min-w-[130px] sm:flex-initial sm:min-w-0">
+      {icon && (
+        <span
+          className={`absolute left-2.5 pointer-events-none transition-colors ${
+            isActive ? "text-blue-600" : "text-slate-400"
+          }`}
+        >
+          {icon}
+        </span>
+      )}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+        className={`w-full appearance-none text-xs font-semibold rounded-xl border outline-none cursor-pointer transition-all ${
+          icon ? "pl-8" : "pl-3"
+        } pr-7 py-2 ${
+          isActive
+            ? "bg-blue-50 border-blue-400 text-blue-700 font-bold ring-1 ring-blue-500/20"
+            : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300"
+        }`}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        className={`w-3.5 h-3.5 absolute right-2.5 pointer-events-none transition-colors ${
+          isActive ? "text-blue-600" : "text-slate-400"
+        }`}
+      />
+    </div>
+  );
+}
 
 export function ProBuilderClient() {
 
@@ -813,7 +865,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 </div>
                 <h3 className="text-base sm:text-lg font-black">Complete your {camCount}-Camera {technology} setup in 1-Click?</h3>
                 <p className="text-xs text-blue-100 max-w-xl">
-                  Instantly bundles the best matching Surveillance HDD, {technology === "IP" ? "CAT6 Network Cables, PoE Switch" : "3+1 Cables, SMPS Power Supply"}, connectors, junction boxes, and professional installation.
+                  Instantly bundles the best matching Surveillance HDD, {technology === "Wireless" ? "MicroSD Storage & Wi-Fi Accessories" : technology === "IP" ? "CAT6 Network Cables, PoE Switch" : "3+1 Cables, SMPS Power Supply"}, connectors, junction boxes, and professional installation.
                 </p>
               </div>
               <Button
@@ -856,7 +908,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 <h2 className="text-3xl font-black text-slate-900">Choose Your Base Technology</h2>
                 <p className="text-slate-500 mt-2">This will automatically filter all compatible cameras and recorders.</p>
               </div>
-              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 <button 
                   onClick={() => { setTechnology("IP"); handleStepChange(1, "IP"); }}
                   className={`p-4 md:p-8 rounded-3xl border-2 text-left transition-all ${technology === "IP" ? "border-blue-600 ring-4 ring-blue-50 bg-blue-50" : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-lg"}`}
@@ -875,7 +927,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
 
                 <button 
                   onClick={() => { setTechnology("HD"); handleStepChange(1, "HD"); }}
-                  className={`p-4 md:p-8 rounded-3xl border-2 text-left transition-all ${technology === "HD" ? "border-blue-600 ring-4 ring-blue-50 bg-blue-50" : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-lg"}`}
+                  className={`p-4 md:p-8 rounded-3xl border-2 text-left transition-all ${technology === "HD" ? "border-amber-600 ring-4 ring-amber-50 bg-amber-50" : "border-slate-200 bg-white hover:border-amber-300 hover:shadow-lg"}`}
                 >
                   <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6">
                     <Sparkles className="w-8 h-8" />
@@ -888,254 +940,193 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-amber-600" /> Coaxial (3+1) Cable</div>
                   </div>
                 </button>
+
+                <button 
+                  onClick={() => { setTechnology("Wireless"); handleStepChange(1, "Wireless"); }}
+                  className={`p-4 md:p-8 rounded-3xl border-2 text-left transition-all ${technology === "Wireless" ? "border-purple-600 ring-4 ring-purple-50 bg-purple-50" : "border-slate-200 bg-white hover:border-purple-300 hover:shadow-lg"}`}
+                >
+                  <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6">
+                    <Wifi className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 mb-2">Wireless (Wi-Fi / 4G)</h3>
+                  <p className="text-slate-600 mb-6">Zero video cabling. Perfect for homes, shops, and standalone perimeter monitoring with easy phone app access.</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600" /> Dedicated MicroSD Storage</div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600" /> Standalone App or NVR Compatible</div>
+                    <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600" /> Wi-Fi / 4G SIM Connectivity</div>
+                  </div>
+                </button>
               </div>
             </div>
           ) : (
             <>
               {/* Search, Sort & Dynamic Filter Toolbar */}
               <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3">
-                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-                  {/* Search Input */}
-                  <div className="relative flex-1">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder={`Search in ${STEPS.find(c => c.id === activeCategory)?.label}...`}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                {/* Search Input */}
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder={`Search in ${STEPS.find(c => c.id === activeCategory)?.label}...`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                  {searchQuery && (
+                    <button 
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      title="Clear search"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Dynamic Contextual Filter & Sort Dropdowns */}
+                <div className="pt-2.5 border-t border-slate-100 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
+                  {/* Camera Form Factor */}
+                  {activeCategory === "camera" && filterOptions.hasDomes && filterOptions.hasBullets && (
+                    <FilterSelect
+                      value={filterType}
+                      onChange={setFilterType}
+                      ariaLabel="Filter by camera type"
+                      options={[
+                        { value: "all", label: "Type: All" },
+                        ...(filterOptions.hasDomes ? [{ value: "dome", label: "Dome (Indoor)" }] : []),
+                        ...(filterOptions.hasBullets ? [{ value: "bullet", label: "Bullet (Outdoor)" }] : []),
+                      ]}
                     />
-                    {searchQuery && (
-                      <button 
-                        onClick={() => setSearchQuery("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                        title="Clear search"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Sort Dropdown & Reset */}
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex items-center">
-                      <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
-                      <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as any)}
-                        className="pl-8 pr-7 py-2 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer transition-all"
-                      >
-                        <option value="recommended">Sort: Default</option>
-                        <option value="price_asc">Price: Low to High</option>
-                        <option value="price_desc">Price: High to Low</option>
-                        <option value="name_asc">Name: A to Z</option>
-                      </select>
-                    </div>
-
-                    {hasActiveFilters && (
-                      <button
-                        onClick={resetAllFilters}
-                        className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-1"
-                      >
-                        <X className="w-3 h-3" /> Reset
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Contextual Category Filter Pills */}
-                <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-                  {/* Camera Filters */}
-                  {activeCategory === "camera" && (
-                    <>
-                      {(filterOptions.hasDomes && filterOptions.hasBullets) && (
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Type:</span>
-                          <button
-                            onClick={() => setFilterType("all")}
-                            className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterType === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                          >
-                            All
-                          </button>
-                          {filterOptions.hasDomes && (
-                            <button
-                              onClick={() => setFilterType("dome")}
-                              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterType === "dome" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                            >
-                              Dome (Indoor)
-                            </button>
-                          )}
-                          {filterOptions.hasBullets && (
-                            <button
-                              onClick={() => setFilterType("bullet")}
-                              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterType === "bullet" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                            >
-                              Bullet (Outdoor)
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {filterOptions.resolutions.length > 1 && (
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Res:</span>
-                          <button
-                            onClick={() => setFilterRes("all")}
-                            className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterRes === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                          >
-                            All
-                          </button>
-                          {filterOptions.resolutions.map(r => (
-                            <button
-                              key={r}
-                              onClick={() => setFilterRes(r)}
-                              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterRes === r ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                            >
-                              {r}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {filterOptions.nightVisions.length > 1 && (
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Night Vision:</span>
-                            <button
-                              onClick={() => setFilterNightVision("all")}
-                              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterNightVision === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                            >
-                              All
-                            </button>
-                            {filterOptions.nightVisions.map(nv => (
-                              <button
-                                key={nv}
-                                onClick={() => setFilterNightVision(nv)}
-                                className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterNightVision === nv ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                              >
-                                {nv}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                    </>
                   )}
 
-                  {/* Recorder Filters */}
+                  {/* Camera Resolution */}
+                  {activeCategory === "camera" && filterOptions.resolutions.length > 1 && (
+                    <FilterSelect
+                      value={filterRes}
+                      onChange={setFilterRes}
+                      ariaLabel="Filter by resolution"
+                      options={[
+                        { value: "all", label: "Resolution: All" },
+                        ...filterOptions.resolutions.map(r => ({ value: r, label: r })),
+                      ]}
+                    />
+                  )}
+
+                  {/* Camera Night Vision */}
+                  {activeCategory === "camera" && filterOptions.nightVisions.length > 1 && (
+                    <FilterSelect
+                      value={filterNightVision}
+                      onChange={setFilterNightVision}
+                      ariaLabel="Filter by night vision"
+                      options={[
+                        { value: "all", label: "Vision: All" },
+                        ...filterOptions.nightVisions.map(nv => ({ value: nv, label: nv })),
+                      ]}
+                    />
+                  )}
+
+                  {/* Recorder Channels */}
                   {activeCategory === "recorder" && filterOptions.channels.length > 1 && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Channels:</span>
-                      <button
-                        onClick={() => setFilterChannels("all")}
-                        className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterChannels === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                      >
-                        All
-                      </button>
-                      {filterOptions.channels.map(ch => (
-                        <button
-                          key={ch}
-                          onClick={() => setFilterChannels(ch)}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterChannels === ch ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                        >
-                          {ch} Ch
-                        </button>
-                      ))}
-                    </div>
+                    <FilterSelect
+                      value={filterChannels}
+                      onChange={setFilterChannels}
+                      ariaLabel="Filter by channels"
+                      options={[
+                        { value: "all", label: "Channels: All" },
+                        ...filterOptions.channels.map(ch => ({ value: ch, label: `${ch} Channels` })),
+                      ]}
+                    />
                   )}
 
-                  {/* Storage Filters */}
+                  {/* Storage Capacity */}
                   {activeCategory === "storage" && filterOptions.capacities.length > 1 && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Capacity:</span>
-                      <button
-                        onClick={() => setFilterCapacity("all")}
-                        className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterCapacity === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                      >
-                        All
-                      </button>
-                      {filterOptions.capacities.map(cap => (
-                        <button
-                          key={cap}
-                          onClick={() => setFilterCapacity(cap)}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterCapacity === cap ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                        >
-                          {cap}
-                        </button>
-                      ))}
-                    </div>
+                    <FilterSelect
+                      value={filterCapacity}
+                      onChange={setFilterCapacity}
+                      ariaLabel="Filter by storage capacity"
+                      options={[
+                        { value: "all", label: "Capacity: All" },
+                        ...filterOptions.capacities.map(cap => ({ value: cap, label: cap })),
+                      ]}
+                    />
                   )}
 
-                  {/* Cable Filters */}
+                  {/* Cable Type */}
                   {activeCategory === "cable" && filterOptions.cableTypes.length > 1 && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Type:</span>
-                      <button
-                        onClick={() => setFilterCableType("all")}
-                        className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterCableType === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                      >
-                        All
-                      </button>
-                      {filterOptions.cableTypes.map(ct => (
-                        <button
-                          key={ct}
-                          onClick={() => setFilterCableType(ct)}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterCableType === ct ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                        >
-                          {ct}
-                        </button>
-                      ))}
-                    </div>
+                    <FilterSelect
+                      value={filterCableType}
+                      onChange={setFilterCableType}
+                      ariaLabel="Filter by cable type"
+                      options={[
+                        { value: "all", label: "Cable: All" },
+                        ...filterOptions.cableTypes.map(ct => ({ value: ct, label: ct })),
+                      ]}
+                    />
                   )}
 
-                  {/* Upgrades Filters */}
+                  {/* Upgrades Type */}
                   {activeCategory === "upgrades" && filterOptions.upgradeTypes.length > 1 && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Type:</span>
-                      <button
-                        onClick={() => setFilterType("all")}
-                        className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterType === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                      >
-                        All
-                      </button>
-                      {filterOptions.upgradeTypes.map(ut => (
-                        <button
-                          key={ut}
-                          onClick={() => setFilterType(ut)}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterType === ut ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                        >
-                          {ut.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
-                        </button>
-                      ))}
-                    </div>
+                    <FilterSelect
+                      value={filterType}
+                      onChange={setFilterType}
+                      ariaLabel="Filter by upgrade category"
+                      options={[
+                        { value: "all", label: "Type: All" },
+                        ...filterOptions.upgradeTypes.map(ut => ({ 
+                          value: ut, 
+                          label: ut.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) 
+                        })),
+                      ]}
+                    />
                   )}
 
-                  {/* Brand Filter */}
+                  {/* Brand Filter (Available for any category with multiple brands) */}
                   {filterOptions.brands.length > 1 && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Brand:</span>
-                      <button
-                        onClick={() => setFilterBrand("all")}
-                        className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterBrand === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                      >
-                        All
-                      </button>
-                      {filterOptions.brands.map(b => (
-                        <button
-                          key={b}
-                          onClick={() => setFilterBrand(b)}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition-all ${filterBrand === b ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                        >
-                          {b}
-                        </button>
-                      ))}
-                    </div>
+                    <FilterSelect
+                      value={filterBrand}
+                      onChange={setFilterBrand}
+                      ariaLabel="Filter by brand"
+                      options={[
+                        { value: "all", label: "Brand: All" },
+                        ...filterOptions.brands.map(b => ({ value: b, label: b })),
+                      ]}
+                    />
+                  )}
+
+                  {/* Sort Dropdown */}
+                  <FilterSelect
+                    value={sortBy}
+                    onChange={(val) => setSortBy(val as any)}
+                    ariaLabel="Sort products"
+                    icon={<ArrowUpDown className="w-3.5 h-3.5" />}
+                    options={[
+                      { value: "recommended", label: "Sort: Default" },
+                      { value: "price_asc", label: "Price: Low to High" },
+                      { value: "price_desc", label: "Price: High to Low" },
+                      { value: "name_asc", label: "Name: A to Z" },
+                    ]}
+                  />
+
+                  {/* Reset All Filters Button */}
+                  {hasActiveFilters && (
+                    <button
+                      onClick={resetAllFilters}
+                      className="col-span-2 sm:col-span-1 px-3 py-2 text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-all whitespace-nowrap flex items-center justify-center gap-1 shadow-sm"
+                      title="Reset all filters"
+                    >
+                      <X className="w-3.5 h-3.5" /> Reset Filters
+                    </button>
                   )}
                 </div>
 
-                {/* Counter */}
+                {/* Counter & Status */}
                 <div className="text-[11px] font-medium text-slate-400 flex items-center justify-between pt-1">
                   <span>Showing {filteredProducts.length} of {categoryProducts.length} items</span>
                   {hasActiveFilters && (
-                    <span className="text-blue-600 font-semibold">Active filters applied</span>
+                    <span className="text-blue-600 font-semibold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block animate-pulse"></span>
+                      Active filters applied
+                    </span>
                   )}
                 </div>
               </div>

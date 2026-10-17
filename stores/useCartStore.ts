@@ -14,9 +14,9 @@ export interface CartItem {
 }
 
 interface CartState {
-  technology: "HD" | "IP" | null;
+  technology: "HD" | "IP" | "Wireless" | null;
   items: CartItem[];
-  setTechnology: (tech: "HD" | "IP" | null) => void;
+  setTechnology: (tech: "HD" | "IP" | "Wireless" | null) => void;
   addItem: (product: any, qty?: number) => void;
   removeItem: (id: string) => void;
   updateQty: (id: string, qty: number) => void;
@@ -40,7 +40,7 @@ export const useCartStore = create<CartState>()(
       // Auto-set technology if it's the first non-common item
       let newTech = state.technology;
       if (!newTech && product.technologies && !product.technologies.includes("Common")) {
-        newTech = product.technologies.includes("IP") ? "IP" : "HD";
+        newTech = product.technologies.includes("Wireless") ? "Wireless" : product.technologies.includes("IP") ? "IP" : "HD";
       }
       
       const existing = state.items.find((i) => i.id === product.id);
