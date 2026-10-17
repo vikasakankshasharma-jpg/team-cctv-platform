@@ -199,10 +199,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     }
 
     // Determine Dynamic Cards
-    const dynamicCards: Array<{technology: "HD" | "IP"; option: number}> = [
-      { technology: normalizedTech as "HD" | "IP", option: 1 },
-      { technology: normalizedTech as "HD" | "IP", option: 2 },
-      { technology: normalizedTech as "HD" | "IP", option: 3 }
+    const dynamicCards: Array<{technology: "HD" | "IP" | "Wireless"; option: number}> = [
+      { technology: normalizedTech, option: 1 },
+      { technology: normalizedTech, option: 2 },
+      { technology: normalizedTech, option: 3 }
     ];
     
     const recCard = dynamicCards.find(c => c.technology === normalizedTech && c.option === recommendation?.camera_option) || dynamicCards[1];
@@ -276,7 +276,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     return calculatePricing({
       selection: { 
         ...selection, 
-        technology: cT as "HD" | "IP", 
+        technology: (cT === "Wireless" || cT === "wireless" || cT === "WIFI" || cT === "WiFi") ? "Wireless" : (cT as "HD" | "IP"), 
         plan_type: (typeof cO === "string" && ["budget", "recommended", "premium"].includes(cO)) ? (cO as any) : selection.plan_type,
         selected_camera_option: typeof cO === "number" ? cO : undefined, 
         selected_camera_id: selection.selected_camera_id || (isCameraSku ? cO : undefined),
@@ -302,7 +302,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     return calculatePricing({
       selection: { 
         ...selection, 
-        technology: cT as "HD" | "IP", 
+        technology: (cT === "Wireless" || cT === "wireless" || cT === "WIFI" || cT === "WiFi") ? "Wireless" : (cT as "HD" | "IP"), 
         selected_camera_option: baseOption,
         selected_camera_id: undefined,
         selected_recorder_id: undefined,
@@ -437,7 +437,10 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     const recItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "recorder");
     const strItem = pricing.items?.find((i: any) => currentProducts.find(p => p.id === i.product_id)?.category === "storage");
 
-    const tech = ((pricing.technology || selection.technology || "HD") as string).toUpperCase() as "HD" | "IP";
+    const rawTech = String(pricing.technology || selection.technology || "HD");
+    const tech: "HD" | "IP" | "Wireless" = 
+      (rawTech.toLowerCase() === "wireless" || rawTech.toLowerCase() === "wifi") ? "Wireless" : 
+      (rawTech.toUpperCase() === "IP" ? "IP" : "HD");
 
     const mixedReqs = pricing.mixed_camera_requirements || selection.mixed_camera_requirements;
     const totalCams = mixedReqs && mixedReqs.length > 0

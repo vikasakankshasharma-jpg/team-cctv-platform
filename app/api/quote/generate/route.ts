@@ -6,6 +6,7 @@ import { generateConfiguration } from "@/lib/configuration-engine";
 import { resolveProducts } from "@/lib/product-resolver";
 import { generatePricingSnapshot } from "@/lib/pricing-engine";
 import { adminDb } from "@/lib/firebase-admin";
+import { getUniqueCanonicalBrands } from "@/lib/brand-utils";
 
 async function getActiveProducts(): Promise<Product[]> {
   const snap = await adminDb
@@ -59,29 +60,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Extract unique brands from catalog
-    const brands = new Set<string>();
-    catalog.forEach((p: Product) => {
-       if (p.category === "cctv_camera" || p.category === "recorder" || (p.category as any) === "CAMERA_HD" || (p.category as any) === "CAMERA_IP") {
-                    let b = p.brand;
-          if (!b) {
-             if (p.display_name.toLowerCase().includes("cp plus")) b = "CP Plus";
-             else if (p.display_name.toLowerCase().includes("hikvision")) b = "Hikvision";
-             else if (p.display_name.toLowerCase().includes("prama")) b = "Prama";
-             else if (p.display_name.toLowerCase().includes("dahua")) b = "Dahua";
-          }
-          if (b) {
-             const lower = b.toLowerCase().replace(/\s+/g, "");
-             if (lower === "cpplus") b = "CP Plus";
-             else if (lower.includes("budget")) b = "";
-             else if (lower === "prama") b = "Prama";
-             else if (lower === "hikvision") b = "Hikvision";
-             else if (lower === "dahua") b = "Dahua";
-          }
-          if (b) brands.add(b);
-       }
-    });
-    const uniqueBrands = Array.from(brands);
+    // 3. Extract unique canonical brands from catalog (excluding "Budget Brand" since Budget is resolved first)
+    const uniqueBrands = getUniqueCanonicalBrands(catalog, ["cctv_camera", "recorder", "CAMERA_HD", "CAMERA_IP"])
+      .filter(b => b !== "Budget Brand");
 
     // 4. Resolve Hardware (Dynamic Tech+MP Combinations) for "Budget" + Each Brand
     let allResolvedPlans: Record<string, any> = {};

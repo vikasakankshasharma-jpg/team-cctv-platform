@@ -6,6 +6,7 @@ import type { Product, AppSettings, ConfiguratorSelection } from "@/types";
 import { calculatePricing } from "@/lib/pricing-engine";
 import { calculateSystemScore, inferResolutionFromName, inferNightVisionFromName } from "@/lib/system-score";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getCanonicalBrandName } from "@/lib/brand-utils";
 
 interface CompareOption {
   technology: string;
@@ -45,7 +46,7 @@ const SECTIONS: SpecSection[] = [
     title: "1. Camera Specifications",
     rows: [
       { label: "Camera Model", key: "cam_model", getValue: ({ cam }) => cam?.camera_model || cam?.technical_name || cam?.display_name },
-      { label: "Brand", key: "cam_brand", getValue: ({ cam }) => cam?.brand || "Premium" },
+      { label: "Brand", key: "cam_brand", getValue: ({ cam }) => (cam?.brand ? getCanonicalBrandName(cam.brand) : "Premium") },
       { label: "Technology", key: "cam_tech", getValue: ({ cam }) => cam?.technologies?.join(', ') },
       {
         label: "Resolution",
@@ -93,7 +94,7 @@ const SECTIONS: SpecSection[] = [
         label: "Lens",
         key: "cam_lens",
         getValue: ({ cam }) => cam?.lens_mm ?? undefined,
-        formatValue: (v) => v ? `${v}mm` : "-",
+        formatValue: (v) => v ? (String(v).toLowerCase().includes("mm") ? String(v) : `${v}mm`) : "-",
       },
     ],
   },
@@ -101,7 +102,7 @@ const SECTIONS: SpecSection[] = [
     title: "2. Recorder Specifications",
     rows: [
       { label: "Recorder Model", key: "rec_model", getValue: ({ rec, quote }) => rec?.recorder_model || rec?.technical_name || rec?.display_name || quote.items.find(i => i.product_id.includes("recorder") || i.display_name.includes("Recorder"))?.display_name },
-      { label: "Brand", key: "rec_brand", getValue: ({ rec }) => rec?.brand || "Premium" },
+      { label: "Brand", key: "rec_brand", getValue: ({ rec }) => (rec?.brand ? getCanonicalBrandName(rec.brand) : "Premium") },
       { label: "Type", key: "rec_type", getValue: ({ rec, cam }) => rec?.recorder_type || rec?.technologies?.join(', ') || (cam?.technologies?.includes("IP") ? "NVR" : "DVR") },
       {
         label: "Compression",

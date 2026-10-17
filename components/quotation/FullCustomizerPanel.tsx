@@ -3,7 +3,8 @@
 import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { calculateSystemScore } from "@/lib/system-score";
-import { isTechMatch, isBrandMatch } from "@/lib/product-resolver";
+import { isTechMatch } from "@/lib/product-resolver";
+import { isBrandMatch, getCanonicalBrandName, getCanonicalBrandKey, getUniqueCanonicalBrands } from "@/lib/brand-utils";
 import { 
   Zap, Maximize, Mic, Moon, Camera, Server, HardDrive, Plug, PlusCircle,
   Search, X, Sparkles, Check, CheckCircle2, ChevronDown, ChevronUp, Unlock, Lock, Wrench, ArrowRight, Cable
@@ -121,7 +122,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         (p.stock_quantity === undefined || p.stock_quantity >= requiredQty) &&
         (!proxyTech || p.technologies?.includes(proxyTech as any) || p.technologies?.includes("Common"))
       ).forEach(p => {
-        if (p.brand) brands.add(p.brand);
+        if (p.brand) brands.add(getCanonicalBrandName(p.brand));
         if (p.resolution_mp) mps.add(`${p.resolution_mp}MP`);
         if (p.form_factor) types.add(p.form_factor.charAt(0).toUpperCase() + p.form_factor.slice(1));
         if (p.lens_mm) lenses.add(`${p.lens_mm}mm`);
@@ -148,7 +149,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         (!selection.technology || p.technologies?.includes(selection.technology as any) || p.technologies?.includes("Common")) &&
         (p.max_cameras || p.channels || 0) >= selection.camera_count
       ).forEach(p => {
-        if (p.brand) brands.add(p.brand);
+        if (p.brand) brands.add(getCanonicalBrandName(p.brand));
         if (p.channels) channels.add(`${p.channels} Ch`);
         const name = (p.technical_name || p.display_name || "").toLowerCase();
         if (name.includes("nvr")) types.add("NVR");
@@ -190,7 +191,8 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
     const stats: Record<string, number> = {};
     products.forEach(p => {
       if (p.category === "cctv_camera" && p.brand && p.is_active) {
-        stats[p.brand] = (stats[p.brand] || 0) + 1;
+        const cBrand = getCanonicalBrandName(p.brand);
+        stats[cBrand] = (stats[cBrand] || 0) + 1;
       }
     });
     return Object.entries(stats).sort((a, b) => b[1] - a[1]);
@@ -495,7 +497,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
               <span className="text-[17px] font-semibold text-[#1d1d1f] dark:text-white">₹{unitPrice.toLocaleString("en-IN")}{requiredQuantity > 1 ? ` × ${requiredQuantity}` : ""}</span>
               {"brand" in item && item.brand && (
                 <span className="text-[11px] font-medium text-[#86868b]">
-                  {item.brand}
+                  {getCanonicalBrandName(item.brand)}
                 </span>
               )}
             </div>

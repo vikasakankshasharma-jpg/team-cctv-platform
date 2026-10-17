@@ -1360,7 +1360,8 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     ["ptz", "solar", "4g", "wireless", "panoramic"].includes(rf)
   ) || ((selection as any).type && ["ptz", "solar", "4g", "wireless"].some(t => (selection as any).type.toLowerCase().includes(t)));
 
-  if (!hasSpecialtyRequest) {
+  const isWirelessTech = tech === "Wireless" || tech === "WiFi" || tech === "wireless" || tech === "wifi";
+  if (!hasSpecialtyRequest && !isWirelessTech) {
     const nonSpecialtyPool = pool.filter(cam => {
       const name = (cam.technical_name + " " + cam.display_name).toLowerCase();
       const feats = (cam.features || []).map(f => f.toLowerCase());
@@ -1412,8 +1413,8 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
       
       return selection.requested_features!.every(rf => {
         const rfLower = rf.toLowerCase().trim();
-        if (rfLower === "dome") return formFactor === "dome" || formFactor === "indoor_pt" || name.includes("dome");
-        if (rfLower === "bullet") return formFactor === "bullet" || formFactor === "outdoor_pt" || name.includes("bullet");
+        if (rfLower === "dome" || rfLower === "indoor") return formFactor === "dome" || formFactor === "indoor_pt" || formFactor === "indoor" || (cam as any).indoor_outdoor === "indoor" || name.includes("dome") || name.includes("indoor");
+        if (rfLower === "bullet" || rfLower === "outdoor") return formFactor === "bullet" || formFactor === "outdoor_pt" || formFactor === "outdoor" || (cam as any).indoor_outdoor === "outdoor" || name.includes("bullet") || name.includes("outdoor");
         if (rfLower === "mic" || rfLower === "audio") return feats.some(f => f.includes("mic") || f.includes("audio") || f.includes("2-way") || f.includes("two-way") || f.includes("two way")) || name.includes("mic") || name.includes("audio") || name.includes("2-way") || name.includes("two-way") || name.includes("two way");
         if (rfLower === "2-way" || rfLower === "two-way" || rfLower === "two way") return feats.some(f => f.includes("2-way") || f.includes("two-way") || f.includes("two way") || f.includes("speaker")) || name.includes("2-way") || name.includes("two-way") || name.includes("two way") || name.includes("speaker");
         if (rfLower === "color") return feats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) || name.includes("color") || name.includes("colour");

@@ -8,21 +8,11 @@ import { calculateSystemScore } from "@/lib/system-score";
 import { trackEvent } from "@/components/shared/TrackingProvider";
 import { useConfiguratorStore } from "@/store/configurator";
 
-const BRAND_DISPLAY: Record<string, string> = {
-  "cpplus": "CP Plus", "cp-plus": "CP Plus", "cp plus": "CP Plus",
-  "wd": "WD",
-  "seagate": "Seagate",
-  "prama": "Prama",
-  "hikvision": "Hikvision",
-  "dahua": "Dahua",
-  "trueview": "Trueview",
-  "d-link": "D-Link",
-  "tp-link": "TP-Link",
-};
+import { getCanonicalBrandName } from "@/lib/brand-utils";
 
 function normalizeBrand(brand?: string | null): string {
   if (!brand) return "Premium";
-  return BRAND_DISPLAY[brand.toLowerCase()] || brand;
+  return getCanonicalBrandName(brand) || "Premium";
 }
 
 

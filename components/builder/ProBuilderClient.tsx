@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
+import { getUniqueCanonicalBrands, isBrandMatch } from "@/lib/brand-utils";
 
 function FilterSelect({
   value,
@@ -455,7 +456,7 @@ const isWirelessItem = (item: any) => {
 
   // Available filter options for active category
   const filterOptions = useMemo(() => {
-    const brands = Array.from(new Set(categoryProducts.map(p => p.brand).filter(Boolean))) as string[];
+    const brands = getUniqueCanonicalBrands(categoryProducts);
     const resolutions = Array.from(new Set(categoryProducts.map(p => p.derivedResolution).filter(Boolean))) as string[];
     const channels = Array.from(new Set(categoryProducts.map(p => p.derivedChannels ? String(p.derivedChannels) : "").filter(Boolean))).sort((a, b) => parseInt(a) - parseInt(b));
     const capacities = Array.from(new Set(categoryProducts.map(p => p.derivedCapacity).filter(Boolean))) as string[];
@@ -488,7 +489,7 @@ const isWirelessItem = (item: any) => {
       }
 
       // Brand filter
-      if (filterBrand !== "all" && p.brand !== filterBrand) return false;
+      if (filterBrand !== "all" && !isBrandMatch(p, filterBrand)) return false;
 
       // Category specific filters
       if (activeCategory === "camera") {

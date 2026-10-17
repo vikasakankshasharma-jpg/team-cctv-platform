@@ -309,16 +309,20 @@ export interface Product {
   // These replace fragile string-parsing of technical_name for spec comparison.
   night_vision_type?: "ir" | "color" | "dual_light" | "starlight";
   night_vision_range_m?: number;     // IR/color range in meters (e.g., 20, 30, 50)
-  lens_mm?: number;                  // Focal length (e.g., 2.8, 3.6, 6)
+  lens_mm?: number | string;         // Focal length e.g. 2.8, 3.6, or varifocal "2.8 - 12"
+  is_varifocal?: boolean;            // Varifocal / Motorized zoom lens
   viewing_angle_deg?: number;        // Field of view in degrees (e.g., 90, 110)
   form_factor?: "dome" | "bullet" | "indoor_pt" | "outdoor_pt" | "ptz" | "multi_lens" | "dual_lens" | "turret" | "fisheye" | "wire_free_battery" | "video_doorbell" | string;
+  body_material?: "metal" | "plastic" | "semi_metal"; // Enclosure material
+  is_metal_body?: boolean;           // Quick flag: Metal Body
   ip_rating?: string;                // e.g., "IP67", "IP66", "IP65", "Indoor"
   compression?: "H.264" | "H.265" | "H.265+";
   wdr?: boolean;                     // Wide Dynamic Range
   has_audio?: boolean;               // Built-in microphone
-  has_speaker?: boolean;             // Inbuilt speaker / 2-way talk / siren
+  has_speaker?: boolean;             // Inbuilt speaker / 2-way talk
+  has_siren?: boolean;               // Inbuilt Siren / Flashing Strobe (Active Deterrence)
   has_sd_slot?: boolean;             // Local SD card storage
-  max_sd_capacity_gb?: number;       // Max supported MicroSD card capacity in GB (e.g., 128, 256, 512)
+  max_sd_capacity_gb?: number;       // Max supported MicroSD card capacity in GB (e.g., 64, 128, 256, 512)
   poe?: boolean;                     // Power over Ethernet
   
   // Lens & View Specs

@@ -12,6 +12,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { FullCustomizerPanel } from "./FullCustomizerPanel";
+import { getCanonicalBrandName, getCanonicalBrandKey, getUniqueCanonicalBrands } from "@/lib/brand-utils";
 
 interface InstantQuotationReviewProps {
   lead: Lead;
@@ -82,8 +83,9 @@ export function InstantQuotationReview({
     products.find(p => p.id === i.product_id)?.category === "cctv_camera" ||
     i.display_name?.toLowerCase().includes("camera")
   );
-  const brandName = camItem?.brand || selection.brand_preference || "Budget Brand";
+  const brandName = getCanonicalBrandName(camItem?.brand || selection.brand_preference || "Budget Brand");
   const techName = (activePricing.technology || selection.technology || "HD").toUpperCase();
+  const isWireless = techName === "WIRELESS" || techName === "WIFI";
   const mixedCount = selection.mixed_camera_requirements?.reduce((sum, r) => sum + Number(r.count || 0), 0) || 0;
   const camCount = mixedCount > 0 ? mixedCount : (selection.camera_count || 4);
 
@@ -94,7 +96,19 @@ export function InstantQuotationReview({
   );
   const recorderDisplayName = recItem 
     ? (recItem.brand ? `${recItem.brand} ${techName === "IP" ? "NVR" : "DVR"}` : recItem.display_name)
+    : isWireless 
+    ? "None (MicroSD / App)" 
     : `${brandName} ${techName === "IP" ? "NVR" : "DVR"}`;
+
+  const strItem = activePricing.items?.find((i: any) => 
+    products.find(p => p.id === i.product_id)?.category === "storage" ||
+    i.display_name?.toLowerCase().includes("microsd") ||
+    i.display_name?.toLowerCase().includes("sd card") ||
+    i.display_name?.toLowerCase().includes("hdd") ||
+    i.display_name?.toLowerCase().includes("hard disk")
+  );
+  const strProduct = strItem ? products.find(p => p.id === strItem.product_id) : undefined;
+  const storageCap = (strProduct as any)?.capacity || (strItem as any)?.capacity || (strItem?.display_name?.match(/(\d+)\s*(?:GB|TB)/i)?.[0]) || (isWireless ? "128GB" : "1TB");
 
   // Find accessory products available in catalog
   const availableAccessories = [
@@ -296,7 +310,7 @@ export function InstantQuotationReview({
               <span className="text-[9px] sm:text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">{t("wz_best_value")}</span>
             </div>
             <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white">
-              {brandName} {techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip")} {t("wz_setup")}
+              {brandName} {isWireless ? "Smart Wireless (Wi-Fi / 4G)" : techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip")} {t("wz_setup")}
             </h2>
             <p className="text-[11px] sm:text-xs text-blue-200/80 mt-0.5">
               {t("wz_complete_system_for")} {camCount} {t("wz_cameras_with")} {selection.recording_days || 7} {t("wz_days_storage")}
@@ -308,7 +322,9 @@ export function InstantQuotationReview({
             <div className="flex items-baseline gap-1 mt-0.5">
               <span className="text-xl sm:text-3xl font-black text-white">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
             </div>
-            <span className="hidden sm:block text-[9px] text-emerald-300 font-semibold mt-0.5">✓ {t("wz_includes_hardware_wiring_install")}</span>
+            <span className="hidden sm:block text-[9px] text-emerald-300 font-semibold mt-0.5">
+              ✓ {isWireless ? "Zero Video Cabling • High Endurance MicroSD • Onsite Setup" : t("wz_includes_hardware_wiring_install")}
+            </span>
           </div>
         </div>
 
@@ -334,7 +350,7 @@ export function InstantQuotationReview({
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Camera className="w-4 h-4 text-blue-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_cameras")}</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{camCount}x {techName}</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{camCount}x {isWireless ? "Wi-Fi" : techName}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Server className="w-4 h-4 text-indigo-600 mx-auto mb-1" />
@@ -344,12 +360,12 @@ export function InstantQuotationReview({
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <HardDrive className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_storage")}</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{selection.recording_days || 7} {t("wz_days")}</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{isWireless ? `${storageCap} MicroSD (${selection.recording_days || 7}d)` : `${selection.recording_days || 7} ${t("wz_days")}`}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Cable className="w-4 h-4 text-amber-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_cabling")}</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{t("wz_copper_wire")}</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{isWireless ? "Zero Video Cabling" : t("wz_copper_wire")}</div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Wrench className="w-4 h-4 text-purple-600 mx-auto mb-1" />
@@ -377,19 +393,22 @@ export function InstantQuotationReview({
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0 pb-1 sm:pb-0">
           <button 
             onClick={() => updateSelection({ brand_preference: 'all' })}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all shrink-0 ${selection.brand_preference === 'all' || !selection.brand_preference ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white dark:bg-zinc-900 text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400'}`}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all shrink-0 ${selection.brand_preference === 'all' || !selection.brand_preference || getCanonicalBrandKey(selection.brand_preference) === 'all' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white dark:bg-zinc-900 text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400'}`}
           >
             Mixed (Best Price)
           </button>
-          {Array.from(new Set(products.filter(p => p.category === "cctv_camera" && p.brand).map(p => p.brand as string))).sort().map(brand => (
-            <button 
-              key={brand}
-              onClick={() => updateSelection({ brand_preference: brand })}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all shrink-0 ${selection.brand_preference?.toLowerCase() === brand.toLowerCase() ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white dark:bg-zinc-900 text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400'}`}
-            >
-              {brand}
-            </button>
-          ))}
+          {getUniqueCanonicalBrands(products, "cctv_camera").map(brand => {
+            const isSelected = getCanonicalBrandKey(selection.brand_preference) === getCanonicalBrandKey(brand);
+            return (
+              <button 
+                key={brand}
+                onClick={() => updateSelection({ brand_preference: brand })}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all shrink-0 ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white dark:bg-zinc-900 text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400'}`}
+              >
+                {brand}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -402,7 +421,7 @@ export function InstantQuotationReview({
                   <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{translateProductName(item.display_name)}</div>
                     {item.brand && (
                       <div className="inline-block mt-0.5 mb-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
-                        {item.brand}
+                        {getCanonicalBrandName(item.brand)}
                       </div>
                     )}
                     <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
@@ -458,7 +477,7 @@ export function InstantQuotationReview({
                           <div className="truncate">{translateProductName(item.display_name)}</div>
                           {item.brand && (
                             <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
-                              {item.brand}
+                              {getCanonicalBrandName(item.brand)}
                             </span>
                           )}
                         </td>

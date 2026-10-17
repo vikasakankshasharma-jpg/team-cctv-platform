@@ -1,5 +1,6 @@
 
 import { Product, CCTVRequirement, CCTVConfiguration, ResolvedSystem } from "@/types";
+import { isBrandMatch as isBrandMatchFromUtils } from "./brand-utils";
 
 export function isTechMatch(p: any, targetTech: string): boolean {
   if (!targetTech) return true;
@@ -30,30 +31,15 @@ export function isTechMatch(p: any, targetTech: string): boolean {
     if (name.includes("POE") || name.includes("RJ45")) return false;
     return name.includes("HD") || name.includes("DVR") || name.includes("SMPS") || name.includes("COAXIAL") || name.includes("3+1") || name.includes("BNC");
   }
+  if (targetUpper === "WIFI" || targetUpper === "WIRELESS") {
+    if (name.includes("DVR") || name.includes("NVR") || name.includes("SMPS") || name.includes("BNC") || name.includes("COAXIAL")) return false;
+    return !!p.has_wifi || !!p.has_4g_sim || name.includes("WIFI") || name.includes("WI-FI") || name.includes("WIRELESS") || name.includes("4G");
+  }
   return true;
 }
 
 export function isBrandMatch(p: Product, brandFilter: string): boolean {
-  if (!brandFilter || brandFilter === "Budget" || brandFilter === "All Brands") return true;
-  const filterLower = brandFilter.toLowerCase().replace(/[\s-]+/g, "");
-  
-  let pBrand = p.brand;
-  if (!pBrand) {
-     if (p.display_name.toLowerCase().includes("cp plus")) pBrand = "CP Plus";
-     else if (p.display_name.toLowerCase().includes("hikvision")) pBrand = "Hikvision";
-     else if (p.display_name.toLowerCase().includes("prama")) pBrand = "Prama";
-     else if (p.display_name.toLowerCase().includes("dahua")) pBrand = "Dahua";
-  }
-  if (pBrand) {
-     const lower = pBrand.toLowerCase().replace(/[\s-]+/g, "");
-     if (lower === "cpplus" && filterLower === "cpplus") return true;
-     if (lower === filterLower) return true;
-  }
-  
-  if (p.brand?.toLowerCase().includes(brandFilter.toLowerCase())) return true;
-  if (p.display_name?.toLowerCase().includes(brandFilter.toLowerCase())) return true;
-  
-  return false;
+  return isBrandMatchFromUtils(p, brandFilter);
 }
 
 export function parseResolutionMP(item: any): number {

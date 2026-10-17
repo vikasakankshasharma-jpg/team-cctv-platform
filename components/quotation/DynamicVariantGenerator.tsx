@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Check, Filter, Tag, ChevronDown, Plus, Trash2, Info } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BookSurveyClient } from "@/components/public/BookSurveyClient";
+import { getCanonicalBrandKey, getCanonicalBrandName } from "@/lib/brand-utils";
 
 const BRAND_DISPLAY: Record<string, string> = {
   "all": "All Brands",
@@ -22,27 +23,8 @@ const BRAND_DISPLAY: Record<string, string> = {
   "tp-link": "TP-Link",
 };
 
-const BRAND_PREFERENCE_MAP: Record<string, string | undefined> = {
-  "all": undefined,
-  "budget": "Budget Brand",
-  "cpplus": "CP Plus",
-  "hikvision": "Hikvision",
-  "dahua": "Dahua",
-  "prama": "Prama",
-  "trueview": "Trueview",
-  "secureye": "Secureye",
-};
-
 function normalizeBrandKey(brandStr: string): string {
-  const lower = (brandStr || "").toLowerCase().trim();
-  if (lower.includes("budget") || lower.includes("generic") || lower.includes("local") || lower.includes("oem")) return "budget";
-  if (lower.includes("cp") || lower.includes("cpplus")) return "cpplus";
-  if (lower.includes("hikvision") || lower.includes("hik")) return "hikvision";
-  if (lower.includes("dahua") || lower.includes("dah")) return "dahua";
-  if (lower.includes("prama")) return "prama";
-  if (lower.includes("trueview")) return "trueview";
-  if (lower.includes("secureye")) return "secureye";
-  return lower;
+  return getCanonicalBrandKey(brandStr);
 }
 
 function getRes(p: Product): string {
@@ -106,11 +88,15 @@ export function DynamicVariantGenerator({
   selectedCompareItems
 }: DynamicVariantGeneratorProps) {
   const { t } = useTranslation();
-  // Auto-select Standard HD (Analog) by default or load from session
-  const [activeTech, setActiveTech] = useState<"hd" | "ip">(() => {
+  // Auto-select based on selection.technology, session storage, or default
+  const [activeTech, setActiveTech] = useState<"hd" | "ip" | "wireless">(() => {
+    const selTech = String(selection.technology || "").toLowerCase();
+    if (selTech === "wireless" || selTech === "wifi") return "wireless";
+    if (selTech === "ip") return "ip";
+    if (selTech === "hd") return "hd";
     if (typeof window !== 'undefined') {
       const saved = sessionStorage.getItem('quote_active_tech');
-      if (saved === 'hd' || saved === 'ip') return saved;
+      if (saved === 'hd' || saved === 'ip' || saved === 'wireless') return saved as any;
     }
     return "hd";
   });
@@ -123,6 +109,18 @@ export function DynamicVariantGenerator({
     }
     return initialBrand;
   });
+
+  // Sync activeTech when selection.technology changes externally
+  useEffect(() => {
+    const selTech = String(selection.technology || "").toLowerCase();
+    if (selTech === "wireless" || selTech === "wifi") {
+      setActiveTech("wireless");
+    } else if (selTech === "ip") {
+      setActiveTech("ip");
+    } else if (selTech === "hd") {
+      setActiveTech("hd");
+    }
+  }, [selection.technology]);
 
   // Persist selections to session storage to remember them when returning from Full Quote view
   useEffect(() => {
@@ -184,9 +182,11 @@ export function DynamicVariantGenerator({
     products.forEach(p => {
       const pTech = (p.technology || "").toUpperCase();
       const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
-      const isTechMatch = activeTech === "hd" ? 
-        (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD"))) :
-        (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")));
+      const isTechMatch = activeTech === "hd" 
+        ? (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD")))
+        : activeTech === "ip"
+        ? (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")))
+        : (p.category === "cctv_camera" && (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim));
         
       if (isTechMatch && p.brand) {
         brandSet.add(normalizeBrandKey(p.brand));
@@ -203,6 +203,10 @@ export function DynamicVariantGenerator({
       if (k === "all" || brandSet.has(k)) {
         if (!resultBrands.includes(k)) resultBrands.push(k);
       }
+    });
+
+    brandSet.forEach(k => {
+      if (!resultBrands.includes(k)) resultBrands.push(k);
     });
 
     const orderedRes = ["2MP", "3MP", "4MP", "5MP", "6MP", "8MP", "12MP"];
@@ -232,9 +236,11 @@ export function DynamicVariantGenerator({
     effectiveProducts.forEach(p => {
       const pTech = (p.technology || "").toUpperCase();
       const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
-      const isTechMatch = activeTech === "hd" ? 
-        (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD"))) :
-        (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")));
+      const isTechMatch = activeTech === "hd" 
+        ? (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD")))
+        : activeTech === "ip"
+        ? (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")))
+        : (p.category === "cctv_camera" && (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim));
         
       if (isTechMatch && p.brand) {
         const pBrandKey = normalizeBrandKey(p.brand);
@@ -248,13 +254,19 @@ export function DynamicVariantGenerator({
       }
     });
 
+    const isWireless = activeTech === "wireless";
     let mixedReqs: any[] = cameraBuckets.filter(b => b.count > 0).map(b => {
       const res = availableResolutions.includes(b.resolution) ? b.resolution : (availableResolutions.includes("2MP") ? "2MP" : (availableResolutions[0] || "2MP"));
       return {
-        type: b.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera",
+        type: isWireless 
+          ? (b.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera")
+          : (b.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera"),
         count: b.count,
         resolution: res,
-        features: b.type === "outdoor" ? ["bullet"] : ["dome"]
+        technology: isWireless ? "Wireless" : (activeTech === "ip" ? "IP" : "HD"),
+        features: isWireless
+          ? (b.type === "outdoor" ? ["outdoor"] : ["indoor"])
+          : (b.type === "outdoor" ? ["bullet"] : ["dome"])
       };
     });
 
@@ -282,7 +294,8 @@ export function DynamicVariantGenerator({
             cap = tbVal < 1 ? `${Math.round(tbVal * 1000)}GB` : `${tbVal}TB`;
           }
         }
-        (storage_device as any).derivedCapacity = cap || "HDD";
+        const isSd = (storage_device as any).subcategory === "sd_card" || ((storage_device as any).display_name || "").toLowerCase().includes("sd") || ((storage_device as any).display_name || "").toLowerCase().includes("microsd");
+        (storage_device as any).derivedCapacity = cap ? (isSd ? `${cap} MicroSD` : cap) : (isSd ? "MicroSD" : "HDD");
       }
 
       // Extract actual resolutions delivered in the quote (to handle fallbacks, e.g. when a brand lacks 2MP IP)
@@ -306,8 +319,8 @@ export function DynamicVariantGenerator({
         }
       });
       
-      let outdoorRequested = mixedReqs.find(r => r.type === "Outdoor Bullet Camera")?.resolution;
-      let indoorRequested = mixedReqs.find(r => r.type === "Indoor Dome Camera")?.resolution;
+      let outdoorRequested = mixedReqs.find(r => r.type.toLowerCase().includes("outdoor"))?.resolution;
+      let indoorRequested = mixedReqs.find(r => r.type.toLowerCase().includes("indoor"))?.resolution;
       
       let substitutionNotes: string[] = [];
       if (outdoorRequested && outdoorProvided && outdoorRequested !== outdoorProvided) {
@@ -340,7 +353,7 @@ export function DynamicVariantGenerator({
       
       return { 
         ...pricing, 
-        technology: activeTech.toUpperCase(),
+        technology: activeTech === "wireless" ? "Wireless" : activeTech.toUpperCase(),
         camera_device: camera_device ? { ...camera_device, derivedResolution: displayResolution } : { derivedResolution: displayResolution, brand: brandName }, 
         storage_device, 
         camera_count: outdoorCount + indoorCount, 
@@ -357,7 +370,7 @@ export function DynamicVariantGenerator({
       const planType = b.brandKey === "budget" ? "budget" : (uniqueRes.includes("8MP") ? "premium" : "recommended");
       const sel: ConfiguratorSelection = {
         ...selection,
-        technology: (activeTech === "ip" ? "IP" : "HD") as any,
+        technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
         brand_preference: b.brand,
         mixed_camera_requirements: mixedReqs,
         outdoor_camera_count: outdoorCount,
@@ -386,7 +399,7 @@ export function DynamicVariantGenerator({
       if (reqDays > 3) {
         const economySel: ConfiguratorSelection = {
           ...sel,
-          technology: (activeTech === "ip" ? "IP" : "HD") as any,
+          technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
           recording_days: 3 // Force 3 days to pick the smallest available HDD (usually 500GB)
         };
         const rawEconomyPricing = calculatePricing({
@@ -445,6 +458,14 @@ export function DynamicVariantGenerator({
             {activeTech === "ip" && <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full -z-10" />}
             <span>{t("wz_premium_ip_network")}</span>
           </button>
+          <button
+            onClick={() => setActiveTech("wireless")}
+            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "wireless" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
+          >
+            {activeTech === "wireless" && <span className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full -z-10" />}
+            <span>Smart Wireless (Wi-Fi / 4G)</span>
+            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'wireless' ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300'}`}>Zero Wiring</span>
+          </button>
         </div>
 
         {/* Brand Selector */}
@@ -456,7 +477,7 @@ export function DynamicVariantGenerator({
               onClick={() => setActiveBrand(b)}
               className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeBrand === b ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
             >
-              {BRAND_DISPLAY[b] || b}
+              {BRAND_DISPLAY[b] || getCanonicalBrandName(b) || b}
             </button>
           ))}
         </div>
@@ -639,20 +660,17 @@ export function DynamicVariantGenerator({
                   {variant.is_economy_storage && (
                     <div className="flex flex-col items-center justify-center mb-3 gap-1">
                       <p className="text-xs text-[#86868b] font-medium">
-                        
-                                                              {t("wz_basic_storage_")}{variant.storage_device?.derivedCapacity || "500GB"})
+                        {t("wz_basic_storage_")}{variant.storage_device?.derivedCapacity || (variant.technology === "Wireless" ? "64GB MicroSD" : "500GB HDD")})
                       </p>
                       <p className="text-[11px] bg-green-50 text-green-700 px-2.5 py-1 rounded-md border border-green-200 font-bold inline-block">
-                        
-                                                              {t("wz_save_")}{((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN')}  {t("wz_3_days_vs")} {(variant as any).requested_days}  {t("wz_days")}
-                                                            </p>
+                        {t("wz_save_")}{((variant as any).original_payable - variant.total_payable).toLocaleString('en-IN')}  {t("wz_3_days_vs")} {(variant as any).requested_days}  {t("wz_days")}
+                      </p>
                     </div>
                   )}
                   {!variant.is_economy_storage && variant.is_economy_storage !== undefined && (
                     <p className="text-xs text-emerald-600 font-medium mb-3">
-                      
-                                                        {t("wz_requested_storage_")}{variant.storage_device?.derivedCapacity || "2TB"}) - {variant.storage_days}  {t("wz_days")}
-                                                      </p>
+                      {t("wz_requested_storage_")}{variant.storage_device?.derivedCapacity || (variant.technology === "Wireless" ? "128GB MicroSD" : "2TB")}) - {variant.storage_days}  {t("wz_days")}
+                    </p>
                   )}
                   <div className="flex items-start justify-center">
                     <span className="text-[40px] leading-none font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">

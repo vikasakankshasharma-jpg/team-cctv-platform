@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Product } from "@/types";
 import { resolveWaterfallMargin, calculateSellingPrice } from "@/lib/waterfall-pricing";
+import { getUniqueCanonicalBrands, isBrandMatch } from "@/lib/brand-utils";
 
 export default function CatalogManager({ initialProducts, pricingRules }: { initialProducts: Product[], pricingRules: any }) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -17,11 +18,11 @@ export default function CatalogManager({ initialProducts, pricingRules }: { init
   // Saving
   const [saving, setSaving] = useState(false);
 
-  const brands = useMemo(() => Array.from(new Set(products.map(p => p.brand).filter(Boolean))), [products]);
+  const brands = useMemo(() => getUniqueCanonicalBrands(products), [products]);
   const categories = useMemo(() => Array.from(new Set(products.map(p => p.category).filter(Boolean))), [products]);
 
   const filteredProducts = products.filter(p => {
-    if (filterBrand !== "ALL" && p.brand !== filterBrand) return false;
+    if (filterBrand !== "ALL" && !isBrandMatch(p, filterBrand)) return false;
     if (filterCategory !== "ALL" && p.category !== filterCategory) return false;
     if (search && !(p.sku || "").toLowerCase().includes(search.toLowerCase()) && !(p.display_name || "").toLowerCase().includes(search.toLowerCase())) return false;
     return true;

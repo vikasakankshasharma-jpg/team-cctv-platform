@@ -308,6 +308,12 @@ export default function AdminProductsPage() {
           computedFeatures.add("2-way");
           computedFeatures.add("audio");
         }
+        if (payload.has_siren) {
+          computedFeatures.add("siren");
+          computedFeatures.add("active_deterrence");
+        }
+        if (payload.is_varifocal) computedFeatures.add("varifocal");
+        if (payload.is_metal_body || payload.body_material === "metal") computedFeatures.add("metal_body");
         if (payload.has_sd_slot) {
           computedFeatures.add("sd_slot");
           payload.max_sd_capacity_gb = Number(payload.max_sd_capacity_gb) || 128;
@@ -345,6 +351,12 @@ export default function AdminProductsPage() {
           computedFeatures.delete("speaker");
           computedFeatures.delete("2-way");
         }
+        if (!payload.has_siren) {
+          computedFeatures.delete("siren");
+          computedFeatures.delete("active_deterrence");
+        }
+        if (!payload.is_varifocal) computedFeatures.delete("varifocal");
+        if (!payload.is_metal_body && payload.body_material !== "metal") computedFeatures.delete("metal_body");
         if (!payload.has_sd_slot) computedFeatures.delete("sd_slot");
         if (!(payload.night_vision_type === "color" || payload.night_vision_type === "dual_light" || payload.night_vision_type === "starlight")) computedFeatures.delete("color");
         if (!isPtz) computedFeatures.delete("ptz");
@@ -759,14 +771,31 @@ export default function AdminProductsPage() {
                         </div>
                         
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Lens (mm)</label>
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Lens (mm)</label>
+                            <label className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground cursor-pointer hover:text-foreground">
+                              <input 
+                                type="checkbox" 
+                                checked={!!editingProduct.is_varifocal} 
+                                onChange={e => {
+                                  const checked = e.target.checked;
+                                  setEditingProduct({
+                                    ...editingProduct, 
+                                    is_varifocal: checked,
+                                    lens_mm: checked && !editingProduct.lens_mm ? "2.8 - 12" : editingProduct.lens_mm
+                                  });
+                                }}
+                                className="w-3.5 h-3.5 rounded border-input accent-primary" 
+                              />
+                              <span>Varifocal</span>
+                            </label>
+                          </div>
                           <input 
-                            type="number" 
-                            step="0.1"
-                            value={editingProduct.lens_mm || ""}
-                            onChange={e => setEditingProduct({...editingProduct, lens_mm: e.target.value ? Number(e.target.value) : undefined})}
+                            type="text" 
+                            value={editingProduct.lens_mm !== undefined && editingProduct.lens_mm !== null ? String(editingProduct.lens_mm) : ""}
+                            onChange={e => setEditingProduct({...editingProduct, lens_mm: e.target.value})}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="e.g. 2.8"
+                            placeholder={editingProduct.is_varifocal ? "e.g. 2.8 - 12" : "e.g. 2.8, 3.6"}
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -815,6 +844,25 @@ export default function AdminProductsPage() {
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder="e.g. 16"
                           />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Body Material</label>
+                          <select 
+                            value={editingProduct.body_material || (editingProduct.is_metal_body ? "metal" : "plastic")}
+                            onChange={e => {
+                              const val = e.target.value as "plastic" | "metal" | "semi_metal";
+                              setEditingProduct({
+                                ...editingProduct, 
+                                body_material: val,
+                                is_metal_body: val === "metal" || val === "semi_metal"
+                              });
+                            }}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                          >
+                            <option value="plastic">Full Plastic Body</option>
+                            <option value="metal">Full Metal Body (Aluminium)</option>
+                            <option value="semi_metal">Semi-Metal (Metal Face + Plastic Housing)</option>
+                          </select>
                         </div>
                         <div className="space-y-1.5 col-span-1 md:col-span-3">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">AI Analytics Features (comma separated)</label>
@@ -967,6 +1015,26 @@ export default function AdminProductsPage() {
                               <span className="text-xs font-semibold text-foreground">Inbuilt Speaker</span>
                             </label>
                             <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input 
+                                type="checkbox" 
+                                checked={!!editingProduct.has_siren} 
+                                onChange={e => {
+                                  const checked = e.target.checked;
+                                  setEditingProduct({
+                                    ...editingProduct, 
+                                    has_siren: checked,
+                                    has_speaker: checked ? true : editingProduct.has_speaker,
+                                    has_audio: checked ? true : editingProduct.has_audio
+                                  });
+                                }} 
+                                className="w-4 h-4 rounded border-input accent-primary" 
+                              />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-semibold text-foreground">Siren / Strobe</span>
+                                <span className="text-[10px] text-muted-foreground">Active Deterrence</span>
+                              </div>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
                               <input type="checkbox" checked={!!editingProduct.wdr} onChange={e => setEditingProduct({...editingProduct, wdr: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
                               <span className="text-xs font-semibold text-foreground">WDR</span>
                             </label>
@@ -1079,7 +1147,7 @@ export default function AdminProductsPage() {
                                 <p className="text-[11px] text-muted-foreground mt-0.5">Limits customer MicroSD selection in quotation to avoid quoting incompatible card sizes.</p>
                               </div>
                               <div className="flex items-center gap-1.5 bg-background p-1 rounded-lg border border-border shrink-0">
-                                {[128, 256, 512].map((cap) => {
+                                {[64, 128, 256, 512].map((cap) => {
                                   const isSelected = (editingProduct.max_sd_capacity_gb || 128) === cap;
                                   return (
                                     <button

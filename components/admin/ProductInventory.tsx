@@ -5,6 +5,7 @@ import {
   ListFilter, Filter, Wrench, Shield, Tv, Box, Server, Square, CheckSquare
 } from "lucide-react";
 import type { Product } from "@/types";
+import { getUniqueCanonicalBrands, isBrandMatch } from "@/lib/brand-utils";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -203,6 +204,16 @@ function SubCategoryGroup({
                         {p.has_sd_slot && (
                           <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-200 dark:border-amber-800">
                             SD: {p.max_sd_capacity_gb || 128}GB
+                          </Badge>
+                        )}
+                        {p.has_siren && (
+                          <Badge variant="outline" className="text-[9px] bg-red-500/10 text-red-600 border-red-200 dark:border-red-800">
+                            Siren
+                          </Badge>
+                        )}
+                        {(p.is_metal_body || p.body_material === "metal") && (
+                          <Badge variant="outline" className="text-[9px] bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-200">
+                            Metal
                           </Badge>
                         )}
                       </div>
@@ -432,9 +443,7 @@ export function ProductInventory({
   }, [search, filterCat, filterTech, filterStatus, filterBrand]);
 
   const brands = useMemo(() => {
-    const b = new Set<string>();
-    products.forEach(p => { if (p.brand) b.add(p.brand); });
-    return Array.from(b).sort();
+    return getUniqueCanonicalBrands(products);
   }, [products]);
 
   const filtered = useMemo(() => {
@@ -453,7 +462,7 @@ export function ProductInventory({
         || (filterTech === "both" && (p.technologies?.includes("both" as any) || p.technologies?.includes("Common" as any) || p.technology === "Common"))
         || p.technology === filterTech;
       const matchStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
-      const matchBrand  = filterBrand === "all"  || p.brand === filterBrand;
+      const matchBrand  = filterBrand === "all"  || isBrandMatch(p, filterBrand);
       return matchSearch && matchCat && matchTech && matchStatus && matchBrand;
     });
   }, [products, search, filterCat, filterTech, filterStatus, filterBrand]);
