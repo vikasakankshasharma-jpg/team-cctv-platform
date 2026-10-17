@@ -7,15 +7,20 @@
 
 | ID | Name | Brand | Category | Technology | Price |
 |----|------|-------|----------|------------|-------|
-| `CAM-CPP-WIFI-E28Q` | CP Plus 2MP Wi-Fi PT Camera with Two Way Talk (CP-E28Q) | CP PLUS | cctv_camera | Wireless | ₹2429 |
-| `CAM-CPP-4G-R33T` | CP Plus 3MP 4G Smart Full Color Bullet Camera with 2-Way Audio (EZ-R33T) | CP PLUS | cctv_camera | Wireless | ₹2593 |
-| `CAM-CPP-WIFI-E31Q` | CP Plus 3MP Wi-Fi PT Camera with Two Way Talk (CP-E31Q) | CP PLUS | cctv_camera | Wireless | ₹2989 |
-| `CAM-CPP-WIFI-E38Q` | CP Plus 3MP Wi-Fi PT Camera with Two Way Audio (CP-E38Q) | CP PLUS | cctv_camera | Wireless | ₹3104 |
-| `CAM-CPP-4G-S35T` | CP Plus 3MP 4G PT Camera Night Color with Two Way Talk (EZ-S35T) | CP PLUS | cctv_camera | Wireless | ₹3827 |
-| `CAM-CPP-WIFI-Z45Q` | CP Plus 4MP Quad HD Wi-Fi PT Camera Night Color with Built-in Siren (CP-Z45Q) | CP PLUS | cctv_camera | Wireless | ₹4485 |
+| `CAM-CPP-WIFI-E28Q` | CP Plus 2MP Wi-Fi PT Camera with Two Way Talk (CP-E28Q) | CP Plus | cctv_camera | Wireless | ₹2429 |
+| `CAM-CPP-4G-R33T` | CP Plus 3MP 4G Smart Full Color Bullet Camera with 2-Way Audio (EZ-R33T) | CP Plus | cctv_camera | Wireless | ₹2593 |
+| `CAM-CPP-WIFI-E31Q` | CP Plus 3MP Wi-Fi PT Camera with Two Way Talk (CP-E31Q) | CP Plus | cctv_camera | Wireless | ₹2989 |
+| `CAM-CPP-WIFI-E38Q` | CP Plus 3MP Wi-Fi PT Camera with Two Way Audio (CP-E38Q) | CP Plus | cctv_camera | Wireless | ₹3104 |
+| `CAM-CPP-4G-S35T` | CP Plus 3MP 4G PT Camera Night Color with Two Way Talk (EZ-S35T) | CP Plus | cctv_camera | Wireless | ₹3827 |
+| `CAM-CPP-WIFI-Z45Q` | CP Plus 4MP Quad HD Wi-Fi PT Camera Night Color with Built-in Siren (CP-Z45Q) | CP Plus | cctv_camera | Wireless | ₹4485 |
 | `SD-SANDISK-64GB-HE` | SanDisk High Endurance 64GB MicroSD Card | SanDisk | storage | Wireless | ₹650 |
 | `SD-SANDISK-128GB-HE` | SanDisk High Endurance 128GB MicroSD Card | SanDisk | storage | Wireless | ₹1150 |
 | `SD-SANDISK-256GB-HE` | SanDisk High Endurance 256GB MicroSD Card | SanDisk | storage | Wireless | ₹2100 |
+| `SD-CPP-128GB` | CP Plus 128GB Surveillance MicroSD Card (CP-NM128) | CP PLUS | storage | Wireless | ₹2152 |
+| `SD-CPP-64GB` | CP Plus 64GB Surveillance MicroSD Card (CP-NM64) | CP PLUS | storage | Wireless | ₹1186 |
+| `SD-EVM-256GB` | EVM 256GB Elite MicroSD Card For CCTV Camera (EVMSD/256GB) | EVM | storage | Wireless | ₹4122 |
+| `SD-EVM-128GB` | EVM 128GB Elite MicroSD Card For CCTV Camera (EVMSD/128GB) | EVM | storage | Wireless | ₹2125 |
+| `SD-EVM-64GB` | EVM 64GB Elite MicroSD Card For CCTV Camera (EVMSD/64GB) | EVM | storage | Wireless | ₹1040 |
 | `cp_plus_2_4mp_eco_hd_bullet_camera_3_6mm_tc24pl3_hd_camera` | CP-Plus 2.4MP Eco HD Bullet Camera 3.6mm (TC24PL3) | CP-Plus | camera | HD | ₹1118 |
 | `cp_plus_2_4mp_eco_hd_bullet_camera_3_6mm_with_audio_tc24pl3c_hd_camera` | CP-Plus 2.4MP ECO HD Bullet Camera 3.6mm With Audio (TC24PL3C) | CP-Plus | camera | HD | ₹1288 |
 | `cp_plus_2_4mp_eco_hd_dome_camera_3_6mm_with_built_in_mic_dc24pl3c_hd_camera` | CP-Plus 2.4MP Eco HD Dome Camera 3.6mm With Built-in Mic (DC24PL3C) | CP-Plus | camera | HD | ₹1257 |
