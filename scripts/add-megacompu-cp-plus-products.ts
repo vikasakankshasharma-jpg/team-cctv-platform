@@ -27,7 +27,7 @@ function getDb() {
   };
 }
 
-const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
+export const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
   "CAM-CPP-WIFI-E28Q": {
     display_name: "CP Plus 2MP Wi-Fi PT Camera with Two Way Talk (CP-E28Q)",
     technical_name: "CP-E28Q",
@@ -40,7 +40,8 @@ const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
     technologies: ["Wireless", "WiFi"],
     catalog_path: "cctv_camera/wifi/WiFi Camera",
     camera_subtype: "indoor_ptz",
-    form_factor: "ptz",
+    form_factor: "indoor_pt",
+    optical_zoom_x: 0,
     resolution_mp: 2,
     resolution_tier: "good",
     night_vision_type: "ir",
@@ -53,7 +54,7 @@ const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
     has_wifi: true,
     is_360: true,
     is_pt: true,
-    features: ["wifi", "ptz", "2-way", "speaker", "audio", "mic", "motion_detection"],
+    features: ["wifi", "indoor_pt", "ptz", "2-way", "speaker", "audio", "mic", "motion_detection"],
     base_cost: 2112,
     margin_percentage: 15,
     unit_price: 2429,
@@ -121,7 +122,8 @@ const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
     technologies: ["Wireless", "WiFi"],
     catalog_path: "cctv_camera/wifi/WiFi Camera",
     camera_subtype: "indoor_ptz",
-    form_factor: "ptz",
+    form_factor: "indoor_pt",
+    optical_zoom_x: 0,
     resolution_mp: 3,
     resolution_tier: "very_clear",
     night_vision_type: "ir",
@@ -134,7 +136,7 @@ const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
     has_wifi: true,
     is_360: true,
     is_pt: true,
-    features: ["wifi", "ptz", "2-way", "speaker", "audio", "mic", "motion_detection"],
+    features: ["wifi", "indoor_pt", "ptz", "2-way", "speaker", "audio", "mic", "motion_detection"],
     base_cost: 2599,
     margin_percentage: 15,
     unit_price: 2989,
@@ -162,7 +164,8 @@ const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
     technologies: ["Wireless", "WiFi"],
     catalog_path: "cctv_camera/wifi/WiFi Camera",
     camera_subtype: "indoor_ptz",
-    form_factor: "ptz",
+    form_factor: "indoor_pt",
+    optical_zoom_x: 0,
     resolution_mp: 3,
     resolution_tier: "very_clear",
     night_vision_type: "ir",
@@ -175,7 +178,7 @@ const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
     has_wifi: true,
     is_360: true,
     is_pt: true,
-    features: ["wifi", "ptz", "2-way", "speaker", "audio", "mic", "motion_detection"],
+    features: ["wifi", "indoor_pt", "ptz", "2-way", "speaker", "audio", "mic", "motion_detection"],
     base_cost: 2699,
     margin_percentage: 15,
     unit_price: 3104,
@@ -203,7 +206,8 @@ const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
     technologies: ["Wireless", "4G"],
     catalog_path: "cctv_camera/wifi/WiFi Camera",
     camera_subtype: "outdoor_ptz",
-    form_factor: "ptz",
+    form_factor: "outdoor_pt",
+    optical_zoom_x: 0,
     ip_rating: "IP66",
     resolution_mp: 3,
     resolution_tier: "very_clear",
@@ -217,7 +221,7 @@ const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
     has_4g_sim: true,
     is_360: true,
     is_pt: true,
-    features: ["4g", "ptz", "color", "2-way", "speaker", "audio", "mic", "night_vision", "outdoor"],
+    features: ["4g", "outdoor_pt", "ptz", "color", "2-way", "speaker", "audio", "mic", "night_vision", "outdoor"],
     base_cost: 3328,
     margin_percentage: 15,
     unit_price: 3827,
@@ -245,7 +249,8 @@ const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
     technologies: ["Wireless", "WiFi"],
     catalog_path: "cctv_camera/wifi/WiFi Camera",
     camera_subtype: "outdoor_ptz",
-    form_factor: "ptz",
+    form_factor: "outdoor_pt",
+    optical_zoom_x: 0,
     ip_rating: "IP66",
     resolution_mp: 4,
     resolution_tier: "crystal_clear",
@@ -259,7 +264,7 @@ const NEW_CP_PLUS_PRODUCTS: Record<string, any> = {
     has_wifi: true,
     is_360: true,
     is_pt: true,
-    features: ["wifi", "ptz", "color", "2-way", "speaker", "siren", "audio", "mic", "night_vision", "outdoor"],
+    features: ["wifi", "outdoor_pt", "ptz", "color", "2-way", "speaker", "siren", "audio", "mic", "night_vision", "outdoor"],
     base_cost: 3900,
     margin_percentage: 15,
     unit_price: 4485,
@@ -289,6 +294,7 @@ async function seedCpPlusProducts() {
     await docRef.set(
       {
         ...prodData,
+        is_deleted: false,
         created_at: existing.exists ? existing.data()?.created_at || ts : ts,
         updated_at: ts,
       },
@@ -299,7 +305,7 @@ async function seedCpPlusProducts() {
     added++;
   }
 
-  console.log(`\n🎉 Successfully added all ${added} CP Plus items to the product list!`);
+  console.log(`\n🎉 Successfully restored/added all ${added} CP Plus items to the product list!`);
 }
 
 seedCpPlusProducts().catch((err) => {
