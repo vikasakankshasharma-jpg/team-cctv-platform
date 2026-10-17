@@ -96,11 +96,16 @@ const isWirelessItem = (item: any) => {
   const techs = Array.isArray(item.technologies) ? item.technologies : [];
   const idStr = (item.id || item.product_id || item.sku || "").toLowerCase();
   const nameStr = (item.display_name || item.name || "").toLowerCase();
+  const catStr = (item.category || item.normCat || "").toLowerCase();
   return (
     techs.includes("Wireless") ||
     techs.includes("WiFi") ||
     techs.includes("4G") ||
+    item.technology === "Wireless" ||
     item.type === "wireless" ||
+    catStr.includes("wifi") ||
+    Boolean(item.has_wifi) ||
+    Boolean(item.has_4g_sim) ||
     idStr.includes("wifi") ||
     idStr.includes("wireless") ||
     idStr.includes("4g") ||
@@ -182,6 +187,9 @@ const isWirelessItem = (item: any) => {
   }, [items]);
 
   const isHybrid = wiredCamCount > 0 && wirelessCamCount > 0;
+  const hasRecorder = useMemo(() => {
+    return items.some(i => i.category === "recorder" || i.category === "cctv_recorder");
+  }, [items]);
 
   const STEPS = useMemo(() => {
     if (technology === "Wireless") {
@@ -351,8 +359,11 @@ const isWirelessItem = (item: any) => {
             }
 
             const isMultiLens = /dual\s*lens|dual-lens|multi\s*lens|cruiser\s*dual/i.test(name);
-            const is4G = techList.includes("4G") || /4g\b/i.test(name) || /4g\b/i.test(sku);
-            const isWifi = techList.includes("WiFi") || techList.includes("Wireless") || /wi-?fi/i.test(name) || /wi-?fi/i.test(sku);
+            const is4G = techList.includes("4G") || /4g\b/i.test(name) || /4g\b/i.test(sku) || Boolean(p.has_4g_sim);
+            const isWifi = techList.includes("WiFi") || techList.includes("Wireless") || /wi-?fi/i.test(name) || /wi-?fi/i.test(sku) || Boolean(p.has_wifi) || cat.includes("wifi");
+            if ((is4G || isWifi || p.has_wifi || p.has_4g_sim) && !techList.includes("Wireless")) {
+              techList.push("Wireless");
+            }
             const hasSpeaker = Boolean(
               p.has_speaker || 
               p.features?.includes("speaker") || 
@@ -434,6 +445,11 @@ const isWirelessItem = (item: any) => {
         }
         return p.technologies?.includes(technology) || p.technologies?.includes("Common");
       }
+      // When in pure wireless mode and no recorder selected, only show MicroSD storage (no internal SATA HDDs)
+      if (technology === "Wireless" && activeCategory === "storage" && !hasRecorder) {
+        const isSd = p.storage_type === "Micro SD" || (p.display_name || "").toLowerCase().includes("sd") || (p.sku || "").toLowerCase().includes("sd");
+        return isSd;
+      }
       // When in storage and there are wireless cameras in a wired setup, show both HDD and MicroSD
       if (activeCategory === "storage" && wirelessCamCount > 0) {
         const isSd = p.storage_type === "Micro SD" || (p.display_name || "").toLowerCase().includes("sd");
@@ -452,7 +468,7 @@ const isWirelessItem = (item: any) => {
       }
       return true;
     });
-  }, [products, activeCategory, technology, showOptionalNVRs, cameraSubTab, wirelessCamCount, storageSubTab]);
+  }, [products, activeCategory, technology, showOptionalNVRs, cameraSubTab, wirelessCamCount, storageSubTab, hasRecorder]);
 
   // Available filter options for active category
   const filterOptions = useMemo(() => {
@@ -658,7 +674,6 @@ const isWirelessItem = (item: any) => {
   const isOverCapacity = effectiveRecorderCams > channelCapacity && channelCapacity > 0;
 
   const hasCameras = camCount > 0;
-  const hasRecorder = items.some(i => i.category === "recorder" || i.category === "cctv_recorder");
   const hasHddStorage = items.some(i => (i.category === "storage" || i.category === "hdd") && !(i.display_name || "").toLowerCase().includes("sd"));
   const hasSdStorage = items.some(i => (i.category === "storage" || i.category === "hdd") && (i.display_name || "").toLowerCase().includes("sd"));
   const hasCables = items.some(i => i.category === "cable");

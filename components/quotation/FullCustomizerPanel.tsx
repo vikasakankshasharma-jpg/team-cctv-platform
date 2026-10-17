@@ -7,7 +7,7 @@ import { isTechMatch } from "@/lib/product-resolver";
 import { isBrandMatch, getCanonicalBrandName, getCanonicalBrandKey, getUniqueCanonicalBrands } from "@/lib/brand-utils";
 import { 
   Zap, Maximize, Mic, Moon, Camera, Server, HardDrive, Plug, PlusCircle,
-  Search, X, Sparkles, Check, CheckCircle2, ChevronDown, ChevronUp, Unlock, Lock, Wrench, ArrowRight, Cable
+  Search, X, Sparkles, Check, CheckCircle2, ChevronDown, ChevronUp, Unlock, Lock, Wrench, ArrowRight, Cable, Wifi
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Product, Addon, PricingResult } from "@/types";
@@ -71,34 +71,40 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
   };
 
   // Step completion tracking
+  const currentTabFlow = useMemo(() => {
+    if (selection.technology === "Wireless") {
+      return ["cameras", "storage"] as Tab[];
+    }
+    return ["cameras", "recorders", "storage", "power"] as Tab[];
+  }, [selection.technology]);
 
   const stepCompletion = useMemo(() => ({
     cameras: isMixedCameraMode 
       ? selection.mixed_camera_requirements!.every(r => !!selection.selected_mixed_camera_ids?.[r.type])
       : !!selection.selected_camera_id,
-    recorders: !!selection.selected_recorder_id,
+    recorders: selection.technology === "Wireless" ? true : !!selection.selected_recorder_id,
     storage: !!selection.selected_storage_id,
-    power: !!selection.selected_power_id,
+    power: selection.technology === "Wireless" ? true : !!selection.selected_power_id,
     addons: selection.selected_addons.length > 0,
-  }), [selection.selected_camera_id, selection.selected_recorder_id, selection.selected_storage_id, selection.selected_power_id, selection.selected_addons, isMixedCameraMode, selection.mixed_camera_requirements, selection.selected_mixed_camera_ids]);
+  }), [selection.selected_camera_id, selection.selected_recorder_id, selection.selected_storage_id, selection.selected_power_id, selection.selected_addons, isMixedCameraMode, selection.mixed_camera_requirements, selection.selected_mixed_camera_ids, selection.technology]);
 
-  const completedSteps = TAB_FLOW.filter(t => stepCompletion[t]).length;
-  const totalSteps = TAB_FLOW.length;
+  const completedSteps = currentTabFlow.filter(t => stepCompletion[t]).length;
+  const totalSteps = currentTabFlow.length;
 
   // Auto-advance to next tab after selection
   const advanceToNextTab = useCallback((currentTab: Tab) => {
-    const currentIdx = TAB_FLOW.indexOf(currentTab);
-    if (currentIdx === -1 || currentIdx >= TAB_FLOW.length - 1) return;
-    const nextTab = TAB_FLOW[currentIdx + 1];
+    const currentIdx = currentTabFlow.indexOf(currentTab);
+    if (currentIdx === -1 || currentIdx >= currentTabFlow.length - 1) return;
+    const nextTab = currentTabFlow[currentIdx + 1];
     const nextLabel = TAB_LABELS[nextTab];
     toast.success(`${TAB_LABELS[currentTab]} pinned!`, {
-      description: `Now choose a ${nextLabel} â†’`,
+      description: `Now choose a ${nextLabel} →`,
       duration: 2500,
     });
     setTimeout(() => {
       handleTabChange(nextTab);
     }, 800);
-  }, [handleTabChange]);
+  }, [currentTabFlow, handleTabChange]);
 
   const filterCategories = useMemo(() => {
     if (activeTab === "cameras") {
@@ -288,6 +294,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
   }, [products, selection.technology, selection.requested_features, search, activeFilters, isMixedCameraMode, activeMixedType, selection.mixed_camera_requirements, selection.camera_count]);
 
   const filteredRecorders = useMemo(() => {
+    if (selection.technology === "Wireless") return [];
     let list = products.filter(p => p.category === "recorder" && p.is_active && (p.unit_price || 0) > 0);
     if (selection.technology && selection.technology !== "both" as any) list = list.filter(p => isTechMatch(p, selection.technology as string));
     list = list.filter(p => (p.max_cameras || p.channels || 0) >= selection.camera_count);
@@ -343,6 +350,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
   }, [addons, search, activeFilters, selection.technology, products]);
 
   const filteredPower = useMemo(() => {
+    if (selection.technology === "Wireless") return [];
     const isIP = selection.technology === "IP";
     let list = [...products, ...addons].filter(a => {
       if (!a.is_active || !((a.unit_price || (a as any).price || 0) > 0)) return false;
@@ -442,7 +450,9 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           <TabButton active={activeTab === "recorders"} onClick={() => handleTabChange("recorders")} label={<TranslatedText tKey="recorders" defaultText="Recorders" />} completed={stepCompletion.recorders} />
         )}
         <TabButton active={activeTab === "storage"} onClick={() => handleTabChange("storage")} label={<TranslatedText tKey="storage" defaultText="Storage" />} completed={stepCompletion.storage} />
-        <TabButton active={activeTab === "power"} onClick={() => handleTabChange("power")} label={<TranslatedText tKey="power" defaultText="Power" />} completed={stepCompletion.power} />
+        {selection.technology !== "Wireless" && (
+          <TabButton active={activeTab === "power"} onClick={() => handleTabChange("power")} label={<TranslatedText tKey="power" defaultText="Power" />} completed={stepCompletion.power} />
+        )}
         <TabButton active={activeTab === "addons"} onClick={() => handleTabChange("addons")} label={<TranslatedText tKey="accessories" defaultText="Accessories" />} completed={stepCompletion.addons} />
       </div>
       {/* Right fade gradient hint */}
@@ -649,7 +659,14 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
                     selected_recorder_id: undefined,
                     selected_mixed_camera_ids: undefined
                   });
-                  toast.success(`Switched to ${tech}`, { description: "Hardware reset. Please select compatible cameras and recorders." });
+                  if (tech === "Wireless" && (activeTab === "recorders" || activeTab === "power")) {
+                    handleTabChange("cameras");
+                  }
+                  toast.success(`Switched to ${tech}`, { 
+                    description: tech === "Wireless" 
+                      ? "Switched to Smart Wireless. Select Wi-Fi/4G cameras and MicroSD cards." 
+                      : "Hardware reset. Please select compatible cameras and recorders." 
+                  });
                 }}
                 className={`px-3 py-1 rounded-md text-[11px] font-medium transition-colors ${
                   selection.technology === tech
@@ -810,7 +827,25 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           );
         })}
 
-        {activeTab === "recorders" && filteredRecorders.map(rec => {
+        {activeTab === "recorders" && selection.technology === "Wireless" && (
+          <div className="col-span-full bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-3xl p-8 text-center max-w-xl mx-auto my-6">
+            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <Wifi className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-[#1d1d1f] dark:text-white mb-2">No NVR/DVR Recorder Needed</h4>
+            <p className="text-xs text-[#86868b] leading-relaxed mb-4">
+              Smart Wi-Fi and 4G cameras are standalone devices that stream directly to your mobile app and record onto individual MicroSD cards. A centralized recorder is not required.
+            </p>
+            <button
+              onClick={() => handleTabChange("storage")}
+              className="bg-[#1d1d1f] dark:bg-white text-white dark:text-[#1d1d1f] text-xs font-semibold px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
+            >
+              Continue to MicroSD Storage →
+            </button>
+          </div>
+        )}
+
+        {activeTab === "recorders" && selection.technology !== "Wireless" && filteredRecorders.map(rec => {
           const isSelected = selection.selected_recorder_id === rec.id || (!selection.selected_recorder_id && activePricing?.items.some((i: any) => i.product_id === rec.id));
           return renderProductItem(
             rec, isSelected as boolean, () => { updateSelection({ selected_recorder_id: rec.id }); advanceToNextTab("recorders"); }, !!selection.selected_recorder_id, () => updateSelection({ selected_recorder_id: undefined })
@@ -847,7 +882,25 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           </>
         )}
 
-        {activeTab === "power" && filteredPower.map(pwr => {
+        {activeTab === "power" && selection.technology === "Wireless" && (
+          <div className="col-span-full bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-3xl p-8 text-center max-w-xl mx-auto my-6">
+            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <Zap className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-[#1d1d1f] dark:text-white mb-2">Power Adapters Included in Box</h4>
+            <p className="text-xs text-[#86868b] leading-relaxed mb-4">
+              Each Wi-Fi & 4G camera includes its manufacturer-certified power adapter in the box. No centralized CCTV SMPS power supply or PoE switch is required.
+            </p>
+            <button
+              onClick={() => handleTabChange("addons")}
+              className="bg-[#1d1d1f] dark:bg-white text-white dark:text-[#1d1d1f] text-xs font-semibold px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
+            >
+              View Optional Accessories →
+            </button>
+          </div>
+        )}
+
+        {activeTab === "power" && selection.technology !== "Wireless" && filteredPower.map(pwr => {
           const reqQty = Math.ceil((selection.camera_count || 1) / (pwr.max_cameras || 4));
           const isSelected = selection.selected_power_id === pwr.id || (!selection.selected_power_id && activePricing?.items.some((i: any) => i.product_id === pwr.id));
           return renderProductItem(
@@ -976,9 +1029,9 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         )}
         
         {((activeTab === "cameras" && filteredCameras.length === 0) ||
-          (activeTab === "recorders" && filteredRecorders.length === 0) ||
+          (activeTab === "recorders" && filteredRecorders.length === 0 && selection.technology !== "Wireless") ||
           (activeTab === "storage" && filteredStorage.length === 0) ||
-          (activeTab === "power" && filteredPower.length === 0) ||
+          (activeTab === "power" && filteredPower.length === 0 && selection.technology !== "Wireless") ||
           (activeTab === "addons" && filteredAddons.length === 0)) && (
           <div className="py-6 md:py-12 text-center col-span-full">
             <p className="text-sm font-medium text-[#86868b]"><TranslatedText tKey="no_components_match" defaultText="No components match your search." /></p>

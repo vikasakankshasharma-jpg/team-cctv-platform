@@ -81,6 +81,25 @@ export default function BuilderClient() {
 
   const [existingEquipment, setExistingEquipment] = useState({ cameras: 0, recorderChannels: 0 });
 
+  const selectedCams = selections.filter(s => {
+    const p = products.find(prod => prod.id === s.product_id);
+    return p && (p.category === "cctv_camera" || (p.category as any) === "camera");
+  });
+  const selectedWiredCams = selectedCams.filter(s => {
+    const p = products.find(prod => prod.id === s.product_id);
+    if (!p) return false;
+    const name = (p.display_name || p.technical_name || "").toLowerCase();
+    const pid = (p.id || "").toLowerCase();
+    const techs = Array.isArray(p.technologies) ? p.technologies.map(t => String(t).toLowerCase()) : [];
+    return !(
+      techs.includes("wireless") || techs.includes("wifi") || techs.includes("4g") ||
+      p.technology === "Wireless" || pid.includes("wifi") || pid.includes("wireless") || pid.includes("4g") ||
+      name.includes("wi-fi") || name.includes("wifi") || name.includes("4g") ||
+      Boolean(p.has_wifi) || Boolean(p.has_4g_sim)
+    );
+  });
+  const isPureWirelessBuild = selectedCams.length > 0 && selectedWiredCams.length === 0 && existingEquipment.cameras === 0;
+
   const calculateSystem = async () => {
     setCalculating(true);
     try {
@@ -92,12 +111,8 @@ export default function BuilderClient() {
       const data = await res.json();
       if (data.success) {
         setPricingResult(data.pricing);
-        setWarnings(data.warnings);
-        if (data.warnings.length === 0) {
-          setStep(7); // Go to Review
-        } else {
-          alert("Compatibility Warnings:\n" + data.warnings.join("\n"));
-        }
+        setWarnings(data.warnings || []);
+        setStep(7); // Go to Review
       } else {
         alert("Calculation failed: " + data.message);
       }
@@ -275,14 +290,32 @@ export default function BuilderClient() {
             {step === 3 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Select Recorder</h2>
+                {isPureWirelessBuild && (
+                  <div className="bg-purple-50 border border-purple-200 text-purple-900 rounded-xl p-4 mb-6">
+                    <p className="font-bold text-sm">💡 Standalone Wi-Fi & 4G System</p>
+                    <p className="text-xs mt-1 text-purple-800">
+                      Standalone wireless cameras stream directly to your mobile app and record onto individual MicroSD cards. No NVR or DVR recorder is required!
+                    </p>
+                  </div>
+                )}
                 {renderProducts("recorder")}
-                <button onClick={() => setStep(4)} className="mt-6 bg-black text-white px-6 py-3 rounded-xl w-full">Continue to Storage</button>
+                <button onClick={() => setStep(4)} className="mt-6 bg-black text-white px-6 py-3 rounded-xl w-full">
+                  {isPureWirelessBuild ? "Skip Recorder & Continue to Storage (Recommended)" : "Continue to Storage"}
+                </button>
               </div>
             )}
 
             {step === 4 && (
               <div>
-                <h2 className="text-2xl font-bold mb-6">Select Storage (HDD)</h2>
+                <h2 className="text-2xl font-bold mb-6">Select Storage (MicroSD / HDD)</h2>
+                {isPureWirelessBuild && (
+                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl p-4 mb-6">
+                    <p className="font-bold text-sm">💡 MicroSD Storage for Wireless Cameras</p>
+                    <p className="text-xs mt-1 text-emerald-800">
+                      Select 1 MicroSD card per camera (128GB gives ~15-20 days of recording).
+                    </p>
+                  </div>
+                )}
                 {renderProducts("storage")}
                 <button onClick={() => setStep(5)} className="mt-6 bg-black text-white px-6 py-3 rounded-xl w-full">Continue to Cable</button>
               </div>
@@ -291,17 +324,35 @@ export default function BuilderClient() {
             {step === 5 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Select Cable</h2>
+                {isPureWirelessBuild && (
+                  <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 mb-6">
+                    <p className="font-bold text-sm">💡 Zero Video Cabling Needed</p>
+                    <p className="text-xs mt-1 text-blue-800">
+                      Smart wireless cameras communicate via Wi-Fi or 4G LTE SIM. Video cabling is not required!
+                    </p>
+                  </div>
+                )}
                 {renderProducts("cable")}
-                <button onClick={() => setStep(6)} className="mt-6 bg-black text-white px-6 py-3 rounded-xl w-full">Continue to Accessories</button>
+                <button onClick={() => setStep(6)} className="mt-6 bg-black text-white px-6 py-3 rounded-xl w-full">
+                  {isPureWirelessBuild ? "Skip Cables & Continue to Accessories" : "Continue to Accessories"}
+                </button>
               </div>
             )}
 
             {step === 6 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Select Power & Accessories</h2>
+                {isPureWirelessBuild && (
+                  <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 mb-6">
+                    <p className="font-bold text-sm">💡 Power Adapters Included in Box</p>
+                    <p className="text-xs mt-1 text-amber-800">
+                      Dedicated manufacturer DC power adapters are included with every Wi-Fi and 4G camera in the box. No centralized CCTV SMPS power supply is needed.
+                    </p>
+                  </div>
+                )}
                 {renderProducts("power_supply")}
                 {renderProducts("accessory")}
-                <button onClick={calculateSystem} disabled={calculating} className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-xl w-full">
+                <button onClick={calculateSystem} disabled={calculating} className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-xl w-full font-bold">
                   {calculating ? "Checking Compatibility..." : "Check System & Review"}
                 </button>
               </div>
@@ -315,9 +366,24 @@ export default function BuilderClient() {
                   <svg className="w-5 h-5 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                   <div>
                     <h4 className="font-bold">System is ready to quote</h4>
-                    <p className="text-sm">Camera count supported, recorder capacity verified.</p>
+                    <p className="text-sm">
+                      {isPureWirelessBuild
+                        ? "Smart Wireless configuration verified. Mobile app streaming and MicroSD storage ready."
+                        : "Camera count supported, recorder capacity verified."}
+                    </p>
                   </div>
                 </div>
+
+                {warnings.length > 0 && (
+                  <div className="bg-amber-50 text-amber-900 border border-amber-200 p-4 rounded-xl mb-6">
+                    <h4 className="font-bold text-sm mb-1">Configuration Notes:</h4>
+                    <ul className="text-xs list-disc list-inside space-y-1">
+                      {warnings.map((w, i) => (
+                        <li key={i}>{w}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <div className="border rounded-xl divide-y">
                   {pricingResult.items.map((item: any, i: number) => (

@@ -23,6 +23,8 @@ export async function POST(request: Request) {
     });
 
     let cameraCount = 0;
+    let wiredCameraCount = 0;
+    let wirelessCameraCount = 0;
     let recorderChannels = 0;
     
     const resolvedItems: any[] = [];
@@ -31,21 +33,37 @@ export async function POST(request: Request) {
       const p = dbProducts.get(sel.product_id);
       if (p) {
         resolvedItems.push({ ...p, qty: sel.quantity });
-        if (p.category === "cctv_camera") cameraCount += sel.quantity;
+        if (p.category === "cctv_camera" || (p.category as any) === "camera") {
+          cameraCount += sel.quantity;
+          const pTechs = Array.isArray(p.technologies) ? p.technologies.map(t => String(t).toLowerCase()) : [];
+          const pid = (p.id || "").toLowerCase();
+          const name = (p.display_name || p.technical_name || "").toLowerCase();
+          const isWireless = pTechs.includes("wireless") || pTechs.includes("wifi") || pTechs.includes("4g") ||
+                             p.technology === "Wireless" || (p as any).type === "wireless" ||
+                             pid.includes("wifi") || pid.includes("wireless") || pid.includes("4g") ||
+                             name.includes("wi-fi") || name.includes("wifi") || name.includes("4g") ||
+                             Boolean(p.has_wifi) || Boolean(p.has_4g_sim);
+          if (isWireless) {
+            wirelessCameraCount += sel.quantity;
+          } else {
+            wiredCameraCount += sel.quantity;
+          }
+        }
         if (p.category === "recorder" && p.channels) recorderChannels += (p.channels * sel.quantity);
       }
     }
 
     const totalCameras = cameraCount + (existingEquipment.cameras || 0);
+    const totalWiredCameras = wiredCameraCount + (existingEquipment.cameras || 0);
     const totalRecorderChannels = recorderChannels + (existingEquipment.recorderChannels || 0);
 
-    console.log(`[DEBUG] totalCameras=${totalCameras}, totalRecorderChannels=${totalRecorderChannels}, selections=${JSON.stringify(selections)}`);
+    console.log(`[DEBUG] totalCameras=${totalCameras}, totalWiredCameras=${totalWiredCameras}, wirelessCameraCount=${wirelessCameraCount}, totalRecorderChannels=${totalRecorderChannels}, selections=${JSON.stringify(selections)}`);
 
     const warnings: string[] = [];
     
-    // Validation
-    if (totalCameras > 0 && totalRecorderChannels === 0) {
-      const msg = "Compatibility Error: You have cameras but no recorder selected.";
+    // Validation: Only require a recorder if there are wired cameras!
+    if (totalWiredCameras > 0 && totalRecorderChannels === 0) {
+      const msg = "Compatibility Error: You have wired cameras but no recorder selected.";
       await adminDb.collection("analytics_rejections").add({
         type: "build_rejection",
         reason: "NO_RECORDER",
@@ -56,8 +74,8 @@ export async function POST(request: Request) {
         success: false,
         message: msg,
       }, { status: 400 });
-    } else if (totalCameras > totalRecorderChannels) {
-      const msg = `Compatibility Error: Your recorder(s) only support ${totalRecorderChannels} cameras, but you will have ${totalCameras} cameras. Please upgrade your recorder.`;
+    } else if (totalWiredCameras > totalRecorderChannels) {
+      const msg = `Compatibility Error: Your recorder(s) only support ${totalRecorderChannels} wired cameras, but you will have ${totalWiredCameras} wired cameras. Please upgrade your recorder.`;
       await adminDb.collection("analytics_rejections").add({
         type: "build_rejection",
         reason: "RECORDER_CAPACITY_EXCEEDED",
@@ -73,21 +91,32 @@ export async function POST(request: Request) {
     // Storage Validation
     const storageSelected = resolvedItems.filter(i => i.category === "storage");
     let totalStorageTb = 0;
-    for (const hdd of storageSelected) {
-      if (hdd.storage_capacity_tb) totalStorageTb += (hdd.storage_capacity_tb * hdd.qty);
+    let totalSdCards = 0;
+    for (const item of storageSelected) {
+      const isSd = item.storage_type === "Micro SD" || (item.display_name || "").toLowerCase().includes("sd") || (item.id || "").toLowerCase().includes("sd");
+      if (isSd) {
+        totalSdCards += item.qty;
+      } else if (item.storage_capacity_tb) {
+        totalStorageTb += (item.storage_capacity_tb * item.qty);
+      }
     }
     
-    if (totalStorageTb === 0 && cameraCount > 0) {
-      warnings.push("You haven't selected any storage (HDD). Your system will not record video.");
-    } else if (totalStorageTb > 0 && cameraCount > 0) {
-      // Rough estimate: 1TB = 30 days for 1 camera (H.265)
-      const estimatedDays = Math.floor((totalStorageTb * 30) / cameraCount);
-      warnings.push(`Note: Your selected ${totalStorageTb}TB storage will provide approximately ${estimatedDays} days of recording for ${cameraCount} cameras.`);
+    if (totalWiredCameras > 0 && totalStorageTb === 0) {
+      warnings.push("You haven't selected any Surveillance HDD storage. Wired cameras will not record video to your recorder.");
+    } else if (totalStorageTb > 0 && totalWiredCameras > 0) {
+      const estimatedDays = Math.floor((totalStorageTb * 30) / totalWiredCameras);
+      warnings.push(`Note: Your selected ${totalStorageTb}TB storage will provide approximately ${estimatedDays} days of recording for ${totalWiredCameras} wired cameras.`);
     }
 
-    // Auto-complete (mocking basic connector addition)
+    if (wirelessCameraCount > 0 && totalSdCards === 0) {
+      warnings.push("You have wireless cameras but no MicroSD cards selected. Wireless cameras will only support live viewing without local recording.");
+    } else if (wirelessCameraCount > 0 && totalSdCards < wirelessCameraCount) {
+      warnings.push(`Note: You have selected ${totalSdCards} MicroSD card(s) for ${wirelessCameraCount} wireless cameras (recommended: 1 card per camera).`);
+    }
+
+    // Auto-complete (mocking basic connector addition for wired cameras only)
     const hasConnectors = resolvedItems.some(i => i.category === "connector");
-    if (!hasConnectors && cameraCount > 0) {
+    if (!hasConnectors && totalWiredCameras > 0) {
       // Add a dummy connector item for pricing, in real life fetch actual SKUs
       resolvedItems.push({
         id: "mock-bnc",
@@ -95,7 +124,7 @@ export async function POST(request: Request) {
         display_name: "BNC/DC Connector Pair",
         category: "connector",
         unit_price: 50,
-        qty: cameraCount
+        qty: totalWiredCameras
       });
     }
 
