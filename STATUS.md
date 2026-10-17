@@ -272,6 +272,11 @@
   - Multi-stream recording multiplies daily gigabyte rates so MicroSD/HDD storage recommendations are never cut in half.
   - `lib/product-resolver.ts` and `lib/pricing-engine.ts` isolate indoor plastic PT cameras from outdoor weather requirements and cleanly match PT vs PTZ vs Multi-Lens.
 
+### Milestone 31: Pro Builder Wireless (Wi-Fi / 4G) Technology Integration
+- **3-Card Technology Architecture in Pro Builder:** Expanded Step 0 (`Choose Your Base Technology`) in `components/builder/ProBuilderClient.tsx` from 2 cards to 3 cards by adding **`Wireless (Wi-Fi / 4G)`** alongside `IP / Network System` and `HD / Coaxial System`.
+- **Zustand Cart Store Synchronization:** Updated `stores/useCartStore.ts` to support `technology: "HD" | "IP" | "Wireless" | null` and auto-set `Wireless` when wireless products are selected.
+- **Wireless Catalog Filtering:** Selecting Wireless automatically filters the catalog to show Wi-Fi cameras, 4G SIM cameras, MicroSD storage cards, 4G Wi-Fi routers, and wireless installation options.
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
