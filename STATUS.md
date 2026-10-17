@@ -208,6 +208,19 @@
 - **Currency Symbol Encoding:** Eliminated corrupted `?` character in cable remainder line items (`@ ?30/m`), replacing it with standard Indian Rupee symbol `₹` (`@ ₹30/m`).
 - **Labor Rate Alignment:** Updated Firestore `settings/app_config` to peg IP installation labor at ₹500/camera and HD labor at ₹400/camera in strict accordance with `BUSINESS_RULES.md`.
 
+### Milestone 23: Complete HDMI Cable Catalog & Multi-Option Expansion
+- **Comprehensive HDMI Cable Range:** Expanded the CCTV add-on accessories catalog from a single 3-meter option to the full market range:
+  - 1.5 Meter (`HDMI-1.5M`, Compact, ₹84 +GST)
+  - 3 Meter (`HDMI-3M`, Essential, ₹168 +GST)
+  - 5 Meter (`HDMI-5M`, Extended, ₹252 +GST)
+  - 10 Meter (`HDMI-10M`, Long Run, ₹420 +GST)
+  - 15 Meter (`HDMI-15M`, Pro Length, ₹630 +GST)
+  - 20 Meter (`HDMI-20M`, Max Range, ₹910 +GST)
+- **Live Catalog Price Synchronization:** Updated `InstantQuotationReview.tsx` so add-on cards dynamically resolve prices directly from `products` collection (`products.find(p => p.id === acc.id || p.sku === acc.id)?.unit_price || fallbackPrice`). Card prices, BOM line item rates, and gross totals are guaranteed 100% synchronized.
+- **Smart Length Switching in Configurator:** Enhanced `toggleAddon` in `store/configurator.ts` to enforce mutual exclusivity across HDMI cable lengths. Selecting an HDMI length automatically switches out any previously selected length, preventing duplicate billing for single-recorder setups.
+- **Catalog Add-on Merging & Fallback Defense:** Dynamically merged all active catalog accessories from `products` and `addons` in `InstantQuotationReview.tsx`, and implemented `FALLBACK_CATALOG` in `lib/pricing-engine.ts:calculateAddons` ensuring offline/mock resilience.
+- **100% Verification:** Validated all 6 HDMI options with dedicated test suite (`scripts/test-hdmi-addons.ts`), 238-test matrix (`scripts/execute-all-238-tests.ts`), and 432-configuration matrix (`scripts/test-all-counts-matrix.ts`).
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
@@ -237,6 +250,7 @@
 | **Layer 21: Cross-Tech Hardware Isolation & Zero-Trust Pinned Defense** | Invariant Suite (`test-invariants.ts`) & 238 Matrix | `PASS` | 100% invariant pass: IP quotes never receive Analog SMPS, 4-cam quotes never receive 32Ch NVR; mismatched pinned overrides instantly rejected and auto-healed. |
 | **Layer 22: Mixed Camera Sizing & Brand Matching Defense** | Live Quote Suite (`verify-quote-fixes.ts`) | `PASS` | 5-cam mixed setup (3 bullet + 2 dome) correctly selects 8Ch NVR, 1x 8-port PoE switch, ₹500 labor/cam, and clean ₹ currency symbol with 100% build pass. |
 | **Layer 23: All-Camera-Count Scaling & Industrial Boundary Matrix** | Matrix Suite (`test-all-counts-matrix.ts`) | `PASS` | 432/432 passed (100.0%). Every camera count 1 to 32 across HD, IP, and Wireless cleanly validates channel capacity, port scaling, and dynamic industrial routing with 0 errors. |
+| **Layer 24: HDMI Multi-Option & Catalog Pricing Synchronization** | HDMI Suite (`test-hdmi-addons.ts`) & Matrix | `PASS` | 100% pass across all 6 HDMI lengths (1.5m to 20m), mutual length switching in store, dynamic DB price resolution, and 0 TS errors. |
 
 ---
 

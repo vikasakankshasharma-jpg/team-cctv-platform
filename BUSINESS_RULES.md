@@ -154,6 +154,22 @@
     - IP: capped at the highest active NVR in catalog (currently 32Ch). Quotes $> 32\text{ IP cameras}$ route to `requiresIndustrialQuote: true`.
     - Wireless: capped at 16 if wireless cameras are active in catalog, or 0 if unstocked, routing custom enterprise inquiries cleanly without throwing spurious missing-hardware exceptions.
 
+### 3.10 Wires, Cables & HDMI Cable Catalog Architecture
+- **Complete Length Range Availability:**
+  The quotation engine and Instant Quotation Review expose all standard CCTV HDMI cable lengths:
+  - 1.5 Meter (`HDMI-1.5M`, Compact, ₹84 +GST)
+  - 3 Meter (`HDMI-3M`, Essential/Popular, ₹168 +GST)
+  - 5 Meter (`HDMI-5M`, Extended, ₹252 +GST)
+  - 10 Meter (`HDMI-10M`, Long Run, ₹420 +GST)
+  - 15 Meter (`HDMI-15M`, Pro Length, ₹630 +GST)
+  - 20 Meter (`HDMI-20M`, Max Range, ₹910 +GST)
+- **Dynamic Retail Price Synchronization:**
+  Add-on display cards in `InstantQuotationReview.tsx` dynamically pull real-time retail unit prices directly from the live catalog (`products.find(p => p.id === acc.id || p.sku === acc.id)?.unit_price || fallbackPrice`). This guarantees that card prices and itemized Bill of Materials line totals are always 100% identical.
+- **Mutual Exclusivity in Length Selection:**
+  Selecting an HDMI cable length in `store/configurator.ts` (`toggleAddon`) automatically switches any previously selected HDMI cable length, ensuring customers are never inadvertently double-charged for multiple HDMI cables when choosing between different lengths for their recorder.
+- **Catalog Add-on Merging & Fallback Resilience:**
+  `InstantQuotationReview.tsx` merges all catalog accessories from both `addons` and `products` collections into `allAccessories`. `calculateAddons` in `lib/pricing-engine.ts` incorporates a standard catalog fallback for all HDMI lengths and safety enclosures to ensure resilient offline, cold-start, or mock test quotation calculation.
+
 ---
 
 ## 4. Installation, Labor & Site Survey Rules

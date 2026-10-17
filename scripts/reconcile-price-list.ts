@@ -62,6 +62,8 @@ const SOURCE_PRICE_LIST: SourcePriceRow[] = [
   { category: "HDMI Cable", brand: "Budget Brand", spec: "3 m", formOrChannel: "3 m", features: "—", unit: "each", sourceCost: 120 },
   { category: "HDMI Cable", brand: "Budget Brand", spec: "5 m", formOrChannel: "5 m", features: "—", unit: "each", sourceCost: 180 },
   { category: "HDMI Cable", brand: "Budget Brand", spec: "10 m", formOrChannel: "10 m", features: "—", unit: "each", sourceCost: 300 },
+  { category: "HDMI Cable", brand: "Budget Brand", spec: "15 m", formOrChannel: "15 m", features: "—", unit: "each", sourceCost: 450 },
+  { category: "HDMI Cable", brand: "Budget Brand", spec: "20 m", formOrChannel: "20 m", features: "—", unit: "each", sourceCost: 650 },
 
   // Hard Disks / Storage
   { category: "Hard Disk / Recorder Storage", brand: "Budget Brand", spec: "500GB", formOrChannel: "500GB", features: "—", unit: "each", sourceCost: 1800 },

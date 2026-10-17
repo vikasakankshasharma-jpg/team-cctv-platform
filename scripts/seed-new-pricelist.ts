@@ -98,6 +98,8 @@ const PRODUCTS = {
   "hdmi_3m": { display_name: "HDMI Cable (3m)", technical_name: "HDMI-3M", brand: "budget", category: "hdmi_cable", technology: "BOTH", base_cost: 120, unit_price: makePrice(120), is_active: true },
   "hdmi_5m": { display_name: "HDMI Cable (5m)", technical_name: "HDMI-5M", brand: "budget", category: "hdmi_cable", technology: "BOTH", base_cost: 180, unit_price: makePrice(180), is_active: true },
   "hdmi_10m": { display_name: "HDMI Cable (10m)", technical_name: "HDMI-10M", brand: "budget", category: "hdmi_cable", technology: "BOTH", base_cost: 300, unit_price: makePrice(300), is_active: true },
+  "hdmi_15m": { display_name: "HDMI Cable (15m)", technical_name: "HDMI-15M", brand: "budget", category: "hdmi_cable", technology: "BOTH", base_cost: 450, unit_price: makePrice(450), is_active: true },
+  "hdmi_20m": { display_name: "HDMI Cable (20m)", technical_name: "HDMI-20M", brand: "budget", category: "hdmi_cable", technology: "BOTH", base_cost: 650, unit_price: makePrice(650), is_active: true },
 
   // ACCESSORIES
   "acc_junction_box": { display_name: "Junction Box for Camera", technical_name: "ACC-JBOX", brand: "budget", category: "accessories", technology: "BOTH", base_cost: 20, unit_price: makePrice(20), is_active: true },

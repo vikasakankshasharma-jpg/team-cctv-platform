@@ -194,6 +194,8 @@ const RAW_PRODUCTS = [
   { sku: "HDMI-3M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 3 MTR", base_cost: 120, technology: "Common" },
   { sku: "HDMI-5M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 5 MTR", base_cost: 180, technology: "Common" },
   { sku: "HDMI-10M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 10 MTR", base_cost: 300, technology: "Common" },
+  { sku: "HDMI-15M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 15 MTR", base_cost: 450, technology: "Common" },
+  { sku: "HDMI-20M", brand: "Budget Brand", category: "hdmi_cable", description: "HDMI Cable 20 MTR", base_cost: 650, technology: "Common" },
 
   // --- Accessories & Displays ---
   { sku: "ACC-JUNCTION-BOX", brand: "Budget Brand", category: "accessories", description: "Junction Box for Camera", base_cost: 20, technology: "Common" },

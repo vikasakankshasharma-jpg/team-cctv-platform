@@ -857,6 +857,21 @@ export type TranslationKey =
   | "addon_tag_best_protection"
   | "addon_hdmi_title"
   | "addon_hdmi_desc"
+  | "addon_hdmi_1_5m_title"
+  | "addon_hdmi_1_5m_desc"
+  | "addon_hdmi_5m_title"
+  | "addon_hdmi_5m_desc"
+  | "addon_hdmi_10m_title"
+  | "addon_hdmi_10m_desc"
+  | "addon_hdmi_15m_title"
+  | "addon_hdmi_15m_desc"
+  | "addon_hdmi_20m_title"
+  | "addon_hdmi_20m_desc"
+  | "addon_tag_compact"
+  | "addon_tag_extended"
+  | "addon_tag_long_run"
+  | "addon_tag_pro_length"
+  | "addon_tag_max_range"
   | "addon_cat_cables"
   | "addon_tag_essential"
   | "qrc_price_include_standard"
@@ -1831,6 +1846,21 @@ export const translations: Record<
       "addon_tag_best_protection": "Best Protection",
       "addon_hdmi_title": "High-Speed HDMI Cable (3 MTR)",
       "addon_hdmi_desc": "Gold-plated 4K-ready HDMI cable to connect your DVR/NVR directly to TV or monitor.",
+      "addon_hdmi_1_5m_title": "High-Speed HDMI Cable (1.5 MTR)",
+      "addon_hdmi_1_5m_desc": "Ultra-compact 4K HDMI cable for TV or monitor placed right next to DVR/NVR.",
+      "addon_hdmi_5m_title": "High-Speed HDMI Cable (5 MTR)",
+      "addon_hdmi_5m_desc": "Extended 5-meter run for wall-mounted TV or desk-to-rack connection.",
+      "addon_hdmi_10m_title": "High-Speed HDMI Cable (10 MTR)",
+      "addon_hdmi_10m_desc": "Heavy-duty long run cable with noise shielding for inter-room TV/monitor monitoring.",
+      "addon_hdmi_15m_title": "High-Speed HDMI Cable (15 MTR)",
+      "addon_hdmi_15m_desc": "Commercial grade long-distance 4K HDMI cable with signal booster for large halls/reception.",
+      "addon_hdmi_20m_title": "High-Speed HDMI Cable (20 MTR)",
+      "addon_hdmi_20m_desc": "Ultra long-run premium HDMI cable for remote security control room or executive cabin.",
+      "addon_tag_compact": "Compact",
+      "addon_tag_extended": "Extended",
+      "addon_tag_long_run": "Long Run",
+      "addon_tag_pro_length": "Pro Length",
+      "addon_tag_max_range": "Max Range",
       "addon_cat_cables": "Wires & Cables",
       "addon_tag_essential": "Essential",
       "qrc_price_include_standard": "• Prices include standard cabling and professional on-site installation.",

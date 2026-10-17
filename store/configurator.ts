@@ -228,9 +228,18 @@ export const useConfiguratorStore = create<ConfiguratorStore>()((set, get) => ({
   toggleAddon: (addonId) =>
     set((state) => {
       const current = state.selection.selected_addons;
-      const updated = current.includes(addonId)
-        ? current.filter((id) => id !== addonId)
-        : [...current, addonId];
+      let updated: string[];
+      if (current.includes(addonId)) {
+        updated = current.filter((id) => id !== addonId);
+      } else {
+        const isHdmi = addonId.startsWith("HDMI-") || addonId.toLowerCase().includes("hdmi");
+        if (isHdmi) {
+          const withoutOtherHdmi = current.filter(id => !id.startsWith("HDMI-") && !id.toLowerCase().includes("hdmi"));
+          updated = [...withoutOtherHdmi, addonId];
+        } else {
+          updated = [...current, addonId];
+        }
+      }
       return { selection: { ...state.selection, selected_addons: updated } };
     }),
 

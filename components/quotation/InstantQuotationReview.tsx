@@ -58,6 +58,12 @@ export function InstantQuotationReview({
     localized = localized.replace("Connector Set", t("wz_prod_connector_set"));
     localized = localized.replace("Connectors", t("wz_prod_connectors"));
     localized = localized.replace("Weatherproof Camera Junction Box", t("wz_prod_junction_box"));
+    localized = localized.replace("Budget Brand HDMI Cable", "High-Speed HDMI Cable");
+    localized = localized.replace("Budget Brand Display 19 inch", "19\" Security LED Display");
+    localized = localized.replace("Budget Brand 4G Router", "4G SIM WiFi Router (Dual Antenna)");
+    localized = localized.replace("Budget Brand 2U Rack for Recorder", "2U Metal DVR/NVR Rack");
+    localized = localized.replace("Budget Brand 4U Rack for Recorder", "4U Metal DVR/NVR Rack");
+    localized = localized.replace("Budget Brand PVC Rack for PoE Switch", "PVC Weatherproof Rack");
     return localized;
   };
 
@@ -88,7 +94,7 @@ export function InstantQuotationReview({
       id: "ACC-2U-RACK-RECORDER",
       title: t("addon_2u_rack_title", "2U Metal DVR/NVR Rack"),
       description: t("addon_2u_rack_desc", "Wall-mount lockable steel cabinet to protect your recorder and power supply from theft and dust."),
-      price: 490,
+      price: products.find(p => p.id === "ACC-2U-RACK-RECORDER" || p.sku === "ACC-2U-RACK-RECORDER")?.unit_price || 490,
       icon: Box,
       category: t("addon_cat_enclosure", "Safety Racks & Boxes"),
       tag: t("addon_tag_recommended", "Recommended")
@@ -97,7 +103,7 @@ export function InstantQuotationReview({
       id: "ACC-4U-RACK-RECORDER",
       title: t("addon_4u_rack_title", "4U Metal DVR/NVR Rack"),
       description: t("addon_4u_rack_desc", "Heavy-duty 4U rack with ventilation, fits recorder, PoE switch, router, and power backups."),
-      price: 630,
+      price: products.find(p => p.id === "ACC-4U-RACK-RECORDER" || p.sku === "ACC-4U-RACK-RECORDER")?.unit_price || 630,
       icon: Box,
       category: t("addon_cat_enclosure", "Safety Racks & Boxes"),
       tag: t("addon_tag_spacious", "Spacious")
@@ -106,7 +112,7 @@ export function InstantQuotationReview({
       id: "ACC-PVC-RACK-POE",
       title: t("addon_pvc_rack_title", "PVC Weatherproof Rack"),
       description: t("addon_pvc_rack_desc", "Outdoor waterproof and anti-rust enclosure specially designed for PoE switch & junction protection."),
-      price: 630,
+      price: products.find(p => p.id === "ACC-PVC-RACK-POE" || p.sku === "ACC-PVC-RACK-POE")?.unit_price || 630,
       icon: Box,
       category: t("addon_cat_enclosure", "Safety Racks & Boxes"),
       tag: t("addon_tag_all_weather", "All-Weather")
@@ -115,7 +121,7 @@ export function InstantQuotationReview({
       id: "DISP-19-INCH",
       title: t("addon_disp_19_title", "19\" Security LED Display"),
       description: t("addon_disp_19_desc", "Continuous 24/7 commercial LED monitor with HDMI/VGA support for live multi-camera monitoring."),
-      price: 2940,
+      price: products.find(p => p.id === "DISP-19-INCH" || p.sku === "DISP-19-INCH")?.unit_price || 2415,
       icon: Monitor,
       category: t("addon_cat_display", "TV & Display Screens"),
       tag: t("addon_tag_popular", "Popular")
@@ -124,7 +130,7 @@ export function InstantQuotationReview({
       id: "ACC-4G-ROUTER",
       title: t("addon_4g_router_title", "4G SIM WiFi Router (Dual Antenna)"),
       description: t("addon_4g_router_desc", "High-speed 4G router for remote mobile phone viewing without any broadband or landline connection."),
-      price: 2030,
+      price: products.find(p => p.id === "ACC-4G-ROUTER" || p.sku === "ACC-4G-ROUTER")?.unit_price || 1885,
       icon: Wifi,
       category: t("addon_cat_internet", "Internet (For Mobile View)"),
       tag: t("addon_tag_zero_broadband", "Zero-Broadband")
@@ -139,18 +145,68 @@ export function InstantQuotationReview({
       tag: t("addon_tag_best_protection", "Best Protection")
     },
     {
+      id: "HDMI-1.5M",
+      title: t("addon_hdmi_1_5m_title", "High-Speed HDMI Cable (1.5 MTR)"),
+      description: t("addon_hdmi_1_5m_desc", "Ultra-compact 4K HDMI cable for TV or monitor placed right next to DVR/NVR."),
+      price: products.find(p => p.id === "HDMI-1.5M" || p.sku === "HDMI-1.5M")?.unit_price || 84,
+      icon: Cable,
+      category: t("addon_cat_cables", "Wires & Cables"),
+      tag: t("addon_tag_compact", "Compact")
+    },
+    {
       id: "HDMI-3M",
       title: t("addon_hdmi_title", "High-Speed HDMI Cable (3 MTR)"),
       description: t("addon_hdmi_desc", "Gold-plated 4K-ready HDMI cable to connect your DVR/NVR directly to TV or monitor."),
-      price: 168,
+      price: products.find(p => p.id === "HDMI-3M" || p.sku === "HDMI-3M")?.unit_price || 168,
       icon: Cable,
       category: t("addon_cat_cables", "Wires & Cables"),
       tag: t("addon_tag_essential", "Essential")
+    },
+    {
+      id: "HDMI-5M",
+      title: t("addon_hdmi_5m_title", "High-Speed HDMI Cable (5 MTR)"),
+      description: t("addon_hdmi_5m_desc", "Extended 5-meter run for wall-mounted TV or desk-to-rack connection."),
+      price: products.find(p => p.id === "HDMI-5M" || p.sku === "HDMI-5M")?.unit_price || 252,
+      icon: Cable,
+      category: t("addon_cat_cables", "Wires & Cables"),
+      tag: t("addon_tag_extended", "Extended")
+    },
+    {
+      id: "HDMI-10M",
+      title: t("addon_hdmi_10m_title", "High-Speed HDMI Cable (10 MTR)"),
+      description: t("addon_hdmi_10m_desc", "Heavy-duty long run cable with noise shielding for inter-room TV/monitor monitoring."),
+      price: products.find(p => p.id === "HDMI-10M" || p.sku === "HDMI-10M")?.unit_price || 420,
+      icon: Cable,
+      category: t("addon_cat_cables", "Wires & Cables"),
+      tag: t("addon_tag_long_run", "Long Run")
+    },
+    {
+      id: "HDMI-15M",
+      title: t("addon_hdmi_15m_title", "High-Speed HDMI Cable (15 MTR)"),
+      description: t("addon_hdmi_15m_desc", "Commercial grade long-distance 4K HDMI cable with signal booster for large halls/reception."),
+      price: products.find(p => p.id === "HDMI-15M" || p.sku === "HDMI-15M")?.unit_price || 630,
+      icon: Cable,
+      category: t("addon_cat_cables", "Wires & Cables"),
+      tag: t("addon_tag_pro_length", "Pro Length")
+    },
+    {
+      id: "HDMI-20M",
+      title: t("addon_hdmi_20m_title", "High-Speed HDMI Cable (20 MTR)"),
+      description: t("addon_hdmi_20m_desc", "Ultra long-run premium HDMI cable for remote security control room or executive cabin."),
+      price: products.find(p => p.id === "HDMI-20M" || p.sku === "HDMI-20M")?.unit_price || 910,
+      icon: Cable,
+      category: t("addon_cat_cables", "Wires & Cables"),
+      tag: t("addon_tag_max_range", "Max Range")
     }
   ];
 
-  // Merge dynamic addons from DB
-  const dynamicAccessories = (addons || []).map(a => {
+  // Merge dynamic addons from DB (both addons and product catalog accessories)
+  const combinedDbAddons = [
+    ...(addons || []),
+    ...(products || []).filter(p => ["accessories", "hdmi_cable", "display", "network", "rack"].includes(p.category || ""))
+  ];
+
+  const dynamicAccessories = combinedDbAddons.map(a => {
     let cat = (a.category || "General Accessories").toString();
     let Icon = Box;
     const catLower = cat.toLowerCase();
@@ -161,7 +217,7 @@ export function InstantQuotationReview({
     } else if (catLower.includes("rack") || catLower.includes("box") || catLower.includes("enclosure")) {
       cat = t("addon_cat_enclosure", "Safety Racks & Boxes");
       Icon = Box;
-    } else if (catLower.includes("cable") || catLower.includes("wire")) {
+    } else if (catLower.includes("cable") || catLower.includes("wire") || catLower.includes("hdmi")) {
       cat = t("addon_cat_cables", "Wires & Cables");
       Icon = Cable;
     } else if (catLower.includes("internet") || catLower.includes("router") || catLower.includes("network")) {
@@ -170,7 +226,7 @@ export function InstantQuotationReview({
     }
 
     return {
-      id: a.id || "",
+      id: a.id || (a as any).sku || "",
       title: a.display_name,
       description: (a as any).description || "Optional system upgrade or accessory.",
       price: a.unit_price || 0,
@@ -190,9 +246,16 @@ export function InstantQuotationReview({
   };
 
   const handleToggle = (id: string, title: string) => {
+    const isCurrentlySelected = isAddonSelected(id);
+    const isHdmi = id.startsWith("HDMI-") || id.toLowerCase().includes("hdmi");
+    const otherHdmi = isHdmi 
+      ? (selection.selected_addons || []).find(addonId => (addonId.startsWith("HDMI-") || addonId.toLowerCase().includes("hdmi")) && addonId !== id)
+      : undefined;
+
     toggleAddon(id);
-    const willBeSelected = !isAddonSelected(id);
-    if (willBeSelected) {
+    if (otherHdmi && !isCurrentlySelected) {
+      toast.success(`Switched HDMI cable to ${title}`);
+    } else if (!isCurrentlySelected) {
       toast.success(`Added ${title} to quotation`);
     } else {
       toast.info(`Removed ${title} from quotation`);
