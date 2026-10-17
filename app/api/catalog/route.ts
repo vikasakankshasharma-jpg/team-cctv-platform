@@ -78,6 +78,8 @@ export async function GET(req: NextRequest) {
 
     const laborHd = settings?.labor_hd_per_camera || 400;
     const laborIp = settings?.labor_ip_per_camera || 500;
+    const laborWirelessPro = settings?.labor_wireless_pro_per_camera || 349;
+    const laborWirelessDiy = settings?.labor_wireless_diy || 0;
 
     items.push({
       id: "PRO_INSTALL_HD",
@@ -96,6 +98,26 @@ export async function GET(req: NextRequest) {
       technologies: ["IP"],
       unit_price: laborIp,
       unit_multiplier: "camera_count",
+      type: "service"
+    });
+
+    items.push({
+      id: "PRO_INSTALL_WIRELESS",
+      display_name: "Professional Wireless Camera Fitting & App Setup",
+      category: "installation",
+      technologies: ["Wireless"],
+      unit_price: laborWirelessPro,
+      unit_multiplier: "camera_count",
+      type: "service"
+    });
+
+    items.push({
+      id: "PRO_INSTALL_DIY",
+      display_name: "Free DIY Delivery & Easy Self-Setup (₹0)",
+      category: "installation",
+      technologies: ["Wireless"],
+      unit_price: laborWirelessDiy,
+      unit_multiplier: "none",
       type: "service"
     });
 

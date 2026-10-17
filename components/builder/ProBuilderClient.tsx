@@ -125,30 +125,49 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   const existingLeadId = searchParams.get("leadId");
   const [isLeadCaptured, setIsLeadCaptured] = useState(!!existingLeadId);
 
+  const { technology, items, addItem, removeItem, updateQty, clearCart, setTechnology, getTotal, getCameraCount } = useCartStore();
+
   // Search, Sort & Filters State
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"recommended" | "price_asc" | "price_desc" | "name_asc">("recommended");
   const [filterBrand, setFilterBrand] = useState("all");
-  const [filterType, setFilterType] = useState("all"); // "all" | "dome" | "bullet"
+  const [filterType, setFilterType] = useState("all"); // "all" | "dome" | "bullet" | "ptz" | "multi_lens"
+  const [filterConnection, setFilterConnection] = useState("all"); // "all" | "wifi" | "4g"
   const [filterRes, setFilterRes] = useState("all"); // "all" | "2MP" | "4MP" | "5MP" | "8MP"
   const [filterNightVision, setFilterNightVision] = useState("all"); // "all" | "Color" | "B&W"
   const [filterChannels, setFilterChannels] = useState("all"); // "all" | "4" | "8" | "16" | "32"
   const [filterCapacity, setFilterCapacity] = useState("all"); // "all" | "500GB" | "1TB" | "2TB" | "4TB"
   const [filterCableType, setFilterCableType] = useState("all"); // "all" | "CAT6" | "3+1" | "HDMI"
+  const [showOptionalNVRs, setShowOptionalNVRs] = useState(false);
 
-  const STEPS = [
-    { id: "technology", label: "Technology" },
-    { id: "camera", label: "Cameras" },
-    { id: "recorder", label: "Recorders" },
-    { id: "storage", label: "Storage" },
-    { id: "connector", label: "Connectors" },
-    { id: "cable", label: "Cables" },
-    { id: "power", label: "Power Device" },
-    { id: "upgrades", label: "Optional Upgrades" },
-    { id: "installation", label: "Installation" }
-  ];
+  const STEPS = useMemo(() => {
+    if (technology === "Wireless") {
+      return [
+        { id: "technology", label: "Technology" },
+        { id: "camera", label: "Cameras" },
+        { id: "recorder", label: "Recorders", badge: "Optional" },
+        { id: "storage", label: "Storage", badge: "MicroSD" },
+        { id: "connector", label: "Connectors", badge: "N/A" },
+        { id: "cable", label: "Cables", badge: "Optional" },
+        { id: "power", label: "Power Device", badge: "Included" },
+        { id: "upgrades", label: "Optional Upgrades" },
+        { id: "installation", label: "Installation" }
+      ];
+    }
+    return [
+      { id: "technology", label: "Technology" },
+      { id: "camera", label: "Cameras" },
+      { id: "recorder", label: "Recorders" },
+      { id: "storage", label: "Storage" },
+      { id: "connector", label: "Connectors" },
+      { id: "cable", label: "Cables" },
+      { id: "power", label: "Power Device" },
+      { id: "upgrades", label: "Optional Upgrades" },
+      { id: "installation", label: "Installation" }
+    ];
+  }, [technology]);
 
-  const activeCategory = STEPS[activeStepIndex].id;
+  const activeCategory = STEPS[activeStepIndex]?.id || "technology";
 
   const handleStepChange = (index: number, overrideTech?: string) => {
     // Prevent skipping ahead if technology isn't set, unless they are going back
@@ -160,6 +179,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     setSearchQuery("");
     setFilterBrand("all");
     setFilterType("all");
+    setFilterConnection("all");
     setFilterRes("all");
     setFilterNightVision("all");
     setFilterChannels("all");
@@ -178,8 +198,6 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
       handleStepChange(activeStepIndex - 1);
     }
   };
-
-  const { technology, items, addItem, removeItem, updateQty, clearCart, setTechnology, getTotal, getCameraCount } = useCartStore();
 
   useEffect(() => {
     fetch("/api/catalog?retail=true")
@@ -235,7 +253,9 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
             if (!formFactor) {
               if (/\bdome\b/i.test(name) || p.type?.toLowerCase() === "dome") formFactor = "dome";
               else if (/\bbullet\b/i.test(name) || p.type?.toLowerCase() === "bullet") formFactor = "bullet";
+              else if (/\bptz\b|\bpt\b|pan\s*(&|\/)?\s*tilt|360/i.test(name) || p.type?.toLowerCase() === "ptz") formFactor = "ptz";
             }
+            if (formFactor === "pt") formFactor = "ptz";
 
             // Derived resolution
             let resolution = p.resolution || (p.resolution_mp ? `${p.resolution_mp}MP` : "");
@@ -287,6 +307,16 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
               }
             }
 
+            const isMultiLens = /dual\s*lens|dual-lens|multi\s*lens|cruiser\s*dual/i.test(name);
+            const is4G = techList.includes("4G") || /4g\b/i.test(name) || /4g\b/i.test(sku);
+            const isWifi = techList.includes("WiFi") || techList.includes("Wireless") || /wi-?fi/i.test(name) || /wi-?fi/i.test(sku);
+            const hasSpeaker = Boolean(
+              p.has_speaker || 
+              p.features?.includes("speaker") || 
+              p.audio_type === "two_way" || 
+              /two\s*way|2-way|inbuilt\s*speaker|built-in\s*speaker|talk|siren/i.test(name)
+            );
+
             return {
               ...p,
               unit_multiplier: p.unit_multiplier,
@@ -297,7 +327,11 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
               derivedChannels: channels,
               derivedCapacity: capacity,
               derivedNightVision: nightVision,
-              derivedCableType: cableType
+              derivedCableType: cableType,
+              isMultiLens,
+              is4G,
+              isWifi,
+              hasSpeaker
             };
           });
           setProducts(normalized);
@@ -322,6 +356,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     sortBy !== "recommended" || 
     filterBrand !== "all" || 
     filterType !== "all" || 
+    filterConnection !== "all" ||
     filterRes !== "all" || 
     filterNightVision !== "all" || 
     filterChannels !== "all" || 
@@ -333,6 +368,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     setSortBy("recommended");
     setFilterBrand("all");
     setFilterType("all");
+    setFilterConnection("all");
     setFilterRes("all");
     setFilterNightVision("all");
     setFilterChannels("all");
@@ -344,12 +380,16 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   const categoryProducts = useMemo(() => {
     return products.filter(p => {
       if (p.normCat !== activeCategory) return false;
+      if (technology === "Wireless" && activeCategory === "recorder") {
+        if (!showOptionalNVRs) return false;
+        return p.technologies?.includes("IP") || p.technologies?.includes("Common");
+      }
       if (technology && p.technologies && !p.technologies.includes("Common")) {
         if (!p.technologies.includes(technology)) return false;
       }
       return true;
     });
-  }, [products, activeCategory, technology]);
+  }, [products, activeCategory, technology, showOptionalNVRs]);
 
   // Available filter options for active category
   const filterOptions = useMemo(() => {
@@ -362,8 +402,12 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     const nightVisions = Array.from(new Set(categoryProducts.map(p => p.derivedNightVision).filter(Boolean))) as string[];
     const hasDomes = categoryProducts.some(p => p.derivedFormFactor === "dome");
     const hasBullets = categoryProducts.some(p => p.derivedFormFactor === "bullet");
+    const hasPTZ = categoryProducts.some(p => p.derivedFormFactor === "ptz");
+    const hasMultiLens = categoryProducts.some(p => p.isMultiLens);
+    const has4G = categoryProducts.some(p => p.is4G);
+    const hasWifi = categoryProducts.some(p => p.isWifi);
 
-    return { brands, resolutions, channels, capacities, cableTypes, upgradeTypes, nightVisions, hasDomes, hasBullets };
+    return { brands, resolutions, channels, capacities, cableTypes, upgradeTypes, nightVisions, hasDomes, hasBullets, hasPTZ, hasMultiLens, has4G, hasWifi };
   }, [categoryProducts]);
 
   const camCount = getCameraCount();
@@ -386,7 +430,12 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
 
       // Category specific filters
       if (activeCategory === "camera") {
-        if (filterType !== "all" && p.derivedFormFactor !== filterType) return false;
+        if (filterConnection === "wifi" && !p.isWifi) return false;
+        if (filterConnection === "4g" && !p.is4G) return false;
+        if (filterType !== "all") {
+          if (filterType === "multi_lens" && !p.isMultiLens) return false;
+          else if (filterType !== "multi_lens" && p.derivedFormFactor !== filterType) return false;
+        }
         if (filterRes !== "all" && p.derivedResolution !== filterRes) return false;
         if (filterNightVision !== "all" && p.derivedNightVision !== filterNightVision) return false;
       } else if (activeCategory === "recorder") {
@@ -411,6 +460,17 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
       result = [...result].sort((a, b) => (a.display_name || "").localeCompare(b.display_name || ""));
     }
 
+    // Prioritize MicroSD cards at the top for Wireless storage
+    if (activeCategory === "storage" && technology === "Wireless") {
+      result = [...result].sort((a, b) => {
+        const aIsSd = (a.storage_type === "Micro SD" || (a.display_name || "").toLowerCase().includes("sd"));
+        const bIsSd = (b.storage_type === "Micro SD" || (b.display_name || "").toLowerCase().includes("sd"));
+        if (aIsSd && !bIsSd) return -1;
+        if (!aIsSd && bIsSd) return 1;
+        return 0;
+      });
+    }
+
     return result;
   }, [
     categoryProducts,
@@ -418,12 +478,14 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     sortBy,
     filterBrand,
     filterType,
+    filterConnection,
     filterRes,
     filterNightVision,
     filterChannels,
     filterCapacity,
     filterCableType,
     activeCategory,
+    technology,
     camCount
   ]);
 
@@ -512,11 +574,42 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   const hasRecorder = items.some(i => i.category === "recorder" || i.category === "cctv_recorder");
   const hasStorage = items.some(i => i.category === "storage" || i.category === "hdd");
   const hasCables = items.some(i => i.category === "cable");
-  const canAutoComplete = hasCameras && hasRecorder && (!hasStorage || !hasCables);
+  const canAutoComplete = technology === "Wireless"
+    ? (hasCameras && !hasStorage)
+    : (hasCameras && hasRecorder && (!hasStorage || !hasCables));
 
   const handleAutoCompleteSetup = () => {
-    if (!hasCameras || !hasRecorder) return;
+    if (!hasCameras) return;
     const tech = technology || "IP";
+
+    if (tech === "Wireless") {
+      // 1. Storage: 128GB MicroSD Card (1 per camera)
+      if (!hasStorage) {
+        const sdCard = products.find(p => 
+          p.normCat === "storage" && 
+          (p.technologies?.includes("Wireless") || p.technologies?.includes("Common")) &&
+          (p.derivedCapacity === "128GB" || (p.display_name || "").toLowerCase().includes("128gb"))
+        ) || products.find(p => p.normCat === "storage" && (p.technologies?.includes("Wireless") || p.technologies?.includes("Common")));
+        if (sdCard) addItem(sdCard, camCount);
+      }
+
+      // 2. Weatherproof Junction Boxes (1 per camera)
+      const hasJunction = items.some(i => (i.display_name || "").toLowerCase().includes("junction") || (i.id || "").toLowerCase().includes("junction"));
+      if (!hasJunction) {
+        const junc = products.find(p => (p.sku || "").includes("JUNCTION") || (p.display_name || "").toLowerCase().includes("junction"));
+        if (junc) addItem(junc, camCount);
+      }
+
+      // 3. Wireless Installation (1 per camera)
+      const hasInstall = items.some(i => i.category === "installation");
+      if (!hasInstall) {
+        const install = products.find(p => p.id === "PRO_INSTALL_WIRELESS" || (p.category === "installation" && p.technologies?.includes("Wireless")));
+        if (install) addItem(install, camCount);
+      }
+      return;
+    }
+
+    if (!hasRecorder) return;
 
     // 1. Storage (HDD)
     if (!hasStorage) {
@@ -865,7 +958,10 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 </div>
                 <h3 className="text-base sm:text-lg font-black">Complete your {camCount}-Camera {technology} setup in 1-Click?</h3>
                 <p className="text-xs text-blue-100 max-w-xl">
-                  Instantly bundles the best matching Surveillance HDD, {technology === "Wireless" ? "MicroSD Storage & Wi-Fi Accessories" : technology === "IP" ? "CAT6 Network Cables, PoE Switch" : "3+1 Cables, SMPS Power Supply"}, connectors, junction boxes, and professional installation.
+                  {technology === "Wireless"
+                    ? "Instantly bundles high-endurance 128GB MicroSD cards for all cameras, weatherproof junction boxes, and Professional Wireless Fitting & App Setup."
+                    : `Instantly bundles the best matching Surveillance HDD, ${technology === "IP" ? "CAT6 Network Cables, PoE Switch" : "3+1 Cables, SMPS Power Supply"}, connectors, junction boxes, and professional installation.`
+                  }
                 </p>
               </div>
               <Button
@@ -884,7 +980,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 key={step.id}
                 onClick={() => handleStepChange(idx)}
                 disabled={!technology && idx > 0}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
                   activeStepIndex === idx
                     ? "bg-slate-900 text-white shadow-md"
                     : (idx < activeStepIndex || technology)
@@ -892,12 +988,23 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                       : "bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed"
                 }`}
               >
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${
                   activeStepIndex === idx ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
                 }`}>
                   {idx + 1}
                 </span>
-                {step.label}
+                <span>{step.label}</span>
+                {step.badge && (
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                    activeStepIndex === idx 
+                      ? "bg-white/20 text-white" 
+                      : step.badge === "N/A"
+                        ? "bg-slate-100 text-slate-400"
+                        : "bg-blue-50 text-blue-600 border border-blue-200"
+                  }`}>
+                    {step.badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -985,8 +1092,22 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
 
                 {/* Dynamic Contextual Filter & Sort Dropdowns */}
                 <div className="pt-2.5 border-t border-slate-100 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
+                  {/* Camera Connection (Wireless Wi-Fi vs 4G) */}
+                  {activeCategory === "camera" && technology === "Wireless" && (filterOptions.has4G || filterOptions.hasWifi) && (
+                    <FilterSelect
+                      value={filterConnection}
+                      onChange={setFilterConnection}
+                      ariaLabel="Filter by connection"
+                      options={[
+                        { value: "all", label: "Connection: All" },
+                        ...(filterOptions.hasWifi ? [{ value: "wifi", label: "Wi-Fi (Home/Office)" }] : []),
+                        ...(filterOptions.has4G ? [{ value: "4g", label: "4G SIM (Cellular)" }] : []),
+                      ]}
+                    />
+                  )}
+
                   {/* Camera Form Factor */}
-                  {activeCategory === "camera" && filterOptions.hasDomes && filterOptions.hasBullets && (
+                  {activeCategory === "camera" && (filterOptions.hasDomes || filterOptions.hasBullets || filterOptions.hasPTZ || filterOptions.hasMultiLens) && (
                     <FilterSelect
                       value={filterType}
                       onChange={setFilterType}
@@ -995,6 +1116,8 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                         { value: "all", label: "Type: All" },
                         ...(filterOptions.hasDomes ? [{ value: "dome", label: "Dome (Indoor)" }] : []),
                         ...(filterOptions.hasBullets ? [{ value: "bullet", label: "Bullet (Outdoor)" }] : []),
+                        ...(filterOptions.hasPTZ ? [{ value: "ptz", label: "360° Pan-Tilt (PTZ)" }] : []),
+                        ...(filterOptions.hasMultiLens ? [{ value: "multi_lens", label: "Multi-Lens (Dual)" }] : []),
                       ]}
                     />
                   )}
@@ -1131,6 +1254,80 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 </div>
               </div>
 
+              {/* Contextual Guidance Banners for Wireless Technology */}
+              {technology === "Wireless" && activeCategory === "recorder" && showOptionalNVRs && (
+                <div className="mb-4 bg-purple-50 border border-purple-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-purple-900">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-purple-700">
+                      <Wifi className="w-4 h-4" /> Optional Centralized IP NVRs
+                    </div>
+                    <p className="text-xs text-purple-800 max-w-2xl">
+                      Wireless cameras record independently to MicroSD cards and stream live to your phone app. An NVR is optional only if you want centralized 24/7 continuous TV display recording.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button 
+                      onClick={() => handleStepChange(3)}
+                      size="sm"
+                      className="bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl"
+                    >
+                      Skip to MicroSD &rarr;
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowOptionalNVRs(false)}
+                      size="sm"
+                      className="border-purple-200 text-purple-700 hover:bg-purple-100/50 rounded-xl"
+                    >
+                      Hide NVRs
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {technology === "Wireless" && activeCategory === "storage" && (
+                <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-emerald-900">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-emerald-700">
+                      <Sparkles className="w-4 h-4 text-emerald-600" /> Dedicated MicroSD Storage Recommended
+                    </div>
+                    <p className="text-xs text-emerald-800 max-w-2xl">
+                      Each wireless camera stores video footage locally on its own high-endurance MicroSD card. 128GB provides ~15 to 20 days of motion event / continuous recording per camera.
+                    </p>
+                  </div>
+                  <div className="text-xs font-bold text-emerald-800 bg-white border border-emerald-200 px-3 py-1.5 rounded-xl shrink-0">
+                    Recommended: 1 card per camera ({camCount} cameras)
+                  </div>
+                </div>
+              )}
+
+              {technology === "Wireless" && activeCategory === "cable" && (
+                <div className="mb-4 bg-purple-50 border border-purple-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-purple-900">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-purple-700">
+                      <Wifi className="w-4 h-4" /> Zero Video Cabling Needed
+                    </div>
+                    <p className="text-xs text-purple-800 max-w-2xl">
+                      Wireless cameras communicate wirelessly over Wi-Fi or 4G. Power adapters are included in the box. Pick an HDMI cable below if connecting an optional NVR to a TV/display, or proceed to the next step.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => handleStepChange(6)}
+                    size="sm"
+                    className="bg-purple-700 hover:bg-purple-800 text-white font-bold shrink-0 rounded-xl"
+                  >
+                    Skip to Power &rarr;
+                  </Button>
+                </div>
+              )}
+
+              {technology === "Wireless" && activeCategory === "upgrades" && (
+                <div className="mb-4 bg-blue-50 border border-blue-200 rounded-2xl p-3.5 flex items-center gap-2 text-xs text-blue-900">
+                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span><strong>Pro Tip for Outdoor Wireless Cameras:</strong> Add Weatherproof Deep Junction Boxes to house and protect the 230V power plug from rain and weathering.</span>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredProducts.map(p => {
                   const inCart = items.find(i => i.id === p.id);
@@ -1139,9 +1336,13 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                   const isRecommendedStorage = 
                     activeCategory === "storage" && 
                     camCount > 0 && (
-                      (camCount <= 4 && (p.derivedCapacity === "1TB" || p.derivedCapacity === "2TB")) ||
-                      (camCount > 4 && camCount <= 8 && (p.derivedCapacity === "2TB" || p.derivedCapacity === "4TB")) ||
-                      (camCount > 8 && (p.derivedCapacity === "4TB" || p.derivedCapacity === "8TB"))
+                      technology === "Wireless"
+                        ? (p.derivedCapacity === "128GB" || (p.display_name || "").toLowerCase().includes("128gb"))
+                        : (
+                            (camCount <= 4 && (p.derivedCapacity === "1TB" || p.derivedCapacity === "2TB")) ||
+                            (camCount > 4 && camCount <= 8 && (p.derivedCapacity === "2TB" || p.derivedCapacity === "4TB")) ||
+                            (camCount > 8 && (p.derivedCapacity === "4TB" || p.derivedCapacity === "8TB"))
+                          )
                     );
 
                   // Smart fit for recorder
@@ -1171,17 +1372,20 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                          autoQtyLabel = `${autoQty} units (2/cam + 2 uplink)`;
                       } else if (name.includes("BNC")) {
                          autoQty = camCount * 2;
-                         autoQtyLabel = `${camCount * 2} units (2 per camera)`;
+                         autoQtyLabel = `${camCount} units (2 per camera)`;
                       } else if (name.includes("DC")) {
                          autoQty = camCount;
                          autoQtyLabel = `${camCount} units (1 per camera)`;
                       } else {
                          autoQty = camCount * 2;
-                         autoQtyLabel = `${camCount * 2} units (2 per camera)`;
+                         autoQtyLabel = `${camCount} units (2 per camera)`;
                       }
                     } else if (activeCategory === "upgrades" && (p.category === "camera_mount" || name.includes("JUNCTION") || name.includes("MOUNT"))) {
                       autoQty = camCount;
                       autoQtyLabel = `${camCount} units (1 per camera)`;
+                    } else if (p.id === "PRO_INSTALL_DIY") {
+                      autoQty = 1;
+                      autoQtyLabel = "Free Self-Setup";
                     } else if (activeCategory === "installation" || p.category === "installation" || p.unit_multiplier === "camera_count") {
                       autoQty = camCount;
                       autoQtyLabel = `${camCount} units (1 per camera)`;
@@ -1226,6 +1430,31 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                               Bullet (Outdoor)
                             </span>
                           )}
+                          {p.derivedFormFactor === "ptz" && (
+                            <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
+                              360° PTZ (Pan-Tilt)
+                            </span>
+                          )}
+                          {p.is4G && (
+                            <span className="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
+                              4G SIM
+                            </span>
+                          )}
+                          {p.isWifi && (
+                            <span className="text-[10px] font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 px-2 py-0.5 rounded-full">
+                              Wi-Fi
+                            </span>
+                          )}
+                          {p.isMultiLens && (
+                            <span className="text-[10px] font-bold text-fuchsia-700 bg-fuchsia-50 border border-fuchsia-200 px-2 py-0.5 rounded-full">
+                              Multi-Lens (Dual)
+                            </span>
+                          )}
+                          {p.hasSpeaker && (
+                            <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                              Inbuilt Speaker
+                            </span>
+                          )}
                           {p.derivedResolution && (
                             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                               {p.derivedResolution}
@@ -1259,7 +1488,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                         {/* Recommendation Badges */}
                         {isRecommendedStorage && (
                           <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-emerald-600 shrink-0" /> Recommended (~15-30 days backup)
+                            <Sparkles className="w-3 h-3 text-emerald-600 shrink-0" /> {technology === "Wireless" ? "Recommended: 128GB (~15-20 days backup)" : "Recommended (~15-30 days backup)"}
                           </div>
                         )}
                         {isRecommendedRecorder && (
@@ -1297,16 +1526,89 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 })}
                 
                 {filteredProducts.length === 0 && (
-                  <div className="col-span-full py-6 md:py-12 text-center bg-white rounded-2xl border border-dashed border-slate-200 p-4 md:p-8">
-                    <Filter className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-600 font-bold">No products match your filters</p>
-                    <p className="text-xs text-slate-400 mt-1">Try clearing or adjusting your search and filter options.</p>
-                    {hasActiveFilters && (
-                      <Button onClick={resetAllFilters} variant="outline" size="sm" className="mt-4 text-blue-600 border-blue-200 hover:bg-blue-50">
-                        Clear All Filters
-                      </Button>
+                  <>
+                    {technology === "Wireless" && activeCategory === "recorder" && !showOptionalNVRs ? (
+                      <div className="col-span-full bg-gradient-to-br from-purple-50 via-white to-indigo-50/50 rounded-3xl border-2 border-purple-200/70 p-6 sm:p-10 text-center shadow-sm">
+                        <div className="w-16 h-16 bg-purple-100 text-purple-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                          <Wifi className="w-8 h-8" />
+                        </div>
+                        <span className="text-[11px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 px-3 py-1 rounded-full inline-block mb-3">
+                          Standalone Mobile App Architecture
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">No NVR or DVR Recorder Required!</h3>
+                        <p className="text-sm text-slate-600 max-w-xl mx-auto mb-6 leading-relaxed">
+                          Your Wi-Fi & 4G cameras connect directly to your home/office Wi-Fi router or cellular SIM card. They record independently onto high-speed MicroSD memory cards and stream live to your smartphone app anywhere in the world.
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                          <Button 
+                            onClick={() => handleStepChange(3)}
+                            className="w-full sm:w-auto bg-purple-700 hover:bg-purple-800 text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-2"
+                          >
+                            <span>Skip to MicroSD Storage (Recommended)</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => setShowOptionalNVRs(true)}
+                            className="w-full sm:w-auto border-purple-300 text-purple-800 hover:bg-purple-50 font-bold px-5 py-3 rounded-xl"
+                          >
+                            View Compatible IP NVRs (Optional)
+                          </Button>
+                        </div>
+                      </div>
+                    ) : technology === "Wireless" && activeCategory === "connector" ? (
+                      <div className="col-span-full bg-gradient-to-br from-slate-50 via-white to-blue-50/40 rounded-3xl border-2 border-slate-200 p-6 sm:p-10 text-center shadow-sm">
+                        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <Sparkles className="w-8 h-8" />
+                        </div>
+                        <span className="text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full inline-block mb-3">
+                          Zero Connectors Needed
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">No Video Connectors Required</h3>
+                        <p className="text-sm text-slate-600 max-w-xl mx-auto mb-6 leading-relaxed">
+                          Wireless Wi-Fi and 4G cameras transmit video data digitally over radio frequencies and mobile cellular networks. Unlike wired HD (BNC/DC) or IP (RJ45) systems, wireless cameras do not need crimped video connectors.
+                        </p>
+                        <Button 
+                          onClick={() => handleStepChange(5)}
+                          className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center gap-2 mx-auto"
+                        >
+                          <span>Proceed to Cables (Optional)</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : technology === "Wireless" && activeCategory === "power" ? (
+                      <div className="col-span-full bg-gradient-to-br from-slate-50 via-white to-amber-50/40 rounded-3xl border-2 border-slate-200 p-6 sm:p-10 text-center shadow-sm">
+                        <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <Sparkles className="w-8 h-8" />
+                        </div>
+                        <span className="text-[11px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-3 py-1 rounded-full inline-block mb-3">
+                          Power Adapters Included
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">Dedicated Power Adapters Included in Box</h3>
+                        <p className="text-sm text-slate-600 max-w-xl mx-auto mb-6 leading-relaxed">
+                          Every Wi-Fi & 4G camera includes its manufacturer-certified 12V/5V DC power adapter (or integrated battery/solar panel) inside the box. No centralized CCTV SMPS power box or PoE network switch is required!
+                        </p>
+                        <Button 
+                          onClick={() => handleStepChange(7)}
+                          className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center gap-2 mx-auto"
+                        >
+                          <span>Proceed to Optional Upgrades</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="col-span-full py-6 md:py-12 text-center bg-white rounded-2xl border border-dashed border-slate-200 p-4 md:p-8">
+                        <Filter className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-600 font-bold">No products match your filters</p>
+                        <p className="text-xs text-slate-400 mt-1">Try clearing or adjusting your search and filter options.</p>
+                        {hasActiveFilters && (
+                          <Button onClick={resetAllFilters} variant="outline" size="sm" className="mt-4 text-blue-600 border-blue-200 hover:bg-blue-50">
+                            Clear All Filters
+                          </Button>
+                        )}
+                      </div>
                     )}
-                  </div>
+                  </>
                 )}
               </div>
               

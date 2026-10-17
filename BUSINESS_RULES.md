@@ -296,6 +296,16 @@ To ensure professional, 100% accurate map rendering across all PIN codes in Indi
 - Mobile Safari Auto-Zoom prevention: Input fields enforce `text-base sm:text-sm` (16px font on mobile).
 - Single-option filter auto-collapse: Category filters with only 1 option automatically collapse to keep UI clean.
 
+### 7.3 Wireless System (Wi-Fi / 4G) Custom Build Architecture
+- **3-Card Technology Selection:** Pro Builder provides equal first-class standing to `IP / Network System`, `HD / Coaxial System`, and `Wireless (Wi-Fi / 4G)`.
+- **Dynamic Stepper Adapters:** Stepper badges non-wired steps gracefully: `Recorders (Optional)`, `Storage (MicroSD)`, `Connectors (N/A)`, `Cables (Optional)`, `Power Device (Included)`.
+- **Cameras Step:** Provides filters for `Connection: All | Wi-Fi | 4G SIM`, Form Factor (`Dome`, `Bullet`, `360° PTZ`, `Multi-Lens`), and surfaces `Inbuilt Speaker & 2-Way Audio` badges.
+- **Standalone App Operation (Recorders Step):** Renders informative architecture cards explaining that Wi-Fi & 4G cameras stream directly to phone apps and record to local MicroSD cards without a bulky NVR. Includes 1-click `Skip to MicroSD Storage (Recommended)` button and optional `View Compatible IP NVRs` toggle.
+- **Storage Prioritization:** MicroSD cards are sorted first. The default 128GB High Endurance card (~15-20 days continuous backup) is badged as Recommended per the camera hardware safety rule (`max_sd_capacity_gb`).
+- **No Inapplicable Steps:** Connectors, video cables, and SMPS/PoE devices display clean domain cards with 1-click proceed/skip actions instead of empty filter error states.
+- **1-Click Smart Setup Assistant for Wireless:** Bundles 128GB MicroSD cards (1/camera), Weatherproof Junction Boxes (1/camera), and Wireless Pro Fitting (₹349/camera). Never bundles coaxial/CAT6 cables, PoE switches, SMPS, or RJ45/BNC connectors.
+- **Dedicated Wireless Labor Parity:** `PRO_INSTALL_WIRELESS` authoritatively verified server-side at ₹349/camera (`labor_wireless_pro_per_camera`) and `PRO_INSTALL_DIY` at ₹0, strictly preventing fallback to wired IP labor rates (₹500).
+
 ---
 
 ## 8. Role Isolation & Localization

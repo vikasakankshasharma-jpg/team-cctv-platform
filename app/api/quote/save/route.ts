@@ -149,6 +149,10 @@ export async function POST(request: Request) {
             dbProduct = { id: "PRO_INSTALL_HD", display_name: "Standard Installation (HD)", category: "installation", unit_price: settings.labor_hd_per_camera || settings.labor_full_installation_rate || 400 };
           } else if (item.product_id === "PRO_INSTALL_IP") {
             dbProduct = { id: "PRO_INSTALL_IP", display_name: "Standard Installation (IP)", category: "installation", unit_price: settings.labor_ip_per_camera || settings.labor_full_installation_rate || 500 };
+          } else if (item.product_id === "PRO_INSTALL_WIRELESS" || item.product_id === "labor_wireless_pro_fitting") {
+            dbProduct = { id: item.product_id, display_name: "Professional Wireless Camera Fitting & App Setup", category: "installation", unit_price: (settings as any).labor_wireless_pro_per_camera || 349 };
+          } else if (item.product_id === "PRO_INSTALL_DIY") {
+            dbProduct = { id: item.product_id, display_name: "Free DIY Delivery & Easy Self-Setup (₹0)", category: "installation", unit_price: (settings as any).labor_wireless_diy || 0 };
           } else if (item.product_id?.startsWith("PRO_INSTALL_")) {
             const isHd = item.product_id.includes("HD");
             const fallbackRate = isHd ? (settings.labor_hd_per_camera || 400) : (settings.labor_ip_per_camera || 500);
@@ -180,6 +184,14 @@ export async function POST(request: Request) {
             // Strict rule: Overwrite any catalog price with the strict market rate
             if (item.product_id === "labor_visit_charge") {
               verifiedUnitPrice = Math.round(visitCharge);
+            } else if (item.product_id === "PRO_INSTALL_WIRELESS" || item.product_id === "labor_wireless_pro_fitting") {
+              verifiedUnitPrice = Math.round((settings as any).labor_wireless_pro_per_camera ?? 349);
+            } else if (item.product_id === "PRO_INSTALL_DIY") {
+              verifiedUnitPrice = Math.round((settings as any).labor_wireless_diy ?? 0);
+            } else if (item.product_id === "PRO_INSTALL_HD") {
+              verifiedUnitPrice = Math.round(settings.labor_hd_per_camera || 400);
+            } else if (item.product_id === "PRO_INSTALL_IP") {
+              verifiedUnitPrice = Math.round(settings.labor_ip_per_camera || 500);
             } else {
               verifiedUnitPrice = Math.round(strictLaborRate);
             }
