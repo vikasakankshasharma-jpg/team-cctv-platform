@@ -24,12 +24,15 @@
 - **Cable Bundling & Margin Slabs:** Evaluates 305m/100m bundles vs. per-meter pricing, with admin-configured short-run margin slabs.
 - **Formulas:** Connectors (`camera_count * 2` + 2 for IP uplink), Junction Boxes (`1:1`).
 - **Comprehensive Add-ons & Full HDMI Cable Range:** Full market range of HDMI cables (1.5M, 3M, 5M, 10M, 15M, 20M) with smart mutual exclusivity in configurator selection. 100% real-time price synchronization across UI cards, BOM line items, and live Admin database (`DISP-19-INCH` @ ₹2,415, `ACC-4G-ROUTER` @ ₹1,885, Racks @ ₹490/₹630).
-
+- **Wireless CCTV Multi-Camera Storage & Safety Caps:** Dynamic MicroSD memory card sizing per Wi-Fi camera (H.265 baseline, 0.40 smart motion vs 1.0 continuous) capped by camera hardware support (`max_sd_capacity_gb || 128`).
+- **Mandatory Wi-Fi Check & 4G/5G Router Flow (Option B):** Wi-Fi check for wireless journeys with automated 4G/5G Router injection (`ACC-4G-ROUTER`) if customer lacks on-site broadband.
+- **Bundled Solar Invariant:** All-in-one solar CCTV cameras include the solar panel in the box with ₹0 separate accessory charges.
 
 ### 3. Transparent Labor & Site Survey Rules
 - **Zero Margin on Labor:** Labor costs strictly reflect local market rates with 0% margin markup.
 - **Full Installation:** ₹500/IP camera, ₹400/HD camera with 15m free cable pulling per camera (excess cable ₹15/m).
 - **Fitting-Only (No Cabling):** ₹200/HD, ₹300/IP + ₹500 site visit charge (flat ₹500/camera for setups <= 2 cameras).
+- **Wireless Pro Fitting:** ₹349/camera for Wi-Fi/4G cameras with full wall mounting and smartphone app pairing, or ₹0 for DIY delivery.
 - **Site Preparation Flags:** Bitmask support for ladder (₹500), marble (₹400), metal (₹200), furnished (₹300), and heavy drilling (₹600).
 - **Quotation Versioning:** Post-survey changes by installers/salespeople automatically create a new quotation version (`v2`, `v3`).
 - **Site Disclaimer:** Prominent notice on all quotes that physical site conditions may adjust final totals.

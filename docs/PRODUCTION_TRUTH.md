@@ -42,13 +42,16 @@
 2. **Strict Server Authority:** Client pricing calculations are rejected; all final quotes must compute through server pricing engines.
 3. **Environment Management:** All sensitive API keys and secrets must be updated via the Vercel CLI / Dashboard, never committed to source control.
 4. **Hardware Resolution Compatibility & Best-Price Tie-Break:** Recorders (DVR/NVR) must strictly satisfy $\text{recMaxMP} \ge \max(\text{Camera MP})$. When a higher-resolution recorder is priced lower than a lower-resolution recorder, the pricing engine selects the cheaper unit to optimize customer savings while ensuring full technical compatibility.
+5. **MicroSD Hardware Safety Cap:** MicroSD cards for Wi-Fi cameras must strictly be capped by `cameraProduct?.max_sd_capacity_gb || 128` to prevent quoting incompatible oversized cards.
+6. **Wi-Fi Connectivity Invariant (Option B):** Wi-Fi camera setups must verify broadband Wi-Fi availability on site, automatically injecting a 4G/5G SIM Wi-Fi router if Wi-Fi is absent.
+7. **Bundled Solar CCTV Packaging:** Solar CCTV cameras are complete standalone systems with bundled solar panels; separate solar panel line items are prohibited.
 
 ---
 
 ## 4. Catalog Integrity & Test Hygiene Guardrails
 1. **Zero Fake Products Policy:**
    - No mock/placeholder SKUs (e.g. `"Test Camera"`, `"TEST-CAM"`) are permitted in the catalog or quotation pipeline.
-   - All 68 active products must represent genuine hardware from verified OEMs (CP Plus, Hikvision, Dahua).
+   - All active products must represent genuine hardware from verified OEMs (CP Plus, Hikvision, Dahua, TP-Link, SanDisk).
    - Any test suite that exercises quoting, invoicing, or inventory must use genuine catalog SKUs.
 2. **Mandatory Automated Test Teardown (`afterAll`):**
    - Any test creating transient fixtures (`QT-E2E-...`, `L_REV_...`, `INV-TEST-...`) must include an `afterAll()` hook that automatically cleans up its created entities.

@@ -349,3 +349,45 @@ To ensure professional, 100% accurate map rendering across all PIN codes in Indi
 - **Strict Geofenced Coordinate Bounding:** All hub markers and sub-office coordinates must pass geographical boundary sanity checks:
   - Latitude must strictly fall within `[26.50, 27.50]°N` and Longitude within `[75.40, 76.20]°E` for the Jaipur urban agglomeration.
   - Any coordinates outside these bounds (e.g., Lucknow, Delhi, Gujarat, Telangana coordinate bleed from ungrounded geocoding) are strictly rejected and automatically scrubbed to prevent map viewport distortion.
+
+---
+
+## 10. Wireless & Wi-Fi CCTV Systems & Hybrid Architecture
+
+### 10.1 Mandatory Wi-Fi Connectivity Check & 4G/5G Router Injection (Option B)
+- **Wi-Fi Connectivity Invariant:** Wi-Fi cameras strictly require an operational broadband Wi-Fi connection at the premises to function.
+- **Guided Check Protocol:** Whenever a customer selects Wireless technology (or chooses Wi-Fi cameras in a hybrid configuration), the configurator MUST ask: *"Do you have a working Wi-Fi connection at the camera location?"*
+- **Automatic Router Injection:** If the customer answers **No**, the pricing engine automatically injects a high-speed 4G/5G SIM Wi-Fi router (`ACC-4G-ROUTER` @ ₹1,885) into the quotation BOM. If the customer answers **Yes**, no router is added.
+- **Hybrid System Parity:** Customers selecting wired HD or IP systems who add supplemental Wi-Fi cameras also trigger the Wi-Fi connectivity assessment and receive dedicated MicroSD cards and router support.
+
+### 10.2 MicroSD Card Multiplication & Storage Sizing
+- **Dedicated Local Storage:** Each Wi-Fi camera records locally on its own independent MicroSD memory card.
+- **Quantity Formula:**
+  - Pure Wireless: `MicroSD Quantity = camera_count` (1 card per camera).
+  - Hybrid Systems: `MicroSD Quantity = wifi_camera_count` (in addition to the shared HDD for wired cameras).
+- **H.265 Bitrate Baselines:**
+  - 2MP: 8 GB/day
+  - 3MP / 4MP / 5MP: 14 GB/day
+  - 6MP / 8MP (4K): 22 GB/day
+- **Recording Mode Multipliers:**
+  - Smart Motion Detection: `0.40` (saves up to 60% card storage).
+  - Continuous 24×7 Recording: `1.0`.
+
+### 10.3 MicroSD Hardware Safety Cap (`max_sd_capacity_gb`)
+- **Strict Compatibility Sizing:** Every camera specifies its maximum supported card capacity (`max_sd_capacity_gb`).
+- **Safe Baseline Default:** If unspecified or missing in catalog specs, `max_sd_capacity_gb` safely defaults to **128 GB**.
+- **Engine Enforcement:** The pricing engine strictly filters candidate MicroSD cards to `getCardGb(card) <= (camera.max_sd_capacity_gb || 128)`. An oversized card (e.g., 256GB or 512GB) must NEVER be automatically quoted for a camera that only supports 128GB.
+
+### 10.4 Solar CCTV Camera Packaging Invariant
+- **Bundled Solar Panels:** Solar-powered CCTV cameras are packaged and sold as complete all-in-one standalone systems. The solar panel, mounting arm, and battery bracket are included in the box.
+- **No Separate Solar Panel Charge:** Solar panels must NEVER be listed or billed as a separate add-on or accessory in quotations.
+
+### 10.5 Wireless Installation & Labor Rules
+- **Wireless Pro Fitting:** Professional installation for wireless cameras is billed at `₹349/camera` (`labor_wireless_pro_per_camera`).
+- **DIY Delivery:** Customers may choose DIY delivery for wireless cameras with **₹0 installation labor**.
+- **Wired Hardware Exclusion:** Pure wireless configurations strictly omit DVRs, NVRs, SMPS units, PoE switches, BNC/DC/RJ45 connectors, and coaxial/LAN cabling.
+
+### 10.6 Hardware Capabilities & Inbuilt Speaker Distinction
+- **Audio Mic (`has_audio`):** Unidirectional listen-only microphone.
+- **Inbuilt Speaker (`has_speaker`):** Hardware speaker enabling Two-Way Talk and Active Deterrence Siren/Alarm.
+- **Auto-Tagging:** Setting `has_speaker: true` automatically activates `has_audio: true` and attaches `speaker`, `2-way`, and `audio` feature tags.

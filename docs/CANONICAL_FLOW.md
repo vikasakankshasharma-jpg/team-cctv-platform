@@ -10,8 +10,13 @@ flowchart TD
     B --> C2["Custom Build (Pro Builder)"]
     C2 --> C2_OTP["Step 1: WhatsApp OTP Lead Capture"]
     C2_OTP --> C2_BUILD["Pro Builder Component Customizer"]
-    C1 --> D["Dynamic Packages Generated"]
-    C2_BUILD --> D
+    C1 --> C1_WIFI{"Wireless or Wi-Fi Cameras Selected?"}
+    C2_BUILD --> C1_WIFI
+    C1_WIFI -- Yes --> W1{"Wi-Fi Broadband Available on Site?"}
+    W1 -- No --> W2["Auto-Inject 4G/5G SIM Wi-Fi Router"]
+    W1 -- Yes --> D["Dynamic Packages Generated"]
+    W2 --> D
+    C1_WIFI -- No --> D
     D --> E["Server Pricing Engine Re-Calculation (/api/quote/save)"]
     E --> F["Quotation Review Screen"]
     F --> G["Match My Brand Dynamic Brand Unification"]
@@ -47,6 +52,11 @@ flowchart TD
   - **Mobile Slide-Over Cart:** Responsive drawer (`showMobileCart`) enables complete BOM review on smartphones.
   - **Single-Option Filter Auto-Collapse:** Hides empty or single-option filters to eliminate visual clutter.
 
+### 2.1 Wi-Fi Connectivity Check & Standalone Router Injection (Option B)
+- **Wi-Fi Readiness Check:** When choosing Wireless technology or adding supplemental Wi-Fi cameras in a wired setup, the wizard asks: *"Do you have a working Wi-Fi connection at the installation site?"*
+- **Automatic 4G/5G Router Injection:** If **No**, the engine injects a 4G/5G SIM Wi-Fi router into the quotation BOM. If **Yes**, no router is added.
+- **MicroSD Card Multiplication & Safety Caps:** Pure wireless quotes allocate 1 MicroSD card per camera (`qty = camera_count`). Hybrid quotes allocate 1 MicroSD card per Wi-Fi camera. Sized via H.265 baseline bitrates (0.40 smart motion multiplier) and capped strictly by `camera.max_sd_capacity_gb || 128`.
+
 ### 3. Server-Side Pricing Engine Execution (`/api/quote/save`)
 - **Zero-Trust Client Pricing:** Client calculations are strictly discarded. All line items, margins, taxes, and labor rates are recomputed server-side in `lib/pricing-engine.ts`.
 - **100% Mathematical Parity:** Guided Setup and Pro Builder configurations yield identical totals for identical Bills of Materials.
@@ -56,7 +66,7 @@ flowchart TD
   - Multi-PoE Gigabit Uplink Switch: Automatically attached when camera count exceeds single switch capacity.
   - Cable Bundling: Bundles (305m/100m) + per-meter balance evaluated against pure per-meter rates.
   - Connectors (`camera_count * 2` + 2 RJ45 for IP uplink) & Junction Boxes (`1:1`).
-  - Labor: Zero margin markup. Full install (₹500 IP / ₹400 HD + 15m free cable pulling; excess ₹15/m); Fitting-only (₹200 HD / ₹300 IP + ₹500 visit charge).
+  - Labor: Zero margin markup. Full install (₹500 IP / ₹400 HD + 15m free cable pulling; excess ₹15/m); Fitting-only (₹200 HD / ₹300 IP + ₹500 visit charge); Wireless Pro Fitting (₹349/camera vs ₹0 DIY delivery).
 
 ### 4. Quote Review & "Match My Brand" Upsell
 - **UI Element:** `InstantQuotationReview` (`/quote/[leadId]/review/[quoteId]`).

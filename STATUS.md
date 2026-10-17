@@ -219,11 +219,36 @@
 - **Live Catalog Price Synchronization:** Updated `InstantQuotationReview.tsx` so add-on cards dynamically resolve prices directly from `products` collection (`products.find(p => p.id === acc.id || p.sku === acc.id)?.unit_price || fallbackPrice`). Card prices, BOM line item rates, and gross totals are guaranteed 100% synchronized.
 - **Smart Length Switching in Configurator:** Enhanced `toggleAddon` in `store/configurator.ts` to enforce mutual exclusivity across HDMI cable lengths. Selecting an HDMI length automatically switches out any previously selected length, preventing duplicate billing for single-recorder setups.
 - **Catalog Add-on Merging & Fallback Defense:** Dynamically merged all active catalog accessories from `products` and `addons` in `InstantQuotationReview.tsx`, and implemented `FALLBACK_CATALOG` in `lib/pricing-engine.ts:calculateAddons` ensuring offline/mock resilience.
-### Milestone 24: Collapsible Category Accordion & Compact HDMI Length Selector
-- **70% Vertical Scroll Reduction:** Replaced the wall of 12+ open accessory cards with 5 sleek, modern collapsible category accordion bars (Safety Racks & Enclosures, TV & Security Displays, Internet & 4G Router, Wires & Cables, Maintenance & Warranty).
-- **At-a-Glance Active Selection State:** When collapsed, categories with selected accessories display a prominent status badge (`✓ Selected: [Item Title] (+₹Price)`) with a quick 1-click `✕` remove button right on the header without requiring expansion.
-- **Compact HDMI Cable Variant Selector:** In "Wires & Cables", consolidated 6 bulky cards into 1 unified 4K High-Speed HDMI Cable card featuring an interactive Length Pill Selector (`1.5M`, `3M`, `5M`, `10M`, `15M`, `20M`). Selecting any length pill triggers instantaneous quotation recalculation, active checkmark highlighting, and mutual exclusivity.
-- **Responsive & Accessible Ergonomics:** Keyboard navigation (Enter/Space to toggle), rotating chevron indicators, live real-time price reflection, and zero layout shift.
+### Milestone 25: Wireless CCTV Multi-Camera Storage & Labor Architecture
+- **MicroSD Card Multiplication:** Wi-Fi cameras record locally on dedicated MicroSD cards (1 card per camera). The pricing engine enforces `qty = camera_count` for pure wireless setups, and `qty = wifi_camera_count` for hybrid setups.
+- **H.265 Bitrate & Mode Estimation:** Storage capacity is dynamically calculated using H.265 baseline daily consumption with intelligent mode multipliers (Smart Motion = `0.40`, Continuous 24×7 = `1.0`).
+- **Dedicated Wireless Labor:** Added `labor_wireless_pro_per_camera` pegged at ₹349/camera for professional Wi-Fi camera wall/ceiling mounting and app configuration, with a 100% free DIY Delivery option (`₹0`).
+- **Strict Wired Hardware Exclusion:** Pure wireless configurations strictly exclude DVRs, NVRs, SMPS units, PoE switches, BNC/DC/RJ45 connectors, and coaxial/LAN cabling.
+
+### Milestone 26: Mandatory Wi-Fi Connectivity Check & 4G/5G Router Flow (Option B)
+- **Wi-Fi Connectivity Invariant:** Wi-Fi cameras require an active broadband Wi-Fi connection to operate.
+- **Guided Connectivity Check:** The configurator prompts customers selecting Wireless technology (or adding Wi-Fi cameras in hybrid setups) to verify if a working Wi-Fi connection is available at the installation site.
+- **Automated Router Injection:** If the customer does NOT have Wi-Fi, the quotation engine automatically adds a high-speed 4G/5G SIM Wi-Fi Router (`ACC-4G-ROUTER` @ ₹1,885) to the quotation BOM, ensuring a fully operational standalone system out of the box.
+
+### Milestone 27: Solar CCTV Camera Architecture
+- **Integrated Unit Invariant:** Standardized rule: Solar CCTV cameras are engineered as complete all-in-one systems with the solar panel and mounting bracket bundled inside the camera box.
+- **Zero Separate Solar Panel Charge:** Solar panels are strictly prohibited from being billed or quoted as separate add-on accessories.
+
+### Milestone 28: Mega Compu World CP Plus PTZ & 4G Camera Catalog Expansion
+- **6 Top-Selling Models Added to Firestore:** Integrated genuine, high-demand CP Plus cameras from Mega Compu World:
+  1. `CAM-CPP-WIFI-E28Q`: CP Plus 2MP Wi-Fi PT Camera with Two Way Talk (CP-E28Q) @ ₹2,429
+  2. `CAM-CPP-4G-R33T`: CP Plus 3MP 4G Smart Full Color Bullet Camera with 2-Way Audio (EZ-R33T) @ ₹2,593
+  3. `CAM-CPP-WIFI-E31Q`: CP Plus 3MP Wi-Fi PT Camera with Two Way Talk (CP-E31Q) @ ₹2,989
+  4. `CAM-CPP-WIFI-E38Q`: CP Plus 3MP Wi-Fi PT Camera with Two Way Audio (CP-E38Q) @ ₹3,104
+  5. `CAM-CPP-4G-S35T`: CP Plus 3MP 4G PT Camera Night Color with Two Way Talk (EZ-S35T) @ ₹3,827
+  6. `CAM-CPP-WIFI-Z45Q`: CP Plus 4MP Quad HD Wi-Fi PT Camera Night Color with Built-in Siren (CP-Z45Q) @ ₹4,485
+
+### Milestone 29: Inbuilt Speaker Capability & Dynamic MicroSD Capacity Selector (with Safety Caps)
+- **Inbuilt Speaker Hardware Option:** Added `Inbuilt Speaker` (`has_speaker`) checkbox in the Admin Product Modal right next to `Audio Mic`. Checking it automatically flags `has_speaker: true` and activates `has_audio: true` for 2-way talk.
+- **Dynamic MicroSD Capacity Selector:** Added interactive capacity selector (`[ 128 GB (Default) ]`, `[ 256 GB ]`, `[ 512 GB ]`) when `SD Slot` is checked in the Admin Modal, safely defaulting to **128 GB**.
+- **Pricing Engine Hardware Safety Cap:** In `resolveHDD`, candidate MicroSD cards are capped by `cameraProduct?.max_sd_capacity_gb || 128` to guarantee that oversized incompatible cards (e.g., 256GB/512GB) are never quoted for cameras that only support 128GB.
+- **Admin Inventory Table Badges:** Displaying `2-Way Talk` (purple) / `Mic` (blue) and `SD: 128GB/256GB` (amber) badges in the product specs column.
+- **Firestore Database Synchronization:** Backfilled all existing cameras with SD slots and two-way talk across the database.
 
 ---
 
@@ -239,7 +264,7 @@
 | **Layer 6: Mobile Responsiveness** | Small Screens & Safari | `PASS` | Pro Builder drawer and 16px input fields prevent zoom glitch. |
 | **Layer 7: Boundary Engine Fidelity** | Google Maps Postal Parity | `PASS` | 100% Google Maps parity for 302041 (Dhankya/Bindayaka/Bichpari, excluding Sirsi) and 302012 (Jhotwara urban core) + true geometric centroid alignment (`getKnownCentroid`). |
 | **Layer 8: City Boundary & Framing** | Google Maps Jaipur Parity | `PASS` | Mappls GeoAnalytics official boundary + 34-vertex fallback; camera locked at zoom 11.8 on Jaipur city core; zero rural scatter. |
-| **Layer 9: Catalog & Data Hygiene** | Zero Fake Products & Teardown | `PASS` | 68 active genuine products; 0 fake SKUs; test teardown hooks attached; Admin test records hidden by default. |
+| **Layer 9: Catalog & Data Hygiene** | Zero Fake Products & Teardown | `PASS` | Genuine products; 0 fake SKUs; test teardown hooks attached; Admin test records hidden by default. |
 | **Layer 10: Administrative Geo Hierarchy** | 4-Tier PIN/Tehsil Hierarchy | `PASS` | Granular active vs inactive PIN enforcement; single PIN toggle & bulk Tehsil activation verified; 0 TS errors. |
 | **Layer 11: Universal Delivery Micro-Hubs & Halos** | Sub-Post Offices & 3-Tier Geography | `PASS` | Dynamic S.O./B.O. hubs with 850m halos, tokenized address matching, radial dispersion, and 100% India Post coverage. |
 | **Layer 12: Production Live Deployment** | https://cctvquotation.com | `PASS` | Live production verified with HTTP 200, fast SSL handshake, and verified delivery micro-hubs. |
@@ -256,6 +281,9 @@
 | **Layer 23: All-Camera-Count Scaling & Industrial Boundary Matrix** | Matrix Suite (`test-all-counts-matrix.ts`) | `PASS` | 432/432 passed (100.0%). Every camera count 1 to 32 across HD, IP, and Wireless cleanly validates channel capacity, port scaling, and dynamic industrial routing with 0 errors. |
 | **Layer 24: HDMI Multi-Option & Catalog Pricing Synchronization** | HDMI Suite (`test-hdmi-addons.ts`) & Matrix | `PASS` | 100% pass across all 6 HDMI lengths (1.5m to 20m), mutual length switching in store, dynamic DB price resolution, and 0 TS errors. |
 | **Layer 25: Collapsible Category Accordion & Compact HDMI Selector UX** | TypeScript & Build Gates | `PASS` | 70% vertical scroll reduction, active status pills on collapsed rows, compact 6-length pill selector, 100% build pass. |
+| **Layer 26: Wireless Storage Multiplication & Labor Suite** | Wireless Suite (`test-wireless-storage-multiplication.ts`) | `PASS` | 22/22 passed (100%). 1 card per camera, motion vs continuous bitrate calculation, Pro fitting ₹349 vs DIY ₹0 verified. |
+| **Layer 27: Hardware Safety Cap & Speaker Toggle Verification** | Unit Suite & Type Engine | `PASS` | Strict capping at camera max supported capacity (`max_sd_capacity_gb || 128`), auto-tagging `speaker`/`2-way`/`audio`, 0 TS errors. |
+| **Layer 28: Mega Compu World CP Plus Catalog Ingestion** | Database Sync Scripts | `PASS` | All 6 CP Plus cameras verified in Firestore with genuine technical specs, prices, and capabilities. |
 
 ---
 

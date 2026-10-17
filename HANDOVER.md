@@ -39,12 +39,15 @@ This document serves as the master engineering and operational handover for the 
 - **Multi-PoE Gigabit Uplink:** Automatically includes an interconnecting Desktop Gigabit Switch when total IP cameras exceed single PoE switch capacity.
 - **Connectors & Junction Boxes:** Connectors (`camera_count * 2` + 2 RJ45 for IP uplink), Junction Boxes (`1:1`).
 - **Add-ons, Accessories & Full HDMI Range:** Full range of standard HDMI cables (1.5M, 3M, 5M, 10M, 15M, 20M) with smart mutual exclusivity (switching length auto-deselects previously selected length). Dynamically renders genuine active catalog accessories under "Add-ons & Accessories For Your System" (`DISP-19-INCH` @ ₹2,415, `ACC-4G-ROUTER` @ ₹1,885, Racks @ ₹490/₹630, AMC) with 100% price synchronization across UI cards, BOM line items, and server pricing engine.
-
+- **Wireless CCTV Multi-Camera Storage & Safety Caps:** Wi-Fi cameras size dedicated MicroSD cards (1 card per camera). Sized via H.265 bitrate (smart motion 0.40 vs continuous 1.0) and capped by camera hardware support (`max_sd_capacity_gb || 128`).
+- **Mandatory Wi-Fi Check & 4G/5G Router Flow (Option B):** Prompting customers on Wi-Fi availability; automatically adds 4G/5G Wi-Fi Router (`ACC-4G-ROUTER`) if Wi-Fi is absent.
+- **Bundled Solar Invariant:** Solar CCTV cameras include the solar panel in the box; separate solar panel add-on charges are strictly prohibited.
 
 ### 2.3 Installation & Site Survey Rules
 - **Zero Margin on Labor:** Labor line items NEVER receive commercial margin markup.
 - **Full Installation:** ₹500/IP camera, ₹400/HD camera with 15m free cable pulling per camera (excess cable ₹15/m).
 - **Fitting-Only (No Cabling):** ₹200/HD, ₹300/IP + ₹500 visit charge (flat ₹500/camera for systems <= 2 cameras).
+- **Wireless Pro Fitting:** ₹349/camera for Wi-Fi/4G cameras with full wall mounting and smartphone app pairing, or ₹0 for DIY delivery.
 - **Site Prep Surcharges (Bitmask):** Ladder (₹500), marble (₹400), metal (₹200), furnished (₹300), heavy drilling (₹600).
 - **Quotation Versioning:** Changes made by installers or salespeople after a site survey automatically spawn a new version (`v2`, `v3`).
 - **Quotation Disclaimer:** Standard notice indicating final quotes may adjust based on actual site conditions.
