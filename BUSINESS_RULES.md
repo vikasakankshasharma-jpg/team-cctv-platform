@@ -170,6 +170,9 @@
   Selecting an HDMI cable length in `store/configurator.ts` (`toggleAddon`) automatically switches any previously selected HDMI cable length, ensuring customers are never inadvertently double-charged for multiple HDMI cables when choosing between different lengths for their recorder.
 - **Catalog Add-on Merging & Fallback Resilience:**
   `InstantQuotationReview.tsx` merges all catalog accessories from both `addons` and `products` collections into `allAccessories`. `calculateAddons` in `lib/pricing-engine.ts` incorporates a standard catalog fallback for all HDMI lengths and safety enclosures to ensure resilient offline, cold-start, or mock test quotation calculation.
+- **Collapsible Category Accordion & Compact Variant Selector:**
+  `InstantQuotationReview.tsx` organizes the "Add-ons & Accessories For Your System" section into clean collapsible category accordion bars. Categories start collapsed (reducing vertical scroll height by 70%), displaying active badges (`✓ Selected: [Item] (+₹Price)`) with quick remove controls. When "Wires & Cables" is expanded, the 6 HDMI lengths are presented via an interactive Compact Length Pill Selector (`1.5M`, `3M`, `5M`, `10M`, `15M`, `20M`), delivering single-tap switching and instant real-time quote recalculation.
+
 
 ---
 

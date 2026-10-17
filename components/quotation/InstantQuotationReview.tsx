@@ -6,7 +6,7 @@ import type { Lead, PricingResult, Product, Addon, AppSettings } from "@/types";
 import { 
   ArrowLeft, Check, CheckCircle2, ShieldCheck, Camera, HardDrive, Server, 
   Cable, Monitor, Wifi, Box, FileText, Sparkles, 
-  ChevronRight, Wrench, Shield, Layers
+  ChevronRight, ChevronDown, Wrench, Shield, Layers, X, Plus
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
@@ -69,6 +69,14 @@ export function InstantQuotationReview({
 
   const { selection, toggleAddon, updateSelection } = useConfiguratorStore();
   const [showAdvancedCustomizer, setShowAdvancedCustomizer] = useState(false);
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+
+  const toggleCategory = (cat: string) => {
+    setOpenCategories(prev => ({
+      ...prev,
+      [cat]: !prev[cat]
+    }));
+  };
   // Derive package header info
   const camItem = activePricing.items?.find((i: any) => 
     products.find(p => p.id === i.product_id)?.category === "cctv_camera" ||
@@ -536,8 +544,10 @@ export function InstantQuotationReview({
               {t("iqr_addons_desc")}
             </p>
           </div>
-          <div className="text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 self-start sm:self-auto">
-            Live Real-Time Pricing
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <div className="text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              Live Real-Time Pricing
+            </div>
           </div>
         </div>
 
@@ -557,90 +567,329 @@ export function InstantQuotationReview({
           };
 
           const categoryIcons: Record<string, React.ReactNode> = {
-            [t("addon_cat_enclosure", "Safety Racks & Boxes")]: <Box className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" />,
-            [t("addon_cat_display", "TV & Display Screens")]: <Monitor className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" />,
-            [t("addon_cat_internet", "Internet (For Mobile View)")]: <Wifi className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" />,
-            [t("addon_cat_warranty", "Maintenance & Warranty")]: <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" />,
-            [t("addon_cat_cables", "Wires & Cables")]: <Cable className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" />
+            [t("addon_cat_enclosure", "Safety Racks & Boxes")]: <Box className="w-5 h-5 text-indigo-500" />,
+            [t("addon_cat_display", "TV & Display Screens")]: <Monitor className="w-5 h-5 text-indigo-500" />,
+            [t("addon_cat_internet", "Internet (For Mobile View)")]: <Wifi className="w-5 h-5 text-indigo-500" />,
+            [t("addon_cat_warranty", "Maintenance & Warranty")]: <ShieldCheck className="w-5 h-5 text-indigo-500" />,
+            [t("addon_cat_cables", "Wires & Cables")]: <Cable className="w-5 h-5 text-indigo-500" />
           };
 
-          return (
-            <div className="space-y-8">
-              {Object.entries(groupedAccessories).map(([category, items]) => (
-                <div key={category} className="bg-white dark:bg-[#1d1d1f] border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-3 sm:p-7 shadow-sm flex flex-col space-y-3 sm:space-y-5">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      {categoryIcons[category]}
-                      <h3 className="text-sm sm:text-lg font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-tight">{category}</h3>
-                    </div>
-                    <p className="text-[10px] leading-snug sm:leading-normal sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 font-medium">{categoryDescriptions[category] || ""}</p>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {items.map((acc) => {
-                      const selected = isAddonSelected(acc.id);
-                      const Icon = acc.icon;
+          const categoryOrder = [
+            t("addon_cat_enclosure", "Safety Racks & Boxes"),
+            t("addon_cat_display", "TV & Display Screens"),
+            t("addon_cat_internet", "Internet (For Mobile View)"),
+            t("addon_cat_cables", "Wires & Cables"),
+            t("addon_cat_warranty", "Maintenance & Warranty")
+          ];
 
-                      return (
-                        <div
-                key={acc.id}
-                onClick={() => handleToggle(acc.id, acc.title)}
-                className={`group cursor-pointer rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border transition-all duration-200 flex flex-col justify-between ${
-                  selected
-                    ? "bg-blue-50/60 dark:bg-blue-950/30 border-blue-500 ring-2 ring-blue-500/20 shadow-md"
-                    : "bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-white dark:hover:bg-zinc-900 shadow-xs hover:shadow-md"
-                }`}
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className={`p-2.5 rounded-xl ${selected ? "bg-blue-600 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors"}`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                        {acc.tag}
-                      </span>
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${selected ? "bg-blue-600 text-white" : "border border-zinc-300 dark:border-zinc-700"}`}>
-                        {selected && <Check className="w-3.5 h-3.5" />}
+          const sortedCategories = Object.keys(groupedAccessories).sort((a, b) => {
+            const idxA = categoryOrder.indexOf(a);
+            const idxB = categoryOrder.indexOf(b);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            return a.localeCompare(b);
+          });
+
+          return (
+            <div className="space-y-3 sm:space-y-4">
+              {sortedCategories.map((category) => {
+                const items = groupedAccessories[category] || [];
+                const selectedItems = items.filter(acc => isAddonSelected(acc.id));
+                const hasSelected = selectedItems.length > 0;
+                const isCategoryOpen = !!openCategories[category];
+
+                // Check for HDMI items in this category
+                const hdmiItems = items.filter(acc => 
+                  acc.id.startsWith("HDMI-") || 
+                  acc.id.toLowerCase().includes("hdmi") || 
+                  acc.title.toLowerCase().includes("hdmi")
+                );
+                const nonHdmiItems = items.filter(acc => !hdmiItems.includes(acc));
+                const hasHdmiGroup = hdmiItems.length > 1;
+                const selectedHdmi = hdmiItems.find(acc => isAddonSelected(acc.id));
+
+                return (
+                  <div 
+                    key={category} 
+                    className={`bg-white dark:bg-[#1d1d1f] border transition-all duration-200 rounded-2xl overflow-hidden shadow-xs ${
+                      hasSelected
+                        ? "border-blue-400 dark:border-blue-700/80 ring-1 ring-blue-500/20"
+                        : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                    }`}
+                  >
+                    {/* Collapsible Accordion Header */}
+                    <div
+                      onClick={() => toggleCategory(category)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleCategory(category);
+                        }
+                      }}
+                      className={`w-full flex items-center justify-between p-3.5 sm:p-5 cursor-pointer transition-colors select-none ${
+                        hasSelected 
+                          ? "bg-blue-50/40 dark:bg-blue-950/20" 
+                          : "hover:bg-zinc-50/70 dark:hover:bg-zinc-900/60"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                        <div className={`p-2 sm:p-2.5 rounded-xl shrink-0 transition-colors ${
+                          hasSelected 
+                            ? "bg-blue-600 text-white shadow-xs" 
+                            : "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400"
+                        }`}>
+                          {categoryIcons[category] || <Box className="w-5 h-5" />}
+                        </div>
+                        <div className="min-w-0 text-left">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white truncate">
+                              {category}
+                            </h3>
+                            {hasSelected ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                                {selectedItems.length === 1 ? selectedItems[0].title : `${selectedItems.length} Added`}
+                                <span className="opacity-75 font-normal ml-0.5">
+                                  (+₹{selectedItems.reduce((sum, i) => sum + i.price, 0).toLocaleString("en-IN")})
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                                {hasHdmiGroup ? `${hdmiItems.length} Lengths Available` : `${items.length} ${items.length === 1 ? "Option" : "Options"}`}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate hidden sm:block">
+                            {categoryDescriptions[category] || ""}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        {hasSelected && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              selectedItems.forEach(item => handleToggle(item.id, item.title));
+                            }}
+                            className="text-[11px] font-bold text-red-600 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 px-2 py-1 rounded-lg transition-colors hidden md:inline-flex items-center gap-1 cursor-pointer"
+                            title="Remove selected items"
+                          >
+                            <X className="w-3 h-3" />
+                            <span>Remove</span>
+                          </button>
+                        )}
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-lg transition-colors ${
+                          isCategoryOpen 
+                            ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200" 
+                            : "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400"
+                        }`}>
+                          {isCategoryOpen ? "Close" : (hasSelected ? "Modify" : "+ Select")}
+                        </span>
+                        <ChevronDown className={`w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 transition-transform duration-200 ${
+                          isCategoryOpen ? "rotate-180" : ""
+                        }`} />
                       </div>
                     </div>
-                  </div>
 
+                    {/* Collapsible Content */}
+                    {isCategoryOpen && (
+                      <div className="p-3.5 sm:p-6 border-t border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/30 dark:bg-zinc-900/30 space-y-4 animate-in fade-in-50 duration-200">
+                        {categoryDescriptions[category] && (
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400 sm:hidden">
+                            {categoryDescriptions[category]}
+                          </p>
+                        )}
 
-                  <h3 className={`font-bold text-sm sm:text-base leading-snug sm:leading-normal mb-1.5 transition-colors ${selected ? "text-blue-950 dark:text-blue-200" : "text-zinc-900 dark:text-white group-hover:text-blue-600"}`}>
-                    {acc.title}
-                  </h3>
-                  <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 leading-snug sm:leading-relaxed mb-3 sm:mb-4">
-                    {acc.description}
-                  </p>
-                </div>
+                        {/* Special Compact Variant Selector for HDMI Cables */}
+                        {hasHdmiGroup && (
+                          <div className="bg-white dark:bg-zinc-900 border border-blue-200/80 dark:border-blue-900/40 rounded-2xl p-4 sm:p-5 shadow-xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                              <div className="flex items-start gap-3">
+                                <div className="p-2 sm:p-2.5 rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
+                                  <Cable className="w-4 h-4 sm:w-5 sm:h-5" />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h4 className="font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">
+                                      High-Speed 4K HDMI Cable
+                                    </h4>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
+                                      Gold Plated 4K 60Hz
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    Ultra-clear video & audio transmission from your DVR/NVR directly to a local TV or monitor.
+                                  </p>
+                                </div>
+                              </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
-                  <div className="text-sm sm:text-base font-black text-zinc-900 dark:text-white">
-                    +₹{acc.price.toLocaleString("en-IN")}
-                    <span className="text-[10px] font-normal text-zinc-400 ml-1">+{t("wz_gst")}</span>
+                              {selectedHdmi && (
+                                <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 self-start sm:self-auto">
+                                  <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                                  <span>{selectedHdmi.title}</span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleToggle(selectedHdmi.id, selectedHdmi.title);
+                                    }}
+                                    className="ml-1 hover:text-red-600 dark:hover:text-red-400 text-zinc-400 transition-colors p-0.5 rounded cursor-pointer"
+                                    title="Remove Cable"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Length Selection Pill Grid */}
+                            <div className="space-y-2">
+                              <label className="text-[10px] sm:text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
+                                Choose Cable Length:
+                              </label>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                                {hdmiItems.map((hdmi) => {
+                                  const isSelected = isAddonSelected(hdmi.id);
+                                  const match = hdmi.title.match(/(\d+(?:\.\d+)?)\s*(?:MTR|M|Meter)/i);
+                                  const meterLabel = match ? `${match[1]} Meter` : hdmi.title;
+
+                                  return (
+                                    <button
+                                      key={hdmi.id}
+                                      type="button"
+                                      onClick={() => handleToggle(hdmi.id, hdmi.title)}
+                                      className={`group/pill flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl border transition-all duration-150 cursor-pointer text-center relative ${
+                                        isSelected
+                                          ? "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-500/20"
+                                          : "bg-zinc-50 dark:bg-zinc-800/80 hover:bg-blue-50/70 dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-700 text-zinc-800 dark:text-zinc-200 shadow-2xs"
+                                      }`}
+                                    >
+                                      {hdmi.tag && (
+                                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full mb-1 ${
+                                          isSelected 
+                                            ? "bg-blue-700 text-blue-100" 
+                                            : "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 group-hover/pill:bg-blue-100"
+                                        }`}>
+                                          {hdmi.tag}
+                                        </span>
+                                      )}
+                                      <span className="font-extrabold text-xs sm:text-sm">
+                                        {meterLabel}
+                                      </span>
+                                      <span className={`text-[11px] mt-0.5 font-bold ${
+                                        isSelected ? "text-blue-100" : "text-zinc-500 dark:text-zinc-400"
+                                      }`}>
+                                        +₹{hdmi.price.toLocaleString("en-IN")}
+                                        <span className="text-[9px] font-normal ml-0.5 opacity-80">+{t("wz_gst")}</span>
+                                      </span>
+                                      {isSelected && (
+                                        <div className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white rounded-full p-0.5 shadow-xs">
+                                          <Check className="w-3 h-3 stroke-[3]" />
+                                        </div>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div className="mt-3.5 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                              <span>* Shielded 4K 60Hz high-bandwidth transmission with gold connectors.</span>
+                              {selectedHdmi ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggle(selectedHdmi.id, selectedHdmi.title)}
+                                  className="text-red-600 hover:text-red-700 dark:text-red-400 font-bold underline cursor-pointer self-start sm:self-auto"
+                                >
+                                  Remove from quotation
+                                </button>
+                              ) : (
+                                <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                                  Tip: 3 Meter is the standard recommended length for wall-mounted TVs.
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Standard Cards Grid for Non-HDMI items or other categories */}
+                        {(!hasHdmiGroup ? items : nonHdmiItems).length > 0 && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+                            {(!hasHdmiGroup ? items : nonHdmiItems).map((acc) => {
+                              const selected = isAddonSelected(acc.id);
+                              const Icon = acc.icon;
+
+                              return (
+                                <div
+                                  key={acc.id}
+                                  onClick={() => handleToggle(acc.id, acc.title)}
+                                  className={`group cursor-pointer rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border transition-all duration-200 flex flex-col justify-between ${
+                                    selected
+                                      ? "bg-blue-50/60 dark:bg-blue-950/30 border-blue-500 ring-2 ring-blue-500/20 shadow-md"
+                                      : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50 shadow-xs hover:shadow-md"
+                                  }`}
+                                >
+                                  <div>
+                                    <div className="flex items-start justify-between gap-3 mb-3">
+                                      <div className={`p-2.5 rounded-xl ${selected ? "bg-blue-600 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors"}`}>
+                                        <Icon className="w-5 h-5" />
+                                      </div>
+                                      <div className="flex items-center gap-1.5">
+                                        {acc.tag && (
+                                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                                            {acc.tag}
+                                          </span>
+                                        )}
+                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${selected ? "bg-blue-600 text-white" : "border border-zinc-300 dark:border-zinc-700"}`}>
+                                          {selected && <Check className="w-3.5 h-3.5" />}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <h3 className={`font-bold text-sm sm:text-base leading-snug sm:leading-normal mb-1.5 transition-colors ${selected ? "text-blue-950 dark:text-blue-200" : "text-zinc-900 dark:text-white group-hover:text-blue-600"}`}>
+                                      {acc.title}
+                                    </h3>
+                                    <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 leading-snug sm:leading-relaxed mb-3 sm:mb-4">
+                                      {acc.description}
+                                    </p>
+                                  </div>
+
+                                  <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+                                    <div className="text-sm sm:text-base font-black text-zinc-900 dark:text-white">
+                                      +₹{acc.price.toLocaleString("en-IN")}
+                                      <span className="text-[10px] font-normal text-zinc-400 ml-1">+{t("wz_gst")}</span>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant={selected ? "destructive" : "outline"}
+                                      className={`rounded-full text-xs font-bold transition-all ${
+                                        selected
+                                          ? "bg-blue-600 hover:bg-red-600 text-white border-transparent"
+                                          : "border-zinc-300 dark:border-zinc-700 hover:border-blue-600 hover:text-blue-600"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleToggle(acc.id, acc.title);
+                                      }}
+                                    >
+                                      {selected ? "✓ Added" : "+ Add"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <Button
-                    size="sm"
-                    variant={selected ? "destructive" : "outline"}
-                    className={`rounded-full text-xs font-bold transition-all ${
-                      selected
-                        ? "bg-blue-600 hover:bg-red-600 text-white border-transparent"
-                        : "border-zinc-300 dark:border-zinc-700 hover:border-blue-600 hover:text-blue-600"
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggle(acc.id, acc.title);
-                    }}
-                  >
-                    {selected ? "✓ Added" : "+ Add"}
-                  </Button>
-                </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })()}

@@ -219,7 +219,11 @@
 - **Live Catalog Price Synchronization:** Updated `InstantQuotationReview.tsx` so add-on cards dynamically resolve prices directly from `products` collection (`products.find(p => p.id === acc.id || p.sku === acc.id)?.unit_price || fallbackPrice`). Card prices, BOM line item rates, and gross totals are guaranteed 100% synchronized.
 - **Smart Length Switching in Configurator:** Enhanced `toggleAddon` in `store/configurator.ts` to enforce mutual exclusivity across HDMI cable lengths. Selecting an HDMI length automatically switches out any previously selected length, preventing duplicate billing for single-recorder setups.
 - **Catalog Add-on Merging & Fallback Defense:** Dynamically merged all active catalog accessories from `products` and `addons` in `InstantQuotationReview.tsx`, and implemented `FALLBACK_CATALOG` in `lib/pricing-engine.ts:calculateAddons` ensuring offline/mock resilience.
-- **100% Verification:** Validated all 6 HDMI options with dedicated test suite (`scripts/test-hdmi-addons.ts`), 238-test matrix (`scripts/execute-all-238-tests.ts`), and 432-configuration matrix (`scripts/test-all-counts-matrix.ts`).
+### Milestone 24: Collapsible Category Accordion & Compact HDMI Length Selector
+- **70% Vertical Scroll Reduction:** Replaced the wall of 12+ open accessory cards with 5 sleek, modern collapsible category accordion bars (Safety Racks & Enclosures, TV & Security Displays, Internet & 4G Router, Wires & Cables, Maintenance & Warranty).
+- **At-a-Glance Active Selection State:** When collapsed, categories with selected accessories display a prominent status badge (`✓ Selected: [Item Title] (+₹Price)`) with a quick 1-click `✕` remove button right on the header without requiring expansion.
+- **Compact HDMI Cable Variant Selector:** In "Wires & Cables", consolidated 6 bulky cards into 1 unified 4K High-Speed HDMI Cable card featuring an interactive Length Pill Selector (`1.5M`, `3M`, `5M`, `10M`, `15M`, `20M`). Selecting any length pill triggers instantaneous quotation recalculation, active checkmark highlighting, and mutual exclusivity.
+- **Responsive & Accessible Ergonomics:** Keyboard navigation (Enter/Space to toggle), rotating chevron indicators, live real-time price reflection, and zero layout shift.
 
 ---
 
@@ -251,6 +255,7 @@
 | **Layer 22: Mixed Camera Sizing & Brand Matching Defense** | Live Quote Suite (`verify-quote-fixes.ts`) | `PASS` | 5-cam mixed setup (3 bullet + 2 dome) correctly selects 8Ch NVR, 1x 8-port PoE switch, ₹500 labor/cam, and clean ₹ currency symbol with 100% build pass. |
 | **Layer 23: All-Camera-Count Scaling & Industrial Boundary Matrix** | Matrix Suite (`test-all-counts-matrix.ts`) | `PASS` | 432/432 passed (100.0%). Every camera count 1 to 32 across HD, IP, and Wireless cleanly validates channel capacity, port scaling, and dynamic industrial routing with 0 errors. |
 | **Layer 24: HDMI Multi-Option & Catalog Pricing Synchronization** | HDMI Suite (`test-hdmi-addons.ts`) & Matrix | `PASS` | 100% pass across all 6 HDMI lengths (1.5m to 20m), mutual length switching in store, dynamic DB price resolution, and 0 TS errors. |
+| **Layer 25: Collapsible Category Accordion & Compact HDMI Selector UX** | TypeScript & Build Gates | `PASS` | 70% vertical scroll reduction, active status pills on collapsed rows, compact 6-length pill selector, 100% build pass. |
 
 ---
 
