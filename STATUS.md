@@ -272,10 +272,21 @@
   - Multi-stream recording multiplies daily gigabyte rates so MicroSD/HDD storage recommendations are never cut in half.
   - `lib/product-resolver.ts` and `lib/pricing-engine.ts` isolate indoor plastic PT cameras from outdoor weather requirements and cleanly match PT vs PTZ vs Multi-Lens.
 
-### Milestone 31: Pro Builder Wireless (Wi-Fi / 4G) Technology Integration
-- **3-Card Technology Architecture in Pro Builder:** Expanded Step 0 (`Choose Your Base Technology`) in `components/builder/ProBuilderClient.tsx` from 2 cards to 3 cards by adding **`Wireless (Wi-Fi / 4G)`** alongside `IP / Network System` and `HD / Coaxial System`.
-- **Zustand Cart Store Synchronization:** Updated `stores/useCartStore.ts` to support `technology: "HD" | "IP" | "Wireless" | null` and auto-set `Wireless` when wireless products are selected.
-- **Wireless Catalog Filtering:** Selecting Wireless automatically filters the catalog to show Wi-Fi cameras, 4G SIM cameras, MicroSD storage cards, 4G Wi-Fi routers, and wireless installation options.
+### Milestone 32: Hybrid CCTV Systems Architecture (Wired + Wireless in Single Quotation)
+- **Guided Setup & Pro Builder Hybrid Integration:**
+  - In Guided Setup Wizard (`WizardClientV2.tsx`), Step 0 explicitly highlights `+ Wi-Fi Support` on wired systems, allowing customers to add Wi-Fi cameras in Step 1 alongside indoor and outdoor wired cameras.
+  - In Pro Builder (`ProBuilderClient.tsx`), Step 1 features a dual sub-tab switcher: `[Wired {technology} Cameras]` vs `[+ Add Wireless / 4G]` with informative callouts explaining the benefits of wireless cameras for remote gates, terraces, or garden perimeter spots.
+- **Sizing NVR/DVR Strictly to Wired Cameras:**
+  - Implemented channel capacity checks that evaluate `wiredCamCount` rather than total camera count, recognizing that wireless cameras record to onboard MicroSD cards and stream over the network rather than consuming physical DVR/NVR BNC or PoE channels.
+- **Dual-Storage Co-Allocation (Surveillance HDD + Dedicated MicroSDs):**
+  - Pro Builder Step 3 features dual-storage guidance and sub-tab filters (`All Storage`, `Surveillance HDDs`, `MicroSD Cards`), allowing simultaneous allocation of a central Surveillance HDD (qty 1) and dedicated MicroSD cards (qty = `wirelessCamCount`).
+- **Zero-Transmission for Wireless Hardware:**
+  - Connectors (RJ45/BNC), cabling coils, and power devices (PoE/SMPS) size strictly to `wiredCamCount`, preventing unwarranted cabling and power costs for wireless cameras with local wall plug adapters.
+- **Independent Installation Labor Billing:**
+  - Hybrid quotations separate labor into `PRO_INSTALL_IP`/`PRO_INSTALL_HD` for wired cabling/mounting and `PRO_INSTALL_WIRELESS` (₹349) / `PRO_INSTALL_DIY` (₹0) for wireless fitting.
+- **Server Parity & Automated Verification:**
+  - Updated `app/api/quote/save/route.ts` to identify wireless cameras via both SKU and `technologies` array.
+  - Automated unit test suite (`scripts/test-wireless-storage-multiplication.ts`) verified with 25/25 passing tests (100% pass rate).
 
 ---
 
@@ -312,6 +323,7 @@
 | **Layer 27: Hardware Safety Cap & Speaker Toggle Verification** | Unit Suite & Type Engine | `PASS` | Strict capping at camera max supported capacity (`max_sd_capacity_gb || 128`), auto-tagging `speaker`/`2-way`/`audio`, 0 TS errors. |
 | **Layer 28: Mega Compu World CP Plus Catalog Ingestion** | Database Sync Scripts | `PASS` | All 6 CP Plus cameras verified in Firestore with genuine technical specs, prices, and capabilities. |
 | **Layer 29: Pro Builder Wireless Journey & Zero-Trust Pricing** | Pro Builder Suite (`test-pro-builder-wireless-journey.ts`) | `PASS` | 3-card technology selection, dynamic stepper badges, MicroSD storage prioritization, zero-connector/cable/power skip cards, Wireless Pro install (₹349) vs DIY (₹0), 0 TS errors, 100% build pass. |
+| **Layer 30: Hybrid CCTV System Architecture & Server-Side Parity** | Hybrid Test Suite (`test-wireless-storage-multiplication.ts`) | `PASS` | 25/25 passed (100%). Sizing NVR/DVR to wiredCamCount, dual storage co-allocation (HDD + MicroSDs), zero transmission/cables/connectors for wireless cams, distinct wired vs wireless labor lines, 0 TS errors, 100% build pass. |
 
 ---
 

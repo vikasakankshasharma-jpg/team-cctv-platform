@@ -91,6 +91,24 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   );
 };
 
+const isWirelessItem = (item: any) => {
+  const techs = Array.isArray(item.technologies) ? item.technologies : [];
+  const idStr = (item.id || item.product_id || item.sku || "").toLowerCase();
+  const nameStr = (item.display_name || item.name || "").toLowerCase();
+  return (
+    techs.includes("Wireless") ||
+    techs.includes("WiFi") ||
+    techs.includes("4G") ||
+    item.type === "wireless" ||
+    idStr.includes("wifi") ||
+    idStr.includes("wireless") ||
+    idStr.includes("4g") ||
+    nameStr.includes("wi-fi") ||
+    nameStr.includes("wifi") ||
+    nameStr.includes("4g")
+  );
+};
+
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
@@ -140,6 +158,30 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
   const [filterCableType, setFilterCableType] = useState("all"); // "all" | "CAT6" | "3+1" | "HDMI"
   const [showOptionalNVRs, setShowOptionalNVRs] = useState(false);
 
+  // Hybrid setup sub-tabs
+  const [cameraSubTab, setCameraSubTab] = useState<"wired" | "wireless">("wired");
+  const [storageSubTab, setStorageSubTab] = useState<"all" | "hdd" | "sd">("all");
+
+  const wiredCamCount = useMemo(() => {
+    return items.reduce((count, item) => {
+      if (item.category === "camera" || item.category === "cctv_camera") {
+        if (!isWirelessItem(item)) return count + item.qty;
+      }
+      return count;
+    }, 0);
+  }, [items]);
+
+  const wirelessCamCount = useMemo(() => {
+    return items.reduce((count, item) => {
+      if (item.category === "camera" || item.category === "cctv_camera") {
+        if (isWirelessItem(item)) return count + item.qty;
+      }
+      return count;
+    }, 0);
+  }, [items]);
+
+  const isHybrid = wiredCamCount > 0 && wirelessCamCount > 0;
+
   const STEPS = useMemo(() => {
     if (technology === "Wireless") {
       return [
@@ -156,16 +198,16 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     }
     return [
       { id: "technology", label: "Technology" },
-      { id: "camera", label: "Cameras" },
+      { id: "camera", label: "Cameras", badge: wirelessCamCount > 0 ? "Hybrid" : undefined },
       { id: "recorder", label: "Recorders" },
-      { id: "storage", label: "Storage" },
+      { id: "storage", label: "Storage", badge: wirelessCamCount > 0 ? "HDD + SD" : undefined },
       { id: "connector", label: "Connectors" },
       { id: "cable", label: "Cables" },
       { id: "power", label: "Power Device" },
       { id: "upgrades", label: "Optional Upgrades" },
-      { id: "installation", label: "Installation" }
+      { id: "installation", label: "Installation", badge: wirelessCamCount > 0 ? "Wired+WiFi" : undefined }
     ];
-  }, [technology]);
+  }, [technology, wirelessCamCount]);
 
   const activeCategory = STEPS[activeStepIndex]?.id || "technology";
 
@@ -384,12 +426,32 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
         if (!showOptionalNVRs) return false;
         return p.technologies?.includes("IP") || p.technologies?.includes("Common");
       }
+      // When browsing cameras in a wired build, let user toggle between wired & wireless add-on cameras
+      if (activeCategory === "camera" && (technology === "IP" || technology === "HD")) {
+        if (cameraSubTab === "wireless") {
+          return p.technologies?.includes("Wireless") || p.isWifi || p.is4G;
+        }
+        return p.technologies?.includes(technology) || p.technologies?.includes("Common");
+      }
+      // When in storage and there are wireless cameras in a wired setup, show both HDD and MicroSD
+      if (activeCategory === "storage" && wirelessCamCount > 0) {
+        const isSd = p.storage_type === "Micro SD" || (p.display_name || "").toLowerCase().includes("sd");
+        if (storageSubTab === "hdd" && isSd) return false;
+        if (storageSubTab === "sd" && !isSd) return false;
+        if (isSd) return true;
+      }
+      // When in installation and there are wireless cameras in a wired setup, show both wired and wireless install
+      if (activeCategory === "installation" && wirelessCamCount > 0) {
+        if (p.id === "PRO_INSTALL_WIRELESS" || p.id === "PRO_INSTALL_DIY" || p.technologies?.includes("Wireless")) {
+          return true;
+        }
+      }
       if (technology && p.technologies && !p.technologies.includes("Common")) {
         if (!p.technologies.includes(technology)) return false;
       }
       return true;
     });
-  }, [products, activeCategory, technology, showOptionalNVRs]);
+  }, [products, activeCategory, technology, showOptionalNVRs, cameraSubTab, wirelessCamCount, storageSubTab]);
 
   // Available filter options for active category
   const filterOptions = useMemo(() => {
@@ -460,15 +522,25 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
       result = [...result].sort((a, b) => (a.display_name || "").localeCompare(b.display_name || ""));
     }
 
-    // Prioritize MicroSD cards at the top for Wireless storage
-    if (activeCategory === "storage" && technology === "Wireless") {
-      result = [...result].sort((a, b) => {
-        const aIsSd = (a.storage_type === "Micro SD" || (a.display_name || "").toLowerCase().includes("sd"));
-        const bIsSd = (b.storage_type === "Micro SD" || (b.display_name || "").toLowerCase().includes("sd"));
-        if (aIsSd && !bIsSd) return -1;
-        if (!aIsSd && bIsSd) return 1;
-        return 0;
-      });
+    // Prioritize MicroSD cards for Wireless storage; Group HDDs first then MicroSD for Hybrid
+    if (activeCategory === "storage") {
+      if (technology === "Wireless") {
+        result = [...result].sort((a, b) => {
+          const aIsSd = (a.storage_type === "Micro SD" || (a.display_name || "").toLowerCase().includes("sd"));
+          const bIsSd = (b.storage_type === "Micro SD" || (b.display_name || "").toLowerCase().includes("sd"));
+          if (aIsSd && !bIsSd) return -1;
+          if (!aIsSd && bIsSd) return 1;
+          return 0;
+        });
+      } else if (wirelessCamCount > 0) {
+        result = [...result].sort((a, b) => {
+          const aIsSd = (a.storage_type === "Micro SD" || (a.display_name || "").toLowerCase().includes("sd"));
+          const bIsSd = (b.storage_type === "Micro SD" || (b.display_name || "").toLowerCase().includes("sd"));
+          if (!aIsSd && bIsSd) return -1;
+          if (aIsSd && !bIsSd) return 1;
+          return 0;
+        });
+      }
     }
 
     return result;
@@ -505,7 +577,17 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
       const camCount = getCameraCount();
       const quoteItems = items.map(i => {
         let finalQty = i.qty;
-        if (i.unit_multiplier === "camera_count") finalQty = camCount;
+        if (i.unit_multiplier === "camera_count") {
+          if (i.id === "PRO_INSTALL_HD" || i.id === "PRO_INSTALL_IP") {
+            finalQty = wiredCamCount > 0 ? wiredCamCount : camCount;
+          } else if (i.id === "PRO_INSTALL_WIRELESS" || i.id === "labor_wireless_pro_fitting") {
+            finalQty = wirelessCamCount > 0 ? wirelessCamCount : camCount;
+          } else if (i.id === "PRO_INSTALL_DIY") {
+            finalQty = 1;
+          } else {
+            finalQty = camCount;
+          }
+        }
         return {
           product_id: i.id,
           display_name: i.display_name,
@@ -527,8 +609,11 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
           requirementSnapshot: {
             installation_type: "new",
             camera_count: camCount,
+            wired_camera_count: wiredCamCount,
+            wifi_camera_count: wirelessCamCount,
             technology_preference: technology || "IP",
             is_pro_builder: true,
+            is_hybrid: isHybrid,
             customer_pincode: checkoutPincode,
             quadrant: checkoutQuadrant,
             lat: checkoutCoords.lat,
@@ -568,15 +653,20 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
     }, 0);
   }, [items, products]);
 
-  const isOverCapacity = camCount > channelCapacity && channelCapacity > 0;
+  const effectiveRecorderCams = wiredCamCount > 0 ? wiredCamCount : camCount;
+  const isOverCapacity = effectiveRecorderCams > channelCapacity && channelCapacity > 0;
 
   const hasCameras = camCount > 0;
   const hasRecorder = items.some(i => i.category === "recorder" || i.category === "cctv_recorder");
-  const hasStorage = items.some(i => i.category === "storage" || i.category === "hdd");
+  const hasHddStorage = items.some(i => (i.category === "storage" || i.category === "hdd") && !(i.display_name || "").toLowerCase().includes("sd"));
+  const hasSdStorage = items.some(i => (i.category === "storage" || i.category === "hdd") && (i.display_name || "").toLowerCase().includes("sd"));
   const hasCables = items.some(i => i.category === "cable");
+
   const canAutoComplete = technology === "Wireless"
-    ? (hasCameras && !hasStorage)
-    : (hasCameras && hasRecorder && (!hasStorage || !hasCables));
+    ? (hasCameras && !hasSdStorage)
+    : isHybrid
+      ? (hasCameras && hasRecorder && (!hasHddStorage || !hasSdStorage || !hasCables))
+      : (hasCameras && hasRecorder && (!hasHddStorage || !hasCables));
 
   const handleAutoCompleteSetup = () => {
     if (!hasCameras) return;
@@ -584,7 +674,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
 
     if (tech === "Wireless") {
       // 1. Storage: 128GB MicroSD Card (1 per camera)
-      if (!hasStorage) {
+      if (!hasSdStorage) {
         const sdCard = products.find(p => 
           p.normCat === "storage" && 
           (p.technologies?.includes("Wireless") || p.technologies?.includes("Common")) &&
@@ -609,30 +699,40 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
       return;
     }
 
-    if (!hasRecorder) return;
+    if (!hasRecorder && wiredCamCount > 0) return;
 
-    // 1. Storage (HDD)
-    if (!hasStorage) {
-      const targetCap = camCount <= 4 ? "1TB" : (camCount <= 8 ? "2TB" : "4TB");
-      const hdd = products.find(p => p.normCat === "storage" && p.derivedCapacity === targetCap) ||
-                  products.find(p => p.normCat === "storage");
+    // 1. Storage: Central HDD (for wired cameras)
+    if (!hasHddStorage && wiredCamCount > 0) {
+      const targetCap = wiredCamCount <= 4 ? "1TB" : (wiredCamCount <= 8 ? "2TB" : "4TB");
+      const hdd = products.find(p => p.normCat === "storage" && !(p.display_name || "").toLowerCase().includes("sd") && p.derivedCapacity === targetCap) ||
+                  products.find(p => p.normCat === "storage" && !(p.display_name || "").toLowerCase().includes("sd"));
       if (hdd) addItem(hdd, 1);
     }
 
-    // 2. Cables
-    if (!hasCables) {
+    // 2. Storage: MicroSD Cards (for wireless cameras in hybrid setup)
+    if (!hasSdStorage && wirelessCamCount > 0) {
+      const sdCard = products.find(p => 
+        p.normCat === "storage" && 
+        (p.technologies?.includes("Wireless") || p.technologies?.includes("Common")) &&
+        (p.derivedCapacity === "128GB" || (p.display_name || "").toLowerCase().includes("128gb"))
+      ) || products.find(p => p.normCat === "storage" && (p.technologies?.includes("Wireless") || p.technologies?.includes("Common")));
+      if (sdCard) addItem(sdCard, wirelessCamCount);
+    }
+
+    // 3. Cables (for wired cameras)
+    if (!hasCables && wiredCamCount > 0) {
       const cable = products.find(p => p.normCat === "cable" && (p.technologies?.includes(tech) || p.technologies?.includes("Common")));
       if (cable) {
-        const cableQty = Math.max(1, Math.ceil(camCount / 4));
+        const cableQty = Math.max(1, Math.ceil(wiredCamCount / 4));
         addItem(cable, cableQty);
       }
     }
 
-    // 3. Power device / Switch
+    // 4. Power device / Switch (for wired cameras)
     const hasPower = items.some(i => i.category === "power" || i.category === "network" || i.category === "power_device");
-    if (!hasPower) {
+    if (!hasPower && wiredCamCount > 0) {
       if (tech === "IP") {
-        const poe = products.find(p => p.normCat === "power" && p.derivedChannels && p.derivedChannels >= camCount) ||
+        const poe = products.find(p => p.normCat === "power" && p.derivedChannels && p.derivedChannels >= wiredCamCount) ||
                     products.find(p => p.normCat === "power" && p.technologies?.includes("IP"));
         if (poe) addItem(poe, 1);
       } else {
@@ -642,32 +742,41 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
       }
     }
 
-    // 4. Connectors
+    // 5. Connectors (for wired cameras)
     const hasConnectors = items.some(i => (i.id || "").toLowerCase().includes("conn"));
-    if (!hasConnectors) {
+    if (!hasConnectors && wiredCamCount > 0) {
       if (tech === "IP") {
         const rj45 = products.find(p => (p.sku || "").includes("RJ45") || (p.display_name || "").includes("RJ45"));
-        if (rj45) addItem(rj45, camCount * 2);
+        if (rj45) addItem(rj45, (wiredCamCount * 2) + 2);
       } else {
         const bnc = products.find(p => (p.sku || "").includes("BNC") || (p.display_name || "").includes("BNC"));
         const dc = products.find(p => (p.sku || "").includes("DC") || (p.display_name || "").includes("DC"));
-        if (bnc) addItem(bnc, camCount * 2);
-        if (dc) addItem(dc, camCount);
+        if (bnc) addItem(bnc, wiredCamCount * 2);
+        if (dc) addItem(dc, wiredCamCount);
       }
     }
 
-    // 5. Junction boxes
+    // 6. Junction boxes (for all cameras)
     const hasJunction = items.some(i => (i.display_name || "").toLowerCase().includes("junction") || (i.id || "").toLowerCase().includes("junction"));
     if (!hasJunction) {
       const junc = products.find(p => (p.sku || "").includes("JUNCTION") || (p.display_name || "").toLowerCase().includes("junction"));
       if (junc) addItem(junc, camCount);
     }
 
-    // 6. Installation
-    const hasInstall = items.some(i => i.category === "installation");
-    if (!hasInstall) {
-      const install = products.find(p => p.category === "installation" && (p.technologies?.includes(tech) || p.technologies?.includes("Common")));
-      if (install) addItem(install, 1);
+    // 7. Installation (Wired + Wireless)
+    if (wiredCamCount > 0) {
+      const hasWiredInstall = items.some(i => i.id === "PRO_INSTALL_HD" || i.id === "PRO_INSTALL_IP");
+      if (!hasWiredInstall) {
+        const wiredInstall = products.find(p => p.id === (tech === "IP" ? "PRO_INSTALL_IP" : "PRO_INSTALL_HD"));
+        if (wiredInstall) addItem(wiredInstall, wiredCamCount);
+      }
+    }
+    if (wirelessCamCount > 0) {
+      const hasWirelessInstall = items.some(i => i.id === "PRO_INSTALL_WIRELESS" || i.id === "PRO_INSTALL_DIY");
+      if (!hasWirelessInstall) {
+        const wirelessInstall = products.find(p => p.id === "PRO_INSTALL_WIRELESS");
+        if (wirelessInstall) addItem(wirelessInstall, wirelessCamCount);
+      }
     }
   };
 
@@ -956,11 +1065,15 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 <div className="flex items-center gap-1.5 font-black text-[11px] uppercase tracking-wider bg-white/20 text-white w-fit px-2.5 py-0.5 rounded-full">
                   <Sparkles className="w-3.5 h-3.5 text-yellow-300" /> Smart Setup Assistant
                 </div>
-                <h3 className="text-base sm:text-lg font-black">Complete your {camCount}-Camera {technology} setup in 1-Click?</h3>
+                <h3 className="text-base sm:text-lg font-black">
+                  Complete your {camCount}-Camera {isHybrid ? `Hybrid (${technology} + Wireless)` : technology} setup in 1-Click?
+                </h3>
                 <p className="text-xs text-blue-100 max-w-xl">
                   {technology === "Wireless"
                     ? "Instantly bundles high-endurance 128GB MicroSD cards for all cameras, weatherproof junction boxes, and Professional Wireless Fitting & App Setup."
-                    : `Instantly bundles the best matching Surveillance HDD, ${technology === "IP" ? "CAT6 Network Cables, PoE Switch" : "3+1 Cables, SMPS Power Supply"}, connectors, junction boxes, and professional installation.`
+                    : isHybrid
+                      ? `Instantly bundles Surveillance HDD for your ${wiredCamCount} wired camera(s), 128GB MicroSD cards for your ${wirelessCamCount} wireless camera(s), ${technology === "IP" ? "CAT6 Cables, PoE Switch, RJ45s" : "3+1 Cables, SMPS Power, BNCs"}, junction boxes, and installation for both.`
+                      : `Instantly bundles the best matching Surveillance HDD, ${technology === "IP" ? "CAT6 Network Cables, PoE Switch" : "3+1 Cables, SMPS Power Supply"}, connectors, junction boxes, and professional installation.`
                   }
                 </p>
               </div>
@@ -1029,6 +1142,9 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-blue-600" /> Uses NVRs (Network Video Recorders)</div>
                     <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-blue-600" /> Up to 4K / 8MP+ Resolution</div>
                     <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-blue-600" /> PoE (Power over Ethernet)</div>
+                    <div className="flex items-center gap-2 text-xs font-bold text-indigo-700 bg-indigo-50 p-2 rounded-xl border border-indigo-100 mt-2">
+                      <Wifi className="w-4 h-4 text-indigo-600 shrink-0" /> Option to add Wi-Fi / 4G cameras in next step
+                    </div>
                   </div>
                 </button>
 
@@ -1045,6 +1161,9 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-amber-600" /> Uses DVRs (Digital Video Recorders)</div>
                     <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-amber-600" /> 2MP to 5MP Resolution</div>
                     <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-amber-600" /> Coaxial (3+1) Cable</div>
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-800 bg-amber-50 p-2 rounded-xl border border-amber-200 mt-2">
+                      <Wifi className="w-4 h-4 text-amber-600 shrink-0" /> Option to add Wi-Fi / 4G cameras in next step
+                    </div>
                   </div>
                 </button>
 
@@ -1061,12 +1180,163 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600" /> Dedicated MicroSD Storage</div>
                     <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600" /> Standalone App or NVR Compatible</div>
                     <div className="flex items-center gap-2 text-sm text-slate-700"><Lock className="w-4 h-4 text-purple-600" /> Wi-Fi / 4G SIM Connectivity</div>
+                    <div className="flex items-center gap-2 text-xs font-bold text-purple-800 bg-purple-50 p-2 rounded-xl border border-purple-200 mt-2">
+                      <Sparkles className="w-4 h-4 text-purple-600 shrink-0" /> Optional NVR pairing supported
+                    </div>
                   </div>
                 </button>
               </div>
             </div>
           ) : (
             <>
+              {/* Hybrid Setup: Cameras Sub-Tabs */}
+              {activeCategory === "camera" && (technology === "IP" || technology === "HD") && (
+                <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 text-white shadow-lg border border-indigo-800/40 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 px-2 py-0.5 rounded-full">
+                          System Architecture
+                        </span>
+                        {wirelessCamCount > 0 && (
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-emerald-400" /> Hybrid Setup Active
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-base sm:text-lg font-black mt-1">Select Cameras for Your Build</h3>
+                      <p className="text-xs text-indigo-200/80">Mix wired {technology} cameras with standalone Wi-Fi / 4G cameras for complete coverage.</p>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-white/10 p-1.5 rounded-xl border border-white/15">
+                      <button
+                        onClick={() => { setCameraSubTab("wired"); setFilterConnection("all"); }}
+                        className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
+                          cameraSubTab === "wired"
+                            ? "bg-white text-slate-900 shadow-md"
+                            : "text-white/80 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        <Lock className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Wired {technology} Cameras</span>
+                        {wiredCamCount > 0 && (
+                          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                            cameraSubTab === "wired" ? "bg-blue-600 text-white" : "bg-white/20 text-white"
+                          }`}>
+                            {wiredCamCount}
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => { setCameraSubTab("wireless"); setFilterConnection("all"); }}
+                        className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
+                          cameraSubTab === "wireless"
+                            ? "bg-purple-600 text-white shadow-md shadow-purple-500/30"
+                            : "text-white/80 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        <Wifi className="w-3.5 h-3.5 text-purple-300" />
+                        <span>+ Add Wireless / 4G</span>
+                        {wirelessCamCount > 0 && (
+                          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-white text-purple-900">
+                            {wirelessCamCount}
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {cameraSubTab === "wireless" && (
+                    <div className="bg-purple-950/60 border border-purple-400/30 rounded-xl p-3 text-xs text-purple-200 flex items-start gap-2.5 animate-in fade-in">
+                      <Sparkles className="w-4 h-4 text-purple-300 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold text-white">Why add wireless cameras to a wired setup? </span>
+                        Ideal for spots where running physical cables through walls or driveways is hard (e.g. detached gate, terrace, garden, or baby room). Wireless cameras record locally onto MicroSD cards and stream live to your phone app without consuming wired ports on your {technology} recorder.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Hybrid Step Banners */}
+              {activeCategory === "storage" && isHybrid && (
+                <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-indigo-700">
+                      <Sparkles className="w-4 h-4 text-indigo-600" /> Hybrid Storage Plan Active
+                    </div>
+                    <p className="text-xs text-slate-700 max-w-2xl">
+                      Your build contains <strong>{wiredCamCount} wired camera(s)</strong> (record to central Surveillance HDD in recorder) and <strong>{wirelessCamCount} wireless camera(s)</strong> (record to dedicated MicroSD cards). Please ensure both storage types are selected below.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-indigo-200 shrink-0">
+                    <button
+                      onClick={() => setStorageSubTab("all")}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${storageSubTab === "all" ? "bg-indigo-600 text-white" : "text-slate-600 hover:text-slate-900"}`}
+                    >
+                      All Storage
+                    </button>
+                    <button
+                      onClick={() => setStorageSubTab("hdd")}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${storageSubTab === "hdd" ? "bg-indigo-600 text-white" : "text-slate-600 hover:text-slate-900"}`}
+                    >
+                      Surveillance HDDs ({wiredCamCount} Wired)
+                    </button>
+                    <button
+                      onClick={() => setStorageSubTab("sd")}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${storageSubTab === "sd" ? "bg-indigo-600 text-white" : "text-slate-600 hover:text-slate-900"}`}
+                    >
+                      MicroSD Cards ({wirelessCamCount} Wireless)
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeCategory === "connector" && isHybrid && (
+                <div className="bg-blue-50 rounded-2xl p-3.5 border border-blue-200 shadow-sm flex items-start gap-2.5 text-xs text-blue-900">
+                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Hybrid Connector Sizing: </span>
+                    Recommended quantities below are calculated for your <strong>{wiredCamCount} wired camera(s)</strong> only. Wireless cameras do not require video cable connectors.
+                  </div>
+                </div>
+              )}
+
+              {activeCategory === "cable" && isHybrid && (
+                <div className="bg-blue-50 rounded-2xl p-3.5 border border-blue-200 shadow-sm flex items-start gap-2.5 text-xs text-blue-900">
+                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Hybrid Cabling Sizing: </span>
+                    Cable bundles below cover your <strong>{wiredCamCount} wired camera(s)</strong>. Your <strong>{wirelessCamCount} wireless camera(s)</strong> transmit video over Wi-Fi / 4G and need no video cables.
+                  </div>
+                </div>
+              )}
+
+              {activeCategory === "power" && isHybrid && (
+                <div className="bg-blue-50 rounded-2xl p-3.5 border border-blue-200 shadow-sm flex items-start gap-2.5 text-xs text-blue-900">
+                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Hybrid Power Sizing: </span>
+                    Power supplies below are sized for your <strong>{wiredCamCount} wired camera(s)</strong>. Your <strong>{wirelessCamCount} wireless camera(s)</strong> come with their individual certified power adapters included in the box.
+                  </div>
+                </div>
+              )}
+
+              {activeCategory === "installation" && isHybrid && (
+                <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-200 shadow-sm flex items-start gap-3 text-xs sm:text-sm">
+                  <Sparkles className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <div className="font-black text-slate-900">
+                      Hybrid Installation Available
+                    </div>
+                    <p className="text-slate-600 text-xs">
+                      Select <strong>{technology} Standard Installation</strong> for your {wiredCamCount} wired cameras (includes cabling, conduit fitting, camera mounting & recorder setup), and <strong>Smart Wi-Fi Camera Wall Mounting & App Pairing</strong> for your {wirelessCamCount} wireless camera(s).
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Search, Sort & Dynamic Filter Toolbar */}
               <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3">
                 {/* Search Input */}
@@ -1093,7 +1363,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 {/* Dynamic Contextual Filter & Sort Dropdowns */}
                 <div className="pt-2.5 border-t border-slate-100 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
                   {/* Camera Connection (Wireless Wi-Fi vs 4G) */}
-                  {activeCategory === "camera" && technology === "Wireless" && (filterOptions.has4G || filterOptions.hasWifi) && (
+                  {activeCategory === "camera" && (technology === "Wireless" || cameraSubTab === "wireless") && (filterOptions.has4G || filterOptions.hasWifi) && (
                     <FilterSelect
                       value={filterConnection}
                       onChange={setFilterConnection}
@@ -1332,32 +1602,36 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                 {filteredProducts.map(p => {
                   const inCart = items.find(i => i.id === p.id);
                   
+                  const isSdProduct = p.storage_type === "Micro SD" || (p.display_name || "").toLowerCase().includes("sd");
+                  const effectiveWiredCams = wiredCamCount > 0 ? wiredCamCount : camCount;
+                  const effectiveWirelessCams = wirelessCamCount > 0 ? wirelessCamCount : camCount;
+
                   // Smart recommendation for storage based on camCount
                   const isRecommendedStorage = 
                     activeCategory === "storage" && 
                     camCount > 0 && (
-                      technology === "Wireless"
+                      isSdProduct
                         ? (p.derivedCapacity === "128GB" || (p.display_name || "").toLowerCase().includes("128gb"))
                         : (
-                            (camCount <= 4 && (p.derivedCapacity === "1TB" || p.derivedCapacity === "2TB")) ||
-                            (camCount > 4 && camCount <= 8 && (p.derivedCapacity === "2TB" || p.derivedCapacity === "4TB")) ||
-                            (camCount > 8 && (p.derivedCapacity === "4TB" || p.derivedCapacity === "8TB"))
+                            (effectiveWiredCams <= 4 && (p.derivedCapacity === "1TB" || p.derivedCapacity === "2TB")) ||
+                            (effectiveWiredCams > 4 && effectiveWiredCams <= 8 && (p.derivedCapacity === "2TB" || p.derivedCapacity === "4TB")) ||
+                            (effectiveWiredCams > 8 && (p.derivedCapacity === "4TB" || p.derivedCapacity === "8TB"))
                           )
                     );
 
                   // Smart fit for recorder
                   const isRecommendedRecorder = 
                     activeCategory === "recorder" && 
-                    camCount > 0 && 
+                    effectiveWiredCams > 0 && 
                     p.derivedChannels && 
-                    p.derivedChannels >= camCount && 
-                    p.derivedChannels <= camCount * 2;
+                    p.derivedChannels >= effectiveWiredCams && 
+                    p.derivedChannels <= effectiveWiredCams * 2;
 
                   const isUnderCapacityRecorder = 
                     activeCategory === "recorder" && 
-                    camCount > 0 && 
+                    effectiveWiredCams > 0 && 
                     p.derivedChannels && 
-                    p.derivedChannels < camCount;
+                    p.derivedChannels < effectiveWiredCams;
 
                   let autoQty = 0;
                   let autoQtyLabel = "";
@@ -1365,41 +1639,52 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     const name = (p.display_name || p.sku || "").toUpperCase();
                     if (activeCategory === "connector") {
                       if (name.includes("BNC") && name.includes("DC")) {
-                         autoQty = camCount;
-                         autoQtyLabel = `${camCount} pairs (1 per camera)`;
+                         autoQty = effectiveWiredCams;
+                         autoQtyLabel = `${effectiveWiredCams} pairs (1 per wired camera)`;
                       } else if (name.includes("RJ45")) {
-                         autoQty = (camCount * 2) + 2;
-                         autoQtyLabel = `${autoQty} units (2/cam + 2 uplink)`;
+                         autoQty = (effectiveWiredCams * 2) + 2;
+                         autoQtyLabel = `${autoQty} units (2/wired cam + 2 uplink)`;
                       } else if (name.includes("BNC")) {
-                         autoQty = camCount * 2;
-                         autoQtyLabel = `${camCount} units (2 per camera)`;
+                         autoQty = effectiveWiredCams * 2;
+                         autoQtyLabel = `${effectiveWiredCams * 2} units (2 per wired camera)`;
                       } else if (name.includes("DC")) {
-                         autoQty = camCount;
-                         autoQtyLabel = `${camCount} units (1 per camera)`;
+                         autoQty = effectiveWiredCams;
+                         autoQtyLabel = `${effectiveWiredCams} units (1 per wired camera)`;
                       } else {
-                         autoQty = camCount * 2;
-                         autoQtyLabel = `${camCount} units (2 per camera)`;
+                         autoQty = effectiveWiredCams * 2;
+                         autoQtyLabel = `${effectiveWiredCams * 2} units (2 per wired camera)`;
                       }
+                    } else if (activeCategory === "cable") {
+                      autoQty = Math.max(1, Math.ceil(effectiveWiredCams / 4));
+                      autoQtyLabel = `${autoQty} coil${autoQty > 1 ? 's' : ''} (covers ~${effectiveWiredCams * 15}m)`;
                     } else if (activeCategory === "upgrades" && (p.category === "camera_mount" || name.includes("JUNCTION") || name.includes("MOUNT"))) {
                       autoQty = camCount;
                       autoQtyLabel = `${camCount} units (1 per camera)`;
                     } else if (p.id === "PRO_INSTALL_DIY") {
                       autoQty = 1;
                       autoQtyLabel = "Free Self-Setup";
+                    } else if (p.id === "PRO_INSTALL_HD" || p.id === "PRO_INSTALL_IP") {
+                      autoQty = effectiveWiredCams;
+                      autoQtyLabel = `${effectiveWiredCams} units (for wired cameras)`;
+                    } else if (p.id === "PRO_INSTALL_WIRELESS" || p.id === "labor_wireless_pro_fitting") {
+                      autoQty = effectiveWirelessCams;
+                      autoQtyLabel = `${effectiveWirelessCams} units (for wireless cameras)`;
                     } else if (activeCategory === "installation" || p.category === "installation" || p.unit_multiplier === "camera_count") {
                       autoQty = camCount;
                       autoQtyLabel = `${camCount} units (1 per camera)`;
                     } else if (activeCategory === "power" || p.category === "power_device" || p.category === "power") {
                       const maxCams = p.max_cameras || p.channels || 0;
-                      if (maxCams > 0 && maxCams < camCount) {
-                        autoQty = Math.ceil(camCount / maxCams);
-                        autoQtyLabel = `${autoQty} units (to power ${camCount} cams)`;
+                      if (maxCams > 0) {
+                        autoQty = Math.max(1, Math.ceil(effectiveWiredCams / maxCams));
+                        autoQtyLabel = `${autoQty} unit${autoQty > 1 ? 's' : ''} (to power ${effectiveWiredCams} wired cams)`;
                       }
                     } else if (activeCategory === "storage" || p.category === "storage") {
-                      const nameStr = (p.display_name || "").toLowerCase();
-                      if (p.storage_type === "Micro SD" || nameStr.includes("sd card") || nameStr.includes("micro sd") || nameStr.includes("memory card")) {
-                        autoQty = camCount;
-                        autoQtyLabel = `${camCount} units (1 per camera)`;
+                      if (isSdProduct) {
+                        autoQty = effectiveWirelessCams;
+                        autoQtyLabel = `${effectiveWirelessCams} units (1 per ${wirelessCamCount > 0 ? 'wireless ' : ''}camera)`;
+                      } else {
+                        autoQty = 1;
+                        autoQtyLabel = "1 unit (for central recorder)";
                       }
                     }
                   }
@@ -1488,17 +1773,17 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                         {/* Recommendation Badges */}
                         {isRecommendedStorage && (
                           <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-emerald-600 shrink-0" /> {technology === "Wireless" ? "Recommended: 128GB (~15-20 days backup)" : "Recommended (~15-30 days backup)"}
+                            <Sparkles className="w-3 h-3 text-emerald-600 shrink-0" /> {isSdProduct ? "Recommended MicroSD: 128GB (~15-20 days backup)" : `Recommended HDD for ${effectiveWiredCams} wired cams (~15-30 days backup)`}
                           </div>
                         )}
                         {isRecommendedRecorder && (
                           <div className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-blue-600 shrink-0" /> Best fit for {camCount} cameras
+                            <Sparkles className="w-3 h-3 text-blue-600 shrink-0" /> Best fit for {effectiveWiredCams} wired cameras
                           </div>
                         )}
                         {isUnderCapacityRecorder && (
                           <div className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md flex items-start gap-1">
-                            <span className="shrink-0 mt-0.5">⚠️</span> <span>Under capacity for {camCount} cameras. You will need multiple units.</span>
+                            <span className="shrink-0 mt-0.5">⚠️</span> <span>Under capacity for {effectiveWiredCams} wired cameras. You will need multiple units.</span>
                           </div>
                         )}
 
@@ -1683,7 +1968,7 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
           {isOverCapacity && (
             <div className="mt-4 bg-yellow-50 border border-yellow-200 p-3 rounded-xl flex gap-3 text-yellow-800 text-sm font-medium">
               <AlertTriangle className="w-5 h-5 shrink-0 text-yellow-600" />
-              You have {camCount} cameras but only {channelCapacity} recorder channels. Please add a larger recorder!
+              You have {effectiveRecorderCams} wired cameras but only {channelCapacity} recorder channels. Please add a larger recorder!
             </div>
           )}
           {canAutoComplete && (
@@ -1715,7 +2000,13 @@ const QtyInput = ({ qty, onUpdate, className = "" }: { qty: number, onUpdate: (q
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-slate-500">INR {item.unit_price.toLocaleString('en-IN')} × {effQty}</span>
                       {item.unit_multiplier === "camera_count" && (
-                        <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 rounded font-bold">Auto (Per Cam)</span>
+                        <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 rounded font-bold">
+                          {item.id === "PRO_INSTALL_HD" || item.id === "PRO_INSTALL_IP"
+                            ? `Auto (${wiredCamCount} Wired)`
+                            : item.id === "PRO_INSTALL_WIRELESS"
+                              ? `Auto (${wirelessCamCount} Wireless)`
+                              : "Auto (Per Cam)"}
+                        </span>
                       )}
                     </div>
                   </div>

@@ -439,3 +439,41 @@ The platform enforces clean, industry-standard camera form factors:
 - **Storage Multiplier (`recording_streams_count`):**
   - Cameras recording multiple simultaneous 24/7 video streams multiply daily gigabyte storage requirements by the number of active recording streams.
 
+---
+
+## 12. Hybrid CCTV Architectures (Wired + Wireless in Single Quotation)
+
+### 12.1 Definition & Commercial Rationale
+A **Hybrid CCTV System** combines a central wired CCTV setup (Analog HD with DVR or Network IP with NVR) with standalone wireless Wi-Fi or 4G cameras within a single quotation, invoice, and bill of materials. This is purpose-designed for customer properties where detached gates, perimeter boundary walls, terrace gardens, remote outbuildings, or finished interior spaces make central video cabling impractical, unsightly, or cost-prohibitive.
+
+### 12.2 Recorder (DVR/NVR) Capacity Sizing Invariant
+- **Local Recording Independence:** Wireless cameras record locally to onboard MicroSD cards and stream directly via mobile apps (e.g. Tapo, Imou, CP Plus). They do NOT connect to or consume physical video channels on the central DVR or NVR.
+- **Strict Sizing Formula:** Central DVR/NVR channel capacity is sized strictly to `wiredCamCount`:
+  $$\text{Recorder Sizing Capacity} = \text{wiredCamCount} = \text{camera\_count} - \text{wifi\_camera\_count}$$
+- **Capacity Alert Enforcement:** Channel capacity alerts (e.g. 4Ch, 8Ch, 16Ch) in Pro Builder and Guided Setup compare `wiredCamCount` against `recorder.channel_count`. For example, a 3 Wired IP + 1 Wi-Fi system strictly pairs with a 4-Channel NVR, avoiding premature upselling to an 8-Channel unit.
+
+### 12.3 Dual-Storage Architecture (Surveillance HDD + Dedicated MicroSD Cards)
+- **Co-Allocation:** Hybrid systems require both storage media to be co-allocated in the Bill of Materials:
+  1. **Surveillance HDD:** Quantity 1, sized dynamically to meet the backup retention target for wired cameras recording to the central recorder.
+  2. **MicroSD Cards:** Quantity = `wirelessCamCount`, dedicated to each wireless camera, sized to the customer's recording preference (Continuous vs. Motion) and capped by each camera's `max_sd_capacity_gb` (safely defaulting to 128GB).
+- **Pro Builder UI:** Step 3 displays a dual-storage banner and tabbed filters (`All Storage`, `Surveillance HDDs`, `MicroSD Cards`) to allow selecting both HDD and MicroSD cards simultaneously.
+
+### 12.4 Transmission Cabling & Connectors Sizing Invariant
+- Wireless cameras require zero coaxial or LAN transmission cabling back to the central recorder and zero BNC/DC/RJ45 connectors:
+  - **RJ45 Connectors:** `(wiredCamCount * 2) + 2` (uplink ports).
+  - **BNC Connectors:** `wiredCamCount * 2`.
+  - **CCTV Cable Coils:** `Math.max(1, Math.ceil(wiredCamCount / 4))` coils.
+  - **Waterproof Junction Boxes:** Billed per camera position as selected by the customer.
+
+### 12.5 Power Device (PoE Switch / SMPS) Sizing Invariant
+- Wireless cameras are powered by individual 12V/5V DC adapters plugged into local power points, or integrated solar/battery modules. They do NOT draw power from the central SMPS or PoE switch.
+- Central SMPS channel count and PoE switch port capacity size strictly to `wiredCamCount`.
+- Example: 3 Wired IP + 1 Wi-Fi camera utilizes a 4-port PoE switch, NOT an 8-port switch.
+
+### 12.6 Labor & Installation Separation
+- **Dual Labor Lines:** Hybrid quotations separate installation labor into distinct transparent lines:
+  1. **Wired Camera Installation:** Billed at `PRO_INSTALL_IP` (₹500/camera) or `PRO_INSTALL_HD` (₹400/camera), covering video cabling pulling up to 15m, connector termination, camera mounting, and recorder setup.
+  2. **Wireless Camera Fitting:** Billed at `PRO_INSTALL_WIRELESS` (₹349/camera) for physical mounting and app/Wi-Fi pairing, or `PRO_INSTALL_DIY` (₹0) if self-installed.
+- **Server Parity & Verification:** `app/api/quote/save/route.ts` and `lib/pricing-engine.ts` independently evaluate wired vs. wireless camera counts to ensure 100% mathematical parity across Guided Setup and Pro Builder.
+
+

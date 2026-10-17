@@ -91,8 +91,12 @@ export async function POST(request: Request) {
           const qty = Math.max(1, Math.min(100, Math.floor(Number(item.qty || 1))));
           
           if (cat === "cctv_camera" || cat.includes("camera")) {
-              if (item.product_id?.toLowerCase().includes("ip")) isIPSystem = true;
-              if (!item.product_id?.toLowerCase().includes("wifi") && !item.product_id?.toLowerCase().includes("wireless")) {
+              const pid = (item.product_id || "").toLowerCase();
+              const pTechs = Array.isArray(dbProduct.technologies) ? dbProduct.technologies.map((t: string) => t.toLowerCase()) : [];
+              const isWirelessCam = pid.includes("wifi") || pid.includes("wireless") || pid.includes("4g") || pTechs.includes("wireless") || pTechs.includes("wifi") || pTechs.includes("4g");
+              
+              if (pid.includes("ip") || pTechs.includes("ip")) isIPSystem = true;
+              if (!isWirelessCam) {
                   totalWiredCameras += qty;
               }
           } else if (cat === "cable") {

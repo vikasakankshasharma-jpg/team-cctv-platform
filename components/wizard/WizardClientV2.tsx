@@ -673,9 +673,12 @@ export function WizardClientV2() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
               <button onClick={() => { updateReq({ installation_type: "new", technology_preference: "HD", property_type: "home" }); handleNext(); }}
                 className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "new" && req.technology_preference !== "Wireless" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
-                <span className="inline-block px-2 py-0.5 mb-2 text-[10px] font-bold uppercase rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">Wired Setup</span>
+                <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">Wired Setup</span>
+                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">+ Wi-Fi Support</span>
+                </div>
                 <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-blue-600">{t("wz_completely_new_system")}</span>
-                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">Central DVR/NVR, dedicated cabling, highest reliability for whole premises.</span>
+                <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">Central DVR/NVR with dedicated cabling. Option to add Wi-Fi cameras for remote gates or terrace.</span>
               </button>
               <button onClick={() => { updateReq({ installation_type: "new", technology_preference: "Wireless", cabling_done: true, installation_preference: "pro", property_type: "home" }); handleNext(); }}
                 className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-emerald-500 transition-all cursor-pointer group ${req.installation_type === "new" && req.technology_preference === "Wireless" ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
