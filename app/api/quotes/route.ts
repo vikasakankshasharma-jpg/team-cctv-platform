@@ -78,13 +78,15 @@ export async function POST(request: NextRequest) {
       return ApiResponse.forbidden("Forbidden: Lead ownership mismatch");
     }
 
-    const products = productsSnap.docs.map(d => {
-      const data = d.data() as any;
-      if (!Array.isArray(data.technologies)) {
-        data.technologies = data.technology ? [data.technology] : ["Common"];
-      }
-      return { id: d.id, ...data };
-    }) as Product[];
+    const products = productsSnap.docs
+      .map(d => {
+        const data = d.data() as any;
+        if (!Array.isArray(data.technologies)) {
+          data.technologies = data.technology ? [data.technology] : ["Common"];
+        }
+        return { id: d.id, ...data };
+      })
+      .filter(p => p.is_deleted !== true && p.is_addon !== true && p.is_quotation_eligible !== false) as Product[];
     const addons = addonsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Addon[];
     const geoRules = geoRulesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
@@ -99,8 +101,18 @@ export async function POST(request: NextRequest) {
       selection.recording_mode = wizardAnswers.q_recording_mode as any;
     }
 
-    // Map outdoor and indoor camera counts ONLY if user hasn't selected an explicit camera/package
-    if (!selection.selected_camera_id) {
+    // Normalize technology to match pricing engine expectations
+    const rawTech = String(selection.technology || "HD").toLowerCase();
+    if (rawTech === "wireless" || rawTech === "wifi" || rawTech === "4g") {
+      selection.technology = "Wireless" as any;
+    } else if (rawTech === "ip") {
+      selection.technology = "IP" as any;
+    } else {
+      selection.technology = "HD" as any;
+    }
+
+    // Map outdoor and indoor camera counts ONLY if user hasn't selected an explicit camera/package AND mixed requirements not present
+    if (!selection.selected_camera_id && (!selection.mixed_camera_requirements || selection.mixed_camera_requirements.length === 0)) {
       if (selection.outdoor_camera_count === undefined) {
         if (siteSurvey.outdoor_camera_count !== undefined) {
           selection.outdoor_camera_count = siteSurvey.outdoor_camera_count;

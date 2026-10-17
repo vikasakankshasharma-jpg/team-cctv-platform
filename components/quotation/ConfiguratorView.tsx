@@ -365,14 +365,19 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       const cT = active_checkout_option?.technology ?? selection.technology;
       const cO = active_checkout_option?.option ?? selection.selected_camera_option;
 
+      const isWireless = (cT === "Wireless" || cT === "wireless" || cT === "WIFI" || cT === "WiFi");
+      const normalizedTech: "HD" | "IP" | "Wireless" = isWireless ? "Wireless" : (cT as "HD" | "IP");
+
       const payload = {
         lead_id: currentLead.id,
         selection: {
           ...selection,
           lead_id: currentLead.id,
           plan_type: selection.plan_type || "recommended",
-          technology: cT as "HD" | "IP",
+          technology: normalizedTech,
           camera_count: selection.camera_count,
+          indoor_camera_count: selection.indoor_camera_count ?? (lead.wizard_answers?.indoor_camera_count !== undefined ? Number(lead.wizard_answers.indoor_camera_count) : undefined),
+          outdoor_camera_count: selection.outdoor_camera_count ?? (lead.wizard_answers?.outdoor_camera_count !== undefined ? Number(lead.wizard_answers.outdoor_camera_count) : undefined),
           mixed_camera_requirements: selection.mixed_camera_requirements,
           picture_quality: selection.picture_quality || "good",
           recording_days: selection.recording_days,
@@ -398,7 +403,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       };
 
       const res = await fetch("/api/quotes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error("Failed to save quote");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        console.error("Quote save failed:", errorData);
+        throw new Error(errorData?.message || errorData?.error || "Failed to save quote");
+      }
       const resData = await res.json();
       setSavedQuoteId(resData.data.id);
       
@@ -406,9 +415,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       else toast.success("Detailed Quotation Ready!");
 
       router.push(`/quote/${currentLead.id}/review/${resData.data.id}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Error saving your quote. Please try again.");
+      toast.error(err?.message || "Error saving your quote. Please try again.");
     } finally {
       setIsSaving(false);
     }

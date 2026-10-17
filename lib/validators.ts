@@ -97,16 +97,17 @@ export type UpdateLeadStatusInput = z.infer<typeof UpdateLeadStatusSchema>;
 
 export const GenerateQuoteSchema = z.object({
   lead_id: z.string().min(1),
-  plan_type: z.enum(["budget", "recommended", "premium"]),
-  technology: z.enum(["HD", "IP"]),
-  camera_count: z.coerce.number().int().min(1).max(16),
+  plan_type: z.string().min(1),
+  technology: z.enum(["HD", "IP", "Wireless", "WiFi", "4G", "Analog", "both"]).or(z.string()),
+  camera_count: z.coerce.number().int().min(1).max(128),
   mixed_camera_requirements: z.array(z.object({
     type: z.string(),
     count: z.coerce.number().int().min(1),
     resolution: z.string().optional(),
-    technology: z.string().optional()
+    technology: z.string().optional(),
+    features: z.array(z.string()).optional()
   })).optional(),
-  picture_quality: z.enum(["good", "very_clear", "crystal_clear"]),
+  picture_quality: z.string().optional().nullable(),
   recording_days: z.coerce.number().int().min(0).max(365),
   selected_addons: z.array(z.string()).default([]),
   selected_camera_option: z.coerce.number().int().optional(),
@@ -208,7 +209,7 @@ export const CreateAddonRuleSchema = z.object({
   priority: z.number().int().positive(),
   conditions: z.object({
     property_type: z.enum(["home", "shop", "office", "factory", "warehouse", "bungalow", "residential", "other"]).optional(),
-    technology: z.enum(["HD", "IP"]).optional(),
+    technology: z.enum(["HD", "IP", "Wireless", "WiFi", "4G", "both"]).or(z.string()).optional(),
     requirements: z.array(z.string()).optional(),
     cabling_done: z.boolean().optional(),
   }),
