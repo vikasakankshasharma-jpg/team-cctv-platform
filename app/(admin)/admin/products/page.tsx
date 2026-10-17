@@ -303,6 +303,17 @@ export default function AdminProductsPage() {
         
         // Add tags based on explicit truthy checks
         if (payload.has_audio) computedFeatures.add("audio");
+        if (payload.has_speaker) {
+          computedFeatures.add("speaker");
+          computedFeatures.add("2-way");
+          computedFeatures.add("audio");
+        }
+        if (payload.has_sd_slot) {
+          computedFeatures.add("sd_slot");
+          payload.max_sd_capacity_gb = Number(payload.max_sd_capacity_gb) || 128;
+        } else {
+          delete payload.max_sd_capacity_gb;
+        }
         if (payload.night_vision_type === "color" || payload.night_vision_type === "dual_light" || payload.night_vision_type === "starlight") computedFeatures.add("color");
         if (payload.form_factor === "ptz" || payload.is_pt) computedFeatures.add("ptz");
         if (payload.is_solar) computedFeatures.add("solar");
@@ -314,7 +325,12 @@ export default function AdminProductsPage() {
         if (payload.is_quad_lens) computedFeatures.add("quad_lens");
 
         // Remove tags if they are explicitly false/missing
-        if (!payload.has_audio) computedFeatures.delete("audio");
+        if (!payload.has_audio && !payload.has_speaker) computedFeatures.delete("audio");
+        if (!payload.has_speaker) {
+          computedFeatures.delete("speaker");
+          computedFeatures.delete("2-way");
+        }
+        if (!payload.has_sd_slot) computedFeatures.delete("sd_slot");
         if (!(payload.night_vision_type === "color" || payload.night_vision_type === "dual_light" || payload.night_vision_type === "starlight")) computedFeatures.delete("color");
         if (!(payload.form_factor === "ptz" || payload.is_pt)) computedFeatures.delete("ptz");
         if (!payload.is_solar) computedFeatures.delete("solar");
@@ -757,6 +773,19 @@ export default function AdminProductsPage() {
                               <span className="text-xs font-semibold text-foreground">Audio Mic</span>
                             </label>
                             <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
+                              <input 
+                                type="checkbox" 
+                                checked={!!editingProduct.has_speaker} 
+                                onChange={e => setEditingProduct({
+                                  ...editingProduct, 
+                                  has_speaker: e.target.checked,
+                                  has_audio: e.target.checked ? true : editingProduct.has_audio
+                                })} 
+                                className="w-4 h-4 rounded border-input accent-primary" 
+                              />
+                              <span className="text-xs font-semibold text-foreground">Inbuilt Speaker</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
                               <input type="checkbox" checked={!!editingProduct.wdr} onChange={e => setEditingProduct({...editingProduct, wdr: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
                               <span className="text-xs font-semibold text-foreground">WDR</span>
                             </label>
@@ -765,7 +794,19 @@ export default function AdminProductsPage() {
                               <span className="text-xs font-semibold text-foreground">PoE Support</span>
                             </label>
                             <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
-                              <input type="checkbox" checked={!!editingProduct.has_sd_slot} onChange={e => setEditingProduct({...editingProduct, has_sd_slot: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <input 
+                                type="checkbox" 
+                                checked={!!editingProduct.has_sd_slot} 
+                                onChange={e => {
+                                  const checked = e.target.checked;
+                                  setEditingProduct({
+                                    ...editingProduct, 
+                                    has_sd_slot: checked,
+                                    max_sd_capacity_gb: checked ? (editingProduct.max_sd_capacity_gb || 128) : undefined
+                                  });
+                                }} 
+                                className="w-4 h-4 rounded border-input accent-primary" 
+                              />
                               <span className="text-xs font-semibold text-foreground">SD Slot</span>
                             </label>
                             <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
@@ -801,6 +842,37 @@ export default function AdminProductsPage() {
                               <span className="text-xs font-semibold text-foreground">Quad Camera</span>
                             </label>
                           </div>
+
+                          {editingProduct.has_sd_slot && (
+                            <div className="mt-3 p-3.5 bg-primary/5 rounded-xl border border-primary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1">
+                              <div>
+                                <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                  <span>Max Supported MicroSD Capacity</span>
+                                  <span className="text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">Default: 128 GB</span>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">Limits customer MicroSD selection in quotation to avoid quoting incompatible card sizes.</p>
+                              </div>
+                              <div className="flex items-center gap-1.5 bg-background p-1 rounded-lg border border-border shrink-0">
+                                {[128, 256, 512].map((cap) => {
+                                  const isSelected = (editingProduct.max_sd_capacity_gb || 128) === cap;
+                                  return (
+                                    <button
+                                      key={cap}
+                                      type="button"
+                                      onClick={() => setEditingProduct({ ...editingProduct, max_sd_capacity_gb: cap })}
+                                      className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                                        isSelected 
+                                          ? "bg-primary text-primary-foreground shadow-sm" 
+                                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                      }`}
+                                    >
+                                      {cap} GB {cap === 128 && <span className="opacity-75 text-[10px]">(Default)</span>}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

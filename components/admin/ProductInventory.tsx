@@ -191,6 +191,20 @@ function SubCategoryGroup({
                         <Badge variant="secondary" className="text-[9px]">
                           {p.technologies?.join(', ') || "HD"}
                         </Badge>
+                        {p.has_speaker ? (
+                          <Badge variant="outline" className="text-[9px] bg-purple-500/10 text-purple-600 border-purple-200 dark:border-purple-800">
+                            2-Way Talk
+                          </Badge>
+                        ) : p.has_audio ? (
+                          <Badge variant="outline" className="text-[9px] bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-800">
+                            Mic
+                          </Badge>
+                        ) : null}
+                        {p.has_sd_slot && (
+                          <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-200 dark:border-amber-800">
+                            SD: {p.max_sd_capacity_gb || 128}GB
+                          </Badge>
+                        )}
                       </div>
                     </td>
 

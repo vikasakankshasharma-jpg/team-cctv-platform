@@ -316,7 +316,9 @@ export interface Product {
   compression?: "H.264" | "H.265" | "H.265+";
   wdr?: boolean;                     // Wide Dynamic Range
   has_audio?: boolean;               // Built-in microphone
+  has_speaker?: boolean;             // Inbuilt speaker / 2-way talk / siren
   has_sd_slot?: boolean;             // Local SD card storage
+  max_sd_capacity_gb?: number;       // Max supported MicroSD card capacity in GB (e.g., 128, 256, 512)
   poe?: boolean;                     // Power over Ethernet
   
   // Lens & View Specs

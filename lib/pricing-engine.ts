@@ -571,7 +571,8 @@ function calculateHardware(
     ...selection,
     camera_count: isWirelessTech ? totalHardwareCameraCount : wiredCameraCount
   };
-  const hdd = resolveHDD(hddSelection, [...products, ...addons] as any[], tech, recorder, undefined, settings);
+  const primaryCamera = products.find(prod => items.some(i => i.product_id === prod.id && prod.category === "cctv_camera"));
+  const hdd = resolveHDD(hddSelection, [...products, ...addons] as any[], tech, recorder, primaryCamera, settings);
   if (hdd) {
     const unitPrice = hdd.unit_price || hdd.price || 0;
     
@@ -599,7 +600,8 @@ function calculateHardware(
       camera_count: wifiCameraCount,
       technology_preference: "Wireless"
     };
-    const sdCard = resolveHDD(sdSelection, [...products, ...addons] as any[], "Wireless", undefined, undefined, settings);
+    const wifiCamera = products.find(p => p.category === "cctv_camera" && (p.technologies?.includes("Wireless") || p.has_wifi || p.has_4g));
+    const sdCard = resolveHDD(sdSelection, [...products, ...addons] as any[], "Wireless", undefined, wifiCamera || primaryCamera, settings);
     if (sdCard) {
       const unitPrice = sdCard.unit_price || (sdCard as any).price || 0;
       items.push({
@@ -1294,7 +1296,7 @@ function estimateQuoteTotal(cam: Product, selection: ConfiguratorSelection, prod
   const recorder = resolveRecorder({ ...selection, resolution_preference: `${camMP}MP` }, products, tech, camMP);
   const recTotal = recorder ? recorder.unit_price : 0;
   
-  const hdd = resolveHDD(selection, [...products, ...addons] as any[], tech, recorder);
+  const hdd = resolveHDD(selection, [...products, ...addons] as any[], tech, recorder, cam, settings);
   const hddTotal = hdd ? (hdd.unit_price || hdd.price || 0) : 0;
 
   const transmission = resolveTransmission(selection, [...products, ...addons] as any[], tech);
@@ -1688,13 +1690,18 @@ function resolveHDD(selection: ConfiguratorSelection, addons: Addon[], tech: str
         return 32;
       };
 
-      // 4. Find cheapest active card that satisfies requiredCardGb
-      const sortedCards = [...sdCards].sort((a, b) => getCardGb(a) - getCardGb(b));
+      // 4. Cap MicroSD cards by the camera's max supported capacity (defaults to 128GB for safety)
+      const maxCameraCardGb = cameraProduct?.max_sd_capacity_gb || 128;
+      const eligibleCards = sdCards.filter(c => getCardGb(c) <= maxCameraCardGb);
+      const candidates = eligibleCards.length > 0 ? eligibleCards : sdCards;
+
+      // 5. Find cheapest active card that satisfies requiredCardGb within camera hardware support
+      const sortedCards = [...candidates].sort((a, b) => getCardGb(a) - getCardGb(b));
       let chosenCard = sortedCards.find(c => getCardGb(c) >= requiredCardGb);
 
       let storageOverflow = false;
       if (!chosenCard) {
-        // Exceeds max card capacity in catalog (e.g. 256GB limit)
+        // Exceeds max card capacity supported by camera or available in catalog
         chosenCard = sortedCards[sortedCards.length - 1];
         storageOverflow = true;
       }
