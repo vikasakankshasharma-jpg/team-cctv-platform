@@ -206,9 +206,14 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
       let matchForm = pFormRaw === targetForm;
       if (!matchForm) {
         if (targetForm === "dome") {
-          matchForm = pFormRaw.includes("dome") || pFormRaw.includes("turret") || pFormRaw.includes("indoor") || (pFormRaw.includes("ptz") && !pFormRaw.includes("outdoor"));
+          // Indoor-safe forms: dome, turret, indoor_pt, or explicit Indoor rating
+          const isExplicitIndoor = p.ip_rating === "Indoor" || p.ip_rating === "Indoor Only";
+          const isNotOutdoor = !pFormRaw.includes("bullet") && !pFormRaw.includes("outdoor");
+          matchForm = pFormRaw.includes("dome") || pFormRaw.includes("turret") || pFormRaw.includes("indoor") || pFormRaw === "indoor_pt" || (isExplicitIndoor && isNotOutdoor);
         } else if (targetForm === "bullet") {
-          matchForm = pFormRaw.includes("bullet") || pFormRaw.includes("outdoor") || (pFormRaw.includes("ptz") && !pFormRaw.includes("indoor"));
+          // Outdoor weatherproof forms: bullet, outdoor_pt, ptz, or IP65/IP66/IP67 rated
+          const isWeatherproof = p.ip_rating === "IP65" || p.ip_rating === "IP66" || p.ip_rating === "IP67";
+          matchForm = pFormRaw.includes("bullet") || pFormRaw.includes("outdoor") || pFormRaw === "outdoor_pt" || pFormRaw === "ptz" || isWeatherproof;
         }
       }
       

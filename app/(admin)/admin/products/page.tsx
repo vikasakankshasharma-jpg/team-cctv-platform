@@ -315,14 +315,29 @@ export default function AdminProductsPage() {
           delete payload.max_sd_capacity_gb;
         }
         if (payload.night_vision_type === "color" || payload.night_vision_type === "dual_light" || payload.night_vision_type === "starlight") computedFeatures.add("color");
-        if (payload.form_factor === "ptz" || payload.is_pt) computedFeatures.add("ptz");
+        
+        // PT vs PTZ handling
+        const isPtz = payload.form_factor === "ptz" || (Number(payload.optical_zoom_x) > 1);
+        const isPt = payload.form_factor === "indoor_pt" || payload.form_factor === "outdoor_pt" || payload.is_pt || payload.form_factor === "ptz";
+        if (isPtz) computedFeatures.add("ptz");
+        if (isPt) {
+          computedFeatures.add("pt");
+          computedFeatures.add("pan_tilt");
+        }
+
         if (payload.is_solar) computedFeatures.add("solar");
         if (payload.has_4g) computedFeatures.add("4g");
         if (payload.has_wifi) computedFeatures.add("wifi");
         if (payload.is_360) computedFeatures.add("360");
-        if (payload.is_dual_lens) computedFeatures.add("dual_lens");
-        if (payload.is_triple_lens) computedFeatures.add("triple_lens");
-        if (payload.is_quad_lens) computedFeatures.add("quad_lens");
+
+        // Multi-Lens handling
+        const isMulti = payload.form_factor === "multi_lens" || payload.form_factor === "dual_lens" || payload.is_dual_lens || payload.is_triple_lens || payload.is_quad_lens;
+        if (isMulti) {
+          computedFeatures.add("multi_lens");
+          if (payload.is_dual_lens || payload.lens_count === 2) computedFeatures.add("dual_lens");
+          if (payload.is_triple_lens || payload.lens_count === 3) computedFeatures.add("triple_lens");
+          if (payload.is_quad_lens || payload.lens_count === 4) computedFeatures.add("quad_lens");
+        }
 
         // Remove tags if they are explicitly false/missing
         if (!payload.has_audio && !payload.has_speaker) computedFeatures.delete("audio");
@@ -332,14 +347,25 @@ export default function AdminProductsPage() {
         }
         if (!payload.has_sd_slot) computedFeatures.delete("sd_slot");
         if (!(payload.night_vision_type === "color" || payload.night_vision_type === "dual_light" || payload.night_vision_type === "starlight")) computedFeatures.delete("color");
-        if (!(payload.form_factor === "ptz" || payload.is_pt)) computedFeatures.delete("ptz");
+        if (!isPtz) computedFeatures.delete("ptz");
+        if (!isPt) {
+          computedFeatures.delete("pt");
+          computedFeatures.delete("pan_tilt");
+        }
         if (!payload.is_solar) computedFeatures.delete("solar");
         if (!payload.has_4g) computedFeatures.delete("4g");
         if (!payload.has_wifi) computedFeatures.delete("wifi");
         if (!payload.is_360) computedFeatures.delete("360");
-        if (!payload.is_dual_lens) computedFeatures.delete("dual_lens");
-        if (!payload.is_triple_lens) computedFeatures.delete("triple_lens");
-        if (!payload.is_quad_lens) computedFeatures.delete("quad_lens");
+        if (!isMulti) {
+          computedFeatures.delete("multi_lens");
+          computedFeatures.delete("dual_lens");
+          computedFeatures.delete("triple_lens");
+          computedFeatures.delete("quad_lens");
+        } else {
+          if (!payload.is_dual_lens && payload.lens_count !== 2) computedFeatures.delete("dual_lens");
+          if (!payload.is_triple_lens && payload.lens_count !== 3) computedFeatures.delete("triple_lens");
+          if (!payload.is_quad_lens && payload.lens_count !== 4) computedFeatures.delete("quad_lens");
+        }
 
         payload.features = Array.from(computedFeatures);
       }
@@ -684,16 +710,51 @@ export default function AdminProductsPage() {
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Form Factor</label>
                           <select 
                             value={editingProduct.form_factor || "dome"}
-                            onChange={e => setEditingProduct({...editingProduct, form_factor: e.target.value as any})}
+                            onChange={e => {
+                              const val = e.target.value;
+                              let updates: Partial<Product> = { form_factor: val as any };
+                              if (val === "indoor_pt") {
+                                updates.is_pt = true;
+                                updates.ip_rating = "Indoor";
+                                updates.optical_zoom_x = undefined;
+                              } else if (val === "outdoor_pt") {
+                                updates.is_pt = true;
+                                updates.ip_rating = editingProduct.ip_rating && editingProduct.ip_rating !== "Indoor" ? editingProduct.ip_rating : "IP66";
+                                updates.optical_zoom_x = undefined;
+                              } else if (val === "ptz") {
+                                updates.is_pt = true;
+                                updates.ip_rating = editingProduct.ip_rating && editingProduct.ip_rating !== "Indoor" ? editingProduct.ip_rating : "IP66";
+                                if (!editingProduct.optical_zoom_x) updates.optical_zoom_x = 4;
+                              } else if (val === "multi_lens") {
+                                const count = editingProduct.lens_count || 2;
+                                updates.lens_count = count;
+                                updates.is_dual_lens = count === 2;
+                                updates.is_triple_lens = count === 3;
+                                updates.is_quad_lens = count === 4;
+                                updates.multi_lens_archetype = editingProduct.multi_lens_archetype || "fixed_plus_pt";
+                                updates.is_pt = true;
+                                updates.nvr_channels_consumed = editingProduct.nvr_channels_consumed || 1;
+                                updates.recording_streams_count = editingProduct.recording_streams_count || count;
+                              } else if (val === "bullet") {
+                                updates.is_pt = false;
+                                if (!editingProduct.ip_rating || editingProduct.ip_rating === "Indoor") updates.ip_rating = "IP67";
+                              } else if (val === "dome") {
+                                updates.is_pt = false;
+                                if (!editingProduct.ip_rating) updates.ip_rating = "Indoor";
+                              }
+                              setEditingProduct({ ...editingProduct, ...updates });
+                            }}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
                           >
                             <option value="dome">Indoor Ceiling Dome</option>
                             <option value="bullet">Outdoor Bullet (Weatherproof)</option>
-                            <option value="ptz">Indoor / Outdoor 360° PTZ (Pan/Tilt)</option>
-                            <option value="dual_lens">Dual-Lens (Fixed + PTZ)</option>
+                            <option value="indoor_pt">Indoor Pan & Tilt (PT)</option>
+                            <option value="outdoor_pt">Outdoor Pan & Tilt (PT)</option>
+                            <option value="ptz">Commercial PTZ (Motorized Optical Zoom)</option>
+                            <option value="multi_lens">Multi-Lens Multi-Sensor (Dual / Triple / Quad)</option>
+                            <option value="turret">Turret / Eyeball</option>
                             <option value="wire_free_battery">Wire-Free / Battery Powered</option>
                             <option value="video_doorbell">Smart Video Doorbell</option>
-                            <option value="turret">Turret</option>
                           </select>
                         </div>
                         
@@ -709,7 +770,7 @@ export default function AdminProductsPage() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Viewing Angle (Â°)</label>
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Viewing Angle (°)</label>
                           <input 
                             type="number" 
                             value={editingProduct.viewing_angle_deg || ""}
@@ -732,14 +793,16 @@ export default function AdminProductsPage() {
                           </select>
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Optical Zoom (x)</label>
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">
+                            Optical Zoom (x) {editingProduct.form_factor === "ptz" && <span className="text-primary font-bold">(PTZ)</span>}
+                          </label>
                           <input 
                             type="number" 
                             step="1"
                             value={editingProduct.optical_zoom_x || ""}
                             onChange={e => setEditingProduct({...editingProduct, optical_zoom_x: e.target.value ? Number(e.target.value) : undefined})}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="e.g. 25"
+                            placeholder="e.g. 4, 10, 25"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -763,6 +826,124 @@ export default function AdminProductsPage() {
                             placeholder="e.g. person_detect, vehicle_detect, face_detect"
                           />
                         </div>
+
+                        {/* Multi-Lens Architecture Configuration */}
+                        {(editingProduct.form_factor === "multi_lens" || 
+                          editingProduct.form_factor === "dual_lens" || 
+                          editingProduct.is_dual_lens || 
+                          editingProduct.is_triple_lens || 
+                          editingProduct.is_quad_lens) && (
+                          <div className="col-span-1 md:col-span-3 p-4 bg-primary/5 rounded-2xl border border-primary/20 space-y-3.5 animate-in fade-in slide-in-from-top-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-primary/10 pb-2.5">
+                              <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 bg-primary/15 text-primary text-[10px] font-extrabold uppercase tracking-wider rounded-md">Multi-Lens Architecture</span>
+                                <span className="text-xs font-bold text-foreground">Multi-Sensor Specifications & Sizing</span>
+                              </div>
+                              <span className="text-[11px] text-muted-foreground">Configures independent lens roles, NVR channels, & storage multiplier</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                              {/* Lens Count */}
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Lens Count</label>
+                                <div className="flex rounded-lg border border-input p-0.5 bg-background h-9">
+                                  {[
+                                    { count: 2, label: "2 (Dual)" },
+                                    { count: 3, label: "3 (Triple)" },
+                                    { count: 4, label: "4 (Quad)" }
+                                  ].map(item => {
+                                    const activeCount = editingProduct.lens_count || (editingProduct.is_triple_lens ? 3 : editingProduct.is_quad_lens ? 4 : 2);
+                                    const isSel = activeCount === item.count;
+                                    return (
+                                      <button
+                                        key={item.count}
+                                        type="button"
+                                        onClick={() => {
+                                          setEditingProduct({
+                                            ...editingProduct,
+                                            lens_count: item.count,
+                                            is_dual_lens: item.count === 2,
+                                            is_triple_lens: item.count === 3,
+                                            is_quad_lens: item.count === 4,
+                                            recording_streams_count: item.count
+                                          });
+                                        }}
+                                        className={`flex-1 py-1 text-xs font-semibold rounded-md transition-all ${
+                                          isSel
+                                            ? "bg-primary text-primary-foreground shadow-sm"
+                                            : "text-muted-foreground hover:text-foreground"
+                                        }`}
+                                      >
+                                        {item.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Lens Archetype */}
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Lens Setup / Archetype</label>
+                                <select
+                                  value={editingProduct.multi_lens_archetype || "fixed_plus_pt"}
+                                  onChange={e => setEditingProduct({
+                                    ...editingProduct, 
+                                    multi_lens_archetype: e.target.value as any,
+                                    is_pt: e.target.value.includes("pt")
+                                  })}
+                                  className="flex h-9 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs appearance-none"
+                                >
+                                  <option value="fixed_plus_pt">Fixed Overview + Pan-Tilt (PT)</option>
+                                  <option value="fixed_plus_ptz">Fixed Overview + Motorized PTZ Zoom</option>
+                                  <option value="panoramic_stitched">Panoramic 180° / 360° Stitched</option>
+                                  <option value="multi_directional">Multi-Directional Independent</option>
+                                </select>
+                              </div>
+
+                              {/* NVR Channels Consumed */}
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">NVR Channels Used</label>
+                                <select
+                                  value={editingProduct.nvr_channels_consumed || 1}
+                                  onChange={e => setEditingProduct({...editingProduct, nvr_channels_consumed: Number(e.target.value)})}
+                                  className="flex h-9 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs appearance-none"
+                                >
+                                  <option value={1}>1 Channel (App Split-View / Stitched)</option>
+                                  <option value={2}>2 Channels (Dual IP ONVIF Streams)</option>
+                                  <option value={3}>3 Channels (Triple IP Streams)</option>
+                                  <option value={4}>4 Channels (Quad IP Streams)</option>
+                                </select>
+                              </div>
+
+                              {/* Recording Streams / Storage Multiplier */}
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Recording Streams</label>
+                                <select
+                                  value={editingProduct.recording_streams_count || editingProduct.lens_count || 2}
+                                  onChange={e => setEditingProduct({...editingProduct, recording_streams_count: Number(e.target.value)})}
+                                  className="flex h-9 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs appearance-none"
+                                >
+                                  <option value={1}>1 Stream (Combined / Motion Substream)</option>
+                                  <option value={2}>2 Streams (Dual 24/7 Recording)</option>
+                                  <option value={3}>3 Streams (Triple 24/7 Recording)</option>
+                                  <option value={4}>4 Streams (Quad 24/7 Recording)</option>
+                                </select>
+                              </div>
+
+                              {/* Lens Breakdown Summary */}
+                              <div className="space-y-1 col-span-1 sm:col-span-2 md:col-span-4">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Per-Lens Specification Breakdown</label>
+                                <input
+                                  type="text"
+                                  value={editingProduct.lens_breakdown || ""}
+                                  onChange={e => setEditingProduct({...editingProduct, lens_breakdown: e.target.value})}
+                                  placeholder="e.g. 3MP Fixed Overview (2.8mm Wide) + 3MP Smart Pan-Tilt (6mm Auto-Tracking)"
+                                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         
                         {/* Hardware Capabilities (Replaces old toggles + wizard tags) */}
                         <div className="col-span-1 md:col-span-3 mt-4">
@@ -830,15 +1011,60 @@ export default function AdminProductsPage() {
                               <span className="text-xs font-semibold text-foreground">PT (Pan & Tilt)</span>
                             </label>
                             <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
-                              <input type="checkbox" checked={!!editingProduct.is_dual_lens} onChange={e => setEditingProduct({...editingProduct, is_dual_lens: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <input 
+                                type="checkbox" 
+                                checked={!!editingProduct.is_dual_lens} 
+                                onChange={e => {
+                                  const checked = e.target.checked;
+                                  setEditingProduct({
+                                    ...editingProduct, 
+                                    is_dual_lens: checked,
+                                    is_triple_lens: false,
+                                    is_quad_lens: false,
+                                    lens_count: checked ? 2 : undefined,
+                                    form_factor: checked && (!editingProduct.form_factor || editingProduct.form_factor === "dome") ? "multi_lens" : editingProduct.form_factor
+                                  });
+                                }} 
+                                className="w-4 h-4 rounded border-input accent-primary" 
+                              />
                               <span className="text-xs font-semibold text-foreground">Dual Camera</span>
                             </label>
                             <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
-                              <input type="checkbox" checked={!!editingProduct.is_triple_lens} onChange={e => setEditingProduct({...editingProduct, is_triple_lens: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <input 
+                                type="checkbox" 
+                                checked={!!editingProduct.is_triple_lens} 
+                                onChange={e => {
+                                  const checked = e.target.checked;
+                                  setEditingProduct({
+                                    ...editingProduct, 
+                                    is_dual_lens: false,
+                                    is_triple_lens: checked,
+                                    is_quad_lens: false,
+                                    lens_count: checked ? 3 : undefined,
+                                    form_factor: checked && (!editingProduct.form_factor || editingProduct.form_factor === "dome") ? "multi_lens" : editingProduct.form_factor
+                                  });
+                                }} 
+                                className="w-4 h-4 rounded border-input accent-primary" 
+                              />
                               <span className="text-xs font-semibold text-foreground">Triple Camera</span>
                             </label>
                             <label className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/50">
-                              <input type="checkbox" checked={!!editingProduct.is_quad_lens} onChange={e => setEditingProduct({...editingProduct, is_quad_lens: e.target.checked})} className="w-4 h-4 rounded border-input accent-primary" />
+                              <input 
+                                type="checkbox" 
+                                checked={!!editingProduct.is_quad_lens} 
+                                onChange={e => {
+                                  const checked = e.target.checked;
+                                  setEditingProduct({
+                                    ...editingProduct, 
+                                    is_dual_lens: false,
+                                    is_triple_lens: false,
+                                    is_quad_lens: checked,
+                                    lens_count: checked ? 4 : undefined,
+                                    form_factor: checked && (!editingProduct.form_factor || editingProduct.form_factor === "dome") ? "multi_lens" : editingProduct.form_factor
+                                  });
+                                }} 
+                                className="w-4 h-4 rounded border-input accent-primary" 
+                              />
                               <span className="text-xs font-semibold text-foreground">Quad Camera</span>
                             </label>
                           </div>

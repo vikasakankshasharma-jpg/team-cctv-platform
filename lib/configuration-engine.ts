@@ -59,10 +59,26 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
   // Calculate Recorder Channels (4, 8, 16, 32)
   let recorderChannels: number | undefined = undefined;
   
-  // Calculate total ACTIVE cameras (existing + new) for recorder sizing
-  let totalActiveCamerasForRecorder = wiredCameras;
+  // Calculate total ACTIVE cameras / channels (existing + new) for recorder sizing
+  let channelsNeededForWired = wiredCameras;
+  if (req.mixed_camera_requirements && req.mixed_camera_requirements.length > 0) {
+    let customChannels = 0;
+    req.mixed_camera_requirements.forEach((r: any) => {
+      const rtLower = (r.type || "").toLowerCase();
+      const isRWireless = rtLower.includes("wifi") || rtLower.includes("wireless") || rtLower.includes("4g") || rtLower.includes("solar");
+      if (!isRWireless) {
+        const chMultiplier = r.nvr_channels_consumed || r.channels_per_camera || 1;
+        customChannels += (r.count * chMultiplier);
+      }
+    });
+    if (customChannels > 0) {
+      channelsNeededForWired = customChannels;
+    }
+  }
+
+  let totalActiveCamerasForRecorder = channelsNeededForWired;
   if (req.installation_type === "addon" && req.existing_working_cameras) {
-    totalActiveCamerasForRecorder = wiredCameras + req.existing_working_cameras;
+    totalActiveCamerasForRecorder = channelsNeededForWired + req.existing_working_cameras;
   }
 
   if (wiredCameras > 0) {
@@ -78,9 +94,9 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
         else recorderChannels = 32;
       }
     } else {
-      if (wiredCameras <= 4) recorderChannels = 4;
-      else if (wiredCameras <= 8) recorderChannels = 8;
-      else if (wiredCameras <= 16) recorderChannels = 16;
+      if (channelsNeededForWired <= 4) recorderChannels = 4;
+      else if (channelsNeededForWired <= 8) recorderChannels = 8;
+      else if (channelsNeededForWired <= 16) recorderChannels = 16;
       else recorderChannels = 32; // Simplified for now
     }
   }
@@ -111,7 +127,16 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
            ? totalCameras + req.existing_working_cameras 
            : totalCameras;
            
-       storageGb = camsForStorage * gbPerDay * days;
+       // If mixed_camera_requirements specifies multi-stream recording, scale storage accordingly
+       let streamCountMultiplier = 0;
+       if (req.mixed_camera_requirements && req.mixed_camera_requirements.length > 0) {
+         req.mixed_camera_requirements.forEach((r: any) => {
+           const streams = r.recording_streams_count || (r.is_dual_lens ? 2 : r.is_triple_lens ? 3 : r.is_quad_lens ? 4 : 1);
+           streamCountMultiplier += (r.count * streams);
+         });
+       }
+       const effectiveCamsForStorage = streamCountMultiplier > 0 ? streamCountMultiplier : camsForStorage;
+       storageGb = effectiveCamsForStorage * gbPerDay * days;
     }
   }
 

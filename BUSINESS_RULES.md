@@ -391,3 +391,41 @@ To ensure professional, 100% accurate map rendering across all PIN codes in Indi
 - **Audio Mic (`has_audio`):** Unidirectional listen-only microphone.
 - **Inbuilt Speaker (`has_speaker`):** Hardware speaker enabling Two-Way Talk and Active Deterrence Siren/Alarm.
 - **Auto-Tagging:** Setting `has_speaker: true` automatically activates `has_audio: true` and attaches `speaker`, `2-way`, and `audio` feature tags.
+
+---
+
+## 11. Camera Form Factor, PT vs. PTZ, and Multi-Lens Architecture
+
+### 11.1 Distinct Form Factor Classification
+The platform enforces clean, industry-standard camera form factors:
+1. `Indoor Ceiling Dome` (`dome`): Fixed lens, indoor plastic/metal ceiling mount.
+2. `Outdoor Bullet (Weatherproof)` (`bullet`): Fixed lens, outdoor wall/pole mount (`IP66` or `IP67`).
+3. `Indoor Pan & Tilt (PT)` (`indoor_pt`): 360° horizontal / 90° vertical rotation, fixed lens, digital zoom only, strictly indoor unsealed housing.
+4. `Outdoor Pan & Tilt (PT)` (`outdoor_pt`): 360° rotation, fixed lens, digital zoom only, weatherproof sealed housing (`IP66`).
+5. `Commercial PTZ (Motorized Optical Zoom)` (`ptz`): 360° rotation with motorized physical moving glass lenses (4x, 10x, 25x, 32x optical zoom).
+6. `Multi-Lens Multi-Sensor (Dual / Triple / Quad)` (`multi_lens`): 2, 3, or 4 lenses integrated into a single physical unit.
+7. `Turret / Eyeball` (`turret`): Flat-faced ball-and-socket dome.
+8. `Wire-Free / Battery Powered` (`wire_free_battery`): Battery or Solar standalone units.
+9. `Smart Video Doorbell` (`video_doorbell`): Entrance intercom and camera.
+
+### 11.2 PT vs. PTZ Engineering Distinction
+- **PT (Pan & Tilt):** Rotates on 2 axes with a fixed focal length lens (3.6mm/4mm). Features only digital zoom (pixel crop). Low-cost consumer/SOHO models (₹1,400 to ₹4,500).
+- **PTZ (Pan-Tilt-Zoom):** Rotates on 2 axes AND possesses motorized optical zoom lenses with physical optical magnification (`optical_zoom_x > 1`). High-end commercial models (₹15,000 to ₹60,000+).
+
+### 11.3 Indoor vs. Outdoor Weatherproofing Isolation
+- Indoor requirements strictly resolve cameras with `ip_rating === "Indoor"` or form factors `dome`, `turret`, or `indoor_pt`.
+- Outdoor requirements strictly resolve weatherproof cameras with `ip_rating` in `["IP65", "IP66", "IP67"]` or form factors `bullet`, `outdoor_pt`, or `ptz`.
+- Indoor plastic cameras must NEVER be quoted or allocated to outdoor positions.
+
+### 11.4 Multi-Lens Camera Architecture & System Sizing
+- **Lens Archetypes:**
+  - `Fixed Overview + Pan-Tilt (PT)`: 1 or 2 fixed wide lenses (24/7 overview) + 1 rotating PT dome (smart auto-tracking).
+  - `Fixed Overview + Motorized PTZ Zoom`: 1 fixed overview + 1 high-speed optical zoom dome.
+  - `Panoramic 180° / 360° Stitched`: Multiple fixed lenses seamlessly stitched into one wide picture.
+  - `Multi-Directional Independent`: Multiple adjustable fixed lenses aimed in separate directions.
+- **NVR Channel Consumption (`nvr_channels_consumed`):**
+  - Stitched or standalone Wi-Fi cameras consume **1 channel**.
+  - Multi-stream IP cameras consume independent ONVIF channels (e.g. 2, 3, or 4 channels). The configuration engine sizes the NVR capacity to `sum(camera_count * nvr_channels_consumed)` to prevent undersized recorders.
+- **Storage Multiplier (`recording_streams_count`):**
+  - Cameras recording multiple simultaneous 24/7 video streams multiply daily gigabyte storage requirements by the number of active recording streams.
+

@@ -311,7 +311,7 @@ export interface Product {
   night_vision_range_m?: number;     // IR/color range in meters (e.g., 20, 30, 50)
   lens_mm?: number;                  // Focal length (e.g., 2.8, 3.6, 6)
   viewing_angle_deg?: number;        // Field of view in degrees (e.g., 90, 110)
-  form_factor?: "dome" | "bullet" | "ptz" | "turret" | "fisheye";
+  form_factor?: "dome" | "bullet" | "indoor_pt" | "outdoor_pt" | "ptz" | "multi_lens" | "dual_lens" | "turret" | "fisheye" | "wire_free_battery" | "video_doorbell" | string;
   ip_rating?: string;                // e.g., "IP67", "IP66", "IP65", "Indoor"
   compression?: "H.264" | "H.265" | "H.265+";
   wdr?: boolean;                     // Wide Dynamic Range
@@ -328,6 +328,13 @@ export interface Product {
   is_triple_lens?: boolean;          // Triple Camera / Lens
   is_quad_lens?: boolean;            // Quad Camera / Lens
   is_pt?: boolean;                   // PT Camera (Pan & Tilt)
+
+  // Multi-Lens & Multi-Sensor Specifications
+  lens_count?: number;               // Number of lenses: 2, 3, 4
+  multi_lens_archetype?: "fixed_plus_pt" | "fixed_plus_ptz" | "panoramic_stitched" | "multi_directional" | string;
+  lens_breakdown?: string;           // e.g. "3MP Fixed (2.8mm) + 3MP PT (6mm)"
+  nvr_channels_consumed?: number;    // Channels consumed on NVR (e.g. 1, 2, 3, 4)
+  recording_streams_count?: number;  // Number of active recording video feeds (e.g. 1, 2, 3, 4)
 
   // Connectivity & Power
   is_solar?: boolean;                // Solar Powered

@@ -268,9 +268,11 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           if (tag === "mic") return camFeats.some(f => f.includes("mic") || f.includes("audio") || f.includes("2-way") || f.includes("two-way")) || name.includes("mic") || name.includes("audio") || name.includes("2-way") || name.includes("two-way");
             if (tag === "2-way") return camFeats.some(f => f.includes("2-way") || f.includes("two-way") || f.includes("speaker")) || name.includes("2-way") || name.includes("two-way") || name.includes("speaker");
           if (tag === "color") return camFeats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) || name.includes("color") || name.includes("colour");
-          if (tag === "ptz") return camFeats.some(f => f.includes("ptz")) || name.includes("ptz");
-          if (tag === "dome") return formFactor === "dome" || name.includes("dome");
-          if (tag === "bullet") return formFactor === "bullet" || name.includes("bullet");
+          if (tag === "pt" || tag === "pan_tilt") return camFeats.some(f => f === "pt" || f.includes("pan_tilt")) || formFactor.includes("pt") || !!cam.is_pt;
+          if (tag === "ptz") return camFeats.some(f => f.includes("ptz")) || formFactor === "ptz" || (Number(cam.optical_zoom_x) > 1) || name.includes("ptz");
+          if (tag === "multi_lens" || tag === "dual_lens") return camFeats.some(f => f.includes("lens")) || formFactor.includes("lens") || !!cam.is_dual_lens || !!cam.is_triple_lens || !!cam.is_quad_lens || name.includes("dual") || name.includes("triple");
+          if (tag === "dome") return formFactor === "dome" || formFactor === "indoor_pt" || name.includes("dome");
+          if (tag === "bullet") return formFactor === "bullet" || formFactor === "outdoor_pt" || name.includes("bullet");
           return camFeats.some(f => f.includes(tag)) || name.includes(tag);
         };
         return effectiveFeatures.every(reqFeat => check(reqFeat.toLowerCase().trim()));

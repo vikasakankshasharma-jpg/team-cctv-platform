@@ -436,6 +436,8 @@ function calculateHardware(
       
       const typeLower = req.type.toLowerCase();
       if (typeLower.includes("ptz")) extraFeatures.push("ptz");
+      else if (typeLower.includes("pt") || typeLower.includes("pan tilt") || typeLower.includes("pan-tilt")) extraFeatures.push("pt");
+      if (typeLower.includes("multi-lens") || typeLower.includes("multi lens") || typeLower.includes("dual-lens") || typeLower.includes("dual lens") || typeLower.includes("triple") || typeLower.includes("quad")) extraFeatures.push("multi_lens");
       if (typeLower.includes("solar")) extraFeatures.push("solar");
       if (typeLower.includes("4g")) extraFeatures.push("4g");
       if (typeLower.includes("speaker") || typeLower.includes("2-way") || typeLower.includes("two-way")) extraFeatures.push("2-way");
@@ -1410,12 +1412,14 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
       
       return selection.requested_features!.every(rf => {
         const rfLower = rf.toLowerCase().trim();
-        if (rfLower === "dome") return formFactor === "dome" || name.includes("dome");
-        if (rfLower === "bullet") return formFactor === "bullet" || name.includes("bullet");
+        if (rfLower === "dome") return formFactor === "dome" || formFactor === "indoor_pt" || name.includes("dome");
+        if (rfLower === "bullet") return formFactor === "bullet" || formFactor === "outdoor_pt" || name.includes("bullet");
         if (rfLower === "mic" || rfLower === "audio") return feats.some(f => f.includes("mic") || f.includes("audio") || f.includes("2-way") || f.includes("two-way") || f.includes("two way")) || name.includes("mic") || name.includes("audio") || name.includes("2-way") || name.includes("two-way") || name.includes("two way");
         if (rfLower === "2-way" || rfLower === "two-way" || rfLower === "two way") return feats.some(f => f.includes("2-way") || f.includes("two-way") || f.includes("two way") || f.includes("speaker")) || name.includes("2-way") || name.includes("two-way") || name.includes("two way") || name.includes("speaker");
         if (rfLower === "color") return feats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) || name.includes("color") || name.includes("colour");
-        if (rfLower === "ptz") return feats.some(f => f.includes("ptz")) || name.includes("ptz");
+        if (rfLower === "pt" || rfLower === "pan_tilt") return feats.some(f => f === "pt" || f.includes("pan_tilt")) || formFactor.includes("pt") || !!cam.is_pt;
+        if (rfLower === "ptz") return feats.some(f => f.includes("ptz")) || formFactor === "ptz" || (Number(cam.optical_zoom_x) > 1) || name.includes("ptz");
+        if (rfLower === "multi_lens" || rfLower === "multi-lens" || rfLower === "dual_lens") return feats.some(f => f.includes("lens")) || formFactor.includes("lens") || !!cam.is_dual_lens || !!cam.is_triple_lens || !!cam.is_quad_lens || name.includes("dual") || name.includes("triple");
         return feats.includes(rfLower) || name.includes(rfLower);
       });
     });

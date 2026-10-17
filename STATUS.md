@@ -250,6 +250,28 @@
 - **Admin Inventory Table Badges:** Displaying `2-Way Talk` (purple) / `Mic` (blue) and `SD: 128GB/256GB` (amber) badges in the product specs column.
 - **Firestore Database Synchronization:** Backfilled all existing cameras with SD slots and two-way talk across the database.
 
+### Milestone 30: Form Factor Modernization (PT vs PTZ vs Multi-Lens Multi-Sensor Architecture)
+- **Elimination of Ambiguous Form Factor:** Replaced flawed `"Indoor / Outdoor 360° PTZ (Pan/Tilt)"` option with distinct, industry-standard options:
+  - `Indoor Ceiling Dome` (`dome`)
+  - `Outdoor Bullet (Weatherproof)` (`bullet`)
+  - `Indoor Pan & Tilt (PT)` (`indoor_pt`)
+  - `Outdoor Pan & Tilt (PT)` (`outdoor_pt`)
+  - `Commercial PTZ (Motorized Optical Zoom)` (`ptz`)
+  - `Multi-Lens Multi-Sensor (Dual / Triple / Quad)` (`multi_lens`)
+  - `Turret / Eyeball` (`turret`)
+  - `Wire-Free / Battery Powered` (`wire_free_battery`)
+  - `Smart Video Doorbell` (`video_doorbell`)
+- **PT vs. PTZ Technical Isolation:**
+  - Standard rotating cameras with fixed lenses are classified as **PT (Pan & Tilt)** (`is_pt: true, optical_zoom_x: 0`).
+  - Cameras with motorized optical zoom lenses are classified as **PTZ** (`is_pt: true, optical_zoom_x > 1`).
+- **Comprehensive Multi-Lens Architecture Sub-Panel:**
+  - Added dedicated Multi-Lens configuration UI when `multi_lens` or `is_dual_lens / is_triple_lens / is_quad_lens` is active.
+  - Configures **Lens Count** (2 Dual, 3 Triple, 4 Quad), **Archetype** (Fixed + PT, Fixed + Optical PTZ, Panoramic Stitched, Multi-Directional), **Per-Lens Breakdown** (`lens_breakdown`), **NVR Channels Used** (`nvr_channels_consumed`: 1 to 4), and **Recording Streams Multiplier** (`recording_streams_count`: 1 to 4).
+- **Engine Sizing & Storage Synchronization:**
+  - `lib/configuration-engine.ts` sizes NVR channels based on `nvr_channels_consumed` (e.g. 2 dual-lens IP cameras using 2 channels each size to 4-channel NVR; 3 size up to 8-channel NVR).
+  - Multi-stream recording multiplies daily gigabyte rates so MicroSD/HDD storage recommendations are never cut in half.
+  - `lib/product-resolver.ts` and `lib/pricing-engine.ts` isolate indoor plastic PT cameras from outdoor weather requirements and cleanly match PT vs PTZ vs Multi-Lens.
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
