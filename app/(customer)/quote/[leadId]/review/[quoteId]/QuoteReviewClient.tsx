@@ -172,6 +172,19 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
   const advance = isPartiallyPaid && quote.amount_due ? quote.amount_due : 500;
   const daysLeft = daysUntil(quote.validUntil);
 
+  useEffect(() => {
+    // Preload Razorpay checkout SDK on mount for instant mobile checkout
+    if (typeof window !== "undefined" && !(window as any).Razorpay) {
+      const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (!existing) {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        document.body.appendChild(script);
+      }
+    }
+  }, []);
+
   const loadRazorpayScript = async (retries = 2): Promise<boolean> => {
     for (let i = 0; i < retries; i++) {
       const success = await new Promise<boolean>((resolve) => {
@@ -183,10 +196,26 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         let timeout: NodeJS.Timeout;
         
         const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
-        if (existing) existing.remove();
+        if (existing) {
+          // If script is already attached, listen to load or wait
+          (existing as HTMLScriptElement).onload = () => {
+            clearTimeout(timeout);
+            resolve(true);
+          };
+          (existing as HTMLScriptElement).onerror = () => {
+            clearTimeout(timeout);
+            existing.remove();
+            resolve(false);
+          };
+          timeout = setTimeout(() => {
+            resolve(Boolean((window as any).Razorpay));
+          }, 10000);
+          return;
+        }
         
         const script = document.createElement("script");
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
         
         script.onload = () => {
           clearTimeout(timeout);
@@ -195,15 +224,16 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         
         script.onerror = () => {
           clearTimeout(timeout);
+          script.remove();
           resolve(false);
         };
         
         document.body.appendChild(script);
         
-        // Timeout after 4 seconds
+        // Timeout after 10 seconds for mobile connections
         timeout = setTimeout(() => {
-          resolve(false);
-        }, 4000);
+          resolve(Boolean((window as any).Razorpay));
+        }, 10000);
       });
       
       if (success) return true;
@@ -906,7 +936,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
       </div>
 
       {/* Mobile-Friendly Sticky Bottom Bar */}
-      {!accepted && (
+      {!accepted && !isBillingModalOpen && !isSurveyModalOpen && (
         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-xl border-t border-zinc-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[max(0.4rem,env(safe-area-inset-bottom))]">
           <div className="px-2 py-2 max-w-lg mx-auto space-y-2.5">
             

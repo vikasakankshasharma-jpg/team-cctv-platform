@@ -112,15 +112,22 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
     }
   };
 
-  const isAdvance = Boolean(
+  const isPaid = Boolean(
+    statusData?.status === "PAID" || 
+    statusData?.payment_status === "paid" || 
+    statusData?.payment_status === "captured" ||
+    (statusData?.amount_due === 0 && (statusData?.amount_paid || 0) > 500)
+  );
+
+  const isAdvance = !isPaid && Boolean(
     statusData?.is_advance || 
     statusData?.status === "BOOKED" || 
     statusData?.payment_status === "advance_paid" || 
     (statusData?.amount_due && statusData.amount_due > 0)
   );
 
-  const paidAmount = statusData?.amount_paid || (isAdvance ? 500 : 0);
-  const dueAmount = statusData?.amount_due || (isAdvance && statusData?.total_payable ? Math.max(0, statusData.total_payable - paidAmount) : 0);
+  const paidAmount = statusData?.amount_paid || (isAdvance ? 500 : (statusData?.total_payable || 0));
+  const dueAmount = isPaid ? 0 : (statusData?.amount_due || (isAdvance && statusData?.total_payable ? Math.max(0, statusData.total_payable - paidAmount) : 0));
 
   const invoiceUrl = `/api/invoice/${quoteId}/download?t=${Date.now()}`;
   const whatsappInvoiceUrl = `https://wa.me/917357612865?text=${encodeURIComponent(`Hi TEAM CCTV, please send me the official ${isAdvance ? 'Advance Booking Receipt' : 'Tax Invoice'} PDF for my booking.\n\nQuote ID: ${quoteId}\n{t("ps_payment_id")}: ${paymentId}`)}`;
@@ -131,6 +138,12 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
   const displayName = billingData?.is_business && billingData?.company_name
     ? billingData.company_name
     : (billingData?.customer_name || "Valued Customer");
+
+  // Sanitize address line to avoid showing duplicate pincodes e.g. "302004, 302004"
+  const rawAddr = (billingData?.address_line1 || "").trim();
+  const isAddrPincodeOnly = /^\d{6}$/.test(rawAddr) || rawAddr.toLowerCase().includes("pending");
+  const streetDisplay = isAddrPincodeOnly ? "" : rawAddr;
+  const fullAddressString = [streetDisplay, billingData?.city, billingData?.pincode].filter(Boolean).join(", ");
 
   return (
     <div className="max-w-3xl mx-auto py-4 md:py-10 sm:py-16 px-4 sm:px-6 pb-20">
@@ -147,7 +160,7 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
           <p className="text-white/90 text-sm sm:text-base font-medium">
             {isAdvance 
               ? `₹${paidAmount.toLocaleString('en-IN')} Advance Received. Your CCTV installation slot is reserved.`
-              : "Your CCTV installation booking is locked in."}
+              : "Full Payment Confirmed • Your CCTV installation is locked in."}
           </p>
         </div>
 
@@ -184,10 +197,10 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
                   <span className="font-mono font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">{billingData.gstin} (B2B Tax Invoice)</span>
                 </div>
               )}
-              {billingData?.address_line1 && (
+              {fullAddressString && (
                 <div className="flex justify-between items-start">
                   <span className="text-emerald-800 shrink-0">{t("ps_site_address")}</span>
-                  <span className="text-right text-emerald-950 font-medium pl-4">{billingData.address_line1}, {billingData.city} {billingData.pincode}</span>
+                  <span className="text-right text-emerald-950 font-medium pl-4">{fullAddressString}</span>
                 </div>
               )}
               <div className="flex justify-between items-center pt-1">
@@ -201,7 +214,7 @@ export function PaymentSuccessClient({ quoteId, paymentId }: Props) {
                   </span>
                 ) : (
                   <span className="font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-3 py-0.5 rounded-full text-xs uppercase tracking-wider">
-                    {t("ps_paid_confirmed")}
+                    Full Payment Confirmed • Zero Balance Due
                   </span>
                 )}
               </div>

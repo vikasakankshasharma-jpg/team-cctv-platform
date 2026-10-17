@@ -121,6 +121,10 @@ export function BillingOverviewModal({
   const [googleMapsLink, setGoogleMapsLink] = useState<string>(initialData?.google_maps_link || "");
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [gstError, setGstError] = useState("");
+  const [addressError, setAddressError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [pincodeError, setPincodeError] = useState("");
 
   useEffect(() => {
     if (initialData) {
@@ -176,13 +180,22 @@ export function BillingOverviewModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    setNameError("");
+    setPhoneError("");
+    setAddressError("");
+    setPincodeError("");
+
     if (!customerName.trim()) {
+      setNameError("Please enter your name");
       toast.error("Please enter your name / contact person name");
+      document.getElementById("billing-name-input")?.focus();
       return;
     }
 
     if (!phone.trim() || phone.length < 10) {
+      setPhoneError("Please enter a valid 10-digit mobile number");
       toast.error("Please enter a valid 10-digit mobile number");
+      document.getElementById("billing-phone-input")?.focus();
       return;
     }
 
@@ -203,12 +216,20 @@ export function BillingOverviewModal({
     }
 
     if (!addressLine1.trim() || addressLine1.trim().toLowerCase().includes("address pending") || addressLine1.trim().toLowerCase() === "pending") {
-      toast.error("Please enter your complete installation & billing street address");
+      setAddressError("Please enter your flat/building/shop number and street name");
+      toast.error("Please enter your installation street address");
+      const el = document.getElementById("billing-address-input");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.focus();
+      }
       return;
     }
 
     if (!pincode.trim() || pincode.length < 6) {
+      setPincodeError("Please enter a valid 6-digit Pincode");
       toast.error("Please enter a valid 6-digit Pincode");
+      document.getElementById("billing-pincode-input")?.focus();
       return;
     }
 
@@ -236,12 +257,12 @@ export function BillingOverviewModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[92vh] flex flex-col"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 30 }}
+          className="relative w-full max-w-2xl bg-white rounded-t-[28px] sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92dvh] h-auto overscroll-contain"
         >
           {/* Header */}
           <div className="px-6 py-5 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex items-center justify-between">
@@ -382,13 +403,25 @@ export function BillingOverviewModal({
                     {isBusiness ? "Contact Person Name" : "Full Name"} <span className="text-rose-500">*</span>
                   </label>
                   <input
+                    id="billing-name-input"
                     type="text"
                     required
                     value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
+                    onChange={(e) => {
+                      setCustomerName(e.target.value);
+                      if (nameError) setNameError("");
+                    }}
                     placeholder="e.g. Vikas Sharma"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 bg-white transition-colors ${
+                      nameError ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20" : "border-slate-300 focus:ring-emerald-500"
+                    }`}
                   />
+                  {nameError && (
+                    <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      {nameError}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -396,14 +429,26 @@ export function BillingOverviewModal({
                     Mobile Number <span className="text-rose-500">*</span>
                   </label>
                   <input
+                    id="billing-phone-input"
                     type="tel"
                     required
                     maxLength={10}
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
+                    onChange={(e) => {
+                      setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10));
+                      if (phoneError) setPhoneError("");
+                    }}
                     placeholder="9876543210"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 bg-white transition-colors ${
+                      phoneError ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20" : "border-slate-300 focus:ring-emerald-500"
+                    }`}
                   />
+                  {phoneError && (
+                    <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      {phoneError}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -420,50 +465,66 @@ export function BillingOverviewModal({
                 />
               </div>
 
-                <div className="pt-2">
-                  <label className="text-xs font-semibold text-slate-700 block mb-2">
-                    {isBusiness ? "Registered Office / Billing Address" : "Installation Location & Address"} <span className="text-rose-500">*</span>
+              <div className="pt-1">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                    <span>{isBusiness ? "Registered Office / Installation Address" : "Installation Street Address"}</span>
+                    <span className="text-rose-500">*</span>
                   </label>
-
-                  {/* Prominent Map CTA Before Address */}
-                  <div className="mb-3">
-                    {coords ? (
-                      <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-900 shadow-sm transition-all hover:bg-emerald-100/50 cursor-pointer" onClick={() => setIsMapModalOpen(true)}>
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center shrink-0">
-                            <CheckCircle2 className="w-4 h-4" />
-                          </div>
-                          <div className="truncate">
-                            <span className="font-bold block text-[13px]">{t("modal_loc_pinned")}</span>
-                            <span className="font-mono text-[10px] text-emerald-700">{coords.lat.toFixed(4)}&deg;N, {coords.lng.toFixed(4)}&deg;E</span>
-                          </div>
-                        </div>
-                        <button type="button" className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 underline underline-offset-2 px-2 shrink-0">{t("modal_edit_pin")}</button>
-                      </div>
-                    ) : (
-                      <div 
-                        onClick={() => setIsMapModalOpen(true)}
-                        className="p-4 rounded-xl bg-blue-50 border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-100 transition-all cursor-pointer flex flex-col items-center justify-center text-center group"
-                      >
-                        <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center mb-2 shadow-md group-hover:scale-110 transition-transform">
-                          <MapPin className="w-5 h-5" />
-                        </div>
-                        <h4 className="font-bold text-blue-900 text-[13px]">Pin Installation Location on Map</h4>
-                        <p className="text-[11px] text-blue-700/80 mt-0.5">Helps our engineers find your exact site easily.</p>
-                        <span className="mt-2 text-[10px] font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full group-hover:bg-blue-200">Open Map</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <input
-                    type="text"
-                    required
-                    value={addressLine1}
-                    onChange={(e) => setAddressLine1(e.target.value)}
-                    placeholder="Flat/House/Shop No, Building, Street (Manual Entry)"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsMapModalOpen(true)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-all shadow-sm ${
+                      coords
+                        ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300"
+                        : "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                    }`}
+                  >
+                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                    <span>{coords ? "📍 Location Pinned (Change)" : "📍 Pin on Map"}</span>
+                  </button>
                 </div>
+
+                {coords && (
+                  <div className="mb-2 p-2 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-900">
+                    <div className="flex items-center gap-2 truncate">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="truncate font-medium text-[11px]">
+                        GPS Pin Locked ({coords.lat.toFixed(4)}&deg;N, {coords.lng.toFixed(4)}&deg;E)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMapModalOpen(true)}
+                      className="text-[10px] font-bold text-emerald-700 hover:underline shrink-0 ml-2"
+                    >
+                      Edit Pin
+                    </button>
+                  </div>
+                )}
+
+                <input
+                  id="billing-address-input"
+                  type="text"
+                  required
+                  value={addressLine1}
+                  onChange={(e) => {
+                    setAddressLine1(e.target.value);
+                    if (addressError) setAddressError("");
+                  }}
+                  placeholder="Flat/House/Shop No, Building Name, Street / Colony"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 bg-white transition-colors ${
+                    addressError ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20" : "border-slate-300 focus:ring-emerald-500"
+                  }`}
+                />
+                {addressError && (
+                  <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {addressError}
+                  </p>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-700 mb-1 block">{t("modal_city")}</label>
@@ -501,6 +562,7 @@ export function BillingOverviewModal({
                     Pincode <span className="text-rose-500">*</span>
                   </label>
                   <input
+                    id="billing-pincode-input"
                     type="text"
                     required
                     maxLength={6}
@@ -508,6 +570,7 @@ export function BillingOverviewModal({
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
                       setPincode(val);
+                      if (pincodeError) setPincodeError("");
                       if (val.length === 6) {
                         fetch(`/api/pincode/${val}`)
                           .then(res => res.json())
@@ -526,8 +589,16 @@ export function BillingOverviewModal({
                       }
                     }}
                     placeholder="302001"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 bg-white transition-colors ${
+                      pincodeError ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20" : "border-slate-300 focus:ring-emerald-500"
+                    }`}
                   />
+                  {pincodeError && (
+                    <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      {pincodeError}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -588,6 +659,10 @@ export function BillingOverviewModal({
                     <span>
                       {mode === "edit" 
                         ? "Save Billing & GST Details" 
+                        : paymentType === "full_discount"
+                        ? `Pay ₹${amountToCharge.toLocaleString("en-IN")} (2% Off Applied)`
+                        : paymentType.includes("advance")
+                        ? `Book Slot for ₹${amountToCharge.toLocaleString("en-IN")}`
                         : `Confirm & Pay ₹${amountToCharge.toLocaleString("en-IN")}`}
                     </span>
                     <ArrowRight className="w-4 h-4" />
@@ -605,9 +680,20 @@ export function BillingOverviewModal({
         onClose={() => setIsMapModalOpen(false)}
         initialPincode={pincode || "302001"}
         initialCoords={coords}
-        onConfirm={(newCoords, mapUrl) => {
+        onConfirm={(newCoords, mapUrl, meta) => {
           setCoords(newCoords);
           setGoogleMapsLink(mapUrl);
+          if (meta?.formattedAddress) {
+            setAddressLine1(meta.formattedAddress);
+            setAddressError("");
+          }
+          if (meta?.pincode) {
+            setPincode(meta.pincode);
+            setPincodeError("");
+          }
+          if (meta?.locality && (!city || city === "Jaipur")) {
+            setCity(meta.locality);
+          }
         }}
       />
     </AnimatePresence>

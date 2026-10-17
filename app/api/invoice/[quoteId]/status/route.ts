@@ -53,10 +53,11 @@ export async function GET(
       quoteData.status === "COMPLETED";
 
     const isAdvance = 
-      quoteData.status === "BOOKED" || 
-      quoteData.payment_status === "advance_paid" || 
-      String(quoteData.payment_type || '').includes("advance") ||
-      (quoteData.amount_paid && quoteData.amount_paid < (quoteData.total_payable || 999999));
+      !isPaid && (
+        quoteData.status === "BOOKED" || 
+        quoteData.payment_status === "advance_paid" || 
+        String(quoteData.payment_type || '').includes("advance")
+      );
 
     const isReady = isPaid || isAdvance || !!quoteData.paid_at || !!quoteData.payment_id || (quoteData.amount_paid || 0) > 0;
 

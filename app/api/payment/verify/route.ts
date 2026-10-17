@@ -1,27 +1,82 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
 
 export async function POST(request: Request) {
   try {
     const { quoteId, paymentId } = await request.json();
-    if (!quoteId || !paymentId) return NextResponse.json({ success: false, error: "Missing payload" }, { status: 400 });
+    if (!quoteId || !paymentId) {
+      return NextResponse.json({ success: false, error: "Missing payload" }, { status: 400 });
+    }
 
     // Fallback Verification for preview environments where webhooks fail to reach localhost/vercel preview branches
-    const quoteRef = adminDb.collection("quotes").doc(quoteId);
-    const docSnap = await quoteRef.get();
-    
+    let quoteRef = adminDb.collection("quotes").doc(quoteId);
+    let docSnap = await quoteRef.get();
+
+    // Check case variations or nested subcollection if not found in root quotes
+    if (!docSnap.exists) {
+      const upperSnap = await adminDb.collection("quotes").doc(quoteId.toUpperCase()).get();
+      if (upperSnap.exists) {
+        quoteRef = adminDb.collection("quotes").doc(quoteId.toUpperCase());
+        docSnap = upperSnap;
+      }
+    }
+
+    if (!docSnap.exists) {
+      try {
+        const cgSnap = await adminDb.collectionGroup("quotes").where("id", "==", quoteId).limit(1).get();
+        if (!cgSnap.empty) {
+          docSnap = cgSnap.docs[0];
+          quoteRef = docSnap.ref as any;
+        }
+      } catch (err) {
+        console.warn("CollectionGroup lookup failed:", err);
+      }
+    }
+
     if (docSnap.exists) {
-      const data = docSnap.data();
-      // Only update if not already marked
-      if (data?.status !== "PAID" && data?.status !== "BOOKED") {
-        await quoteRef.update({
-          status: "BOOKED",
-          payment_status: "advance_paid",
-          amount_paid: data?.amount_paid || 500, // At least 500
-          booking_amount: 500,
+      const data = docSnap.data() as any;
+      const isAlreadyPaid = data?.status === "PAID" || data?.payment_status === "paid" || data?.payment_status === "captured";
+
+      // Calculate totals
+      const totalAmount = Number(
+        data?.total_payable_after_discount ??
+        data?.total_amount ??
+        data?.pricingSnapshot?.total_payable ??
+        data?.total_payable ??
+        data?.total ??
+        0
+      );
+
+      const isFullPayment = 
+        data?.payment_type === "full" || 
+        data?.payment_type === "full_discount" || 
+        (Number(data?.razorpay_order_amount) > 500);
+
+      const amountPaid = isFullPayment 
+        ? Number(data?.razorpay_order_amount || totalAmount) 
+        : 500;
+
+      const amountDue = isFullPayment 
+        ? 0 
+        : Math.max(0, totalAmount - amountPaid);
+
+      if (!isAlreadyPaid) {
+        const updateData: any = {
+          status: isFullPayment ? "PAID" : "BOOKED",
+          payment_status: isFullPayment ? "paid" : "advance_paid",
+          is_advance: !isFullPayment,
+          amount_paid: amountPaid,
+          amount_due: amountDue,
           payment_id: paymentId,
-          paid_at: new Date().toISOString()
-        });
+          paid_at: new Date().toISOString(),
+          updated_at: serverTimestamp ? serverTimestamp() : new Date().toISOString(),
+        };
+
+        if (!isFullPayment) {
+          updateData.booking_amount = 500;
+        }
+
+        await quoteRef.update(updateData);
       }
 
       const leadId = data?.lead_id || data?.leadId;
@@ -30,13 +85,12 @@ export async function POST(request: Request) {
         const leadSnap = await leadRef.get();
         if (leadSnap.exists) {
           await leadRef.update({
-            status: "booked",
-            payment_status: "advance_paid",
-            amount_paid: data?.amount_paid || 500,
-            booking_amount: 500,
+            status: isFullPayment ? "converted" : "booked",
+            payment_status: isFullPayment ? "paid" : "advance_paid",
+            amount_paid: amountPaid,
             payment_id: paymentId,
             paid_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            updated_at: serverTimestamp ? serverTimestamp() : new Date().toISOString(),
           }).catch(() => {});
         }
       }
