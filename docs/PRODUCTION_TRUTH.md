@@ -122,5 +122,18 @@
 4. **Assigned Pincodes Badge Area:**
    - Interactive badge wrap displaying currently assigned PINs with 1-click `✕` removal buttons.
 
+---
 
-
+## 8. Add-ons, Accessories & HDMI Cable Range Architecture (Production Invariants)
+1. **Strict Active Catalog & Anti-Synthetic Rule (Section 1.1):**
+   - The platform strictly renders only genuine, verified items existing in the Firestore `products` collection (`is_active === true` and `is_deleted !== true`).
+   - Fictitious, placeholder, or mock accessories (e.g., dummy sensors, fake UPS systems) are strictly forbidden in customer quotations.
+2. **Category Boundaries:**
+   - `MUST_HAVE_CATEGORIES`: Cameras, Recorders, Storage HDDs, Power Supplies (SMPS/PoE), System Cables, and Connectors are essential core Bill of Materials items sized automatically by the pricing engine based on camera count and technology. They are NOT optional customer checkboxes.
+   - `OPTIONAL_CATEGORIES`: Display Monitors, DVR/NVR Racks, 4G Wi-Fi Routers, Desktop Gigabit Switches, and HDMI Cables are rendered in "Add-ons & Accessories For Your System" for customer upsell.
+3. **HDMI Cable Suite (1.5M to 20M):**
+   - 6 standardized SKUs: `HDMI-1.5M` (₹84), `HDMI-3M` (₹168), `HDMI-5M` (₹252), `HDMI-10M` (₹420), `HDMI-15M` (₹630), `HDMI-20M` (₹910).
+   - **Smart Mutual Exclusivity:** Selecting any HDMI length in `store/configurator.ts` (`toggleAddon`) automatically switches out any previously selected length, preventing duplicate billing for single-recorder setups.
+4. **Dynamic Price Synchronization & Fallback Defense:**
+   - Add-on cards in `InstantQuotationReview.tsx` resolve unit prices dynamically from `products.find(...)?.unit_price`.
+   - `FALLBACK_CATALOG` in `lib/pricing-engine.ts:calculateAddons` matches live Admin database prices (`DISP-19-INCH` @ ₹2,415, `ACC-4G-ROUTER` @ ₹1,885, Racks @ ₹490/₹630), guaranteeing 100% price parity between display cards, BOM line items, and invoice documents.

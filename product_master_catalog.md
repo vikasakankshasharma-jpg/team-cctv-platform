@@ -1,7 +1,7 @@
 # TEAM CCTV Product Master Catalog (Deduplicated)
 
-*Last Updated: 15/5/2026, 9:35:31 am*
-*Total Items: 732 (Products: 393, Addons: 339)*
+*Last Updated: 17/10/2026, 9:35:00 am*
+*Total Items: 738 (Products: 399, Addons: 339)*
 
 ## Products
 
@@ -400,6 +400,12 @@
 | `secureye_dvr_8ch_1_sata_h_265_sr_xvr_108_hd_dvr` | Secureye DVR 8Ch 1 SATA H.265 (SR-XVR-108) | Secureye | recorder | HD | ₹3364 |
 | `secureye_nvr_8ch_1_sata_h_265_sr_nvr_108_ip_nvr` | Secureye NVR 8Ch 1 SATA H.265 (SR-NVR-108) | Secureye | recorder | IP | ₹4487 |
 | `secureye_spr105_5ch_6mp_ip_nvr_1_sata_ip_nvr` | Secureye SPR105 5CH 6MP IP NVR (1 SATA) | Secureye | recorder | IP | ₹3661 |
+| `HDMI-1.5M` | High-Speed HDMI Cable (1.5 MTR) | Budget Brand | hdmi_cable | Common | ₹84 |
+| `HDMI-3M` | High-Speed HDMI Cable (3 MTR) | Budget Brand | hdmi_cable | Common | ₹168 |
+| `HDMI-5M` | High-Speed HDMI Cable (5 MTR) | Budget Brand | hdmi_cable | Common | ₹252 |
+| `HDMI-10M` | High-Speed HDMI Cable (10 MTR) | Budget Brand | hdmi_cable | Common | ₹420 |
+| `HDMI-15M` | High-Speed HDMI Cable (15 MTR) | Budget Brand | hdmi_cable | Common | ₹630 |
+| `HDMI-20M` | High-Speed HDMI Cable (20 MTR) | Budget Brand | hdmi_cable | Common | ₹910 |
 
 ## Addons
 

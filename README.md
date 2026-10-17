@@ -23,6 +23,8 @@
 - **Multi-PoE & Gigabit Aggregation:** Automatically allocates interconnecting Desktop Gigabit Switches for large IP camera topologies.
 - **Cable Bundling & Margin Slabs:** Evaluates 305m/100m bundles vs. per-meter pricing, with admin-configured short-run margin slabs.
 - **Formulas:** Connectors (`camera_count * 2` + 2 for IP uplink), Junction Boxes (`1:1`).
+- **Comprehensive Add-ons & Full HDMI Cable Range:** Full market range of HDMI cables (1.5M, 3M, 5M, 10M, 15M, 20M) with smart mutual exclusivity in configurator selection. 100% real-time price synchronization across UI cards, BOM line items, and live Admin database (`DISP-19-INCH` @ ₹2,415, `ACC-4G-ROUTER` @ ₹1,885, Racks @ ₹490/₹630).
+
 
 ### 3. Transparent Labor & Site Survey Rules
 - **Zero Margin on Labor:** Labor costs strictly reflect local market rates with 0% margin markup.
@@ -109,6 +111,15 @@ npx playwright test
 
 # Verify quotation engine parity
 npx tsx scratch/verify_quotation_flow.ts
+
+# Test HDMI Add-ons Suite (all 12 active catalog SKUs)
+npx tsx scripts/test-hdmi-addons.ts
+
+# Test Multi-Camera Matrix (432 configurations, 1-32 cameras)
+npx tsx scripts/test-all-counts-matrix.ts
+
+# Test 238 Permutations Matrix
+npx tsx scripts/execute-all-238-tests.ts
 ```
 
 ---

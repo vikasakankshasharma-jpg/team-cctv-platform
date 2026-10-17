@@ -37,8 +37,9 @@ This document serves as the master engineering and operational handover for the 
 - **Recorder (DVR/NVR) Resolution Compatibility & Cost Optimization:** Recorders are dynamically sized to ensure maximum supported camera resolution meets or exceeds the highest camera in the configuration: $\text{recMaxMP} \ge \max(\text{Camera MP})$. If a 5MP recorder is priced lower than a 2MP recorder in the catalog, the engine chooses the cheaper 5MP unit for 2MP cameras. For 4MP/5MP/8MP cameras, 2MP recorders are strictly disqualified. Mixed camera installations automatically size to the highest resolution camera.
 - **Competitive SMPS Rule:** The engine selects the cheapest compatible power supply, even if it has higher channel capacity (e.g., 8Ch SMPS for 4 cameras), to ensure maximum price competitiveness. Fallback quantity uses `Math.ceil(camera_count / max_cameras)`.
 - **Multi-PoE Gigabit Uplink:** Automatically includes an interconnecting Desktop Gigabit Switch when total IP cameras exceed single PoE switch capacity.
-- **Cabling & Margin Slabs:** Evaluates whether required cable length is cheaper as full bundles (305m / 100m) + balance per meter, or purely per-meter rates. Cable pulling labor is free up to 15m/camera; cable material is billed. Admin short-run margin slabs protect low-volume runs.
 - **Connectors & Junction Boxes:** Connectors (`camera_count * 2` + 2 RJ45 for IP uplink), Junction Boxes (`1:1`).
+- **Add-ons, Accessories & Full HDMI Range:** Full range of standard HDMI cables (1.5M, 3M, 5M, 10M, 15M, 20M) with smart mutual exclusivity (switching length auto-deselects previously selected length). Dynamically renders genuine active catalog accessories under "Add-ons & Accessories For Your System" (`DISP-19-INCH` @ ₹2,415, `ACC-4G-ROUTER` @ ₹1,885, Racks @ ₹490/₹630, AMC) with 100% price synchronization across UI cards, BOM line items, and server pricing engine.
+
 
 ### 2.3 Installation & Site Survey Rules
 - **Zero Margin on Labor:** Labor line items NEVER receive commercial margin markup.
@@ -94,6 +95,15 @@ npm run build
 
 # Playwright Test Suite
 npx playwright test
+
+# HDMI Add-ons Verification Suite (12 active catalog SKUs)
+npx tsx scripts/test-hdmi-addons.ts
+
+# Multi-Camera Count Matrix (1-32 cameras across HD, IP, Wireless - 432 permutations)
+npx tsx scripts/test-all-counts-matrix.ts
+
+# 238-Test Matrix Runner
+npx tsx scripts/execute-all-238-tests.ts
 
 # Database Verification Script
 npx tsx scratch/verify_db.ts
