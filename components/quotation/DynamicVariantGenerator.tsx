@@ -468,7 +468,9 @@ export function DynamicVariantGenerator({
           >
             {activeTech === "wireless" && <span className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full -z-10" />}
             <span>Smart Wireless (Wi-Fi / 4G)</span>
-            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'wireless' ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300'}`}>Zero Wiring</span>
+            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'wireless' ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300'}`}>
+              {selection.power_wiring_option === "wire_needed" ? "Zero Video Wire" : "Zero Wiring"}
+            </span>
           </button>
         </div>
 

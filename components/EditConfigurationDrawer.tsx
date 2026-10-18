@@ -89,20 +89,99 @@ export function EditConfigurationDrawer({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Total Cable Length (Meters, all cameras combined)</Label>
-            <Input 
-              type="number" 
-              value={req.total_cable_length_meters || (req.cable_length_meters ? req.cable_length_meters * (req.camera_count || 1) : "") || ""} 
-              placeholder="Leave blank for auto-calculation"
-              onChange={(e) => setReq(prev => ({...prev, total_cable_length_meters: parseInt(e.target.value) || undefined, cable_length_meters: undefined}))}
-            />
-            {req.total_cable_length_meters && req.total_cable_length_meters > ((req.camera_count || 1) * 15) && (
-              <p className="text-xs text-red-500 font-medium mt-1">
-                Exceeds {((req.camera_count || 1) * 15)}m free limit. Excess incurs a labor surcharge of ₹15/m.
-              </p>
-            )}
-          </div>
+          {req.technology_preference === "Wireless" ? (
+            <div className="space-y-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                  Camera Power Point Availability
+                </Label>
+                <Select
+                  value={req.power_wiring_option || "socket_available"}
+                  onValueChange={(val: any) => {
+                    const wirelessCams = req.camera_count || 1;
+                    setReq(prev => ({
+                      ...prev,
+                      power_wiring_option: val,
+                      total_power_cable_meters: val === "wire_needed" ? (prev.total_power_cable_meters || wirelessCams * 10) : 0,
+                      power_cable_meters: val === "wire_needed" ? 10 : 0
+                    }));
+                  }}
+                >
+                  <SelectTrigger className="bg-white dark:bg-zinc-900">
+                    <SelectValue placeholder="Select power availability" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="socket_available">Power Socket Nearby (Within 1.5m) - Included (₹0)</SelectItem>
+                    <SelectItem value="wire_needed">Need 2-Core Electrical Power Cabling (@ ₹10/m)</SelectItem>
+                    <SelectItem value="site_survey">Site Survey / Decide on Site Visit (Pay on Actuals)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {req.power_wiring_option === "wire_needed" && (
+                <div className="space-y-1.5 pt-1">
+                  <Label className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                    Total 2-Core Electrical Wire Length (Meters)
+                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-9 w-9 bg-white dark:bg-zinc-900"
+                      onClick={() => {
+                        const current = req.total_power_cable_meters || ((req.camera_count || 1) * 10);
+                        const next = Math.max(5, current - 5);
+                        setReq(prev => ({ ...prev, total_power_cable_meters: next, power_cable_meters: Math.ceil(next / (prev.camera_count || 1)) }));
+                      }}
+                      disabled={(req.total_power_cable_meters || ((req.camera_count || 1) * 10)) <= 5}
+                    >
+                      -
+                    </Button>
+                    <Input 
+                      type="number" 
+                      min="5"
+                      value={req.total_power_cable_meters ?? ((req.camera_count || 1) * 10)} 
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setReq(prev => ({ ...prev, total_power_cable_meters: val, power_cable_meters: Math.ceil(val / (prev.camera_count || 1)) }));
+                      }}
+                      className="w-24 text-center bg-white dark:bg-zinc-900 font-bold"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-9 w-9 bg-white dark:bg-zinc-900"
+                      onClick={() => {
+                        const current = req.total_power_cable_meters || ((req.camera_count || 1) * 10);
+                        const next = current + 5;
+                        setReq(prev => ({ ...prev, total_power_cable_meters: next, power_cable_meters: Math.ceil(next / (prev.camera_count || 1)) }));
+                      }}
+                    >
+                      +
+                    </Button>
+                    <span className="text-xs text-amber-700 dark:text-amber-300 font-medium ml-1">
+                      @ ₹10/m = ₹{((req.total_power_cable_meters || ((req.camera_count || 1) * 10)) * 10).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Total Cable Length (Meters, all cameras combined)</Label>
+              <Input 
+                type="number" 
+                value={req.total_cable_length_meters || (req.cable_length_meters ? req.cable_length_meters * (req.camera_count || 1) : "") || ""} 
+                placeholder="Leave blank for auto-calculation"
+                onChange={(e) => setReq(prev => ({...prev, total_cable_length_meters: parseInt(e.target.value) || undefined, cable_length_meters: undefined}))}
+              />
+              {req.total_cable_length_meters && req.total_cable_length_meters > ((req.camera_count || 1) * 15) && (
+                <p className="text-xs text-red-500 font-medium mt-1">
+                  Exceeds {((req.camera_count || 1) * 15)}m free limit. Excess incurs a labor surcharge of ₹15/m.
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Site Internet / Wi-Fi Connection</Label>

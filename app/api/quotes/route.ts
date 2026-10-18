@@ -142,7 +142,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. SERVER-SIDE PRICE RECALCULATION (IMMUTABLE BY CLIENT)
+    // Map power wiring option for wireless cameras
+    if (!selection.power_wiring_option && (wizardAnswers.power_wiring_option || siteSurvey.power_wiring_option)) {
+      selection.power_wiring_option = (wizardAnswers.power_wiring_option || siteSurvey.power_wiring_option) as any;
+    }
+    if ((selection as any).total_power_cable_meters === undefined && wizardAnswers.total_power_cable_meters !== undefined) {
+      (selection as any).total_power_cable_meters = Number(wizardAnswers.total_power_cable_meters);
+    }
+    if ((selection as any).power_cable_meters === undefined && wizardAnswers.power_cable_meters !== undefined) {
+      (selection as any).power_cable_meters = Number(wizardAnswers.power_cable_meters);
+    }
     let appliedReferralDiscountPercent = 0;
     if (leadData.referral_code) {
       appliedReferralDiscountPercent = settings.customer_referral_discount_percent ?? 3;
@@ -170,7 +179,7 @@ export async function POST(request: NextRequest) {
       products,
       addons,
       settings,
-      cablingDone: leadData.cabling_done || false,
+      cablingDone: (selection as any).cabling_done !== undefined ? Boolean((selection as any).cabling_done) : (leadData.cabling_done || false),
       cablingMeters,              // FIX: Now matches the client cabling calculation exactly
       site_surcharge_flags: effectiveSurchargeFlags,
       referralDiscountPercent: appliedReferralDiscountPercent, // Injected via global settings

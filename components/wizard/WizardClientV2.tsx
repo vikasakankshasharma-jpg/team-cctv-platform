@@ -1153,7 +1153,7 @@ export function WizardClientV2() {
                   <div>
                     <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">3. Installation & Setup Preference</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-                      <button type="button" onClick={() => updateReq({ installation_preference: "pro", cabling_done: true })}
+                      <button type="button" onClick={() => updateReq({ installation_preference: "pro", cabling_done: false })}
                         className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${(req.installation_preference || "pro") === "pro" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Pro Installation Fitting</span>
@@ -1161,7 +1161,7 @@ export function WizardClientV2() {
                         </div>
                         <p className="text-[11px] text-gray-500 dark:text-zinc-400">Certified technician visits for physical drill mounting & phone app setup.</p>
                       </button>
-                      <button type="button" onClick={() => updateReq({ installation_preference: "diy", cabling_done: true })}
+                      <button type="button" onClick={() => updateReq({ installation_preference: "diy", cabling_done: false })}
                         className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.installation_preference === "diy" ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">DIY Self-Installation</span>
@@ -1170,8 +1170,160 @@ export function WizardClientV2() {
                         <p className="text-[11px] text-gray-500 dark:text-zinc-400">Delivered to your doorstep. Plug into power and pair via mobile app.</p>
                       </button>
                     </div>
-                    <div className="mt-2 p-2.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900 text-[11px] text-blue-800 dark:text-blue-300">
-                      ℹ️ <strong>Zero Video Cabling:</strong> Wi-Fi cameras connect directly to your wireless router. Simply plug into a nearby 12V/5V socket.
+
+                    {/* Camera Power & Electrical Cabling Requirement */}
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider">
+                          4. Camera Power Point Availability
+                        </h3>
+                        <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">
+                          Zero Video Cabling
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mb-2">
+                        Cameras connect to Wi-Fi/4G wirelessly, but each requires electrical power. Select your site condition:
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
+                        {/* Option 1: Power Socket Nearby */}
+                        <button
+                          type="button"
+                          onClick={() => updateReq({ power_wiring_option: "socket_available", total_power_cable_meters: 0, power_cable_meters: 0 })}
+                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                            (!req.power_wiring_option || req.power_wiring_option === "socket_available")
+                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm'
+                              : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Power Socket Nearby</span>
+                            <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">
+                              Included (₹0)
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                            Power socket within 1.5m of each camera. Simply plug adapter into socket.
+                          </p>
+                        </button>
+
+                        {/* Option 2: Need 2-Core Electrical Power Cabling */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const wirelessCams = Number(req.camera_count) || 2;
+                            const defaultMeters = wirelessCams * 10;
+                            updateReq({
+                              power_wiring_option: "wire_needed",
+                              total_power_cable_meters: req.total_power_cable_meters || defaultMeters,
+                              power_cable_meters: 10
+                            });
+                          }}
+                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                            req.power_wiring_option === "wire_needed"
+                              ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/50 shadow-sm'
+                              : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Need Power Cabling</span>
+                            <span className="text-[9px] bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 font-bold px-1.5 py-0.5 rounded">
+                              @ ₹10/m
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                            No socket nearby. Install 2-core copper electrical wire from switchboard to camera points.
+                          </p>
+                        </button>
+
+                        {/* Option 3: Site Survey / Decide on Installation */}
+                        <button
+                          type="button"
+                          onClick={() => updateReq({ power_wiring_option: "site_survey", total_power_cable_meters: 0, power_cable_meters: 0 })}
+                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                            req.power_wiring_option === "site_survey"
+                              ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm'
+                              : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Decide on Site Visit</span>
+                            <span className="text-[9px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
+                              Pay on Actuals
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                            Technician inspects site power points and quotes wire as per actual length needed.
+                          </p>
+                        </button>
+                      </div>
+
+                      {/* Meter counter when wire_needed is chosen */}
+                      {req.power_wiring_option === "wire_needed" && (() => {
+                        const wirelessCams = Number(req.camera_count) || 2;
+                        const defaultMeters = wirelessCams * 10;
+                        const selectedPowerMeters = typeof req.total_power_cable_meters === "number" ? req.total_power_cable_meters : defaultMeters;
+                        const estCost = selectedPowerMeters * 10;
+
+                        return (
+                          <div className="mt-2.5 p-3 rounded-xl border bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in">
+                            <div>
+                              <span className="block font-bold text-gray-900 dark:text-white text-xs">
+                                Estimated 2-Core Electrical Power Wire Required
+                              </span>
+                              <span className="block text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+                                ~{Math.round(selectedPowerMeters / wirelessCams)}m / camera • ₹10/m = <strong className="font-bold text-amber-950 dark:text-amber-200">₹{estCost.toLocaleString("en-IN")} total</strong>
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-xl border border-amber-200 dark:border-zinc-700 shadow-sm self-start sm:self-auto shrink-0">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 text-gray-700 dark:text-gray-200 hover:bg-gray-100 font-bold"
+                                onClick={() => {
+                                  const next = Math.max(5, selectedPowerMeters - 5);
+                                  updateReq({ total_power_cable_meters: next, power_cable_meters: Math.ceil(next / wirelessCams) });
+                                }}
+                                disabled={selectedPowerMeters <= 5}
+                              >
+                                -
+                              </Button>
+
+                              <div className="flex items-center min-w-[65px] justify-center">
+                                <input
+                                  type="number"
+                                  min="5"
+                                  value={selectedPowerMeters}
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    if (!isNaN(val)) {
+                                      const next = Math.max(0, val);
+                                      updateReq({ total_power_cable_meters: next, power_cable_meters: Math.ceil(next / wirelessCams) });
+                                    }
+                                  }}
+                                  className="w-10 text-center font-black text-xs bg-transparent border-none focus:ring-0 p-0 outline-none text-amber-900 dark:text-amber-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                                <span className="text-xs font-black text-amber-900 dark:text-amber-200 ml-0.5">m</span>
+                              </div>
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 text-gray-700 dark:text-gray-200 hover:bg-gray-100 font-bold"
+                                onClick={() => {
+                                  const next = selectedPowerMeters + 5;
+                                  updateReq({ total_power_cable_meters: next, power_cable_meters: Math.ceil(next / wirelessCams) });
+                                }}
+                              >
+                                +
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 ) : (

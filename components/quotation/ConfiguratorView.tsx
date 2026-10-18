@@ -189,6 +189,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       property_type: lead.property_type,
       lead_pincode: lead.address?.pincode || (lead.wizard_answers?.lead_pincode as string) || "",
       wants_remote_viewing: lead.wizard_answers?.["q_remote_viewing"] === "yes",
+      power_wiring_option: (lead.wizard_answers?.["power_wiring_option"] as any) || "socket_available",
+      power_cable_meters: typeof lead.wizard_answers?.["power_cable_meters"] === "number" ? lead.wizard_answers["power_cable_meters"] : undefined,
+      total_power_cable_meters: typeof lead.wizard_answers?.["total_power_cable_meters"] === "number" ? lead.wizard_answers["total_power_cable_meters"] : undefined,
+      total_cable_length_meters: typeof lead.wizard_answers?.["total_cable_length_meters"] === "number" ? lead.wizard_answers["total_cable_length_meters"] : undefined,
+      cable_length_meters: typeof lead.wizard_answers?.["cable_length_meters"] === "number" ? lead.wizard_answers["cable_length_meters"] : undefined,
       broadband_status: (() => {
         const raw = lead.wizard_answers?.["broadband_status"] || lead.wizard_answers?.["q_broadband"] || (lead as any).broadband_status;
         if (raw === "wifi_extender" || raw === "sim_router" || raw === "independent_4g" || raw === "no") {
@@ -227,23 +232,23 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentProducts, currentAddons]);
 
-  const cablingDone = lead.cabling_done;
+  const cablingDone = selection.cabling_done !== undefined ? Boolean(selection.cabling_done) : Boolean(lead.cabling_done);
   const propertyType = lead.property_type;
   
   const cablingMeters = useMemo(() => {
-    if (lead.cabling_done) return 0;
+    if (cablingDone) return 0;
     
     // We must pass PER CAMERA meters because calculateCabling multiplies by camera_count
-    const totalMeters = lead.wizard_answers?.total_cable_length_meters;
+    const totalMeters = selection.total_cable_length_meters || lead.wizard_answers?.total_cable_length_meters;
     if (typeof totalMeters === "number" && totalMeters > 0) {
       return totalMeters / (selection.camera_count || 4);
     }
     
-    const perCamMeters = lead.wizard_answers?.cable_length_meters;
+    const perCamMeters = selection.cable_length_meters || lead.wizard_answers?.cable_length_meters;
     if (typeof perCamMeters === "number" && perCamMeters > 0) return perCamMeters;
     
     return 15; // default 15m per camera
-  }, [lead.cabling_done, lead.wizard_answers, selection.camera_count]);
+  }, [cablingDone, selection.total_cable_length_meters, selection.cable_length_meters, lead.wizard_answers, selection.camera_count]);
   
   const requirements = useMemo(() => {
     const reqValues = lead.wizard_answers?.["q_special_features"] || lead.wizard_answers?.["q_features"];
@@ -399,8 +404,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           property_type: selection.property_type,
           requested_features: selection.requested_features,
           max_budget: selection.max_budget,
-          cable_length_meters: lead.wizard_answers?.cable_length_meters,
-          total_cable_length_meters: lead.wizard_answers?.total_cable_length_meters,
+          cable_length_meters: selection.cable_length_meters || lead.wizard_answers?.cable_length_meters,
+          total_cable_length_meters: selection.total_cable_length_meters || lead.wizard_answers?.total_cable_length_meters,
+          power_wiring_option: selection.power_wiring_option || (lead.wizard_answers?.["power_wiring_option"] as any) || "socket_available",
+          power_cable_meters: selection.power_cable_meters ?? (typeof lead.wizard_answers?.["power_cable_meters"] === "number" ? lead.wizard_answers["power_cable_meters"] : undefined),
+          total_power_cable_meters: selection.total_power_cable_meters ?? (typeof lead.wizard_answers?.["total_power_cable_meters"] === "number" ? lead.wizard_answers["total_power_cable_meters"] : undefined),
           broadband_status: selection.broadband_status || (lead.wizard_answers?.["broadband_status"] as any) || (lead.wizard_answers?.["q_broadband"] as any) || "yes",
         },
         address: currentLead.address,

@@ -180,14 +180,41 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
     // Labor purchase cost is usually 0 (internal staff) or a percentage (outsourced)
     totalPurchaseCost += (labor.totalRetail * (settings.labor_cost_margin_percent || 0)) / 100;
 
-    // 3b. Cabling Cost (only if customer hasn't already done cabling)
-    if (!cablingDone) {
+    // 3b. Cabling Cost (only if customer hasn't already done video cabling, OR if wireless camera needs electrical power wire)
+    const hasHybridWifi = Number(selection.wifi_camera_count || 0) > 0 || (selection.mixed_camera_requirements && selection.mixed_camera_requirements.some(r => {
+      const t = (r.type || "").toLowerCase();
+      const techStr = String(r.technology || "").toUpperCase();
+      return t.includes("wifi") || t.includes("wireless") || techStr === "WIRELESS" || techStr === "WIFI";
+    }));
+    const isWirelessTech = effectiveTech === "Wireless" || selection.technology === "Wireless" || (selection as any).technology_preference === "Wireless";
+    const needsElectricalWire = (isWirelessTech || hasHybridWifi) && (
+      (selection as any).power_wiring_option === "wire_needed" || 
+      (typeof (selection as any).total_power_cable_meters === "number" && (selection as any).total_power_cable_meters > 0)
+    );
+
+    if (!cablingDone || needsElectricalWire) {
       const camBrand = hardware.items.find(i => i.display_name?.includes("Dome") || i.display_name?.includes("Bullet"))?.brand || "budget";
       const cabling = calculateCabling(selection, settings, effectiveTech, cablingMeters, effectiveLaborMultiplier, products, camBrand);
-      lineItems.push(...cabling.items);
-      baseHardwareCost += cabling.totalRetail;
-        actualCablingCost = cabling.totalRetail;
-      totalPurchaseCost += cabling.totalCost;
+      
+      let itemsToAdd = cabling.items;
+      let retailToAdd = cabling.totalRetail;
+      let costToAdd = cabling.totalCost;
+
+      // If customer has already done video cabling (cablingDone === true), do not charge for video cables, ONLY electrical wire!
+      if (cablingDone && needsElectricalWire) {
+        itemsToAdd = cabling.items.filter(i => 
+          i.product_id === "CAB-ELEC-2CORE-PU" || 
+          i.display_name?.toLowerCase().includes("2-core") || 
+          i.display_name?.toLowerCase().includes("electrical")
+        );
+        retailToAdd = itemsToAdd.reduce((sum, i) => sum + i.line_total, 0);
+        costToAdd = itemsToAdd.reduce((sum, i) => sum + ((i.base_cost_at_quote || 0) * i.qty), 0);
+      }
+
+      lineItems.push(...itemsToAdd);
+      baseHardwareCost += retailToAdd;
+      actualCablingCost = retailToAdd;
+      totalPurchaseCost += costToAdd;
     }
 
     // 3c. Connectors Cost
@@ -923,7 +950,8 @@ function calculateCabling(
       brand: elecProduct?.brand || "Standard Electrical",
       qty: totalPowerMeters,
       unit_price: finalRate,
-      line_total: lineTotal
+      line_total: lineTotal,
+      base_cost_at_quote: finalCost
     };
 
     return { elecItems: [elecItem], elecRetail: lineTotal, elecCost: lineCost };
@@ -2325,17 +2353,25 @@ export function generatePricingSnapshot(
     }
 
   // 5. Cable (Fetch from DB, fallback to settings)
-  if (resolvedSystem.cable_meters > 0) {
-      const isIP = resolvedSystem.plan_type?.includes("IP");
-      const effectiveTech = isIP ? "IP" : "HD";
-      const camBrand = resolvedSystem.cameras.length > 0 ? (resolvedSystem.cameras[0].product.brand || "budget") : "budget";
-      
-      const cabling = calculateCabling(req as any, settings, effectiveTech, undefined, 1.0, products, camBrand);
-      
-      lineItems.push(...cabling.items);
-      cablingCost += cabling.totalRetail;
-      totalPurchaseCost += cabling.totalCost;
-    }
+  const isWirelessSnap = resolvedSystem.plan_type?.includes("Wireless") || (req as any).technology === "Wireless" || (req as any).technology_preference === "Wireless";
+  const snapPowerWiringOption = (req as any).power_wiring_option;
+  const snapTotalPowerMeters = (req as any).total_power_cable_meters;
+  const snapNeedsPowerWire = isWirelessSnap && (
+    snapPowerWiringOption === "wire_needed" || 
+    (typeof snapTotalPowerMeters === "number" && snapTotalPowerMeters > 0)
+  );
+
+  if (resolvedSystem.cable_meters > 0 || snapNeedsPowerWire) {
+    const isIP = resolvedSystem.plan_type?.includes("IP");
+    const effectiveTech = isWirelessSnap ? "Wireless" : (isIP ? "IP" : "HD");
+    const camBrand = resolvedSystem.cameras.length > 0 ? (resolvedSystem.cameras[0].product.brand || "budget") : "budget";
+    
+    const cabling = calculateCabling(req as any, settings, effectiveTech, undefined, 1.0, products, camBrand);
+    
+    lineItems.push(...cabling.items);
+    cablingCost += cabling.totalRetail;
+    totalPurchaseCost += cabling.totalCost;
+  }
     
     // 6. Connectors (Derived from Settings)
   if (resolvedSystem.connectors_qty > 0) {
