@@ -480,7 +480,7 @@ export interface ConfiguratorSelection {
   wiring_type?: "open" | "conduit";
   lead_pincode?: string;
   wants_remote_viewing?: boolean;
-  broadband_status?: "yes" | "no" | "sim_router";
+  broadband_status?: "yes" | "no" | "sim_router" | "wifi_extender" | "independent_4g";
   recording_mode?: "continuous" | "motion" | "smart";
   indoor_camera_count?: number;
   outdoor_camera_count?: number;

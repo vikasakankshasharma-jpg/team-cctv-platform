@@ -382,19 +382,37 @@ function calculateHardware(
     const isWirelessMode = tech === "Wireless" || tech === "WiFi";
 
     if (isWirelessMode) {
-      if (outdoor > 0 && indoor > 0) {
-        mixedReqs = [
-          { type: "Outdoor Wi-Fi Camera", count: outdoor, features: ["bullet", "wireless", "wifi"] },
-          { type: "Indoor Wi-Fi Camera", count: indoor, features: ["dome", "wireless", "wifi", "ptz"] }
-        ];
-      } else if (outdoor > 0) {
-        mixedReqs = [
-          { type: "Outdoor Wi-Fi Camera", count: outdoor, features: ["bullet", "wireless", "wifi"] }
-        ];
-      } else if (indoor > 0) {
-        mixedReqs = [
-          { type: "Indoor Wi-Fi Camera", count: indoor, features: ["dome", "wireless", "wifi", "ptz"] }
-        ];
+      const isIndependent4G = selection.broadband_status === "independent_4g";
+      if (isIndependent4G) {
+        if (outdoor > 0 && indoor > 0) {
+          mixedReqs = [
+            { type: "Outdoor 4G SIM Camera", count: outdoor, features: ["outdoor", "4g", "sim"], technology: "Wireless" as any },
+            { type: "Indoor 4G SIM Camera", count: indoor, features: ["indoor", "4g", "sim"], technology: "Wireless" as any }
+          ];
+        } else if (outdoor > 0) {
+          mixedReqs = [
+            { type: "Outdoor 4G SIM Camera", count: outdoor, features: ["outdoor", "4g", "sim"], technology: "Wireless" as any }
+          ];
+        } else if (indoor > 0) {
+          mixedReqs = [
+            { type: "Indoor 4G SIM Camera", count: indoor, features: ["indoor", "4g", "sim"], technology: "Wireless" as any }
+          ];
+        }
+      } else {
+        if (outdoor > 0 && indoor > 0) {
+          mixedReqs = [
+            { type: "Outdoor Wi-Fi Camera", count: outdoor, features: ["bullet", "wireless", "wifi"] },
+            { type: "Indoor Wi-Fi Camera", count: indoor, features: ["dome", "wireless", "wifi", "ptz"] }
+          ];
+        } else if (outdoor > 0) {
+          mixedReqs = [
+            { type: "Outdoor Wi-Fi Camera", count: outdoor, features: ["bullet", "wireless", "wifi"] }
+          ];
+        } else if (indoor > 0) {
+          mixedReqs = [
+            { type: "Indoor Wi-Fi Camera", count: indoor, features: ["dome", "wireless", "wifi", "ptz"] }
+          ];
+        }
       }
     } else {
       mixedReqs = [];
@@ -1308,7 +1326,7 @@ function calculateAddons(params: {
   // to avoid double-counting (price is % of hardware, not a fixed price).
   let staticAddonIds = [...selectedAddonIds].filter(id => id !== amcAddonId);
 
-  // Conditional injection for SIM Router (No Broadband + Remote Viewing or Wireless without Wi-Fi)
+  // Conditional injection for SIM Router (No Broadband + Close Locations)
   if (selection.broadband_status === "sim_router") {
     const router = addons.find(a => {
       const name = (a.technical_name || a.display_name || "").toLowerCase();
@@ -1320,6 +1338,21 @@ function calculateAddons(params: {
     const routerId = router?.id || "ACC-4G-ROUTER";
     if (!staticAddonIds.includes(routerId)) {
       staticAddonIds.push(routerId);
+    }
+  }
+
+  // Conditional injection for Wi-Fi Range Extender (Broadband at site but distant outdoor spots)
+  if (selection.broadband_status === "wifi_extender") {
+    const extender = addons.find(a => {
+      const name = (a.technical_name || a.display_name || "").toLowerCase();
+      return a.id === "ACC-WIFI-EXTENDER" || name.includes("extender") || name.includes("repeater");
+    }) || products.find(p => {
+      const name = (p.technical_name || p.display_name || "").toLowerCase();
+      return p.id === "ACC-WIFI-EXTENDER" || name.includes("extender") || name.includes("repeater");
+    });
+    const extenderId = extender?.id || "ACC-WIFI-EXTENDER";
+    if (!staticAddonIds.includes(extenderId)) {
+      staticAddonIds.push(extenderId);
     }
   }
 
@@ -1338,6 +1371,7 @@ function calculateAddons(params: {
         "ACC-PVC-RACK-POE": { display_name: "PVC Weatherproof Rack", unit_price: 630, base_cost: 450, category: "rack" },
         "DISP-19-INCH": { display_name: "19\" Security LED Display", unit_price: 2415, base_cost: 2100, category: "display" },
         "ACC-4G-ROUTER": { display_name: "4G SIM WiFi Router (Dual Antenna)", unit_price: 1885, base_cost: 1450, category: "network" },
+        "ACC-WIFI-EXTENDER": { display_name: "High-Speed Wi-Fi Range Extender (Dual Antenna)", unit_price: 1299, base_cost: 900, category: "network" },
       };
       if (FALLBACK_CATALOG[id]) {
         addon = { id, ...FALLBACK_CATALOG[id] } as any;
@@ -1528,9 +1562,24 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     }
   }
 
-  // ── Wi-Fi Sub-Technology Preference ─────────────────────────
-  // If requirement is Wi-Fi, prefer Wi-Fi cameras over 4G cameras unless 4G was explicitly requested
-  if (isWifiReq && isWirelessTech) {
+  // ── Wireless Sub-Technology Preference (4G Cellular vs. Wi-Fi) ─────────────────
+  const is4GExplicit = selection.broadband_status === "independent_4g" ||
+                       reqFeatures.includes("4g") ||
+                       reqFeatures.includes("sim") ||
+                       reqType.includes("4g") ||
+                       reqType.includes("sim");
+
+  if (is4GExplicit && isWirelessTech) {
+    const simPool = pool.filter(cam => {
+      const feats = (cam.features || []).map(f => f.toLowerCase());
+      const name = (cam.technical_name + " " + cam.display_name).toLowerCase();
+      const techArr = (cam.technologies || []).map(t => String(t).toLowerCase());
+      return !!(cam as any).has_4g || !!(cam as any).has_4g_sim || feats.includes("4g") || feats.includes("sim") || name.includes("4g") || techArr.includes("4g");
+    });
+    if (simPool.length > 0) {
+      pool = simPool;
+    }
+  } else if (isWifiReq && isWirelessTech) {
     const wifiPool = pool.filter(cam => {
       const feats = (cam.features || []).map(f => f.toLowerCase());
       const name = (cam.technical_name + " " + cam.display_name).toLowerCase();

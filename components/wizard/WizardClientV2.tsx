@@ -1304,39 +1304,103 @@ export function WizardClientV2() {
                   </h3>
                   
                   {req.technology_preference === "Wireless" || (Number(req.wifi_camera_count) > 0) ? (
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+                        {/* 1. Have Strong Wi-Fi */}
                         <button
                           type="button"
                           onClick={() => updateReq({ broadband_status: "yes", wants_remote_viewing: true })}
-                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${(req.broadband_status || "yes") === "yes" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${(req.broadband_status || "yes") === "yes" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Yes, I Have Wi-Fi at Site</span>
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
+                              <span>📶</span>
+                              <span>Have Wi-Fi (Full Coverage)</span>
+                            </span>
                             <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">₹0 FREE</span>
                           </div>
-                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">JioFiber, Airtel, or local broadband Wi-Fi already installed at premises.</p>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">JioFiber, Airtel, or local Wi-Fi reaches all camera spots clearly.</p>
                         </button>
 
+                        {/* 2. Have Wi-Fi, but Outer Spots are Far (Need Extender) */}
+                        <button
+                          type="button"
+                          onClick={() => updateReq({ broadband_status: "wifi_extender", wants_remote_viewing: true })}
+                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "wifi_extender" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
+                              <span>📡</span>
+                              <span>Have Wi-Fi, but Far Spots</span>
+                            </span>
+                            <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold px-1.5 py-0.5 rounded">+₹1,299 Extender</span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">Router is inside, but gate/parking has weak signal. Includes Wi-Fi Range Extender.</p>
+                        </button>
+
+                        {/* 3. No Wi-Fi (Close Spots - Central 4G Router) */}
                         <button
                           type="button"
                           onClick={() => updateReq({ broadband_status: "sim_router", wants_remote_viewing: true })}
-                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "sim_router" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "sim_router" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">No Wi-Fi at Site (Need 4G Router)</span>
-                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">+₹1,885</span>
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
+                              <span>🌐</span>
+                              <span>No Wi-Fi (Spots Within 20m)</span>
+                            </span>
+                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">+₹1,885 4G Router</span>
                           </div>
-                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">Add 4G SIM Wi-Fi router to quotation so cameras connect and stream to phone.</p>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">Cameras are close together. 1 Central 4G Router connects all cameras (1 SIM recharge).</p>
+                        </button>
+
+                        {/* 4. No Wi-Fi (Spots Far Apart / Farm / Yard - Independent 4G SIM Cameras) */}
+                        <button
+                          type="button"
+                          onClick={() => updateReq({ broadband_status: "independent_4g", wants_remote_viewing: true })}
+                          className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "independent_4g" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
+                              <span>🛰️</span>
+                              <span>No Wi-Fi (Spots Far Apart / Farm)</span>
+                            </span>
+                            <span className="text-[10px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 font-bold px-1.5 py-0.5 rounded">Direct 4G SIM</span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400">Spots are 50m-200m+ apart (farm/yard). Central router not feasible. Each camera gets its own 4G SIM.</p>
                         </button>
                       </div>
 
-                      <div className="p-2.5 bg-amber-50/80 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2">
-                        <span className="text-sm shrink-0">📶</span>
-                        <span>
-                          <strong>Wi-Fi Connection Required:</strong> Wi-Fi CCTV cameras must have an active Wi-Fi connection to transmit live video and motion alerts to your mobile phone.
-                        </span>
-                      </div>
+                      {/* Dynamic helpful info badge */}
+                      {req.broadband_status === "independent_4g" ? (
+                        <div className="p-2.5 bg-purple-50/80 dark:bg-purple-950/40 rounded-xl border border-purple-200 dark:border-purple-900/60 text-[11px] text-purple-900 dark:text-purple-200 flex items-start gap-2">
+                          <span className="text-sm shrink-0">🛰️</span>
+                          <span>
+                            <strong>Independent 4G SIM Cameras Selected:</strong> Ideal for large farmhouses, warehouses, or distant gates where Wi-Fi cannot reach. Each camera operates independently on 4G mobile network towers. No router or cabling required between camera points!
+                          </span>
+                        </div>
+                      ) : req.broadband_status === "wifi_extender" ? (
+                        <div className="p-2.5 bg-indigo-50/80 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-900/60 text-[11px] text-indigo-900 dark:text-indigo-200 flex items-start gap-2">
+                          <span className="text-sm shrink-0">📡</span>
+                          <span>
+                            <strong>Wi-Fi Range Extender Included:</strong> We've included a high-gain Wi-Fi Range Extender (+₹1,299) to repeat your home Wi-Fi signal to distant outdoor spots like your main gate or porch.
+                          </span>
+                        </div>
+                      ) : req.broadband_status === "sim_router" ? (
+                        <div className="p-2.5 bg-blue-50/80 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900/60 text-[11px] text-blue-900 dark:text-blue-200 flex items-start gap-2">
+                          <span className="text-sm shrink-0">🌐</span>
+                          <span>
+                            <strong>Central 4G Router Included:</strong> We've included a 4G SIM Wi-Fi Router (+₹1,885). All your cameras will connect to this single Wi-Fi hotspot, so you only have to recharge 1 SIM card per month.
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="p-2.5 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-900/60 text-[11px] text-emerald-900 dark:text-emerald-200 flex items-start gap-2">
+                          <span className="text-sm shrink-0">✓</span>
+                          <span>
+                            <strong>Existing Wi-Fi Coverage:</strong> Standard Smart Wi-Fi cameras will connect directly to your home/office Wi-Fi router. ₹0 extra networking hardware cost!
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">

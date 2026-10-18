@@ -259,13 +259,17 @@ export function DynamicVariantGenerator({
       const res = availableResolutions.includes(b.resolution) ? b.resolution : (availableResolutions.includes("2MP") ? "2MP" : (availableResolutions[0] || "2MP"));
       return {
         type: isWireless 
-          ? (b.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera")
+          ? (selection.broadband_status === "independent_4g"
+              ? (b.type === "outdoor" ? "Outdoor 4G SIM Camera" : "Indoor 4G SIM Camera")
+              : (b.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera"))
           : (b.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera"),
         count: b.count,
         resolution: res,
         technology: isWireless ? "Wireless" : (activeTech === "ip" ? "IP" : "HD"),
         features: isWireless
-          ? (b.type === "outdoor" ? ["outdoor", "wifi"] : ["indoor", "wifi"])
+          ? (selection.broadband_status === "independent_4g"
+              ? (b.type === "outdoor" ? ["outdoor", "4g", "sim"] : ["indoor", "4g", "sim"])
+              : (b.type === "outdoor" ? ["outdoor", "wifi"] : ["indoor", "wifi"]))
           : (b.type === "outdoor" ? ["bullet"] : ["dome"])
       };
     });

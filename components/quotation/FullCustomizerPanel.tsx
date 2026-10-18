@@ -512,11 +512,37 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
             <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isSelected ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[#86868b]"}`}>
               {item.category === "cctv_camera" ? <Camera className="w-5 h-5" /> : <Server className="w-5 h-5" />}
             </div>
-            {isSelected && (
-              <span className="text-[10px] font-medium text-[#1d1d1f] bg-[#f5f5f7] border border-[#d2d2d7] px-2 py-0.5 rounded-full flex items-center gap-1">
-                <Lock className="w-2.5 h-2.5" /> <TranslatedText tKey="pinned" defaultText="Pinned" />
-              </span>
-            )}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {item.category === "cctv_camera" && (
+                <>
+                  {((item as any).has_4g_sim || (item as any).has_4g || ((item as any).technologies || []).some((t: string) => String(t).toUpperCase().includes("4G"))) ? (
+                    <span className="text-[10px] font-bold text-purple-700 bg-purple-50 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-2 py-0.5 rounded-full">
+                      4G SIM
+                    </span>
+                  ) : (((item as any).technologies || []).some((t: string) => String(t).toUpperCase().includes("WIFI") || String(t).toUpperCase().includes("WIRELESS"))) ? (
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded-full">
+                      Wi-Fi
+                    </span>
+                  ) : null}
+
+                  {(item as any).ip_rating && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      String((item as any).ip_rating).toUpperCase().startsWith("IP6")
+                        ? "text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                        : "text-zinc-600 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700"
+                    }`}>
+                      {(item as any).ip_rating}
+                    </span>
+                  )}
+                </>
+              )}
+
+              {isSelected && (
+                <span className="text-[10px] font-medium text-[#1d1d1f] bg-[#f5f5f7] border border-[#d2d2d7] px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Lock className="w-2.5 h-2.5" /> <TranslatedText tKey="pinned" defaultText="Pinned" />
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex-1 min-w-0">
             <p className={`text-[15px] font-semibold leading-tight line-clamp-2 ${isSelected ? "text-[#0071e3]" : "text-[#1d1d1f] dark:text-[#f5f5f7]"}`}>
