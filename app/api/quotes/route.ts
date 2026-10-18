@@ -101,6 +101,10 @@ export async function POST(request: NextRequest) {
       selection.recording_mode = wizardAnswers.q_recording_mode as any;
     }
 
+    if (!selection.broadband_status) {
+      selection.broadband_status = (wizardAnswers.broadband_status as any) || (wizardAnswers.q_broadband as any) || "yes";
+    }
+
     // Normalize technology to match pricing engine expectations
     const rawTech = String(selection.technology || "HD").toLowerCase();
     if (rawTech === "wireless" || rawTech === "wifi" || rawTech === "4g") {

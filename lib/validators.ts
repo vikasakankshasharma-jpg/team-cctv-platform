@@ -133,6 +133,7 @@ export const GenerateQuoteSchema = z.object({
   power_wiring_option: z.enum(["socket_available", "wire_needed", "site_survey"]).nullable().optional(),
   power_cable_meters: z.coerce.number().nullable().optional(),
   total_power_cable_meters: z.coerce.number().nullable().optional(),
+  broadband_status: z.enum(["yes", "no", "sim_router", "wifi_extender", "independent_4g"]).nullable().optional(),
 });
 
 export type GenerateQuoteInput = z.infer<typeof GenerateQuoteSchema>;

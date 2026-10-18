@@ -189,7 +189,13 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       property_type: lead.property_type,
       lead_pincode: lead.address?.pincode || (lead.wizard_answers?.lead_pincode as string) || "",
       wants_remote_viewing: lead.wizard_answers?.["q_remote_viewing"] === "yes",
-      broadband_status: (lead.wizard_answers?.["q_broadband"] as "yes" | "no" | "sim_router" | "wifi_extender" | "independent_4g") || "yes",
+      broadband_status: (() => {
+        const raw = lead.wizard_answers?.["broadband_status"] || lead.wizard_answers?.["q_broadband"] || (lead as any).broadband_status;
+        if (raw === "wifi_extender" || raw === "sim_router" || raw === "independent_4g" || raw === "no") {
+          return raw;
+        }
+        return "yes";
+      })(),
     };
 
     // Calculate Recommendation Synchronously
@@ -395,6 +401,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           max_budget: selection.max_budget,
           cable_length_meters: lead.wizard_answers?.cable_length_meters,
           total_cable_length_meters: lead.wizard_answers?.total_cable_length_meters,
+          broadband_status: selection.broadband_status || (lead.wizard_answers?.["broadband_status"] as any) || (lead.wizard_answers?.["q_broadband"] as any) || "yes",
         },
         address: currentLead.address,
         firebase_uid: currentLead.firebase_uid,

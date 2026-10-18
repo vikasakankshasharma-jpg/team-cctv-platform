@@ -433,7 +433,7 @@ export function WizardClientV2() {
         customer_name: req.customer_name || "",
         mobile_number: cleanMobile,
         email: req.customer_email || undefined,
-        wizard_answers: { ...req, pincode, city },
+        wizard_answers: { ...req, broadband_status: req.broadband_status, q_broadband: req.broadband_status, pincode, city },
         property_type: req.property_type || "home",
         technology_choice: req.technology_preference || "HD",
         cabling_done: req.cabling_done || false,
