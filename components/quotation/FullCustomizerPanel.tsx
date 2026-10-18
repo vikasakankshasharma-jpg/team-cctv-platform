@@ -911,6 +911,122 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         {activeTab === "addons" && (
           <>
             {(() => {
+              const isWireless = selection.technology === "Wireless";
+              if (isWireless) {
+                const cameraCount = selection.camera_count || 1;
+                const powerOption = selection.power_wiring_option || "socket_available";
+                const totalPowerMeters = selection.total_power_cable_meters || (cameraCount * 10);
+
+                return (
+                  <div className="col-span-full mb-4 p-5 bg-white dark:bg-[#1d1d1f] rounded-[24px] border border-[#d2d2d7] dark:border-[#424245] shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                            <Zap className="w-4 h-4" />
+                          </span>
+                          <h4 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-white">Camera Power Point & Wiring</h4>
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                            Zero Video Cabling
+                          </span>
+                        </div>
+                        <p className="text-[13px] text-[#86868b] mt-1">
+                          Wireless Wi-Fi/4G cameras do not require coaxial/CAT6 cables. Each camera includes a 1.5m power adapter.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => updateSelection({ power_wiring_option: "socket_available", power_cable_meters: 0, total_power_cable_meters: 0 })}
+                        className={`p-3.5 rounded-xl border text-left transition-all ${
+                          powerOption === "socket_available"
+                            ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/20 text-emerald-950 dark:text-emerald-200"
+                            : "bg-[#f5f5f7] dark:bg-[#2d2d2f] border-transparent text-[#1d1d1f] dark:text-white hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold">Power Socket Nearby</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-300">
+                            ₹0 (Free)
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#86868b] leading-tight">Wall AC point exists within 1.5m of each camera.</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => updateSelection({ 
+                          power_wiring_option: "wire_needed", 
+                          power_cable_meters: selection.power_cable_meters || 10,
+                          total_power_cable_meters: selection.total_power_cable_meters || (cameraCount * 10)
+                        })}
+                        className={`p-3.5 rounded-xl border text-left transition-all ${
+                          powerOption === "wire_needed"
+                            ? "bg-amber-50/80 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/20 text-amber-950 dark:text-amber-200"
+                            : "bg-[#f5f5f7] dark:bg-[#2d2d2f] border-transparent text-[#1d1d1f] dark:text-white hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold">Need 2-Core Electrical Wire</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-300">
+                            @ ₹10/m
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#86868b] leading-tight">Run copper power wire from switchboard to cameras.</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => updateSelection({ power_wiring_option: "site_survey", power_cable_meters: 0, total_power_cable_meters: 0 })}
+                        className={`p-3.5 rounded-xl border text-left transition-all ${
+                          powerOption === "site_survey"
+                            ? "bg-blue-50/80 dark:bg-blue-950/40 border-blue-500 ring-2 ring-blue-500/20 text-blue-950 dark:text-blue-200"
+                            : "bg-[#f5f5f7] dark:bg-[#2d2d2f] border-transparent text-[#1d1d1f] dark:text-white hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold">Check on Site Survey</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-300">
+                            Pay on Actuals
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#86868b] leading-tight">Technician measures on-site and bills wire only if required.</p>
+                      </button>
+                    </div>
+
+                    {powerOption === "wire_needed" && (
+                      <div className="pt-3 border-t border-[#d2d2d7] dark:border-[#424245] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <span className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                          Estimated 2-Core Electrical Wire Length:
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const next = Math.max(5, totalPowerMeters - 5);
+                              updateSelection({ total_power_cable_meters: next, power_cable_meters: Math.ceil(next / cameraCount) });
+                            }}
+                            className="w-8 h-8 flex items-center justify-center rounded-full bg-[#f5f5f7] dark:bg-[#2d2d2f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
+                          >-</button>
+                          <span className="text-[14px] font-semibold w-14 text-center text-[#1d1d1f] dark:text-white">{totalPowerMeters}m</span>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const next = totalPowerMeters + 5;
+                              updateSelection({ total_power_cable_meters: next, power_cable_meters: Math.ceil(next / cameraCount) });
+                            }}
+                            className="w-8 h-8 flex items-center justify-center rounded-full bg-[#f5f5f7] dark:bg-[#2d2d2f] shadow-sm text-[#1d1d1f] dark:text-white font-medium"
+                          >+</button>
+                          <span className="text-[12px] text-[#86868b]">(~{Math.round(totalPowerMeters / cameraCount)}m / camera)</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               const cameraCount = selection.camera_count || 1;
               const freeLimitMeters = cameraCount * 15;
               const currentTotalMeters = selection.total_cable_length_meters || (selection.cable_length_meters ? selection.cable_length_meters * cameraCount : freeLimitMeters);

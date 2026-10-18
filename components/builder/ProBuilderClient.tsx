@@ -339,6 +339,7 @@ const isWirelessItem = (item: any) => {
             if (/\bcat6\b/i.test(name) || /cat6/i.test(sku) || /cat6/i.test(catalogPath)) cableType = "CAT6";
             else if (/3\+1/i.test(name) || /3\+1/i.test(catalogPath)) cableType = "3+1 HD";
             else if (/hdmi/i.test(name) || cat === "hdmi_cable") cableType = "HDMI";
+            else if (/2-core|2 core|electrical/i.test(name) || sku.includes("elec")) cableType = "Electrical Wire";
 
             // Progressive Technology Classification
             let techList = Array.isArray(p.technologies) && p.technologies.length > 0 
@@ -353,6 +354,8 @@ const isWirelessItem = (item: any) => {
                 techList = ["IP"];
               } else if (cableType === "3+1 HD" || sku.startsWith("cab-hd") || sku.startsWith("smps-") || /(\bbnc\b|\bdvr\b|\bsmps\b)/i.test(name)) {
                 techList = ["HD"];
+              } else if (cableType === "Electrical Wire" || sku.startsWith("cab-elec")) {
+                techList = ["Wireless", "Common"];
               } else {
                 techList = ["Common"];
               }
@@ -1325,6 +1328,21 @@ const isWirelessItem = (item: any) => {
                   <div>
                     <span className="font-bold">Hybrid Cabling Sizing: </span>
                     Cable bundles below cover your <strong>{wiredCamCount} wired camera(s)</strong>. Your <strong>{wirelessCamCount} wireless camera(s)</strong> transmit video over Wi-Fi / 4G and need no video cables.
+                  </div>
+                </div>
+              )}
+
+              {activeCategory === "cable" && technology === "Wireless" && (
+                <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 rounded-2xl p-4 border border-emerald-200 shadow-sm flex items-start gap-3 text-xs sm:text-sm">
+                  <Sparkles className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <div className="font-black text-slate-900 flex items-center gap-2">
+                      <span>Zero Video Cabling Required (Wireless Wi-Fi / 4G)</span>
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold">100% Wire-Free Video</span>
+                    </div>
+                    <p className="text-slate-600 text-xs leading-relaxed">
+                      Wireless cameras transmit video digitally over Wi-Fi/4G without any 3+1 coaxial or CAT6 LAN cables. If your camera installation spots lack nearby 220V wall sockets, add <strong>2-Core Copper Electrical Power Wire</strong> below to power them from your switchboard.
+                    </p>
                   </div>
                 </div>
               )}

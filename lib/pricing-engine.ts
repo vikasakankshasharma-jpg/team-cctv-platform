@@ -846,25 +846,112 @@ function calculateCabling(
 ) {
   const items: QuoteLineItem[] = [];
   
-  if (tech === "WiFi" || tech === "Wireless") {
-    return { items, totalRetail: 0, totalCost: 0 };
+  const upperTech = String(tech || "").toUpperCase();
+  const isPureWireless = upperTech === "WIFI" || upperTech === "WIRELESS" || selection.technology === "Wireless";
+
+  // Helper to calculate 2-Core Electrical Power Wire when needed for wireless cameras
+  const calculateElectricalPowerWire = (wirelessCount: number) => {
+    const powerWiringOption = (selection as any).power_wiring_option || "socket_available";
+    const totalPowerMetersRequested = typeof (selection as any).total_power_cable_meters === "number" && (selection as any).total_power_cable_meters > 0
+      ? (selection as any).total_power_cable_meters
+      : (typeof (selection as any).power_cable_meters === "number" && (selection as any).power_cable_meters > 0
+          ? (selection as any).power_cable_meters * wirelessCount
+          : undefined);
+
+    const isPowerWireNeeded = powerWiringOption === "wire_needed" || (typeof totalPowerMetersRequested === "number" && totalPowerMetersRequested > 0);
+
+    if (!isPowerWireNeeded || wirelessCount <= 0) {
+      return { elecItems: [], elecRetail: 0, elecCost: 0 };
+    }
+
+    const defaultPowerMetersPerCam = 10;
+    const totalPowerMeters = totalPowerMetersRequested || (wirelessCount * defaultPowerMetersPerCam);
+
+    // Look for exact per-meter 2-core wire product (unit_price < 50), never a 90m roll!
+    const elecProduct = products.find(p => p.id === "CAB-ELEC-2CORE-PU" || p.sku === "CAB-ELEC-2CORE-PU") ||
+      products.find(p => 
+        p.category === "cable" && 
+        (p.subcategory === "electrical_wire" || (p.display_name || "").toLowerCase().includes("2-core") || (p.display_name || "").toLowerCase().includes("electrical")) &&
+        ((p.display_name || "").toLowerCase().includes("per mtr") || (p.unit_price || 0) < 50)
+      );
+
+    const baseRatePerMeter = elecProduct?.unit_price || 10;
+    const baseCostPerMeter = elecProduct?.base_cost || 6;
+
+    const isConduit = selection.wiring_type === "conduit";
+    const conduitRate = isConduit ? (settings.conduit_cost_per_meter || 12) : 0;
+    const conduitCost = isConduit ? (conduitRate * 0.7) : 0;
+
+    const finalRate = Math.round((baseRatePerMeter + conduitRate) * locationMultiplier);
+    const finalCost = baseCostPerMeter + conduitCost;
+    const lineTotal = finalRate * totalPowerMeters;
+    const lineCost = finalCost * totalPowerMeters;
+
+    const elecItem: QuoteLineItem = {
+      product_id: elecProduct?.id || "CAB-ELEC-2CORE-PU",
+      display_name: isConduit
+        ? `2-Core Copper Electrical Power Wire (with PVC Conduit) (~${totalPowerMeters}m) @ ₹${finalRate}/m`
+        : `2-Core Copper Electrical Power Wire (Open) (~${totalPowerMeters}m) @ ₹${finalRate}/m`,
+      brand: elecProduct?.brand || "Standard Electrical",
+      qty: totalPowerMeters,
+      unit_price: finalRate,
+      line_total: lineTotal
+    };
+
+    return { elecItems: [elecItem], elecRetail: lineTotal, elecCost: lineCost };
+  };
+
+  // Pure Wireless setups (Zero video cabling, only optional electrical power wire)
+  if (isPureWireless) {
+    const wirelessCamCount = Number(selection.camera_count) || 
+      (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0) || 1;
+    const { elecItems, elecRetail, elecCost } = calculateElectricalPowerWire(wirelessCamCount);
+    return { items: elecItems, totalRetail: elecRetail, totalCost: elecCost };
   }
 
-  // Exclude Wireless/Solar/4G cameras from cabling meter counts
+  // Exclude Wireless/Solar/4G cameras from wired cabling meter counts
   let wiredCameraCount = Number(selection.camera_count) || 0;
+  let wirelessCameraCount = 0;
   if (selection.wifi_camera_count && Number(selection.wifi_camera_count) > 0) {
-    wiredCameraCount = Math.max(0, wiredCameraCount - Number(selection.wifi_camera_count));
+    wirelessCameraCount = Number(selection.wifi_camera_count);
+    wiredCameraCount = Math.max(0, wiredCameraCount - wirelessCameraCount);
   } else if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
     wiredCameraCount = selection.mixed_camera_requirements
       .filter(req => {
-        const t = req.type.toLowerCase();
-        return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
+        const t = (req.type || "").toLowerCase();
+        const techStr = String(req.technology || "").toUpperCase();
+        return (
+          !t.includes("solar") &&
+          !t.includes("4g") &&
+          !t.includes("wifi") &&
+          !t.includes("wi-fi") &&
+          !t.includes("wireless") &&
+          techStr !== "WIRELESS" &&
+          techStr !== "WIFI"
+        );
+      })
+      .reduce((sum, req) => sum + Number(req.count), 0);
+
+    wirelessCameraCount = selection.mixed_camera_requirements
+      .filter(req => {
+        const t = (req.type || "").toLowerCase();
+        const techStr = String(req.technology || "").toUpperCase();
+        return (
+          t.includes("solar") ||
+          t.includes("4g") ||
+          t.includes("wifi") ||
+          t.includes("wi-fi") ||
+          t.includes("wireless") ||
+          techStr === "WIRELESS" ||
+          techStr === "WIFI"
+        );
       })
       .reduce((sum, req) => sum + Number(req.count), 0);
   }
 
   if (wiredCameraCount <= 0) {
-    return { items, totalRetail: 0, totalCost: 0 };
+    const { elecItems, elecRetail, elecCost } = calculateElectricalPowerWire(wirelessCameraCount || Number(selection.camera_count) || 1);
+    return { items: elecItems, totalRetail: elecRetail, totalCost: elecCost };
   }
 
   // Use explicitly requested total meters, or calculate from legacy per-camera meters, or default to admin configured / 20m per wired camera
@@ -1035,6 +1122,16 @@ function calculateCabling(
     });
   }
 
+  if (wirelessCameraCount > 0) {
+    const { elecItems, elecRetail, elecCost } = calculateElectricalPowerWire(wirelessCameraCount);
+    items.push(...elecItems);
+    return { 
+      items, 
+      totalRetail: bestCombination.totalRetail + elecRetail, 
+      totalCost: bestCombination.totalCost + elecCost 
+    };
+  }
+
   return { items, totalRetail: bestCombination.totalRetail, totalCost: bestCombination.totalCost };
 }
 
@@ -1058,8 +1155,17 @@ function calculateConnectors(
   } else if (selection.mixed_camera_requirements && selection.mixed_camera_requirements?.length > 0) {
     wiredCameraCount = selection.mixed_camera_requirements
       .filter(req => {
-        const t = req.type.toLowerCase();
-        return !t.includes("solar") && !t.includes("4g") && !t.includes("wifi") && !t.includes("wireless");
+        const t = (req.type || "").toLowerCase();
+        const techStr = String(req.technology || "").toUpperCase();
+        return (
+          !t.includes("solar") &&
+          !t.includes("4g") &&
+          !t.includes("wifi") &&
+          !t.includes("wi-fi") &&
+          !t.includes("wireless") &&
+          techStr !== "WIRELESS" &&
+          techStr !== "WIFI"
+        );
       })
       .reduce((sum, req) => sum + Number(req.count), 0);
   }

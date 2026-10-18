@@ -130,6 +130,9 @@ export const GenerateQuoteSchema = z.object({
   power_socket_near_dvr: z.boolean().nullable().optional(),
   router_near_dvr: z.boolean().nullable().optional(),
   include_junction_boxes: z.boolean().nullable().optional(),
+  power_wiring_option: z.enum(["socket_available", "wire_needed", "site_survey"]).nullable().optional(),
+  power_cable_meters: z.coerce.number().nullable().optional(),
+  total_power_cable_meters: z.coerce.number().nullable().optional(),
 });
 
 export type GenerateQuoteInput = z.infer<typeof GenerateQuoteSchema>;

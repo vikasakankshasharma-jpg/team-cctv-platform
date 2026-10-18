@@ -6,7 +6,7 @@ import type { Lead, PricingResult, Product, Addon, AppSettings } from "@/types";
 import { 
   ArrowLeft, Check, CheckCircle2, ShieldCheck, Camera, HardDrive, Server, 
   Cable, Monitor, Wifi, Box, FileText, Sparkles, 
-  ChevronRight, ChevronDown, Wrench, Shield, Layers, X, Plus
+  ChevronRight, ChevronDown, Wrench, Shield, Layers, X, Plus, Zap
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
@@ -365,7 +365,13 @@ export function InstantQuotationReview({
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Cable className="w-4 h-4 text-amber-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_cabling")}</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{isWireless ? "Zero Video Cabling" : t("wz_copper_wire")}</div>
+          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+            {isWireless 
+              ? (selection.power_wiring_option === "wire_needed" 
+                  ? `2-Core Wire (~${selection.total_power_cable_meters || (camCount * 10)}m)` 
+                  : "Zero Video Cabling") 
+              : t("wz_copper_wire")}
+          </div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Wrench className="w-4 h-4 text-purple-600 mx-auto mb-1" />
@@ -411,6 +417,138 @@ export function InstantQuotationReview({
           })}
         </div>
       </div>
+
+      {/* WIRELESS CAMERA POWER & CABLING PROVISION */}
+      {isWireless && (
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3.5 sm:p-5 shadow-xs transition-all">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-3">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="p-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                  <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </span>
+                <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white">
+                  Camera Power Point Availability
+                </h4>
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                  Zero Video Cabling
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Wi-Fi & 4G cameras transmit video wirelessly. Each camera includes a manufacturer power adapter (1.5m). Select your site power scenario:
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {/* Option 1: Power Socket Nearby */}
+            <button
+              type="button"
+              onClick={() => updateSelection({ power_wiring_option: "socket_available", power_cable_meters: 0, total_power_cable_meters: 0 })}
+              className={`p-3 rounded-xl border text-left transition-all relative cursor-pointer ${
+                (!selection.power_wiring_option || selection.power_wiring_option === "socket_available")
+                  ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/20 text-emerald-950 dark:text-emerald-200 shadow-xs"
+                  : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 text-zinc-700 dark:text-zinc-300"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold">Power Socket Nearby</span>
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-300">
+                  Included (₹0)
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                Power socket within 1.5m of camera. Camera plugs directly into AC point.
+              </p>
+            </button>
+
+            {/* Option 2: Need 2-Core Electrical Power Wire */}
+            <button
+              type="button"
+              onClick={() => updateSelection({ 
+                power_wiring_option: "wire_needed", 
+                power_cable_meters: selection.power_cable_meters || 10,
+                total_power_cable_meters: selection.total_power_cable_meters || (camCount * 10)
+              })}
+              className={`p-3 rounded-xl border text-left transition-all relative cursor-pointer ${
+                selection.power_wiring_option === "wire_needed"
+                  ? "bg-amber-50/80 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/20 text-amber-950 dark:text-amber-200 shadow-xs"
+                  : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 text-zinc-700 dark:text-zinc-300"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold">Need Electrical Wire</span>
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-300">
+                  @ ₹10/m
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                No plug point near camera. Run 2-core copper electrical wire from switchboard.
+              </p>
+            </button>
+
+            {/* Option 3: Site Survey */}
+            <button
+              type="button"
+              onClick={() => updateSelection({ power_wiring_option: "site_survey", power_cable_meters: 0, total_power_cable_meters: 0 })}
+              className={`p-3 rounded-xl border text-left transition-all relative cursor-pointer ${
+                selection.power_wiring_option === "site_survey"
+                  ? "bg-blue-50/80 dark:bg-blue-950/40 border-blue-500 ring-2 ring-blue-500/20 text-blue-950 dark:text-blue-200 shadow-xs"
+                  : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 text-zinc-700 dark:text-zinc-300"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold">Check on Site Survey</span>
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-300">
+                  Pay on Actuals
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                Free survey. Technician will measure distance on site and bill wire only if required.
+              </p>
+            </button>
+          </div>
+
+          {/* Meter selector if wire_needed */}
+          {selection.power_wiring_option === "wire_needed" && (
+            <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-amber-50/50 dark:bg-amber-950/20 p-2.5 sm:p-3 rounded-xl">
+              <span className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                2-Core Electrical Wire Estimated Length:
+              </span>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = selection.total_power_cable_meters || (camCount * 10);
+                    const next = Math.max(5, current - 5);
+                    updateSelection({ total_power_cable_meters: next, power_cable_meters: Math.ceil(next / camCount) });
+                  }}
+                  className="w-7 h-7 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold flex items-center justify-center hover:bg-zinc-100 active:scale-95"
+                >
+                  -
+                </button>
+                <span className="text-xs font-black min-w-[50px] text-center text-zinc-900 dark:text-white">
+                  {selection.total_power_cable_meters || (camCount * 10)}m
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = selection.total_power_cable_meters || (camCount * 10);
+                    const next = current + 5;
+                    updateSelection({ total_power_cable_meters: next, power_cable_meters: Math.ceil(next / camCount) });
+                  }}
+                  className="w-7 h-7 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold flex items-center justify-center hover:bg-zinc-100 active:scale-95"
+                >
+                  +
+                </button>
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400 ml-1">
+                  (~{Math.round((selection.total_power_cable_meters || (camCount * 10)) / camCount)}m / camera)
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-4">
           {/* MOBILE ITEM CARDS (sm:hidden) */}
