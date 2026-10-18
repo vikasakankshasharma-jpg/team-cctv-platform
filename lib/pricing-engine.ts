@@ -4,7 +4,7 @@
  * Decomposed into modular, testable units with zero-trust server validation.
  */
 
-import { isBrandMatch, parseResolutionMP, getRecorderMaxSupportedMP, getProductChannelCapacity, isTechMatch } from "./product-resolver";
+import { isBrandMatch, parseResolutionMP, getRecorderMaxSupportedMP, getProductChannelCapacity, isTechMatch, isCameraWeatherproof, isCameraIndoorSafe } from "./product-resolver";
 import type {
   Product,
   Addon,
@@ -416,6 +416,7 @@ function calculateHardware(
   if (mixedReqs && mixedReqs.length > 0) {
     for (const req of mixedReqs) {
       const proxySelection = { ...selection };
+      (proxySelection as any).type = req.type;
       proxySelection.camera_count = req.count;
       if (req.resolution) proxySelection.resolution_preference = req.resolution;
       
@@ -428,7 +429,10 @@ function calculateHardware(
       }
       
       const extraFeatures = proxySelection.requested_features 
-        ? proxySelection.requested_features.filter(f => f.toLowerCase() !== "bullet" && f.toLowerCase() !== "dome") 
+        ? proxySelection.requested_features.filter(f => {
+            const fl = f.toLowerCase();
+            return fl !== "bullet" && fl !== "dome" && fl !== "outdoor" && fl !== "indoor";
+          }) 
         : [];
       if (req.features && req.features.length > 0) {
         extraFeatures.push(...req.features);
@@ -443,8 +447,9 @@ function calculateHardware(
       if (typeLower.includes("speaker") || typeLower.includes("2-way") || typeLower.includes("two-way")) extraFeatures.push("2-way");
         else if (typeLower.includes("audio") || typeLower.includes("mic")) extraFeatures.push("audio");
       if (typeLower.includes("color")) extraFeatures.push("color");
-      if (typeLower.includes("indoor") || typeLower.includes("dome")) extraFeatures.push("dome");
-      if (typeLower.includes("outdoor") || typeLower.includes("bullet")) extraFeatures.push("bullet");
+      if (typeLower.includes("indoor") || typeLower.includes("dome")) extraFeatures.push("dome", "indoor");
+      if (typeLower.includes("outdoor") || typeLower.includes("bullet")) extraFeatures.push("bullet", "outdoor");
+      if (typeLower.includes("wi-fi") || typeLower.includes("wifi")) extraFeatures.push("wifi");
       
       proxySelection.requested_features = extraFeatures;
       
@@ -679,9 +684,14 @@ function calculateLabor(
 
   const upperTech = String(tech || "").toUpperCase();
   if (upperTech === "WIFI" || upperTech === "WIRELESS") {
-    let wifiQty = Number(selection.camera_count) || 0;
-    if (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined) {
-      wifiQty = (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0) || wifiQty;
+    let wifiQty = 0;
+    if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+      wifiQty = selection.mixed_camera_requirements.reduce((sum, req) => sum + (Number(req.count) || 0), 0);
+    } else if (selection.indoor_camera_count !== undefined || selection.outdoor_camera_count !== undefined) {
+      wifiQty = (Number(selection.indoor_camera_count) || 0) + (Number(selection.outdoor_camera_count) || 0);
+    }
+    if (wifiQty <= 0) {
+      wifiQty = Number(selection.camera_count) || 0;
     }
     const installPref = (selection as any).installation_preference || "pro";
     if (installPref === "diy" || wifiQty <= 0) {
@@ -1466,7 +1476,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     ["ptz", "solar", "4g", "wireless", "panoramic"].includes(rf)
   ) || ((selection as any).type && ["ptz", "solar", "4g", "wireless"].some(t => (selection as any).type.toLowerCase().includes(t)));
 
-  const isWirelessTech = tech === "Wireless" || tech === "WiFi" || tech === "wireless" || tech === "wifi";
+  const isWirelessTech = String(tech || "").toLowerCase().includes("wire") || String(tech || "").toLowerCase().includes("wifi");
   if (!hasSpecialtyRequest && !isWirelessTech) {
     const nonSpecialtyPool = pool.filter(cam => {
       const name = (cam.technical_name + " " + cam.display_name).toLowerCase();
@@ -1482,6 +1492,12 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     }
   }
 
+  const reqType = String((selection as any).type || "").toLowerCase();
+  const reqFeatures = (selection.requested_features || []).map(f => f.toLowerCase().trim());
+  const isOutdoorReq = reqType.includes("outdoor") || reqType.includes("bullet") || reqFeatures.includes("outdoor") || reqFeatures.includes("bullet");
+  const isIndoorReq = reqType.includes("indoor") || reqType.includes("dome") || reqFeatures.includes("indoor") || reqFeatures.includes("dome");
+  const isWifiReq = reqType.includes("wi-fi") || reqType.includes("wifi") || reqFeatures.includes("wifi") || reqFeatures.includes("wireless");
+
   // Filter by Brand
   if (selection.brand_preference && selection.brand_preference !== "all") {
     const brandFiltered = pool.filter(cam => isBrandMatch(cam, selection.brand_preference!));
@@ -1491,12 +1507,47 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     }
   }
 
-  // Filter by Resolution (Megapixel)
+  // ── Physical Environmental Invariant (CRITICAL) ──────────────
+  // An indoor-only camera must NEVER be selected for an outdoor requirement,
+  // and an outdoor-only bullet camera should not be selected for indoor if domes/indoor PT exist.
+  if (isOutdoorReq) {
+    const outdoorPool = pool.filter(cam => isCameraWeatherproof(cam));
+    if (outdoorPool.length > 0) {
+      pool = outdoorPool;
+    } else {
+      // If brand has no outdoor cameras in this tech pool, search entire catalog of available cameras for that tech that are weatherproof
+      const fallbackOutdoor = products.filter(p => p.category === "cctv_camera" && isAvailable(p) && isTechMatch(p, tech) && isCameraWeatherproof(p));
+      if (fallbackOutdoor.length > 0) {
+        pool = fallbackOutdoor;
+      }
+    }
+  } else if (isIndoorReq) {
+    const indoorPool = pool.filter(cam => isCameraIndoorSafe(cam));
+    if (indoorPool.length > 0) {
+      pool = indoorPool;
+    }
+  }
+
+  // ── Wi-Fi Sub-Technology Preference ─────────────────────────
+  // If requirement is Wi-Fi, prefer Wi-Fi cameras over 4G cameras unless 4G was explicitly requested
+  if (isWifiReq && isWirelessTech) {
+    const wifiPool = pool.filter(cam => {
+      const feats = (cam.features || []).map(f => f.toLowerCase());
+      const name = (cam.technical_name + " " + cam.display_name).toLowerCase();
+      const techArr = (cam.technologies || []).map(t => String(t).toLowerCase());
+      return feats.includes("wifi") || !!cam.has_wifi || name.includes("wi-fi") || name.includes("wifi") || techArr.includes("wifi");
+    });
+    if (wifiPool.length > 0) {
+      pool = wifiPool;
+    }
+  }
+
+  // ── Resolution Matching & Smart Auto-Upgrade ─────────────────
   if (selection.resolution_preference && selection.resolution_preference !== "all") {
-    // We expect resolution_preference to be something like "2MP" or "4MP"
     const resPref = String(selection.resolution_preference).toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
+    const targetMP = parseResolutionMP(resPref);
+
     const resFiltered = pool.filter(cam => {
-      // Safely parse resolution_mp or resolution (which might be "2MP", "2.4MP", "4MP", etc.)
       let camRes = String(cam.resolution_mp || cam.resolution || "").toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
       if (!camRes) {
         const match = ((cam.technical_name || "") + " " + (cam.display_name || "")).replace(/\s+/g, "").match(/(\d+)MP/i);
@@ -1504,23 +1555,40 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
       }
       return camRes === resPref || camRes === resPref.replace("MP", "") || camRes + "MP" === resPref || camRes.includes(resPref) || resPref.includes(camRes);
     });
-    // Fallback: If strict resolution matching eliminates ALL cameras, drop the filter
+
     if (resFiltered.length > 0) {
       pool = resFiltered;
+    } else {
+      // Auto-upgrade: find cameras with closest higher resolution (or closest available)
+      const sortedByResolutionDistance = [...pool].sort((a, b) => {
+        const aMP = parseResolutionMP(a);
+        const bMP = parseResolutionMP(b);
+        const aDiff = aMP >= targetMP ? (aMP - targetMP) : (100 + (targetMP - aMP));
+        const bDiff = bMP >= targetMP ? (bMP - targetMP) : (100 + (targetMP - bMP));
+        if (aDiff !== bDiff) return aDiff - bDiff;
+        return (a.unit_price || 0) - (b.unit_price || 0);
+      });
+      if (sortedByResolutionDistance.length > 0) {
+        const bestMP = parseResolutionMP(sortedByResolutionDistance[0]);
+        pool = pool.filter(c => parseResolutionMP(c) === bestMP);
+      }
     }
   }
 
-  // Filter by features
-  if (selection.requested_features?.length) {
+  // Filter by remaining requested features
+  const remainingFeatures = (selection.requested_features || []).filter(f => {
+    const fl = f.toLowerCase().trim();
+    return fl !== "bullet" && fl !== "dome" && fl !== "outdoor" && fl !== "indoor" && fl !== "wifi" && fl !== "wireless";
+  });
+
+  if (remainingFeatures.length > 0) {
     const filteredPool = pool.filter(cam => {
       const feats = (cam.features || []).map(f => f.toLowerCase().trim());
       const name = (cam.technical_name + " " + cam.display_name).toLowerCase();
       const formFactor = (cam.form_factor || "").toLowerCase();
       
-      return selection.requested_features!.every(rf => {
+      return remainingFeatures.every(rf => {
         const rfLower = rf.toLowerCase().trim();
-        if (rfLower === "dome" || rfLower === "indoor") return formFactor === "dome" || formFactor === "indoor_pt" || formFactor === "indoor" || (cam as any).indoor_outdoor === "indoor" || name.includes("dome") || name.includes("indoor");
-        if (rfLower === "bullet" || rfLower === "outdoor") return formFactor === "bullet" || formFactor === "outdoor_pt" || formFactor === "outdoor" || (cam as any).indoor_outdoor === "outdoor" || name.includes("bullet") || name.includes("outdoor");
         if (rfLower === "mic" || rfLower === "audio") return feats.some(f => f.includes("mic") || f.includes("audio") || f.includes("2-way") || f.includes("two-way") || f.includes("two way")) || name.includes("mic") || name.includes("audio") || name.includes("2-way") || name.includes("two-way") || name.includes("two way");
         if (rfLower === "2-way" || rfLower === "two-way" || rfLower === "two way") return feats.some(f => f.includes("2-way") || f.includes("two-way") || f.includes("two way") || f.includes("speaker")) || name.includes("2-way") || name.includes("two-way") || name.includes("two way") || name.includes("speaker");
         if (rfLower === "color") return feats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) || name.includes("color") || name.includes("colour");

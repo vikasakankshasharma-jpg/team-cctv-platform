@@ -38,6 +38,96 @@ export function isTechMatch(p: any, targetTech: string): boolean {
   return true;
 }
 
+/**
+ * Strict environmental classifier: Determines if a camera is weatherproof and safe for outdoor installation.
+ * Hard-excludes any camera that has explicit indoor rating or indoor-only form factor.
+ */
+export function isCameraWeatherproof(cam: Product): boolean {
+  if (!cam) return false;
+  const ip = (cam.ip_rating || "").toUpperCase().trim();
+  const form = (cam.form_factor || "").toLowerCase().trim();
+  const name = `${cam.technical_name || ""} ${cam.display_name || ""}`.toLowerCase();
+  const feats = (cam.features || []).map(f => f.toLowerCase().trim());
+  const inOut = String((cam as any).indoor_outdoor || "").toLowerCase().trim();
+
+  // 1. Explicit Indoor disqualification (Hard negative)
+  // An indoor-only camera or indoor PT camera can NEVER be outdoor
+  if (
+    ip === "INDOOR" ||
+    ip === "INDOOR ONLY" ||
+    ip === "NONE" ||
+    ip === "IP20" ||
+    form === "indoor_pt" ||
+    form === "indoor" ||
+    inOut === "indoor"
+  ) {
+    return false;
+  }
+
+  // 2. Weatherproof IP rating check (IP65, IP66, IP67, IP68)
+  if (ip === "IP65" || ip === "IP66" || ip === "IP67" || ip === "IP68") {
+    return true;
+  }
+
+  // 3. Form factor check (bullet, outdoor_pt, outdoor, ptz)
+  if (
+    form === "bullet" ||
+    form === "outdoor_pt" ||
+    form === "outdoor" ||
+    form === "ptz"
+  ) {
+    return true;
+  }
+
+  // 4. Feature or naming check
+  if (feats.includes("outdoor") || feats.includes("bullet") || feats.includes("outdoor_pt")) {
+    return true;
+  }
+  if (name.includes("outdoor") || name.includes("bullet") || name.includes("weatherproof")) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Environmental classifier: Determines if a camera is safe / suitable for indoor installation.
+ */
+export function isCameraIndoorSafe(cam: Product): boolean {
+  if (!cam) return false;
+  const ip = (cam.ip_rating || "").toUpperCase().trim();
+  const form = (cam.form_factor || "").toLowerCase().trim();
+  const name = `${cam.technical_name || ""} ${cam.display_name || ""}`.toLowerCase();
+  const feats = (cam.features || []).map(f => f.toLowerCase().trim());
+  const inOut = String((cam as any).indoor_outdoor || "").toLowerCase().trim();
+
+  // Explicit indoor markers
+  if (
+    form === "dome" ||
+    form === "indoor_pt" ||
+    form === "indoor" ||
+    form === "turret" ||
+    form === "cube" ||
+    form === "box"
+  ) {
+    return true;
+  }
+
+  if (ip === "INDOOR" || ip === "INDOOR ONLY" || inOut === "indoor") {
+    return true;
+  }
+
+  if (feats.includes("indoor") || feats.includes("dome") || feats.includes("indoor_pt")) {
+    return true;
+  }
+
+  if (name.includes("indoor") || name.includes("dome")) {
+    return true;
+  }
+
+  return false;
+}
+
 export function isBrandMatch(p: Product, brandFilter: string): boolean {
   return isBrandMatchFromUtils(p, brandFilter);
 }
@@ -177,64 +267,63 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
   const getCameraBySpec = (formFactor: string) => {
     let filtered = cams.filter(p => {
       // Must match Technology — handle both legacy `technology` (string) and new `technologies` (array)
-        if (!isTechMatch(p, config.technology)) return false;
-      
-      // Must match Form Factor — use form_factor (primary) with multiple fallbacks
-      const pFormRaw = String(
-        p.form_factor
-        || (p.specifications as any)?.formFactor
-        || (p as any).type
-        || (p.display_name?.toLowerCase().includes("bullet") ? "bullet"
-           : (p.display_name?.toLowerCase().includes("dome") ? "dome" : ""))
-      ).toLowerCase();
+      if (!isTechMatch(p, config.technology)) return false;
       
       const targetForm = formFactor.toLowerCase();
-      let matchForm = pFormRaw === targetForm;
-      if (!matchForm) {
-        if (targetForm === "dome") {
-          // Indoor-safe forms: dome, turret, indoor_pt, or explicit Indoor rating
-          const isExplicitIndoor = p.ip_rating === "Indoor" || p.ip_rating === "Indoor Only";
-          const isNotOutdoor = !pFormRaw.includes("bullet") && !pFormRaw.includes("outdoor");
-          matchForm = pFormRaw.includes("dome") || pFormRaw.includes("turret") || pFormRaw.includes("indoor") || pFormRaw === "indoor_pt" || (isExplicitIndoor && isNotOutdoor);
-        } else if (targetForm === "bullet") {
-          // Outdoor weatherproof forms: bullet, outdoor_pt, ptz, or IP65/IP66/IP67 rated
-          const isWeatherproof = p.ip_rating === "IP65" || p.ip_rating === "IP66" || p.ip_rating === "IP67";
-          matchForm = pFormRaw.includes("bullet") || pFormRaw.includes("outdoor") || pFormRaw === "outdoor_pt" || pFormRaw === "ptz" || isWeatherproof;
-        }
+      if (targetForm === "dome" || targetForm === "indoor") {
+        return isCameraIndoorSafe(p);
+      } else if (targetForm === "bullet" || targetForm === "outdoor") {
+        return isCameraWeatherproof(p);
       }
-      
-      // Must match Resolution
-      const pRes = (p.specifications as any)?.resolution || (p as any).resolution;
-        let matchRes = false;
-        const normalizeRes = (r: string) => String(r || "").toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
-        const normTarget = normalizeRes(targetResolution);
-        
-        if (!pRes) {
-           matchRes = normalizeRes(p.display_name).includes(normTarget);
-        } else {
-           const normPRes = normalizeRes(pRes);
-           matchRes = normPRes === normTarget || normPRes.includes(normTarget);
-        }
-
-      return matchForm && matchRes;
+      return true;
     });
 
     if (filtered.length === 0) return undefined;
 
     if (isBudget) {
-      // For Budget tier: prefer products marked "budget", otherwise pick the cheapest available product
       const budgetItems = filtered.filter(p => p.brand?.toLowerCase().includes("budget") || p.display_name?.toLowerCase().includes("budget"));
-      if (budgetItems.length > 0) return budgetItems.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
-      return filtered.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
-    }
-
-    if (brandFilter) {
+      if (budgetItems.length > 0) filtered = budgetItems;
+    } else if (brandFilter && brandFilter !== "all") {
       const brandItems = filtered.filter(p => isBrandMatch(p, brandFilter));
-      if (brandItems.length > 0) return brandItems.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
-      return undefined; // Strictly enforce camera brand
+      if (brandItems.length > 0) {
+        filtered = brandItems;
+      } else {
+        return undefined; // Strictly enforce camera brand
+      }
     }
 
-    // Fallback if no specific brand was requested
+    // Must match Resolution with smart auto-upgrade fallback
+    const normalizeRes = (r: string) => String(r || "").toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
+    const normTarget = normalizeRes(targetResolution);
+    const targetMP = parseResolutionMP(normTarget);
+
+    const resFiltered = filtered.filter(p => {
+      const pRes = (p.specifications as any)?.resolution || (p as any).resolution;
+      if (!pRes) {
+        return normalizeRes(p.display_name).includes(normTarget);
+      }
+      const normPRes = normalizeRes(pRes);
+      return normPRes === normTarget || normPRes.includes(normTarget);
+    });
+
+    if (resFiltered.length > 0) {
+      filtered = resFiltered;
+    } else {
+      // Auto-upgrade to closest higher resolution
+      const sortedByResolutionDistance = [...filtered].sort((a, b) => {
+        const aMP = parseResolutionMP(a);
+        const bMP = parseResolutionMP(b);
+        const aDiff = aMP >= targetMP ? (aMP - targetMP) : (100 + (targetMP - aMP));
+        const bDiff = bMP >= targetMP ? (bMP - targetMP) : (100 + (targetMP - bMP));
+        if (aDiff !== bDiff) return aDiff - bDiff;
+        return (a.unit_price || 0) - (b.unit_price || 0);
+      });
+      if (sortedByResolutionDistance.length > 0) {
+        const bestMP = parseResolutionMP(sortedByResolutionDistance[0]);
+        filtered = filtered.filter(c => parseResolutionMP(c) === bestMP);
+      }
+    }
+
     return filtered.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))[0];
   };
 

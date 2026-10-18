@@ -265,7 +265,7 @@ export function DynamicVariantGenerator({
         resolution: res,
         technology: isWireless ? "Wireless" : (activeTech === "ip" ? "IP" : "HD"),
         features: isWireless
-          ? (b.type === "outdoor" ? ["outdoor"] : ["indoor"])
+          ? (b.type === "outdoor" ? ["outdoor", "wifi"] : ["indoor", "wifi"])
           : (b.type === "outdoor" ? ["bullet"] : ["dome"])
       };
     });

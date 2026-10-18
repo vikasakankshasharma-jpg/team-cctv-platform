@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { calculateSystemScore } from "@/lib/system-score";
-import { isTechMatch } from "@/lib/product-resolver";
+import { isTechMatch, isCameraWeatherproof, isCameraIndoorSafe } from "@/lib/product-resolver";
 import { isBrandMatch, getCanonicalBrandName, getCanonicalBrandKey, getUniqueCanonicalBrands } from "@/lib/brand-utils";
 import { 
   Zap, Maximize, Mic, Moon, Camera, Server, HardDrive, Plug, PlusCircle,
@@ -279,8 +279,8 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
           if (tag === "pt" || tag === "pan_tilt") return camFeats.some(f => f === "pt" || f.includes("pan_tilt")) || formFactor.includes("pt") || !!cam.is_pt;
           if (tag === "ptz") return camFeats.some(f => f.includes("ptz")) || formFactor === "ptz" || (Number(cam.optical_zoom_x) > 1) || name.includes("ptz");
           if (tag === "multi_lens" || tag === "dual_lens") return camFeats.some(f => f.includes("lens")) || formFactor.includes("lens") || !!cam.is_dual_lens || !!cam.is_triple_lens || !!cam.is_quad_lens || name.includes("dual") || name.includes("triple");
-          if (tag === "dome") return formFactor === "dome" || formFactor === "indoor_pt" || name.includes("dome");
-          if (tag === "bullet") return formFactor === "bullet" || formFactor === "outdoor_pt" || name.includes("bullet");
+          if (tag === "dome" || tag === "indoor") return isCameraIndoorSafe(cam);
+          if (tag === "bullet" || tag === "outdoor") return isCameraWeatherproof(cam);
           return camFeats.some(f => f.includes(tag)) || name.includes(tag);
         };
         return effectiveFeatures.every(reqFeat => check(reqFeat.toLowerCase().trim()));
