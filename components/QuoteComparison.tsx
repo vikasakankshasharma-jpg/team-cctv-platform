@@ -155,7 +155,11 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
             <li className="flex justify-between">
               <span className="text-gray-500">Internet Connection</span> 
               <span className="font-semibold text-xs text-right">
-                {plan.addons?.some((a: any) => a.addon_id === "ACC-4G-ROUTER" || a.display_name?.toLowerCase().includes("router")) || requirement.broadband_status === "sim_router"
+                {requirement.broadband_status === "independent_4g"
+                  ? "Independent 4G SIM"
+                  : (plan.addons?.some((a: any) => a.addon_id === "ACC-WIFI-EXTENDER" || a.display_name?.toLowerCase().includes("extender")) || requirement.broadband_status === "wifi_extender")
+                  ? "Wi-Fi Extender Included"
+                  : (plan.addons?.some((a: any) => a.addon_id === "ACC-4G-ROUTER" || a.display_name?.toLowerCase().includes("router")) || requirement.broadband_status === "sim_router")
                   ? "4G SIM Router Included"
                   : "Customer Wi-Fi / Free"}
               </span>
@@ -264,7 +268,13 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
                      const hasRouter = (p as any).addons?.some((a: any) => a.addon_id === "ACC-4G-ROUTER" || a.display_name?.toLowerCase().includes("router")) || requirement.broadband_status === "sim_router";
                      return (
                        <td key={key} className="p-4 border-b border-r text-center font-medium">
-                         {hasRouter ? "4G SIM Router Included" : "Customer Wi-Fi"}
+                         {requirement.broadband_status === "independent_4g"
+                            ? "Independent 4G SIM"
+                            : ((p as any).addons?.some((a: any) => a.addon_id === "ACC-WIFI-EXTENDER" || a.display_name?.toLowerCase().includes("extender")) || requirement.broadband_status === "wifi_extender")
+                            ? "Wi-Fi Extender Included"
+                            : hasRouter
+                            ? "4G SIM Router Included"
+                            : "Customer Wi-Fi"}
                        </td>
                      );
                    })}

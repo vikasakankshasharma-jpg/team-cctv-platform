@@ -189,7 +189,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       property_type: lead.property_type,
       lead_pincode: lead.address?.pincode || (lead.wizard_answers?.lead_pincode as string) || "",
       wants_remote_viewing: lead.wizard_answers?.["q_remote_viewing"] === "yes",
-      broadband_status: (lead.wizard_answers?.["q_broadband"] as "yes" | "no" | "sim_router") || "yes",
+      broadband_status: (lead.wizard_answers?.["q_broadband"] as "yes" | "no" | "sim_router" | "wifi_extender" | "independent_4g") || "yes",
     };
 
     // Calculate Recommendation Synchronously

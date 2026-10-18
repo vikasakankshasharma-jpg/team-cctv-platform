@@ -158,6 +158,15 @@ export function InstantQuotationReview({
       tag: t("addon_tag_zero_broadband", "Zero-Broadband")
     },
     {
+      id: "ACC-WIFI-EXTENDER",
+      title: t("addon_wifi_extender_title", "High-Speed Wi-Fi Range Extender (Dual Antenna)"),
+      description: t("addon_wifi_extender_desc", "Extends your indoor Wi-Fi network coverage by 15-25 meters to reach distant outdoor cameras."),
+      price: products.find(p => p.id === "ACC-WIFI-EXTENDER" || p.sku === "ACC-WIFI-EXTENDER")?.unit_price || 1299,
+      icon: Wifi,
+      category: t("addon_cat_internet", "Internet (For Mobile View)"),
+      tag: t("addon_tag_range_boost", "Range Boost")
+    },
+    {
       id: "amc_1yr",
       title: t("addon_amc_title", "1-Year Comprehensive AMC"),
       description: t("addon_amc_desc", "Annual Maintenance Contract: Free quarterly servicing, priority technician breakdown support, and peace of mind."),

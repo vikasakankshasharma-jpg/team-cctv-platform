@@ -115,7 +115,9 @@ export function EditConfigurationDrawer({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="yes">Existing Wi-Fi / Broadband (Free)</SelectItem>
-                <SelectItem value="sim_router">No Wi-Fi at Site (Include 4G SIM Router)</SelectItem>
+                <SelectItem value="wifi_extender">Have Wi-Fi, but Far Spots (Add Range Extender)</SelectItem>
+                <SelectItem value="sim_router">No Wi-Fi at Site - Close Spots (Include 4G SIM Router)</SelectItem>
+                <SelectItem value="independent_4g">No Wi-Fi at Site - Distant Spots (Independent 4G SIM per Camera)</SelectItem>
                 <SelectItem value="no">Offline (Local Recording Only)</SelectItem>
               </SelectContent>
             </Select>
