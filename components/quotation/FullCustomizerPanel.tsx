@@ -273,12 +273,31 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         const name = (cam.display_name + " " + cam.technical_name).toLowerCase();
         const formFactor = (cam.form_factor || "").toLowerCase();
         const check = (tag: string) => {
-          if (tag === "mic") return camFeats.some(f => f.includes("mic") || f.includes("audio") || f.includes("2-way") || f.includes("two-way")) || name.includes("mic") || name.includes("audio") || name.includes("2-way") || name.includes("two-way");
-            if (tag === "2-way") return camFeats.some(f => f.includes("2-way") || f.includes("two-way") || f.includes("speaker")) || name.includes("2-way") || name.includes("two-way") || name.includes("speaker");
-          if (tag === "color") return camFeats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) || name.includes("color") || name.includes("colour");
-          if (tag === "pt" || tag === "pan_tilt") return camFeats.some(f => f === "pt" || f.includes("pan_tilt")) || formFactor.includes("pt") || !!cam.is_pt;
-          if (tag === "ptz") return camFeats.some(f => f.includes("ptz")) || formFactor === "ptz" || (Number(cam.optical_zoom_x) > 1) || name.includes("ptz");
-          if (tag === "multi_lens" || tag === "dual_lens") return camFeats.some(f => f.includes("lens")) || formFactor.includes("lens") || !!cam.is_dual_lens || !!cam.is_triple_lens || !!cam.is_quad_lens || name.includes("dual") || name.includes("triple");
+          if (tag === "mic" || tag === "audio") {
+            return cam.has_audio === true || (cam as any).has_mic === true || (cam as any).has_2way_audio === true ||
+              camFeats.some(f => f.includes("mic") || f.includes("audio") || f.includes("2-way") || f.includes("two-way")) ||
+              name.includes("mic") || name.includes("audio") || name.includes("2-way") || name.includes("two-way");
+          }
+          if (tag === "2-way" || tag === "two-way") {
+            return cam.has_speaker === true || (cam as any).has_2way_audio === true ||
+              camFeats.some(f => f.includes("2-way") || f.includes("two-way") || f.includes("speaker")) ||
+              name.includes("2-way") || name.includes("two-way") || name.includes("speaker");
+          }
+          if (tag === "color") {
+            return cam.night_vision_type === "color" || cam.night_vision_type === "dual_light" || cam.night_vision_type === "starlight" ||
+              camFeats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) ||
+              name.includes("color") || name.includes("colour");
+          }
+          if (tag === "pt" || tag === "pan_tilt") {
+            return cam.is_pt === true || formFactor.includes("pt") || camFeats.some(f => f === "pt" || f.includes("pan_tilt"));
+          }
+          if (tag === "ptz") {
+            return cam.is_ptz === true || formFactor === "ptz" || (Number(cam.optical_zoom_x) > 1) || camFeats.some(f => f.includes("ptz")) || name.includes("ptz");
+          }
+          if (tag === "multi_lens" || tag === "dual_lens") {
+            return (cam as any).is_dual_lens === true || (cam as any).is_triple_lens === true || (cam as any).is_quad_lens === true ||
+              camFeats.some(f => f.includes("lens")) || formFactor.includes("lens") || name.includes("dual") || name.includes("triple");
+          }
           if (tag === "dome" || tag === "indoor") return isCameraIndoorSafe(cam);
           if (tag === "bullet" || tag === "outdoor") return isCameraWeatherproof(cam);
           return camFeats.some(f => f.includes(tag)) || name.includes(tag);

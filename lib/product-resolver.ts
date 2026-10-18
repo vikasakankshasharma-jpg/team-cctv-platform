@@ -40,23 +40,25 @@ export function isTechMatch(p: any, targetTech: string): boolean {
 
 /**
  * Strict environmental classifier: Determines if a camera is weatherproof and safe for outdoor installation.
- * Hard-excludes any camera that has explicit indoor rating or indoor-only form factor.
+ * Grounded fundamentally on Ingress Protection (IP Rating >= IP65) protecting against water jets, rain, and dust (IEC 60529).
+ * System decisions strictly follow physical product specifications, NOT SKU strings or model names.
  */
 export function isCameraWeatherproof(cam: Product): boolean {
   if (!cam) return false;
-  const ip = (cam.ip_rating || "").toUpperCase().trim();
-  const form = (cam.form_factor || "").toLowerCase().trim();
-  const name = `${cam.technical_name || ""} ${cam.display_name || ""}`.toLowerCase();
-  const feats = (cam.features || []).map(f => f.toLowerCase().trim());
+
+  const rawIp = cam.ip_rating || (cam.specifications as any)?.ip_rating || (cam.specifications as any)?.ipRating || "";
+  const ip = String(rawIp).toUpperCase().trim();
+  const form = String(cam.form_factor || "").toLowerCase().trim();
   const inOut = String((cam as any).indoor_outdoor || "").toLowerCase().trim();
 
   // 1. Explicit Indoor disqualification (Hard negative)
-  // An indoor-only camera or indoor PT camera can NEVER be outdoor
+  // If explicitly rated indoor or indoor-only, it can NEVER be installed outdoors
   if (
     ip === "INDOOR" ||
     ip === "INDOOR ONLY" ||
     ip === "NONE" ||
     ip === "IP20" ||
+    ip === "IP40" ||
     form === "indoor_pt" ||
     form === "indoor" ||
     inOut === "indoor"
@@ -64,44 +66,41 @@ export function isCameraWeatherproof(cam: Product): boolean {
     return false;
   }
 
-  // 2. Weatherproof IP rating check (IP65, IP66, IP67, IP68)
-  if (ip === "IP65" || ip === "IP66" || ip === "IP67" || ip === "IP68") {
+  // 2. Authoritative Specification Check: Ingress Protection (IP65, IP66, IP67, IP68)
+  // Outdoor CCTV engineering standard requires at least IP65 (dust-tight + water jets) or IP66/IP67/IP68
+  if (/^IP6[5-8]/i.test(ip)) {
     return true;
   }
 
-  // 3. Form factor check (bullet, outdoor_pt, outdoor, ptz)
-  if (
-    form === "bullet" ||
-    form === "outdoor_pt" ||
-    form === "outdoor" ||
-    form === "ptz"
-  ) {
-    return true;
-  }
-
-  // 4. Feature or naming check
-  if (feats.includes("outdoor") || feats.includes("bullet") || feats.includes("outdoor_pt")) {
-    return true;
-  }
-  if (name.includes("outdoor") || name.includes("bullet") || name.includes("weatherproof")) {
-    return true;
+  // 3. Fallback specification check: structured indoor_outdoor specification
+  // Only valid if physical body material is weatherproof metal/polycarbonate and not indoor
+  if (inOut === "outdoor" || inOut === "both" || inOut === "indoor/outdoor") {
+    if (cam.body_material?.toLowerCase() === "metal" || form === "outdoor_pt") {
+      return true;
+    }
   }
 
   return false;
 }
 
 /**
- * Environmental classifier: Determines if a camera is safe / suitable for indoor installation.
+ * Environmental classifier: Determines if a camera is suitable for indoor installation.
+ * Grounded on physical specifications (indoor rating, non-intrusive form factor, plastic/metal indoor housing).
  */
 export function isCameraIndoorSafe(cam: Product): boolean {
   if (!cam) return false;
-  const ip = (cam.ip_rating || "").toUpperCase().trim();
-  const form = (cam.form_factor || "").toLowerCase().trim();
-  const name = `${cam.technical_name || ""} ${cam.display_name || ""}`.toLowerCase();
-  const feats = (cam.features || []).map(f => f.toLowerCase().trim());
+
+  const rawIp = cam.ip_rating || (cam.specifications as any)?.ip_rating || (cam.specifications as any)?.ipRating || "";
+  const ip = String(rawIp).toUpperCase().trim();
+  const form = String(cam.form_factor || "").toLowerCase().trim();
   const inOut = String((cam as any).indoor_outdoor || "").toLowerCase().trim();
 
-  // Explicit indoor markers
+  // 1. Explicit indoor ratings or structured flags
+  if (ip === "INDOOR" || ip === "INDOOR ONLY" || ip === "IP20" || ip === "IP40" || inOut === "indoor") {
+    return true;
+  }
+
+  // 2. Indoor-oriented form factors (dome, indoor_pt, turret, cube, box)
   if (
     form === "dome" ||
     form === "indoor_pt" ||
@@ -113,15 +112,8 @@ export function isCameraIndoorSafe(cam: Product): boolean {
     return true;
   }
 
-  if (ip === "INDOOR" || ip === "INDOOR ONLY" || inOut === "indoor") {
-    return true;
-  }
-
-  if (feats.includes("indoor") || feats.includes("dome") || feats.includes("indoor_pt")) {
-    return true;
-  }
-
-  if (name.includes("indoor") || name.includes("dome")) {
+  // 3. Dual-use cameras rated both indoor/outdoor
+  if (inOut === "both" || inOut === "indoor/outdoor") {
     return true;
   }
 
@@ -156,7 +148,15 @@ export function parseResolutionMP(item: any): number {
 
 export function getRecorderMaxSupportedMP(recorder: Product): number {
   if (!recorder) return 2;
-  const isIP = String(recorder.technology || "").toUpperCase().includes("IP") ||
+  if (typeof (recorder as any).max_supported_mp === "number" && (recorder as any).max_supported_mp > 0) {
+    return (recorder as any).max_supported_mp;
+  }
+  if (typeof (recorder as any).resolution_mp === "number" && (recorder as any).resolution_mp > 0) {
+    return (recorder as any).resolution_mp;
+  }
+
+  const isIP = (recorder as any).recorder_type === "NVR" ||
+               String(recorder.technology || "").toUpperCase().includes("IP") ||
                (recorder.technologies || []).some((t: any) => String(t).toUpperCase().includes("IP")) ||
                String(recorder.display_name || "").toUpperCase().includes("IP") ||
                String(recorder.display_name || "").toUpperCase().includes("NVR");
@@ -298,12 +298,8 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
     const targetMP = parseResolutionMP(normTarget);
 
     const resFiltered = filtered.filter(p => {
-      const pRes = (p.specifications as any)?.resolution || (p as any).resolution;
-      if (!pRes) {
-        return normalizeRes(p.display_name).includes(normTarget);
-      }
-      const normPRes = normalizeRes(pRes);
-      return normPRes === normTarget || normPRes.includes(normTarget);
+      const pMP = parseResolutionMP(p);
+      return pMP === targetMP;
     });
 
     if (resFiltered.length > 0) {
@@ -329,16 +325,16 @@ function resolveCamerasForPermutation(config: CCTVConfiguration, targetResolutio
 
   const res = [];
   if (config.indoor_cameras > 0) {
-    const dome = getCameraBySpec('DOME');
-    if (dome) res.push({ product: dome, qty: config.indoor_cameras });
+    const indoorCam = getCameraBySpec('indoor') || getCameraBySpec('dome');
+    if (indoorCam) res.push({ product: indoorCam, qty: config.indoor_cameras });
   }
   if (config.outdoor_cameras > 0) {
-    const bullet = getCameraBySpec('BULLET');
-    if (bullet) res.push({ product: bullet, qty: config.outdoor_cameras });
+    const outdoorCam = getCameraBySpec('outdoor') || getCameraBySpec('bullet');
+    if (outdoorCam) res.push({ product: outdoorCam, qty: config.outdoor_cameras });
   }
   
   if (config.indoor_cameras === 0 && config.outdoor_cameras === 0 && config.total_cameras > 0) {
-     const cam = getCameraBySpec('DOME') || getCameraBySpec('BULLET');
+     const cam = getCameraBySpec('indoor') || getCameraBySpec('outdoor') || getCameraBySpec('dome') || getCameraBySpec('bullet');
      if (cam) res.push({ product: cam, qty: config.total_cameras });
   }
   
@@ -362,10 +358,16 @@ function resolveRecorderForPermutation(config: CCTVConfiguration, pool: Product[
     if (getProductChannelCapacity(p) < config.recorder_channels!) return false;
     if (!isTechMatch(p, config.technology)) return false;
     
-    // Strict hardware separation: DVR for HD, NVR for IP
+    // Strict hardware separation: DVR for HD, NVR for IP (Specifications first)
+    const recType = String((p as any).recorder_type || "").toUpperCase();
     const name = `${p.technical_name || ""} ${p.display_name || ""} ${(p.tags || []).join(" ")}`.toLowerCase();
-    if (isIP && name.includes("dvr") && !name.includes("nvr")) return false;
-    if (!isIP && name.includes("nvr") && !name.includes("dvr")) return false;
+    if (isIP) {
+      if (recType === "DVR") return false;
+      if (name.includes("dvr") && !name.includes("nvr")) return false;
+    } else {
+      if (recType === "NVR") return false;
+      if (name.includes("nvr") && !name.includes("dvr")) return false;
+    }
 
     if (getRecorderMaxSupportedMP(p) < requiredMaxMP) return false;
     return true;

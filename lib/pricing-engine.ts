@@ -1548,12 +1548,8 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     const targetMP = parseResolutionMP(resPref);
 
     const resFiltered = pool.filter(cam => {
-      let camRes = String(cam.resolution_mp || cam.resolution || "").toUpperCase().replace(/\s+/g, "").replace("MEGAPIXEL", "MP");
-      if (!camRes) {
-        const match = ((cam.technical_name || "") + " " + (cam.display_name || "")).replace(/\s+/g, "").match(/(\d+)MP/i);
-        if (match) camRes = match[0].toUpperCase();
-      }
-      return camRes === resPref || camRes === resPref.replace("MP", "") || camRes + "MP" === resPref || camRes.includes(resPref) || resPref.includes(camRes);
+      const camMP = parseResolutionMP(cam);
+      return camMP === targetMP;
     });
 
     if (resFiltered.length > 0) {
@@ -1575,7 +1571,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
     }
   }
 
-  // Filter by remaining requested features
+  // Filter by remaining requested features (Specifications first)
   const remainingFeatures = (selection.requested_features || []).filter(f => {
     const fl = f.toLowerCase().trim();
     return fl !== "bullet" && fl !== "dome" && fl !== "outdoor" && fl !== "indoor" && fl !== "wifi" && fl !== "wireless";
@@ -1589,12 +1585,32 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
       
       return remainingFeatures.every(rf => {
         const rfLower = rf.toLowerCase().trim();
-        if (rfLower === "mic" || rfLower === "audio") return feats.some(f => f.includes("mic") || f.includes("audio") || f.includes("2-way") || f.includes("two-way") || f.includes("two way")) || name.includes("mic") || name.includes("audio") || name.includes("2-way") || name.includes("two-way") || name.includes("two way");
-        if (rfLower === "2-way" || rfLower === "two-way" || rfLower === "two way") return feats.some(f => f.includes("2-way") || f.includes("two-way") || f.includes("two way") || f.includes("speaker")) || name.includes("2-way") || name.includes("two-way") || name.includes("two way") || name.includes("speaker");
-        if (rfLower === "color") return feats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) || name.includes("color") || name.includes("colour");
-        if (rfLower === "pt" || rfLower === "pan_tilt") return feats.some(f => f === "pt" || f.includes("pan_tilt")) || formFactor.includes("pt") || !!cam.is_pt;
-        if (rfLower === "ptz") return feats.some(f => f.includes("ptz")) || formFactor === "ptz" || (Number(cam.optical_zoom_x) > 1) || name.includes("ptz");
-        if (rfLower === "multi_lens" || rfLower === "multi-lens" || rfLower === "dual_lens") return feats.some(f => f.includes("lens")) || formFactor.includes("lens") || !!cam.is_dual_lens || !!cam.is_triple_lens || !!cam.is_quad_lens || name.includes("dual") || name.includes("triple");
+        // Check structured specifications first, then feature tags/names
+        if (rfLower === "mic" || rfLower === "audio") {
+          return cam.has_audio === true || (cam as any).has_mic === true || (cam as any).has_2way_audio === true ||
+                 feats.some(f => f.includes("mic") || f.includes("audio") || f.includes("2-way") || f.includes("two-way") || f.includes("two way")) ||
+                 name.includes("mic") || name.includes("audio") || name.includes("2-way") || name.includes("two-way") || name.includes("two way");
+        }
+        if (rfLower === "2-way" || rfLower === "two-way" || rfLower === "two way") {
+          return cam.has_speaker === true || (cam as any).has_2way_audio === true ||
+                 feats.some(f => f.includes("2-way") || f.includes("two-way") || f.includes("two way") || f.includes("speaker")) ||
+                 name.includes("2-way") || name.includes("two-way") || name.includes("two way") || name.includes("speaker");
+        }
+        if (rfLower === "color") {
+          return cam.night_vision_type === "color" || cam.night_vision_type === "dual_light" || cam.night_vision_type === "starlight" ||
+                 feats.some(f => f.includes("color") || f.includes("colour") || f.includes("night")) ||
+                 name.includes("color") || name.includes("colour");
+        }
+        if (rfLower === "pt" || rfLower === "pan_tilt") {
+          return cam.is_pt === true || formFactor.includes("pt") || feats.some(f => f === "pt" || f.includes("pan_tilt"));
+        }
+        if (rfLower === "ptz") {
+          return cam.is_ptz === true || formFactor === "ptz" || (Number(cam.optical_zoom_x) > 1) || feats.some(f => f.includes("ptz")) || name.includes("ptz");
+        }
+        if (rfLower === "multi_lens" || rfLower === "multi-lens" || rfLower === "dual_lens") {
+          return (cam as any).is_dual_lens === true || (cam as any).is_triple_lens === true || (cam as any).is_quad_lens === true ||
+                 feats.some(f => f.includes("lens")) || formFactor.includes("lens") || name.includes("dual") || name.includes("triple");
+        }
         return feats.includes(rfLower) || name.includes(rfLower);
       });
     });
@@ -1736,10 +1752,16 @@ function resolveRecorder(selection: ConfiguratorSelection, products: Product[], 
     if (p.category !== "recorder" || !isAvailable(p)) return false;
     if (!isTechMatch(p, tech)) return false;
 
-    // Strict hardware separation: DVR for HD, NVR for IP
+    // Strict hardware separation: DVR for HD, NVR for IP (Specifications first)
+    const recType = String((p as any).recorder_type || "").toUpperCase();
     const name = `${p.technical_name || ""} ${p.display_name || ""} ${(p.tags || []).join(" ")}`.toLowerCase();
-    if (isIP && name.includes("dvr") && !name.includes("nvr")) return false;
-    if (!isIP && name.includes("nvr") && !name.includes("dvr")) return false;
+    if (isIP) {
+      if (recType === "DVR") return false;
+      if (name.includes("dvr") && !name.includes("nvr")) return false;
+    } else {
+      if (recType === "NVR") return false;
+      if (name.includes("nvr") && !name.includes("dvr")) return false;
+    }
 
     if (getProductChannelCapacity(p) < selection.camera_count) return false;
 
