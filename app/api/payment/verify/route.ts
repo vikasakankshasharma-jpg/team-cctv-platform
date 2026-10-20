@@ -88,6 +88,7 @@ export async function POST(request: Request) {
             status: isFullPayment ? "converted" : "booked",
             payment_status: isFullPayment ? "paid" : "advance_paid",
             amount_paid: amountPaid,
+            amount_due: amountDue,
             payment_id: paymentId,
             paid_at: new Date().toISOString(),
             updated_at: serverTimestamp ? serverTimestamp() : new Date().toISOString(),

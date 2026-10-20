@@ -176,6 +176,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       camera_count: initialCamCount,
       indoor_camera_count: lead.wizard_answers?.["indoor_camera_count"] !== undefined ? Number(lead.wizard_answers["indoor_camera_count"]) : undefined,
       outdoor_camera_count: lead.wizard_answers?.["outdoor_camera_count"] !== undefined ? Number(lead.wizard_answers["outdoor_camera_count"]) : undefined,
+      wifi_camera_count: lead.wizard_answers?.["wifi_camera_count"] !== undefined ? Number(lead.wizard_answers["wifi_camera_count"]) : undefined,
       mixed_camera_requirements: mixedReqs,
       recording_days: initialDays,
       recording_mode: ((lead.wizard_answers?.["recording_mode"] as string) || (lead.wizard_answers?.["q_recording_mode"] as string) || "motion") as "continuous" | "motion" | "smart",
@@ -241,7 +242,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     // We must pass PER CAMERA meters because calculateCabling multiplies by camera_count
     const totalMeters = selection.total_cable_length_meters || lead.wizard_answers?.total_cable_length_meters;
     if (typeof totalMeters === "number" && totalMeters > 0) {
-      return totalMeters / (selection.camera_count || 4);
+      const wiredCount = (Number(selection.outdoor_camera_count) || 0) + (Number(selection.indoor_camera_count) || 0);
+      const effectiveWiredCount = wiredCount > 0 ? wiredCount : (selection.camera_count || 4);
+      return totalMeters / effectiveWiredCount;
     }
     
     const perCamMeters = selection.cable_length_meters || lead.wizard_answers?.cable_length_meters;
@@ -406,6 +409,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           max_budget: selection.max_budget,
           cable_length_meters: selection.cable_length_meters || lead.wizard_answers?.cable_length_meters,
           total_cable_length_meters: selection.total_cable_length_meters || lead.wizard_answers?.total_cable_length_meters,
+          wifi_camera_count: selection.wifi_camera_count ?? (typeof lead.wizard_answers?.["wifi_camera_count"] === "number" ? lead.wizard_answers["wifi_camera_count"] : undefined),
           power_wiring_option: selection.power_wiring_option || (lead.wizard_answers?.["power_wiring_option"] as any) || "socket_available",
           power_cable_meters: selection.power_cable_meters ?? (typeof lead.wizard_answers?.["power_cable_meters"] === "number" ? lead.wizard_answers["power_cable_meters"] : undefined),
           total_power_cable_meters: selection.total_power_cable_meters ?? (typeof lead.wizard_answers?.["total_power_cable_meters"] === "number" ? lead.wizard_answers["total_power_cable_meters"] : undefined),

@@ -24,6 +24,16 @@ export function LeadStatusBadge({ lead, quote, className = "" }: LeadStatusBadge
     ["advance_paid", "delivery_paid", "paid", "captured"].includes(quote?.payment_status) ||
     ["booked", "won", "dispatched", "delivered"].includes(rawStatus);
 
+  const isFullyPaid = 
+    lead?.payment_status === "paid" ||
+    quote?.payment_status === "paid" ||
+    rawStatus === "paid" ||
+    String(quote?.status || "").toLowerCase() === "paid" ||
+    quote?.payment_type === "full" ||
+    quote?.payment_type === "full_discount" ||
+    quote?.payment_type === "full_discounted" ||
+    ((quote?.amount_due === 0 || lead?.amount_due === 0) && ((quote?.amount_paid || 0) > 500 || (lead?.amount_paid || 0) > 500));
+
   if (installStatus === "COMPLETED" || rawStatus === "completed") {
     status = t("badge_completed", "COMPLETED");
     colorClass = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-900";
@@ -36,6 +46,10 @@ export function LeadStatusBadge({ lead, quote, className = "" }: LeadStatusBadge
     status = t("badge_hardware_dispatched", "HARDWARE DISPATCHED");
     colorClass = "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-400 dark:border-teal-900";
     Icon = Package;
+  } else if (isFullyPaid) {
+    status = t("badge_fully_paid", "ORDER CONFIRMED (FULLY PAID)");
+    colorClass = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-900";
+    Icon = ShieldCheck;
   } else if (isPaid || rawStatus === "won") {
     status = t("badge_booked_advance", "BOOKED (ADVANCE PAID)");
     colorClass = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-900";

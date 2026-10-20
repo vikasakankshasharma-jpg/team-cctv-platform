@@ -50,7 +50,11 @@ export async function GET(
       quoteData.status === "PAID" || 
       quoteData.payment_status === "captured" || 
       quoteData.payment_status === "paid" ||
-      quoteData.status === "COMPLETED";
+      quoteData.status === "COMPLETED" ||
+      quoteData.payment_type === "full" ||
+      quoteData.payment_type === "full_discount" ||
+      quoteData.payment_type === "full_discounted" ||
+      (quoteData.amount_due === 0 && (quoteData.amount_paid || 0) > 500);
 
     const isAdvance = 
       !isPaid && (
@@ -62,13 +66,14 @@ export async function GET(
     const isReady = isPaid || isAdvance || !!quoteData.paid_at || !!quoteData.payment_id || (quoteData.amount_paid || 0) > 0;
 
     const totalPayable = Number(
+      quoteData.total_payable_after_discount ??
       quoteData.total_amount ??
       quoteData.pricingSnapshot?.total_payable ??
       quoteData.total_payable ??
       quoteData.total ??
       0
     );
-    const amountPaid = Number(quoteData.amount_paid ?? (isAdvance ? 500 : 0));
+    const amountPaid = Number(quoteData.amount_paid ?? (isAdvance ? 500 : totalPayable));
     const amountDue = isPaid ? 0 : Number(quoteData.amount_due ?? Math.max(0, totalPayable - amountPaid));
 
     return NextResponse.json({

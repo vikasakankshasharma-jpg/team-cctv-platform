@@ -34,8 +34,11 @@ export interface CustomerQuoteItem {
   leadId: string;
   createdAt: string;
   totalPayable: number;
-    amountPaid?: number;
-    amountDue?: number;
+  originalTotal?: number;
+  discountAmount?: number;
+  paymentType?: string;
+  amountPaid?: number;
+  amountDue?: number;
   status: string;
   cameraCount?: number;
   propertyType?: string;
@@ -665,6 +668,11 @@ export function CustomerDashboardClient({ user, quotes }: CustomerDashboardProps
                               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                               ₹{q.totalPayable?.toLocaleString("en-IN") || "—"}
                             </span>
+                            {q.discountAmount > 0 && (
+                              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                                Saved ₹{q.discountAmount.toLocaleString("en-IN")} (2% Off)
+                              </span>
+                            )}
                             <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded uppercase">Fully Paid</span>
                           </div>
                         </div>

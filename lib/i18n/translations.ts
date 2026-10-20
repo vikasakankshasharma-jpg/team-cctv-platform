@@ -993,6 +993,7 @@ export type TranslationKey =
   | "badge_work_in_progress"
   | "badge_hardware_dispatched"
   | "badge_booked_advance"
+  | "badge_fully_paid"
   | "badge_site_survey"
   | "badge_estimate_generated"
   | "badge_lost_cancelled"
@@ -1985,6 +1986,7 @@ export const translations: Record<
       "badge_work_in_progress": "WORK IN PROGRESS",
       "badge_hardware_dispatched": "HARDWARE DISPATCHED",
       "badge_booked_advance": "BOOKED (ADVANCE PAID)",
+      "badge_fully_paid": "ORDER CONFIRMED (FULLY PAID)",
       "badge_site_survey": "SITE SURVEY SCHEDULED",
       "badge_estimate_generated": "ESTIMATE GENERATED",
       "badge_lost_cancelled": "LOST / CANCELLED",

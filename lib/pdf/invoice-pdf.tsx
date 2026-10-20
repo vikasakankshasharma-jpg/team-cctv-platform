@@ -344,7 +344,7 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
     (Array.isArray(quote?.addons_snapshot) && quote.addons_snapshot.length > 0) ? quote.addons_snapshot :
     [];
 
-  const totalPayable = 
+  const rawTotalPayable = 
     quote?.pricingSnapshot?.total_payable || 
     quote?.total_payable || 
     quote?.totalPayable || 
@@ -352,11 +352,35 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
     quote?.amount || 
     0;
 
+  // Determine if Smart Pay (2% discount) or any full payment discount was applied
+  const isFullPaymentType = 
+    quote?.payment_type === 'full' || 
+    quote?.payment_type === 'full_discount' || 
+    quote?.payment_type === 'full_discounted';
+
+  const discountAmount = Number(
+    quote?.full_payment_discount || 
+    quote?.discount_amount || 
+    (quote?.payment_type === 'full_discount' || quote?.payment_type === 'full_discounted'
+      ? (rawTotalPayable - (quote?.total_payable_after_discount || quote?.razorpay_order_amount || Math.round(rawTotalPayable * 0.98)))
+      : 0) ||
+    0
+  );
+
+  const totalPayableAfterDiscount = Number(
+    quote?.total_payable_after_discount ?? 
+    (discountAmount > 0 ? rawTotalPayable - discountAmount : rawTotalPayable)
+  );
+
+  const totalPayable = (discountAmount > 0 || quote?.total_payable_after_discount)
+    ? totalPayableAfterDiscount
+    : rawTotalPayable;
+
   const grossSubtotal = 
     quote?.pricingSnapshot?.gross_subtotal || 
     quote?.gross_subtotal || 
     quote?.subtotal || 
-    (totalPayable > 0 ? Math.round(totalPayable / 1.18) : 0);
+    (rawTotalPayable > 0 ? Math.round(rawTotalPayable / 1.18) : 0);
 
   const gstRate = 
     quote?.pricingSnapshot?.gst_rate || 
@@ -369,7 +393,7 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
     quote?.pricingSnapshot?.gst_amount || 
     quote?.gst_amount || 
     quote?.gstAmount || 
-    Math.max(0, totalPayable - grossSubtotal);
+    Math.max(0, rawTotalPayable - grossSubtotal);
 
   const laborCost = 
     quote?.pricingSnapshot?.labor_cost || 
@@ -386,8 +410,23 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
   );
   const amountPaid = isNaN(rawPaid) ? 0 : rawPaid;
 
-  // Fully paid only if total is non-zero and amount paid covers the full total (with 1 rupee rounding tolerance)
-  const isFullyPaid = totalPayable > 0 && amountPaid >= (totalPayable - 1) && quote?.status !== 'BOOKED' && quote?.payment_status !== 'advance_paid';
+  const isQuoteStatusPaid = 
+    quote?.status === 'PAID' || 
+    quote?.status === 'COMPLETED' || 
+    quote?.payment_status === 'paid' || 
+    quote?.payment_status === 'captured';
+
+  // Fully paid if:
+  // 1) explicitly status PAID / payment_status paid / captured
+  // 2) payment_type is full or full_discount
+  // 3) quote.amount_due === 0 and amountPaid > 500
+  // 4) amountPaid covers totalPayable (with 1 rupee rounding tolerance)
+  const isFullyPaid = totalPayable > 0 && (
+    isQuoteStatusPaid ||
+    isFullPaymentType ||
+    (quote?.amount_due === 0 && amountPaid > 500) ||
+    (amountPaid >= (totalPayable - 1) && quote?.status !== 'BOOKED' && quote?.payment_status !== 'advance_paid')
+  );
   
   // Advance/Partial paid if booking advance was paid (e.g. ₹500) but full total is not yet settled
   const isAdvancePaid = !isFullyPaid && (
@@ -397,15 +436,19 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
     String(quote?.payment_type || '').includes('advance')
   );
 
-  const effectivePaid = amountPaid > 0 ? amountPaid : (isAdvancePaid ? 500 : 0);
+  const effectivePaid = isFullyPaid 
+    ? (amountPaid > 0 ? amountPaid : totalPayable)
+    : (amountPaid > 0 ? amountPaid : 500);
 
   const amountDue = isFullyPaid 
     ? 0 
-    : (typeof quote?.amount_due === 'number' && quote.amount_due > 0 && quote.amount_due <= totalPayable
+    : (typeof quote?.amount_due === 'number' && quote.amount_due >= 0 && quote.amount_due <= totalPayable
         ? quote.amount_due
         : Math.max(0, totalPayable - effectivePaid));
 
   const pricing = {
+    raw_total: rawTotalPayable,
+    discount_amount: discountAmount,
     total_payable: totalPayable,
     amount_paid: effectivePaid,
     amount_due: amountDue,
@@ -472,6 +515,8 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
     invoiceStatusBorder = '#b91c1c';
     supplyTypeLabel = isBusiness ? 'B2B (Proforma Quotation)' : 'B2C (Proforma Quotation)';
     invoiceTypeDesc = 'Payment Pending';
+  } else if (discountAmount > 0) {
+    invoiceTypeDesc = `Full Payment (₹${pricing.amount_paid.toLocaleString('en-IN')} Received - 2% Smart Pay Instant Discount Applied)`;
   }
 
   return (
@@ -620,10 +665,12 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
         <View style={styles.bottomSection} wrap={false}>
           <View style={styles.termsBox}>
             <Text style={styles.termsTitle}>{isAdvancePaid ? 'Booking Confirmation Terms' : 'Terms & Confirmation'}</Text>
-            <Text style={[styles.termsHighlight, isAdvancePaid ? { color: '#d97706' } : {}]}>
+            <Text style={[styles.termsHighlight, isAdvancePaid ? { color: '#d97706' } : { color: '#16a34a' }]}>
               {isAdvancePaid
                 ? `Booking confirmed with ₹${pricing.amount_paid.toLocaleString('en-IN')} advance! Remaining balance of ${formatCurrency(pricing.amount_due)} is payable on delivery/installation.`
-                : 'Thank you for your payment! Installation will be scheduled within 48 hours.'}
+                : (discountAmount > 0
+                    ? 'Thank you for your full payment! 2% Smart Pay discount applied. Your installation will be scheduled within 48 hours.'
+                    : 'Thank you for your payment! Installation will be scheduled within 48 hours.')}
             </Text>
             <Text style={styles.termsText}>1. Standard 1-Year Warranty on all hardware items unless specified otherwise.</Text>
             <Text style={styles.termsText}>2. 1-Year Free AMC (Annual Maintenance Contract) included covering 2 free service visits.</Text>
@@ -668,15 +715,28 @@ export const InvoicePDFDocument = ({ quote, settings }: { quote: any; settings?:
               </>
             )}
 
+            {pricing.discount_amount > 0 && (
+              <>
+                <View style={[styles.totalRow, { marginTop: 2, paddingTop: 2, borderTopWidth: 0.5, borderTopColor: '#e2e8f0' }]}>
+                  <Text style={styles.totalLabel}>Quotation Total:</Text>
+                  <Text style={styles.totalValue}>{formatCurrency(pricing.raw_total)}</Text>
+                </View>
+                <View style={styles.totalRow}>
+                  <Text style={[styles.totalLabel, { color: '#16a34a', fontWeight: 'bold' }]}>Smart Pay Discount (2%):</Text>
+                  <Text style={[styles.totalValue, { color: '#16a34a', fontWeight: 'bold' }]}>-{formatCurrency(pricing.discount_amount)}</Text>
+                </View>
+              </>
+            )}
+
             <View style={[styles.grandTotalRow, { paddingBottom: 4, borderBottomWidth: pricing.amount_due > 0 ? 1 : 0, borderBottomColor: '#e5e7eb' }]}>
               <Text style={styles.grandTotalLabel}>Grand Total:</Text>
               <Text style={styles.grandTotalValue}>{formatCurrency(pricing.total_payable)}</Text>
             </View>
             <View style={[styles.grandTotalRow, { marginTop: 4, paddingTop: 4, borderTopWidth: 0 }]}>
-              <Text style={[styles.grandTotalLabel, { color: isAdvancePaid ? '#d97706' : '#4b5563', fontSize: 9 }]}>
-                {isAdvancePaid ? 'Booking Advance Paid:' : 'Amount Paid:'}
+              <Text style={[styles.grandTotalLabel, { color: isAdvancePaid ? '#d97706' : '#16a34a', fontSize: 9 }]}>
+                {isAdvancePaid ? 'Booking Advance Paid:' : 'Amount Paid (Fully Paid):'}
               </Text>
-              <Text style={[styles.grandTotalValue, { color: isAdvancePaid ? '#d97706' : '#4b5563', fontSize: 10 }]}>
+              <Text style={[styles.grandTotalValue, { color: isAdvancePaid ? '#d97706' : '#16a34a', fontSize: 10 }]}>
                 {formatCurrency(pricing.amount_paid)}
               </Text>
             </View>

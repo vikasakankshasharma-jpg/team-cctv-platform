@@ -132,6 +132,13 @@ export async function POST(request: NextRequest) {
           selection.indoor_camera_count = Number(wizardAnswers.indoor_camera_count);
         }
       }
+      if ((selection as any).wifi_camera_count === undefined) {
+        if ((siteSurvey as any).wifi_camera_count !== undefined) {
+          (selection as any).wifi_camera_count = Number((siteSurvey as any).wifi_camera_count);
+        } else if (wizardAnswers.wifi_camera_count !== undefined) {
+          (selection as any).wifi_camera_count = Number(wizardAnswers.wifi_camera_count);
+        }
+      }
     }
 
     // Map wiring_type (open vs conduit)
@@ -164,7 +171,9 @@ export async function POST(request: NextRequest) {
     let cablingMeters: number | undefined = undefined;
     if (!leadData.cabling_done) {
       if (typeof rawTotalMeters === 'number' && rawTotalMeters > 0) {
-        cablingMeters = rawTotalMeters / ((selection as any).camera_count || 4);
+        const wiredCount = (Number((selection as any).outdoor_camera_count) || 0) + (Number((selection as any).indoor_camera_count) || 0);
+        const effectiveWiredCount = wiredCount > 0 ? wiredCount : ((selection as any).camera_count || 4);
+        cablingMeters = rawTotalMeters / effectiveWiredCount;
       } else if (typeof rawPerCamMeters === 'number' && rawPerCamMeters > 0) {
         cablingMeters = rawPerCamMeters;
       } else {

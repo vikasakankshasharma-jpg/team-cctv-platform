@@ -183,6 +183,86 @@ export function EditConfigurationDrawer({
             </div>
           )}
 
+          
+          {req.technology_preference !== "Wireless" && Number(req.wifi_camera_count) > 0 && (
+            <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-900/60">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
+                  Power Availability for {req.wifi_camera_count} Smart Wi-Fi Cameras
+                </Label>
+                <Select
+                  value={req.power_wiring_option || "socket_available"}
+                  onValueChange={(val: any) => {
+                    const wifiCams = Number(req.wifi_camera_count) || 1;
+                    setReq(prev => ({
+                      ...prev,
+                      power_wiring_option: val,
+                      total_power_cable_meters: val === "wire_needed" ? (prev.total_power_cable_meters || wifiCams * 10) : 0,
+                      power_cable_meters: val === "wire_needed" ? 10 : 0
+                    }));
+                  }}
+                >
+                  <SelectTrigger className="bg-white dark:bg-zinc-900">
+                    <SelectValue placeholder="Select power availability" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="socket_available">Power Socket Nearby (Within 1.5m) - Included (₹0)</SelectItem>
+                    <SelectItem value="wire_needed">Need 2-Core Electrical Power Cabling (@ ₹10/m)</SelectItem>
+                    <SelectItem value="site_survey">Site Survey / Decide on Site Visit (Pay on Actuals)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {req.power_wiring_option === "wire_needed" && (
+                <div className="space-y-1.5 pt-1">
+                  <Label className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                    Total 2-Core Electrical Wire Length (Meters)
+                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-9 w-9 bg-white dark:bg-zinc-900"
+                      onClick={() => {
+                        const current = req.total_power_cable_meters || (Number(req.wifi_camera_count || 1) * 10);
+                        const next = Math.max(5, current - 5);
+                        setReq(prev => ({ ...prev, total_power_cable_meters: next, power_cable_meters: Math.ceil(next / Number(prev.wifi_camera_count || 1)) }));
+                      }}
+                      disabled={(req.total_power_cable_meters || (Number(req.wifi_camera_count || 1) * 10)) <= 5}
+                    >
+                      -
+                    </Button>
+                    <Input 
+                      type="number" 
+                      min="5"
+                      value={req.total_power_cable_meters ?? (Number(req.wifi_camera_count || 1) * 10)} 
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setReq(prev => ({ ...prev, total_power_cable_meters: val, power_cable_meters: Math.ceil(val / Number(prev.wifi_camera_count || 1)) }));
+                      }}
+                      className="w-24 text-center bg-white dark:bg-zinc-900 font-bold"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-9 w-9 bg-white dark:bg-zinc-900"
+                      onClick={() => {
+                        const current = req.total_power_cable_meters || (Number(req.wifi_camera_count || 1) * 10);
+                        const next = current + 5;
+                        setReq(prev => ({ ...prev, total_power_cable_meters: next, power_cable_meters: Math.ceil(next / Number(prev.wifi_camera_count || 1)) }));
+                      }}
+                    >
+                      +
+                    </Button>
+                    <span className="text-xs text-amber-700 dark:text-amber-300 font-medium ml-1">
+                      @ ₹10/m = ₹{((req.total_power_cable_meters || (Number(req.wifi_camera_count || 1) * 10)) * 10).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Site Internet / Wi-Fi Connection</Label>
             <Select 

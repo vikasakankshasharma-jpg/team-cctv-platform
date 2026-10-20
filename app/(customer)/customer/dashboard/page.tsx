@@ -212,13 +212,25 @@ export default async function CustomerDashboardPage() {
 
       let invData = invoicesMap.get(quoteId) || null;
 
-      const totalPayable = Number(
-        invData?.total_amount ??
+      const rawTotal = Number(
         qData.pricingSnapshot?.total_payable ??
         qData.total_payable ??
         qData.total ??
         matchingLead?.total_payable ??
         0
+      );
+
+      const discountAmount = Number(
+        qData.full_payment_discount || 
+        qData.discount_amount || 
+        (qData.payment_type === "full_discount" || qData.payment_type === "full_discounted" ? Math.round(rawTotal * 0.02) : 0) ||
+        0
+      );
+
+      const totalPayable = Number(
+        invData?.total_amount ??
+        qData.total_payable_after_discount ??
+        (discountAmount > 0 ? rawTotal - discountAmount : rawTotal)
       );
 
       const isPaid =
@@ -240,7 +252,7 @@ export default async function CustomerDashboardPage() {
         (isPaid ? 500 : 0)
       );
 
-      const amountDue = isPaid && (qData.status === "PAID" || invData?.status === "PAID")
+      const amountDue = isPaid && (qData.status === "PAID" || invData?.status === "PAID" || qData.payment_type === "full" || qData.payment_type === "full_discount" || qData.payment_type === "full_discounted")
         ? 0
         : Math.max(0, totalPayable - amountPaid);
 
@@ -280,6 +292,9 @@ export default async function CustomerDashboardPage() {
         leadId,
         createdAt: createdStr,
         totalPayable,
+        originalTotal: rawTotal,
+        discountAmount,
+        paymentType: qData.payment_type,
         status: qData.status || invData?.status || "GENERATED",
         cameraCount,
         propertyType,

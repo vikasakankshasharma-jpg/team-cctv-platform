@@ -139,14 +139,21 @@ export async function POST(req: Request) {
 
     const paymentLink = await razorpay.paymentLink.create(paymentLinkOptions);
 
-    await quoteRef.update({
+    const updatePayload: any = {
       razorpay_payment_link_id: paymentLink.id,
       razorpay_order_amount: chargeAmount,
       payment_type: paymentType,
       currency: "INR",
       payment_status: "PAYMENT_LINK_CREATED",
       updated_at: serverTimestamp(),
-    });
+    };
+
+    if (paymentType === "full_discount" || paymentType === "full_discounted") {
+      updatePayload.full_payment_discount = serverAmount - chargeAmount;
+      updatePayload.total_payable_after_discount = chargeAmount;
+    }
+
+    await quoteRef.update(updatePayload);
 
     return NextResponse.json({
       success: true,

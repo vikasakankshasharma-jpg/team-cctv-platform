@@ -20,8 +20,18 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
   const [loadingType, setLoadingType] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Total amount from lead or quote
-  const totalAmount = lead?.total_payable || quote?.total_payable || quote?.total || 0;
+  // Total amount from lead or quote (accounting for Smart Pay discount)
+  const isFullPayment = 
+    quote?.payment_type === "full" || 
+    quote?.payment_type === "full_discount" || 
+    quote?.payment_type === "full_discounted" ||
+    lead?.payment_status === "paid" || 
+    quote?.payment_status === "paid" || 
+    quote?.status === "PAID";
+
+  const totalAmount = (quote?.total_payable_after_discount && (isFullPayment || quote?.full_payment_discount))
+    ? quote.total_payable_after_discount
+    : (lead?.total_payable || quote?.total_payable || quote?.total || 0);
   
   if (!totalAmount || totalAmount <= 0) return null;
 
@@ -130,8 +140,11 @@ export function PaymentStagesWidget({ quoteId, lead, quote, onPaymentSuccess, is
 
   // Calculate total paid and progress
 
-  const totalPaid = (isStage1Paid ? stage1Amount : 0) + (isStage2Paid ? stage2Amount : 0) + (isStage3Paid ? stage3Amount : 0);
-  const progressPercent = Math.min(100, Math.round((totalPaid / totalAmount) * 100));
+  const actualPaidAmount = Number(quote?.amount_paid || lead?.amount_paid || 0);
+  const totalPaid = (isStage3Paid || isFullPayment)
+    ? (actualPaidAmount > 0 ? actualPaidAmount : totalAmount)
+    : ((isStage1Paid ? stage1Amount : 0) + (isStage2Paid ? stage2Amount : 0) + (isStage3Paid ? stage3Amount : 0));
+  const progressPercent = Math.min(100, Math.round((totalPaid / (totalAmount || 1)) * 100));
 
   let currentStatusText = t("psw_stage1_pending", "Pending Booking Amount (Stage 1)");
   if (isStage3Paid) {

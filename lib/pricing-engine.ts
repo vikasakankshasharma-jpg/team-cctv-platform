@@ -329,16 +329,34 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       error = true;
       errorMessage = "Missing required camera hardware in catalog.";
     } else {
+      // In hybrid setups, recorder and central SMPS only serve wired cameras!
+      const requiredWiredCount = (() => {
+        if (effectiveTech.toUpperCase() === "WIRELESS" || effectiveTech.toUpperCase() === "WIFI") return 0;
+        if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
+          return selection.mixed_camera_requirements
+            .filter(req => {
+              const t = String(req.technology || effectiveTech).toLowerCase();
+              const type = String(req.type || "").toLowerCase();
+              return t !== "wireless" && t !== "wifi" && !type.includes("wi-fi") && !type.includes("wifi") && !type.includes("4g");
+            })
+            .reduce((sum, req) => sum + (Number(req.count) || 0), 0);
+        }
+        if (Number(selection.wifi_camera_count || 0) > 0) {
+          return Math.max(0, selection.camera_count - Number(selection.wifi_camera_count || 0));
+        }
+        return selection.camera_count;
+      })();
+
       // Validate recorder capacity
       const recorderItem = lineItems.find(item => products.some(p => p.id === item.product_id && p.category === "recorder"));
-      if (!recorderItem && effectiveTech.toUpperCase() !== "WIRELESS") {
+      if (!recorderItem && effectiveTech.toUpperCase() !== "WIRELESS" && requiredWiredCount > 0) {
         error = true;
         errorMessage = "Missing required recorder hardware in catalog.";
       } else if (recorderItem) {
         const rec = products.find(p => p.id === recorderItem.product_id);
-        if (rec && (rec.channels || rec.max_cameras || 0) < selection.camera_count) {
+        if (rec && (rec.channels || rec.max_cameras || 0) < requiredWiredCount) {
           error = true;
-          errorMessage = `Selected recorder supports up to ${rec.channels || rec.max_cameras} cameras, but ${selection.camera_count} are required.`;
+          errorMessage = `Selected recorder supports up to ${rec.channels || rec.max_cameras} cameras, but ${requiredWiredCount} wired cameras are required.`;
         }
       }
       
@@ -347,9 +365,9 @@ export function calculatePricing(params: PricingEngineParams): PricingResult {
       if (powerItem) {
         const pwr = [...products, ...addons].find(p => p.id === powerItem.product_id);
         // Only validate if max_cameras is explicitly defined on the product
-        if (pwr && pwr.max_cameras != null && (pwr.max_cameras * (powerItem.qty || 1)) < selection.camera_count) {
+        if (pwr && pwr.max_cameras != null && (pwr.max_cameras * (powerItem.qty || 1)) < requiredWiredCount) {
           error = true;
-          errorMessage = `Selected power supply supports up to ${pwr.max_cameras * (powerItem.qty || 1)} cameras, but ${selection.camera_count} are required.`;
+          errorMessage = `Selected power supply supports up to ${pwr.max_cameras * (powerItem.qty || 1)} cameras, but ${requiredWiredCount} wired cameras are required.`;
         }
       }
     }

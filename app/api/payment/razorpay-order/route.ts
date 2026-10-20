@@ -28,14 +28,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Already paid" }, { status: 400 });
     }
 
-    // Amount logic (Flat ₹500 for Advance booking)
+    const serverAmount = Number(
+      quoteData.negotiated_final_price ??
+      quoteData.pricingSnapshot?.total_payable ??
+      quoteData.total_payable ??
+      quoteData.total ??
+      0
+    );
+
     let chargeAmount = 500;
-    if (paymentType === "delivery_90") {
-      const totalPayable = quoteData.pricingSnapshot?.total_payable || quoteData.total_payable || 0;
-      chargeAmount = Math.round((totalPayable - 500) * 0.90);
+    let appliedDiscount = 0;
+
+    if (paymentType === "full_discount" || paymentType === "full_discounted") {
+      appliedDiscount = Math.round(serverAmount * 0.02);
+      chargeAmount = serverAmount - appliedDiscount;
+    } else if (paymentType === "full") {
+      chargeAmount = serverAmount;
+    } else if (paymentType === "delivery_90") {
+      chargeAmount = Math.round((serverAmount - 500) * 0.90);
     } else if (paymentType === "installation_final") {
-      const totalPayable = quoteData.pricingSnapshot?.total_payable || quoteData.total_payable || 0;
-      chargeAmount = Math.round((totalPayable - 500) * 0.10);
+      chargeAmount = Math.round((serverAmount - 500) * 0.10);
     }
 
     const key_id = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
@@ -61,12 +73,19 @@ export async function POST(req: Request) {
 
     const order = await razorpay.orders.create(options);
 
-    await quoteRef.update({
+    const updatePayload: any = {
       razorpay_order_id: order.id,
       razorpay_order_amount: chargeAmount,
       payment_type: paymentType,
       updated_at: serverTimestamp(),
-    });
+    };
+
+    if (appliedDiscount > 0) {
+      updatePayload.full_payment_discount = appliedDiscount;
+      updatePayload.total_payable_after_discount = chargeAmount;
+    }
+
+    await quoteRef.update(updatePayload);
 
     return NextResponse.json({ success: true, orderId: order.id, amount: options.amount, keyId: key_id });
   } catch (error: any) {

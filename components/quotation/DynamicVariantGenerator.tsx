@@ -135,39 +135,82 @@ export function DynamicVariantGenerator({
     }
   }, [activeBrand]);
   
+  const isInitialWireless = activeTech === "wireless";
   const [cameraBuckets, setCameraBuckets] = useState<any[]>(() => {
     // If we are editing a quote that already has mixed requirements, load them!
     if (selection.mixed_camera_requirements && selection.mixed_camera_requirements.length > 0) {
-      return selection.mixed_camera_requirements.map(req => ({
-        id: Math.random().toString(36).substring(7),
-        type: req.type.toLowerCase().includes("outdoor") ? "outdoor" : "indoor",
-        count: req.count,
-        resolution: req.resolution || "2MP"
-      }));
+      return selection.mixed_camera_requirements.map(req => {
+        const tLower = (req.type || "").toLowerCase();
+        const techStr = String(req.technology || "").toUpperCase();
+        let conn: "wired" | "wifi" | "4g" = "wired";
+        if (tLower.includes("4g") || (req.features && req.features.includes("4g"))) conn = "4g";
+        else if (tLower.includes("wifi") || tLower.includes("wireless") || techStr === "WIRELESS" || techStr === "WIFI") conn = "wifi";
+        else if (activeTech === "wireless") conn = "wifi";
+
+        return {
+          id: Math.random().toString(36).substring(7),
+          type: tLower.includes("outdoor") ? "outdoor" : "indoor",
+          count: req.count || 1,
+          resolution: req.resolution || "2MP",
+          connection: conn
+        };
+      });
     }
 
     const buckets: any[] = [];
+    const isWirelessMode = activeTech === "wireless";
+    const wifiCount = Number(selection.wifi_camera_count) || 0;
+    
     const outCount = selection.outdoor_camera_count !== undefined 
       ? selection.outdoor_camera_count 
       : (selection.indoor_camera_count !== undefined 
-          ? Math.max(0, (selection.camera_count || 4) - selection.indoor_camera_count) 
+          ? Math.max(0, (selection.camera_count || 4) - selection.indoor_camera_count - (isWirelessMode ? 0 : wifiCount)) 
           : Math.ceil((selection.camera_count || 4) / 2));
           
     const inCount = selection.indoor_camera_count !== undefined 
       ? selection.indoor_camera_count 
-      : Math.max(0, (selection.camera_count || 4) - outCount);
+      : Math.max(0, (selection.camera_count || 4) - outCount - (isWirelessMode ? 0 : wifiCount));
+
+    const defaultConn: "wired" | "wifi" | "4g" = isWirelessMode 
+      ? (selection.broadband_status === "independent_4g" ? "4g" : "wifi") 
+      : "wired";
 
     if (outCount > 0) {
-      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: outCount, resolution: "2MP" });
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: outCount, resolution: "2MP", connection: defaultConn });
     }
     if (inCount > 0) {
-      buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", count: inCount, resolution: "2MP" });
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", count: inCount, resolution: "2MP", connection: defaultConn });
+    }
+    // If hybrid setup has wifi cameras and we are in wired tab:
+    if (!isWirelessMode && wifiCount > 0) {
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: wifiCount, resolution: "3MP", connection: "wifi" });
     }
     if (buckets.length === 0 && selection.camera_count) {
-      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: selection.camera_count, resolution: "2MP" });
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: selection.camera_count, resolution: "2MP", connection: defaultConn });
     }
     return buckets;
   });
+
+  // Helper to get available resolutions per bucket connection type
+  const getResolutionsForBucket = (b: any) => {
+    const isWirelessConn = b.connection === "wifi" || b.connection === "4g" || activeTech === "wireless";
+    const connResolutions = new Set<string>();
+    products.forEach(p => {
+      const pTech = (p.technology || "").toUpperCase();
+      const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+      const isConnMatch = isWirelessConn
+        ? (p.category === "cctv_camera" && (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim))
+        : activeTech === "ip"
+        ? (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")))
+        : (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD")));
+      if (isConnMatch && p.brand) {
+        connResolutions.add(getRes(p));
+      }
+    });
+    const orderedRes = ["2MP", "3MP", "4MP", "5MP", "6MP", "8MP", "12MP"];
+    const filtered = orderedRes.filter(r => connResolutions.has(r));
+    return filtered.length > 0 ? filtered : availableResolutions;
+  };
 
   const outdoorCount = cameraBuckets.filter(b => b.type === "outdoor").reduce((sum, b) => sum + b.count, 0);
   const indoorCount = cameraBuckets.filter(b => b.type === "indoor").reduce((sum, b) => sum + b.count, 0);
@@ -256,21 +299,34 @@ export function DynamicVariantGenerator({
 
     const isWireless = activeTech === "wireless";
     let mixedReqs: any[] = cameraBuckets.filter(b => b.count > 0).map(b => {
-      const res = availableResolutions.includes(b.resolution) ? b.resolution : (availableResolutions.includes("2MP") ? "2MP" : (availableResolutions[0] || "2MP"));
+      const conn = isWireless ? (b.connection === "4g" ? "4g" : "wifi") : (b.connection || "wired");
+      const bucketResList = getResolutionsForBucket(b);
+      const res = bucketResList.includes(b.resolution) ? b.resolution : (bucketResList.includes("3MP") ? "3MP" : (bucketResList.includes("2MP") ? "2MP" : (bucketResList[0] || "2MP")));
+      
+      if (conn === "4g") {
+        return {
+          type: b.type === "outdoor" ? "Outdoor 4G SIM Camera" : "Indoor 4G SIM Camera",
+          count: b.count,
+          resolution: res,
+          technology: "Wireless",
+          features: b.type === "outdoor" ? ["outdoor", "4g", "sim"] : ["indoor", "4g", "sim"]
+        };
+      }
+      if (conn === "wifi") {
+        return {
+          type: b.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera",
+          count: b.count,
+          resolution: res,
+          technology: "Wireless",
+          features: b.type === "outdoor" ? ["bullet", "wireless", "wifi"] : ["dome", "wireless", "wifi", "ptz"]
+        };
+      }
       return {
-        type: isWireless 
-          ? (selection.broadband_status === "independent_4g"
-              ? (b.type === "outdoor" ? "Outdoor 4G SIM Camera" : "Indoor 4G SIM Camera")
-              : (b.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera"))
-          : (b.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera"),
+        type: b.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera",
         count: b.count,
         resolution: res,
-        technology: isWireless ? "Wireless" : (activeTech === "ip" ? "IP" : "HD"),
-        features: isWireless
-          ? (selection.broadband_status === "independent_4g"
-              ? (b.type === "outdoor" ? ["outdoor", "4g", "sim"] : ["indoor", "4g", "sim"])
-              : (b.type === "outdoor" ? ["outdoor", "wifi"] : ["indoor", "wifi"]))
-          : (b.type === "outdoor" ? ["bullet"] : ["dome"])
+        technology: activeTech === "ip" ? "IP" : "HD",
+        features: b.type === "outdoor" ? ["bullet", "outdoor"] : ["dome", "indoor"]
       };
     });
 
@@ -347,7 +403,9 @@ export function DynamicVariantGenerator({
       const isHybrid = resolvedRes.length > 1;
       let displayResolution = resolvedRes[0] ? `${resolvedRes[0]} ${t("wz_resolution")}` : `2MP ${t("wz_resolution")}`;
       
-      if (isHybrid) {
+      if (totalWiredCount > 0 && totalWifiCount > 0) {
+        displayResolution = `${totalWiredCount} Wired + ${totalWifiCount} Smart Wi-Fi`;
+      } else if (isHybrid) {
         displayResolution = `${t("wz_mixed_resolutions")} (${resolvedRes.join(", ")})`;
       } else if (hasOutdoor && !hasIndoor) {
         displayResolution = `${resolvedRes[0] || "2MP"} ${t("wz_resolution")} (${outdoorCount} ${t("wz_outdoor")})`;
@@ -360,7 +418,7 @@ export function DynamicVariantGenerator({
         technology: activeTech === "wireless" ? "Wireless" : activeTech.toUpperCase(),
         camera_device: camera_device ? { ...camera_device, derivedResolution: displayResolution } : { derivedResolution: displayResolution, brand: brandName }, 
         storage_device, 
-        camera_count: outdoorCount + indoorCount, 
+        camera_count: totalHardwareCount, 
         storage_days: (pricing as any)._calculated_days || selection.recording_days || 7,
         plan_type: brandKey === "budget" ? "budget" : (Array.from(new Set(mixedReqs.map(r => r.resolution))).includes("8MP") ? "premium" : "recommended"),
         is_hybrid: isHybrid,
@@ -368,6 +426,12 @@ export function DynamicVariantGenerator({
         substitution_message: substitutionMessage
       };
     };
+
+    const wiredBuckets = cameraBuckets.filter(b => !isWireless && (b.connection === "wired" || !b.connection));
+    const wifiBuckets = cameraBuckets.filter(b => isWireless || b.connection === "wifi" || b.connection === "4g");
+    const totalWiredCount = wiredBuckets.reduce((sum, b) => sum + b.count, 0);
+    const totalWifiCount = wifiBuckets.reduce((sum, b) => sum + b.count, 0);
+    const totalHardwareCount = totalWiredCount + totalWifiCount;
 
     brandsToGenerate.forEach(b => {
       const uniqueRes = Array.from(new Set(mixedReqs.map(r => r.resolution)));
@@ -377,9 +441,10 @@ export function DynamicVariantGenerator({
         technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
         brand_preference: b.brand,
         mixed_camera_requirements: mixedReqs,
-        outdoor_camera_count: outdoorCount,
-        indoor_camera_count: indoorCount,
-        camera_count: outdoorCount + indoorCount,
+        outdoor_camera_count: cameraBuckets.filter(b => b.type === "outdoor").reduce((sum, b) => sum + b.count, 0),
+        indoor_camera_count: cameraBuckets.filter(b => b.type === "indoor").reduce((sum, b) => sum + b.count, 0),
+        wifi_camera_count: totalWifiCount,
+        camera_count: totalHardwareCount,
         resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : "5MP",
         plan_type: planType as any,
       };
@@ -531,8 +596,8 @@ export function DynamicVariantGenerator({
                 </div>
               </div>
 
-              {/* Controls row: Quantity Dropdown & Resolution Dropdown */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              {/* Controls row: Quantity Dropdown, Resolution Dropdown & Connection Dropdown */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
                 {/* Quantity Dropdown */}
                 <div className="relative">
                   <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
@@ -568,7 +633,7 @@ export function DynamicVariantGenerator({
                     }}
                     className="w-full py-2 px-3 text-xs sm:text-sm font-bold bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 transition-all"
                   >
-                    {availableResolutions.map(r => (
+                    {getResolutionsForBucket(bucket).map(r => (
                       <option key={r} value={r}>
                         {r} {r === '2MP' ? t('wz_2mp_full_hd') : r === '3MP' ? t('wz_3mp_2k') : r === '4MP' ? t('wz_4mp_ultra_hd') : r === '5MP' ? t('wz_5mp_pro_clarity') : r === '8MP' ? t('wz_8mp_4k_ultra') : ''}
                       </option>
@@ -576,19 +641,69 @@ export function DynamicVariantGenerator({
                   </select>
                   <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
                 </div>
+
+                {/* Connection Dropdown */}
+                <div className="relative">
+                  <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
+                    Connection
+                  </label>
+                  <select
+                    value={bucket.connection || (activeTech === "wireless" ? "wifi" : "wired")}
+                    onChange={(e) => {
+                      const newConn = e.target.value as "wired" | "wifi" | "4g";
+                      setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, connection: newConn } : b));
+                    }}
+                    className="w-full py-2 px-3 text-xs sm:text-sm font-bold bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 transition-all"
+                  >
+                    {activeTech !== "wireless" && (
+                      <option value="wired">
+                        {activeTech === "ip" ? "Wired (CAT6 IP)" : "Wired (Analog HD)"}
+                      </option>
+                    )}
+                    <option value="wifi">Smart Wi-Fi (Wireless)</option>
+                    <option value="4g">4G SIM (Cellular)</option>
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Informative feature badge for this bucket */}
+              <div className="mt-2.5 pt-2 border-t border-gray-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px]">
+                {bucket.connection === "wifi" ? (
+                  <span className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
+                    <span>📶</span>
+                    <span>
+                      {bucket.type === "outdoor" ? "Weatherproof Outdoor Wi-Fi Camera" : "Indoor 360° Pan-Tilt Wi-Fi Camera"} • MicroSD Card • Zero Video Cable
+                    </span>
+                  </span>
+                ) : bucket.connection === "4g" ? (
+                  <span className="text-purple-700 dark:text-purple-400 font-medium flex items-center gap-1">
+                    <span>🛰️</span>
+                    <span>
+                      {bucket.type === "outdoor" ? "Outdoor 4G SIM Camera (Direct SIM)" : "Indoor 4G SIM Camera"} • MicroSD Card • Zero Router
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-blue-700 dark:text-blue-400 font-medium flex items-center gap-1">
+                    <span>🔌</span>
+                    <span>
+                      {bucket.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera"} • Central {activeTech === "ip" ? "NVR" : "DVR"} + Video Cable
+                    </span>
+                  </span>
+                )}
               </div>
             </div>
           ))}
           
           <div className="flex gap-3 mt-2">
              <button 
-               onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "outdoor", count: 1, resolution: "2MP" }])}
+               onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "outdoor", count: 1, resolution: "2MP", connection: activeTech === "wireless" ? "wifi" : "wired" }])}
                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-4 py-2 rounded-full transition-colors"
              >
                <span>+</span>  {t("wz_add_outdoor")}
                                        </button>
              <button 
-               onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "indoor", count: 1, resolution: "2MP" }])}
+               onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "indoor", count: 1, resolution: "2MP", connection: activeTech === "wireless" ? "wifi" : "wired" }])}
                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-4 py-2 rounded-full transition-colors"
              >
                <span>+</span>  {t("wz_add_indoor")}
