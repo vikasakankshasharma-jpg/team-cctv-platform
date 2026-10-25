@@ -297,7 +297,7 @@ export function WizardClientV2() {
 
   const [loading, setLoading] = useState(false);
   const [quoteResult, setQuoteResult] = useState<any>(null);
-  const totalSteps = req.installation_type === "addon" ? 7 : 6;
+  const totalSteps = 6;
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [customizerPlanId, setCustomizerPlanId] = useState<string | null>(null);
 
@@ -1071,7 +1071,7 @@ export function WizardClientV2() {
             </div>
           );
         }
-      case 6:
+      case 7:
         if (req.installation_type === "addon") {
            return (
              <div className="space-y-6 animate-in fade-in">
