@@ -12,11 +12,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
-  description: "Get an instant free CCTV quotation online. We offer CCTV on EMI with the lowest price guaranteed for CP Plus, Hikvision & Prama. 100% Free Smart Estimate.",
+  title: "Instant Free CCTV Quotation & CCTV Setup on EMI | Compare CP Plus, Hikvision & Prama",
+  description: "Get an instant free CCTV quotation online. Complete CCTV setup with installation on easy EMI starting ₹649/mo. Compare multiple brand variations for your home or business.",
   keywords: ["Instant free CCTV quotation", "CCTV on EMI", "Lowest Price Guaranteed CCTV", "CCTVQuotation", "CCTV Installation"],
   openGraph: {
-    title: "Instant Free CCTV Quotation & CCTV on EMI | Lowest Price Guaranteed",
+    title: "Instant Free CCTV Quotation & CCTV Setup on EMI | Compare CP Plus, Hikvision & Prama",
     description: "Get your custom security blueprint and CCTV installation cost instantly with the lowest price guaranteed.",
     type: "website",
     locale: "en_IN",

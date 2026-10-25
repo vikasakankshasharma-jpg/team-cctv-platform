@@ -28,10 +28,12 @@ import {
   Zap,
   Trash2,
   Layers,
-  Lock
+  Lock,
+  Banknote
 } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function LeadDetailPage() {
   const params = useParams();
@@ -74,6 +76,27 @@ export default function LeadDetailPage() {
       fetchLead(); // refresh
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleToggleCashApproval = async (approved: boolean, reason?: string) => {
+    try {
+      const res = await fetch(`/api/admin/leads/${quoteId}/approve-cash`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          approved, 
+          reason: reason || (approved ? "Authorized by Admin Desk" : "Revoked by Admin") 
+        })
+      });
+      if (res.ok) {
+        toast.success(approved ? "Cash collection authorized for field staff!" : "Cash collection revoked.");
+        fetchLead();
+      } else {
+        toast.error("Failed to update cash authority");
+      }
+    } catch {
+      toast.error("Network error updating cash authority");
     }
   };
 
@@ -516,6 +539,91 @@ export default function LeadDetailPage() {
           {isPaid && (
             <DispatchPanel lead={lead} onUpdate={fetchLead} />
           )}
+
+          {/* Admin Cash Collection Authority Card */}
+          <Card className={lead.cash_collection_approved ? "border-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/20" : lead.cash_approval_requested ? "border-amber-400 bg-amber-50/50 dark:bg-amber-950/20 ring-2 ring-amber-400/30" : "border-zinc-200"}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100">
+                  <Banknote className="w-4 h-4 text-emerald-600" /> Cash Authority Gate
+                </span>
+                {lead.cash_collection_approved ? (
+                  <Badge className="bg-emerald-600 text-white text-[10px] font-bold">Authorized</Badge>
+                ) : lead.cash_approval_requested ? (
+                  <Badge className="bg-amber-600 text-white text-[10px] font-bold animate-pulse">Request Pending</Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[10px] text-zinc-500 font-bold">Locked</Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-xs">
+              {lead.cash_collection_approved ? (
+                <>
+                  <p className="text-emerald-900 dark:text-emerald-200 font-medium">
+                    ✓ Field cash collection is active for this job.
+                  </p>
+                  {lead.cash_approved_by && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Authorized by: <strong className="text-foreground">{lead.cash_approved_by}</strong>
+                    </p>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleToggleCashApproval(false)}
+                    className="w-full text-xs font-bold text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:hover:bg-red-950/30"
+                  >
+                    Revoke Cash Authority
+                  </Button>
+                </>
+              ) : lead.cash_approval_requested ? (
+                <>
+                  <div className="p-3 bg-amber-100/80 dark:bg-amber-950/40 rounded-xl space-y-1.5 border border-amber-300 dark:border-amber-800/40">
+                    <p className="font-bold text-amber-950 dark:text-amber-200 text-xs">
+                      Technician requested to collect ₹{(lead.cash_requested_amount || 0).toLocaleString('en-IN')} in cash.
+                    </p>
+                    <p className="text-[11px] text-amber-900 dark:text-amber-300">
+                      Reason: "{lead.cash_requested_reason || 'Customer prefers cash'}"
+                    </p>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                      Requested by: {lead.cash_requested_by_installer_name || 'Field Technician'}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleToggleCashApproval(true)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
+                    >
+                      ✓ Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleToggleCashApproval(false, "Rejected by Admin")}
+                      className="text-red-600 border-red-200 hover:bg-red-50 text-xs font-bold"
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Physical cash collection is disabled. Technicians must use the On-Screen Dynamic UPI QR code.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleToggleCashApproval(true)}
+                    className="w-full text-xs font-bold text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  >
+                    Grant Cash Collection Authority
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader className="pb-2">

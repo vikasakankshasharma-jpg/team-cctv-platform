@@ -30,6 +30,26 @@ export async function GET(
     }
 
     if (!doc.exists) {
+      // Check change_orders collection
+      const coDoc = await adminDb.collection("change_orders").doc(quoteId).get();
+      if (coDoc.exists) {
+        const coData = coDoc.data() as any;
+        const isPaid = coData.payment_status === "paid" || coData.status === "paid" || coData.status === "approved";
+        return NextResponse.json({
+          ready: true,
+          status: isPaid ? "PAID" : "PENDING",
+          payment_status: isPaid ? "paid" : "unpaid",
+          is_advance: false,
+          amount_paid: isPaid ? coData.total_payable : 0,
+          amount_due: isPaid ? 0 : coData.total_payable,
+          total_payable: coData.total_payable,
+          payment_id: coData.payment_id || null,
+          invoice_url: isPaid ? `/api/invoice/${quoteId}/download` : null,
+        });
+      }
+    }
+
+    if (!doc.exists) {
       // Check collectionGroup
       try {
         const cgSnap = await adminDb.collectionGroup("quotes").where("id", "==", quoteId).limit(1).get();

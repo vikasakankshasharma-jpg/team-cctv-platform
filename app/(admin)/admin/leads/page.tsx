@@ -24,6 +24,9 @@ type LeadListRow = {
   gstin?: string | null;
   site_visit_date?: string | null;
   site_visit_slot?: string | null;
+  cash_approval_requested?: boolean;
+  cash_collection_approved?: boolean;
+  cash_requested_amount?: number;
   createdAt: string;
   quoteId?: string;
 };
@@ -99,6 +102,9 @@ export default async function LeadsPage({
       gstin: data.gst_number || data.billing_details?.gstin || quoteData?.billing_details?.gstin || null,
       site_visit_date: getSafeIsoString(data.site_visit_date),
       site_visit_slot: data.site_visit_slot || null,
+      cash_approval_requested: Boolean(data.cash_approval_requested || quoteData?.cash_approval_requested),
+      cash_collection_approved: Boolean(data.cash_collection_approved || quoteData?.cash_collection_approved),
+      cash_requested_amount: data.cash_requested_amount || quoteData?.cash_requested_amount || 0,
       createdAt: getSafeIsoString(data.created_at || data.createdAt) || new Date().toISOString(),
     };
   }));
@@ -289,7 +295,21 @@ export default async function LeadsPage({
                         <TableCell className="font-bold text-sm">
                           ₹{lead.total_payable.toLocaleString("en-IN")}
                         </TableCell>
-                        <TableCell>{getStatusBadge(lead.leadStatus, lead.isPaid)}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1 items-start">
+                            {getStatusBadge(lead.leadStatus, lead.isPaid)}
+                            {lead.cash_approval_requested && !lead.cash_collection_approved && (
+                              <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold whitespace-nowrap">
+                                💵 Cash Req: ₹{lead.cash_requested_amount?.toLocaleString("en-IN")}
+                              </Badge>
+                            )}
+                            {lead.cash_collection_approved && (
+                              <Badge variant="outline" className="border-emerald-500 text-emerald-700 bg-emerald-50 text-[10px] font-bold whitespace-nowrap">
+                                ✓ Cash Allowed
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <Link href={`/admin/leads/${lead.leadId}`}>

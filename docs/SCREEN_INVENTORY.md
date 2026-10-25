@@ -1,17 +1,16 @@
 # SCREEN INVENTORY & AUDIT REPORT
 
 ## Metrics Summary
-- **Total Screens:** 94
+- **Total Screens:** 95
 - **By Route Group:**
   - `(admin)`: 55 screens
   - `(customer)`: 13 screens
   - `(installer)`: 6 screens
+  - `(delivery)`: 1 screen
   - `(partner)`: 5 screens
   - `(salesperson)`: 4 screens
   - `root / other`: 11 screens
-- **`components/ui` Usage:** ~21% (20/94) pages leverage standard shadcn/ui components (specifically ~20/68 admin pages, and 0% across customer, installer, and partner routes).
-- **Native Dialogs (`alert`, `confirm`, `prompt`):**
-  - `app/(admin)/admin/products/page.tsx` (Line 93): Uses `confirm("Are you sure you want to delete...")`
+- **`components/ui` Usage:** ~21% (20/95) pages leverage standard shadcn/ui components.
 
 ---
 
@@ -34,9 +33,9 @@ The primary Admin interface provides the following routing structure:
 |---|---|---|---|
 | `/admin` | `(admin)/admin/page.tsx` | KEEP | Primary Admin Dashboard |
 | `/admin/analytics` | `(admin)/admin/analytics/page.tsx` | KEEP | Global analytics |
-| `/admin/leads` | `(admin)/admin/leads/page.tsx` | KEEP | CRM Lead tracking |
-| `/admin/leads/[leadId]` | `(admin)/admin/leads/[leadId]/page.tsx` | KEEP | Lead details |
-| `/admin/leads/[leadId]/deal` | `(admin)/admin/leads/[leadId]/deal/page.tsx` | MERGE | Merge into lead details tabs |
+| `/admin/leads` | `(admin)/admin/leads/page.tsx` | KEEP | CRM Lead tracking with Cash Authority Gate indicator |
+| `/admin/leads/[leadId]` | `(admin)/admin/leads/[leadId]/page.tsx` | KEEP | Lead details with Cash Authority Card |
+| `/admin/leads/[leadId]/deal` | `(admin)/admin/leads/[leadId]/deal/page.tsx` | MERGE | Deal conversion |
 | `/admin/leads/[leadId]/quote-builder` | `(admin)/admin/leads/[leadId]/quote-builder/page.tsx` | KEEP | Quote creation flow |
 | `/admin/expansion` | `(admin)/admin/expansion/page.tsx` | KEEP | Franchise/Expansion tracking |
 | `/admin/bookings` | `(admin)/admin/bookings/page.tsx` | KEEP | Site visits scheduling |
@@ -58,25 +57,6 @@ The primary Admin interface provides the following routing structure:
 | `/admin/pricing/matrices` | `(admin)/admin/pricing/matrices/page.tsx` | KEEP | Quote tier matrices |
 | `/admin/pricing/logs` | `(admin)/admin/pricing/logs/page.tsx` | MERGE | Merge into global audit logs |
 | `/admin/rules` | `(admin)/admin/rules/page.tsx` | KEEP | Rule engine |
-| `/admin/card-layouts` | `(admin)/admin/card-layouts/page.tsx` | KEEP | UI card configurations |
-| `/admin/dispatch` | `(admin)/admin/dispatch/page.tsx` | KEEP | Order dispatch |
-| `/admin/hubs` | `(admin)/admin/hubs/page.tsx` | KEEP | Warehouse hubs |
-| `/admin/installers` | `(admin)/admin/installers/page.tsx` | KEEP | Network of installers |
-| `/admin/promoters` | `(admin)/admin/promoters/page.tsx` | KEEP | Partner promoters |
-| `/admin/commission` | `(admin)/admin/commission/page.tsx` | KEEP | Earnings & Payouts |
-| `/admin/settings` | `(admin)/admin/settings/page.tsx` | KEEP | Global settings |
-| `/admin/addons` | `(admin)/admin/addons/page.tsx` | MERGE | Move to rules/catalog |
-| `/admin/finance` | `(admin)/admin/finance/page.tsx` | KEEP | Financial ledger |
-| `/admin/inventory` | `(admin)/admin/inventory/page.tsx` | MERGE | Redundant with products |
-| `/admin/inventory/exceptions` | `(admin)/admin/inventory/exceptions/page.tsx` | MERGE | Fold into inventory/products |
-| `/admin/inventory/ledger` | `(admin)/admin/inventory/ledger/page.tsx` | KEEP | Stock movements |
-| `/admin/inventory/purchase` | `(admin)/admin/inventory/purchase/page.tsx` | KEEP | PO management |
-| `/admin/operations` | `(admin)/admin/operations/page.tsx` | KEEP | General ops dashboard |
-| `/admin/operations/jobs/[jobId]` | `(admin)/admin/operations/jobs/[jobId]/page.tsx` | KEEP | Job workflow |
-| `/admin/wizard` | `(admin)/admin/wizard/page.tsx` | MERGE | If test env, move to root. Else remove. |
-| `/admin/payouts` | `(admin)/admin/payouts/page.tsx` | MERGE | Fold into commission ledger |
-| `/admin/price-match` | `(admin)/admin/price-match/page.tsx` | KEEP | Price matching ops |
-| `/admin/sales` | `(admin)/admin/sales/page.tsx` | MERGE | Fold into leads/dashboard |
 | `/admin/spec-optimizer` | `(admin)/admin/spec-optimizer/page.tsx` | MERGE | Fold into products enrich |
 | `/admin/login` | `(admin)/admin/login/page.tsx` | KEEP | Admin auth |
 | `/ai-dashboard` | `(admin)/ai-dashboard/page.tsx` | MOVE | Move to `/admin/ai-dashboard` |
@@ -98,7 +78,7 @@ The primary Admin interface provides the following routing structure:
 | `/quote/[leadId]/review/[quoteId]` | `(customer)/quote/[leadId]/review/[quoteId]/page.tsx` | KEEP | Quote approval/payment |
 | `/track/[id]` | `(customer)/track/[id]/page.tsx` | KEEP | Job/Installation tracking |
 | `/payment-success` | `(customer)/payment-success/page.tsx` | KEEP | Checkout callback |
-| `/for-installers` | `(customer)/for-installers/page.tsx` | MOVE | Move out of customer group, marketing for partners |
+| `/for-installers` | `(customer)/for-installers/page.tsx` | MOVE | Marketing for partners |
 | `/privacy-policy` | `(customer)/privacy-policy/page.tsx` | KEEP | Legal |
 | `/terms-of-service` | `(customer)/terms-of-service/page.tsx` | KEEP | Legal |
 
@@ -109,12 +89,19 @@ The primary Admin interface provides the following routing structure:
 |---|---|---|---|
 | `/installer/dashboard` | `(installer)/installer/dashboard/page.tsx` | KEEP | Installer home |
 | `/installer/jobs` | `(installer)/installer/jobs/page.tsx` | KEEP | Assigned job pipeline |
-| `/installer/jobs/[id]` | `(installer)/installer/jobs/[id]/page.tsx` | KEEP | Job execution & proof |
+| `/installer/jobs/[id]` | `(installer)/installer/jobs/[id]/page.tsx` | KEEP | Job execution, proof upload, On-Screen Dynamic UPI QR, Admin-gated cash collection, and `+ Add Site Extra / Change Order` |
 | `/installer/ledger` | `(installer)/installer/ledger/page.tsx` | KEEP | Installer earnings |
 | `/installer/login` | `(installer)/installer/login/page.tsx` | KEEP | Installer auth |
 | `/installer/profile` | `(installer)/installer/profile/page.tsx` | KEEP | Settings/KYC |
 
-### 4. `(partner)` Group - 5 Screens
+### 4. `(delivery)` Group - 1 Screen
+**Primary Persona:** Delivery Field Agent / Courier
+
+| Route Path | File Path | Tag | Notes |
+|---|---|---|---|
+| `/delivery/[quoteId]` | `delivery/[quoteId]/page.tsx` | KEEP | Equipment delivery handover (Smart Pay bypass, 90% On-Screen Dynamic UPI QR, Admin-gated cash collection, OTP verification) |
+
+### 5. `(partner)` Group - 5 Screens
 **Primary Persona:** Partner/Promoter
 
 | Route Path | File Path | Tag | Notes |
@@ -125,7 +112,7 @@ The primary Admin interface provides the following routing structure:
 | `/partner/login` | `(partner)/partner/login/page.tsx` | KEEP | Partner auth |
 | `/partner/profile` | `(partner)/partner/profile/page.tsx` | KEEP | Settings/KYC |
 
-### 5. `(salesperson)` Group - 4 Screens
+### 6. `(salesperson)` Group - 4 Screens
 **Primary Persona:** Salesperson
 
 | Route Path | File Path | Tag | Notes |
@@ -135,12 +122,12 @@ The primary Admin interface provides the following routing structure:
 | `/salesperson/create-quote` | `(salesperson)/salesperson/create-quote/page.tsx` | KEEP | Manual quote generator |
 | `/salesperson/commissions` | `(salesperson)/salesperson/commissions/page.tsx` | KEEP | Staff commissions |
 
-### 6. `root / other` Group - 11 Screens
+### 7. `root / other` Group - 11 Screens
 **Primary Persona:** Mixed / Legacy
 
 | Route Path | File Path | Tag | Notes |
 |---|---|---|---|
-| `/login` | `login/page.tsx` | REMOVE | Deprecated root login. Use persona-specific logins. |
+| `/login` | `login/page.tsx` | REMOVE | Deprecated root login |
 | `/test-login` | `test-login/page.tsx` | REMOVE | Development artifact |
 | `/__e2e/login` | `__e2e/login/page.tsx` | KEEP | E2E test harness |
 | `/offline` | `offline/page.tsx` | KEEP | PWA fallback |

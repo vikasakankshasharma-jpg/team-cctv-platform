@@ -30,16 +30,35 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Ownership & Existence Verification
-    const leadRef = adminDb.collection("leads").doc(lead_id);
-    const leadDoc = await leadRef.get();
-    
-    if (!leadDoc.exists) {
-      return ApiResponse.error("Lead not found", "NOT_FOUND", 404);
-    }
-    
-    const leadData = leadDoc.data();
-    if (firebase_uid && leadData?.firebase_uid !== firebase_uid) {
-      return ApiResponse.forbidden("You do not have permission to book for this lead.");
+    let leadData: any = null;
+    let actualLeadId = lead_id;
+    let leadRef: any;
+
+    if (lead_id.startsWith("HOMEPAGE_") || lead_id.startsWith("DIRECT_")) {
+      leadRef = adminDb.collection("leads").doc();
+      actualLeadId = leadRef.id;
+      leadData = {
+        id: actualLeadId,
+        customer_name: body.customer_name || "Customer",
+        mobile_number: body.customer_mobile || "",
+        source: "homepage_free_survey",
+        status: "site_visit",
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp()
+      };
+      await leadRef.set(leadData);
+    } else {
+      leadRef = adminDb.collection("leads").doc(lead_id);
+      const leadDoc = await leadRef.get();
+      
+      if (!leadDoc.exists) {
+        return ApiResponse.error("Lead not found", "NOT_FOUND", 404);
+      }
+      
+      leadData = leadDoc.data();
+      if (firebase_uid && leadData?.firebase_uid !== firebase_uid) {
+        return ApiResponse.forbidden("You do not have permission to book for this lead.");
+      }
     }
 
     // 2. Extract detailed visit data
@@ -56,7 +75,7 @@ export async function POST(request: NextRequest) {
     const bookingRef = adminDb.collection(COLLECTIONS.SITE_VISIT_BOOKINGS).doc();
     const bookingData = {
       id: bookingRef.id,
-      lead_id,
+      lead_id: actualLeadId,
       quote_id: quote_id || null,
       address,
       customer_name,
@@ -86,7 +105,7 @@ export async function POST(request: NextRequest) {
     const jobRef = adminDb.collection("jobs").doc(jobId);
     const jobPromise = jobRef.set({
       id: jobId,
-      lead_id,
+      lead_id: actualLeadId,
       quote_id: quote_id || null,
       booking_id: bookingRef.id,
       type: "survey",
@@ -110,7 +129,7 @@ export async function POST(request: NextRequest) {
     await createAuditLog({
       action: "LEAD_UPDATE", // Booking is a lead-stage update
       actor_id: firebase_uid || "guest",
-      resource_id: lead_id,
+      resource_id: actualLeadId,
       resource_type: "lead",
       ip_address: ip,
       user_agent: ua,

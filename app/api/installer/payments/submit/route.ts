@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { verifyInstallerSession } from "@/lib/auth-installer";
 
@@ -15,8 +15,17 @@ export async function POST(req: Request) {
 
     const [installerSnap, leadSnap] = await Promise.all([installerRef.get(), leadRef.get()]);
 
+    const leadData = leadSnap.data() || {};
+    const isCashApproved = leadData.cash_collection_approved === true || leadData.job_level_cash_authority === true;
+
+    if (method === "cash" && !isCashApproved) {
+      return NextResponse.json({ 
+        error: "Cash collection is strictly locked. Admin approval is required to accept physical cash." 
+      }, { status: 403 });
+    }
+
     const isTrusted = installerSnap.data()?.is_trusted_payment_collector === true;
-    const isJobTrusted = leadSnap.data()?.job_level_cash_authority === true;
+    const isJobTrusted = isCashApproved;
 
     const autoApprove = isTrusted || isJobTrusted;
 

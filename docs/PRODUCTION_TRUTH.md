@@ -45,6 +45,10 @@
 5. **MicroSD Hardware Safety Cap:** MicroSD cards for Wi-Fi cameras must strictly be capped by `cameraProduct?.max_sd_capacity_gb || 128` to prevent quoting incompatible oversized cards.
 6. **Wi-Fi Connectivity Invariant (Option B):** Wi-Fi camera setups must verify broadband Wi-Fi availability on site, automatically injecting a 4G/5G SIM Wi-Fi router if Wi-Fi is absent.
 7. **Bundled Solar CCTV Packaging:** Solar CCTV cameras are complete standalone systems with bundled solar panels; separate solar panel line items are prohibited.
+8. **Smart Pay Invariant (GST Section 31):** Quotes paid in full with 2% discount must issue an immutable **TAX INVOICE** (not Advance Receipt) with `amountDue: 0`, `PAID` watermark badge, and discount itemization.
+9. **GST Section 15 & 34 Invariant (Change Orders):** Never overwrite or modify a settled Tax Invoice. Any on-site extra materials or work discovered during installation must be billed via an official **Supplementary Tax Invoice (`INV-xxxx-S1`)** tied to a Change Order entity (`CO-xxxx`).
+10. **Admin-Gated Cash Collection Guardrail:** Cash collection on site by installers or delivery staff is strictly disabled by default. The cash payment option is active only when `cash_collection_approved: true` has been authorized by Admin staff. Backend rejects unauthorized cash submissions with HTTP 403.
+11. **On-Screen Dynamic UPI QR Standard:** Field collection for delivery handovers (90%), installation handovers (10%), and on-site change orders defaults to an on-screen dynamic Razorpay/UPI QR on the technician's mobile screen (`DynamicOnScreenQRCodeModal`), verified via polling in 2-3s with Web Audio chime and automated WhatsApp receipt delivery.
 
 ---
 

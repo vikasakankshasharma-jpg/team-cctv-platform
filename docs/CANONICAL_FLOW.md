@@ -74,21 +74,43 @@ flowchart TD
 - **Quotation Disclaimer:** Displays standard notice: *"Final quotation may differ based on actual site survey and requirements at installation time."*
 
 ### 5. Four Checkout Pathways & Payment Resilience
-1. **Option 1: Pay Full Upfront:** Applies an instant 2% discount on total quote.
-2. **Option 2: 3-Step Milestone Booking:** Charges a ₹500 advance token to lock installation slot.
+1. **Option 1: Pay Full Upfront (Smart Pay):**
+   - Applies an instant 2% discount on the total quote.
+   - Generates an official **TAX INVOICE** (not Advance Receipt) with **PAID** watermark, `amountDue: 0`, and an itemized line: `Smart Pay Discount (2%): -₹...`.
+   - Sets lead/quote status directly to `PAID` / `ORDER CONFIRMED (FULLY PAID)`.
+2. **Option 2: 3-Step Milestone Booking:** Charges a ₹500 advance token to lock installation slot (generates Advance Receipt; 90% balance due on material delivery, 10% on installation completion).
 3. **Option 3: EMI Financing:** Low-cost EMI financing plans prominently featured.
 4. **Option 4: Free Site Survey Booking:** Embedded calendar date/time picker (restricted to future dates) for on-site consultation.
 - **Payment Verification:** Razorpay/Cashfree webhook + client-side **Fallback Verification API** attached to payment success screen guarantees immediate status transition to `BOOKED` / `PAID`.
+
+---
+
+### 5.1 Material Delivery Handover & 90% Collection (`/delivery/[quoteId]`)
+- **Zero Due for Smart Pay:** If the customer paid in full upfront with Smart Pay discount, the delivery screen automatically detects `amountDue = 0` and displays a `✓ Smart Pay (Fully Paid)` badge. The delivery agent only collects the 4-digit customer delivery OTP.
+- **On-Screen Dynamic UPI QR:** For milestone quotes with balance due, the delivery agent renders an instant dynamic Razorpay/UPI QR directly on their mobile screen (`DynamicOnScreenQRCodeModal`). The customer scans with Google Pay, PhonePe, or Paytm; payment confirms in 2-3 seconds with an audio chime, and the receipt is auto-dispatched to WhatsApp.
+- **Strict Admin-Gated Cash Collection:** The physical cash collection checkbox is strictly disabled and locked unless an Admin has approved cash collection for that job (`cash_collection_approved: true`). Delivery agents can submit a 1-click cash approval request to the Admin desk.
+
+---
 
 ### 6. Geolocation Dispatch & Sub-Post Office Delivery Micro-Hub Routing
 - **Territory Matching:** Matches customer address tokens against authentic Sub-Post Office Delivery Micro-Hubs (with local communicating names), operating radius, and cadastral polygon boundaries.
 - **Visual Status:** Displays active technician coverage with green pill shortcodes (`[✓ NR]`, `[✓ LC]`) and 850m halos, unassigned areas in red dashed halos.
 - **Installer Assignment:** Automatically dispatches lead to authorized local installer.
 
-### 7. Installer Job Execution & Quotation Versioning
+### 7. Installer Job Execution, On-Site Change Orders & Field Handover
 - **Job Card (`/installer/jobs/[id]`):** Details equipment BOM, site condition checklist, and required handover photos.
 - **Site Prep Surcharges:** Installer can apply verified flags: ladder (₹500), marble (₹400), metal (₹200), furnished (₹300), heavy drilling (₹600) with ₹0 markup.
-- **Quotation Versioning:** Any post-survey adjustment spawns a new version (`v2`, `v3`), preserving historical customer approval records.
+- **On-Site Extra Materials & Change Orders (GST Section 15 & 34 Invariant):**
+  - If additional materials (Cat6 cabling, conduit, junction boxes, wall brackets) or labor are required on-site, the installer uses `+ Add Site Extra / Change Order` (`InstallerChangeOrderModal`).
+  - The finalized base Tax Invoice is preserved intact to maintain GST compliance.
+  - The system creates a **Supplementary Change Order (`CO-xxxx`)** and issues an official **Supplementary Tax Invoice (`INV-xxxx-S1`)** with deterministic 18% GST.
+- **On-Screen Dynamic UPI QR Collection:**
+  - The installer renders an on-screen dynamic UPI QR code on their smartphone screen (`DynamicOnScreenQRCodeModal`).
+  - Customer scans using GPay, PhonePe, or Paytm; verifies in 2-3s with audio confirmation; Tax Invoice receipt auto-delivered to WhatsApp.
+- **Admin-Gated Cash Collection:**
+  - "Pay Cash to Installer" is strictly disabled unless an Admin or admin staff approves cash collection for that job (`cash_collection_approved: true`).
+  - Installers can send a 1-click cash approval request to the Admin desk (`/api/installer/cash-approval/request`).
+- **Quotation Versioning:** Pre-installation survey adjustments spawn new quotation versions (`v2`, `v3`), preserving historical customer approval records.
 
 ### 8. Financial Dashboard & Payout Governance
 - **Trigger:** Job marked `COMPLETED` with zero open punch-list items.

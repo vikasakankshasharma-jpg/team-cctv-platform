@@ -33,6 +33,36 @@ export async function POST(request: Request) {
       }
     }
 
+    if (!docSnap.exists) {
+      // Check change_orders collection
+      const coRef = adminDb.collection("change_orders").doc(quoteId);
+      const coSnap = await coRef.get();
+      if (coSnap.exists) {
+        const coData = coSnap.data() as any;
+        await coRef.update({
+          status: "approved",
+          payment_status: "paid",
+          payment_id: paymentId,
+          paid_at: new Date().toISOString(),
+          updated_at: serverTimestamp ? serverTimestamp() : new Date().toISOString()
+        });
+
+        // Also update supplementary invoice
+        const suppInvSnap = await adminDb.collection("invoices").where("change_order_id", "==", quoteId).limit(1).get();
+        if (!suppInvSnap.empty) {
+          await suppInvSnap.docs[0].ref.update({
+            payment_status: "paid",
+            amount_paid: coData.total_payable,
+            amount_due: 0,
+            payment_references: [paymentId],
+            updated_at: serverTimestamp ? serverTimestamp() : new Date().toISOString()
+          });
+        }
+
+        return NextResponse.json({ success: true, is_change_order: true });
+      }
+    }
+
     if (docSnap.exists) {
       const data = docSnap.data() as any;
       const isAlreadyPaid = data?.status === "PAID" || data?.payment_status === "paid" || data?.payment_status === "captured";

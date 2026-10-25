@@ -258,6 +258,19 @@ export function WizardClientV2() {
         setReq(prev => ({ ...prev, partner_id: ref.toUpperCase() }));
       }
       
+      const propParam = urlParams.get("property");
+      const camParam = urlParams.get("cameras");
+      if (propParam || camParam) {
+        const count = camParam ? Math.min(Math.max(parseInt(camParam, 10) || 4, 1), 64) : 4;
+        const indoor = Math.floor(count / 2);
+        const outdoor = count - indoor;
+        setReq(prev => ({
+          ...prev,
+          ...(propParam ? { property_type: propParam as any } : {}),
+          ...(camParam ? { camera_count: count, indoor_camera_count: indoor, outdoor_camera_count: outdoor } : {}),
+        }));
+      }
+
       const pin = urlParams.get("pincode");
       if (pin) {
         setReq(prev => ({ ...prev, customer_pincode: pin }));

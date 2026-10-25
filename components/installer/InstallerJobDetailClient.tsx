@@ -6,11 +6,12 @@ import { toast } from "sonner";
 import { compressImage } from "@/lib/compress-image";
 import { storage } from "@/lib/firebase-client";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { MapPin, Phone, User, Package, Camera, CheckCircle2, ArrowLeft, Loader2, UploadCloud, Store, ScanBarcode } from "lucide-react";
+import { MapPin, Phone, User, Package, Camera, CheckCircle2, ArrowLeft, Loader2, UploadCloud, Store, ScanBarcode, Plus } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { InstallerBlockageModal } from "./InstallerBlockageModal";
 import SubmitOfflinePaymentModal from "./SubmitOfflinePaymentModal";
+import { InstallerChangeOrderModal } from "./InstallerChangeOrderModal";
 import BarcodeScanner from "./BarcodeScanner";
 import { JobSignoffModal } from "./JobSignoffModal";
 import type { Lead } from "@/types";
@@ -40,6 +41,7 @@ export default function InstallerJobDetailClient({
   const [pin, setPin] = useState("");
   const [resending, setResending] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isChangeOrderModalOpen, setIsChangeOrderModalOpen] = useState(false);
   
   // Scanning State
   const [scannedAssets, setScannedAssets] = useState<any[]>([]);
@@ -483,14 +485,38 @@ export default function InstallerJobDetailClient({
               />
             </div>
 
+            {/* On-Site Change Order / Extra Work Trigger */}
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest">
+                  Extra Work / Materials Found?
+                </label>
+                <span className="text-[10px] bg-amber-200 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-bold px-2 py-0.5 rounded-full">
+                  GST Supplementary
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                Site requires extra cable, casing, junction boxes, or custom labor? Create an official Supplementary Tax Invoice and collect payment instantly on-screen.
+              </p>
+              <button 
+                type="button"
+                onClick={() => setIsChangeOrderModalOpen(true)}
+                className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm active:scale-[0.99]"
+              >
+                <Plus className="w-4 h-4" /> Add Site Extra / Change Order
+              </button>
+            </div>
+
             {lead?.status !== "won" && (
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4">
-                <label className="block text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Payment Collection</label>
+                <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">
+                  Payment Collection (Stage 3 Handover)
+                </label>
                 <button 
                   onClick={() => setIsPaymentModalOpen(true)}
-                  className="w-full py-4 bg-blue-600 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                  className="w-full py-4 bg-blue-600 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-[0.99]"
                 >
-                  Collect Payment (Cash / UPI)
+                  Collect Payment (On-Screen UPI QR / Cash)
                 </button>
               </div>
             )}
@@ -505,6 +531,29 @@ export default function InstallerJobDetailClient({
           </div>
         </div>
       )}
+
+      {/* Offline Payment Modal with On-Screen UPI QR & Admin Cash Gate */}
+      <SubmitOfflinePaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        leadId={leadId}
+        quoteId={(lead as any).last_quote_id || lead.latest_quote_id || (lead as any).quote_id || leadId}
+        isCashApproved={Boolean((lead as any).cash_collection_approved || (lead as any).job_level_cash_authority)}
+        expectedAmount={Number((lead as any).amount_due || 0)}
+      />
+
+      {/* On-Site Change Order Modal with On-Screen Dynamic QR */}
+      <InstallerChangeOrderModal
+        isOpen={isChangeOrderModalOpen}
+        onClose={() => setIsChangeOrderModalOpen(false)}
+        leadId={leadId}
+        quoteId={(lead as any).last_quote_id || lead.latest_quote_id || (lead as any).quote_id || leadId}
+        jobId={job?.id}
+        isCashApproved={Boolean((lead as any).cash_collection_approved || (lead as any).job_level_cash_authority)}
+        onSuccess={() => {
+          toast.success("Site Change Order registered successfully!");
+        }}
+      />
 
       <InstallerBlockageModal 
         isOpen={isBlockageModalOpen} 

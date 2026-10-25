@@ -98,6 +98,10 @@ This document tracks all API routes, their HTTP methods, the Firestore collectio
 | `/api/inventory/purchase/[poId]/receive` | POST | serial_assets, stock_ledger, purchase_orders, inventory | *Orphan Route?* |
 | `/api/inventory/reconcile` | GET | stock_ledger, inventory | master-e2e.spec.ts |
 | `/api/inventory/serials` | GET | serial_assets, jobs | *Orphan Route?* |
+| /api/installer/cash-approval/request | POST | leads, quotes, audit_logs | SubmitOfflinePaymentModal.tsx<br>InstallerChangeOrderModal.tsx<br>DeliveryClient.tsx |
+| /api/admin/leads/[leadId]/approve-cash | POST | leads, quotes, audit_logs | LeadDetailPage (admin/leads/[leadId]/page.tsx) |
+| /api/payment/razorpay-qr | POST | quotes | DynamicOnScreenQRCodeModal.tsx |
+| /api/payment/verify | POST | quotes, leads, change_orders, invoices | DynamicOnScreenQRCodeModal.tsx<br>payment-success |
 | `/api/invoice/change-order` | POST | jobs, change_orders, invoices, audit_logs | e2e-financial-contracts.spec.ts |
 | `/api/invoice/generate` | POST | quotes, invoices | e2e-financial-contracts.spec.ts |
 | `/api/invoice/[quoteId]/download` | GET | quotes | *Orphan Route?* |
