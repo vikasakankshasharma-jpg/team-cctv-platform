@@ -297,22 +297,22 @@ export function WizardClientV2() {
 
   const [loading, setLoading] = useState(false);
   const [quoteResult, setQuoteResult] = useState<any>(null);
-  const totalSteps = req.installation_type === "addon" ? 6 : 5;
+  const totalSteps = req.installation_type === "addon" ? 7 : 6;
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [customizerPlanId, setCustomizerPlanId] = useState<string | null>(null);
 
   const handleNext = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setStep(s => Math.min(s + 1, 5));
+    setStep(s => Math.min(s + 1, totalSteps));
   };
   const handlePrev = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (step === 5 && otpSent) {
+    if (step === 6 && otpSent) {
       setOtpSent(false);
       setOtp(["", "", "", ""]);
       return;
     }
-    if (step === 5 && isProBuilderFlow) {
+    if (step === 6 && isProBuilderFlow) {
       setStep(0);
       setIsProBuilderFlow(false);
       return;
@@ -661,7 +661,7 @@ export function WizardClientV2() {
             <div className="text-center pt-2 sm:pt-4">
               <button
                 type="button"
-                onClick={() => { setIsProBuilderFlow(true); setStep(5); }}
+                onClick={() => { setIsProBuilderFlow(true); setStep(6); }}
                 className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors cursor-pointer inline-block leading-relaxed max-w-xl mx-auto"
               >
                 <span className="font-semibold text-slate-700 dark:text-zinc-300 inline-flex items-center gap-1 mr-1">
@@ -1117,8 +1117,8 @@ export function WizardClientV2() {
           return (
             <div className="space-y-3.5 sm:space-y-5 animate-in fade-in">
               <div>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_site__preferences")}</h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">{t("wz_help_us_finetune_your_quote_wi")}</p>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">Site & Mounting Conditions</h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">Help us prepare the right mounting hardware and cabling length for your site.</p>
               </div>
               
               <div className="space-y-3 sm:space-y-4">
@@ -1623,12 +1623,49 @@ export function WizardClientV2() {
                   })()}
                 </div>
                 )}
+              </div>
 
-                {/* 4. Internet & Wi-Fi Connection at Site */}
-                <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
-                    4. Internet & Wi-Fi Connection at Site
-                  </h3>
+              <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
+                <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                  {t("wz_back")}
+                </Button>
+                <Button 
+                  onClick={handleNext} 
+                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || (req.technology_preference !== "Wireless" && req.cabling_done === undefined)}
+                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || (req.technology_preference !== "Wireless" && req.cabling_done === undefined)) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
+                >
+                  <span>Continue to Mobile & Internet →</span>
+                </Button>
+              </div>
+            </div>
+          );
+
+        case 5:
+          return (
+            <div className="space-y-4 sm:space-y-6 animate-in fade-in">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[11px] font-black uppercase tracking-wider mb-2">
+                  <span>📱 Remote Phone Viewing</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
+                  Mobile App & Internet Connection
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">
+                  Choose how you want to watch live camera video on your smartphone.
+                </p>
+              </div>
+
+              {/* Quick Customer Value Banner */}
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/60 dark:from-blue-950/40 dark:to-indigo-950/30 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-center gap-2.5">
+                <span className="text-lg shrink-0">✨</span>
+                <span className="font-medium">
+                  All packages include <strong>free lifetime mobile app setup</strong> (Android & iOS) with multi-phone access for your family or staff.
+                </span>
+              </div>
+
+              <div className="space-y-3 sm:space-y-4">
+{/* 4. Internet & Wi-Fi Connection at Site */}
+                
                   
                   {req.technology_preference === "Wireless" || (Number(req.wifi_camera_count) > 0) ? (
                     <div className="space-y-2.5">
@@ -1730,45 +1767,53 @@ export function WizardClientV2() {
                       )}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <button
                         type="button"
                         onClick={() => updateReq({ broadband_status: "yes", wants_remote_viewing: true })}
-                        className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${(req.broadband_status || "yes") === "yes" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                        className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${(req.broadband_status || "yes") === "yes" ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/50 shadow-sm ring-1 ring-blue-500/30' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-gray-900 dark:text-white text-xs">Have Wi-Fi Router</span>
-                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">FREE</span>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
+                            <span>📶</span>
+                            <span>Have Wi-Fi Router</span>
+                          </span>
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">FREE</span>
                         </div>
-                        <p className="text-[10px] text-gray-500 dark:text-zinc-400">Connect DVR to your Wi-Fi router via LAN cable for mobile viewing.</p>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">Connect DVR to your Wi-Fi router via LAN cable for 24/7 mobile live view on phone.</p>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => updateReq({ broadband_status: "sim_router", wants_remote_viewing: true })}
-                        className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "sim_router" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                        className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "sim_router" ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/50 shadow-sm ring-1 ring-blue-500/30' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-gray-900 dark:text-white text-xs">Add 4G SIM Router</span>
-                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">+₹1,885</span>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
+                            <span>🌐</span>
+                            <span>Add 4G SIM Router</span>
+                          </span>
+                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">+₹1,885</span>
                         </div>
-                        <p className="text-[10px] text-gray-500 dark:text-zinc-400">No broadband at site. Include 4G SIM Wi-Fi router for mobile viewing.</p>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">No broadband at site. Include 4G SIM Wi-Fi router so you can still view live on mobile.</p>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => updateReq({ broadband_status: "no", wants_remote_viewing: false })}
-                        className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "no" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                        className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${req.broadband_status === "no" ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/50 shadow-sm ring-1 ring-blue-500/30' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'}`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-gray-900 dark:text-white text-xs">Offline / TV Only</span>
-                          <span className="text-[10px] bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-bold px-1.5 py-0.5 rounded">Offline</span>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
+                            <span>📺</span>
+                            <span>Offline / TV Only</span>
+                          </span>
+                          <span className="text-[10px] bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-bold px-2 py-0.5 rounded-full">Offline</span>
                         </div>
-                        <p className="text-[10px] text-gray-500 dark:text-zinc-400">Local recording only. Connect directly to TV or LED monitor.</p>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">Local recording only. Connect directly to TV or LED monitor with HDMI/VGA cable.</p>
                       </button>
                     </div>
                   )}
-                </div>
               </div>
 
               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
@@ -1777,16 +1822,15 @@ export function WizardClientV2() {
                 </Button>
                 <Button 
                   onClick={handleNext} 
-                  disabled={!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || (req.technology_preference !== "Wireless" && req.cabling_done === undefined)}
-                  className={`flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2 transition-all duration-500 ${(!req.ceiling_height || !(req.surface_types && req.surface_types.length > 0) || (req.technology_preference !== "Wireless" && req.cabling_done === undefined)) ? 'bg-blue-600/70' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_25px_rgba(59,130,246,0.8)] ring-2 ring-blue-400 scale-[1.02] animate-pulse'}`}
+                  className="flex-1 h-11 sm:h-12 text-[13px] sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 rounded-xl whitespace-nowrap overflow-hidden text-ellipsis px-2"
                 >
-                  {t("wz_confirm_details")}
+                  <span>Continue to Instant Quote →</span>
                 </Button>
               </div>
             </div>
           );
 
-        case 5:
+        case 6:
           if (otpSent) {
             return (
               <div className="space-y-4 sm:space-y-6 animate-in fade-in">
