@@ -53,7 +53,13 @@ export function LocationPickerModal({
 
   const [isLocatingGPS, setIsLocatingGPS] = useState(false);
   const [pincodeResolved, setPincodeResolved] = useState(false);
-  const [resolvedAddress, setResolvedAddress] = useState<LocationMeta | null>(null);
+  const [resolvedAddress, setResolvedAddress] = useState<LocationMeta | null>(() => {
+    const cleanPin = initialPincode?.replace(/\D/g, "");
+    if (cleanPin && cleanPin.length === 6) {
+      return { pincode: cleanPin, formattedAddress: `PIN: ${cleanPin}` };
+    }
+    return null;
+  });
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
 
   // When modal opens, center on Pincode if provided and no prior coords set
@@ -135,10 +141,20 @@ export function LocationPickerModal({
   useEffect(() => {
     if (!coords || !coords.lat || !coords.lng) return;
     setIsResolvingAddress(true);
-    const timer = setTimeout(() => {
-      // 1. Authoritative polygon-based PIN resolution (India Post official boundaries)
-      const polygonPin = resolvePincodeFromCoordinates(coords);
 
+    // 1. Authoritative polygon-based PIN resolution (India Post official boundaries)
+    const polygonPin = resolvePincodeFromCoordinates(coords);
+    const immediatePin = polygonPin || (initialPincode && initialPincode.length === 6 && initialPincode !== "302001" ? initialPincode : undefined);
+
+    if (immediatePin) {
+      setResolvedAddress(prev => ({
+        ...prev,
+        pincode: immediatePin,
+        formattedAddress: prev?.formattedAddress || `Area in PIN ${immediatePin}`
+      }));
+    }
+
+    const timer = setTimeout(() => {
       fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lng}&format=json&addressdetails=1`)
         .then(res => res.json())
         .then(data => {
@@ -153,11 +169,14 @@ export function LocationPickerModal({
             if (!finalPin) {
               if (osmPin === "302001" && initialPincode && initialPincode.length === 6 && initialPincode !== "302001") {
                 finalPin = initialPincode;
-              } else if (osmPin.length === 6) {
+              } else if (osmPin.length === 6 && osmPin !== "302001") {
                 finalPin = osmPin;
               } else if (initialPincode && initialPincode.length === 6) {
                 finalPin = initialPincode;
               }
+            } else if (osmPin === "302001" && initialPincode && initialPincode.length === 6 && initialPincode !== "302001") {
+              // Never degrade specific pincode to 302001
+              finalPin = polygonPin || initialPincode;
             }
 
             const locality = data.address.suburb || data.address.neighbourhood || data.address.residential || data.address.city_district || "";
@@ -196,7 +215,23 @@ export function LocationPickerModal({
 
   const handleConfirmLocation = () => {
     const googleMapsUrl = `https://maps.google.com/?q=${coords.lat},${coords.lng}`;
-    onConfirm(coords, googleMapsUrl, resolvedAddress || undefined);
+    
+    // Authoritative check
+    const polygonPin = resolvePincodeFromCoordinates(coords);
+    let confirmedPin = polygonPin || resolvedAddress?.pincode;
+
+    if (initialPincode && initialPincode.length === 6 && initialPincode !== "302001") {
+      if (!confirmedPin || confirmedPin === "302001") {
+        confirmedPin = polygonPin || initialPincode;
+      }
+    }
+
+    const finalMeta: LocationMeta = {
+      ...(resolvedAddress || {}),
+      pincode: confirmedPin || resolvedAddress?.pincode || (initialPincode && initialPincode.length === 6 ? initialPincode : undefined),
+    };
+
+    onConfirm(coords, googleMapsUrl, finalMeta);
     toast.success("Installation location pinned successfully!");
     onClose();
   };

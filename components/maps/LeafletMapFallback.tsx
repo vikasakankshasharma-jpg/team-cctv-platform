@@ -3,6 +3,20 @@ import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+// Prevent Leaflet default icon from attempting to load broken external/relative images
+if (typeof window !== "undefined" && L && L.Icon && L.Icon.Default) {
+  try {
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: "",
+      iconUrl: "",
+      shadowUrl: "",
+    });
+  } catch (_) {
+    // Ignore in SSR
+  }
+}
+
 // Self-contained high-visibility SVG pin to prevent broken CDN image issues ("Mark" bug)
 export const createDropPinIcon = (draggable?: boolean) => {
   return L.divIcon({
@@ -27,7 +41,7 @@ export const createDropPinIcon = (draggable?: boolean) => {
           transform: translateX(-50%);
           width: 18px;
           height: 6px;
-          background: rgba(15, 23, 42, 0.4);
+          background: rgba(15, 23, 42, 0.45);
           border-radius: 50%;
           filter: blur(1px);
         "></div>
@@ -166,9 +180,15 @@ export default function LeafletMapFallback({ center, zoom, markers, polylines, o
         .custom-droppin-pin {
           background: transparent !important;
           border: none !important;
+          box-shadow: none !important;
+          outline: none !important;
         }
         .leaflet-container img.leaflet-marker-icon {
           max-width: none !important;
+        }
+        .leaflet-marker-icon.custom-droppin-pin {
+          background: transparent !important;
+          border: 0 !important;
         }
       `}</style>
       <MapContainer

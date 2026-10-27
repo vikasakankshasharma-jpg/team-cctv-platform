@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cctvquotation-v7';
+const CACHE_NAME = 'cctvquotation-v10';
 const OFFLINE_URL = '/offline';
 const URLS_TO_CACHE = [
   '/',
@@ -63,6 +63,7 @@ self.addEventListener('fetch', (event) => {
 
   // Bypass service worker entirely for API routes, auth, Next.js internal RSC requests, and admin
   if (
+    url.pathname.startsWith('/_next/') ||
     url.search.includes('_rsc=') ||
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/admin') ||

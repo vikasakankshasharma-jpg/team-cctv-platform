@@ -369,7 +369,9 @@ export function SmartAddressInput({
           initialCoords={
             pinnedCoords?.lat && pinnedCoords?.lng
               ? { lat: pinnedCoords.lat, lng: pinnedCoords.lng }
-              : undefined
+              : geoInfo?.lat && geoInfo?.lng
+                ? { lat: geoInfo.lat, lng: geoInfo.lng }
+                : undefined
           }
           onConfirm={handleMapConfirm}
         />
