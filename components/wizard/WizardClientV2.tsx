@@ -172,7 +172,7 @@ export function WizardClientV2() {
     newOtp[index] = clean;
     setOtp(newOtp);
 
-    if (clean && index < 5) {
+    if (clean && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
     
@@ -439,7 +439,7 @@ export function WizardClientV2() {
       if (typeof window !== "undefined") {
         const urlParams = new URLSearchParams(window.location.search);
         city = urlParams.get("city") || "";
-        pincode = urlParams.get("pincode") || req.customer_pincode || "";
+        pincode = req.customer_pincode || urlParams.get("pincode") || "";
       }
 
       const payload = {
@@ -1989,7 +1989,7 @@ export function WizardClientV2() {
                     type="text" 
                     placeholder={t("wz_eg_referral")} 
                     value={req.partner_id || ''} 
-                    onChange={(e) => setReq(prev => ({ ...prev, partner_id: e.target.value.toUpperCase() }))} 
+                    onChange={(e) => setReq(prev => ({ ...prev, partner_id: e.target.value.toUpperCase().trim() }))} 
                     className="w-full py-2 px-3 text-sm border border-green-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all uppercase placeholder-normal bg-white dark:bg-zinc-800 text-gray-900 dark:text-white font-semibold"
                   />
                 </div>

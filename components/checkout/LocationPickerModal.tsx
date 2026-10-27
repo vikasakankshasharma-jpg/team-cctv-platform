@@ -15,7 +15,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import HybridMap from "../maps/HybridMap";
-import { getPincodeCoordinates, Coordinates } from "@/lib/geo-utils";
+import { getPincodeCoordinates, resolvePincodeFromCoordinates, Coordinates } from "@/lib/geo-utils";
 import { toast } from "sonner";
 
 export interface LocationMeta {
@@ -136,27 +136,63 @@ export function LocationPickerModal({
     if (!coords || !coords.lat || !coords.lng) return;
     setIsResolvingAddress(true);
     const timer = setTimeout(() => {
+      // 1. Authoritative polygon-based PIN resolution (India Post official boundaries)
+      const polygonPin = resolvePincodeFromCoordinates(coords);
+
       fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lng}&format=json&addressdetails=1`)
         .then(res => res.json())
         .then(data => {
           if (data && data.address) {
-            const pin = (data.address.postcode || "").replace(/\D/g, "");
+            const osmPin = (data.address.postcode || "").replace(/\D/g, "");
+
+            // Priority:
+            // 1. Polygon-resolved PIN (exact match from India Post boundaries like 302012 for Jhotwara)
+            // 2. If polygonPin not found, but initialPincode was provided and osmPin is "302001" (Nominatim generic default), retain initialPincode
+            // 3. Otherwise osmPin (if 6-digit) or initialPincode
+            let finalPin = polygonPin;
+            if (!finalPin) {
+              if (osmPin === "302001" && initialPincode && initialPincode.length === 6 && initialPincode !== "302001") {
+                finalPin = initialPincode;
+              } else if (osmPin.length === 6) {
+                finalPin = osmPin;
+              } else if (initialPincode && initialPincode.length === 6) {
+                finalPin = initialPincode;
+              }
+            }
+
             const locality = data.address.suburb || data.address.neighbourhood || data.address.residential || data.address.city_district || "";
             const road = [data.address.house_number, data.address.road].filter(Boolean).join(" ");
             const shortAddr = [road, locality].filter(Boolean).join(", ") || data.display_name?.split(", ").slice(0, 3).join(", ") || "";
             setResolvedAddress({
-              pincode: pin.length === 6 ? pin : undefined,
+              pincode: finalPin || undefined,
               locality,
               formattedAddress: shortAddr,
             });
+          } else {
+            if (polygonPin) {
+              setResolvedAddress(prev => ({
+                ...prev,
+                pincode: polygonPin,
+                formattedAddress: prev?.formattedAddress || `Area around PIN ${polygonPin}`
+              }));
+            }
           }
         })
-        .catch(err => console.warn("Reverse geocode failed:", err))
+        .catch(err => {
+          console.warn("Reverse geocode failed:", err);
+          if (polygonPin) {
+            setResolvedAddress(prev => ({
+              ...prev,
+              pincode: polygonPin,
+              formattedAddress: prev?.formattedAddress || `Area around PIN ${polygonPin}`
+            }));
+          }
+        })
         .finally(() => setIsResolvingAddress(false));
     }, 450);
 
     return () => clearTimeout(timer);
-  }, [coords]);
+  }, [coords, initialPincode]);
 
   const handleConfirmLocation = () => {
     const googleMapsUrl = `https://maps.google.com/?q=${coords.lat},${coords.lng}`;

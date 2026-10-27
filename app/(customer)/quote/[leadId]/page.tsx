@@ -231,7 +231,14 @@ export default async function QuoteResultPage({
     card_layouts
   };
 
-  const leadPincode = String(lead.wizard_answers?.lead_pincode || "");
+  const leadPincode = String(
+    lead.address?.pincode ||
+    (lead as any).detected_pincode ||
+    lead.wizard_answers?.customer_pincode ||
+    lead.wizard_answers?.pincode ||
+    lead.wizard_answers?.lead_pincode ||
+    ""
+  );
   let unservedCityName: string | null = null;
   let nearestHubName: string | undefined = undefined;
   let distanceKm: number | undefined = undefined;

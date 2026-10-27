@@ -177,7 +177,12 @@ export function SmartAddressInput({
     }
 
     if (meta?.pincode && meta.pincode.length === 6) {
-      onPincodeChange(meta.pincode);
+      // Protect user's entered PIN: do not let generic 302001 fallback overwrite specific PIN (e.g. 302012)
+      if (pincode && pincode.length === 6 && pincode !== "302001" && meta.pincode === "302001") {
+        // preserve user's entered pincode
+      } else {
+        onPincodeChange(meta.pincode);
+      }
     }
 
     if (meta?.formattedAddress && onStreetAddressChange && !streetAddress) {

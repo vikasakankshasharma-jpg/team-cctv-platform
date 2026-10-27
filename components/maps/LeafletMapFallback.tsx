@@ -3,13 +3,71 @@ import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix for broken default marker icons in Next.js/Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
+// Self-contained high-visibility SVG pin to prevent broken CDN image issues ("Mark" bug)
+export const createDropPinIcon = (draggable?: boolean) => {
+  return L.divIcon({
+    className: "custom-droppin-pin",
+    html: `
+      <div style="
+        position: relative;
+        width: 44px;
+        height: 54px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        cursor: ${draggable ? 'grab' : 'pointer'};
+        user-select: none;
+      ">
+        <!-- Ground contact shadow and pulse ring -->
+        <div style="
+          position: absolute;
+          bottom: 1px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 18px;
+          height: 6px;
+          background: rgba(15, 23, 42, 0.4);
+          border-radius: 50%;
+          filter: blur(1px);
+        "></div>
+        <div style="
+          position: absolute;
+          bottom: 2px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 8px;
+          height: 8px;
+          background: #2563eb;
+          border-radius: 50%;
+          opacity: 0.6;
+        "></div>
+
+        <!-- High-fidelity Pin Marker -->
+        <svg width="40" height="50" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35)); transition: transform 0.15s ease;">
+          <!-- Pin Body -->
+          <path d="M18 0C8.05888 0 0 8.05888 0 18C0 29.5 18 46 18 46C18 46 36 29.5 36 18C36 8.05888 27.9411 0 18 0Z" fill="#1D4ED8"/>
+          <path d="M18 2C9.16344 2 2 9.16344 2 18C2 28.2 18 43.5 18 43.5C18 43.5 34 28.2 34 18C34 9.16344 26.8366 2 18 2Z" fill="url(#pinDropGrad)"/>
+          
+          <!-- Outer White Target Ring -->
+          <circle cx="18" cy="17" r="7" fill="white"/>
+          
+          <!-- Inner Core -->
+          <circle cx="18" cy="17" r="4" fill="#1D4ED8"/>
+          
+          <defs>
+            <linearGradient id="pinDropGrad" x1="18" y1="2" x2="18" y2="44" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#3B82F6"/>
+              <stop offset="1" stop-color="#1D4ED8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    `,
+    iconSize: [44, 54],
+    iconAnchor: [22, 53], // Needle tip touches exact point
+  });
+};
 
 interface MarkerProps {
   id: string;
@@ -79,23 +137,45 @@ const LeafletDraggableMarker = ({ marker }: { marker: MarkerProps }) => {
     [marker]
   );
 
+  const icon = useMemo(() => {
+    if (marker.iconUrl) {
+      return L.icon({
+        iconUrl: marker.iconUrl,
+        iconSize: [40, 50],
+        iconAnchor: [20, 50],
+      });
+    }
+    return createDropPinIcon(marker.draggable);
+  }, [marker.iconUrl, marker.draggable]);
+
   return (
     <Marker
       draggable={marker.draggable}
       eventHandlers={eventHandlers}
       position={[marker.lat, marker.lng]}
       ref={leafletRef}
+      icon={icon}
     />
   );
 };
 
 export default function LeafletMapFallback({ center, zoom, markers, polylines, onClick }: LeafletMapFallbackProps) {
   return (
-    <MapContainer
-      center={[center.lat, center.lng]}
-      zoom={zoom}
-      style={{ width: "100%", height: "100%", zIndex: 0 }}
-    >
+    <>
+      <style jsx global>{`
+        .custom-droppin-pin {
+          background: transparent !important;
+          border: none !important;
+        }
+        .leaflet-container img.leaflet-marker-icon {
+          max-width: none !important;
+        }
+      `}</style>
+      <MapContainer
+        center={[center.lat, center.lng]}
+        zoom={zoom}
+        style={{ width: "100%", height: "100%", zIndex: 0 }}
+      >
       <MapUpdater center={center} zoom={zoom} />
       <TileLayer
         attribution='&copy; <a href="https://maps.google.com" target="_blank" rel="noreferrer">Google Maps</a>'
@@ -119,5 +199,6 @@ export default function LeafletMapFallback({ center, zoom, markers, polylines, o
         />
       ))}
     </MapContainer>
+    </>
   );
 }

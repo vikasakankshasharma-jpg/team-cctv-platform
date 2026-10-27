@@ -1,4 +1,6 @@
 import pincodeData from "@/data/pincodes.json";
+import { OFFICIAL_PINCODE_POLYGONS } from "./geo/officialBoundaries";
+import { KNOWN_PINCODE_POLYGONS } from "./geo/pincodePolygons";
 
 export interface Coordinates {
   lat: number;
@@ -62,19 +64,59 @@ export function isPointInPolygon(
 }
 
 /**
- * Gets coordinates for a 6-digit Indian Pincode by looking up its 3-digit prefix.
+ * Gets coordinates for a 6-digit Indian Pincode.
+ * Resolves high-precision boundary centroids first (Jaipur official boundaries),
+ * then falls back to 3-digit prefix regional mapping.
  */
 export function getPincodeCoordinates(pincode: string): Coordinates | null {
   if (!pincode || pincode.length < 3) return null;
+  const cleanPin = pincode.replace(/\D/g, "");
+
+  // 1. High-precision official or known boundary centroid
+  if (cleanPin.length === 6) {
+    const poly = OFFICIAL_PINCODE_POLYGONS[cleanPin] || KNOWN_PINCODE_POLYGONS[cleanPin];
+    if (poly && poly.length > 0) {
+      const sumLat = poly.reduce((acc, p) => acc + p.lat, 0);
+      const sumLng = poly.reduce((acc, p) => acc + p.lng, 0);
+      return {
+        lat: Number((sumLat / poly.length).toFixed(5)),
+        lng: Number((sumLng / poly.length).toFixed(5)),
+      };
+    }
+  }
   
-  // Use first 3 digits for regional mapping
-  const prefix = pincode.substring(0, 3);
+  // 2. Use first 3 digits for regional mapping fallback
+  const prefix = cleanPin.substring(0, 3);
   const data = (pincodeData as Record<string, { lat: number, lng: number, city: string }>)[prefix];
   
   if (data) {
     return { lat: data.lat, lng: data.lng };
   }
   
+  return null;
+}
+
+/**
+ * Resolves a 6-digit Indian PIN code from latitude and longitude coordinates.
+ * Evaluates official India Post boundary polygons first, then high-fidelity known polygons.
+ */
+export function resolvePincodeFromCoordinates(coords: Coordinates): string | null {
+  if (!coords || typeof coords.lat !== "number" || typeof coords.lng !== "number") return null;
+
+  // 1. Check official India Post boundary polygons (31 Jaipur postal boundaries)
+  for (const [pin, polygon] of Object.entries(OFFICIAL_PINCODE_POLYGONS)) {
+    if (isPointInPolygon(coords, polygon)) {
+      return pin;
+    }
+  }
+
+  // 2. Fallback to known pincode polygons
+  for (const [pin, polygon] of Object.entries(KNOWN_PINCODE_POLYGONS)) {
+    if (isPointInPolygon(coords, polygon)) {
+      return pin;
+    }
+  }
+
   return null;
 }
 
