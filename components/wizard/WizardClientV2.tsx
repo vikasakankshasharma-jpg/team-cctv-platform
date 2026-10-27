@@ -17,6 +17,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
 import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
 import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
+import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
 
 const GOOGLE_MAPS_LIBRARIES: any = ["places"];
 
@@ -419,6 +420,32 @@ export function WizardClientV2() {
     } catch (error: any) {
       console.error("OTP Send Error:", error);
       toast.error("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+    const handleSwitchToSms = async () => {
+    setOtpMethod("sms");
+    setLoading(true);
+    try {
+      const cleanMobile = (req.customer_mobile || "").replace(/\s/g, "");
+      const res = await fetch("/api/auth/otp/sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanMobile }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to send SMS OTP.");
+        return;
+      }
+      setOtpSent(true);
+      setCountdown(30);
+      setOtp(["", "", "", ""]);
+      toast.success("SMS OTP sent to your number.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send SMS OTP.");
     } finally {
       setLoading(false);
     }
@@ -881,20 +908,14 @@ export function WizardClientV2() {
              if (otpSent) {
                return (
                  <div className="space-y-4 sm:space-y-6 animate-in fade-in">
-                   <div className="text-center">
-                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 mb-2 mx-auto">
-                       <ShieldCheck className="w-6 h-6" />
-                     </div>
-                     <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase rounded-md bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 mb-1">
-                       Verify Mobile Number
-                     </span>
-                     <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">
-                       {t("wz_enter_verification_code")}
-                     </h2>
-                     <p className="text-gray-500 dark:text-zinc-400 text-xs sm:text-sm">
-                       We've sent a 4-digit verification code to{" "}
-                       <span className="font-bold text-slate-900 dark:text-white">+91 {req.customer_mobile}</span> via {otpMethod === "sms" ? "SMS" : "WhatsApp"}
-                     </p>
+                   <div className="space-y-3">
+                     <WhatsAppOtpNotice
+                       phone={req.customer_mobile || ""}
+                       method={otpMethod}
+                       onSwitchToSms={otpMethod === "whatsapp" ? handleSwitchToSms : undefined}
+                       countdown={countdown}
+                       loading={loading}
+                     />
                    </div>
 
                    <div className="py-1 sm:py-2">
@@ -2349,15 +2370,14 @@ export function WizardClientV2() {
           if (otpSent) {
             return (
               <div className="space-y-4 sm:space-y-6 animate-in fade-in">
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 mb-2 mx-auto">
-                    <ShieldCheck className="w-6 h-6" />
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">{t("wz_enter_verification_code")}</h2>
-                  <p className="text-gray-500 dark:text-zinc-400 text-xs sm:text-sm">
-                    {t("wz_weve_sent_a_6digit_verificatio")}{" "}
-                    <span className="font-bold text-slate-900 dark:text-white">+91 {req.customer_mobile}</span>
-                  </p>
+                <div className="space-y-3">
+                  <WhatsAppOtpNotice
+                    phone={req.customer_mobile || ""}
+                    method={otpMethod}
+                    onSwitchToSms={otpMethod === "whatsapp" ? handleSwitchToSms : undefined}
+                    countdown={countdown}
+                    loading={loading}
+                  />
                 </div>
 
                 <div className="py-1 sm:py-2">

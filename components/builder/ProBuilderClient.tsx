@@ -9,6 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SmartAddressInput } from "@/components/shared/SmartAddressInput";
+import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
+import { toast } from "sonner";
 import { getUniqueCanonicalBrands, isBrandMatch } from "@/lib/brand-utils";
 
 function FilterSelect({
@@ -132,6 +134,7 @@ const isWirelessItem = (item: any) => {
   
   // OTP State
   const [otpSent, setOtpSent] = useState(false);
+  const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("whatsapp");
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [countdown, setCountdown] = useState(0);
   const [otpLoading, setOtpLoading] = useState(false);
@@ -808,7 +811,37 @@ const isWirelessItem = (item: any) => {
   }
 
   if (!isLeadCaptured) {
-    const handleSendOtp = async () => {
+      const handleSendSmsOtp = async () => {
+    const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
+    if (!/^[6-9]\d{9}$/.test(cleanedPhone)) {
+      setPhoneError("Please enter a valid 10-digit Indian mobile number.");
+      return;
+    }
+    setOtpMethod("sms");
+    setOtpLoading(true);
+    setPhoneError("");
+    try {
+      const res = await fetch("/api/auth/otp/sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanedPhone }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send SMS OTP.");
+      }
+      setOtpSent(true);
+      setCountdown(30);
+      setOtp(["", "", "", ""]);
+      toast.success("SMS OTP sent to your number.");
+    } catch (error: any) {
+      setPhoneError(error.message || "Failed to send SMS OTP.");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleSendOtp = async () => {
       const cleanedPhone = checkoutPhone.replace(/\D/g, "").slice(-10);
       if (!checkoutName.trim()) {
         setPhoneError("Please enter your name.");
@@ -911,12 +944,13 @@ const isWirelessItem = (item: any) => {
             
             {otpSent ? (
               <div className="space-y-4 sm:space-y-6 animate-in slide-in-from-right-4">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">Verify Your Mobile</h2>
-                  <p className="text-sm text-slate-500">
-                    Enter the 4-digit code sent to <strong className="text-slate-900">{checkoutPhone}</strong>
-                  </p>
-                </div>
+                <WhatsAppOtpNotice
+                  phone={checkoutPhone}
+                  method={otpMethod}
+                  onSwitchToSms={otpMethod === "whatsapp" ? handleSendSmsOtp : undefined}
+                  countdown={countdown}
+                  loading={otpLoading}
+                />
                 
                 <div className="flex justify-center gap-3 sm:gap-4 my-8">
                   {otp.map((digit, index) => (

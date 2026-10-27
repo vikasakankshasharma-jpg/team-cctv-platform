@@ -18,6 +18,8 @@ import {
 import { auth } from "@/lib/firebase-client";
 import { signInWithCustomToken, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { TranslatedText } from "@/components/shared/TranslatedText";
+import { WhatsAppOtpNotice } from "@/components/shared/WhatsAppOtpNotice";
+import { toast } from "sonner";
 
 export function CustomerLoginClient() {
   const router = useRouter();
@@ -135,6 +137,33 @@ export function CustomerLoginClient() {
       } else {
         setError(err.message || "An unexpected error occurred. Please try again later.");
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+    const handleSwitchToSms = async () => {
+    setMethod("sms");
+    setLoading(true);
+    setError("");
+    try {
+      const cleanPhone = mobile.replace(/\D/g, "").slice(-10);
+      const res = await fetch("/api/auth/otp/sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanPhone }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send SMS OTP.");
+      }
+      setTimeLeft(30);
+      setCanResend(false);
+      setOtp(["", "", "", ""]);
+      otpRef.current = ["", "", "", ""];
+      toast.success("SMS OTP sent to your number.");
+    } catch (err: any) {
+      setError(err.message || "Failed to send SMS OTP.");
     } finally {
       setLoading(false);
     }
@@ -281,109 +310,20 @@ export function CustomerLoginClient() {
         {/* Step 1: Mobile Input */}
         {step === 1 && (
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight mb-2 text-center">
-              <TranslatedText tKey="customer_login_title" defaultText="Welcome to Your Portal" />
-            </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8 font-medium text-center">
-              <TranslatedText 
-                tKey="customer_login_subtitle" 
-                defaultText="Enter your mobile number to view your quotations, download tax invoices, and track live installations." 
-              />
-            </p>
-
-            <form onSubmit={handleSendOtp} className="space-y-5">
-              
-              <div className="flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-[20px]">
-                <button
-                  type="button"
-                  onClick={() => { setMethod("sms"); setError(""); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${method === "sms" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-400"}`}
-                >
-                  <Smartphone className="w-3.5 h-3.5" /> SMS OTP
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setMethod("whatsapp"); setError(""); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[16px] text-[10px] font-black uppercase tracking-widest transition-all ${method === "whatsapp" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-400"}`}
-                >
-                  <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-                </button>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">
-                  <TranslatedText tKey="registered_mobile_number" defaultText="Mobile Number" />
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-3.5 text-zinc-400 font-black text-sm select-none">
-                    +91
-                  </span>
-                  <input
-                    type="tel"
-                    required
-                    maxLength={10}
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-                    placeholder="98765 43210"
-                    autoFocus
-                    className="w-full pl-14 pr-4 py-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl font-black text-zinc-900 dark:text-white text-base focus:ring-2 focus:ring-blue-600 focus:border-blue-600 tracking-wider transition-all placeholder:text-zinc-400 placeholder:font-normal"
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 p-4 rounded-2xl text-xs font-semibold flex items-start gap-2.5">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading || mobile.length !== 10}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 text-white font-black py-4 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <TranslatedText tKey="sending_otp" defaultText="Sending OTP..." />
-                  </>
-                ) : (
-                  <>
-                    <TranslatedText tKey="get_otp" defaultText="Get OTP Code" />
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Step 2: OTP Verification */}
-        {step === 2 && (
-          <div>
-            <button
-              onClick={() => {
-                setStep(1);
-                setOtp(["", "", "", ""]);
-                otpRef.current = ["", "", "", ""];
-                setError("");
-              }}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors mb-4"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <TranslatedText tKey="change_number" defaultText="Change number" />
-            </button>
-
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">
-              <TranslatedText tKey="enter_verification_code" defaultText="Verify Security Code" />
-            </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 font-medium">
+            <div className="mb-6 space-y-3">
               {customerName && customerName !== "Valued Customer" ? (
-                <>Welcome back, <strong className="text-zinc-900 dark:text-white">{customerName}</strong>! </>
+                <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                  Welcome back, <strong className="text-zinc-900 dark:text-white">{customerName}</strong>!
+                </p>
               ) : null}
-              We sent a 4-digit code via {method === "sms" ? "SMS" : "WhatsApp"} to <strong className="text-zinc-900 dark:text-white">+91 {mobile}</strong>.
-            </p>
+              <WhatsAppOtpNotice
+                phone={mobile}
+                method={method}
+                onSwitchToSms={method === "whatsapp" ? handleSwitchToSms : undefined}
+                countdown={timeLeft}
+                loading={loading}
+              />
+            </div>
 
             <form onSubmit={handleVerifyOtp} className="space-y-6">
               {/* 4 Digit Input boxes */}
