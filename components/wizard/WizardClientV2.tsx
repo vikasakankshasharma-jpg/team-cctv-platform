@@ -883,10 +883,10 @@ export function WizardClientV2() {
                    {/* Quick Action Buttons */}
                    <div className="space-y-2.5 max-w-md mx-auto pt-2">
                      <a
-                       href={`https://wa.me/919587980007?text=${encodeURIComponent(
-                         `Hi TEAM CCTV, I just requested a compatibility callback for adding cameras to my existing system. Name: ${req.customer_name || ''}, Mobile: ${req.customer_mobile || ''}, Ref: #${(createdCallbackLeadId || '').slice(-6).toUpperCase()}`
-                       )}`}
-                       target="_blank"
+                       href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "917357612865"}?text=${encodeURIComponent(
+                          `Hi TEAM CCTV, I just requested a compatibility callback for adding cameras to my existing system.\n\n• Name: ${req.customer_name || ''}\n• Mobile: +91 ${req.customer_mobile || ''}\n• Request Ref: #${(createdCallbackLeadId || '').slice(-6).toUpperCase()}`
+                        )}`}
+                        target="_blank"
                        rel="noopener noreferrer"
                        className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer text-sm"
                      >
