@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { RecaptchaVerifier, signInWithCustomToken, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { createLeadAction } from "@/app/actions/lead";
-import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin } from "lucide-react";
+import { ShieldCheck, Loader2, Sparkles, Wrench, MapPin, CheckCircle2, HelpCircle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PlacesAutocomplete } from "@/components/shared/PlacesAutocomplete";
 import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
@@ -315,6 +315,10 @@ export function WizardClientV2() {
     if (step === 6 && isProBuilderFlow) {
       setStep(0);
       setIsProBuilderFlow(false);
+      return;
+    }
+    if (step === 2 && req.installation_type === "addon" && req.existing_system_known !== undefined) {
+      updateReq({ existing_system_known: undefined });
       return;
     }
     setStep(s => Math.max(s - 1, 0));
@@ -699,7 +703,7 @@ export function WizardClientV2() {
                 <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-emerald-600">Wi-Fi CCTV Cameras</span>
                 <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">Zero video cabling, SD Cards per camera, 360° PTZ rotation & mobile app.</span>
               </button>
-              <button onClick={() => { updateReq({ installation_type: "addon", existing_system_known: undefined }); }}
+              <button onClick={() => { updateReq({ installation_type: "addon", existing_system_known: undefined }); handleNext(); }}
                 className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer group ${req.installation_type === "addon" ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"}`}>
                 <span className="inline-block px-2 py-0.5 mb-2 text-[10px] font-bold uppercase rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">Expansion</span>
                 <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-blue-600">{t("wz_add_to_existing_system")}</span>
@@ -707,77 +711,156 @@ export function WizardClientV2() {
               </button>
             </div>
             
-            {req.installation_type === "addon" && (
-              <div className="mt-8 p-6 bg-yellow-50 rounded-xl border border-yellow-200 animate-in fade-in">
-                <h3 className="font-semibold text-lg text-yellow-900 mb-4">{t("wz_do_you_know_the_technical_spec")}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button onClick={() => handleNext()}
-                    className="p-4 rounded-xl border border-yellow-300 bg-white hover:bg-yellow-100 text-left transition-all">
-                    <span className="block font-bold text-gray-900">{t("wz_yes_i_know")}</span>
-                    <span className="block text-xs text-gray-500 mt-1">{t("wz_i_know_my_dvr_channels_and_tec")}</span>
-                  </button>
-                  <button onClick={() => updateReq({ existing_system_known: false })}
-                    className="p-4 rounded-xl border border-yellow-300 bg-white hover:bg-yellow-100 text-left transition-all">
-                    <span className="block font-bold text-gray-900">{t("wz_no_i_dont_know")}</span>
-                    <span className="block text-xs text-gray-500 mt-1">{t("wz_help_me_check_compatibility")}</span>
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            {req.installation_type === "addon" && req.existing_system_known === false && (
-              <div className="mt-6 p-6 border rounded-xl bg-white shadow-sm animate-in fade-in">
-                <h3 className="font-bold text-xl mb-2 text-blue-900">{t("wz_we_need_to_check_your_systems_")}</h3>
-                <p className="text-gray-600 mb-4">{t("wz_since_you_already_have_a_syste")}</p>
-                <div className="space-y-4 mb-4">
-                  <input type="text" placeholder="Your Name" value={req.customer_name || ''} onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))} className="w-full p-3 border rounded-xl" />
-                  <input type="tel" placeholder={t("wz_mobile_placeholder")} value={req.customer_mobile || ''} onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))} className="w-full p-3 border rounded-xl" maxLength={10} />
-                </div>
-                <Button onClick={handleFinishWizard} disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10} className="w-full h-12">
-                  
-                                              {t("wz_request_a_free_callback")}
-                                            </Button>
-                <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                  <h4 className="font-semibold text-blue-900 mb-2 text-sm">{t("wz__typical_addon_pricing")}</h4>
-                  <ul className="text-sm text-blue-800 space-y-1.5">
-                    <li>{t("wz__adding_12_cameras_8000__15000")}</li>
-                    <li>{t("wz__adding_34_cameras_15000__2800")}</li>
-                    <li>{t("wz__dvr_upgrade_if_needed_4000__8")}</li>
-                  </ul>
-                  <p className="text-xs text-blue-600 mt-3">{t("wz__exact_pricing_depends_on_your")}</p>
-                </div>
-              </div>
-            )}
-            {req.installation_type !== "addon" && (
-              <div className="pt-2 sm:pt-4">
-                <Button variant="outline" onClick={handlePrev} className="h-11 px-5 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
-                  {t("wz_back")}
-                </Button>
-              </div>
-            )}
+            <div className="pt-2 sm:pt-4">
+              <Button variant="outline" onClick={handlePrev} className="h-11 px-5 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                {t("wz_back")}
+              </Button>
+            </div>
           </div>
         );
       case 2:
         if (req.installation_type === "addon") {
+           // Screen 2A: Dedicated specs inquiry screen
+           if (req.existing_system_known === undefined) {
+             return (
+               <div className="space-y-4 sm:space-y-6 animate-in fade-in">
+                 <div>
+                   <span className="inline-block px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 mb-2">
+                     Add-on Compatibility
+                   </span>
+                   <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
+                     {t("wz_do_you_know_the_technical_spec")}
+                   </h2>
+                   <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">
+                     To ensure your new cameras are 100% compatible with your existing recorder.
+                   </p>
+                 </div>
+
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-1">
+                   <button
+                     type="button"
+                     onClick={() => updateReq({ existing_system_known: true })}
+                     className="p-5 rounded-2xl border-2 text-left hover:border-blue-500 transition-all cursor-pointer bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:shadow-md group"
+                   >
+                     <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-3 group-hover:scale-105 transition-transform">
+                       <CheckCircle2 className="w-5 h-5" />
+                     </div>
+                     <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                       {t("wz_yes_i_know")}
+                     </span>
+                     <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">
+                       {t("wz_i_know_my_dvr_channels_and_tec")}
+                     </span>
+                   </button>
+
+                   <button
+                     type="button"
+                     onClick={() => updateReq({ existing_system_known: false })}
+                     className="p-5 rounded-2xl border-2 text-left hover:border-amber-500 transition-all cursor-pointer bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:shadow-md group"
+                   >
+                     <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-3 group-hover:scale-105 transition-transform">
+                       <HelpCircle className="w-5 h-5" />
+                     </div>
+                     <span className="block font-bold text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400">
+                       {t("wz_no_i_dont_know")}
+                     </span>
+                     <span className="block text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mt-1">
+                       {t("wz_help_me_check_compatibility")}
+                     </span>
+                   </button>
+                 </div>
+
+                 <div className="pt-2 sm:pt-4">
+                   <Button variant="outline" onClick={handlePrev} className="h-11 px-5 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                     {t("wz_back")}
+                   </Button>
+                 </div>
+               </div>
+             );
+           }
+
+           // Screen 2B: Free Compatibility Callback form
+           if (req.existing_system_known === false) {
+             return (
+               <div className="space-y-4 sm:space-y-6 animate-in fade-in">
+                 <div className="p-5 sm:p-6 border rounded-2xl bg-white dark:bg-zinc-900 shadow-sm border-gray-200 dark:border-zinc-800">
+                   <span className="inline-block px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 mb-2">
+                     Free Compatibility Check
+                   </span>
+                   <h3 className="font-bold text-xl sm:text-2xl mb-2 text-slate-900 dark:text-white">
+                     {t("wz_we_need_to_check_your_systems_")}
+                   </h3>
+                   <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-400 mb-4">
+                     {t("wz_since_you_already_have_a_syste")}
+                   </p>
+                   <div className="space-y-3 mb-4">
+                     <input
+                       type="text"
+                       placeholder="Your Name"
+                       value={req.customer_name || ''}
+                       onChange={(e) => setReq(prev => ({ ...prev, customer_name: e.target.value }))}
+                       className="w-full p-3 sm:p-3.5 border rounded-xl bg-slate-50 dark:bg-zinc-800 dark:border-zinc-700 text-slate-900 dark:text-white"
+                     />
+                     <input
+                       type="tel"
+                       placeholder={t("wz_mobile_placeholder")}
+                       value={req.customer_mobile || ''}
+                       onChange={(e) => setReq(prev => ({ ...prev, customer_mobile: e.target.value.replace(/\D/g, '') }))}
+                       className="w-full p-3 sm:p-3.5 border rounded-xl bg-slate-50 dark:bg-zinc-800 dark:border-zinc-700 text-slate-900 dark:text-white"
+                       maxLength={10}
+                     />
+                   </div>
+                   <Button
+                     onClick={handleFinishWizard}
+                     disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10}
+                     className="w-full h-12 rounded-xl text-base font-bold bg-blue-600 hover:bg-blue-700 text-white"
+                   >
+                     {t("wz_request_a_free_callback")}
+                   </Button>
+                   <div className="mt-5 p-4 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900">
+                     <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2 text-xs sm:text-sm">
+                       {t("wz__typical_addon_pricing")}
+                     </h4>
+                     <ul className="text-xs sm:text-sm text-blue-800 dark:text-blue-200 space-y-1.5">
+                       <li>{t("wz__adding_12_cameras_8000__15000")}</li>
+                       <li>{t("wz__adding_34_cameras_15000__2800")}</li>
+                       <li>{t("wz__dvr_upgrade_if_needed_4000__8")}</li>
+                     </ul>
+                     <p className="text-[11px] sm:text-xs text-blue-600 dark:text-blue-400 mt-2.5">
+                       {t("wz__exact_pricing_depends_on_your")}
+                     </p>
+                   </div>
+                 </div>
+
+                 <div className="pt-1">
+                   <Button variant="outline" onClick={handlePrev} className="h-11 px-5 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                     {t("wz_back")}
+                   </Button>
+                 </div>
+               </div>
+             );
+           }
+
+           // Screen 2C: Known system specifications form
            return (
              <div className="space-y-6 animate-in fade-in">
-               <h2 className="text-3xl font-semibold mb-2">{t("wz_existing_system_details")}</h2>
-               <p className="text-gray-600 mb-6">{t("wz_tell_us_about_your_current_rec")}</p>
+               <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{t("wz_existing_system_details")}</h2>
+               <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium mb-6">{t("wz_tell_us_about_your_current_rec")}</p>
                
-               <h3 className="font-semibold text-lg">{t("wz_1_technology")}</h3>
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button onClick={() => setReq(prev => ({ ...prev, existing_technology: "HD" }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_technology === 'HD' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white'}`}>{t("wz_analog_hd_bnc_wire")}</button>
-                  <button onClick={() => setReq(prev => ({ ...prev, existing_technology: "IP" }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_technology === 'IP' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white'}`}>{t("wz_ip__network_cat6_wire")}</button>
+               <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white">{t("wz_1_technology")}</h3>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <button onClick={() => setReq(prev => ({ ...prev, existing_technology: "HD" }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_technology === 'HD' ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800'}`}>{t("wz_analog_hd_bnc_wire")}</button>
+                  <button onClick={() => setReq(prev => ({ ...prev, existing_technology: "IP" }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_technology === 'IP' ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800'}`}>{t("wz_ip__network_cat6_wire")}</button>
                </div>
                
-               <h3 className="font-semibold text-lg mt-6">{t("wz_2_existing_recorder_channels")}</h3>
+               <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white mt-6">{t("wz_2_existing_recorder_channels")}</h3>
                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[4, 8, 16, 32].map(ch => (
-                    <button key={ch} onClick={() => setReq(prev => ({ ...prev, existing_recorder_channels: ch }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_recorder_channels === ch ? 'border-blue-600 bg-blue-50 text-blue-700' : 'bg-white hover:border-blue-300'}`}>{ch} Ch</button>
+                    <button key={ch} onClick={() => setReq(prev => ({ ...prev, existing_recorder_channels: ch }))} className={`p-4 rounded-xl border-2 text-center font-bold ${req.existing_recorder_channels === ch ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 hover:border-blue-300'}`}>{ch} Ch</button>
                   ))}
                </div>
                
-               <h3 className="font-semibold text-lg mt-6">{t("wz_3_currently_working_cameras")}</h3>
+               <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white mt-6">{t("wz_3_currently_working_cameras")}</h3>
                <div className="flex items-center gap-4">
                   <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, existing_working_cameras: Math.max(0, (typeof prev.existing_working_cameras === 'number' ? prev.existing_working_cameras : 0) - 1) }))}>-</Button>
                   <input
@@ -794,13 +877,16 @@ export function WizardClientV2() {
                         setReq(prev => ({ ...prev, existing_working_cameras: Math.max(0, val) }));
                       }
                     }}
-                    className="text-2xl font-bold w-16 text-center text-gray-900 bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="text-2xl font-bold w-16 text-center text-gray-900 dark:text-white bg-transparent border-none focus:ring-0 p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <Button variant="outline" size="icon" onClick={() => setReq(prev => ({ ...prev, existing_working_cameras: (typeof prev.existing_working_cameras === 'number' ? prev.existing_working_cameras : 0) + 1 }))}>+</Button>
                </div>
                
-               <div className="pt-6">
-                 <Button onClick={handleNext} disabled={!req.existing_technology || !req.existing_recorder_channels} className="w-full h-12">{t("wz_next_step")}</Button>
+               <div className="pt-6 flex items-center gap-3">
+                 <Button variant="outline" onClick={handlePrev} className="h-12 px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
+                   {t("wz_back")}
+                 </Button>
+                 <Button onClick={handleNext} disabled={!req.existing_technology || !req.existing_recorder_channels} className="flex-1 h-12">{t("wz_next_step")}</Button>
                </div>
              </div>
            );

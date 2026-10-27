@@ -29,7 +29,7 @@ This document serves as the master engineering and operational handover for the 
 ## 2. Core Functional Modules
 
 ### 2.1 Dual Quotation Funnels
-1. **Guided Setup (`/wizard`):** 5-step intuitive wizard that recommends 3 pre-configured packages (Standard, Professional, Elite) with "Match My Brand" dynamic brand switching.
+1. **Guided Setup (`/wizard`):** Dynamic multi-brand quotation engine that calculates and presents all valid package variations across brands (CP Plus, Hikvision, Dahua, Budget, etc.), resolutions, and storage options matching customer wizard inputs. Zero artificial tier restrictions.
 2. **Custom Build (`/builder` - Pro Builder):** Complete itemized hardware customizer with WhatsApp OTP lead capture at step 1, mobile slide-over cart drawer (`showMobileCart`), and single-filter auto-collapse.
 3. **Parity Engine:** Both funnels calculate totals through `lib/pricing-engine.ts` and `app/api/quote/save/route.ts` ensuring 100% mathematical parity.
 

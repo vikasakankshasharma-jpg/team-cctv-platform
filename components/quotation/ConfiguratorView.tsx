@@ -502,7 +502,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   return (
     <div className="flex flex-col gap-12 sm:gap-20 relative pb-28">
       
-      {/* 3-CARD COMPARISON & SPEC TABLE - APPLE AESTHETIC */}
+      {/* DYNAMIC CATALOG VARIATIONS & SPEC TABLE - APPLE AESTHETIC */}
       <div className="w-full max-w-7xl mx-auto px-4">
         
         {/* Dynamic Generator vs Compare Mode */}

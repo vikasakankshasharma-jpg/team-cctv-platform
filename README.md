@@ -13,7 +13,7 @@
 ## 🚀 Core Platform Capabilities
 
 ### 1. Dual Quotation Engines with 100% Parity
-- **Guided Setup (Customer Wizard):** 5-step intuitive flow with dynamic recommendation algorithms (Standard, Professional, Elite) and real-time "Match My Brand" dynamic brand unification.
+- **Guided Setup (Customer Wizard):** Intuitive multi-brand quotation engine that dynamically generates and displays all valid package variations across brands, resolutions, and storage options based on the customer's wizard answers.
 - **Custom Build (Pro Builder):** Full itemized component customizer with early WhatsApp OTP lead capture, responsive mobile slide-out cart drawer, and single-filter auto-collapse.
 - **Server-Authoritative Parity:** Both engines share 100% mathematical parity via `lib/pricing-engine.ts` and `app/api/quote/save/route.ts`. The client is untrusted.
 
