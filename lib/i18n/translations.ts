@@ -1,6 +1,15 @@
 import { LocaleCode } from "./mapping";
 
 export type TranslationKey =
+  | "wa_otp_badge"
+  | "wa_otp_not_sms"
+  | "wa_otp_title"
+  | "wa_otp_desc"
+  | "wa_otp_open_btn"
+  | "wa_otp_sms_fallback"
+  | "sms_otp_badge"
+  | "sms_otp_title"
+  | "sms_otp_desc"
   | "get_instant_price"
   | "step_1_pincode"
   | "wz_back"
@@ -1019,6 +1028,15 @@ export const translations: Record<
   Partial<Record<TranslationKey, string>>
 > = {
   en: {
+    "wa_otp_badge": "Check WhatsApp App",
+    "wa_otp_not_sms": "Not Regular SMS",
+    "wa_otp_title": "OTP sent to your WhatsApp on",
+    "wa_otp_desc": "Please open your WhatsApp to copy the 4-digit code. You must enter this OTP below to continue.",
+    "wa_otp_open_btn": "📲 Open WhatsApp App ↗",
+    "wa_otp_sms_fallback": "Didn't get on WhatsApp? Send via SMS",
+    "sms_otp_badge": "Regular SMS Dispatched",
+    "sms_otp_title": "We sent your 4-digit code via text SMS to",
+    "sms_otp_desc": "Please check your phone's Messages inbox and enter the code below to proceed.",
     "get_instant_price": "Get Instant Price",
     "wz_back": "Back",
     "wz_step": "Step",
@@ -2007,6 +2025,15 @@ export const translations: Record<
       "psw_step_install": "Install",
 },
   hi: {
+    "wa_otp_badge": "WhatsApp चेक करें",
+    "wa_otp_not_sms": "नॉर्मल SMS में नहीं",
+    "wa_otp_title": "OTP आपके WhatsApp पर भेजा गया है:",
+    "wa_otp_desc": "कृपया अपना WhatsApp खोलकर 4-अंकों का वेरिफिकेशन कोड देखें। आगे बढ़ने के लिए वह OTP नीचे दर्ज करें।",
+    "wa_otp_open_btn": "📲 WhatsApp खोलें ↗",
+    "wa_otp_sms_fallback": "WhatsApp पर नहीं मिला? SMS से भेजें",
+    "sms_otp_badge": "नॉर्मल SMS भेजा गया",
+    "sms_otp_title": "हमने 4-अंकों का कोड SMS से भेजा है:",
+    "sms_otp_desc": "कृपया अपने फोन का मैसेज इनबॉक्स चेक करें और आगे बढ़ने के लिए कोड नीचे दर्ज करें।",
     "wz_back": "बैक",
     "wz_step": "स्टेप",
     "wz_cctvquotationcom": "CCTVQuotation.com",
