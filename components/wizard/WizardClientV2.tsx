@@ -1339,47 +1339,289 @@ export function WizardClientV2() {
                       })()}
                     </div>
                   </div>
-                ) : (
-                <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">{t("wz_3_existing_cabling")}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-                    <button onClick={() => updateReq({ cabling_done: false })}
-                      className={`py-2 sm:py-3 px-2 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.cabling_done === false ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300'}`}>{t("wz_no")}</button>
-                    <button onClick={() => updateReq({ cabling_done: true })}
-                      className={`py-2 sm:py-3 px-2 rounded-xl border-2 text-center text-xs sm:text-sm font-bold transition-all cursor-pointer ${req.cabling_done === true ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300'}`}>
-                      {t("wz_yes")}
-                    </button>
-                  </div>
+                ) : (() => {
+                  const isAddonFlow = req.installation_type === "addon";
+                  const wifiCameraCount = Number(req.wifi_camera_count) || 0;
+                  const wiredCameraCount = Math.max(1, (Number(req.outdoor_camera_count) || 0) + (Number(req.indoor_camera_count) || 0));
+                  const canShowMixed = isAddonFlow && wiredCameraCount > 1;
 
-                  {req.cabling_done === false && (() => {
-                    const wifiCameraCount = Number(req.wifi_camera_count) || 0;
-                    const wiredCameraCount = Math.max(1, (Number(req.outdoor_camera_count) || 0) + (Number(req.indoor_camera_count) || 0));
-                    const freeLimitMeters = wiredCameraCount * 15; // 15m free per wired camera
-                    const selectedMeters = req.total_cable_length_meters ?? freeLimitMeters;
-                    const excessMeters = Math.max(0, selectedMeters - freeLimitMeters);
-                    const isExceeded = excessMeters > 0;
-                    const extraCostEstimate = excessMeters * 15; // ₹15 per extra meter
+                  const currentMode = req.cabling_mode || (req.cabling_done === true ? "all_existing" : "all_new");
+                  const currentCablingNeeded = typeof req.cabling_needed_cameras === "number"
+                    ? Math.max(1, Math.min(wiredCameraCount - 1, req.cabling_needed_cameras))
+                    : Math.max(1, wiredCameraCount - 1);
 
-                    return (
-                      <div className="mt-2.5 space-y-2 animate-in fade-in">
-                        <div className={`p-2.5 sm:p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${
-                          isExceeded 
-                            ? 'bg-red-50/80 dark:bg-red-950/40 border-red-200 dark:border-red-900/60' 
-                            : 'bg-blue-50/70 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900'
-                        }`}>
-                          <div>
-                            <span className="block font-bold text-gray-900 dark:text-white text-xs">
-                              {t("wz_approx_total_cable_required")}
-                            </span>
-                            <span className="block text-[10px] text-gray-500 dark:text-zinc-400">
-                              {t("wz_free_included_text")}: {freeLimitMeters}{t("wz_m")} ({wiredCameraCount} {t("wz_cameras_x_15m")})
-                              {wifiCameraCount > 0 && (
-                                <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1">
-                                  • {wifiCameraCount} Smart Wi-Fi {wifiCameraCount === 1 ? 'camera uses' : 'cameras use'} zero video cable
-                                </span>
-                              )}
-                            </span>
+                  const activeCablingCameras = (isAddonFlow && currentMode === "mixed")
+                    ? currentCablingNeeded
+                    : wiredCameraCount;
+
+                  const freeLimitMeters = activeCablingCameras * 15;
+                  const selectedMeters = req.total_cable_length_meters ?? freeLimitMeters;
+                  const excessMeters = Math.max(0, selectedMeters - freeLimitMeters);
+                  const isExceeded = excessMeters > 0;
+                  const extraCostEstimate = excessMeters * 15;
+
+                  return (
+                    <div>
+                      {isAddonFlow ? (
+                        <div>
+                          <div className="mb-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <h3 className="text-xs sm:text-sm font-bold text-gray-800 dark:text-zinc-200 uppercase tracking-wider">
+                                3. Cabling for NEW Add-on Cameras ({wiredCameraCount} Camera{wiredCameraCount > 1 ? 's' : ''})
+                              </h3>
+                              <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">
+                                System Expansion
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                              Do you have working cables already pre-laid to the new spots, or does our technician need to route new wire from your recorder?
+                            </p>
                           </div>
+
+                          <div className={`grid grid-cols-1 ${canShowMixed ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-2 sm:gap-2.5`}>
+                            {/* Option 1: All New Cabling */}
+                            <button
+                              type="button"
+                              onClick={() => updateReq({
+                                cabling_done: false,
+                                cabling_mode: "all_new",
+                                cabling_needed_cameras: wiredCameraCount,
+                                total_cable_length_meters: wiredCameraCount * 15
+                              })}
+                              className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                                req.cabling_done === false && currentMode === "all_new"
+                                  ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm'
+                                  : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Need New Cables</span>
+                                <span className="text-[9px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
+                                  Recommended
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                                Technician routes fresh cables from recorder to each new spot. Includes free cable allowance (~15m/cam) & full wiring.
+                              </p>
+                            </button>
+
+                            {/* Option 2: All Pre-Wired / Replacements */}
+                            <button
+                              type="button"
+                              onClick={() => updateReq({
+                                cabling_done: true,
+                                cabling_mode: "all_existing",
+                                cabling_needed_cameras: 0,
+                                total_cable_length_meters: 0
+                              })}
+                              className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                                req.cabling_done === true
+                                  ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm'
+                                  : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">All Cables Pre-Laid</span>
+                                <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">
+                                  Fitting Only
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                                Working cables already reach every spot (or replacing old/faulty cameras at existing spots).
+                              </p>
+                            </button>
+
+                            {/* Option 3: Mixed Setup (Replacements + New Spots) */}
+                            {canShowMixed && (
+                              <button
+                                type="button"
+                                onClick={() => updateReq({
+                                  cabling_done: false,
+                                  cabling_mode: "mixed",
+                                  cabling_needed_cameras: currentCablingNeeded,
+                                  total_cable_length_meters: currentCablingNeeded * 15
+                                })}
+                                className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                                  req.cabling_done === false && currentMode === "mixed"
+                                    ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/50 shadow-sm'
+                                    : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Mixed Setup</span>
+                                  <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 font-bold px-1.5 py-0.5 rounded">
+                                    Custom
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                                  Replacing faulty cameras on existing wires AND laying new cables to new camera spots.
+                                </p>
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Mixed Counter Panel */}
+                          {canShowMixed && req.cabling_done === false && currentMode === "mixed" && (
+                            <div className="mt-2.5 p-3 rounded-xl border bg-purple-50/70 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in">
+                              <div>
+                                <span className="block font-bold text-gray-900 dark:text-white text-xs">
+                                  How many cameras need NEW cables routed?
+                                </span>
+                                <span className="block text-[11px] text-purple-800 dark:text-purple-300 font-medium mt-0.5">
+                                  • <strong>{currentCablingNeeded} camera{currentCablingNeeded > 1 ? 's' : ''}</strong> will get fresh wire & full installation (~{currentCablingNeeded * 15}m included)<br />
+                                  • <strong>{wiredCameraCount - currentCablingNeeded} camera{wiredCameraCount - currentCablingNeeded > 1 ? 's' : ''}</strong> will reuse existing cables (mounting/fitting only)
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-xl border border-purple-200 dark:border-zinc-700 shadow-sm self-start sm:self-auto shrink-0">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-7 w-7 text-gray-700 dark:text-gray-200 hover:bg-gray-100 font-bold"
+                                  onClick={() => {
+                                    const next = Math.max(1, currentCablingNeeded - 1);
+                                    updateReq({ cabling_needed_cameras: next, total_cable_length_meters: next * 15 });
+                                  }}
+                                  disabled={currentCablingNeeded <= 1}
+                                >
+                                  -
+                                </Button>
+                                <span className="w-8 text-center font-black text-xs text-purple-900 dark:text-purple-200">
+                                  {currentCablingNeeded}
+                                </span>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-7 w-7 text-gray-700 dark:text-gray-200 hover:bg-gray-100 font-bold"
+                                  onClick={() => {
+                                    const next = Math.min(wiredCameraCount - 1, currentCablingNeeded + 1);
+                                    updateReq({ cabling_needed_cameras: next, total_cable_length_meters: next * 15 });
+                                  }}
+                                  disabled={currentCablingNeeded >= wiredCameraCount - 1}
+                                >
+                                  +
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Existing Cabling Safety Reminder */}
+                          {req.cabling_done === true && (
+                            <div className="mt-2.5 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2 animate-in fade-in">
+                              <span className="text-base shrink-0">⚠️</span>
+                              <div>
+                                <p className="font-bold">Existing Cables Verification Notice</p>
+                                <p className="text-[10px] opacity-90 mt-0.5">
+                                  You selected that working cables are already present at every camera location. If new wire routing is required on-site, cable and routing labor will be charged on actuals.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="mb-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider">
+                                {t("wz_3_existing_cabling")}
+                              </h3>
+                            </div>
+                            <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                              Is your property already pre-wired with CCTV cables, or do we need to lay new cables?
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+                            <button
+                              type="button"
+                              onClick={() => updateReq({
+                                cabling_done: false,
+                                cabling_mode: "all_new",
+                                cabling_needed_cameras: wiredCameraCount,
+                                total_cable_length_meters: wiredCameraCount * 15
+                              })}
+                              className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                                req.cabling_done === false
+                                  ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm'
+                                  : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">No (Need New Cabling)</span>
+                                <span className="text-[9px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
+                                  Standard
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                                Technician brings wire and routes cables across the property. Includes ~15m wire per camera.
+                              </p>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => updateReq({
+                                cabling_done: true,
+                                cabling_mode: "all_existing",
+                                cabling_needed_cameras: 0,
+                                total_cable_length_meters: 0
+                              })}
+                              className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                                req.cabling_done === true
+                                  ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm'
+                                  : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Yes (Pre-Wired Site)</span>
+                                <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">
+                                  Fitting Only
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                                Cables are already concealed/pulled by electrician during construction.
+                              </p>
+                            </button>
+                          </div>
+
+                          {req.cabling_done === true && (
+                            <div className="mt-2.5 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2 animate-in fade-in">
+                              <span className="text-base shrink-0">⚠️</span>
+                              <div>
+                                <p className="font-bold">Pre-Wired Site Notice</p>
+                                <p className="text-[10px] opacity-90 mt-0.5">
+                                  Please ensure that pre-laid cables are tested and reach each camera spot and the central recorder location.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Cable Meter Adjuster when Cabling is Required */}
+                      {req.cabling_done === false && (
+                        <div className="mt-2.5 space-y-2 animate-in fade-in">
+                          <div className={`p-2.5 sm:p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                            isExceeded 
+                              ? 'bg-red-50/80 dark:bg-red-950/40 border-red-200 dark:border-red-900/60' 
+                              : 'bg-blue-50/70 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900'
+                          }`}>
+                            <div>
+                              <span className="block font-bold text-gray-900 dark:text-white text-xs">
+                                {isAddonFlow && currentMode === "mixed"
+                                  ? `Approx. Total Cable for ${activeCablingCameras} New Spot${activeCablingCameras > 1 ? 's' : ''} (${wiredCameraCount - activeCablingCameras} Reusing Wire)`
+                                  : t("wz_approx_total_cable_required")
+                                }
+                              </span>
+                              <span className="block text-[10px] text-gray-500 dark:text-zinc-400">
+                                {t("wz_free_included_text")}: {freeLimitMeters}{t("wz_m")} ({activeCablingCameras} {t("wz_cameras_x_15m")})
+                                {wifiCameraCount > 0 && (
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1">
+                                    • {wifiCameraCount} Smart Wi-Fi {wifiCameraCount === 1 ? 'camera uses' : 'cameras use'} zero video cable
+                                  </span>
+                                )}
+                              </span>
+                            </div>
 
                           <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 px-2 py-1 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-sm shrink-0">
                             <Button
@@ -1463,8 +1705,7 @@ export function WizardClientV2() {
                           </div>
                         )}
                       </div>
-                    );
-                  })()}
+                    )}
 
                   {/* 3b. Smart Wi-Fi Camera Power Point Availability (Hybrid Setup) */}
                   {Number(req.wifi_camera_count) > 0 && (() => {
@@ -1622,7 +1863,8 @@ export function WizardClientV2() {
                     );
                   })()}
                 </div>
-                )}
+              );
+            })()}
               </div>
 
               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">

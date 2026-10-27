@@ -852,29 +852,52 @@ function calculateLabor(
     return { items, totalRetail };
   }
 
-  // ── Scenario: Site REQUIRES cabling (Full Installation & Cabling) ──
+  // ── Scenario: Site REQUIRES cabling (Full Installation & Cabling or Mixed) ──
+  const rawCablingNeeded = (selection as any).cabling_needed_cameras;
+  const isMixed = typeof rawCablingNeeded === "number" && rawCablingNeeded > 0 && rawCablingNeeded < qty;
+  const cablingQty = isMixed ? rawCablingNeeded : qty;
+  const fittingOnlyQty = isMixed ? (qty - cablingQty) : 0;
+
   const defaultRate = tech === "IP" ? 500 : 400;
   const baseRate = tech === "IP" 
     ? (settings.labor_ip_per_camera ?? defaultRate) 
     : (settings.labor_hd_per_camera ?? settings.labor_full_installation_rate ?? defaultRate);
   const rate = Math.round(baseRate * locationMultiplier);
-  const lineTotal = rate * qty;
+  const lineTotal = rate * cablingQty;
 
   items.push({
     product_id: "labor_install",
-    display_name: `Standard ${tech} Installation & Termination${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
-    qty,
+    display_name: isMixed
+      ? `Standard ${tech} Cabling & Installation (${cablingQty} camera spot${cablingQty > 1 ? "s" : ""})${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`
+      : `Standard ${tech} Installation & Termination${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
+    qty: cablingQty,
     unit_price: rate,
     line_total: lineTotal
   });
   totalRetail += lineTotal;
 
+  if (isMixed && fittingOnlyQty > 0) {
+    const hdFittingRate = settings.labor_hd_fitting_only ?? 200;
+    const ipFittingRate = settings.labor_ip_fitting_only ?? 300;
+    const fittingRate = Math.round((tech === "IP" ? ipFittingRate : hdFittingRate) * locationMultiplier);
+    const fittingLineTotal = fittingRate * fittingOnlyQty;
+
+    items.push({
+      product_id: "labor_fitting_only",
+      display_name: `${tech} Camera Mounting & Setup (${fittingOnlyQty} replacement${fittingOnlyQty > 1 ? "s" : ""} on existing cables)${locationMultiplier !== 1.0 ? ` (×${locationMultiplier} local rate)` : ""}`,
+      qty: fittingOnlyQty,
+      unit_price: fittingRate,
+      line_total: fittingLineTotal
+    });
+    totalRetail += fittingLineTotal;
+  }
+
   // Cabling Labor Surcharge
   const defaultMetersPerCamera = 15;
   let totalMeters = selection.total_cable_length_meters || 
-                   (selection.cable_length_meters ? selection.cable_length_meters * qty : defaultMetersPerCamera * qty);
+                   (selection.cable_length_meters ? selection.cable_length_meters * cablingQty : defaultMetersPerCamera * cablingQty);
   
-  const freeLimit = qty * defaultMetersPerCamera;
+  const freeLimit = cablingQty * defaultMetersPerCamera;
   const excessMeters = Math.max(0, totalMeters - freeLimit);
   
   if (excessMeters > 0) {
@@ -1038,7 +1061,8 @@ function calculateCabling(
   } else if (meters !== undefined) {
      totalMeters = meters * wiredCameraCount;
   } else {
-     totalMeters = defaultMeters * wiredCameraCount;
+     const activeCams = (typeof (selection as any).cabling_needed_cameras === 'number' && (selection as any).cabling_needed_cameras >= 0) ? Math.min(wiredCameraCount, (selection as any).cabling_needed_cameras) : wiredCameraCount;
+     totalMeters = defaultMeters * activeCams;
   }
 
   let effectiveCableTech = tech;
@@ -2471,23 +2495,49 @@ export function generatePricingSnapshot(
         }
       }
     } else {
+      const rawCablingNeeded = (req as any).cabling_needed_cameras;
+      const isMixed = typeof rawCablingNeeded === "number" && rawCablingNeeded > 0 && rawCablingNeeded < wiredCameraCount;
+      const cablingQty = isMixed ? rawCablingNeeded : wiredCameraCount;
+      const fittingOnlyQty = isMixed ? (wiredCameraCount - cablingQty) : 0;
+
       const defaultRate = isIP ? 500 : 400;
       const baseRate = isIP 
         ? (settings.labor_ip_per_camera ?? defaultRate)
         : (settings.labor_hd_per_camera ?? settings.labor_full_installation_rate ?? defaultRate);
       const rate = Math.round(baseRate);
-      const laborTotal = rate * wiredCameraCount;
+      const laborTotal = rate * cablingQty;
 
       lineItems.push({
         product_id: "labor_install",
-        display_name: `Installation & Termination (${resolvedSystem.plan_type?.split("_")[0] || "HD"})`,
-        qty: wiredCameraCount,
+        display_name: isMixed
+          ? `Standard ${isIP ? "IP" : "HD"} Cabling & Installation (${cablingQty} camera spot${cablingQty > 1 ? "s" : ""})`
+          : `Installation & Termination (${resolvedSystem.plan_type?.split("_")[0] || "HD"})`,
+        qty: cablingQty,
         unit_price: rate,
         line_total: laborTotal,
         base_cost_at_quote: baseRate
       });
       laborCost += laborTotal;
-      totalPurchaseCost += baseRate * wiredCameraCount;
+      totalPurchaseCost += baseRate * cablingQty;
+
+      if (isMixed && fittingOnlyQty > 0) {
+        const hdFittingRate = settings.labor_hd_fitting_only ?? 200;
+        const ipFittingRate = settings.labor_ip_fitting_only ?? 300;
+        const baseFittingRate = isIP ? ipFittingRate : hdFittingRate;
+        const fittingRate = Math.round(baseFittingRate);
+        const fittingTotal = fittingRate * fittingOnlyQty;
+
+        lineItems.push({
+          product_id: "labor_fitting_only",
+          display_name: `${isIP ? "IP" : "HD"} Camera Mounting & Setup (${fittingOnlyQty} replacement${fittingOnlyQty > 1 ? "s" : ""} on existing cables)`,
+          qty: fittingOnlyQty,
+          unit_price: fittingRate,
+          line_total: fittingTotal,
+          base_cost_at_quote: baseFittingRate
+        });
+        laborCost += fittingTotal;
+        totalPurchaseCost += baseFittingRate * fittingOnlyQty;
+      }
     }
   }
 

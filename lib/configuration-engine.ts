@@ -152,9 +152,11 @@ export function generateConfiguration(req: CCTVRequirement): CCTVConfiguration {
     if (req.total_cable_length_meters && Number(req.total_cable_length_meters) > 0) {
       cableMeters = Number(req.total_cable_length_meters);
     } else if (req.cable_length_meters) {
-      cableMeters = Number(req.cable_length_meters) * wiredCameras;
+      const activeCams = (typeof req.cabling_needed_cameras === 'number' && req.cabling_needed_cameras >= 0) ? Math.min(wiredCameras, req.cabling_needed_cameras) : wiredCameras;
+      cableMeters = Number(req.cable_length_meters) * activeCams;
     } else {
-      cableMeters = 15 * wiredCameras;
+      const activeCams = (typeof req.cabling_needed_cameras === 'number' && req.cabling_needed_cameras >= 0) ? Math.min(wiredCameras, req.cabling_needed_cameras) : wiredCameras;
+      cableMeters = 15 * activeCams;
     }
   }
 
