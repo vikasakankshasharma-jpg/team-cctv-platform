@@ -32,6 +32,8 @@ export function WizardClientV2() {
   const [step, setStep] = useState(0);
   const [isProBuilderFlow, setIsProBuilderFlow] = useState(false);
   const [leadId, setLeadId] = useState<string | null>(null);
+  const [callbackSubmitted, setCallbackSubmitted] = useState(false);
+  const [createdCallbackLeadId, setCreatedCallbackLeadId] = useState<string | null>(null);
   const [otpSent, setOtpSent] = useState(false);
   const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("whatsapp");
   const [otp, setOtp] = useState(["", "", "", ""]);
@@ -317,9 +319,23 @@ export function WizardClientV2() {
       setIsProBuilderFlow(false);
       return;
     }
-    if (step === 2 && req.installation_type === "addon" && req.existing_system_known !== undefined) {
-      updateReq({ existing_system_known: undefined });
-      return;
+    if (step === 2 && req.installation_type === "addon") {
+      if (callbackSubmitted) {
+        setCallbackSubmitted(false);
+        setOtpSent(false);
+        setOtp(["", "", "", ""]);
+        updateReq({ existing_system_known: undefined });
+        return;
+      }
+      if (otpSent) {
+        setOtpSent(false);
+        setOtp(["", "", "", ""]);
+        return;
+      }
+      if (req.existing_system_known !== undefined) {
+        updateReq({ existing_system_known: undefined });
+        return;
+      }
     }
     setStep(s => Math.max(s - 1, 0));
   };
@@ -459,9 +475,25 @@ export function WizardClientV2() {
         firebase_uid: auth.currentUser?.uid || "anonymous"
       };
       
-      const newLeadId = await createLeadAction(payload as any);
+      const isCallbackScenario = req.installation_type === "addon" && req.existing_system_known === false;
+      const newLeadId = await createLeadAction({
+        ...payload,
+        wizard_answers: {
+          ...payload.wizard_answers,
+          callback_requested: isCallbackScenario,
+          callback_reason: isCallbackScenario ? "addon_compatibility_check" : undefined
+        }
+      } as any);
       if (newLeadId && 'success' in newLeadId && newLeadId.success && newLeadId.id) {
         setLeadId(newLeadId.id);
+        setCreatedCallbackLeadId(newLeadId.id);
+
+        if (isCallbackScenario) {
+          setCallbackSubmitted(true);
+          setLoading(false);
+          return;
+        }
+
         if (isProBuilderFlow) { router.push(`/pro-builder?leadId=${newLeadId.id}`); } else { router.push(`/quote/${newLeadId.id}`); }
         return;
       } else {
@@ -779,8 +811,157 @@ export function WizardClientV2() {
              );
            }
 
-           // Screen 2B: Free Compatibility Callback form
+           // Screen 2B: Free Compatibility Callback form & Verification
            if (req.existing_system_known === false) {
+             // Sub-state 1: Callback Confirmed Screen
+             if (callbackSubmitted) {
+               return (
+                 <div className="space-y-5 sm:space-y-6 animate-in fade-in text-center py-4 sm:py-6">
+                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                     <CheckCircle2 className="w-9 h-9 sm:w-11 sm:h-11" />
+                   </div>
+
+                   <div>
+                     <span className="inline-block px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 mb-2">
+                       Callback Confirmed • 15 Min SLA
+                     </span>
+                     <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+                       We'll Call You Shortly!
+                     </h2>
+                     <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
+                       Thank you, <strong className="text-slate-900 dark:text-white">{req.customer_name}</strong>. Our senior CCTV engineer will call you on <strong className="text-slate-900 dark:text-white">+91 {req.customer_mobile}</strong> within 15 minutes to verify your existing DVR/NVR specifications.
+                     </p>
+                     {createdCallbackLeadId && (
+                       <p className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono mt-1.5">
+                         Reference ID: #{createdCallbackLeadId.slice(-6).toUpperCase()}
+                       </p>
+                     )}
+                   </div>
+
+                   {/* Pro Tip Card */}
+                   <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 text-left max-w-md mx-auto">
+                     <div className="flex items-start gap-3">
+                       <span className="text-xl shrink-0">📸</span>
+                       <div>
+                         <h4 className="font-bold text-xs sm:text-sm text-amber-900 dark:text-amber-200">
+                           Helpful Tip For the Call
+                         </h4>
+                         <p className="text-[11px] sm:text-xs text-amber-800 dark:text-amber-300 mt-0.5 leading-relaxed">
+                           If you are near your DVR/NVR recorder, keep a quick photo of the <strong>back panel (where camera cables connect)</strong> or <strong>brand model sticker</strong> ready. Our engineer will immediately identify compatibility.
+                         </p>
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* Quick Action Buttons */}
+                   <div className="space-y-2.5 max-w-md mx-auto pt-2">
+                     <a
+                       href={`https://wa.me/919587980007?text=${encodeURIComponent(
+                         `Hi TEAM CCTV, I just requested a compatibility callback for adding cameras to my existing system. Name: ${req.customer_name || ''}, Mobile: ${req.customer_mobile || ''}, Ref: #${(createdCallbackLeadId || '').slice(-6).toUpperCase()}`
+                       )}`}
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer text-sm"
+                     >
+                       <span>💬 Chat with Engineer on WhatsApp</span>
+                     </a>
+
+                     <Link
+                       href="/"
+                       className="w-full h-11 rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold flex items-center justify-center transition-all text-xs sm:text-sm"
+                     >
+                       Back to Home
+                     </Link>
+                   </div>
+                 </div>
+               );
+             }
+
+             // Sub-state 2: OTP Verification Screen
+             if (otpSent) {
+               return (
+                 <div className="space-y-4 sm:space-y-6 animate-in fade-in">
+                   <div className="text-center">
+                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 mb-2 mx-auto">
+                       <ShieldCheck className="w-6 h-6" />
+                     </div>
+                     <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase rounded-md bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 mb-1">
+                       Verify Mobile Number
+                     </span>
+                     <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">
+                       {t("wz_enter_verification_code")}
+                     </h2>
+                     <p className="text-gray-500 dark:text-zinc-400 text-xs sm:text-sm">
+                       We've sent a 4-digit verification code to{" "}
+                       <span className="font-bold text-slate-900 dark:text-white">+91 {req.customer_mobile}</span> via {otpMethod === "sms" ? "SMS" : "WhatsApp"}
+                     </p>
+                   </div>
+
+                   <div className="py-1 sm:py-2">
+                     <div className="flex justify-center gap-2 sm:gap-3" onPaste={handleOtpPaste}>
+                       {otp.map((digit, index) => (
+                         <input
+                           key={index}
+                           ref={(el) => { inputRefs.current[index] = el; }}
+                           type="text"
+                           inputMode="numeric"
+                           pattern="[0-9]*"
+                           autoComplete={index === 0 ? "one-time-code" : "off"}
+                           maxLength={4}
+                           value={digit}
+                           onChange={(e) => handleOtpChange(e.target.value, index)}
+                           onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                           className="w-12 h-14 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-black border-2 rounded-xl border-gray-200 dark:border-zinc-700 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                         />
+                       ))}
+                     </div>
+                   </div>
+
+                   <Button
+                     onClick={() => handleVerifyOtp()}
+                     disabled={loading || otp.join("").length !== 4}
+                     size="lg"
+                     className="w-full text-sm sm:text-base h-12 font-bold shadow-md bg-blue-600 hover:bg-blue-700 rounded-xl text-white"
+                   >
+                     {loading ? (
+                       <span className="flex items-center gap-2 justify-center">
+                         <Loader2 className="w-4 h-4 animate-spin" /> Verifying...
+                       </span>
+                     ) : (
+                       "Verify & Confirm Callback Request"
+                     )}
+                   </Button>
+
+                   <div className="flex items-center justify-between pt-1 text-xs sm:text-sm">
+                     <button
+                       type="button"
+                       onClick={() => {
+                         setOtpSent(false);
+                         setOtp(["", "", "", ""]);
+                       }}
+                       className="text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold transition-colors"
+                     >
+                       ← Change Number
+                     </button>
+
+                     <button
+                       type="button"
+                       disabled={countdown > 0 || loading}
+                       onClick={handleFinishWizard}
+                       className={`font-bold transition-colors ${
+                         countdown > 0
+                           ? "text-gray-400 cursor-not-allowed"
+                           : "text-blue-600 hover:text-blue-700 hover:underline"
+                       }`}
+                     >
+                       {countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
+                     </button>
+                   </div>
+                 </div>
+               );
+             }
+
+             // Sub-state 3: Name and Mobile Number Form
              return (
                <div className="space-y-4 sm:space-y-6 animate-in fade-in">
                  <div className="p-5 sm:p-6 border rounded-2xl bg-white dark:bg-zinc-900 shadow-sm border-gray-200 dark:border-zinc-800">
@@ -815,7 +996,13 @@ export function WizardClientV2() {
                      disabled={loading || !req.customer_name || !req.customer_mobile || req.customer_mobile.length < 10}
                      className="w-full h-12 rounded-xl text-base font-bold bg-blue-600 hover:bg-blue-700 text-white"
                    >
-                     {t("wz_request_a_free_callback")}
+                     {loading ? (
+                       <span className="flex items-center gap-2 justify-center">
+                         <Loader2 className="w-4 h-4 animate-spin" /> Sending OTP...
+                       </span>
+                     ) : (
+                       t("wz_request_a_free_callback")
+                     )}
                    </Button>
                    <div className="mt-5 p-4 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900">
                      <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2 text-xs sm:text-sm">

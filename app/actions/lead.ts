@@ -98,7 +98,8 @@ export async function createLeadAction(payload: {
       if (spDoc?.mobile_number && !isTestLead) {
         try {
           const { msg91 } = await import("@/lib/whatsapp/msg91-provider");
-          const configStr = leadData.wizard_answers?.cameras ? `${leadData.wizard_answers.cameras} Cameras` : "CCTV System";
+          const isCallback = Boolean(leadData.wizard_answers?.callback_requested);
+          const configStr = isCallback ? "Add-on Compatibility Callback (15m SLA)" : leadData.wizard_answers?.cameras ? `${leadData.wizard_answers.cameras} Cameras` : "CCTV System";
           // @ts-ignore
           await msg91.sendSalesLeadAlert({
             phone: spDoc.mobile_number,
@@ -129,7 +130,7 @@ export async function createLeadAction(payload: {
     }
 
     const newLeadRef = adminDb.collection("leads").doc();
-    const isHotLead = leadData.cabling_done === true;
+    const isHotLead = leadData.cabling_done === true || Boolean(wizardAnswers?.callback_requested);
     const slaTimeoutMinutes = isHotLead ? 15 : 60;
     const slaBreachAt = new Date(Date.now() + slaTimeoutMinutes * 60 * 1000);
     const ttlDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
