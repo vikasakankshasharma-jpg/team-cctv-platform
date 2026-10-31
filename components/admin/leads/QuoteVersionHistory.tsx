@@ -20,6 +20,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { format } from "date-fns";
+import { safeFormatDate, toIsoStringSafe } from "@/lib/date-utils";
 
 export interface VersionItem {
   id: string;
@@ -69,7 +70,7 @@ export function QuoteVersionHistory({
       total_payable: currentQuote.pricingSnapshot?.finalPrice || currentQuote.pricingSnapshot?.total_payable || currentQuote.total_payable || 0,
       price_delta: 0,
       status: currentQuote.status || "GENERATED",
-      created_at: currentQuote.createdAt || currentQuote.created_at || new Date().toISOString(),
+      created_at: toIsoStringSafe(currentQuote.createdAt || currentQuote.created_at) || new Date().toISOString(),
       is_active: true,
       revised_by: { role: "system", name: currentQuote.source === "wizard" ? "Customer Wizard" : "Team" },
       revision_notes: "Initial quotation generated",
@@ -180,7 +181,7 @@ export function QuoteVersionHistory({
                     <p className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-2">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-zinc-400" />
-                        {ver.created_at ? format(new Date(ver.created_at), "dd MMM yyyy, hh:mm a") : "—"}
+                        {safeFormatDate(ver.created_at, "dd MMM yyyy, hh:mm a")}
                       </span>
                       <span>•</span>
                       <span className="flex items-center gap-1">

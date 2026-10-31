@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
+import { toIsoStringSafe } from "@/lib/date-utils";
 
 export async function GET(
   request: Request,
@@ -96,8 +97,10 @@ export async function GET(
       const vA = a.version || 1;
       const vB = b.version || 1;
       if (vA !== vB) return vA - vB;
-      const dateA = new Date(a.created_at || a.createdAt || 0).getTime();
-      const dateB = new Date(b.created_at || b.createdAt || 0).getTime();
+      const isoA = toIsoStringSafe(a.created_at || a.createdAt);
+      const isoB = toIsoStringSafe(b.created_at || b.createdAt);
+      const dateA = isoA ? new Date(isoA).getTime() : 0;
+      const dateB = isoB ? new Date(isoB).getTime() : 0;
       return dateA - dateB;
     });
 
@@ -120,7 +123,7 @@ export async function GET(
         total_payable: payable,
         price_delta: delta,
         status: v.status || "GENERATED",
-        created_at: v.created_at || v.createdAt || v.generatedAt || new Date().toISOString(),
+        created_at: toIsoStringSafe(v.created_at || v.createdAt || v.generatedAt) || new Date().toISOString(),
         is_active: v.id === latestQuoteId || index === rawVersions.length - 1,
         revised_by: v.revised_by || (versionNum === 1 ? { role: "system", name: "Initial Generation" } : { role: "admin", name: "Admin Team" }),
         revision_notes: v.revision_notes || (versionNum === 1 ? "Initial quotation baseline" : "Revision updated by team"),
@@ -171,7 +174,7 @@ export async function GET(
       billing_details: quoteData?.billing_details || leadData?.billing_details || null,
       
       // Site Visit Details
-      site_visit_date: quoteData?.site_visit_date || leadData?.site_visit_date || null,
+      site_visit_date: toIsoStringSafe(quoteData?.site_visit_date || leadData?.site_visit_date),
       site_visit_slot: quoteData?.site_visit_slot || leadData?.site_visit_slot || null,
       special_notes: quoteData?.special_notes || leadData?.special_notes || "",
       address: quoteData?.address || leadData?.address || null,
@@ -180,11 +183,30 @@ export async function GET(
       intentScore: quoteData?.intentScore || (isPaid ? "Hot" : isSiteVisit ? "Warm" : "Cold"),
       probabilityPercent: quoteData?.probabilityPercent || (isPaid ? 100 : isSiteVisit ? 75 : 25),
       expectedValue: quoteData?.expectedValue || leadData?.expectedValue || activeQuotePayable || 0,
-      nextActionDate: quoteData?.nextActionDate || quoteData?.followUpDate || quoteData?.site_visit_date || null,
+      nextActionDate: toIsoStringSafe(quoteData?.nextActionDate || quoteData?.followUpDate || quoteData?.site_visit_date),
       nextActionType: quoteData?.nextActionType || (isSiteVisit ? "Site Visit" : "Follow-up"),
-      follow_ups: quoteData?.follow_ups || [],
+      follow_ups: (quoteData?.follow_ups || leadData?.follow_ups || []).map((f: any) => ({
+        ...f,
+        timestamp: toIsoStringSafe(f.timestamp) || new Date().toISOString(),
+        nextFollowUpDate: toIsoStringSafe(f.nextFollowUpDate)
+      })),
       
-      createdAt: quoteData?.createdAt || quoteData?.created_at || leadData?.created_at || new Date().toISOString()
+      createdAt: toIsoStringSafe(quoteData?.createdAt || quoteData?.created_at || leadData?.created_at) || new Date().toISOString(),
+
+      // Price Match / Competitor Quote Info
+      price_match_status: quoteData?.price_match_status || leadData?.price_match_status || null,
+      competitor_quote_url: quoteData?.competitor_quote_url || leadData?.competitor_quote_url || null,
+      price_match_request_id: quoteData?.price_match_request_id || leadData?.price_match_request_id || null,
+      channel: quoteData?.channel || leadData?.channel || "web",
+
+      // Cash Authority
+      cash_collection_approved: Boolean(quoteData?.cash_collection_approved || leadData?.cash_collection_approved),
+      cash_approval_requested: Boolean(quoteData?.cash_approval_requested || leadData?.cash_approval_requested),
+      cash_requested_amount: quoteData?.cash_requested_amount || leadData?.cash_requested_amount || 0,
+      cash_requested_reason: quoteData?.cash_requested_reason || leadData?.cash_requested_reason || "",
+      cash_requested_by_installer_name: quoteData?.cash_requested_by_installer_name || leadData?.cash_requested_by_installer_name || "",
+      cash_approved_by: quoteData?.cash_approved_by || leadData?.cash_approved_by || "",
+      amount_due: quoteData?.amount_due ?? leadData?.amount_due ?? null,
     };
     
     return NextResponse.json({ success: true, data: mergedData });

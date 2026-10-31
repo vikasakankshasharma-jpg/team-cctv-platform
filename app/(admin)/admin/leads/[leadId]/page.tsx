@@ -29,9 +29,11 @@ import {
   Trash2,
   Layers,
   Lock,
-  Banknote
+  Banknote,
+  Tag
 } from "lucide-react";
 import { format } from "date-fns";
+import { safeFormatDate } from "@/lib/date-utils";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -136,6 +138,11 @@ export default function LeadDetailPage() {
                 🏢 GST Firm (B2B)
               </Badge>
             )}
+            {lead.competitor_quote_url && (
+              <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs">
+                📸 Competitor Quote Attached
+              </Badge>
+            )}
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
             <span>📞 {lead.customer_mobile || "No Mobile"}</span>
@@ -174,7 +181,7 @@ export default function LeadDetailPage() {
 
           {lead.customer_mobile && (
             <a
-              href={`https://wa.me/91${lead.customer_mobile.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.customer_name || "Customer"}, this is regarding your CCTV quotation (ID: ${quoteId}) with TEAM CCTV.`)}`}
+              href={`https://wa.me/91${String(lead.customer_mobile).replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.customer_name || "Customer"}, this is regarding your CCTV quotation (ID: ${quoteId}) with TEAM CCTV.`)}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-xs font-bold transition-all"
@@ -246,6 +253,56 @@ export default function LeadDetailPage() {
         {/* Main Column */}
         <div className="lg:col-span-2 space-y-6">
           
+          {/* Price Match / Competitor Quote Attached Card */}
+          {lead.competitor_quote_url && (
+            <Card className="border-amber-300 dark:border-amber-800 bg-gradient-to-br from-amber-50/70 to-white dark:from-amber-950/20 dark:to-zinc-900 shadow-sm">
+              <CardHeader className="pb-3 border-b border-amber-200 dark:border-amber-900/40">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-black text-amber-900 dark:text-amber-300 flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-amber-600" />
+                    <span>Competitor Quotation Attached (Price Match Request)</span>
+                  </CardTitle>
+                  <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase">
+                    Status: {lead.price_match_status || "Pending"}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+                    Customer uploaded an existing competitor quote requesting a price match. Review the competitor quote document before finalizing pricing or offering discounts.
+                  </p>
+                  {lead.price_match_request_id && (
+                    <p className="text-[11px] text-muted-foreground font-mono">
+                      Request ID: {lead.price_match_request_id}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href={lead.competitor_quote_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition-all"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>View Competitor Quote PDF</span>
+                  </a>
+                  {!isPaid && (
+                    <Button
+                      size="sm"
+                      onClick={() => setShowCompleteModal(true)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl"
+                    >
+                      <Zap className="w-3.5 h-3.5 mr-1" />
+                      Complete & Match
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Site Visit Schedule Card (if booked) */}
           {hasSiteVisit && (
             <Card className="border-purple-200 dark:border-purple-900/50 bg-gradient-to-br from-purple-50/60 to-white dark:from-purple-950/20 dark:to-zinc-900 shadow-sm">
@@ -267,7 +324,7 @@ export default function LeadDetailPage() {
                       Preferred Date & Slot
                     </span>
                     <p className="font-bold text-zinc-900 dark:text-white text-sm">
-                      {lead.site_visit_date ? format(new Date(lead.site_visit_date), "EEEE, dd MMMM yyyy") : "Date TBD"}
+                      {safeFormatDate(lead.site_visit_date, "EEEE, dd MMMM yyyy", "Date TBD")}
                     </p>
                     <p className="text-purple-700 dark:text-purple-400 font-bold mt-0.5">
                       ⏰ {lead.site_visit_slot || "10:00 AM - 01:00 PM"}
@@ -639,7 +696,7 @@ export default function LeadDetailPage() {
                   <div className="flex items-center gap-3">
                     <div className="h-2 w-2 rounded-full bg-purple-500 shrink-0" />
                     <p className="font-bold text-purple-700 dark:text-purple-400">
-                      Site Survey Booked ({lead.site_visit_date || "Pending"})
+                      Site Survey Booked ({safeFormatDate(lead.site_visit_date, "dd MMM yyyy", "Pending")})
                     </p>
                   </div>
                 )}

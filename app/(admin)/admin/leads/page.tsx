@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { safeFormatDate, toIsoStringSafe } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,6 +30,9 @@ type LeadListRow = {
   cash_requested_amount?: number;
   createdAt: string;
   quoteId?: string;
+  channel?: string;
+  partner_id?: string | null;
+  competitor_quote_received?: boolean;
 };
 
 export default async function LeadsPage({
@@ -75,12 +79,6 @@ export default async function LeadsPage({
     else if (isSiteVisit && computedLeadStatus === "NEW") computedLeadStatus = "SITE_VISIT";
     if (typeof computedLeadStatus === "string") computedLeadStatus = computedLeadStatus.toUpperCase();
 
-    const getSafeIsoString = (val: any) => {
-      if (!val) return null;
-      if (typeof val.toDate === "function") return val.toDate().toISOString();
-      return new Date(val).toISOString();
-    };
-
     const total_payable = quoteData?.total_payable ?? quoteData?.pricingSnapshot?.total_payable ?? quoteData?.finalPrice ?? data.total_payable ?? 0;
     const selectedPlan = quoteData?.plan_type || quoteData?.selectedPlan || data.selectedPlan || quoteData?.pricingSnapshot?.selectedPlan || "Standard";
     const customerMobile = data.mobile_number || data.customer_mobile || quoteData?.customer_mobile || quoteData?.billing_details?.phone || "";
@@ -100,12 +98,15 @@ export default async function LeadsPage({
       is_business: !!(data.is_b2b || data.billing_details?.is_business || quoteData?.billing_details?.is_business),
       company_name: data.company_name || data.billing_details?.company_name || quoteData?.billing_details?.company_name || null,
       gstin: data.gst_number || data.billing_details?.gstin || quoteData?.billing_details?.gstin || null,
-      site_visit_date: getSafeIsoString(data.site_visit_date),
+      site_visit_date: toIsoStringSafe(data.site_visit_date),
       site_visit_slot: data.site_visit_slot || null,
       cash_approval_requested: Boolean(data.cash_approval_requested || quoteData?.cash_approval_requested),
       cash_collection_approved: Boolean(data.cash_collection_approved || quoteData?.cash_collection_approved),
       cash_requested_amount: data.cash_requested_amount || quoteData?.cash_requested_amount || 0,
-      createdAt: getSafeIsoString(data.created_at || data.createdAt) || new Date().toISOString(),
+      createdAt: toIsoStringSafe(data.created_at || data.createdAt) || new Date().toISOString(),
+      channel: data.channel || quoteData?.channel || "web",
+      partner_id: data.partner_id || quoteData?.partner_id || null,
+      competitor_quote_received: Boolean(data.competitor_quote_received || quoteData?.competitor_quote_received),
     };
   }));
 
@@ -120,12 +121,6 @@ export default async function LeadsPage({
     let computedLeadStatus = qData.leadStatus || qData.status || "NEW";
     if (isPaid) computedLeadStatus = "WON";
     if (typeof computedLeadStatus === "string") computedLeadStatus = computedLeadStatus.toUpperCase();
-
-    const getSafeIsoString = (val: any) => {
-      if (!val) return null;
-      if (typeof val.toDate === "function") return val.toDate().toISOString();
-      return new Date(val).toISOString();
-    };
 
     standaloneQuotes.push({
       id: qDoc.id,
@@ -142,9 +137,9 @@ export default async function LeadsPage({
       is_business: !!(qData.billing_details?.is_business),
       company_name: qData.billing_details?.company_name || null,
       gstin: qData.billing_details?.gstin || null,
-      site_visit_date: getSafeIsoString(qData.site_visit_date),
+      site_visit_date: toIsoStringSafe(qData.site_visit_date),
       site_visit_slot: qData.site_visit_slot || null,
-      createdAt: getSafeIsoString(qData.created_at || qData.createdAt) || new Date().toISOString(),
+      createdAt: toIsoStringSafe(qData.created_at || qData.createdAt) || new Date().toISOString(),
     });
   });
 
@@ -259,7 +254,7 @@ export default async function LeadsPage({
                           {lead.id}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                          {lead.createdAt ? format(new Date(lead.createdAt), "MMM d, yyyy") : "—"}
+                          {safeFormatDate(lead.createdAt, "MMM d, yyyy")}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
@@ -278,6 +273,23 @@ export default async function LeadsPage({
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1 items-start">
+                            {lead.channel === "whatsapp" ? (
+                              <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold">
+                                💬 WhatsApp
+                              </Badge>
+                            ) : (
+                              <span className="text-[10px] text-zinc-400 font-semibold">🌐 Web</span>
+                            )}
+                            {lead.competitor_quote_received && (
+                              <Badge className="bg-amber-500 text-white text-[9px] font-black uppercase">
+                                📸 Price Match
+                              </Badge>
+                            )}
+                            {lead.partner_id && (
+                              <Badge variant="outline" className="border-purple-300 text-purple-700 bg-purple-50 text-[9px] font-bold">
+                                🤝 {lead.partner_id}
+                              </Badge>
+                            )}
                             {isB2B ? (
                               <Badge variant="outline" className="border-blue-300 bg-blue-50 text-blue-800 text-[10px] font-bold">
                                 🏢 B2B {lead.gstin ? `(${lead.gstin.slice(0, 2)}...)` : ""}
@@ -287,7 +299,7 @@ export default async function LeadsPage({
                             )}
                             {hasSurvey && (
                               <Badge variant="outline" className="border-purple-300 bg-purple-50 text-purple-800 text-[10px] font-bold">
-                                📅 Survey: {format(new Date(lead.site_visit_date!), "dd MMM")}
+                                📅 Survey: {safeFormatDate(lead.site_visit_date, "dd MMM")}
                               </Badge>
                             )}
                           </div>

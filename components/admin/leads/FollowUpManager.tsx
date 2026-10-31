@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { safeFormatDate } from "@/lib/date-utils";
 
 type FollowUp = {
   note: string;
@@ -99,12 +100,12 @@ export function FollowUpManager({ quoteId, followUps = [], onAdded }: { quoteId:
           <div key={i} className="border p-3 rounded-md text-sm space-y-2">
             <div className="flex justify-between items-start">
               <span className="font-semibold text-gray-800">{f.author}</span>
-              <span className="text-xs text-muted-foreground">{format(new Date(f.timestamp), "MMM d, h:mm a")}</span>
+              <span className="text-xs text-muted-foreground">{safeFormatDate(f.timestamp, "MMM d, h:mm a")}</span>
             </div>
             <p className="whitespace-pre-wrap text-gray-700">{f.note}</p>
             {f.nextFollowUpDate && (
               <Badge variant="outline" className="mt-2 text-xs bg-blue-50 text-blue-700 border-blue-200">
-                Next Action: {format(new Date(f.nextFollowUpDate), "MMM d, yyyy")} {f.nextActionType ? `(${f.nextActionType})` : ""}
+                Next Action: {safeFormatDate(f.nextFollowUpDate, "MMM d, yyyy")} {f.nextActionType ? `(${f.nextActionType})` : ""}
               </Badge>
             )}
           </div>
