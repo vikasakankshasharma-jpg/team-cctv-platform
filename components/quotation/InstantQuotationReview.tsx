@@ -366,20 +366,22 @@ export function InstantQuotationReview({
             </div>
             {/* EMI Sub-Header Anchor */}
             <div className="flex items-center justify-between sm:justify-end gap-2 w-full">
-              <span className="text-[9px] text-emerald-300 font-semibold sm:hidden">
+              <span className="text-[10px] text-blue-200 font-medium sm:hidden">
                 ✓ Full Setup Included
               </span>
               <button
                 type="button"
                 onClick={() => setShowEmiModal(true)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/40 text-amber-200 hover:text-amber-100 text-[11px] font-bold transition-all cursor-pointer group"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] sm:text-xs shadow-md transition-all active:scale-95 cursor-pointer group"
               >
-                <CreditCard className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform" />
+                <CreditCard className="w-3.5 h-3.5 text-slate-950 group-hover:scale-110 transition-transform" />
                 <span>or ₹{emiMonthlyAmount.toLocaleString("en-IN")}/mo (EMI)</span>
-                <span className="text-[10px] underline opacity-90 ml-0.5">Plans ⓘ</span>
+                <span className="bg-slate-950 text-amber-300 text-[9px] uppercase font-black px-1.5 py-0.2 rounded-full ml-0.5">
+                  Plans ⓘ
+                </span>
               </button>
             </div>
-            <span className="text-[9px] text-emerald-300 font-semibold hidden sm:block">
+            <span className="text-[10px] text-blue-200 font-medium hidden sm:block">
               ✓ {isWireless ? "Zero Video Cabling • High Endurance MicroSD • Onsite Setup" : t("wz_includes_hardware_wiring_install")}
             </span>
             {/* IN-HERO DIRECT BOOKING CTA */}
@@ -387,7 +389,7 @@ export function InstantQuotationReview({
               type="button"
               onClick={onProceedToActualQuotation}
               disabled={isSaving}
-              className="w-full mt-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs sm:text-sm py-2 px-3.5 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full mt-1.5 bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs sm:text-sm py-2 px-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer border border-emerald-400/30"
             >
               <span>{isSaving ? "Finalizing Quote..." : "Book with ₹500 Token Advance"}</span>
               <ArrowRight className="w-3.5 h-3.5" />
