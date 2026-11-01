@@ -8,6 +8,7 @@ import { QuoteVersionHistory } from "@/components/admin/leads/QuoteVersionHistor
 import { CompleteQuoteModal } from "@/components/admin/leads/CompleteQuoteModal";
 import { QuotationRevisionModal } from "@/components/admin/leads/QuotationRevisionModal";
 import { DeleteQuoteModal } from "@/components/admin/leads/DeleteQuoteModal";
+import { PriceMatchReviewModal } from "@/components/admin/PriceMatchReviewModal";
 import LeadIntelligencePanel from "@/components/admin/leads/LeadIntelligencePanel";
 import DispatchPanel from "@/components/admin/leads/DispatchPanel";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +49,7 @@ export default function LeadDetailPage() {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPriceMatchModal, setShowPriceMatchModal] = useState(false);
 
   useEffect(() => {
     fetchLead();
@@ -255,48 +257,111 @@ export default function LeadDetailPage() {
           
           {/* Price Match / Competitor Quote Attached Card */}
           {lead.competitor_quote_url && (
-            <Card className="border-amber-300 dark:border-amber-800 bg-gradient-to-br from-amber-50/70 to-white dark:from-amber-950/20 dark:to-zinc-900 shadow-sm">
+            <Card className="border-amber-300 dark:border-amber-800 bg-gradient-to-br from-amber-50/70 via-white to-orange-50/30 dark:from-amber-950/20 dark:via-zinc-900 dark:to-orange-950/10 shadow-sm overflow-hidden">
               <CardHeader className="pb-3 border-b border-amber-200 dark:border-amber-900/40">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <CardTitle className="text-base font-black text-amber-900 dark:text-amber-300 flex items-center gap-2">
                     <Tag className="w-4 h-4 text-amber-600" />
-                    <span>Competitor Quotation Attached (Price Match Request)</span>
+                    <span>Competitor Price Match Deal Desk</span>
                   </CardTitle>
-                  <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase">
-                    Status: {lead.price_match_status || "Pending"}
+                  <Badge className={`font-bold text-xs uppercase px-2.5 py-1 ${
+                    lead.price_match_status === "approved"
+                      ? "bg-emerald-600 text-white"
+                      : lead.price_match_status === "counter_offered"
+                      ? "bg-purple-600 text-white"
+                      : "bg-amber-500 text-white"
+                  }`}>
+                    Status: {lead.price_match_status || "Pending Review"}
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
-                    Customer uploaded an existing competitor quote requesting a price match. Review the competitor quote document before finalizing pricing or offering discounts.
-                  </p>
-                  {lead.price_match_request_id && (
-                    <p className="text-[11px] text-muted-foreground font-mono">
-                      Request ID: {lead.price_match_request_id}
+              <CardContent className="pt-4 space-y-4">
+                {/* Side-by-Side Comparison Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Competitor Offer */}
+                  <div className="p-3.5 rounded-xl bg-amber-100/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">Competitor Quote</p>
+                    <p className="text-base font-extrabold text-amber-950 dark:text-amber-100 mt-0.5">
+                      {lead.competitor_total ? `₹${Number(lead.competitor_total).toLocaleString("en-IN")}` : "Amount Not Specified"}
                     </p>
-                  )}
+                    <p className="text-xs text-amber-800/80 dark:text-amber-300/80 truncate mt-0.5 font-medium">
+                      Vendor: {lead.competitor_name || "Local Competitor"}
+                    </p>
+                  </div>
+
+                  {/* Our Target Package */}
+                  <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">Our Matching Target</p>
+                    <p className="text-base font-extrabold text-blue-950 dark:text-blue-100 mt-0.5">
+                      {lead.selected_package_price || lead.total_payable
+                        ? `₹${Number(lead.selected_package_price || lead.total_payable).toLocaleString("en-IN")}`
+                        : "₹" + Number(lead.pricing_breakdown?.total_payable || 0).toLocaleString("en-IN")}
+                    </p>
+                    <p className="text-xs text-blue-800/80 dark:text-blue-300/80 truncate mt-0.5 font-medium">
+                      {lead.selected_package_title || "Standard CCTV Package"}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <a
-                    href={lead.competitor_quote_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition-all"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>View Competitor Quote PDF</span>
-                  </a>
-                  {!isPaid && (
+
+                {/* Difference / Price Delta banner if both amounts available */}
+                {lead.competitor_total && (lead.selected_package_price || lead.total_payable) && (
+                  <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800/60 text-xs font-semibold">
+                    <span className="text-zinc-600 dark:text-zinc-400">Price Variance to Match:</span>
+                    <span className="text-red-600 dark:text-red-400 font-bold">
+                      -₹{Math.max(0, Number(lead.selected_package_price || lead.total_payable) - Number(lead.competitor_total)).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                )}
+
+                {/* Equipment Advantages Banner */}
+                <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/40 text-[11px] text-emerald-900 dark:text-emerald-300 space-y-1">
+                  <p className="font-bold">TEAM CCTV Value Advantage:</p>
+                  <p className="text-emerald-800 dark:text-emerald-400">
+                    • 100% Solid Pure Copper Cables (prevents video loss)
+                    <br />
+                    • Genuine Western Digital Purple Surveillance HDD
+                    <br />
+                    • Dedicated Mobile App Setup & Remote Support
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-amber-200/60 dark:border-amber-900/30">
+                  <div className="flex items-center gap-2">
                     <Button
                       size="sm"
-                      onClick={() => setShowCompleteModal(true)}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl"
+                      onClick={() => setShowPriceMatchModal(true)}
+                      className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl"
                     >
-                      <Zap className="w-3.5 h-3.5 mr-1" />
-                      Complete & Match
+                      <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+                      Review in Split-Screen
                     </Button>
+                    <a
+                      href={lead.competitor_quote_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 hover:bg-amber-100/50 text-amber-900 dark:text-amber-200 text-xs font-semibold transition-all"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      PDF File
+                    </a>
+                  </div>
+
+                  {/* WhatsApp Counter Offer Dispatch */}
+                  {lead.customer_mobile && (
+                    <a
+                      href={`https://wa.me/91${lead.customer_mobile.replace(/\D/g, "")}?text=${encodeURIComponent(
+                        `Namaste ${lead.customer_name || "Ji"}!\nWe reviewed your competitor quote${
+                          lead.competitor_total ? ` of ₹${Number(lead.competitor_total).toLocaleString("en-IN")}` : ""
+                        }.\nWe are ready to match with our 100% Pure Solid Copper Cable & Genuine Surveillance Storage setup!\n\nView and confirm your updated quotation here:\nhttps://cctvquotation.com/quote/${quoteId}\n\nRegards,\nTEAM CCTV`
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      WhatsApp Pitch
+                    </a>
                   )}
                 </div>
               </CardContent>
@@ -734,6 +799,31 @@ export default function LeadDetailPage() {
         initialFlags={lead.site_surcharge_flags}
         onSuccess={() => fetchLead()}
       />
+
+      {showPriceMatchModal && lead?.competitor_quote_url && (
+        <PriceMatchReviewModal
+          leadId={lead.leadId || quoteId}
+          leadName={lead.customer_name || "Customer"}
+          request={{
+            id: lead.price_match_request_id || "req",
+            lead_id: lead.leadId || quoteId,
+            competitor_quote_url: lead.competitor_quote_url,
+            competitor_name: lead.competitor_name,
+            competitor_total: lead.competitor_total,
+            our_original_total: Number(lead.selected_package_price || lead.total_payable || 0),
+            notes: lead.notes,
+            status: lead.price_match_status || "pending",
+            uploaded_by: "customer",
+            uploaded_by_name: lead.customer_name || "Customer",
+            created_at: lead.created_at || new Date().toISOString()
+          }}
+          onClose={() => setShowPriceMatchModal(false)}
+          onReviewed={() => {
+            setShowPriceMatchModal(false);
+            fetchLead();
+          }}
+        />
+      )}
 
       <DeleteQuoteModal
         isOpen={showDeleteModal}

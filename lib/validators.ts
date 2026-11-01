@@ -478,6 +478,12 @@ export const PriceMatchSubmitSchema = z.object({
   competitor_total: z.number().positive().optional(),
   notes: z.string().max(500).optional(),
   uploaded_by_name: z.string().min(1),
+  selected_package_title: z.string().optional(),
+  selected_package_price: z.number().positive().optional(),
+  selected_plan_type: z.string().optional(),
+  selected_technology: z.string().optional(),
+  selected_camera_count: z.number().positive().optional(),
+  selection: z.any().optional(),
 });
 
 export type PriceMatchSubmitInput = z.infer<typeof PriceMatchSubmitSchema>;

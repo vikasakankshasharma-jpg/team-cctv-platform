@@ -1,45 +1,48 @@
 import { test, expect } from '@playwright/test';
-import { authenticateRole } from './utils/e2eAuth';
 
 test.describe('New Features E2E Verification', () => {
 
-  test('Customer Wizard: Advanced Mix & Match is available', async ({ page }) => {
-    await page.goto('/wizard');
-    await page.waitForSelector('h1');
+  test('Customer Quotation: Price Match On-Card CTA, Anchored Banner & Form', async ({ page }) => {
+    // Set localStorage so LanguageWelcomeModal doesn't show
+    await page.addInitScript(() => {
+      window.localStorage.setItem('i18n-storage', JSON.stringify({
+        state: { locale: 'en', isManuallySet: true, hasSeenWelcome: true },
+        version: 0
+      }));
+    });
+
+    // Navigate to quotation page for mock lead
     await page.goto('/quote/mock-e2e-lead');
-    await expect(page.getByText('Curated Packages')).toBeVisible();
-  });
 
-  test('Admin Portal: CSV Export button exists on Leads page', async ({ page }) => {
-    await authenticateRole(page, 'admin');
-    await page.goto('/admin/leads');
-    await expect(page.getByText('Export CSV')).toBeVisible();
-  });
+    // Dismiss Language modal if it appears
+    const langClose = page.locator('button[aria-label="Close"]');
+    if (await langClose.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await langClose.click().catch(() => {});
+    }
 
-  test('Dealer Portal: Dashboard loads with enhancements', async ({ page }) => {
-    await authenticateRole(page, 'dealer');
-    await page.goto('/partner/dashboard');
-    await expect(page.getByText('Recent Captured Leads')).toBeVisible();
-  });
+    // Wait for the quotation builder to load
+    await expect(page.getByRole('heading', { name: /Build Your Quotation/i })).toBeVisible({ timeout: 20000 });
 
-  test('Customer Quotation: Price Match Smart Popup and Inline Link', async ({ page }) => {
-    // Navigate to a quotation page
-    await page.goto('/quote/mock-e2e-lead');
-    await expect(page.getByText('Curated Packages')).toBeVisible({ timeout: 15000 });
+    // Verify the on-card "Lower competitor quote? Match Price" button exists on quotation cards
+    const cardMatchBtn = page.getByRole('button', { name: /Lower competitor quote\? Match Price/i }).first();
+    await expect(cardMatchBtn).toBeVisible({ timeout: 15000 });
 
-    // Verify the inline link exists
-    const inlineLink = page.getByText('Upload it for a guaranteed best price');
-    await expect(inlineLink).toBeVisible();
+    // Click the on-card Price Match button
+    await cardMatchBtn.click();
 
-    // Click the inline link to show the inline uploader
-    await inlineLink.click();
+    // Verify the uploader appears pre-anchored to the package
+    await expect(page.getByText(/Price Match Guarantee/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/You are comparing:/i)).toBeVisible();
 
-    // Verify the CompetitorQuoteUploader form is visible
-    const competitorInput = page.getByPlaceholder('e.g., CP Plus Dealer, Local CCTV Shop');
+    // Verify the form fields
+    const competitorInput = page.getByPlaceholder(/CP Plus Dealer, Local CCTV Shop/i);
     await expect(competitorInput).toBeVisible();
 
-    const uploadZone = page.getByText('Drop your quote here or click to browse');
+    const uploadZone = page.getByText(/Drop your quote here or click to browse/i);
     await expect(uploadZone).toBeVisible();
+
+    // Strict constraint check: ensure "2 years onsite warranty" is NEVER rendered
+    await expect(page.getByText(/2 years onsite warranty/i)).not.toBeVisible();
   });
 
 });

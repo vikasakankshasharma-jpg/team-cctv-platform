@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { storage } from "@/lib/firebase-client";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import {
@@ -11,21 +11,45 @@ import {
   CheckCircle2,
   ImageIcon,
   ChevronRight,
+  Tag,
+  Shield,
+  Sparkles,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
 import { useTranslation } from "@/hooks/useTranslation";
 
+export interface SelectedPackageInfo {
+  title: string;
+  price: number;
+  brand?: string;
+  resolution?: string;
+  cameraCount?: number;
+  planType?: string;
+  technology?: string;
+}
+
+export interface CompetitorQuoteSubmitData {
+  competitor_quote_url: string;
+  competitor_name?: string;
+  competitor_total?: number;
+  notes?: string;
+  uploaded_by_name: string;
+  selected_package_title?: string;
+  selected_package_price?: number;
+  selected_plan_type?: string;
+  selected_technology?: string;
+  selected_camera_count?: number;
+}
+
 interface CompetitorQuoteUploaderProps {
   leadId: string;
   customerName?: string;
-  onSubmit: (data: {
-    competitor_quote_url: string;
-    competitor_name?: string;
-    competitor_total?: number;
-    notes?: string;
-    uploaded_by_name: string;
-  }) => Promise<void>;
+  selectedPackage?: SelectedPackageInfo | null;
+  availablePackages?: SelectedPackageInfo[];
+  onSelectPackage?: (pkg: SelectedPackageInfo) => void;
+  onSubmit: (data: CompetitorQuoteSubmitData) => Promise<void>;
   onCancel?: () => void;
 }
 
@@ -40,9 +64,22 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export function CompetitorQuoteUploader({
   leadId,
   customerName,
+  selectedPackage,
+  availablePackages,
+  onSelectPackage,
   onSubmit,
   onCancel,
 }: CompetitorQuoteUploaderProps) {
+  const [activePkg, setActivePkg] = useState<SelectedPackageInfo | null>(
+    selectedPackage || null
+  );
+
+  useEffect(() => {
+    if (selectedPackage) {
+      setActivePkg(selectedPackage);
+    }
+  }, [selectedPackage]);
+
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
@@ -81,7 +118,7 @@ export function CompetitorQuoteUploader({
         setUploadProgress(0);
 
         let fileToUpload = file;
-        
+
         // Compress images if they are larger than 1MB
         if (file.type.startsWith("image/") && file.size > 1024 * 1024) {
           try {
@@ -91,16 +128,14 @@ export function CompetitorQuoteUploader({
               useWebWorker: true,
             };
             const imageCompression = (await import("browser-image-compression")).default;
-            fileToUpload = await imageCompression(file, options) as File;
+            fileToUpload = (await imageCompression(file, options)) as File;
           } catch (compError) {
             console.error("Image compression failed, falling back to original:", compError);
           }
         }
 
         const fileExtension = fileToUpload.name.split(".").pop() || "jpg";
-        const timestamp = Date.now();
-        const random = Math.random().toString(36).substring(2, 9);
-        const fileName = `${timestamp}-${random}.${fileExtension}`;
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
         const storagePath = `leads/${leadId}/competitor/${fileName}`;
         const storageRef = ref(storage, storagePath);
 
@@ -109,50 +144,54 @@ export function CompetitorQuoteUploader({
         uploadTask.on(
           "state_changed",
           (snapshot) => {
-            const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            setUploadProgress(p);
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(progress);
           },
           (error) => {
             console.error("Upload error:", error);
-            toast.error("Failed to upload file");
+            toast.error("Upload failed. Please try again.");
             setIsUploading(false);
           },
           async () => {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            setUploadedUrl(downloadURL);
-            setUploadedFileType(file.type === "application/pdf" ? "pdf" : "image");
-            setUploadedFileName(file.name);
-            setIsUploading(false);
-            toast.success("File uploaded successfully");
+            try {
+              const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+              setUploadedUrl(downloadUrl);
+              setUploadedFileName(file.name);
+              setUploadedFileType(file.type === "application/pdf" ? "pdf" : "image");
+              toast.success("File uploaded successfully");
+            } catch (err) {
+              console.error("Error getting download URL:", err);
+              toast.error("Failed to process file. Please try again.");
+            } finally {
+              setIsUploading(false);
+            }
           }
         );
-      } catch (error) {
-        console.error(error);
-        toast.error("An error occurred during upload");
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to upload file. Please try again.");
         setIsUploading(false);
       }
     },
     [leadId]
   );
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      setIsDragOver(false);
-      const file = e.dataTransfer.files?.[0];
-      if (file) handleUpload(file);
-    },
-    [handleUpload]
-  );
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
-  }, []);
+  };
 
-  const handleDragLeave = useCallback(() => {
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
     setIsDragOver(false);
-  }, []);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleUpload(file);
+  };
 
   const clearUpload = () => {
     setUploadedUrl(null);
@@ -182,6 +221,11 @@ export function CompetitorQuoteUploader({
         competitor_total: competitorTotal ? parseFloat(competitorTotal) : undefined,
         notes: notes.trim() || undefined,
         uploaded_by_name: yourName.trim(),
+        selected_package_title: activePkg?.title,
+        selected_package_price: activePkg?.price,
+        selected_plan_type: activePkg?.planType,
+        selected_technology: activePkg?.technology,
+        selected_camera_count: activePkg?.cameraCount,
       });
       setIsSubmitted(true);
     } catch (error) {
@@ -200,10 +244,13 @@ export function CompetitorQuoteUploader({
           <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
         </div>
         <h4 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">
-          {t('up_quote_rcvd', 'Quote Received')}
+          {t("up_quote_rcvd", "Quote Received")}
         </h4>
         <p className="text-[15px] text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-          {t('up_quote_msg', "We've received your quote. Our team will review it and get back to you with a guaranteed best price.")}
+          {t(
+            "up_quote_msg",
+            "We've received your competitor quote. Our engineering team will review the bill of materials and counter-offer with our best matching deal!"
+          )}
         </p>
       </div>
     );
@@ -214,10 +261,73 @@ export function CompetitorQuoteUploader({
       onSubmit={handleFormSubmit}
       className="rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 shadow-sm transition-all duration-300"
     >
+      {/* ─── Package Context & Instructions Banner ───────────────── */}
+      <div className="mb-6 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/40 dark:from-amber-950/30 dark:to-orange-950/10 border border-amber-200/80 dark:border-amber-800/50 p-4 sm:p-5 shadow-xs">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+            <Tag className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div className="space-y-1.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-xs">
+                Price Match Guarantee
+              </span>
+              {activePkg && (
+                <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300">
+                  Our Catalog Target: ₹{activePkg.price.toLocaleString("en-IN")}
+                </span>
+              )}
+            </div>
+
+            <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+              {activePkg
+                ? `You are comparing: ${activePkg.title} (Our Price: ₹${activePkg.price.toLocaleString("en-IN")})`
+                : "Compare with our verified CCTV package"}
+            </h3>
+
+            <p className="text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
+              Upload your competitor's quote for a similar {activePkg?.cameraCount || 4}-camera setup and we guarantee to match or beat their price while giving you 100% pure solid copper cables and genuine surveillance-grade storage!
+            </p>
+
+            {/* Quick Package Selector if multiple packages available */}
+            {availablePackages && availablePackages.length > 1 && (
+              <div className="pt-2">
+                <p className="text-[10px] font-black text-amber-900/70 dark:text-amber-200/70 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                  <Layers className="w-3 h-3 text-amber-600" />
+                  Select matching package from our catalog:
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {availablePackages.map((pkg, i) => {
+                    const isSelected = activePkg?.title === pkg.title;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          setActivePkg(pkg);
+                          if (onSelectPackage) onSelectPackage(pkg);
+                        }}
+                        className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all ${
+                          isSelected
+                            ? "bg-amber-600 text-white font-bold shadow-xs scale-100"
+                            : "bg-white/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-800 border border-amber-200/60 dark:border-amber-800/40"
+                        }`}
+                      >
+                        {pkg.title} • ₹{pkg.price.toLocaleString("en-IN")}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* ─── File Upload Zone ───────────────────────────────────── */}
       <div className="mb-6">
         <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-3 block">
-          {t('up_comp_quote', 'Competitor Quotation')}
+          {t("up_comp_quote", "Competitor Quotation Document (PDF or Photo)")}
         </label>
 
         {uploadedUrl ? (
@@ -297,10 +407,10 @@ export function CompetitorQuoteUploader({
                 </div>
                 <div className="text-center px-4">
                   <p className="text-xs font-black text-zinc-600 dark:text-zinc-300">
-                    {t('up_drop', 'Drop your quote here or click to browse')}
+                    {t("up_drop", "Drop your quote here or click to browse")}
                   </p>
                   <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
-                    {t('up_pdf_max', 'PDF, JPG, PNG up to 10MB')}
+                    {t("up_pdf_max", "PDF, JPG, PNG up to 10MB")}
                   </p>
                 </div>
               </>
@@ -326,14 +436,14 @@ export function CompetitorQuoteUploader({
         {/* Your Name (Required) */}
         <div>
           <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-1.5 block">
-            {t('up_name', 'Your Name')} <span className="text-red-500">*</span>
+            {t("up_name", "Your Name")} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={yourName}
             onChange={(e) => setYourName(e.target.value)}
             required
-            placeholder={t('up_name_ph', 'Enter your full name')}
+            placeholder={t("up_name_ph", "Enter your full name")}
             className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
           />
         </div>
@@ -341,13 +451,13 @@ export function CompetitorQuoteUploader({
         {/* Competitor Name */}
         <div>
           <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-1.5 block">
-            {t('up_comp_name', 'Competitor Name')}
+            {t("up_comp_name", "Competitor Name / Shop Name")}
           </label>
           <input
             type="text"
             value={competitorName}
             onChange={(e) => setCompetitorName(e.target.value)}
-            placeholder={t('up_comp_ph', 'e.g., CP Plus Dealer, Local CCTV Shop')}
+            placeholder={t("up_comp_ph", "e.g., CP Plus Dealer, Local CCTV Shop")}
             className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
           />
         </div>
@@ -355,7 +465,7 @@ export function CompetitorQuoteUploader({
         {/* Competitor Total */}
         <div>
           <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-1.5 block">
-            {t('up_total', 'Their Quoted Total (₹)')}
+            {t("up_total", "Their Quoted Total (₹)")}
           </label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-zinc-400">₹</span>
@@ -363,7 +473,7 @@ export function CompetitorQuoteUploader({
               type="number"
               value={competitorTotal}
               onChange={(e) => setCompetitorTotal(e.target.value)}
-              placeholder="0"
+              placeholder="e.g. 18500"
               min="0"
               step="1"
               className="w-full h-11 pl-8 pr-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all tabular-nums"
@@ -374,12 +484,12 @@ export function CompetitorQuoteUploader({
         {/* Notes */}
         <div>
           <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-1.5 block">
-            {t('up_notes', 'Additional Notes')}
+            {t("up_notes", "Additional Notes (Equipment specs quoted by competitor)")}
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder={t('up_notes_ph', "Anything else you'd like us to know...")}
+            placeholder={t("up_notes_ph", "e.g. 4 cameras, 1TB hard disk, installation included...")}
             rows={3}
             className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all resize-none"
           />
@@ -394,13 +504,13 @@ export function CompetitorQuoteUploader({
             onClick={onCancel}
             className="px-5 py-2.5 rounded-full text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
-            {t('up_cancel', 'Cancel')}
+            {t("up_cancel", "Cancel")}
           </button>
         )}
         <button
           type="submit"
           disabled={!uploadedUrl || !yourName.trim() || isSubmitting}
-          className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+          className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-lg shadow-amber-500/20 active:scale-95"
         >
           {isSubmitting ? (
             <>
@@ -409,7 +519,7 @@ export function CompetitorQuoteUploader({
             </>
           ) : (
             <>
-              {t('up_submit', 'Submit for Price Match')}
+              {t("up_submit", "Submit for Price Match")}
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </>
           )}

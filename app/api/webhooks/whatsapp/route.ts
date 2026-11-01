@@ -29,36 +29,38 @@ export async function POST(request: Request) {
     const entry = body.entry?.[0];
     const changes = entry?.changes?.[0];
     const message = changes?.value?.messages?.[0];
+    const contact = changes?.value?.contacts?.[0];
     
     // Check if it's a valid incoming message
     if (!message) {
       return NextResponse.json({ success: true });
     }
 
-    const from = message.from; // Customer's phone number
+    const from = message.from; // Customer's verified mobile number
+    const profileName = contact?.profile?.name || "WhatsApp Customer";
     const referral = message.referral; // CTWA referral object
+
+    const context = {
+      profileName,
+      referral,
+      locationCoords: message.location ? {
+        latitude: message.location.latitude,
+        longitude: message.location.longitude,
+      } : undefined,
+      mediaId: message.image?.id || message.document?.id,
+    };
 
     if (message.type === "text") {
       const textBody = message.text.body as string;
-      
-      // Legacy check for "Quote ID: {quoteId}"
-      const quoteIdMatch = textBody.match(/Quote ID:\s*([A-Za-z0-9_-]+)/i);
-      if (quoteIdMatch && quoteIdMatch[1]) {
-         // Keep legacy functionality (removed here for brevity, handled by bot-engine now, but if we need we could keep it).
-         // Actually, let's keep it clean and just route to bot.
-      }
-      
-      // Route to bot engine
-      await processIncomingMessage(from, "text", textBody, referral);
+      await processIncomingMessage(from, "text", textBody, context);
 
     } else if (message.type === "interactive") {
-      // Interactive message (Button reply, List reply, or Flow reply)
       const interactive = message.interactive;
       
       if (interactive.type === "nfm_reply") {
-         // WhatsApp Flow Submission
-         const responseJson = interactive.nfm_reply.response_json;
-         await processIncomingMessage(from, "nfm_reply", responseJson, referral);
+        // WhatsApp Flow Submission
+        const responseJson = interactive.nfm_reply.response_json;
+        await processIncomingMessage(from, "nfm_reply", responseJson, context);
       } else {
         let replyContent = "";
         if (interactive.type === "button_reply") {
@@ -68,9 +70,15 @@ export async function POST(request: Request) {
         }
         
         if (replyContent) {
-          await processIncomingMessage(from, "interactive", replyContent, referral);
+          await processIncomingMessage(from, "interactive", replyContent, context);
         }
       }
+    } else if (message.type === "location") {
+      await processIncomingMessage(from, "location", message.location, context);
+    } else if (message.type === "image") {
+      await processIncomingMessage(from, "image", message.image, context);
+    } else if (message.type === "document") {
+      await processIncomingMessage(from, "document", message.document, context);
     }
 
     // Always return 200 OK to Meta to acknowledge receipt and prevent retries
@@ -78,7 +86,6 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error("🔥 WhatsApp Webhook Error:", error);
-    // Still return 200 to Meta to avoid retry loops, but log it
     return NextResponse.json({ success: false, message: error.message }, { status: 200 });
   }
 }

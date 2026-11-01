@@ -110,6 +110,11 @@ export interface PriceMatchRequest {
   counter_offer_amount?: number;
   our_original_total?: number;
   our_new_total?: number;
+  selected_package_title?: string;
+  selected_package_price?: number;
+  selected_plan_type?: string;
+  selected_technology?: string;
+  selected_camera_count?: number;
   created_at: unknown;
   reviewed_at?: unknown;
   updated_at?: unknown;

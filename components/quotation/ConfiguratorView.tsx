@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useConfiguratorStore } from "@/store/configurator";
 import { toast } from "sonner";
 import { calculatePricing } from "@/lib/pricing-engine";
@@ -20,7 +20,7 @@ import dynamic from "next/dynamic";
 import { Shield, ChevronDown, ChevronRight, CheckCircle2, Sparkles, ArrowLeftRight } from "lucide-react";
 import { SiteDetailsModal } from "./SiteDetailsModal";
 import { ShareDialog } from "./ShareDialog";
-import { CompetitorQuoteUploader } from "@/components/shared/CompetitorQuoteUploader";
+import { CompetitorQuoteUploader, SelectedPackageInfo } from "@/components/shared/CompetitorQuoteUploader";
 import { PriceMatchPopup } from "./PriceMatchPopup";
 import { useRealtimeInventory } from "@/hooks/useRealtimeInventory";
 
@@ -62,6 +62,9 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const [showPriceMatchUploader, setShowPriceMatchUploader] = useState(false);
   const [priceMatchSubmitted, setPriceMatchSubmitted] = useState(false);
   const [isPriceMatchSubmitting, setIsPriceMatchSubmitting] = useState(false);
+  const [priceMatchPackage, setPriceMatchPackage] = useState<SelectedPackageInfo | null>(null);
+
+
 
   const { 
     setPricingCache, 
@@ -79,6 +82,38 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   } = useConfiguratorStore();
 
   const [isSaving, setIsSaving] = useState(false);
+
+  const getPackageInfoFromPricing = useCallback((pricing: PricingResult): SelectedPackageInfo => {
+    const brand = pricing.camera_device?.brand || "Smart CCTV";
+    const resolution = pricing.camera_device?.derivedResolution || (pricing.technology === "Wireless" ? "WiFi HD" : "2MP");
+    const camCount = selection.camera_count || 4;
+    const planType = pricing.plan_type || "recommended";
+    const planName = planType === "budget" ? "Essential" : planType === "premium" ? "Pro Elite" : "Smart Plus";
+    const title = `${camCount}-Camera ${brand} ${resolution} ${planName} Package`;
+
+    return {
+      title,
+      price: pricing.total_payable,
+      brand,
+      resolution,
+      cameraCount: camCount,
+      planType,
+      technology: pricing.technology
+    };
+  }, [selection.camera_count]);
+
+  const handleOpenPriceMatch = useCallback((pricing?: PricingResult) => {
+    if (pricing) {
+      setPriceMatchPackage(getPackageInfoFromPricing(pricing));
+    } else if (pricing_results.recommended) {
+      setPriceMatchPackage(getPackageInfoFromPricing(pricing_results.recommended));
+    }
+    setShowPriceMatchUploader(true);
+    setTimeout(() => {
+      const el = document.getElementById("price-match-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }, [getPackageInfoFromPricing, pricing_results.recommended]);
 
   // Setup manual scroll restoration to prevent Next.js from aggressively restoring scroll position
   useEffect(() => {
@@ -525,6 +560,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               onSelectCheckout={handleSelectPackageAndReview}
               onToggleCompare={handleToggleCompare}
               selectedCompareItems={selectedCompareItems}
+              onPriceMatch={handleOpenPriceMatch}
             />
             <CompareTray
               selectedItems={selectedCompareItems}
@@ -593,7 +629,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
         {/* PRICE MATCH — Subtle inline link (Only in catalog view) */}
         {viewMode === 'catalog' && (
-          <div className="mb-16">
+          <div id="price-match-section" className="mb-16 scroll-mt-24">
             {priceMatchSubmitted ? (
               <div className="max-w-xl mx-auto rounded-[28px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 md:p-8 sm:p-12 text-center shadow-sm animate-in fade-in zoom-in-95 duration-500">
                 <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
@@ -609,6 +645,15 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                 <CompetitorQuoteUploader
                   leadId={lead.id!}
                   customerName={lead.customer_name}
+                  selectedPackage={priceMatchPackage}
+                  availablePackages={(() => {
+                    const list: SelectedPackageInfo[] = [];
+                    if (pricing_results.budget) list.push(getPackageInfoFromPricing(pricing_results.budget));
+                    if (pricing_results.recommended) list.push(getPackageInfoFromPricing(pricing_results.recommended));
+                    if (pricing_results.premium) list.push(getPackageInfoFromPricing(pricing_results.premium));
+                    return list;
+                  })()}
+                  onSelectPackage={(pkg) => setPriceMatchPackage(pkg)}
                   onSubmit={async (data) => {
                     setIsPriceMatchSubmitting(true);
                     try {

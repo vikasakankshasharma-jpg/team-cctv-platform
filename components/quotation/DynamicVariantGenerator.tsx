@@ -71,6 +71,7 @@ interface DynamicVariantGeneratorProps {
   onSelectCheckout: (pricing: PricingResult) => void;
   onToggleCompare: (pricing: PricingResult) => void;
   selectedCompareItems: PricingResult[];
+  onPriceMatch?: (pricing: PricingResult) => void;
 }
 
 export function DynamicVariantGenerator({
@@ -85,7 +86,8 @@ export function DynamicVariantGenerator({
   activeOffer,
   onSelectCheckout,
   onToggleCompare,
-  selectedCompareItems
+  selectedCompareItems,
+  onPriceMatch
 }: DynamicVariantGeneratorProps) {
   const { t } = useTranslation();
   // Auto-select based on selection.technology, session storage, or default
@@ -797,6 +799,23 @@ export function DynamicVariantGenerator({
                     <span className="text-[40px] leading-none font-extrabold text-[#1d1d1f] dark:text-white tracking-tight">
                       ₹{variant.total_payable.toLocaleString('en-IN')}
                     </span>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 w-full flex flex-col items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onPriceMatch) {
+                          onPriceMatch(variant);
+                        } else {
+                          onSelectCheckout(variant);
+                        }
+                      }}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 transition-all hover:scale-[1.02] shadow-xs cursor-pointer w-full"
+                    >
+                      <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      <span>Lower competitor quote? Match Price</span>
+                    </button>
                   </div>
                 </div>
               </CardContent>

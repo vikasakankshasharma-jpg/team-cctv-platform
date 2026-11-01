@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { toIsoStringSafe } from "@/lib/date-utils";
+import { getOrCreateLeadQuote } from "@/lib/baseline-quote";
 
 export async function GET(
   request: Request,
@@ -9,30 +10,10 @@ export async function GET(
   try {
     const { quoteId } = await params;
     
-    let quoteDoc = await adminDb.collection("quotes").doc(quoteId).get();
-    let quoteData: any = quoteDoc.exists ? quoteDoc.data() : null;
-
-    let leadId = quoteData?.leadId || quoteData?.lead_id || quoteId;
-    let leadDoc = await adminDb.collection("leads").doc(leadId).get();
-    let leadData: any = leadDoc.exists ? leadDoc.data() : null;
-    
-    // If quote wasn't found by ID, but we found a lead, check if the lead has a linked quote
-    if (!quoteData && leadData) {
-      const qId = leadData.last_quote_id || leadData.latest_quote_id || leadData.won_quote_id;
-      if (qId) {
-        const linkedQuoteDoc = await adminDb.collection("quotes").doc(qId).get();
-        if (linkedQuoteDoc.exists) {
-          quoteData = linkedQuoteDoc.data();
-          quoteData.id = qId;
-        } else {
-          const subQuote = await adminDb.collection("leads").doc(leadId).collection("quotes").doc(qId).get();
-          if (subQuote.exists) {
-             quoteData = subQuote.data();
-             quoteData.id = qId;
-          }
-        }
-      }
-    }
+    const baseline = await getOrCreateLeadQuote(quoteId);
+    let quoteData: any = baseline.quoteData;
+    let leadData: any = baseline.leadData;
+    let leadId = quoteData?.leadId || quoteData?.lead_id || leadData?.id || quoteId;
 
     if (!quoteData && !leadData) {
       return NextResponse.json({ success: false, message: "Lead/Quote not found" }, { status: 404 });
