@@ -28,3 +28,19 @@ Never confuse or revert the quotation presentation strategy for this project. Th
    - **Self-Healing Baseline Quotations:** When an unquoted lead uploads a competitor quote or requests a quote, `getOrCreateLeadQuote(leadOrQuoteId)` in `lib/baseline-quote.ts` deterministically constructs an 8-item server-calculated quote from `wizard_answers`. Zero ₹0 quotes or 404 PDF download errors are permitted.
    - **Strict Copy Constraint:** Under NO circumstances use the phrase `"2 years onsite warranty"` or `"2 year onsite warranty"` anywhere in customer copy or WhatsApp messages. Highlight 100% Solid Pure Copper Cable and Genuine Surveillance Storage instead.
 
+5. **Zero-Tolerance Banned Terms & Obsolete Tier Invariant**
+   - **Permanently Banned Words as Package Names or Category Tiers:**
+     `"Essential"`, `"Smart Plus"`, `"Pro Elite"`, `"Value"`, `"Pro"`, `"Elite"`, `"Standard"`, `"Premium"`, or any other arbitrary marketing tier classifications.
+   - **Strictly Banned Code Patterns:**
+     - NEVER map `plan_type` (`budget` / `recommended` / `premium`) to marketing tier strings like `"Essential"`, `"Smart Plus"`, or `"Pro Elite"`.
+     - NEVER populate UI selectors, quick-pick buttons, or package lists with legacy 3-tier objects (`[pricing_results.budget, pricing_results.recommended, pricing_results.premium]`).
+   - **Authentic Specification Naming Mandate:**
+     Package titles must ALWAYS and EXCLUSIVELY be derived from real hardware attributes:
+     `{cameraCount}-Camera {brand} {resolution} {technology} Package [({storageDetails})]`
+     *Valid Examples:*
+     - `4-Camera CP Plus 2MP HD Package (1TB Storage)`
+     - `4-Camera CP Plus 2MP HD Package (Economy Storage)`
+     - `4-Camera Hikvision 5MP IP Package (2TB Storage)`
+     - `4-Camera TP-Link WiFi HD Wireless Package (128GB MicroSD)`
+
+

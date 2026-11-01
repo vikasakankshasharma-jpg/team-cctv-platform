@@ -85,10 +85,17 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const getPackageInfoFromPricing = useCallback((pricing: PricingResult): SelectedPackageInfo => {
     const brand = pricing.camera_device?.brand || "Smart CCTV";
     const resolution = pricing.camera_device?.derivedResolution || (pricing.technology === "Wireless" ? "WiFi HD" : "2MP");
+    const tech = pricing.technology === "Wireless" ? "Wireless" : pricing.technology === "IP" ? "IP" : "HD";
     const camCount = selection.camera_count || 4;
-    const planType = pricing.plan_type || "recommended";
-    const planName = planType === "budget" ? "Essential" : planType === "premium" ? "Pro Elite" : "Smart Plus";
-    const title = `${camCount}-Camera ${brand} ${resolution} ${planName} Package`;
+    const storageLabel = pricing.is_economy_storage
+      ? "Economy Storage"
+      : pricing.storage_device?.derivedCapacity
+      ? `${pricing.storage_device.derivedCapacity} Storage`
+      : "";
+
+    const title = storageLabel
+      ? `${camCount}-Camera ${brand} ${resolution} ${tech} Package (${storageLabel})`
+      : `${camCount}-Camera ${brand} ${resolution} ${tech} Package`;
 
     return {
       title,
@@ -96,7 +103,6 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       brand,
       resolution,
       cameraCount: camCount,
-      planType,
       technology: pricing.technology
     };
   }, [selection.camera_count]);
@@ -645,14 +651,6 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                   leadId={lead.id!}
                   customerName={lead.customer_name}
                   selectedPackage={priceMatchPackage}
-                  availablePackages={(() => {
-                    const list: SelectedPackageInfo[] = [];
-                    if (pricing_results.budget) list.push(getPackageInfoFromPricing(pricing_results.budget));
-                    if (pricing_results.recommended) list.push(getPackageInfoFromPricing(pricing_results.recommended));
-                    if (pricing_results.premium) list.push(getPackageInfoFromPricing(pricing_results.premium));
-                    return list;
-                  })()}
-                  onSelectPackage={(pkg) => setPriceMatchPackage(pkg)}
                   onSubmit={async (data) => {
                     setIsPriceMatchSubmitting(true);
                     try {

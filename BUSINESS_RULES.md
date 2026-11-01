@@ -511,5 +511,13 @@ A **Hybrid CCTV System** combines a central wired CCTV setup (Analog HD with DVR
   - Certified professional installation with zero hidden charges.
 - **STRICT SAFETY CONSTRAINT:** Under NO circumstances must customer copy, WhatsApp messages, or promotional text include the phrase `"2 years onsite warranty"` or `"2 year onsite warranty"`.
 
+### 13.5 Permanent Ban on Obsolete Tiers ("Essential", "Smart Plus", "Pro Elite")
+- **Forbidden Tier Taxonomy:** The platform strictly prohibits labeling packages as `"Essential"`, `"Smart Plus"`, `"Pro Elite"`, `"Value"`, or `"Premium"`.
+- **Authentic Technical Specifications:** All package titles must be dynamically derived from real hardware attributes:
+  `{cameraCount}-Camera {brand} {resolution} {technology} Package [({storageDetails})]`
+  (e.g., `4-Camera CP Plus 2MP HD Package`, `4-Camera Hikvision 5MP IP Package (2TB Storage)`).
+- **Prohibited Code Patterns:** Developers and agents must never map `plan_type` to marketing tier strings or feed legacy 3-tier objects (`[pricing_results.budget, pricing_results.recommended, pricing_results.premium]`) into UI selectors.
+
+
 
 
