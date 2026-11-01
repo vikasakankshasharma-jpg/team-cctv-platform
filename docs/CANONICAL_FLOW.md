@@ -108,6 +108,12 @@ flowchart TD
 
 ---
 
+### 5.2 Dual-Entity Field Beat Planning & B2B Partner Engagement
+- **Unified Day Routes:** Salespersons execute daily route plans combining Customer Site Surveys (Leads) and B2B Channel Partner courtesy visits (Promoters).
+- **Inactivity Aging Engine (`lib/inactivity-tracker.ts`):** Monitors `last_visited_at`, `last_called_at`, and `last_whatsapp_at`. Automatically calculates days inactive and flags accounts into 4 tiers: `🟢 Active (<7d)`, `🟡 Due Soon (7-14d)`, `🔴 Overdue (>14d)`, and `⚠️ Never Visited`.
+- **Zero-Paperwork Touchpoint Logging (`/api/crm/touchpoint`):** Clicking WhatsApp or Call action buttons automatically timestamps the interaction and resets the inactivity timer. On-site visit check-in captures meeting notes and GPS location.
+- **Route Optimization (VRPTW):** Partitions stops into Morning (09:30-13:00), Afternoon (13:30-17:00), and Evening (17:30-20:00), calculates Haversine distances, minimizes total driving kilometers, and generates 1-click turn-by-turn navigation in Google Maps.
+
 ### 6. Geolocation Dispatch & Sub-Post Office Delivery Micro-Hub Routing
 - **Territory Matching:** Matches customer address tokens against authentic Sub-Post Office Delivery Micro-Hubs (with local communicating names), operating radius, and cadastral polygon boundaries.
 - **Visual Status:** Displays active technician coverage with green pill shortcodes (`[✓ NR]`, `[✓ LC]`) and 850m halos, unassigned areas in red dashed halos.

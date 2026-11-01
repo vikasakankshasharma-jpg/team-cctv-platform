@@ -1,11 +1,11 @@
 import { verifySession } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
-import { SalesRoutePlannerClient } from "@/components/salesperson/SalesRoutePlannerClient";
+import { BeatPlannerWorkspace } from "@/components/crm/BeatPlannerWorkspace";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Daily Client Visits Plan | Sales Portal",
-  description: "Plan on-site surveys, customer meetings, and generate instant quotes along your route",
+  title: "Daily Client Visits & B2B Beat Plan | Sales Portal",
+  description: "Plan on-site surveys, customer meetings, and B2B partner check-ins along your route",
 };
 
 export const dynamic = "force-dynamic";
@@ -17,5 +17,9 @@ export default async function SalespersonRoutePage() {
     redirect("/admin/login");
   }
 
-  return <SalesRoutePlannerClient />;
+  return (
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      <BeatPlannerWorkspace isAdmin={false} />
+    </div>
+  );
 }

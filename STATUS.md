@@ -324,6 +324,27 @@
 
 ---
 
+### Milestone 35: Dual-Entity Beat Planning, Route Optimization & Inactivity Aging (November 2026)
+- **Dual-Entity Route Architecture (Customer Leads + B2B Channel Partners):**
+  - Integrated B2B Promoters (electricians, interior designers, architects, hardware dealers) into the route planning engine alongside customer site survey leads.
+  - Implemented proximity discovery for on-the-way partner check-ins during customer survey trips.
+- **Inactivity Aging Engine (`lib/inactivity-tracker.ts`):**
+  - Tracks `last_visited_at`, `last_called_at`, `last_whatsapp_at`, and `last_contacted_at` across both `leads` and `promoters`.
+  - Visual status badges: `🟢 Active (<7d)`, `🟡 Due Soon (7-14d)`, `🔴 Overdue (>14d)`, and `⚠️ Never Contacted`.
+  - Zero-paperwork touchpoint auto-logging: Clicking `💬 WhatsApp` or `📞 Call` automatically posts to `/api/crm/touchpoint`, updating the timestamp and resetting the inactivity clock without manual reporting.
+- **Interactive Territory Beat Planner Workspace (`components/crm/BeatPlannerWorkspace.tsx`):**
+  - Day schedule broken down into 3 canonical time slots (`Morning 09:30 AM – 01:00 PM`, `Afternoon 01:30 PM – 05:00 PM`, `Evening 05:30 PM – 08:00 PM`).
+  - Neglected Accounts Backlog tab highlighting overdue partners and leads with days counter.
+  - Dual-entity Google Map with numbered stop markers, polyline route, nearby B2B partner diamonds, and 1-click Google Maps Navigation (`buildGoogleMapsMultiStopUrl`).
+  - VRPTW Route Auto-Optimization: Traveling Salesperson Problem heuristic minimizing round-trip drive kilometers.
+  - Geofenced Visit Check-In modal (`📍 Check In`) recording meeting notes and timestamps.
+- **Admin & Salesperson Integration:**
+  - Mounted Admin workspace at `/admin/beat-plans` with sidebar navigation.
+  - Mounted Field Sales workspace at `/salesperson/route`.
+  - Added inactivity aging badges to Admin Leads table (`/admin/leads`) and Promoters table (`/admin/promoters`).
+
+---
+
 ## 3. Comprehensive Verification & Testing Gates
 
 | Verification Layer | Target | Result | Evidence |
@@ -360,6 +381,7 @@
 | **Layer 30: Hybrid CCTV System Architecture & Server-Side Parity** | Hybrid Test Suite (`test-wireless-storage-multiplication.ts`) | `PASS` | 25/25 passed (100%). Sizing NVR/DVR to wiredCamCount, dual storage co-allocation (HDD + MicroSDs), zero transmission/cables/connectors for wireless cams, distinct wired vs wireless labor lines, 0 TS errors, 100% build pass. |
 | **Layer 31: Competitor Price Match & Self-Healing Baseline Engine** | 7-Phase Lifecycle Suite (`test-full-customer-lifecycle-e2e.ts`) & Playwright | `PASS` | 7/7 phases passed (100%). Self-healing baseline quote generation (8 BOM items), on-card contextual anchor, Deal Desk counter-strategy, compliant WhatsApp pitch (zero prohibited warranty phrases), live PDF streaming (200 OK). |
 | **Layer 32: Sales & CRM Lead Urgency & Omnichannel Alignment** | CRMEngine Unit Suite & Lead Ingestion Gates | `PASS` | 100% test pass on timeline-to-priority mapping (HOT 1h, WARM 24h, NURTURE 3d); 9-question WhatsApp bot state machine verified; Step 4 & Step 6 wizard urgency capture active; 1-click WhatsApp admin action; 0 build errors. |
+| **Layer 33: Dual-Entity Beat Planning & Inactivity Tracking** | VRPTW Optimizer & Touchpoint Test Suite | `PASS` | 100% test pass on dual-entity route optimization (7.9km / 19m drive); inactivity aging verification (Active 2d, Due 11d, Overdue 26d, Never); auto-touchpoint logging verified; 0 build errors. |
 
 ---
 

@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { adminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/auth-server";
+import { calculateInactivityAging } from "@/lib/inactivity-tracker";
 
 type LeadListRow = {
   id: string;
@@ -35,6 +36,10 @@ type LeadListRow = {
   competitor_quote_received?: boolean;
   timeline?: string | null;
   priority?: string | null;
+  last_visited_at?: string | null;
+  last_called_at?: string | null;
+  last_whatsapp_at?: string | null;
+  last_contacted_at?: string | null;
 };
 
 export default async function LeadsPage({
@@ -125,6 +130,10 @@ export default async function LeadsPage({
       competitor_quote_received: Boolean(data.competitor_quote_received || quoteData?.competitor_quote_received),
       timeline: data.timeline || data.wizard_answers?.q_timeline || data.wizard_answers?.timeline || quoteData?.timeline || null,
       priority: data.priority || quoteData?.priority || null,
+      last_visited_at: data.last_visited_at || null,
+      last_called_at: data.last_called_at || null,
+      last_whatsapp_at: data.last_whatsapp_at || null,
+      last_contacted_at: data.last_contacted_at || data.last_visited_at || data.last_called_at || data.last_whatsapp_at || null,
     };
   }));
 
@@ -281,6 +290,15 @@ export default async function LeadsPage({
                             <span className="font-medium text-sm text-foreground">
                               {lead.customer_name}
                             </span>
+                            {(() => {
+                              const lastTouch = lead.last_contacted_at || lead.createdAt;
+                              const aging = calculateInactivityAging(lastTouch, 10);
+                              return (
+                                <span className={`inline-block text-[9px] font-semibold px-2 py-0.5 rounded-md mt-1 border w-fit ${aging.badge_color}`}>
+                                  {aging.badge_text}
+                                </span>
+                              );
+                            })()}
                             {lead.company_name && lead.company_name !== lead.customer_name && (
                               <span className="text-xs text-muted-foreground font-semibold">
                                 {lead.company_name}

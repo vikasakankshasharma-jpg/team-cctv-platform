@@ -11,7 +11,7 @@ import {
   FileBox, BadgeDollarSign, TrendingUp, Workflow, ShieldCheck,
   ChevronRight, Calendar, IndianRupee, Zap, Link2, Megaphone,
   Grid3x3, PanelLeftClose, PanelLeftOpen, Database, Building2,
-  HeartPulse, MapPin, Bell, Menu, X, Sparkles, FileEdit,
+  HeartPulse, MapPin, Bell, Menu, X, Sparkles, FileEdit, Navigation,
   } from "lucide-react";
 
 // ─── NAVIGATION STRUCTURE ─────────────────────────────────────────────────────
@@ -29,6 +29,7 @@ const NAV_GROUPS = [
     label: "Sales & CRM",
     items: [
       { name: "Leads Pipeline", href: "/admin/leads",        icon: Users },
+      { name: "Beat Plans & Routes", href: "/admin/beat-plans", icon: Navigation },
       { name: "Site Visits",    href: "/admin/bookings",     icon: Calendar }, { name: "AMC Contracts", href: "/admin/amc", icon: ShieldCheck },
       { name: "Salespersons",   href: "/admin/salespersons", icon: ShieldCheck },
     ],

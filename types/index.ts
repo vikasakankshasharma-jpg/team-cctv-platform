@@ -1367,3 +1367,46 @@ export interface MarginSlab {
   margin_modifier: number;
 }
 
+
+
+// ── Beat Planning & Inactivity Tracking ─────────────────────────────────────
+export interface BeatStop {
+  id: string;
+  entity_type: "lead" | "b2b_partner";
+  title: string;
+  subtitle?: string;
+  business_name?: string;
+  mobile_number?: string;
+  address?: {
+    street?: string;
+    locality?: string;
+    city?: string;
+    pincode?: string;
+    full_address?: string;
+  };
+  coordinates?: { lat: number; lng: number } | null;
+  scheduled_date: string; // YYYY-MM-DD
+  time_slot: "morning" | "afternoon" | "evening" | string;
+  route_order: number;
+  status: "scheduled" | "visited" | "rescheduled" | "cancelled" | "pending" | "active" | string;
+  urgency?: string | null;
+  priority?: string | null;
+  total_value?: number;
+  last_visited_at?: string | null;
+  last_called_at?: string | null;
+  last_whatsapp_at?: string | null;
+  last_contacted_at?: string | null;
+  days_since_last_visit?: number | null;
+  days_since_last_contact?: number | null;
+  health_status: "active" | "due" | "overdue" | "never";
+  checkin_notes?: string | null;
+  checkin_at?: string | null;
+}
+
+export interface TouchpointLogInput {
+  entity_type: "lead" | "promoter";
+  entity_id: string;
+  touchpoint_type: "whatsapp" | "call" | "visit_checkin";
+  notes?: string;
+  coordinates?: { lat: number; lng: number };
+}

@@ -7,6 +7,7 @@ import { PromoterModal } from "./PromoterModal";
 import { PageHeader } from "./PageHeader";
 import { createPromoter, updatePromoter, banPromoter } from "@/app/actions/promoters";
 import { toast } from "sonner";
+import { calculateInactivityAging } from "@/lib/inactivity-tracker";
 import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -206,6 +207,18 @@ export function PromotersClient({ initialPromoters, availableLayouts = [] }: Pro
                   <tr key={agent.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all group/row">
                     <td className="px-4 md:px-8 py-6">
                       <div className="font-black text-zinc-900 dark:text-white text-base leading-tight group-hover/row:text-blue-600 dark:group-hover/row:text-blue-500 transition-colors uppercase tracking-tight">{agent.name}</div>
+                      {(agent as any).business_name && (
+                        <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">{(agent as any).business_name}</div>
+                      )}
+                      {(() => {
+                        const lastTouch = (agent as any).last_contacted_at || (agent as any).last_visited_at || (agent as any).created_at;
+                        const aging = calculateInactivityAging(lastTouch, (agent as any).visit_frequency_days || 14);
+                        return (
+                          <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full mt-1.5 border ${aging.badge_color}`}>
+                            {aging.badge_text}
+                          </span>
+                        );
+                      })()}
                       {agent.mobile_number && (
                         <div className="flex items-center gap-2 text-[10px] text-zinc-400 dark:text-zinc-600 font-bold mt-2 uppercase tracking-widest">
                           <Phone className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" />
