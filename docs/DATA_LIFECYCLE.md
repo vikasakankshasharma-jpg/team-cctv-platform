@@ -44,6 +44,7 @@
 - `payment_transactions`
 - `payout_requests`
 - `price_change_log`
+- `price_match_requests` (subcollection of `leads`)
 - `pricing_audit_logs`
 - `product_groups`
 - `products`
@@ -107,3 +108,11 @@
 - **Creation**: Base invoices generated on quote acceptance (`/api/invoice/generate`); supplementary invoices generated on change order creation (`/api/invoice/change-order`).
 - **Types**: Base Tax Invoice (`INV-yyyy-xxxxx`), Advance Receipt (`REC-yyyy-xxxxx`), Supplementary Tax Invoice (`INV-yyyy-xxxxx-S1`).
 - **States**: `DRAFT` -> `ISSUED` -> `PAID`.
+
+### 6. Competitor Price Match Requests (`leads/{leadId}/price_match_requests`)
+- **Creation**: Triggered when a customer submits a competitor quote from an on-card package anchor via `/api/leads/[id]/price-match`.
+- **Payload**: Anchored package title & price, competitor quoted price, competitor file URL, notes, and submitter name/phone.
+- **States**: `pending` -> `reviewed` -> `countered` / `declined`.
+- **Self-Healing Hook**: Upon submission, triggers `getOrCreateLeadQuote()` to ensure `quotes/{leadId}` is populated with an authoritative 8-item BOM.
+- **Admin Counter-Offer**: Recorded with admin email, timestamp, chosen strategy (`match`, `beat_500`, `custom`), and counter amount.
+

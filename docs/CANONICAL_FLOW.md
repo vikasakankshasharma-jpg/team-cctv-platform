@@ -73,6 +73,12 @@ flowchart TD
 - **Brand Unification:** Defaults to "Mixed (Best Price)". Customer can click **"Match My Brand"** to dynamically unify all components under a single brand (e.g. CP Plus, Hikvision) if active stock exists.
 - **Quotation Disclaimer:** Displays standard notice: *"Final quotation may differ based on actual site survey and requirements at installation time."*
 
+### 4.1 Competitor Price Match Guarantee & Admin Deal Desk
+- **On-Card Anchoring:** Every package card features `"Lower competitor quote? Match Price"` (`PriceMatchModal.tsx`), passing `selected_package_title` and `selected_package_price`. Floating unanchored popups are permanently eliminated.
+- **Self-Healing Baseline Quotation Engine (`lib/baseline-quote.ts`):** If a customer initiates a price match or views their quote without saving a selected card, `getOrCreateLeadQuote(leadOrQuoteId)` generates an authoritative 8-item quote from `wizard_answers` on demand, guaranteeing zero ₹0 quotes and 100% reliable PDF streaming (`/api/quote/[quoteId]/download`).
+- **Admin Deal Desk (`/admin/leads/[leadId]`):** Admin reviews competitor quotes side-by-side against our catalog price, applies counter strategies (Match Exact, Beat by ₹500, Custom), and generates 1-click WhatsApp counter-offers emphasizing 100% Solid Pure Copper Cable and Genuine Surveillance Storage (strictly zero prohibited warranty claims).
+
+
 ### 5. Four Checkout Pathways & Payment Resilience
 1. **Option 1: Pay Full Upfront (Smart Pay):**
    - Applies an instant 2% discount on the total quote.

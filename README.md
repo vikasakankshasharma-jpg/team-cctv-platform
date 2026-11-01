@@ -57,6 +57,12 @@
 - **Free Site Visit Booking:** Date & time picker (future dates only) for on-site consultation.
 - **Fallback Verification API:** Server-side verification on payment success screen guarantees quote status transitions even if webhooks face network timeouts.
 
+### 7. Competitor Price Match Guarantee, Deal Desk & Self-Healing Baseline Engine
+- **On-Card Contextual Anchoring:** All competitor quote uploads originate from specific package cards with explicit title & price anchors (`selected_package_title`, `selected_package_price`). Generic unanchored floating popups are permanently eliminated.
+- **Self-Healing Baseline Quotation Engine (`lib/baseline-quote.ts`):** Automatically computes and persists an authoritative 8-item Bill of Materials for leads with wizard answers if no quote was previously selected. Zero ₹0 quotes and zero 404 PDF download errors across Admin CRM and customer portals.
+- **Admin Deal Desk & Counter-Offer Automation:** `/admin/leads/[leadId]` provides side-by-side catalog vs. competitor economics, variance analysis, counter-strategy selection (Match, Beat by ₹500, Custom), and 1-click WhatsApp counter-pitch messaging highlighting 100% Solid Pure Copper Cable and Genuine Surveillance Storage.
+
+
 ---
 
 ## 🛠 Tech Stack
@@ -111,6 +117,9 @@ npx tsx scratch/gen_markdown_catalog.ts
 ```bash
 # Run Playwright end-to-end tests
 npx playwright test
+
+# Full Customer Lifecycle E2E Test (Price Match, Baseline Quote, Deal Desk, Counter-Pitch)
+npx tsx scripts/test-full-customer-lifecycle-e2e.ts
 
 # Verify quotation engine parity
 npx tsx scratch/verify_quotation_flow.ts

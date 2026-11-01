@@ -288,6 +288,23 @@
   - Updated `app/api/quote/save/route.ts` to identify wireless cameras via both SKU and `technologies` array.
   - Automated unit test suite (`scripts/test-wireless-storage-multiplication.ts`) verified with 25/25 passing tests (100% pass rate).
 
+### Milestone 33: Competitor Price Match Guarantee, Deal Desk & Self-Healing Baseline Engine (November 2026)
+- **Self-Healing Baseline Quotation Engine (`lib/baseline-quote.ts`):**
+  - Implemented `getOrCreateLeadQuote(leadOrQuoteId)` to deterministically synthesize server-authoritative quotations with 8 line items from `wizard_answers` if no quote document was created prior to price match upload or checkout.
+  - Hardened CRM quote route (`/api/crm/quotes/[quoteId]`), PDF download streaming (`/api/quote/[quoteId]/download`), and PDF URL resolver (`/api/quote/[quoteId]/pdf`).
+  - Fixed production lead `TMHfOybvSJ9OGof9xRoE` (Rakesh, 8 cameras) live in production: returned 200 OK, ₹45,286, 8 items, PDF streaming 6,496 bytes.
+- **Contextual On-Card Anchoring & Floating Popup Deprecation:**
+  - Permanently deleted `components/quotation/PriceMatchPopup.tsx` (the unanchored 45-second floating popup) and removed its references from `ConfiguratorView.tsx`.
+  - Replaced with 100% on-card contextual action button `"Lower competitor quote? Match Price"` inside `PriceMatchModal.tsx`, guaranteeing all submissions carry `selected_package_title` and `selected_package_price`.
+- **Admin Deal Desk & WhatsApp Counter-Pitch:**
+  - Integrated Deal Desk in `/admin/leads/[leadId]` showing side-by-side comparative economics (Catalog vs. Competitor, variance, and counter-strategy options: Match Exact, Beat by ₹500, Custom Counter).
+  - Built 1-click WhatsApp counter-pitch generator highlighting 100% Pure Solid Copper Cables and Genuine Surveillance Storage.
+  - Enforced strict safety invariant: Zero occurrences of `"2 years onsite warranty"` or `"2 year onsite warranty"` across all customer-facing copy.
+- **End-to-End Verification:**
+  - Full 7-Phase Customer Cycle Lifecycle Test (`scripts/test-full-customer-lifecycle-e2e.ts`) passed 100%.
+  - Playwright UI test (`tests/new-features.spec.ts`) passed 100%.
+  - Production deployment `dpl_BwWkqaYJfcCXkb1UoEfgYJA7viJc` active and verified live on `cctvquotation.com`.
+
 ---
 
 ## 3. Comprehensive Verification & Testing Gates
@@ -324,6 +341,7 @@
 | **Layer 28: Mega Compu World CP Plus Catalog Ingestion** | Database Sync Scripts | `PASS` | All 6 CP Plus cameras verified in Firestore with genuine technical specs, prices, and capabilities. |
 | **Layer 29: Pro Builder Wireless Journey & Zero-Trust Pricing** | Pro Builder Suite (`test-pro-builder-wireless-journey.ts`) | `PASS` | 3-card technology selection, dynamic stepper badges, MicroSD storage prioritization, zero-connector/cable/power skip cards, Wireless Pro install (₹349) vs DIY (₹0), 0 TS errors, 100% build pass. |
 | **Layer 30: Hybrid CCTV System Architecture & Server-Side Parity** | Hybrid Test Suite (`test-wireless-storage-multiplication.ts`) | `PASS` | 25/25 passed (100%). Sizing NVR/DVR to wiredCamCount, dual storage co-allocation (HDD + MicroSDs), zero transmission/cables/connectors for wireless cams, distinct wired vs wireless labor lines, 0 TS errors, 100% build pass. |
+| **Layer 31: Competitor Price Match & Self-Healing Baseline Engine** | 7-Phase Lifecycle Suite (`test-full-customer-lifecycle-e2e.ts`) & Playwright | `PASS` | 7/7 phases passed (100%). Self-healing baseline quote generation (8 BOM items), on-card contextual anchor, Deal Desk counter-strategy, compliant WhatsApp pitch (zero prohibited warranty phrases), live PDF streaming (200 OK). |
 
 ---
 

@@ -22,3 +22,9 @@ Never confuse or revert the quotation presentation strategy for this project. Th
 3. **Customer Empowerment Philosophy**
    - The customer sees all valid brand options side-by-side with transparent pricing (including GST and installation).
    - The customer has complete autonomy to evaluate what brand trust and features are worth their hard-earned money.
+
+4. **On-Card Competitor Price Match Anchoring & Self-Healing Contract**
+   - **No Unanchored Submissions:** The competitor price match CTA (`PriceMatchModal.tsx`) must strictly originate from specific package cards in the open catalog (`selected_package_title`, `selected_package_price`). Generic or floating popups (e.g. `PriceMatchPopup.tsx`) are permanently banned.
+   - **Self-Healing Baseline Quotations:** When an unquoted lead uploads a competitor quote or requests a quote, `getOrCreateLeadQuote(leadOrQuoteId)` in `lib/baseline-quote.ts` deterministically constructs an 8-item server-calculated quote from `wizard_answers`. Zero ₹0 quotes or 404 PDF download errors are permitted.
+   - **Strict Copy Constraint:** Under NO circumstances use the phrase `"2 years onsite warranty"` or `"2 year onsite warranty"` anywhere in customer copy or WhatsApp messages. Highlight 100% Solid Pure Copper Cable and Genuine Surveillance Storage instead.
+

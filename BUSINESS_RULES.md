@@ -476,4 +476,40 @@ A **Hybrid CCTV System** combines a central wired CCTV setup (Analog HD with DVR
   2. **Wireless Camera Fitting:** Billed at `PRO_INSTALL_WIRELESS` (₹349/camera) for physical mounting and app/Wi-Fi pairing, or `PRO_INSTALL_DIY` (₹0) if self-installed.
 - **Server Parity & Verification:** `app/api/quote/save/route.ts` and `lib/pricing-engine.ts` independently evaluate wired vs. wireless camera counts to ensure 100% mathematical parity across Guided Setup and Pro Builder.
 
+---
+
+## 13. Competitor Price Match Guarantee & Deal Desk Architecture
+
+### 13.1 Contextual On-Card Anchoring (No Unanchored Submissions)
+- **Mandatory Package Anchoring:** Price match requests must always be contextually anchored to a specific quotation package card (`selected_package_title`, `selected_package_price`).
+- **Elimination of Floating Popups:** The legacy unanchored 45-second floating popup (`PriceMatchPopup.tsx`) is permanently deprecated and removed. All competitor price match flows originate exclusively from the on-card CTA button: `"Lower competitor quote? Match Price"`.
+- **Contextual Transparency:** When a customer clicks the CTA, the modal explicitly presents:
+  *"You are comparing: {packageTitle} (Our Price: ₹{packagePrice})"*
+  *"Upload your competitor's quote for a similar {cameraCount}-camera setup and we guarantee to match or beat their price while giving you 100% pure copper cables and genuine surveillance storage!"*
+
+### 13.2 Self-Healing Baseline Quotation Engine (`lib/baseline-quote.ts`)
+- **Deterministic Server-Side Fallback:** If a lead exists in Firestore but no quotation document has been persisted in `quotes/{leadId}` (e.g., when a customer only submits wizard requirements without clicking through to checkout, or immediately initiates a price match), the server automatically triggers `getOrCreateLeadQuote(leadOrQuoteId)`.
+- **Authoritative 8-Item Bill of Materials:** The self-healing engine reconstructs an authoritative 8-item Bill of Materials directly from `wizard_answers` (Cameras, Recorder/NVR/DVR, Storage HDD, Power SMPS/PoE, Video/LAN Cable Coil, Connectors, Waterproof Junction Boxes, and Standard Installation Labor).
+- **Zero ₹0 Quotations Invariant:** Admin CRM `/api/crm/quotes/[quoteId]`, Customer View, and PDF routes (`/api/quote/[quoteId]/download`, `/api/quote/[quoteId]/pdf`) must NEVER return ₹0 or throw 404 "Quote not found" for valid leads with recorded wizard answers.
+
+### 13.3 Admin Deal Desk & Counter-Offer Workflow
+- **Deal Desk Interface:** Located within `/admin/leads/[leadId]`. Displays side-by-side comparative economics:
+  - Catalog Target Package Price
+  - Competitor Quoted Price
+  - Absolute & Percentage Variance (highlighting cheaper competitor quotes in red)
+- **Counter Strategy Presets:**
+  - *Match Exact Price*: Counters with competitor's exact quoted figure.
+  - *Beat by ₹500*: Counters with competitor price minus ₹500 to win the customer deal.
+  - *Custom Counter Offer*: Admin enters a custom negotiated price.
+- **Audit & History:** Counter-offers are persisted to `leads/{leadId}/price_match_requests` and recorded in the lead audit timeline.
+
+### 13.4 Customer WhatsApp Pitch Standards & Safety Invariants
+- **1-Click WhatsApp Pitch Generator:** Generates pre-formatted WhatsApp counter-proposals with direct link to the updated quotation view (`/quote/{leadId}`).
+- **Quality Advantage Positioning:** All counter-pitch copy strictly emphasizes:
+  - 100% Solid Pure Copper Cabling (vs. cheaper copper-clad aluminum CCA used by generic competitors).
+  - Genuine 24/7 Surveillance Hard Drives (vs. repurposed refurbished desktop PC drives).
+  - Certified professional installation with zero hidden charges.
+- **STRICT SAFETY CONSTRAINT:** Under NO circumstances must customer copy, WhatsApp messages, or promotional text include the phrase `"2 years onsite warranty"` or `"2 year onsite warranty"`.
+
+
 
