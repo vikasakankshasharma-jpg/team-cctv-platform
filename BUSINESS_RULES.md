@@ -518,6 +518,14 @@ A **Hybrid CCTV System** combines a central wired CCTV setup (Analog HD with DVR
   (e.g., `4-Camera CP Plus 2MP HD Package`, `4-Camera Hikvision 5MP IP Package (2TB Storage)`).
 - **Prohibited Code Patterns:** Developers and agents must never map `plan_type` to marketing tier strings or feed legacy 3-tier objects (`[pricing_results.budget, pricing_results.recommended, pricing_results.premium]`) into UI selectors.
 
+### 13.6 Price Match Dropdown Selector & Flexible Quoted Amount UX
+- **Dynamic Catalog Package Dropdown Selector:** The Price Match Uploader modal features a responsive dropdown selector populated with all active catalog variations for the customer's configuration. Switching packages dynamically updates the comparison target title and catalog price (e.g., CP Plus vs. Hikvision vs. Dahua).
+- **Optional Competitor Quoted Amount with Real-Time Variance Pill:** Entering the competitor's price is strictly optional to maximize submission conversion. When entered:
+  - If competitor is lower: Real-time emerald badge calculates savings (`Competitor is ₹X lower • We match or beat!`).
+  - If catalog price is lower: Informational blue badge highlights our advantage (`Our price is already ₹X lower with Pure Copper!`).
+- **All-Inclusive Transparency Educational Guidance:** An explicit educational callout informs customers that our prices include 18% GST, 100% solid pure copper cabling, and professional installation, preventing unfair comparisons against competitor estimates omitting GST or labor.
+
+
 
 
 
