@@ -10,6 +10,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { RevisionBanner } from "@/components/quote/RevisionBanner";
 import { BillingOverviewModal, BillingFormData } from "@/components/checkout/BillingOverviewModal";
 import { SiteVisitBookingModal } from "@/components/checkout/SiteVisitBookingModal";
+import { EmiBreakdownModal } from "@/components/quotation/EmiBreakdownModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -147,6 +148,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
   const { t } = useTranslation();
   const [accepted, setAccepted] = useState(quote.status === "accepted");
+  const [showEmiModal, setShowEmiModal] = useState(false);
   const [isPayingEMI, setIsPayingEMI] = useState(false);
   const [isPayingFull, setIsPayingFull] = useState(false);
   const [isPayingAdvance, setIsPayingAdvance] = useState(false);
@@ -167,6 +169,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
   const subtotal = quote.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
   const total = subtotal + (subtotal * quote.gstPercent / 100);
+  const emiMonthlyAmount = Math.round(total / 12 * 1.06);
   const halfGst = (subtotal * quote.gstPercent / 100) / 2;
   const isPartiallyPaid = (quote.amount_paid || 0) > 0 && (quote.amount_due || 0) > 0;
   const advance = isPartiallyPaid && quote.amount_due ? quote.amount_due : 500;
@@ -571,19 +574,47 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </div>
 
               <div className="mt-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div>
+                <div className="flex-1">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200/80">{t("qrc_total_estimate")}</p>
                   <div className="flex items-baseline gap-2 mt-0.5">
                     <span className="text-3xl sm:text-4xl font-black tracking-tight text-white">{formatINR(total)}</span>
                     <span className="text-xs text-emerald-400 font-semibold">{t("qrc_incl_gst")}</span>
                   </div>
-                  <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Pay token of <strong>₹500</strong> {t("qrc_to_book_slot")}</span>
+
+                  {/* Golden EMI Pill Anchor */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmiModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] sm:text-xs shadow-md transition-all active:scale-95 cursor-pointer group"
+                    >
+                      <CreditCard className="w-3.5 h-3.5 text-slate-950 group-hover:scale-110 transition-transform" />
+                      <span>or ₹{emiMonthlyAmount.toLocaleString("en-IN")}/mo (EMI)</span>
+                      <span className="bg-slate-950 text-amber-300 text-[9px] uppercase font-black px-1.5 py-0.2 rounded-full ml-0.5">
+                        Plans ⓘ
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* In-Hero Direct Booking CTA */}
+                  <div className="mt-2.5 max-w-sm">
+                    <button
+                      type="button"
+                      onClick={() => openBillingModal("advance_500")}
+                      disabled={isPayingAdvance || isPayingFull || isPayingEMI}
+                      className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs sm:text-sm py-2.5 px-4 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer border border-emerald-400/30"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-emerald-200" />
+                      <span>Book with ₹500 Token Advance</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                    <p className="text-[10px] text-blue-200/80 mt-1 text-center sm:text-left">
+                      ✓ Full Setup Included • Balance after live testing
+                    </p>
                   </div>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 text-xs min-w-[210px]">
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3.5 border border-white/10 text-xs min-w-[220px] shrink-0">
                   <div className="flex items-center justify-between text-slate-300 text-[10px] uppercase tracking-wider font-semibold">
                     <span>{t("qrc_customer_details")}</span>
                     <button
@@ -597,7 +628,7 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                     {billingData.is_business && billingData.company_name ? billingData.company_name : (billingData.customer_name || quote.customer.name)}
                   </p>
                   <p className="text-slate-300 text-[11px] truncate mt-0.5">
-                    {billingData.address_line1 ? `${billingData.address_line1}, ${billingData.city}` : quote.installationAddress}
+                    {billingData.address_line1 ? (billingData.address_line1 + ', ' + billingData.city) : quote.installationAddress}
                   </p>
                   {billingData.is_business && (
                     <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-200 border border-blue-400/30">
@@ -625,6 +656,65 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
             </div>
           </motion.div>
 
+          {/* Affordability & Flexibility Twin-Trust Strip */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 px-4 sm:px-0">
+            {/* Card 1: Easy EMI */}
+            <div 
+              onClick={() => setShowEmiModal(true)}
+              className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/50 border border-blue-200/80 hover:border-blue-400 transition-all cursor-pointer group shadow-2xs"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-black text-slate-900">
+                      Easy EMI from ₹{emiMonthlyAmount.toLocaleString("en-IN")}/mo
+                    </span>
+                    <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      No Cost Available
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-600 truncate mt-0.5">
+                    HDFC, ICICI, SBI, Axis, Bajaj Finserv & more • Powered by Razorpay
+                  </p>
+                </div>
+              </div>
+              <div className="text-[11px] font-bold text-blue-600 group-hover:translate-x-0.5 transition-transform flex items-center shrink-0 ml-2">
+                <span>Plans</span> <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+              </div>
+            </div>
+
+            {/* Card 2: Zero Risk Advance */}
+            <div 
+              onClick={() => openBillingModal("advance_500")}
+              className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/80 to-teal-50/50 border border-emerald-200/80 hover:border-emerald-400 transition-all cursor-pointer group shadow-2xs"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-black text-slate-900">
+                      Pay After Installation (Zero Risk)
+                    </span>
+                    <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      ₹500 Booking Token
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-600 truncate mt-0.5">
+                    Book your technician slot with ₹500 token, pay balance only after live camera testing
+                  </p>
+                </div>
+              </div>
+              <div className="text-[11px] font-bold text-emerald-600 group-hover:translate-x-0.5 transition-transform flex items-center shrink-0 ml-2">
+                <span>Book</span> <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+              </div>
+            </div>
+          </div>
+
           {/* Itemized Bill of Materials (Edge-to-Edge on Mobile) */}
           <motion.div variants={fadeIn} className="bg-white rounded-none sm:rounded-3xl shadow-none sm:shadow-sm border-b sm:border border-zinc-200/80 p-4 sm:p-7">
             <div className="flex items-center justify-between pb-3.5 border-b border-zinc-100 mb-4">
@@ -644,51 +734,98 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </button>
             </div>
 
-            {/* Mobile-friendly card layout replacing table */}
-            <div className="space-y-3">
+            {/* Desktop Itemized Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-zinc-500 font-bold uppercase text-[10px] tracking-wider">
+                    <th className="pb-3 w-10">#</th>
+                    <th className="pb-3">Item & Description</th>
+                    <th className="pb-3 text-center w-16">Qty</th>
+                    <th className="pb-3 text-right w-24">Unit Price</th>
+                    <th className="pb-3 text-right w-28">Line Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100">
+                  {quote.lineItems.map((item, idx) => {
+                    const cleanDescription = (item.description || "").replace(/Camera type: undefined \| /g, "");
+                    return (
+                      <tr key={item.id || idx} className="hover:bg-zinc-50/70 transition-colors">
+                        <td className="py-3 font-bold text-zinc-400">#{idx + 1}</td>
+                        <td className="py-3 pr-4">
+                          <div className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                            <span>{localizeString(item.name)}</span>
+                            {item.brand && (
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200">
+                                {item.brand}
+                              </span>
+                            )}
+                          </div>
+                          {cleanDescription && (
+                            <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
+                              {localizeString(cleanDescription)}
+                            </p>
+                          )}
+                          {item.badge && (
+                            <span
+                              className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide border"
+                              style={{
+                                backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5',
+                                color: item.badge.color || '#52525b',
+                                borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7'
+                              }}
+                            >
+                              {item.badge.label}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 text-center">
+                          <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                            {item.quantity}
+                          </span>
+                        </td>
+                        <td className="py-3 text-right font-medium text-zinc-600">
+                          {formatINR(item.unitPrice)}
+                        </td>
+                        <td className="py-3 text-right font-bold text-zinc-900">
+                          {formatINR(item.quantity * item.unitPrice)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card Layout */}
+            <div className="sm:hidden space-y-2.5">
               {quote.lineItems.map((item, idx) => {
                 const cleanDescription = (item.description || "").replace(/Camera type: undefined \| /g, "");
                 return (
-                  <div key={item.id || idx} className="bg-white border border-zinc-100 rounded-2xl p-4 shadow-sm">
-                    <div className="flex items-start justify-between mb-2">
+                  <div key={item.id || idx} className="bg-white border border-zinc-100 rounded-2xl p-3.5 shadow-xs">
+                    <div className="flex items-start justify-between mb-1.5">
                       <div className="flex-1 min-w-0 pr-2">
-                        <h4 className="font-bold text-sm text-zinc-900 flex items-center gap-1.5">
-                          <span className="text-[10px] font-bold text-zinc-400 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">#{idx + 1}</span>
+                        <h4 className="font-bold text-xs text-zinc-900 flex items-center gap-1.5">
+                          <span className="text-[9px] font-bold text-zinc-400 bg-zinc-50 px-1 py-0.5 rounded border border-zinc-100">#{idx + 1}</span>
                           {localizeString(item.name)}
                         </h4>
                         {item.brand && (
-                          <span className="inline-block mt-1 mb-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-100 text-zinc-500 border border-zinc-200">
+                          <span className="inline-block mt-0.5 mb-0.5 px-1.5 py-0.2 rounded text-[9px] font-semibold bg-zinc-100 text-zinc-500 border border-zinc-200">
                             {item.brand}
                           </span>
                         )}
                         {cleanDescription && (
-                          <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed line-clamp-2">
+                          <p className="text-[10px] text-zinc-500 mt-1 leading-snug line-clamp-2">
                             {localizeString(cleanDescription)}
                           </p>
                         )}
-                        {item.badge && (
-                          <span
-                            className="inline-block mt-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide border"
-                            style={{
-                              backgroundColor: item.badge.color ? `${item.badge.color}15` : '#f4f4f5',
-                              color: item.badge.color || '#52525b',
-                              borderColor: item.badge.color ? `${item.badge.color}30` : '#e4e4e7'
-                            }}
-                          >
-                            {item.badge.label}
-                          </span>
-                        )}
                       </div>
-                      <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2 py-1 rounded-full shrink-0">
+                      <span className="text-[11px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full shrink-0">
                         Qty: {item.quantity}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-sm mt-4">
-                      <span className="text-zinc-500">{t("qrc_unit_price")}</span>
-                      <span className="font-semibold">{formatINR(item.unitPrice)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-zinc-50">
-                      <span className="text-zinc-500">Subtotal</span>
+                    <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-zinc-50">
+                      <span className="text-zinc-500">{t("qrc_unit_price")}: {formatINR(item.unitPrice)}</span>
                       <span className="font-bold text-zinc-900">{formatINR(item.quantity * item.unitPrice)}</span>
                     </div>
                   </div>
@@ -730,6 +867,51 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
               </div>
             </div>
           </motion.div>
+
+          {/* 4-PILLAR CUSTOMER PEACE-OF-MIND GUARANTEE */}
+          <div className="px-4 sm:px-0">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white border border-zinc-200 rounded-2xl p-4 shadow-xs">
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h5 className="text-xs font-bold text-zinc-900">Zero Advance Risk</h5>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">₹500 token booking. Balance after live camera test on phone.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h5 className="text-xs font-bold text-zinc-900">100% Original Brand</h5>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">Original sealed boxes with valid brand warranty and GST bill.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h5 className="text-xs font-bold text-zinc-900">Certified Engineers</h5>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">Police-verified engineers equipped with pro wiring tools.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <h5 className="text-xs font-bold text-zinc-900">14-Day Price Lock</h5>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">This quote is locked. No hidden charges on site visit.</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
 {/* Dual Action / Next Steps Section */}
           <motion.div variants={fadeIn} id="payment-section" className="pt-0 sm:pt-4">
@@ -835,17 +1017,17 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                         </div>
                         
                         {/* Option 3: Flexi EMI */}
-                        <div className="p-6 rounded-2xl bg-zinc-50 border border-zinc-200 flex flex-col justify-between hover:border-zinc-300 transition-all">
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-amber-50/50 to-orange-50/30 border border-amber-200 flex flex-col justify-between hover:border-amber-300 transition-all shadow-xs">
                           <div>
                             <div className="flex items-baseline justify-between mb-1">
                               <h4 className="text-lg font-black text-zinc-900">{t("qrc_flexi_emi")}</h4>
-                              <span className="text-[10px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full">{t("qrc_easy_emis")}</span>
+                              <span className="text-[10px] font-black text-slate-950 bg-amber-400 px-2 py-0.5 rounded-full">from ₹{emiMonthlyAmount.toLocaleString('en-IN')}/mo</span>
                             </div>
-                            <p className="text-xs text-zinc-500 leading-relaxed mb-4">
+                            <p className="text-xs text-zinc-600 leading-relaxed mb-4">
                               {t("qrc_convert_emi")}
                             </p>
                             
-                            <div className="space-y-2 text-xs text-zinc-600 mb-5 bg-white rounded-xl p-3 border border-zinc-200/80">
+                            <div className="space-y-2 text-xs text-zinc-700 mb-5 bg-white/80 rounded-xl p-3 border border-amber-100">
                               <div className="flex items-center gap-2">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                 <span>{t("qrc_zero_foreclosure")}</span>
@@ -862,12 +1044,12 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
                           </div>
                           
                           <button
-                            onClick={() => openBillingModal("emi")}
+                            onClick={() => setShowEmiModal(true)}
                             disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                            className="w-full py-3.5 px-4 bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-bold rounded-xl text-sm shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                            className="w-full py-3.5 px-4 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 cursor-pointer"
                           >
-                            {isPayingEMI ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4 text-zinc-600" />}
-                            View EMI Options
+                            <CreditCard className="w-4 h-4 text-slate-950" />
+                            View EMI Plans & Banks
                           </button>
                         </div>
 
@@ -957,30 +1139,30 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
 
             <div className="flex gap-1.5">
               <button
-                onClick={() => openBillingModal("emi")}
+                onClick={() => setShowEmiModal(true)}
                 disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl transition-all active:scale-95 disabled:opacity-50 shadow-2xs"
               >
-                <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">EMI Options</span>
+                <CreditCard className="w-3.5 h-3.5 text-slate-950 shrink-0" />
+                <span className="text-[10px] sm:text-[11px] font-black leading-tight">EMI Plans</span>
               </button>
 
               <button
                 onClick={() => openBillingModal("full_discount")}
                 disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl transition-all active:scale-95 disabled:opacity-50"
               >
-                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">Get 2% Pay Full</span>
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-blue-600" />
+                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">2% Off Full</span>
               </button>
 
               <button
                 onClick={() => openBillingModal("advance_500")}
                 disabled={isPayingAdvance || isPayingFull || isPayingEMI}
-                className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-zinc-900 text-white rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
+                className="flex-[1.2] flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50 font-black"
               >
-                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
-                <span className="text-[10px] sm:text-[11px] font-bold leading-tight">Book ₹500</span>
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-200 shrink-0" />
+                <span className="text-[10px] sm:text-[11px] font-black leading-tight">Book ₹500</span>
               </button>
             </div>
 
@@ -998,6 +1180,18 @@ export function QuoteReviewClient({ quote }: { quote: QuoteData }) {
         advanceAmount={advance}
         paymentType={selectedPaymentType}
         isSubmitting={isSubmittingBilling}
+      />
+
+      {/* EMI Breakdown Modal */}
+      <EmiBreakdownModal
+        isOpen={showEmiModal}
+        onClose={() => setShowEmiModal(false)}
+        totalAmount={total}
+        packageName={`Confirmed Quotation #${quote.quoteNumber}`}
+        onProceed={() => {
+          setShowEmiModal(false);
+          openBillingModal("emi");
+        }}
       />
 
       {/* Free Site Survey Booking Modal */}
