@@ -110,13 +110,29 @@ export function KanbanBoard({ leads, onStatusChange, isAdmin, onLeadClick }: Kan
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex flex-wrap items-center gap-1.5 mb-3">
                     <Badge variant="secondary" className="capitalize text-[9px] font-semibold tracking-wider">
                       {lead.property_type}
                     </Badge>
                     <Badge variant="outline" className="text-[9px] uppercase font-bold text-primary border-primary/30">
                       {lead.technology_choice}
                     </Badge>
+                    {(() => {
+                      const t = (lead.timeline || (lead.wizard_answers?.q_timeline as string) || (lead.wizard_answers?.timeline as string) || "").toLowerCase();
+                      if (t === "asap" || t.includes("immediately") || lead.priority === "HOT") {
+                        return <Badge className="bg-red-500 hover:bg-red-600 text-white text-[9px] font-bold px-1.5 py-0">🔥 ASAP</Badge>;
+                      }
+                      if (t === "week" || t.includes("week")) {
+                        return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-[9px] font-bold px-1.5 py-0">⚡ 1-Week</Badge>;
+                      }
+                      if (t === "month" || t.includes("month")) {
+                        return <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-bold px-1.5 py-0">🗓️ Month</Badge>;
+                      }
+                      if (t === "research" || t.includes("plan")) {
+                        return <Badge variant="outline" className="text-zinc-600 border-zinc-300 text-[9px] px-1.5 py-0">🔍 Planning</Badge>;
+                      }
+                      return null;
+                    })()}
                   </div>
 
                   {/* Action Bar */}

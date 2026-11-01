@@ -307,6 +307,23 @@
 
 ---
 
+### Milestone 34: Sales & CRM Lead Urgency & Omnichannel Alignment (November 2026)
+- **Omnichannel Site Work Urgency Capture:**
+  - **Guided Setup (Step 4):** Embedded dedicated urgency selector card (*When do you want work done on your site?*) with 4 visual choice tiers: `⚡ ASAP (1-2 Days)`, `📅 Within a Week`, `🗓️ This Month (Construction)`, and `🔍 Just Planning`.
+  - **Build Your Own Setup (Pro Builder Step 6):** Embedded urgency selector before contact verification to prevent lead prioritization leakage for custom builds.
+  - **WhatsApp Omnichannel Bot (`ASK_TIMELINE`):** Added Question 9 of 9 interactive quick-reply button menu before postal code capture, updating Firestore leads with priority eagerly.
+  - **Compare Mode & Configurator:** Synchronized `installation_timeline` across state machines, BOM cards, and quote snapshots.
+- **Automated CRM SLA Prioritization Engine:**
+  - Mapped canonical timelines: `asap` / `immediately` ➔ `HOT` (1-hour SLA, 15m dynamic breach timer); `week` ➔ `HOT` / `WARM` (24-hour SLA, 60m timer); `month` ➔ `WARM`; `research` ➔ `NURTURE` (3-day SLA).
+  - Wired auto-queueing into `followup_tasks` collection upon lead creation, alerting sales queue without manual intervention.
+- **Admin & Field Workspace Synchronization:**
+  - **Admin Table (`/admin/leads`):** High-visibility urgency badges + 1-click WhatsApp chat action button (`💬`) on every row.
+  - **Lead 360 Header (`/admin/leads/[leadId]`):** Permanent top-level site work timeline indicator alongside payment and B2B tags.
+  - **Kanban Pipeline Board:** Added colored urgency badges to every draggable lead card across all columns.
+  - **Lead Details Drawer:** Integrated dedicated site work timeline review block.
+
+---
+
 ## 3. Comprehensive Verification & Testing Gates
 
 | Verification Layer | Target | Result | Evidence |
@@ -342,6 +359,7 @@
 | **Layer 29: Pro Builder Wireless Journey & Zero-Trust Pricing** | Pro Builder Suite (`test-pro-builder-wireless-journey.ts`) | `PASS` | 3-card technology selection, dynamic stepper badges, MicroSD storage prioritization, zero-connector/cable/power skip cards, Wireless Pro install (₹349) vs DIY (₹0), 0 TS errors, 100% build pass. |
 | **Layer 30: Hybrid CCTV System Architecture & Server-Side Parity** | Hybrid Test Suite (`test-wireless-storage-multiplication.ts`) | `PASS` | 25/25 passed (100%). Sizing NVR/DVR to wiredCamCount, dual storage co-allocation (HDD + MicroSDs), zero transmission/cables/connectors for wireless cams, distinct wired vs wireless labor lines, 0 TS errors, 100% build pass. |
 | **Layer 31: Competitor Price Match & Self-Healing Baseline Engine** | 7-Phase Lifecycle Suite (`test-full-customer-lifecycle-e2e.ts`) & Playwright | `PASS` | 7/7 phases passed (100%). Self-healing baseline quote generation (8 BOM items), on-card contextual anchor, Deal Desk counter-strategy, compliant WhatsApp pitch (zero prohibited warranty phrases), live PDF streaming (200 OK). |
+| **Layer 32: Sales & CRM Lead Urgency & Omnichannel Alignment** | CRMEngine Unit Suite & Lead Ingestion Gates | `PASS` | 100% test pass on timeline-to-priority mapping (HOT 1h, WARM 24h, NURTURE 3d); 9-question WhatsApp bot state machine verified; Step 4 & Step 6 wizard urgency capture active; 1-click WhatsApp admin action; 0 build errors. |
 
 ---
 

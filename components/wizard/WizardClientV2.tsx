@@ -249,7 +249,8 @@ export function WizardClientV2() {
     recording_mode: "motion",
     technology_preference: "HD",
     wants_remote_viewing: true,
-    broadband_status: "yes"
+    broadband_status: "yes",
+    installation_timeline: "asap"
   });
   
   // Auto-capture referral code from URL parameters
@@ -493,7 +494,17 @@ export function WizardClientV2() {
         customer_name: req.customer_name || "",
         mobile_number: cleanMobile,
         email: req.customer_email || undefined,
-        wizard_answers: { ...req, broadband_status: req.broadband_status, q_broadband: req.broadband_status, pincode, city },
+        timeline: req.installation_timeline || "asap",
+        wizard_answers: { 
+          ...req, 
+          q_timeline: req.installation_timeline || "asap",
+          timeline: req.installation_timeline || "asap",
+          installation_timeline: req.installation_timeline || "asap",
+          broadband_status: req.broadband_status, 
+          q_broadband: req.broadband_status, 
+          pincode, 
+          city 
+        },
         property_type: req.property_type || "home",
         technology_choice: req.technology_preference || "HD",
         cabling_done: req.cabling_done || false,
@@ -1213,6 +1224,87 @@ export function WizardClientV2() {
                 <span className="text-xl sm:text-2xl font-black text-blue-700 dark:text-blue-400">{totalCams}</span>
               </div>
 
+              
+                {/* 5. When do you plan to start work at your site? */}
+                <div className="pt-3 border-t border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h3 className="text-xs sm:text-sm font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>⏱️</span>
+                      <span>When do you want work done on your site?</span>
+                    </h3>
+                    <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">
+                      Priority Dispatch
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 dark:text-zinc-400 mb-2.5">
+                    Helps us schedule certified technician availability and prioritize your site survey.
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => updateReq({ installation_timeline: "asap" })}
+                      className={`p-2.5 sm:p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                        (req.installation_timeline === "asap" || !req.installation_timeline)
+                          ? "border-red-500 bg-red-50/80 dark:bg-red-950/40 shadow-sm ring-1 ring-red-400"
+                          : "border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">⚡ ASAP</span>
+                        <span className="text-[9px] bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-bold px-1.5 py-0.5 rounded">
+                          1-2 Days
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">Ready for instant site survey & work</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => updateReq({ installation_timeline: "week" })}
+                      className={`p-2.5 sm:p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                        req.installation_timeline === "week"
+                          ? "border-orange-500 bg-orange-50/80 dark:bg-orange-950/40 shadow-sm ring-1 ring-orange-400"
+                          : "border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">📅 Within a Week</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">Finalizing quotation & setup</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => updateReq({ installation_timeline: "month" })}
+                      className={`p-2.5 sm:p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                        req.installation_timeline === "month"
+                          ? "border-blue-500 bg-blue-50/80 dark:bg-blue-950/40 shadow-sm ring-1 ring-blue-400"
+                          : "border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">🗓️ This Month</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">Site currently under construction</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => updateReq({ installation_timeline: "research" })}
+                      className={`p-2.5 sm:p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                        req.installation_timeline === "research"
+                          ? "border-purple-500 bg-purple-50/80 dark:bg-purple-950/40 shadow-sm ring-1 ring-purple-400"
+                          : "border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">🔍 Just Planning</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 dark:text-zinc-400">Comparing prices & options</p>
+                    </button>
+                  </div>
+                </div>
+              
               <div className="pt-2 sm:pt-4 flex items-center gap-2 sm:gap-3">
                 <Button variant="outline" onClick={handlePrev} className="h-11 sm:h-12 px-3 sm:px-6 rounded-xl font-bold text-gray-700 dark:text-gray-200 border-2">
                   {t("wz_back")}
@@ -2452,7 +2544,38 @@ export function WizardClientV2() {
               </div>
               
               <div className="space-y-2.5 sm:space-y-3.5">
-                <div>
+                
+                {/* Timeline / Urgency Selector for Pro Builder */}
+                {isProBuilderFlow && (
+                  <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800 mb-3">
+                    <label className="block text-xs font-bold text-blue-950 dark:text-blue-300 mb-1.5 flex items-center gap-1.5">
+                      <span>⏱️</span>
+                      <span>When do you plan to get work done on your site?</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      {[
+                        { id: "asap", label: "⚡ ASAP (1-2 Days)" },
+                        { id: "week", label: "📅 Within a Week" },
+                        { id: "month", label: "🗓️ This Month" },
+                        { id: "research", label: "🔍 Just Planning" }
+                      ].map(item => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => updateReq({ installation_timeline: item.id })}
+                          className={`py-2 px-2 text-xs font-bold rounded-lg border transition-all text-center ${
+                            (req.installation_timeline === item.id || (!req.installation_timeline && item.id === "asap"))
+                              ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                              : "border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300"
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+<div>
                   <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">{t("wz_your_name_")}</label>
                   <input 
                     type="text" 

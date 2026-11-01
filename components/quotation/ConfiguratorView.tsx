@@ -245,7 +245,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       surface_types: surfaceTypes,
       selected_addons: selectedAddons,
       brand_preference: mappedBrand,
-      installation_timeline: (lead.wizard_answers?.["q_timeline"] as string) || "research",
+      installation_timeline: (lead.timeline as string) || (lead.wizard_answers?.["q_timeline"] as string) || (lead.wizard_answers?.["timeline"] as string) || (lead.wizard_answers?.["installation_timeline"] as string) || "asap",
       property_type: lead.property_type,
       lead_pincode: lead.address?.pincode || (lead.wizard_answers?.lead_pincode as string) || "",
       wants_remote_viewing: lead.wizard_answers?.["q_remote_viewing"] === "yes",

@@ -4,6 +4,8 @@ import { adminDb, arrayUnion, serverTimestamp, increment } from "@/lib/firebase-
 import { isPincodeActiveByDefault, resolveStaticHierarchy } from "@/lib/geo/geoHierarchy";
 import { CreateLeadSchema } from "@/lib/validators";
 import { calculateSlaDeadline } from "@/lib/sla-engine";
+import { CRMEngine } from "@/lib/crm-engine";
+import type { LeadPriority } from "@/types";
 
 export async function createLeadAction(payload: {
   customer_name: string;
@@ -130,8 +132,10 @@ export async function createLeadAction(payload: {
     }
 
     const newLeadRef = adminDb.collection("leads").doc();
-    const isHotLead = leadData.cabling_done === true || Boolean(wizardAnswers?.callback_requested);
-    const slaTimeoutMinutes = isHotLead ? 15 : 60;
+    const timelineVal = (payload as any).timeline || (wizardAnswers?.installation_timeline as string) || (wizardAnswers?.q_timeline as string) || (wizardAnswers?.timeline as string) || "asap";
+    const priority: LeadPriority = (payload as any).priority || CRMEngine.mapTimelineToPriority(timelineVal);
+    const isHotLead = leadData.cabling_done === true || Boolean(wizardAnswers?.callback_requested) || priority === "HOT";
+    const slaTimeoutMinutes = priority === "HOT" ? 15 : priority === "WARM" ? 60 : 24 * 60;
     const slaBreachAt = new Date(Date.now() + slaTimeoutMinutes * 60 * 1000);
     const ttlDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
@@ -171,6 +175,8 @@ export async function createLeadAction(payload: {
       cabling_done:         leadData.cabling_done,
       camera_count:         payload.camera_count || 0,
       is_hot_lead:          isHotLead,
+      timeline:             timelineVal,
+      priority:             priority,
       // B2B / Corporate tagging
       is_b2b:               payload.is_b2b || (payload.camera_count || 0) > 16,
       company_name:         payload.company_name || null,
@@ -203,6 +209,27 @@ export async function createLeadAction(payload: {
       is_test:               isTestLead,
       ttl:                   isTestLead ? ttlDate : null,
     });
+
+    // Auto-queue CRM follow-up task
+    try {
+      const taskId = CRMEngine.getInitialFollowUpId(newLeadRef.id);
+      const followUpDueAt = CRMEngine.calculateFollowUpSLA(priority);
+      await adminDb.collection("followup_tasks").doc(taskId).set({
+        id: taskId,
+        lead_id: newLeadRef.id,
+        priority,
+        campaign_type: "initial_quote_followup",
+        channel: "whatsapp",
+        due_at: followUpDueAt,
+        attempt_count: 0,
+        max_attempts: 3,
+        status: "pending",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    } catch (taskErr) {
+      console.warn("Could not auto-queue followup_task:", taskErr);
+    }
 
     if (locationData && !locationData.served) {
       adminDb.collection("service_areas").doc(locationData.slug)

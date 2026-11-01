@@ -128,6 +128,8 @@ export interface Lead {
   property_type: "home" | "shop" | "office" | "factory" | "warehouse" | "bungalow" | "residential" | "other";
   technology_choice: Technology;
   cabling_done: boolean;
+  timeline?: string;
+  priority?: LeadPriority;
   address?: Address; // Added for Site Details
   wizard_answers: Record<string, unknown>;
   referral_code?: string | null;

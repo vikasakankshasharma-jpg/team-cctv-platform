@@ -12,13 +12,50 @@ export class CRMEngine {
   static mapTimelineToPriority(timelineStr?: string): LeadPriority {
     if (!timelineStr) return "NURTURE"; // Default safe fallback
 
-    const lowerStr = timelineStr.toLowerCase();
+    const lowerStr = timelineStr.toLowerCase().trim();
     
-    if (lowerStr.includes("immediately")) return "HOT";
-    if (lowerStr.includes("this week")) return "HOT"; // Treating as HOT/WARM boundary
-    if (lowerStr.includes("this month")) return "WARM";
-    if (lowerStr.includes("not decided") || lowerStr.includes("later")) return "NURTURE";
-    if (lowerStr.includes("cold") || lowerStr.includes("just looking")) return "COLD";
+    if (
+      lowerStr === "asap" ||
+      lowerStr.includes("immediately") || 
+      lowerStr.includes("today") || 
+      lowerStr.includes("tomorrow") || 
+      lowerStr.includes("urgent")
+    ) {
+      return "HOT";
+    }
+
+    if (
+      lowerStr === "week" ||
+      lowerStr.includes("this week") || 
+      lowerStr.includes("within a week") ||
+      lowerStr.includes("within_week") ||
+      lowerStr.includes("1-2 days")
+    ) {
+      return "HOT"; // Fast SLA response needed
+    }
+
+    if (
+      lowerStr === "month" ||
+      lowerStr.includes("this month") ||
+      lowerStr.includes("next month") ||
+      lowerStr.includes("construction")
+    ) {
+      return "WARM";
+    }
+
+    if (
+      lowerStr === "research" ||
+      lowerStr.includes("not decided") || 
+      lowerStr.includes("later") ||
+      lowerStr.includes("planning") ||
+      lowerStr.includes("researching")
+    ) {
+      return "NURTURE";
+    }
+
+    if (lowerStr.includes("cold") || lowerStr.includes("just looking")) {
+      return "COLD";
+    }
 
     return "NURTURE"; // Unmatched mappings default to NURTURE
   }

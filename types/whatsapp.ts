@@ -9,6 +9,7 @@ export type WhatsAppBotState =
   | "ASK_STORAGE"
   | "ASK_CABLING"
   | "ASK_INTERNET"
+  | "ASK_TIMELINE"
   | "ASK_SITE_CONDITIONS"
   | "ASK_PINCODE"
   | "GENERATING"

@@ -145,6 +145,38 @@ export default function LeadDetailPage() {
                 📸 Competitor Quote Attached
               </Badge>
             )}
+            {(() => {
+              const t = (lead.timeline || lead.wizard_answers?.timeline || lead.wizard_answers?.q_timeline || "").toLowerCase();
+              if (t === "asap" || t.includes("immediately") || lead.priority === "HOT") {
+                return (
+                  <Badge className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs">
+                    ⚡ TIMELINE: ASAP (1-2 DAYS)
+                  </Badge>
+                );
+              }
+              if (t === "week" || t.includes("week")) {
+                return (
+                  <Badge className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs">
+                    📅 TIMELINE: WITHIN A WEEK
+                  </Badge>
+                );
+              }
+              if (t === "month" || t.includes("month")) {
+                return (
+                  <Badge className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">
+                    🗓️ TIMELINE: THIS MONTH
+                  </Badge>
+                );
+              }
+              if (t === "research" || t.includes("plan")) {
+                return (
+                  <Badge variant="outline" className="border-zinc-400 text-zinc-600 font-bold text-xs">
+                    🔍 TIMELINE: PLANNING
+                  </Badge>
+                );
+              }
+              return null;
+            })()}
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
             <span>📞 {lead.customer_mobile || "No Mobile"}</span>

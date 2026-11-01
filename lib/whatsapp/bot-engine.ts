@@ -170,7 +170,7 @@ export async function processIncomingMessage(
         nextState = "ASK_PROP";
         replies.push(MessageBuilder.buttons(
           from,
-          `Welcome to *TEAM CCTV*! 📷\n\nLet's build your exact, transparent CCTV quotation in under 60 seconds.\n\n*Question 1 of 8:* What type of property are you securing?`,
+          `Welcome to *TEAM CCTV*! 📷\n\nLet's build your exact, transparent CCTV quotation in under 60 seconds.\n\n*Question 1 of 9:* What type of property are you securing?`,
           [
             { id: "prop_home", title: "🏠 Home / Flat" },
             { id: "prop_office", title: "🏢 Office / Shop" },
@@ -187,7 +187,7 @@ export async function processIncomingMessage(
 
           replies.push(MessageBuilder.buttons(
             from,
-            `*Question 2 of 8:* Is this a brand new installation or an expansion?`,
+            `*Question 2 of 9:* Is this a brand new installation or an expansion?`,
             [
               { id: "ins_new_wired", title: "✨ New Wired Setup" },
               { id: "ins_wireless", title: "📶 Smart Wireless" },
@@ -210,7 +210,7 @@ export async function processIncomingMessage(
 
           replies.push(MessageBuilder.list(
             from,
-            `*Question 3 of 8:* How many total cameras do you require?`,
+            `*Question 3 of 9:* How many total cameras do you require?`,
             "Select Cameras",
             [
               {
@@ -254,7 +254,7 @@ export async function processIncomingMessage(
 
             replies.push(MessageBuilder.buttons(
               from,
-              `*Question 4 of 8:* How would you like your ${count} cameras distributed between Outdoor & Indoor?`,
+              `*Question 4 of 9:* How would you like your ${count} cameras distributed between Outdoor & Indoor?`,
               [
                 { id: "split_equal", title: "50/50 Equal Split" },
                 { id: "split_all_outdoor", title: "All Outdoor (Bullet)" },
@@ -283,7 +283,7 @@ export async function processIncomingMessage(
             nextState = "ASK_STORAGE";
             replies.push(MessageBuilder.buttons(
               from,
-              `*Question 5 of 8:* How many days of recording retention do you require?`,
+              `*Question 5 of 9:* How many days of recording retention do you require?`,
               [
                 { id: "storage_7", title: "7 Days (Basic)" },
                 { id: "storage_15", title: "15 Days (Standard)" },
@@ -294,7 +294,7 @@ export async function processIncomingMessage(
             nextState = "ASK_TECH";
             replies.push(MessageBuilder.buttons(
               from,
-              `*Question 5 of 8:* Which camera technology level do you prefer?`,
+              `*Question 5 of 9:* Which camera technology level do you prefer?`,
               [
                 { id: "tech_IP", title: "Digital IP (Best Quality)" },
                 { id: "tech_HD", title: "HD Analog (Lowest Cost)" },
@@ -312,7 +312,7 @@ export async function processIncomingMessage(
 
           replies.push(MessageBuilder.buttons(
             from,
-            `*Question 6 of 8:* How many days of recording storage do you need?`,
+            `*Question 6 of 9:* How many days of recording storage do you need?`,
             [
               { id: "storage_7", title: "7 Days (Basic)" },
               { id: "storage_15", title: "15 Days (Standard)" },
@@ -329,7 +329,7 @@ export async function processIncomingMessage(
 
           replies.push(MessageBuilder.buttons(
             from,
-            `*Question 7 of 8:* What is the current cabling status at your site?`,
+            `*Question 7 of 9:* What is the current cabling status at your site?`,
             [
               { id: "cabling_new", title: "New Wiring Needed" },
               { id: "cabling_done", title: "Cabling Already Done" }
@@ -345,7 +345,7 @@ export async function processIncomingMessage(
 
           replies.push(MessageBuilder.buttons(
             from,
-            `*Question 8 of 8:* Is broadband/Wi-Fi available at the location for remote mobile viewing?`,
+            `*Question 8 of 9:* Is broadband/Wi-Fi available at the location for remote mobile viewing?`,
             [
               { id: "net_yes", title: "Yes, Wi-Fi Available" },
               { id: "net_no", title: "No, Need 4G SIM Router" }
@@ -357,12 +357,47 @@ export async function processIncomingMessage(
       case "ASK_INTERNET":
         if (incomingType === "interactive") {
           session.wizard_answers.broadband_status = content === "net_yes" ? "broadband_available" : "need_4g_router";
+          nextState = "ASK_TIMELINE";
+
+          replies.push(MessageBuilder.buttons(
+            from,
+            `*Question 9 of 9:* ⏱️ When do you plan to get work / installation done at your site?`,
+            [
+              { id: "time_asap", title: "⚡ ASAP (1-2 Days)" },
+              { id: "time_week", title: "📅 Within a Week" },
+              { id: "time_month", title: "🗓️ This Month / Later" }
+            ]
+          ));
+        }
+        break;
+
+      case "ASK_TIMELINE":
+        if (incomingType === "interactive") {
+          const timeChoice = content === "time_asap" ? "Immediately" : content === "time_week" ? "This week" : "This month";
+          const rawCode = content.replace("time_", "");
+          session.wizard_answers.timeline = timeChoice;
+          session.wizard_answers.q_timeline = rawCode;
+          session.wizard_answers.installation_timeline = rawCode;
+          
+          const priority = timeChoice === "Immediately" ? "HOT" : timeChoice === "This week" ? "HOT" : "WARM";
+          await adminDb.collection(COLLECTIONS.LEADS).doc(leadId).update({
+            timeline: timeChoice,
+            priority,
+            is_hot_lead: priority === "HOT",
+            "wizard_answers.timeline": timeChoice,
+            "wizard_answers.q_timeline": rawCode,
+            "wizard_answers.installation_timeline": rawCode,
+            updated_at: new Date()
+          }).catch(console.error);
+
           nextState = "ASK_PINCODE";
 
           replies.push(MessageBuilder.text(
             from,
             `📍 *Final Step:* Please enter your 6-digit Pincode (or tap the clip icon to share your *Location Pin*).\n\nThis allows us to match our nearest Sub-Post Office micro-hub and certified local installer.`
           ));
+        } else {
+          replies.push(MessageBuilder.text(from, "Please select an installation timeframe using the buttons above."));
         }
         break;
 

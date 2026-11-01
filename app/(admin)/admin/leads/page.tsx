@@ -33,6 +33,8 @@ type LeadListRow = {
   channel?: string;
   partner_id?: string | null;
   competitor_quote_received?: boolean;
+  timeline?: string | null;
+  priority?: string | null;
 };
 
 export default async function LeadsPage({
@@ -107,6 +109,8 @@ export default async function LeadsPage({
       channel: data.channel || quoteData?.channel || "web",
       partner_id: data.partner_id || quoteData?.partner_id || null,
       competitor_quote_received: Boolean(data.competitor_quote_received || quoteData?.competitor_quote_received),
+      timeline: data.timeline || data.wizard_answers?.q_timeline || data.wizard_answers?.timeline || quoteData?.timeline || null,
+      priority: data.priority || quoteData?.priority || null,
     };
   }));
 
@@ -139,6 +143,8 @@ export default async function LeadsPage({
       gstin: qData.billing_details?.gstin || null,
       site_visit_date: toIsoStringSafe(qData.site_visit_date),
       site_visit_slot: qData.site_visit_slot || null,
+      timeline: qData.timeline || qData.wizard_answers?.q_timeline || qData.wizard_answers?.timeline || null,
+      priority: qData.priority || null,
       createdAt: toIsoStringSafe(qData.created_at || qData.createdAt) || new Date().toISOString(),
     });
   });
@@ -285,6 +291,38 @@ export default async function LeadsPage({
                                 📸 Price Match
                               </Badge>
                             )}
+                            {(() => {
+                              const t = (lead.timeline || "").toLowerCase();
+                              if (t === "asap" || t.includes("immediately") || lead.priority === "HOT") {
+                                return (
+                                  <Badge className="bg-red-500 hover:bg-red-600 text-white text-[9px] font-black uppercase">
+                                    ⚡ ASAP (1-2 Days)
+                                  </Badge>
+                                );
+                              }
+                              if (t === "week" || t.includes("week")) {
+                                return (
+                                  <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-[9px] font-bold">
+                                    📅 Within a Week
+                                  </Badge>
+                                );
+                              }
+                              if (t === "month" || t.includes("month")) {
+                                return (
+                                  <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-bold">
+                                    🗓️ This Month
+                                  </Badge>
+                                );
+                              }
+                              if (t === "research" || t.includes("plan")) {
+                                return (
+                                  <Badge variant="outline" className="border-zinc-300 text-zinc-600 text-[9px]">
+                                    🔍 Planning
+                                  </Badge>
+                                );
+                              }
+                              return null;
+                            })()}
                             {lead.partner_id && (
                               <Badge variant="outline" className="border-purple-300 text-purple-700 bg-purple-50 text-[9px] font-bold">
                                 🤝 {lead.partner_id}
@@ -329,6 +367,17 @@ export default async function LeadsPage({
                                 Details
                               </Button>
                             </Link>
+                            {lead.customer_mobile && (
+                              <a
+                                href={`https://wa.me/91${lead.customer_mobile.replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(`Hi ${lead.customer_name},\n\nI am contacting you from TEAM CCTV regarding your quotation inquiry for a security system.\n\nAre you available for a quick discussion?`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition-colors"
+                                title="Open WhatsApp Chat"
+                              >
+                                💬
+                              </a>
+                            )}
                             {lead.quoteId || lead.status === "GENERATED" || lead.status === "QUOTED" || lead.isPaid ? (
                               <a
                                 href={`/api/quote/${lead.quoteId || lead.id}/download`}

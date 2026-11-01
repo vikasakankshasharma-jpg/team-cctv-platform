@@ -132,6 +132,27 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose, currentUser, onStatus
                   <span className="block text-xs font-medium text-muted-foreground mb-1"><Activity className="inline w-3 h-3 mr-1"/> Technology</span>
                   <span className="font-semibold text-sm uppercase">{lead.technology_choice}</span>
                 </div>
+
+              <div className="p-3.5 rounded-xl border border-border bg-card">
+                <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  ⏱️ Site Work Timeline
+                </span>
+                <div className="text-sm font-bold text-foreground">
+                  {(() => {
+                    const t = (lead.timeline || (lead.wizard_answers?.q_timeline as string) || (lead.wizard_answers?.timeline as string) || "").toLowerCase();
+                    if (t === "asap" || t.includes("immediately") || lead.priority === "HOT") {
+                      return <span className="text-red-600 font-extrabold flex items-center gap-1">⚡ ASAP / Immediate (1-2 Days)</span>;
+                    }
+                    if (t === "week" || t.includes("week")) {
+                      return <span className="text-orange-600 font-bold flex items-center gap-1">📅 Within a Week</span>;
+                    }
+                    if (t === "month" || t.includes("month")) {
+                      return <span className="text-blue-600 font-bold flex items-center gap-1">🗓️ This Month / Construction</span>;
+                    }
+                    return <span className="text-muted-foreground">🔍 Just Planning / Comparing</span>;
+                  })()}
+                </div>
+              </div>
               </div>
               
               <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">

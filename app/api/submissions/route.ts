@@ -6,6 +6,8 @@ import { rateLimit } from "@/lib/rate-limit";
 import { ApiResponse } from "@/lib/api-response";
 import { calculateSlaDeadline, OperatingHours } from "@/lib/sla-engine";
 import { isMaintenanceMode } from "@/lib/kill-switch";
+import { CRMEngine } from "@/lib/crm-engine";
+import type { LeadPriority } from "@/types";
 
 /**
  * ENTERPRISE LEAD INGESTION
@@ -122,12 +124,14 @@ export async function POST(request: NextRequest) {
 
     // 4. Create Lead Document
     const newLeadRef = adminDb.collection("leads").doc();
-    const isHotLead = leadData.cabling_done === true;
+    const timelineVal = (leadData as any).timeline || (wizardAnswers?.installation_timeline as string) || (wizardAnswers?.q_timeline as string) || (wizardAnswers?.timeline as string) || "asap";
+    const priority: LeadPriority = (leadData as any).priority || CRMEngine.mapTimelineToPriority(timelineVal);
+    const isHotLead = leadData.cabling_done === true || priority === "HOT";
     
     // Dynamic SLA Timeout Logic:
-    // If it's a hot lead (ready for install/cabling done), SLA is tighter (e.g. 15 mins)
-    // Otherwise, SLA is more relaxed (e.g. 60 mins)
-    const slaTimeoutMinutes = isHotLead ? 15 : 60;
+    // If it's a hot lead (ready for install/cabling done or ASAP), SLA is tighter (e.g. 15 mins)
+    // Otherwise, SLA is more relaxed (e.g. 60 mins / 24h)
+    const slaTimeoutMinutes = priority === "HOT" ? 15 : priority === "WARM" ? 60 : 24 * 60;
     const slaBreachAt = new Date(Date.now() + slaTimeoutMinutes * 60 * 1000);
 
     const cameraCount = Number(wizardAnswers?.camera_count || wizardAnswers?.q_cam_count || leadData.camera_count || 4);
@@ -161,6 +165,8 @@ export async function POST(request: NextRequest) {
       technology_choice:    leadData.technology_choice,
       cabling_done:         leadData.cabling_done,
       is_hot_lead:          isHotLead,
+      timeline:             timelineVal,
+      priority:             priority,
       site_survey:          siteSurvey,
 
       // Hub & Spoke Routing
@@ -193,6 +199,27 @@ export async function POST(request: NextRequest) {
       is_deleted:        false,
     });
     
+    // Auto-queue CRM follow-up task
+    try {
+      const taskId = CRMEngine.getInitialFollowUpId(newLeadRef.id);
+      const followUpDueAt = CRMEngine.calculateFollowUpSLA(priority);
+      await adminDb.collection("followup_tasks").doc(taskId).set({
+        id: taskId,
+        lead_id: newLeadRef.id,
+        priority,
+        campaign_type: "initial_quote_followup",
+        channel: "whatsapp",
+        due_at: followUpDueAt,
+        attempt_count: 0,
+        max_attempts: 3,
+        status: "pending",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    } catch (taskErr) {
+      console.warn("Could not auto-queue followup_task in submissions:", taskErr);
+    }
+
     // 5. Update Service Areas Waitlist Count (Async)
     if (locationData && !locationData.served) {
       adminDb.collection("service_areas").doc(locationData.slug)

@@ -52,6 +52,16 @@ flowchart TD
   - **Mobile Slide-Over Cart:** Responsive drawer (`showMobileCart`) enables complete BOM review on smartphones.
   - **Single-Option Filter Auto-Collapse:** Hides empty or single-option filters to eliminate visual clutter.
 
+### 2.2 Omnichannel Site Work Urgency & Dynamic SLA Routing
+- **Timeline Capture:** Across both Guided Setup (Step 4) and Pro Builder (Step 6), customers specify their preferred installation timeline:
+  - `⚡ ASAP (1-2 Days)` ➔ `HOT` priority (15m SLA alert, 1-hour breach SLA).
+  - `📅 Within a Week` ➔ `WARM` / `HOT` priority (60m SLA alert, 24-hour SLA).
+  - `🗓️ This Month (Construction / Renovation)` ➔ `WARM` priority (24-hour SLA).
+  - `🔍 Just Planning / Estimating Budget` ➔ `NURTURE` priority (3-day SLA).
+- **Auto-Task Ingestion:** `app/actions/lead.ts` and `app/api/submissions/route.ts` automatically calculate `sla_breach_at` and enqueue an initial task into `followup_tasks` collection for inside sales routing.
+- **Interactive WhatsApp Bot Integration:** Question 9 of 9 in WhatsApp conversational flow prompts customer with interactive 3-button urgency menu (`⚡ ASAP`, `📅 Within a Week`, `🗓️ This Month / Later`) and eagerly tags lead in Firestore.
+- **Admin Workspace Surfacing:** Badges visible on `/admin/leads` table (with 1-click WhatsApp chat launch), Kanban pipeline cards, Lead 360 overview header, and slide-over lead drawer.
+
 ### 2.1 Wi-Fi Connectivity Check & Standalone Router Injection (Option B)
 - **Wi-Fi Readiness Check:** When choosing Wireless technology or adding supplemental Wi-Fi cameras in a wired setup, the wizard asks: *"Do you have a working Wi-Fi connection at the installation site?"*
 - **Automatic 4G/5G Router Injection:** If **No**, the engine injects a 4G/5G SIM Wi-Fi router into the quotation BOM. If **Yes**, no router is added.
