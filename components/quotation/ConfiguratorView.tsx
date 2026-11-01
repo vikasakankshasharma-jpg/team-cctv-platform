@@ -21,7 +21,6 @@ import { Shield, ChevronDown, ChevronRight, CheckCircle2, Sparkles, ArrowLeftRig
 import { SiteDetailsModal } from "./SiteDetailsModal";
 import { ShareDialog } from "./ShareDialog";
 import { CompetitorQuoteUploader, SelectedPackageInfo } from "@/components/shared/CompetitorQuoteUploader";
-import { PriceMatchPopup } from "./PriceMatchPopup";
 import { useRealtimeInventory } from "@/hooks/useRealtimeInventory";
 
 import type { Lead, Product, Addon, AddonRule, AppSettings, PricingResult, Address, RecommendationRule, CardLayoutRule } from "@/types";
@@ -756,14 +755,6 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         />
       )}
 
-      {/* SMART DELAYED POPUP — appears after 45 seconds of browsing */}
-      <PriceMatchPopup
-        leadId={lead.id!}
-        customerName={lead.customer_name}
-        delayMs={45000}
-        alreadySubmitted={priceMatchSubmitted}
-        onSubmitted={() => setPriceMatchSubmitted(true)}
-      />
-    </div>
+          </div>
   );
 }
