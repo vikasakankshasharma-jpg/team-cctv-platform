@@ -1,6 +1,6 @@
 # TEAM CCTV Platform - Master Project Status & Verification Log
 
-> **Last Updated:** October 17, 2026  
+> **Last Updated:** November 1, 2026  
 > **Production URL:** `https://cctvquotation.com`  
 > **Repository:** `team-cctv-platform` (`master` branch)  
 > **Canonical Plan & Architecture:** [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md) | [`BUSINESS_RULES.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/BUSINESS_RULES.md)
@@ -345,6 +345,33 @@
 
 ---
 
+### Milestone 36: Configuration Tool Inventory Grouping, Storage Normalization & Multi-Category Visibility (November 2026)
+- **Canonical Storage Type Normalization (`getStorageTypeNormalized`):**
+  - Resolved string enum mismatch where Admin Portal (`/admin/products`) saves drives as `Surveillance HDD`, while Configurator expected `Hard Disk`.
+  - Dynamically bridges `Surveillance HDD`, `Hard Disk`, and `HDD` into canonical `Hard Disk`, restoring all active Budget Brand drives (500GB, 1TB, 2TB, 4TB) alongside Seagate drives.
+  - Normalizes `Micro SD`, `MicroSD`, and `SD Card` into canonical `Micro SD`.
+- **Numeric Storage Capacity Sorting (`parseCapacityInGB`):**
+  - Replaced alphabetical capacity sorting (`["1TB", "2TB", "4TB", "500GB"]`) with numeric order (`500GB → 1TB → 2TB → 4TB`).
+- **Storage Brand & Capacity Filters:**
+  - Introduced dedicated `Brand` filter (`Budget Brand`, `Seagate`, etc.) and `Capacity` filter dropdowns under the Storage tab in `FullCustomizerPanel.tsx`.
+- **Accessories & Transmission Hardware Sub-Category Grouping (`getAddonGroupLabel`):**
+  - Unblocked `network` devices (such as D-Link 4G SIM Wi-Fi Routers) from being filtered out of the Configuration Tool.
+  - Structured all accessories and cables into discrete, logical sub-groups:
+    - `Cables & Wire` (3+1 Coaxial, CAT6, HDMI)
+    - `Connectors` (BNC, DC, RJ45)
+    - `Junction Box & Mounts` (PVC Weatherproof Junction Boxes)
+    - `Racks & Enclosures` (2U, 4U Wall Mount Racks)
+    - `Network & Routers` (4G SIM Wi-Fi Routers, Range Extenders)
+    - `Display & Monitors` (LED Surveillance Monitors)
+    - `Services & AMC` (Comprehensive Maintenance Contracts)
+- **Power Device Compatibility & Zero-Stock Protection:**
+  - Removed restrictive single-device channel cutoff in `filteredPower`, allowing multi-unit pairings (e.g. 2x 4-port supplies for 8-camera setups).
+  - Preserved active catalog visibility so out-of-stock active products display the designated "Out of Stock" disabled card rather than vanishing.
+- **End-to-End Test Suite (`scripts/test-configuration-catalog.ts`):**
+  - 24/24 unit and catalog integration tests passing across HD, IP, and Wireless modes.
+
+---
+
 ## 3. Comprehensive Verification & Testing Gates
 
 | Verification Layer | Target | Result | Evidence |
@@ -382,6 +409,7 @@
 | **Layer 31: Competitor Price Match & Self-Healing Baseline Engine** | 7-Phase Lifecycle Suite (`test-full-customer-lifecycle-e2e.ts`) & Playwright | `PASS` | 7/7 phases passed (100%). Self-healing baseline quote generation (8 BOM items), on-card contextual anchor, Deal Desk counter-strategy, compliant WhatsApp pitch (zero prohibited warranty phrases), live PDF streaming (200 OK). |
 | **Layer 32: Sales & CRM Lead Urgency & Omnichannel Alignment** | CRMEngine Unit Suite & Lead Ingestion Gates | `PASS` | 100% test pass on timeline-to-priority mapping (HOT 1h, WARM 24h, NURTURE 3d); 9-question WhatsApp bot state machine verified; Step 4 & Step 6 wizard urgency capture active; 1-click WhatsApp admin action; 0 build errors. |
 | **Layer 33: Dual-Entity Beat Planning & Inactivity Tracking** | VRPTW Optimizer & Touchpoint Test Suite | `PASS` | 100% test pass on dual-entity route optimization (7.9km / 19m drive); inactivity aging verification (Active 2d, Due 11d, Overdue 26d, Never); auto-touchpoint logging verified; 0 build errors. |
+| **Layer 34: Configuration Tool Catalog Normalization & Grouping** | Catalog Grouping Suite (`scripts/test-configuration-catalog.ts`) | `PASS` | 24/24 passed (100%). Storage type normalization (`Surveillance HDD` ➔ `Hard Disk`), all Budget Brand HDDs restored, numeric capacity ordering, 7 accessory sub-categories, 4G router unblocked, 0 build errors. |
 
 ---
 

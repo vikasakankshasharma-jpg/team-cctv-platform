@@ -20,6 +20,78 @@ type Tab = "cameras" | "recorders" | "storage" | "power" | "addons";
 const TAB_FLOW: Tab[] = ["cameras", "recorders", "storage", "power"];
 const TAB_LABELS: Record<Tab, string> = { cameras: "CCTV Camera", recorders: "Recorder", storage: "Storage", power: "Power", addons: "Accessories" };
 
+export function getStorageTypeNormalized(item: any): "Hard Disk" | "Micro SD" | "SSD" {
+  const st = (item.storage_type || "").toString().toLowerCase().trim();
+  const name = ((item.display_name || "") + " " + (item.technical_name || "")).toLowerCase();
+
+  if (st === "hard disk" || st === "hdd" || st === "surveillance hdd" || st.includes("hdd") || st.includes("hard")) {
+    return "Hard Disk";
+  }
+  if (st === "micro sd" || st === "microsd" || st === "sd card" || st.includes("sd")) {
+    return "Micro SD";
+  }
+  if (st === "ssd" || st.includes("ssd")) {
+    return "SSD";
+  }
+
+  if (name.includes("sd card") || name.includes("sdcard") || name.includes("micro sd") || name.includes("microsd") || name.includes("memory card")) {
+    return "Micro SD";
+  }
+  if (name.includes("hard disk") || name.includes("hdd") || name.includes("purple") || name.includes("skyhawk") || name.includes("barracuda") || name.includes("surveillance hard")) {
+    return "Hard Disk";
+  }
+  if (name.includes("ssd")) {
+    return "SSD";
+  }
+
+  return "Hard Disk";
+}
+
+export function parseCapacityInGB(cap: string): number {
+  const match = cap.match(/^(\d+(?:\.\d+)?)\s*(TB|GB)$/i);
+  if (!match) return 0;
+  const num = parseFloat(match[1]);
+  return match[2].toUpperCase() === "TB" ? num * 1000 : num;
+}
+
+export function getAddonGroupLabel(item: any): string {
+  const cat = (item.category || "").toLowerCase();
+  const name = ((item.display_name || "") + " " + (item.technical_name || "")).toLowerCase();
+  
+  // 1. Direct Category Match (highest priority)
+  if (cat === "cable" || cat === "hdmi_cable") return "Cables & Wire";
+  if (cat === "connector") return "Connectors";
+  if (cat === "camera_mount") return "Junction Box & Mounts";
+  if (cat === "rack") return "Racks & Enclosures";
+  if (cat === "network") return "Network & Routers";
+  if (cat === "display") return "Display & Monitors";
+  if (cat === "service") return "Services & AMC";
+
+  // 2. Name Fallback Match (for legacy addons or uncategorized items)
+  if (name.includes("amc") || name.includes("maintenance") || name.includes("warranty") || name.includes("service")) {
+    return "Services & AMC";
+  }
+  if (name.includes("rack") || name.includes("cabinet") || name.includes("enclosure")) {
+    return "Racks & Enclosures";
+  }
+  if (name.includes("cable") || name.includes("wire") || name.includes("cat6") || name.includes("3+1") || name.includes("hdmi")) {
+    return "Cables & Wire";
+  }
+  if (name.includes("connector") || name.includes("bnc") || name.includes("rj45") || name.includes("dc pin") || name.includes("dc plug")) {
+    return "Connectors";
+  }
+  if (name.includes("junction") || name.includes("mount box") || name.includes("camera mount") || name.includes("bracket")) {
+    return "Junction Box & Mounts";
+  }
+  if (name.includes("router") || name.includes("wifi extender") || name.includes("4g sim") || name.includes("access point")) {
+    return "Network & Routers";
+  }
+  if (name.includes("monitor") || name.includes("display screen") || name.includes("led display") || /\b(tv|television)\b/i.test(name)) {
+    return "Display & Monitors";
+  }
+  return "Accessories";
+}
+
 export function FullCustomizerPanel({ activePricing }: { activePricing?: PricingResult }) {
   const { t } = useTranslation();
   const { selection, updateSelection, toggleAddon, products, addons, resetFilters, setActiveCheckoutOption, compare_options, setCompareOptions } = useConfiguratorStore();
@@ -117,15 +189,10 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
       const proxyTech = isMixedCameraMode && activeMixedType 
         ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.technology || selection.technology
         : selection.technology;
-        
-      const requiredQty = isMixedCameraMode && activeMixedType 
-        ? selection.mixed_camera_requirements!.find(r => r.type === activeMixedType)?.count || 1 
-        : selection.camera_count;
 
       products.filter(p => 
         p.category === "cctv_camera" && 
         p.is_active && 
-        (p.stock_quantity === undefined || p.stock_quantity >= requiredQty) &&
         (!proxyTech || p.technologies?.includes(proxyTech as any) || p.technologies?.includes("Common"))
       ).forEach(p => {
         if (p.brand) brands.add(getCanonicalBrandName(p.brand));
@@ -151,12 +218,11 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
       products.filter(p => 
         p.category === "recorder" && 
         p.is_active && 
-        (p.stock_quantity === undefined || p.stock_quantity >= 1) &&
-        (!selection.technology || p.technologies?.includes(selection.technology as any) || p.technologies?.includes("Common")) &&
-        (p.max_cameras || p.channels || 0) >= selection.camera_count
+        (!selection.technology || p.technologies?.includes(selection.technology as any) || p.technologies?.includes("Common"))
       ).forEach(p => {
         if (p.brand) brands.add(getCanonicalBrandName(p.brand));
-        if (p.channels) channels.add(`${p.channels} Ch`);
+        const ch = p.channels || p.max_cameras;
+        if (ch) channels.add(`${ch} Ch`);
         const name = (p.technical_name || p.display_name || "").toLowerCase();
         if (name.includes("nvr")) types.add("NVR");
         if (name.includes("dvr")) types.add("DVR");
@@ -169,26 +235,78 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
     } else if (activeTab === "storage") {
       const capacities = new Set<string>();
       const types = new Set<string>();
+      const brands = new Set<string>();
       [...products, ...addons].filter(a => 
         a.category === "storage" && 
-        a.is_active &&
-        (a.stock_quantity === undefined || a.stock_quantity >= 1)
+        a.is_active
       ).forEach(a => {
-        const match = a.display_name.match(/(\d+TB|\d+GB)/i);
+        if (a.brand) brands.add(getCanonicalBrandName(a.brand));
+        const match = ((a.display_name || "") + " " + (a.technical_name || "") + " " + ((a as any).capacity || "")).match(/(\d+TB|\d+GB)/i);
         if (match) capacities.add(match[1].toUpperCase());
         
-        const name = a.display_name.toLowerCase();
-        
-        if ((a as any).storage_type === "Micro SD" || (!(a as any).storage_type && (name.includes("sd card") || name.includes("micro sd") || name.includes("memory card")))) {
-          types.add("Micro SD");
-        } else if ((a as any).storage_type === "Hard Disk" || (!(a as any).storage_type && (name.includes("hard disk") || name.includes("hdd") || name.includes("purple") || name.includes("skyhawk")))) {
-          types.add("Hard Disk");
-        }
+        const type = getStorageTypeNormalized(a);
+        if (type) types.add(type);
       });
-      return [
-        { key: "type", label: "Type", options: Array.from(types).sort() },
-        { key: "capacity", label: "Capacity", options: Array.from(capacities).sort() }
-      ].filter(f => f.options.length > 1);
+      const filters = [];
+      if (brands.size > 1) {
+        filters.push({ key: "brand", label: "Brand", options: Array.from(brands).sort() });
+      }
+      if (types.size > 1) {
+        filters.push({ key: "type", label: "Type", options: Array.from(types).sort() });
+      }
+      if (capacities.size > 1) {
+        filters.push({ key: "capacity", label: "Capacity", options: Array.from(capacities).sort((a, b) => parseCapacityInGB(a) - parseCapacityInGB(b)) });
+      }
+      return filters;
+    } else if (activeTab === "power") {
+      const brands = new Set<string>();
+      const types = new Set<string>();
+      const isIP = selection.technology === "IP";
+      [...products, ...addons].filter(a => {
+        if (!a.is_active || !((a.unit_price || (a as any).price || 0) > 0)) return false;
+        const cat = a.category || "";
+        const name = (a.technical_name || a.display_name || "").toLowerCase();
+        if (isIP) {
+          return (cat === "power_device" || cat === "power" || cat === "network") && (name.includes("poe") || name.includes("p.o.e") || name.includes("p-o-e") || name.includes("switch"));
+        } else {
+          return (cat === "power_device" || cat === "power") && (name.includes("smps") || name.includes("power supply") || name.includes("psu"));
+        }
+      }).forEach(p => {
+        if (p.brand) brands.add(getCanonicalBrandName(p.brand));
+        const name = (p.technical_name || p.display_name || "").toLowerCase();
+        if (name.includes("poe") || name.includes("switch")) types.add("PoE Switch");
+        else if (name.includes("smps")) types.add("SMPS Supply");
+        else if (name.includes("adapter")) types.add("Power Adapter");
+      });
+      const filters = [];
+      if (brands.size > 1) filters.push({ key: "brand", label: "Brand", options: Array.from(brands).sort() });
+      if (types.size > 1) filters.push({ key: "type", label: "Type", options: Array.from(types).sort() });
+      return filters;
+    } else if (activeTab === "addons") {
+      const subcats = new Set<string>();
+      const brands = new Set<string>();
+      
+      const allAddonPool = [...products, ...addons].filter(a => 
+        !["cctv_camera", "recorder", "storage", "power", "power_device"].includes(a.category || "") && 
+        !(a.category === "network" && ((a.technical_name || a.display_name || "").toLowerCase().includes("poe"))) &&
+        a.is_active && 
+        (a.unit_price || (a as any).price || 0) > 0
+      );
+
+      allAddonPool.forEach(a => {
+        if (a.brand) brands.add(getCanonicalBrandName(a.brand));
+        const grp = getAddonGroupLabel(a);
+        if (grp) subcats.add(grp);
+      });
+
+      const filters = [];
+      if (subcats.size > 1) {
+        filters.push({ key: "subcat", label: "Category", options: Array.from(subcats).sort() });
+      }
+      if (brands.size > 1) {
+        filters.push({ key: "brand", label: "Brand", options: Array.from(brands).sort() });
+      }
+      return filters;
     }
     return [];
   }, [activeTab, products, addons, selection.technology, isMixedCameraMode, activeMixedType, selection.mixed_camera_requirements, selection.camera_count]);
@@ -316,7 +434,6 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
     if (selection.technology === "Wireless") return [];
     let list = products.filter(p => p.category === "recorder" && p.is_active && (p.unit_price || 0) > 0);
     if (selection.technology && selection.technology !== "both" as any) list = list.filter(p => isTechMatch(p, selection.technology as string));
-    list = list.filter(p => (p.max_cameras || p.channels || 0) >= selection.camera_count);
     
     if (activeFilters.brand && activeFilters.brand !== "all") {
       const brandFiltered = list.filter(p => isBrandMatch(p, activeFilters.brand!));
@@ -325,14 +442,26 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
       }
     }
     if (activeFilters.channels && activeFilters.channels !== "all") {
-      list = list.filter(p => `${p.channels} Ch` === activeFilters.channels);
+      list = list.filter(p => {
+        const ch = p.channels || p.max_cameras;
+        return ch ? `${ch} Ch` === activeFilters.channels : false;
+      });
     }
     if (activeFilters.type && activeFilters.type !== "all") {
-      list = list.filter(p => p.technical_name?.toLowerCase().includes(activeFilters.type.toLowerCase()));
+      list = list.filter(p => p.technical_name?.toLowerCase().includes(activeFilters.type.toLowerCase()) || p.display_name?.toLowerCase().includes(activeFilters.type.toLowerCase()));
     }
     
-    if (search.trim()) list = list.filter(p => p.display_name.toLowerCase().includes(search.toLowerCase()));
-    return list.sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0));
+    if (search.trim()) list = list.filter(p => p.display_name.toLowerCase().includes(search.toLowerCase()) || (p.technical_name || "").toLowerCase().includes(search.toLowerCase()));
+    
+    return list.sort((a, b) => {
+      const aCap = a.max_cameras || a.channels || 0;
+      const bCap = b.max_cameras || b.channels || 0;
+      const aFits = aCap >= selection.camera_count;
+      const bFits = bCap >= selection.camera_count;
+      if (aFits && !bFits) return -1;
+      if (!aFits && bFits) return 1;
+      return (a.unit_price || 0) - (b.unit_price || 0);
+    });
   }, [products, selection.technology, selection.camera_count, search, activeFilters]);
 
   const filteredStorage = useMemo(() => {
@@ -340,26 +469,21 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
     
     // Auto-filter for Wireless technology if not explicitly overridden by user filter
     if (!activeFilters.type && selection.technology === "Wireless") {
-      list = list.filter(a => {
-        const name = a.display_name.toLowerCase();
-        return (a as any).storage_type === "Micro SD" || (!(a as any).storage_type && (name.includes("sd card") || name.includes("sdcard") || name.includes("micro sd") || name.includes("microsd") || name.includes("memory card")));
-      });
+      list = list.filter(a => getStorageTypeNormalized(a) === "Micro SD");
     } else if (activeFilters.type && activeFilters.type !== "all") {
-      list = list.filter(a => {
-        const name = a.display_name.toLowerCase();
-        if (activeFilters.type === "Micro SD") {
-          return (a as any).storage_type === "Micro SD" || (!(a as any).storage_type && (name.includes("sd card") || name.includes("sdcard") || name.includes("micro sd") || name.includes("microsd") || name.includes("memory card")));
-        }
-        if (activeFilters.type === "Hard Disk") {
-          return (a as any).storage_type === "Hard Disk" || (!(a as any).storage_type && (name.includes("hard disk") || name.includes("hdd") || name.includes("purple") || name.includes("skyhawk")));
-        }
-        return true;
-      });
+      list = list.filter(a => getStorageTypeNormalized(a) === activeFilters.type);
+    }
+
+    if (activeFilters.brand && activeFilters.brand !== "all") {
+      const brandFiltered = list.filter(a => isBrandMatch(a, activeFilters.brand!));
+      if (brandFiltered.length > 0) {
+        list = brandFiltered;
+      }
     }
 
     if (activeFilters.capacity && activeFilters.capacity !== "all") {
       list = list.filter(a => {
-        const match = a.display_name.match(/(\d+TB|\d+GB)/i);
+        const match = ((a.display_name || "") + " " + (a.technical_name || "") + " " + ((a as any).capacity || "")).match(/(\d+TB|\d+GB)/i);
         return match && match[1].toUpperCase() === activeFilters.capacity;
       });
     }
@@ -381,23 +505,44 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
         return (cat === "power_device" || cat === "power") && (name.includes("smps") || name.includes("power supply") || name.includes("psu"));
       }
     });
-    
-    list = list.filter(a => {
-      let maxCam = a.max_cameras || (a as any).ports || 0;
-      if (!maxCam) {
-        const match = a.display_name.match(/(\d+)\s*(?:Ch|Port)/i);
-        if (match) maxCam = parseInt(match[1]);
-        else maxCam = 999;
+
+    if (activeFilters.brand && activeFilters.brand !== "all") {
+      const brandFiltered = list.filter(p => isBrandMatch(p, activeFilters.brand!));
+      if (brandFiltered.length > 0) {
+        list = brandFiltered;
       }
-      return maxCam >= selection.camera_count;
-    });
+    }
+
+    if (activeFilters.type && activeFilters.type !== "all") {
+      list = list.filter(p => {
+        const name = (p.technical_name || p.display_name || "").toLowerCase();
+        if (activeFilters.type === "PoE Switch") return name.includes("poe") || name.includes("switch");
+        if (activeFilters.type === "SMPS Supply") return name.includes("smps") || name.includes("power supply");
+        if (activeFilters.type === "Power Adapter") return name.includes("adapter");
+        return true;
+      });
+    }
 
     if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()) || (a.technical_name || "").toLowerCase().includes(search.toLowerCase()));
-    return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
-  }, [addons, selection.technology, selection.camera_count, search, products]);
+    
+    return (list as any[]).sort((a, b) => {
+      const aMax = a.max_cameras || (a as any).ports || 4;
+      const bMax = b.max_cameras || (b as any).ports || 4;
+      const aFits = aMax >= selection.camera_count;
+      const bFits = bMax >= selection.camera_count;
+      if (aFits && !bFits) return -1;
+      if (!aFits && bFits) return 1;
+      return (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0);
+    });
+  }, [addons, selection.technology, selection.camera_count, search, activeFilters, products]);
 
   const filteredAddons = useMemo(() => {
-    let list = [...products, ...addons].filter(a => !["cctv_camera", "recorder", "storage", "power", "power_device", "network"].includes(a.category || "") && a.is_active && (a.unit_price || (a as any).price || 0) > 0);
+    let list = [...products, ...addons].filter(a => 
+      !["cctv_camera", "recorder", "storage", "power", "power_device"].includes(a.category || "") && 
+      !(a.category === "network" && ((a.technical_name || a.display_name || "").toLowerCase().includes("poe"))) &&
+      a.is_active && 
+      (a.unit_price || (a as any).price || 0) > 0
+    );
     
     // Hide unrelated items based on technology and cable type
     const isIP = selection.technology === "IP";
@@ -423,9 +568,20 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
       return true;
     });
 
-    if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()));
+    if (activeFilters.subcat && activeFilters.subcat !== "all") {
+      list = list.filter(a => getAddonGroupLabel(a) === activeFilters.subcat);
+    }
+
+    if (activeFilters.brand && activeFilters.brand !== "all") {
+      const brandFiltered = list.filter(a => isBrandMatch(a, activeFilters.brand!));
+      if (brandFiltered.length > 0) {
+        list = brandFiltered;
+      }
+    }
+
+    if (search.trim()) list = list.filter(a => (a.display_name || "").toLowerCase().includes(search.toLowerCase()) || (a.technical_name || "").toLowerCase().includes(search.toLowerCase()));
     return (list as any[]).sort((a, b) => (a.unit_price || a.price || 0) - (b.unit_price || b.price || 0));
-  }, [addons, search, products, selection.technology, selection.cable_type]);
+  }, [addons, search, products, selection.technology, selection.cable_type, activeFilters]);
 
   // Tab bar scroll tracking
   const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -917,7 +1073,7 @@ export function FullCustomizerPanel({ activePricing }: { activePricing?: Pricing
               () => updateSelection({ selected_storage_id: undefined })
             )}
             {filteredStorage.map(hdd => {
-              const isSdCard = ((hdd as any).storage_type === "Micro SD" || (hdd.display_name && hdd.display_name.toLowerCase().includes("sd card")) || (hdd.display_name && hdd.display_name.toLowerCase().includes("micro sd")));
+              const isSdCard = getStorageTypeNormalized(hdd) === "Micro SD";
               const reqQty = (isSdCard && selection.technology === "Wireless") ? (selection.camera_count || 1) : 1;
               const isSelected = selection.selected_storage_id === hdd.id || (!selection.selected_storage_id && activePricing?.items.some((i: any) => i.product_id === hdd.id));
               return renderProductItem(

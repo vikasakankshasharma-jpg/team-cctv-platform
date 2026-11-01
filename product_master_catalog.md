@@ -420,6 +420,10 @@
 | `HDMI-10M` | High-Speed HDMI Cable (10 MTR) | Budget Brand | hdmi_cable | Common | ₹420 |
 | `HDMI-15M` | High-Speed HDMI Cable (15 MTR) | Budget Brand | hdmi_cable | Common | ₹630 |
 | `HDMI-20M` | High-Speed HDMI Cable (20 MTR) | Budget Brand | hdmi_cable | Common | ₹910 |
+| `BB-HDD-500GB` | Budget Brand 500GB Surveillance Hard Disk | Budget Brand | storage | Common | ₹2160 |
+| `BB-HDD-1TB` | Budget Brand 1TB Surveillance Hard Disk | Budget Brand | storage | Common | ₹6240 |
+| `BB-HDD-2TB` | Budget Brand 2TB Surveillance Hard Disk | Budget Brand | storage | Common | ₹9600 |
+| `BB-HDD-4TB` | Budget Brand 4TB Surveillance Hard Disk | Budget Brand | storage | Common | ₹18000 |
 
 ## Addons
 
