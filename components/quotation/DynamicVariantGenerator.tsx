@@ -71,7 +71,7 @@ interface DynamicVariantGeneratorProps {
   onSelectCheckout: (pricing: PricingResult) => void;
   onToggleCompare: (pricing: PricingResult) => void;
   selectedCompareItems: PricingResult[];
-  onPriceMatch?: (pricing: PricingResult) => void;
+  onPriceMatch?: (pricing: PricingResult, allVariants?: PricingResult[]) => void;
 }
 
 export function DynamicVariantGenerator({
@@ -806,7 +806,7 @@ export function DynamicVariantGenerator({
                       onClick={(e) => {
                         e.stopPropagation();
                         if (onPriceMatch) {
-                          onPriceMatch(variant);
+                          onPriceMatch(variant, variants);
                         } else {
                           onSelectCheckout(variant);
                         }

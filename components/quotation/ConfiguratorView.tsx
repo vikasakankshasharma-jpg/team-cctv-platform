@@ -62,6 +62,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const [priceMatchSubmitted, setPriceMatchSubmitted] = useState(false);
   const [isPriceMatchSubmitting, setIsPriceMatchSubmitting] = useState(false);
   const [priceMatchPackage, setPriceMatchPackage] = useState<SelectedPackageInfo | null>(null);
+  const [availablePriceMatchPackages, setAvailablePriceMatchPackages] = useState<SelectedPackageInfo[]>([]);
 
 
 
@@ -107,18 +108,36 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     };
   }, [selection.camera_count]);
 
-  const handleOpenPriceMatch = useCallback((pricing?: PricingResult) => {
+  const handleOpenPriceMatch = useCallback((pricing?: PricingResult, allVariants?: PricingResult[]) => {
     if (pricing) {
       setPriceMatchPackage(getPackageInfoFromPricing(pricing));
     } else if (pricing_results.recommended) {
       setPriceMatchPackage(getPackageInfoFromPricing(pricing_results.recommended));
     }
+
+    if (allVariants && allVariants.length > 0) {
+      const pkgList = allVariants.map(v => getPackageInfoFromPricing(v));
+      const uniqueList = pkgList.filter((pkg, idx, self) => 
+        idx === self.findIndex(p => p.title === pkg.title)
+      );
+      setAvailablePriceMatchPackages(uniqueList);
+    } else if (availablePriceMatchPackages.length === 0) {
+      const storeVariants = [pricing_results.budget, pricing_results.recommended, pricing_results.premium].filter(Boolean) as PricingResult[];
+      if (storeVariants.length > 0) {
+        const pkgList = storeVariants.map(v => getPackageInfoFromPricing(v));
+        const uniqueList = pkgList.filter((pkg, idx, self) => 
+          idx === self.findIndex(p => p.title === pkg.title)
+        );
+        setAvailablePriceMatchPackages(uniqueList);
+      }
+    }
+
     setShowPriceMatchUploader(true);
     setTimeout(() => {
       const el = document.getElementById("price-match-section");
       if (el) el.scrollIntoView({ behavior: "smooth" });
     }, 100);
-  }, [getPackageInfoFromPricing, pricing_results.recommended]);
+  }, [getPackageInfoFromPricing, pricing_results, availablePriceMatchPackages.length]);
 
   // Setup manual scroll restoration to prevent Next.js from aggressively restoring scroll position
   useEffect(() => {
@@ -651,6 +670,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                   leadId={lead.id!}
                   customerName={lead.customer_name}
                   selectedPackage={priceMatchPackage}
+                  availablePackages={availablePriceMatchPackages}
+                  onSelectPackage={(pkg) => setPriceMatchPackage(pkg)}
                   onSubmit={async (data) => {
                     setIsPriceMatchSubmitting(true);
                     try {
@@ -681,7 +702,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
                   {t("wz_already_have_a_quote_from_anot")}
                 </span>
                 <button
-                  onClick={() => setShowPriceMatchUploader(true)}
+                  onClick={() => handleOpenPriceMatch()}
                   className="group inline-flex items-center gap-1 text-[13px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer"
                 >
                   {t("wz_upload_it_for_a_guaranteed_bes")}

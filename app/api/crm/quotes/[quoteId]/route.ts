@@ -137,6 +137,7 @@ export async function GET(
       isCompleted: isPaid || quoteData?.leadStatus === "WON" || leadData?.leadStatus === "WON",
       currentVersion: currentVersionNum,
       versions: formattedVersions,
+      total_payable: activeQuotePayable,
       
       // Commercial & Pricing Snapshot
       pricingSnapshot: (() => {

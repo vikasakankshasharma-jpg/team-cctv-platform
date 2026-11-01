@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   ImageIcon,
   ChevronRight,
+  ChevronDown,
   Tag,
   Shield,
   Sparkles,
@@ -279,46 +280,47 @@ export function CompetitorQuoteUploader({
               )}
             </div>
 
-            <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
-              {activePkg
-                ? `You are comparing: ${activePkg.title} (Our Price: ₹${activePkg.price.toLocaleString("en-IN")})`
-                : "Compare with our verified CCTV package"}
-            </h3>
-
-            <p className="text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
-              Upload your competitor's quote for a similar {activePkg?.cameraCount || 4}-camera setup and we guarantee to match or beat their price while giving you 100% pure solid copper cables and genuine surveillance-grade storage!
-            </p>
-
-            {/* Quick Package Selector if multiple packages available */}
-            {availablePackages && availablePackages.length > 1 && (
-              <div className="pt-2">
-                <p className="text-[10px] font-black text-amber-900/70 dark:text-amber-200/70 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                  <Layers className="w-3 h-3 text-amber-600" />
-                  Select matching package from our catalog:
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {availablePackages.map((pkg, i) => {
-                    const isSelected = activePkg?.title === pkg.title;
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => {
-                          setActivePkg(pkg);
-                          if (onSelectPackage) onSelectPackage(pkg);
-                        }}
-                        className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all ${
-                          isSelected
-                            ? "bg-amber-600 text-white font-bold shadow-xs scale-100"
-                            : "bg-white/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-800 border border-amber-200/60 dark:border-amber-800/40"
-                        }`}
-                      >
-                        {pkg.title} • ₹{pkg.price.toLocaleString("en-IN")}
-                      </button>
-                    );
-                  })}
+            {availablePackages && availablePackages.length > 0 ? (
+              <div className="space-y-2 pt-1">
+                <label className="text-[11px] font-black text-amber-900/90 dark:text-amber-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-amber-600" />
+                  Select package to compare from our catalog:
+                </label>
+                <div className="relative">
+                  <select
+                    value={activePkg?.title || ""}
+                    onChange={(e) => {
+                      const selected = availablePackages.find(p => p.title === e.target.value);
+                      if (selected) {
+                        setActivePkg(selected);
+                        if (onSelectPackage) onSelectPackage(selected);
+                      }
+                    }}
+                    className="w-full py-2.5 pl-3.5 pr-10 text-xs sm:text-sm font-bold bg-white dark:bg-zinc-800 border border-amber-300/80 dark:border-amber-700/80 rounded-xl text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer appearance-none shadow-xs transition-all"
+                  >
+                    {availablePackages.map((pkg, i) => (
+                      <option key={i} value={pkg.title}>
+                        {pkg.title} — ₹{pkg.price.toLocaleString("en-IN")}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-amber-700 dark:text-amber-300 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
+                <p className="text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-300 leading-relaxed pt-1">
+                  Upload your competitor's quote for a similar {activePkg?.cameraCount || 4}-camera setup and we guarantee to match or beat their price while giving you 100% pure solid copper cables and genuine surveillance-grade storage!
+                </p>
               </div>
+            ) : (
+              <>
+                <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                  {activePkg
+                    ? `You are comparing: ${activePkg.title} (Our Price: ₹${activePkg.price.toLocaleString("en-IN")})`
+                    : "Compare with our verified CCTV package"}
+                </h3>
+                <p className="text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  Upload your competitor's quote for a similar {activePkg?.cameraCount || 4}-camera setup and we guarantee to match or beat their price while giving you 100% pure solid copper cables and genuine surveillance-grade storage!
+                </p>
+              </>
             )}
           </div>
         </div>
@@ -462,23 +464,39 @@ export function CompetitorQuoteUploader({
           />
         </div>
 
-        {/* Competitor Total */}
+        {/* Competitor Total (Optional with Real-Time Variance & Smart Guidance) */}
         <div>
-          <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest ml-1 mb-1.5 block">
-            {t("up_total", "Their Quoted Total (₹)")}
-          </label>
+          <div className="flex items-center justify-between ml-1 mb-1.5 flex-wrap gap-1">
+            <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest block">
+              {t("up_total", "Competitor's Quoted Amount (₹)")} <span className="text-zinc-400 dark:text-zinc-500 font-normal lowercase">(optional)</span>
+            </label>
+            {activePkg && competitorTotal && Number(competitorTotal) > 0 && (
+              <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md ${
+                Number(competitorTotal) < activePkg.price
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                  : "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800"
+              }`}>
+                {Number(competitorTotal) < activePkg.price
+                  ? `Competitor is ₹${(activePkg.price - Number(competitorTotal)).toLocaleString("en-IN")} lower • We match or beat!`
+                  : `Our price is already ₹${(Number(competitorTotal) - activePkg.price).toLocaleString("en-IN")} lower with Pure Copper!`}
+              </span>
+            )}
+          </div>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-zinc-400">₹</span>
             <input
               type="number"
               value={competitorTotal}
               onChange={(e) => setCompetitorTotal(e.target.value)}
-              placeholder="e.g. 18500"
+              placeholder="e.g. 18500 (or leave blank if unsure)"
               min="0"
               step="1"
               className="w-full h-11 pl-8 pr-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all tabular-nums"
             />
           </div>
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1.5 ml-1 leading-relaxed">
+            💡 <span className="font-semibold text-zinc-700 dark:text-zinc-300">All-Inclusive Standard:</span> Our catalog price already includes 18% GST, 100% solid pure copper cabling, and professional installation. If your competitor quoted without GST or extra for cabling, leave this blank and our team will verify the full quote for you.
+          </p>
         </div>
 
         {/* Notes */}
