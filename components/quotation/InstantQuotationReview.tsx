@@ -6,8 +6,9 @@ import type { Lead, PricingResult, Product, Addon, AppSettings } from "@/types";
 import { 
   ArrowLeft, Check, CheckCircle2, ShieldCheck, Camera, HardDrive, Server, 
   Cable, Monitor, Wifi, Box, FileText, Sparkles, 
-  ChevronRight, ChevronDown, Wrench, Shield, Layers, X, Plus, Zap
+  ChevronRight, ChevronDown, Wrench, Shield, Layers, X, Plus, Zap, CreditCard
 } from "lucide-react";
+import { EmiBreakdownModal } from "./EmiBreakdownModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -70,6 +71,8 @@ export function InstantQuotationReview({
 
   const { selection, toggleAddon, updateSelection } = useConfiguratorStore();
   const [showAdvancedCustomizer, setShowAdvancedCustomizer] = useState(false);
+  const [showEmiModal, setShowEmiModal] = useState(false);
+  const emiMonthlyAmount = Math.round((activePricing.total_payable * 1.06) / 12);
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
 
   const toggleCategory = (cat: string) => {
@@ -326,12 +329,24 @@ export function InstantQuotationReview({
             </p>
           </div>
 
-          <div className="flex items-center justify-between sm:flex-col sm:items-end bg-white/10 backdrop-blur-md px-3.5 py-2 sm:p-4 rounded-xl border border-white/10 shrink-0">
-            <span className="text-[10px] uppercase font-semibold text-blue-200">{t("wz_total_all_inclusive_price")}</span>
-            <div className="flex items-baseline gap-1 mt-0.5">
+          <div className="flex flex-col sm:items-end bg-white/10 backdrop-blur-md px-3.5 py-2.5 sm:p-4 rounded-xl border border-white/10 shrink-0 gap-1.5">
+            <div className="flex items-center justify-between sm:justify-end gap-3 w-full">
+              <span className="text-[10px] sm:text-xs uppercase font-semibold text-blue-200">{t("wz_total_all_inclusive_price")}</span>
               <span className="text-xl sm:text-3xl font-black text-white">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
             </div>
-            <span className="hidden sm:block text-[9px] text-emerald-300 font-semibold mt-0.5">
+            {/* EMI Sub-Header Anchor */}
+            <div className="flex items-center justify-end w-full">
+              <button
+                type="button"
+                onClick={() => setShowEmiModal(true)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/40 text-amber-200 hover:text-amber-100 text-[11px] font-bold transition-all cursor-pointer group"
+              >
+                <CreditCard className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform" />
+                <span>or ₹{emiMonthlyAmount.toLocaleString("en-IN")}/mo (EMI)</span>
+                <span className="text-[10px] underline opacity-90 ml-0.5">Plans ⓘ</span>
+              </button>
+            </div>
+            <span className="text-[9px] text-emerald-300 font-semibold sm:block">
               ✓ {isWireless ? "Zero Video Cabling • High Endurance MicroSD • Onsite Setup" : t("wz_includes_hardware_wiring_install")}
             </span>
           </div>
@@ -391,6 +406,60 @@ export function InstantQuotationReview({
           <ShieldCheck className="w-4 h-4 text-rose-600 mx-auto mb-1" />
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_warranty")}</div>
           <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{t("wz_1_year_brand")}</div>
+        </div>
+      </div>
+
+      {/* AFFORDABILITY & FLEXIBILITY TWIN-TRUST STRIP */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        {/* Easy EMI Option */}
+        <div 
+          onClick={() => setShowEmiModal(true)}
+          className="bg-white dark:bg-zinc-900 border border-blue-200 dark:border-blue-900/60 hover:border-blue-500 rounded-xl p-3 flex items-center justify-between gap-2.5 shadow-xs hover:shadow-md cursor-pointer transition-all group active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <CreditCard className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                  Easy EMI from ₹{emiMonthlyAmount.toLocaleString("en-IN")}/mo
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.5 rounded shrink-0">
+                  No Cost Available
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate sm:whitespace-normal">
+                HDFC, ICICI, SBI, Axis, Bajaj Finserv & more • Powered by Razorpay
+              </p>
+            </div>
+          </div>
+          <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform flex items-center shrink-0">
+            <span>Plans</span> <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+          </div>
+        </div>
+
+        {/* Book with ₹500 Token Advance */}
+        <div className="bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-900/60 rounded-xl p-3 flex items-center justify-between gap-2.5 shadow-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                  Pay After Installation (Zero Risk)
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 px-1.5 py-0.5 rounded shrink-0">
+                  ₹500 Booking Token
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate sm:whitespace-normal">
+                Book your technician slot with ₹500 token, pay balance only after live camera testing
+              </p>
+            </div>
+          </div>
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
         </div>
       </div>
 
@@ -1116,20 +1185,16 @@ export function InstantQuotationReview({
         </div>
       </div>
         </div>
-      {/* MOBILE STICKY PROCEED BAR */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 p-3 z-50 flex items-center justify-between shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.1)]">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{t("wz_total_amount_payable")}</span>
-          <span className="text-xl font-black text-blue-700 dark:text-blue-400 leading-none mt-1">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
-        </div>
-        <Button
-          onClick={onProceedToActualQuotation}
-          disabled={isSaving}
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl px-6 py-2.5 font-bold shadow-lg shadow-blue-500/30 text-sm flex items-center gap-1.5 transition-transform active:scale-95"
-        >
-          {isSaving ? "Wait..." : "Proceed"} <ChevronRight className="w-4 h-4" />
-        </Button>
-      </div>
+
+
+      {/* EMI Breakdown Modal */}
+      <EmiBreakdownModal
+        isOpen={showEmiModal}
+        onClose={() => setShowEmiModal(false)}
+        totalAmount={activePricing.total_payable}
+        packageName={`${brandName} ${isWireless ? "Smart Wireless" : techName === "HD" ? "Standard HD" : "Premium IP"} Setup`}
+        onProceed={onProceedToActualQuotation}
+      />
     </div>
   );
 }

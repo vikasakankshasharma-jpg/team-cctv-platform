@@ -125,6 +125,9 @@ export function SmartContextBar({ totalPrice, customizationDiff = 0, baseTierNam
               <span className="text-sm font-medium">₹</span>
               <span className="text-2xl font-semibold tracking-tight">{totalPrice.toLocaleString("en-IN")}</span>
             </div>
+            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+              or ₹{Math.round((totalPrice * 1.06) / 12).toLocaleString("en-IN")}/mo (EMI)
+            </span>
           </div>
           
           <div className="flex gap-2 shrink-0 items-center">
