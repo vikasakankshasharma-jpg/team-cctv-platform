@@ -367,14 +367,14 @@ export function WizardClientV2() {
       }
     } catch (e: any) {
       console.error(e);
-      toast.error("Error generating quote");
+      toast.error(t("toast_quote_error", "Error generating quote"));
     }
     setLoading(false);
   };
 
   const handleFinishWizard = async () => {
     if (!req.customer_mobile || req.customer_mobile.length < 10) {
-      toast.error("Please enter a valid 10-digit mobile number.");
+      toast.error(t("err_invalid_mobile", "Please enter a valid 10-digit mobile number."));
       return;
     }
     
@@ -416,11 +416,11 @@ export function WizardClientV2() {
       setOtpSent(true);
       setCountdown(otpMethod === "sms" ? 30 : 60);
       setOtp(["", "", "", ""]);
-      toast.success(`${otpMethod === "sms" ? "SMS" : "WhatsApp"} OTP sent to your number.`);
+      toast.success(t("toast_otp_sent_to_number", `${otpMethod === "sms" ? "SMS" : "WhatsApp"} OTP sent to your number.`));
       
     } catch (error: any) {
       console.error("OTP Send Error:", error);
-      toast.error("Network error. Please try again.");
+      toast.error(t("toast_network_error", "Network error. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -444,7 +444,7 @@ export function WizardClientV2() {
       setOtpSent(true);
       setCountdown(30);
       setOtp(["", "", "", ""]);
-      toast.success("SMS OTP sent to your number.");
+      toast.success(t("toast_otp_sent_to_number", "SMS OTP sent to your number."));
     } catch (err: any) {
       toast.error(err.message || "Failed to send SMS OTP.");
     } finally {
@@ -455,7 +455,7 @@ export function WizardClientV2() {
   const handleVerifyOtp = async (codeOverride?: string) => {
     const code = codeOverride || otp.join("");
     if (code.length !== 4) {
-      toast.error("Please enter the 4-digit OTP.");
+      toast.error(t("toast_enter_4digit_otp", "Please enter the 4-digit OTP."));
       return;
     }
     

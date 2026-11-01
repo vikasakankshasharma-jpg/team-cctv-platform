@@ -61,9 +61,12 @@ export default async function LeadsPage({
   // Process leads and link their quotes
   const resolvedLeads: LeadListRow[] = await Promise.all(leadsSnap.docs.map(async (doc: any) => {
     const data = doc.data();
-    const qId = data.last_quote_id || data.latest_quote_id || data.won_quote_id;
+    const qId = data.last_quote_id || data.latest_quote_id || data.won_quote_id || data.quote_id || data.quoteId || doc.id;
     
     let quoteData: any = qId ? quotesMap.get(qId) : null;
+    if (!quoteData) {
+      quoteData = quotesMap.get(doc.id);
+    }
     if (!quoteData && qId) {
       try {
         const sub = await adminDb.collection("leads").doc(doc.id).collection("quotes").doc(qId).get();
@@ -72,6 +75,7 @@ export default async function LeadsPage({
     }
 
     if (qId) handledQuoteIds.add(qId);
+    handledQuoteIds.add(doc.id);
 
     const isPaid = quoteData?.status === "PAID" || quoteData?.status === "BOOKED" || quoteData?.payment_status === "advance_paid" || !!quoteData?.payment_id || !!data.payment_id || !!data.advance_paid;
     const isSiteVisit = data.status === "site_visit" || quoteData?.status === "site_visit" || !!data.site_visit_date;
@@ -81,7 +85,17 @@ export default async function LeadsPage({
     else if (isSiteVisit && computedLeadStatus === "NEW") computedLeadStatus = "SITE_VISIT";
     if (typeof computedLeadStatus === "string") computedLeadStatus = computedLeadStatus.toUpperCase();
 
-    const total_payable = quoteData?.total_payable ?? quoteData?.pricingSnapshot?.total_payable ?? quoteData?.finalPrice ?? data.total_payable ?? 0;
+    let total_payable = quoteData?.total_payable ?? quoteData?.pricingSnapshot?.total_payable ?? quoteData?.finalPrice ?? data.total_payable ?? 0;
+    if (total_payable <= 0) {
+      try {
+        const { getOrCreateLeadQuote } = await import("@/lib/baseline-quote");
+        const synthesized = await getOrCreateLeadQuote(doc.id);
+        if (synthesized.quoteData?.total_payable) {
+          total_payable = synthesized.quoteData.total_payable;
+          quoteData = synthesized.quoteData;
+        }
+      } catch (_) {}
+    }
     const selectedPlan = quoteData?.plan_type || quoteData?.selectedPlan || data.selectedPlan || quoteData?.pricingSnapshot?.selectedPlan || "Standard";
     const customerMobile = data.mobile_number || data.customer_mobile || quoteData?.customer_mobile || quoteData?.billing_details?.phone || "";
 

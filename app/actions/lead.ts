@@ -231,6 +231,14 @@ export async function createLeadAction(payload: {
       console.warn("Could not auto-queue followup_task:", taskErr);
     }
 
+    // Auto-synthesize authoritative baseline quote so lead immediately has total_payable and BOM
+    try {
+      const { getOrCreateLeadQuote } = await import("@/lib/baseline-quote");
+      await getOrCreateLeadQuote(newLeadRef.id);
+    } catch (quoteErr) {
+      console.warn("Could not auto-generate baseline quote for lead:", quoteErr);
+    }
+
     if (locationData && !locationData.served) {
       adminDb.collection("service_areas").doc(locationData.slug)
         .update({ waitlist_count: increment(1) })

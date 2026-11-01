@@ -581,21 +581,59 @@ body::before {
 .metric-bar-wrap { flex: 1; height: 5px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
 .metric-bar-fill { height: 100%; border-radius: 3px; }
 .metric-bar-pct { font-size: 11px; font-weight: 600; color: var(--text); min-width: 32px; text-align: right; font-family: var(--font-mono), monospace; }
-/* Automatically normalize typography for Indic languages to prevent broken ligatures and unreadable text */
+/* Automatically normalize typography for Indic languages to prevent broken ligatures, clipped matras, and unreadable text */
+html[data-locale]:not([data-locale="en"]) {
+  font-family: var(--font-sans), system-ui, -apple-system,
+    "Noto Sans Devanagari", "Nirmala UI", "Mukta",
+    "Noto Sans Gujarati", "Gujarati Sangam MN", "Shruti",
+    "Noto Sans Tamil", "Tamil Sangam MN", "Latha",
+    "Noto Sans Telugu", "Telugu Sangam MN", "Gautami",
+    "Noto Sans Kannada", "Kannada Sangam MN", "Tunga",
+    "Noto Sans Bengali", "Bangla Sangam MN", "Vrinda",
+    "Noto Sans Gurmukhi", "Gurmukhi Sangam MN", "Raavi",
+    "Noto Sans Malayalam", "Malayalam Sangam MN", "Kartika",
+    "Noto Sans Oriya", "Oriya Sangam MN", "Kalinga",
+    sans-serif;
+  line-height: 1.55;
+}
+
+/* Neutralize negative tracking (which collides Indic ligatures and matras) and excessive tracking */
+html[data-locale]:not([data-locale="en"]) .tracking-tight,
+html[data-locale]:not([data-locale="en"]) .tracking-tighter,
 html[data-locale]:not([data-locale="en"]) .tracking-widest,
 html[data-locale]:not([data-locale="en"]) .tracking-wider,
 html[data-locale]:not([data-locale="en"]) .tracking-\[0\.2em\],
 html[data-locale]:not([data-locale="en"]) .tracking-\[0\.25em\] {
-  letter-spacing: normal !important;
+  letter-spacing: 0.01em !important;
 }
 
-html[data-locale]:not([data-locale="en"]) .uppercase {
+/* Relax tight line-heights to protect upper matras (े, ै, ो, ौ, ं, र्) and lower matras (ु, ू, ृ, ्र) */
+html[data-locale]:not([data-locale="en"]) .leading-none,
+html[data-locale]:not([data-locale="en"]) .leading-tight,
+html[data-locale]:not([data-locale="en"]) .leading-3,
+html[data-locale]:not([data-locale="en"]) .leading-4,
+html[data-locale]:not([data-locale="en"]) .leading-\[1\.05\],
+html[data-locale]:not([data-locale="en"]) .leading-\[1\.1\] {
+  line-height: 1.38 !important;
+}
+
+/* Disable text transform since Indic scripts do not have capitalization */
+html[data-locale]:not([data-locale="en"]) .uppercase,
+html[data-locale]:not([data-locale="en"]) .capitalize {
   text-transform: none !important;
 }
 
 /* For Indic languages, font-black can cause characters to bleed into each other at small sizes */
 html[data-locale]:not([data-locale="en"]) .font-black {
   font-weight: 700 !important; /* Downgrade black to bold for legibility */
+}
+
+/* Prevent vertical clipping of diacritics in badges, buttons, and pill labels */
+html[data-locale]:not([data-locale="en"]) button,
+html[data-locale]:not([data-locale="en"]) .badge,
+html[data-locale]:not([data-locale="en"]) [role="button"] {
+  padding-top: max(0.2rem, inherit);
+  padding-bottom: max(0.2rem, inherit);
 }
 
 /* Mobile touch target - WCAG 2.5.5 */

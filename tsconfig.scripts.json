@@ -7,7 +7,10 @@
     "outDir": "./.tmp-scripts",
     "noEmit": false,
     "isolatedModules": false,
-    "paths": {}
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "include": ["scripts/**/*.ts"],
   "exclude": ["node_modules"]

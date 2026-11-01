@@ -232,6 +232,14 @@ export async function POST(request: NextRequest) {
         });
     }
 
+    // Auto-synthesize authoritative baseline quote so lead immediately has total_payable and BOM
+    try {
+      const { getOrCreateLeadQuote } = await import("@/lib/baseline-quote");
+      await getOrCreateLeadQuote(newLeadRef.id);
+    } catch (quoteErr) {
+      console.warn("Could not auto-generate baseline quote in submissions:", quoteErr);
+    }
+
     return ApiResponse.success({ 
       id: newLeadRef.id, 
       message: "Lead created and routed successfully" 
