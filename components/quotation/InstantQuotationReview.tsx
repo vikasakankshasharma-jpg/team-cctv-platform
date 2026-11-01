@@ -6,7 +6,8 @@ import type { Lead, PricingResult, Product, Addon, AppSettings } from "@/types";
 import { 
   ArrowLeft, Check, CheckCircle2, ShieldCheck, Camera, HardDrive, Server, 
   Cable, Monitor, Wifi, Box, FileText, Sparkles, 
-  ChevronRight, ChevronDown, Wrench, Shield, Layers, X, Plus, Zap, CreditCard
+  ChevronRight, ChevronDown, Wrench, Shield, Layers, X, Plus, Zap, CreditCard,
+  Share2, ArrowRight
 } from "lucide-react";
 import { EmiBreakdownModal } from "./EmiBreakdownModal";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -24,10 +25,11 @@ interface InstantQuotationReviewProps {
   onBack: () => void;
   onProceedToActualQuotation: () => void;
   isSaving: boolean;
+  onDownloadPdf?: () => void;
+  onShareWhatsApp?: () => void;
 }
 
 export function InstantQuotationReview({
-
   lead,
   activePricing,
   products,
@@ -35,7 +37,9 @@ export function InstantQuotationReview({
   settings,
   onBack,
   onProceedToActualQuotation,
-  isSaving
+  isSaving,
+  onDownloadPdf,
+  onShareWhatsApp
 }: InstantQuotationReviewProps) {
   const { t } = useTranslation();
 
@@ -299,18 +303,44 @@ export function InstantQuotationReview({
   return (
     <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 pb-24 sm:pb-6 space-y-4 sm:space-y-6 animate-in fade-in duration-300">
       {/* 1. TOP NAVIGATION & BADGES */}
-      <div className="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center text-xs font-bold text-gray-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 gap-1.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 px-3 py-1.5 rounded-full shadow-xs transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>{t("wz_back_to_packages")}</span>
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center text-xs font-bold text-gray-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 gap-1.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 px-3 py-1.5 rounded-full shadow-xs transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{t("wz_back_to_packages")}</span>
+          </button>
 
-        <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-          {brandName} • {techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip")}
-        </span>
+          <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            {brandName} • {techName === "HD" ? t("wz_standard_hd") : t("wz_premium_ip")}
+          </span>
+        </div>
+
+        {/* Quick Action Share / Download */}
+        <div className="flex items-center gap-2">
+          {onDownloadPdf && (
+            <button
+              type="button"
+              onClick={onDownloadPdf}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-blue-400 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-blue-600 transition-colors shadow-2xs cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5 text-blue-600" />
+              <span className="hidden sm:inline">Download</span> PDF
+            </button>
+          )}
+          {onShareWhatsApp && (
+            <button
+              type="button"
+              onClick={onShareWhatsApp}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 hover:border-emerald-400 text-xs font-semibold text-emerald-700 dark:text-emerald-300 transition-colors shadow-2xs cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden sm:inline">Share</span> WhatsApp
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 2. HERO QUOTATION CARD — Above The Fold Instant Price Clarity */}
@@ -329,13 +359,16 @@ export function InstantQuotationReview({
             </p>
           </div>
 
-          <div className="flex flex-col sm:items-end bg-white/10 backdrop-blur-md px-3.5 py-2.5 sm:p-4 rounded-xl border border-white/10 shrink-0 gap-1.5">
+          <div className="flex flex-col sm:items-end bg-white/10 backdrop-blur-md px-3.5 py-2.5 sm:p-4 rounded-xl border border-white/10 shrink-0 gap-1.5 w-full sm:w-auto">
             <div className="flex items-center justify-between sm:justify-end gap-3 w-full">
               <span className="text-[10px] sm:text-xs uppercase font-semibold text-blue-200">{t("wz_total_all_inclusive_price")}</span>
               <span className="text-xl sm:text-3xl font-black text-white">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
             </div>
             {/* EMI Sub-Header Anchor */}
-            <div className="flex items-center justify-end w-full">
+            <div className="flex items-center justify-between sm:justify-end gap-2 w-full">
+              <span className="text-[9px] text-emerald-300 font-semibold sm:hidden">
+                ✓ Full Setup Included
+              </span>
               <button
                 type="button"
                 onClick={() => setShowEmiModal(true)}
@@ -346,9 +379,19 @@ export function InstantQuotationReview({
                 <span className="text-[10px] underline opacity-90 ml-0.5">Plans ⓘ</span>
               </button>
             </div>
-            <span className="text-[9px] text-emerald-300 font-semibold sm:block">
+            <span className="text-[9px] text-emerald-300 font-semibold hidden sm:block">
               ✓ {isWireless ? "Zero Video Cabling • High Endurance MicroSD • Onsite Setup" : t("wz_includes_hardware_wiring_install")}
             </span>
+            {/* IN-HERO DIRECT BOOKING CTA */}
+            <button
+              type="button"
+              onClick={onProceedToActualQuotation}
+              disabled={isSaving}
+              className="w-full mt-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs sm:text-sm py-2 px-3.5 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>{isSaving ? "Finalizing Quote..." : "Book with ₹500 Token Advance"}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
@@ -381,10 +424,31 @@ export function InstantQuotationReview({
           <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_recorder")}</div>
           <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{recorderDisplayName}</div>
         </div>
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
-          <HardDrive className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-          <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_storage")}</div>
-          <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{isWireless ? `${storageCap} MicroSD (${selection.recording_days || 7}d)` : `${selection.recording_days || 7} ${t("wz_days")}`}</div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs flex flex-col justify-between">
+          <div>
+            <HardDrive className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+            <div className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{t("wz_label_storage")}</div>
+            <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{isWireless ? `${storageCap} MicroSD (${selection.recording_days || 7}d)` : `${selection.recording_days || 7} ${t("wz_days")}`}</div>
+          </div>
+          {!isWireless && (
+            <div className="flex items-center justify-center gap-1 mt-1 pt-1 border-t border-zinc-100 dark:border-zinc-800">
+              {[7, 15, 30].map(days => (
+                <button
+                  key={days}
+                  type="button"
+                  onClick={() => updateSelection({ recording_days: days })}
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all cursor-pointer ${
+                    (selection.recording_days || 7) === days
+                      ? "bg-emerald-600 text-white shadow-2xs"
+                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200"
+                  }`}
+                  title={`Switch to ${days} Days Storage`}
+                >
+                  {days}d
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 text-center shadow-xs">
           <Cable className="w-4 h-4 text-amber-600 mx-auto mb-1" />
@@ -464,32 +528,35 @@ export function InstantQuotationReview({
       </div>
 
             {/* BRAND UNIFICATION BANNER */}
-      <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-3 sm:p-4 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+      <div className="bg-slate-50 dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 rounded-2xl p-3.5 sm:p-4 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
         <div>
-          <div className="text-sm font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-indigo-500" />
+          <div className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-blue-600" />
             {t("iqr_match_my_brand")}
           </div>
-          <div className="text-[11px] text-indigo-700/80 dark:text-indigo-400/80 mt-0.5">
-            {t("iqr_match_brand_desc")}
+          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+            Mixed combines top-grade cameras with a CP Plus recorder for maximum savings. Or match 100% of items to one brand:
           </div>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0 pb-1 sm:pb-0">
           <button 
             onClick={() => updateSelection({ brand_preference: 'all' })}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all shrink-0 ${selection.brand_preference === 'all' || !selection.brand_preference || getCanonicalBrandKey(selection.brand_preference) === 'all' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white dark:bg-zinc-900 text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400'}`}
+            className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${selection.brand_preference === 'all' || !selection.brand_preference || getCanonicalBrandKey(selection.brand_preference) === 'all' ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'}`}
           >
-            Mixed (Best Price)
+            <span>Mixed (Best Price)</span>
+            <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-500 text-white font-black">★ Best Value</span>
           </button>
           {getUniqueCanonicalBrands(products, "cctv_camera").map(brand => {
             const isSelected = getCanonicalBrandKey(selection.brand_preference) === getCanonicalBrandKey(brand);
+            const brandBadge = brand.toLowerCase().includes("cp plus") ? "Popular" : brand.toLowerCase().includes("hikvision") ? "Global #1" : "Standard";
             return (
               <button 
                 key={brand}
                 onClick={() => updateSelection({ brand_preference: brand })}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all shrink-0 ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white dark:bg-zinc-900 text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400'}`}
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'}`}
               >
-                {brand}
+                <span>{brand}</span>
+                <span className={`text-[9px] uppercase px-1 py-0.2 rounded font-black ${isSelected ? 'bg-white/20 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}>{brandBadge}</span>
               </button>
             );
           })}
@@ -641,7 +708,7 @@ export function InstantQuotationReview({
                       </div>
                     )}
                     <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    {t("wz_qty")}: {item.qty} {item.unit_price > 0 ? `• ₹${item.unit_price.toLocaleString("en-IN")} each` : '• {t("wz_free_included")}'}
+                    {t("wz_qty")}: {item.qty} {item.unit_price > 0 ? `• ₹${item.unit_price.toLocaleString("en-IN")} each` : `• ${t("wz_free_included", "Included (Free)")}`}
                   </div>
                 </div>
                 <div className="text-xs font-black text-zinc-900 dark:text-white shrink-0">
@@ -758,6 +825,23 @@ export function InstantQuotationReview({
               <div className="border-t border-zinc-200 dark:border-zinc-700 pt-2 flex justify-between text-sm sm:text-base font-black text-zinc-900 dark:text-white">
                 <span>{t("wz_total_amount_payable")}</span>
                 <span className="text-lg sm:text-2xl font-black text-blue-600 dark:text-blue-400">₹{activePricing.total_payable.toLocaleString("en-IN")}</span>
+              </div>
+
+              {/* High-Trust Token Advance Callout */}
+              <div className="mt-3 pt-3 border-t border-dashed border-emerald-300 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 p-3 rounded-xl space-y-1.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    Booking Token (Due Today):
+                  </span>
+                  <span className="font-black text-emerald-700 dark:text-emerald-300 text-sm">₹500</span>
+                </div>
+                <div className="flex justify-between items-center text-[11px] text-zinc-600 dark:text-zinc-400">
+                  <span>Balance payable post installation & live testing:</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">
+                    ₹{(activePricing.total_payable - 500).toLocaleString("en-IN")}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -1159,6 +1243,49 @@ export function InstantQuotationReview({
         )}
       </div>
 
+      {/* 4-PILLAR CUSTOMER PEACE-OF-MIND GUARANTEE */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs">
+        <div className="flex items-start gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-4 h-4" />
+          </div>
+          <div>
+            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">Zero Advance Risk</h5>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">₹500 token booking. Balance after live camera test on phone.</p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+          <div>
+            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">100% Original Brand</h5>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">Original sealed boxes with valid brand warranty and GST bill.</p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center shrink-0">
+            <Wrench className="w-4 h-4" />
+          </div>
+          <div>
+            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">Certified Engineers</h5>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">Police-verified engineers equipped with pro wiring tools.</p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center shrink-0">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <h5 className="text-xs font-bold text-zinc-900 dark:text-white">7-Day Price Lock</h5>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">This quote is locked. No hidden charges on site visit.</p>
+          </div>
+        </div>
+      </div>
+
       {/* 6. BOTTOM CTA BANNER & ACTION */}
       <div className="rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-700 p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-2 text-center md:text-left">
@@ -1174,11 +1301,30 @@ export function InstantQuotationReview({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
-          
+          {onDownloadPdf && (
+            <Button
+              variant="outline"
+              onClick={onDownloadPdf}
+              className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border-white/20 font-bold text-xs px-4 py-2.5 rounded-full"
+            >
+              <FileText className="w-3.5 h-3.5 mr-1.5" />
+              Download PDF
+            </Button>
+          )}
+          {onShareWhatsApp && (
+            <Button
+              variant="outline"
+              onClick={onShareWhatsApp}
+              className="w-full sm:w-auto bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border-emerald-400/30 font-bold text-xs px-4 py-2.5 rounded-full"
+            >
+              <Share2 className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+              Share WhatsApp
+            </Button>
+          )}
           <Button
             onClick={onProceedToActualQuotation}
             disabled={isSaving}
-            className="w-full sm:w-auto bg-white hover:bg-zinc-100 text-blue-700 font-extrabold text-sm px-4 md:px-8 py-3 rounded-full shadow-lg transition-transform active:scale-95"
+            className="w-full sm:w-auto bg-white hover:bg-zinc-100 text-blue-700 font-extrabold text-sm px-6 py-3 rounded-full shadow-lg transition-transform active:scale-95"
           >
             {isSaving ? "Finalizing Quote..." : t("wz_proceed_to_final_quotation")}
           </Button>

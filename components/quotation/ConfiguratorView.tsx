@@ -559,10 +559,11 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   if (!pricing_results.recommended) return <div className="animate-pulse flex space-y-4 flex-col h-96 bg-zinc-200 rounded-xl" />;
 
   return (
-    <div className="flex flex-col gap-12 sm:gap-20 relative pb-28">
+    <div className={`flex flex-col relative pb-28 ${viewMode === 'addons' ? 'gap-2 sm:gap-4' : 'gap-12 sm:gap-20'}`}>
       
       {/* DYNAMIC CATALOG VARIATIONS & SPEC TABLE - APPLE AESTHETIC */}
-      <div className="w-full max-w-7xl mx-auto px-4">
+      {viewMode !== 'addons' && (
+        <div className="w-full max-w-7xl mx-auto px-4">
         
         {/* Dynamic Generator vs Compare Mode */}
         {viewMode === 'catalog' && (
@@ -713,6 +714,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           </div>
         )}
       </div>
+      )}
 
       {/* FULL INSTANT QUOTATION REVIEW & ADD-ONS */}
       {viewMode === 'addons' && (
@@ -731,6 +733,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
             }}
             onProceedToActualQuotation={() => handleSaveQuote(lead, "draft")}
             isSaving={isSaving}
+            onDownloadPdf={() => triggerActionWithAddress("download")}
+            onShareWhatsApp={() => triggerActionWithAddress("whatsapp")}
           />
         </div>
       )}

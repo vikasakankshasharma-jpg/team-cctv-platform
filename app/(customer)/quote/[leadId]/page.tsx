@@ -284,7 +284,7 @@ export default async function QuoteResultPage({
   return (
     <main className="min-h-screen bg-[#f5f5f7] dark:bg-black font-sans selection:bg-blue-200 dark:selection:bg-blue-900 transition-colors duration-500 pb-32">
             {/* COMPACT HERO SECTION (Above the Fold Pricing) */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 pt-8 sm:pt-12 pb-6 sm:pb-8 text-center">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 pt-4 sm:pt-6 pb-3 sm:pb-5 text-center">
             
             {/* DYNAMIC WAITLIST BANNER WITH DISTANCE */}
             {unservedCityName && (
@@ -303,6 +303,11 @@ export default async function QuoteResultPage({
              <p className="text-sm sm:text-base text-[#86868b] dark:text-[#a1a1a6] font-medium max-w-2xl mx-auto">
                 <TranslatedText tKey="quote_prep" defaultText="Prepared for " /> <span className="text-[#1d1d1f] dark:text-white font-semibold">{lead.customer_name}</span>
              </p>
+
+             <div className="inline-flex items-center gap-1.5 mt-2.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold">
+               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+               <span>Official Quotation • 7 Days Price Lock Guarantee</span>
+             </div>
            </div>
            
            {lead.status === "pending_customer_approval" && (
