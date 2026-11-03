@@ -7,6 +7,9 @@
 
 // Canonical Brand Display Names dictionary
 const CANONICAL_BRAND_NAMES: Record<string, string> = {
+  "aproducts": "A+ Products (Budget)",
+  "a+ products": "A+ Products (Budget)",
+  "a+": "A+ Products (Budget)",
   "cpplus": "CP Plus",
   "cp plus": "CP Plus",
   "cp-plus": "CP Plus",
@@ -55,6 +58,9 @@ export function getCanonicalBrandKey(brand?: string | null): string {
   
   if (cleaned === "all" || cleaned === "all brands" || cleaned === "all_brands" || cleaned === "any") {
     return "all";
+  }
+  if (cleaned.includes("a+ products") || cleaned.includes("a+products") || cleaned === "a+" || cleaned === "aproducts" || cleaned === "a plus") {
+    return "aproducts";
   }
   if (cleaned.includes("cp plus") || cleaned.includes("cp-plus") || cleaned === "cp" || cleaned === "cpplus") {
     return "cpplus";
@@ -136,6 +142,7 @@ export function getCanonicalBrandName(brand?: string | null): string {
 export function inferBrandFromName(name?: string | null): string | null {
   if (!name) return null;
   const lower = name.toLowerCase();
+  if (lower.includes("a+ products") || lower.includes("a+ ") || lower.startsWith("a+")) return "A+ Products";
   if (lower.includes("cp plus") || lower.includes("cpplus") || /\bcp\b/i.test(name)) return "CP Plus";
   if (lower.includes("hikvision") || /\bhik\b/i.test(name)) return "Hikvision";
   if (lower.includes("dahua")) return "Dahua";
@@ -162,11 +169,18 @@ export function isBrandMatch(
   const filterKey = getCanonicalBrandKey(brandFilter);
   if (!filterKey || filterKey === "all" || filterKey === "allbrands") return true;
 
-  // If filter is "budget", match budget brand products
+  // If filter is "budget", match budget brand products and A+ products
   if (filterKey === "budget") {
-    if (p.brand && getCanonicalBrandKey(p.brand) === "budget") return true;
+    if (p.brand && (getCanonicalBrandKey(p.brand) === "budget" || getCanonicalBrandKey(p.brand) === "aproducts")) return true;
     const name = `${p.display_name || ""} ${p.technical_name || ""}`.toLowerCase();
-    return name.includes("budget") || name.includes("generic");
+    return name.includes("budget") || name.includes("generic") || name.includes("a+");
+  }
+
+  // If filter is "aproducts", match A+ products
+  if (filterKey === "aproducts") {
+    if (p.brand && getCanonicalBrandKey(p.brand) === "aproducts") return true;
+    const name = `${p.display_name || ""} ${p.technical_name || ""}`.toLowerCase();
+    return name.includes("a+ products") || name.includes("a+");
   }
 
   // Check explicit brand

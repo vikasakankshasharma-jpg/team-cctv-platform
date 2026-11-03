@@ -252,7 +252,7 @@ export function DynamicVariantGenerator({
     const resultBrands: string[] = ["all"];
     const orderedKeys = settings.brand_tabs_order && settings.brand_tabs_order.length > 0 
       ? settings.brand_tabs_order 
-      : ["all", "budget", "cpplus", "hikvision", "dahua", "prama", "trueview", "secureye"];
+      : ["all", "aproducts", "cpplus", "hikvision", "prama", "secureye", "trueview", "budget", "dahua"];
       
     orderedKeys.forEach(k => {
       if (k === "all" || brandSet.has(k)) {
@@ -336,10 +336,47 @@ export function DynamicVariantGenerator({
       return true;
     });
 
-    const hasColor = matchingCameras.some(p => p.has_color || p.has_colorvu || JSON.stringify(p).toLowerCase().includes("color") || JSON.stringify(p).toLowerCase().includes("colorvu"));
-    const hasMic = matchingCameras.some(p => p.has_mic || p.has_audio || JSON.stringify(p).toLowerCase().includes("mic") || JSON.stringify(p).toLowerCase().includes("audio"));
-    const hasTwoWay = matchingCameras.some(p => p.has_two_way || p.has_speaker || JSON.stringify(p).toLowerCase().includes("two-way") || JSON.stringify(p).toLowerCase().includes("2-way") || JSON.stringify(p).toLowerCase().includes("speaker"));
-    const hasPtz = matchingCameras.some(p => p.has_ptz || JSON.stringify(p).toLowerCase().includes("ptz") || JSON.stringify(p).toLowerCase().includes("pan-tilt") || JSON.stringify(p).toLowerCase().includes("360"));
+    const hasColor = matchingCameras.some(p => 
+      p.has_color === true || 
+      p.has_colorvu === true || 
+      (p.features || []).includes("color") || 
+      (p.features || []).includes("colorvu") || 
+      (p.features || []).includes("dual_light") || 
+      p.night_vision_type === "color" || 
+      p.night_vision_type === "dual_light" || 
+      p.display_name?.toLowerCase().includes("colorvu") || 
+      p.display_name?.toLowerCase().includes("full color") || 
+      p.display_name?.toLowerCase().includes("night color")
+    );
+
+    const hasMic = matchingCameras.some(p => 
+      p.has_mic === true || 
+      p.has_audio === true || 
+      (p.features || []).includes("mic") || 
+      (p.features || []).includes("audio") || 
+      p.display_name?.toLowerCase().includes("with audio") || 
+      p.display_name?.toLowerCase().includes("with mic")
+    );
+
+    const hasTwoWay = matchingCameras.some(p => 
+      (p.has_two_way === true || 
+       p.has_speaker === true || 
+       p.has_2way_audio === true || 
+       (p.features || []).includes("2-way") || 
+       (p.features || []).includes("two-way")) && 
+      !p.display_name?.toLowerCase().includes("without two-way")
+    );
+
+    const hasPtz = matchingCameras.some(p => 
+      (p.has_ptz === true || 
+       (p.features || []).includes("ptz") || 
+       p.form_factor === "ptz" || 
+       p.form_factor === "outdoor_pt" || 
+       p.form_factor === "indoor_pt" || 
+       p.display_name?.toLowerCase().includes("ptz") || 
+       p.display_name?.toLowerCase().includes("pt camera")) && 
+      p.has_ptz !== false
+    );
 
     const available: { tag: string; label: string; title: string }[] = [];
     if (hasColor) {

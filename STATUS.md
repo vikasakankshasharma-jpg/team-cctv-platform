@@ -413,6 +413,22 @@
 | **Layer 35: Mixed Camera Bucket Customization & Real-Time System Composition** | Per-Bucket Specifications & Engine Isolation | `PASS` | 10/10 E2E customer/admin scenarios passed. Per-bucket independent feature toggling (24/7 Color, Audio Mic, 2-Way Talk, 360° PTZ), elimination of global feature leakage into bucket pricing calculations, real-time System Overview counter bar, immutable standard outdoor IP67 weatherproof & 4G SIM cellular badges. |
 | **Layer 36: Educational Feature Guide, Specifications Checklist & Color Harmonization (WCAG 2.1 AA)** | UI/UX & Accessible Color Palette | `PASS` | TagGuideModal with layman real-world examples, SpecificationChecklistModal for customer guidance, unified brand blue pills (`bg-blue-600`), frosted badges, containerized spec chips, muted non-alarming trash buttons, full light & dark mode parity. |
 | **Layer 37: Inventory-Driven Catalog Features & Non-Intrusive Modal UX** | Live Inventory Feature Filters & Unblocked UX | `PASS` | 100% build & Playwright pass (232/232 routes). Removed intrusive auto-popup on load; centered modals with zero bottom clipping; removed 5MP from feature checklists (handled exclusively by RESOLUTION selector); dynamic inventory filtering hides unsupported features per technology/brand (e.g., PTZ hidden in HD/IP, 2-Way hidden in IP); connection dropdown inventory gating. |
+| **Layer 38: Mega Compu World Wholesale Catalog Ingestion & Real Brand Architecture** | Live Wholesale Inventory Sync & Precision Quotation Engine | `PASS` | Ingested and synchronized all 66 products from Mega Compu World distributor catalog across 6 brands: CP Plus (8 HD + 6 Wireless), Hikvision (15 HD), Prama (3 HD), A+ Products (7 HD Budget), Secureye (5 HD), Trueview (1 HD), and 18 matching DVRs (4/8/16Ch in 2MP & 5MP). Fixed 2-way audio false-positive JSON matching on HD analog cameras; normalized canonical brand keys (`aproducts` -> `A+ Products (Budget)`); verified 100% pass across all pricing permutations and Next.js production build (232/232 routes). |
+
+---
+
+### Milestone 38: Mega Compu World Wholesale Catalog Ingestion & Brand Architecture Alignment
+- **Authentic Distributor Catalog Grounding:** Ingested the complete, verified inventory from Mega Compu World Jaipur (`megajaipur.com`), matching 100% of real market models, wholesale purchase costs, and vendor item codes across 6 major Indian CCTV brands:
+  1. **CP Plus (8 HD + 6 Wireless):** TC24PL3C (₹1,236), DC24PL3C-L-V2 (₹1,500), TC24PL3C-L-V2 (₹1,620), DA24PL2C-SE (₹1,812), TA24PL2C-SE (₹1,886), DC51PL3C-L (₹1,944), TC51PL3C-L (₹2,014), CP-GPC-DA50PL2C-SE (₹2,222), plus 6 Wi-Fi & 4G PTZ smart cameras.
+  2. **Hikvision (15 HD):** Full tiering from Eco 2MP (₹986), Regular with Audio (₹1,193 - ₹1,312), Smart Hybrid Dual Light (₹1,614 - ₹2,285), to ColorVu 3K (₹2,286 - ₹3,125).
+  3. **Prama (3 HD):** 2MP Regular Dome (₹1,140), Audio Bullet (₹1,200), and Night Color Dome with Mic (₹1,424).
+  4. **A+ Products (7 HD Budget):** Lowest-entry budget brand from ₹892 to ₹1,255, plus genuine 2.4MP AHD PTZ Camera (₹1,980).
+  5. **Secureye (5 HD):** Falcon 5MP Regular Dome (₹1,020) and Phoenix 2MP/5MP Dual Light Hybrid cameras with Audio (₹1,114 - ₹1,416).
+  6. **Trueview (1 HD):** 2MP Analog HD Mini Pan-Tilt Camera with Night Color & 2-Way Audio (₹1,450).
+  7. **Recorders (18 DVRs/XVRs):** 4ch, 8ch, and 16ch DVRs for A+ Products, CP Plus, Hikvision, Prama, and Secureye in both 2MP and 5MP formats.
+- **Strict Boolean Property Verification:** Eliminated substring false positives where `has_2way_audio: false` was incorrectly matched by `JSON.stringify().includes("2-way")`. Only genuine hardware capabilities (`has_two_way === true || has_speaker === true`) activate interactive feature pills.
+- **Brand Architecture Expansion:** Added canonical mapping for `A+ Products (Budget)` (`aproducts`), allowing customers to explicitly compare entry-level budget quotations against national and international leaders (CP Plus, Hikvision, Prama, Secureye).
+- **Resolution Filter Precision:** Guaranteed that HD Analog cameras strictly present `2MP (Full HD)` and `5MP (3K)` based on actual distributor availability, completely eliminating unfulfillable 3MP, 4MP, and 8MP analog options.
 
 ---
 

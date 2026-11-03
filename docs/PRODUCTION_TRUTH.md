@@ -151,11 +151,17 @@
    - Add-on cards in `InstantQuotationReview.tsx` resolve unit prices dynamically from `products.find(...)?.unit_price`.
    - `FALLBACK_CATALOG` in `lib/pricing-engine.ts:calculateAddons` matches live Admin database prices (`DISP-19-INCH` @ ₹2,415, `ACC-4G-ROUTER` @ ₹1,885, Racks @ ₹490/₹630), guaranteeing 100% price parity between display cards, BOM line items, and invoice documents.
 
-## 18. Inventory-Driven Feature & Filter Parity Rule (Layer 37)
+## 18. Inventory-Driven Feature & Filter Parity Rule (Layer 37 & 38)
 - **Principle:** No customer screen or modal may offer a feature tag, resolution, connection, or brand filter for which zero active inventory exists in the product catalog.
 - **Resolution vs Features:** Resolution (2MP, 3MP, 4MP, 5MP, 8MP) is a camera sensor grade configured solely via the `RESOLUTION` dropdown on camera cards. It must NEVER be offered as an add-on feature tag checkbox.
 - **Dynamic Feature Filtering:**
-  - In Standard HD (Analog): Features limited to `IP67 Weatherproof`, `24/7 Color`, `Audio Mic`, and `2-Way Talk`. `360° PTZ` is suppressed (0 in inventory).
+  - In Standard HD (Analog): Features limited to `IP67 Weatherproof`, `24/7 Color`, and `Audio Mic`. `2-Way Talk` is strictly suppressed (0 in inventory, no HD analog cameras have speakers). `360° PTZ` is displayed only if A+ Products or Trueview PTZ is active.
   - In Premium IP (Network): Features limited to `IP67 Weatherproof`, `24/7 Color`, and `Audio Mic`. `2-Way Talk` and `360° PTZ` are suppressed (0 in inventory).
   - In Smart Wireless (Wi-Fi / 4G): All features (`24/7 Color`, `Audio Mic`, `2-Way Talk`, `360° PTZ`) are supported by inventory and displayed.
 - **Non-Intrusive Modal Standard:** Quoting pages MUST NOT auto-open blocking modals on load. All assistant modals (`TagGuideModal`, `SpecificationChecklistModal`) must be triggered on demand by customer action and render centered (`max-h-[85vh]`).
+
+## 19. Mega Compu World Jaipur Wholesale Ingestion Standard (Layer 38)
+- **Source of Ground Truth:** Mega Compu World Jaipur (`megajaipur.com`) is the primary wholesale distributor for CP Plus, Hikvision, Prama, A+ Products, and Secureye in Rajasthan.
+- **Synchronized Catalog:** 66 active, verified hardware items across 6 camera brands and matching 4ch/8ch/16ch 2MP & 5MP DVRs.
+- **Brand Representation:** Brand filters feature authentic available distributor stock: `All Brands` (Recommended) | `A+ Products (Budget)` | `CP Plus` | `Hikvision` | `Prama` | `Secureye` | `Trueview`.
+- **Zero-Dead-End Guarantee:** If a brand does not stock a specific resolution (e.g. Prama only stocks 2MP in this catalog), switching to that brand auto-adjusts the bucket resolution dropdown to available stock (`2MP`), completely eliminating quotation dead ends or missing product errors.
