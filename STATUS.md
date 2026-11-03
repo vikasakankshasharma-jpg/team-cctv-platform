@@ -412,6 +412,7 @@
 | **Layer 34: Configuration Tool Catalog Normalization & Grouping** | Catalog Grouping Suite (`scripts/test-configuration-catalog.ts`) | `PASS` | 24/24 passed (100%). Storage type normalization (`Surveillance HDD` ➔ `Hard Disk`), all Budget Brand HDDs restored, numeric capacity ordering, 7 accessory sub-categories, 4G router unblocked, 0 build errors. |
 | **Layer 35: Mixed Camera Bucket Customization & Real-Time System Composition** | Per-Bucket Specifications & Engine Isolation | `PASS` | 10/10 E2E customer/admin scenarios passed. Per-bucket independent feature toggling (24/7 Color, Audio Mic, 2-Way Talk, 360° PTZ), elimination of global feature leakage into bucket pricing calculations, real-time System Overview counter bar, immutable standard outdoor IP67 weatherproof & 4G SIM cellular badges. |
 | **Layer 36: Educational Feature Guide, Specifications Checklist & Color Harmonization (WCAG 2.1 AA)** | UI/UX & Accessible Color Palette | `PASS` | TagGuideModal with layman real-world examples, SpecificationChecklistModal for customer guidance, unified brand blue pills (`bg-blue-600`), frosted badges, containerized spec chips, muted non-alarming trash buttons, full light & dark mode parity. |
+| **Layer 37: Inventory-Driven Catalog Features & Non-Intrusive Modal UX** | Live Inventory Feature Filters & Unblocked UX | `PASS` | 100% build & Playwright pass (232/232 routes). Removed intrusive auto-popup on load; centered modals with zero bottom clipping; removed 5MP from feature checklists (handled exclusively by RESOLUTION selector); dynamic inventory filtering hides unsupported features per technology/brand (e.g., PTZ hidden in HD/IP, 2-Way hidden in IP); connection dropdown inventory gating. |
 
 ---
 
@@ -432,6 +433,20 @@
   - Replaced alarming red trash buttons with clean, non-distracting neutral icons (`text-zinc-400 hover:text-red-600`).
   - Containerized bucket specification notes into subtle, high-end specification pills.
   - Achieved full WCAG 2.1 AA contrast compliance across all customer screens in both Light Mode and Dark Mode.
+
+---
+
+### Milestone 37: Inventory-Driven Catalog Features & Non-Intrusive Modal UX
+- **Non-Intrusive Customer Landing:** Removed auto-opening modal on quote load (`ConfiguratorView.tsx`). Customer immediately lands on their quotation catalog without blocking modals. Feature checklist is accessible on demand via the `⚙️ Checklist` button.
+- **Responsive Centering & Viewport Safety:** Replaced bottom-anchored modal containers with centered, padded modal dialogs (`items-center justify-center max-h-[85vh] rounded-2xl sm:rounded-3xl`) ensuring headers, scrollable bodies, and footer action buttons are 100% visible on all viewports without clipping.
+- **Resolution vs Feature Boundary Enforcement:** Removed `5MP (3K) Ultra High Clarity` from feature tags and checklists. Resolution is strictly managed by the `RESOLUTION` dropdown (2MP, 3MP, 4MP, 5MP, 8MP) per camera card. Added a dedicated educational resolution guide to `TagGuideModal.tsx`.
+- **Dynamic Inventory-Driven Feature Filtering:**
+  - Feature tags on camera cards (`getAvailableFeaturesForBucket`) only display capabilities actively supported in stock for that technology and brand.
+  - Automatically hides `360° PTZ` on Standard HD and IP setups (where inventory has 0 PTZ cameras).
+  - Automatically hides `2-Way Talk` on IP setups (where inventory has 0 two-way IP cameras).
+  - Connection dropdown only offers Wi-Fi or 4G SIM if matching cameras exist in active inventory.
+  - Auto-sanitizes bucket selections on technology/brand change, preventing orphaned or invalid feature tags from causing quote calculation failures.
+  - `SpecificationChecklistModal` dynamically filters options with `availableFeatureTags`, never asking customers for features out of stock.
 
 ---
 

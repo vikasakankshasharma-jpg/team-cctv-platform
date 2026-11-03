@@ -141,15 +141,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     }, 100);
   }, [getPackageInfoFromPricing, pricing_results, availablePriceMatchPackages.length]);
 
-  // Auto-show Specification Requirements Checklist on first visit
-  useEffect(() => {
-    if (typeof window !== "undefined" && lead?.id) {
-      const hasSeenSpecs = sessionStorage.getItem(`specs_seen_${lead.id}`);
-      if (!hasSeenSpecs) {
-        setShowSpecsModal(true);
-      }
-    }
-  }, [lead?.id]);
+  // Specification Requirements Checklist is accessible on-demand via the ⚙️ Checklist button
 
   const handleApplySpecs = (newTags: string[]) => {
     updateSelection({ requested_features: newTags });
@@ -585,7 +577,33 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
     }
   };
 
-  if (!pricing_results.recommended) return <div className="animate-pulse flex space-y-4 flex-col h-96 bg-zinc-200 rounded-xl" />;
+  // Compute feature tags that are supported by active products in the selected technology
+  const availableFeatureTags = useMemo(() => {
+    const selTech = String(selection.technology || "").toUpperCase();
+    const isWireless = selTech === "WIRELESS" || selTech === "WIFI";
+    const isIp = selTech === "IP";
+
+    const matchingCameras = currentProducts.filter(p => {
+      if (p.category !== "cctv_camera") return false;
+      const pTech = (p.technology || "").toUpperCase();
+      const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+      const isMatch = isWireless
+        ? (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim)
+        : isIp
+        ? (pTech === "IP" || pTechs.includes("IP"))
+        : (pTech === "HD" || pTechs.includes("HD"));
+      return isMatch;
+    });
+
+    const tags: string[] = ["outdoor"]; // Weatherproof is standard on all outdoor cameras
+    if (matchingCameras.some(p => p.has_color || p.has_colorvu || JSON.stringify(p).toLowerCase().includes("color"))) tags.push("color");
+    if (matchingCameras.some(p => p.has_mic || p.has_audio || JSON.stringify(p).toLowerCase().includes("mic") || JSON.stringify(p).toLowerCase().includes("audio"))) tags.push("mic");
+    if (matchingCameras.some(p => p.has_two_way || p.has_speaker || JSON.stringify(p).toLowerCase().includes("two-way") || JSON.stringify(p).toLowerCase().includes("2-way"))) tags.push("2-way");
+    if (matchingCameras.some(p => p.has_ptz || JSON.stringify(p).toLowerCase().includes("ptz") || JSON.stringify(p).toLowerCase().includes("pan-tilt") || JSON.stringify(p).toLowerCase().includes("360"))) tags.push("ptz");
+    return tags;
+  }, [currentProducts, selection.technology]);
+
+    if (!pricing_results.recommended) return <div className="animate-pulse flex space-y-4 flex-col h-96 bg-zinc-200 rounded-xl" />;
 
   return (
     <div className={`flex flex-col relative pb-28 ${viewMode === 'addons' ? 'gap-2 sm:gap-4' : 'gap-12 sm:gap-20'}`}>
@@ -801,6 +819,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
         currentTags={selection.requested_features || []}
         outdoorCount={selection.outdoor_camera_count}
         indoorCount={selection.indoor_camera_count}
+        availableFeatureTags={availableFeatureTags}
       />
 
       {showShareDialog && pricing_results.budget && (

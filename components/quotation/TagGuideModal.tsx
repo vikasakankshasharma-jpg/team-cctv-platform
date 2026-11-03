@@ -20,7 +20,7 @@ export const TAG_GUIDE_ITEMS: TagGuideItem[] = [
     id: "weatherproof",
     tag: "outdoor",
     title: "100% Weatherproof IP67 Rating",
-    badge: "Always Standard on Outdoor",
+    badge: "Standard on All Outdoor",
     icon: "🌧️",
     simpleExplanation: "Rugged industrial-grade sealed enclosure completely protected against heavy monsoon rain, water jets, dust storms, and extreme summer temperatures.",
     realLifeExample: "Survives intense monsoon downpours and hot summer sun without internal lens fogging or water seepage.",
@@ -31,7 +31,7 @@ export const TAG_GUIDE_ITEMS: TagGuideItem[] = [
     id: "color",
     tag: "color",
     title: "24/7 Full Color Night Vision",
-    badge: "ColorVu / Warm Dual-Light",
+    badge: "Available in HD, IP & Wireless",
     icon: "🌙",
     simpleExplanation: "Traditional cameras switch to black-and-white infrared video at night. Color Night Vision cameras have warm soft lights and ultra-low light sensors to keep full vivid colors 24 hours a day.",
     realLifeExample: "Essential for street gates and parking to identify the exact color of an intruder's clothing (e.g., 'red shirt' vs 'black shirt') or vehicle at 2 AM.",
@@ -41,7 +41,7 @@ export const TAG_GUIDE_ITEMS: TagGuideItem[] = [
     id: "mic",
     tag: "mic",
     title: "Built-in Mic & Audio Recording",
-    badge: "Voice + Sound",
+    badge: "Available in HD, IP & Wireless",
     icon: "🎙️",
     simpleExplanation: "An embedded high-sensitivity microphone records clear spoken voice and ambient sounds right along with video footage.",
     realLifeExample: "Crucial for cash counters, reception desks, and entrance doors where verbal arguments, price negotiations, or promises require undeniable proof.",
@@ -51,7 +51,7 @@ export const TAG_GUIDE_ITEMS: TagGuideItem[] = [
     id: "two_way",
     tag: "2-way",
     title: "2-Way Mobile Talk (Walkie-Talkie)",
-    badge: "Mic + Built-in Speaker",
+    badge: "Available in Wireless & Select HD",
     icon: "🗣️",
     simpleExplanation: "Equipped with both a microphone and a speaker. You can listen live and speak directly from your mobile app, and your voice plays through the camera.",
     realLifeExample: "Instruct delivery agents (Amazon, Zomato, Courier) where to leave packages while you are away, talk to house staff, or warn off suspicious strangers.",
@@ -61,7 +61,7 @@ export const TAG_GUIDE_ITEMS: TagGuideItem[] = [
     id: "ptz",
     tag: "ptz",
     title: "360° Remote Pan-Tilt (PTZ)",
-    badge: "Zero Blind Spots",
+    badge: "Smart Wireless Only",
     icon: "🔄",
     simpleExplanation: "Motorized camera that rotates 360 degrees horizontally and 90 degrees vertically directly from your smartphone app.",
     realLifeExample: "Instead of installing 2-3 fixed cameras in a large hall or living room, a single rotating camera lets you look in any direction anytime.",
@@ -71,21 +71,11 @@ export const TAG_GUIDE_ITEMS: TagGuideItem[] = [
     id: "four_g",
     tag: "4g",
     title: "4G SIM Cellular Connectivity",
-    badge: "Zero Broadband / Wi-Fi Required",
+    badge: "4G SIM Wireless Only",
     icon: "🛰️",
     simpleExplanation: "Works with a direct 4G SIM card (Jio / Airtel) and connects directly to cloud storage and mobile app without needing any broadband Wi-Fi router or video cables.",
     realLifeExample: "Ideal for remote farmhouses, construction sites, independent godowns, or distant gates where home broadband cannot reach.",
     bestFor: "Farmhouses, Under-construction sites, Remote plots, Outpost gates",
-  },
-  {
-    id: "clarity_5mp",
-    tag: "5mp",
-    title: "5MP (3K) Ultra High Clarity",
-    badge: "2.5x Standard 1080p Detail",
-    icon: "🔍",
-    simpleExplanation: "Captures 2.5 times higher resolution and pixel density than standard 2MP full HD cameras. Allows sharp digital zooming without blurring.",
-    realLifeExample: "Enables clear recognition of vehicle registration number plates at the gate or crisp currency note verification at cash drawers.",
-    bestFor: "Vehicle entry gate, Cash registers, Street perimeter, Large compound",
   },
 ];
 
@@ -98,9 +88,9 @@ export function TagGuideModal({ isOpen, onClose }: TagGuideModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
-        className="w-full sm:max-w-3xl max-h-[92vh] sm:max-h-[85vh] bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200 dark:border-zinc-800 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200"
+        className="w-full max-w-2xl sm:max-w-3xl max-h-[85vh] bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
       >
@@ -171,6 +161,68 @@ export function TagGuideModal({ isOpen, onClose }: TagGuideModalProps) {
               </div>
             </div>
           ))}
+
+          {/* Dedicated Camera Resolution Guide */}
+          <div className="pt-5 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/80 to-indigo-50/40 dark:from-blue-950/20 dark:to-zinc-900 border border-blue-200/80 dark:border-blue-900/50">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl sm:text-2xl">🔍</span>
+                <div>
+                  <h4 className="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white">
+                    Camera Resolution & Image Clarity Guide
+                  </h4>
+                  <p className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold">
+                    Configured via the RESOLUTION dropdown on each camera card
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-relaxed mb-3.5">
+                Resolution determines how sharply you can pinch-and-zoom into faces and car number plates. You can choose different resolutions for outdoor vs indoor cameras in your setup:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-xs text-zinc-900 dark:text-white">2MP (1080p Full HD)</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">Standard</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                    Standard high-definition clarity. Perfect for indoor rooms, halls, and general monitoring up to 15-20 feet.
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-xs text-zinc-900 dark:text-white">3MP (2K Clarity)</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">Wireless Std</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                    50% more pixels than 1080p. Standard baseline for smart Wi-Fi & 4G wireless security cameras.
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-xs text-zinc-900 dark:text-white">4MP (2K Quad HD)</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">High Clarity</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                    Sharp perimeter detail for wide driveways, retail storefronts, and medium-distance property gates.
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-blue-300 dark:border-blue-800/80 bg-blue-50/30 dark:bg-blue-950/20">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-xs text-blue-900 dark:text-blue-200">5MP (3K Pro Clarity)</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-600 text-white">Recommended for Gates</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-snug">
+                    2.5x standard 1080p pixel density. Lets you pinch-to-zoom into vehicle license plates and recognize unknown faces up to 30 feet away.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}

@@ -44,15 +44,6 @@ export const SPECIFICATION_OPTIONS: SpecificationOption[] = [
     recommendedFor: "Cash Counters, Office Cabins, Reception, Main Door",
   },
   {
-    id: "clarity_5mp",
-    tag: "4mp",
-    title: "5MP (3K) Ultra High Clarity",
-    subtitle: "Zoom In for Number Plates & Faces",
-    icon: "🔍",
-    whyNeeded: "Over 2.5x the pixel density of standard 1080p cameras. Lets you pinch-to-zoom into vehicle license plates and recognize unknown faces up to 30 feet away.",
-    recommendedFor: "Road Facing Gates, Cash Desks, Large Warehouses",
-  },
-  {
     id: "two_way",
     tag: "2-way",
     title: "2-Way Mobile Talk (Walkie-Talkie)",
@@ -79,6 +70,7 @@ interface SpecificationChecklistModalProps {
   currentTags: string[];
   outdoorCount?: number;
   indoorCount?: number;
+  availableFeatureTags?: string[];
 }
 
 export function SpecificationChecklistModal({
@@ -88,7 +80,13 @@ export function SpecificationChecklistModal({
   currentTags = [],
   outdoorCount = 0,
   indoorCount = 0,
+  availableFeatureTags,
 }: SpecificationChecklistModalProps) {
+  // Filter specification options to only those available in active product inventory
+  const visibleOptions = useMemo(() => {
+    if (!availableFeatureTags || availableFeatureTags.length === 0) return SPECIFICATION_OPTIONS;
+    return SPECIFICATION_OPTIONS.filter(opt => availableFeatureTags.includes(opt.tag));
+  }, [availableFeatureTags]);
   // Compute initial selections based on currentTags or smart context
   const initialSelected = useMemo(() => {
     const set = new Set<string>(currentTags.map(t => t.toLowerCase()));
@@ -127,7 +125,7 @@ export function SpecificationChecklistModal({
   };
 
   const handleSelectAll = () => {
-    const all = new Set(SPECIFICATION_OPTIONS.map(opt => opt.tag));
+    const all = new Set(visibleOptions.map(opt => opt.tag));
     setSelected(all);
   };
 
@@ -136,9 +134,9 @@ export function SpecificationChecklistModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
-        className="w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200 dark:border-zinc-800 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-300"
+        className="w-full max-w-xl sm:max-w-2xl max-h-[85vh] bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
       >
@@ -159,7 +157,7 @@ export function SpecificationChecklistModal({
               Select Your Security Requirements
             </h3>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Choose the features you need. We'll filter and present matching quotations instantly.
+              Choose the hardware capabilities you need. Camera resolution (2MP, 3MP, 5MP, 8MP) is configured directly on each camera card.
             </p>
           </div>
           <button
@@ -196,7 +194,7 @@ export function SpecificationChecklistModal({
 
         {/* Scrollable Checklist Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-3.5 divide-y divide-zinc-100 dark:divide-zinc-800/60">
-          {SPECIFICATION_OPTIONS.map((opt, idx) => {
+          {visibleOptions.map((opt, idx) => {
             const isChecked = selected.has(opt.tag);
             return (
               <div

@@ -217,27 +217,6 @@ export function DynamicVariantGenerator({
     return buckets;
   });
 
-  // Helper to get available resolutions per bucket connection type
-  const getResolutionsForBucket = (b: any) => {
-    const isWirelessConn = b.connection === "wifi" || b.connection === "4g" || activeTech === "wireless";
-    const connResolutions = new Set<string>();
-    products.forEach(p => {
-      const pTech = (p.technology || "").toUpperCase();
-      const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
-      const isConnMatch = isWirelessConn
-        ? (p.category === "cctv_camera" && (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim))
-        : activeTech === "ip"
-        ? (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")))
-        : (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD")));
-      if (isConnMatch && p.brand) {
-        connResolutions.add(getRes(p));
-      }
-    });
-    const orderedRes = ["2MP", "3MP", "4MP", "5MP", "6MP", "8MP", "12MP"];
-    const filtered = orderedRes.filter(r => connResolutions.has(r));
-    return filtered.length > 0 ? filtered : availableResolutions;
-  };
-
   const outdoorCount = cameraBuckets.filter(b => b.type === "outdoor").reduce((sum, b) => sum + b.count, 0);
   const indoorCount = cameraBuckets.filter(b => b.type === "indoor").reduce((sum, b) => sum + b.count, 0);
   const colorCount = cameraBuckets.filter(b => (b.features || []).includes("color")).reduce((sum, b) => sum + b.count, 0);
@@ -295,6 +274,101 @@ export function DynamicVariantGenerator({
   }, [products, activeTech, settings.brand_tabs_order]);
 
   const targetBrand = availableBrands.includes(activeBrand) ? activeBrand : (availableBrands[0] || "all");
+
+  // Prune any bucket features that are not available in the active technology / brand inventory
+  useEffect(() => {
+    setCameraBuckets(prev => prev.map(bucket => {
+      const availableTags = getAvailableFeaturesForBucket(bucket).map(f => f.tag);
+      const validFeatures = (bucket.features || []).filter((f: string) => availableTags.includes(f));
+      if (validFeatures.length !== (bucket.features || []).length) {
+        return { ...bucket, features: validFeatures };
+      }
+      return bucket;
+    }));
+  }, [activeTech, targetBrand]);
+
+  // Helper to get available resolutions per bucket connection type based on active inventory and selected brand
+  const getResolutionsForBucket = (b: any) => {
+    const isWirelessConn = b.connection === "wifi" || b.connection === "4g" || activeTech === "wireless";
+    const connResolutions = new Set<string>();
+    products.forEach(p => {
+      const pTech = (p.technology || "").toUpperCase();
+      const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+      const isConnMatch = isWirelessConn
+        ? (p.category === "cctv_camera" && (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim))
+        : activeTech === "ip"
+        ? (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")))
+        : (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD")));
+      
+      if (isConnMatch && p.brand) {
+        if (targetBrand === "all" || normalizeBrandKey(p.brand) === targetBrand) {
+          connResolutions.add(getRes(p));
+        }
+      }
+    });
+    const orderedRes = ["2MP", "3MP", "4MP", "5MP", "6MP", "8MP", "12MP"];
+    const filtered = orderedRes.filter(r => connResolutions.has(r));
+    return filtered.length > 0 ? filtered : (availableResolutions.length > 0 ? availableResolutions : ["2MP"]);
+  };
+
+  // Helper to get available features in inventory for a specific camera bucket
+  const getAvailableFeaturesForBucket = (b: any) => {
+    const isWirelessConn = b.connection === "wifi" || b.connection === "4g" || activeTech === "wireless";
+    
+    // Find matching camera products in inventory
+    const matchingCameras = products.filter(p => {
+      if (p.category !== "cctv_camera") return false;
+      const pTech = (p.technology || "").toUpperCase();
+      const pTechs = (p.technologies || []).map((t: string) => t.toUpperCase());
+      
+      const isConnMatch = isWirelessConn
+        ? (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim)
+        : activeTech === "ip"
+        ? (pTech === "IP" || pTechs.includes("IP"))
+        : (pTech === "HD" || pTechs.includes("HD"));
+        
+      if (!isConnMatch) return false;
+      
+      if (targetBrand !== "all") {
+        const pBrand = normalizeBrandKey(p.brand || "");
+        if (pBrand !== targetBrand) return false;
+      }
+      return true;
+    });
+
+    const hasColor = matchingCameras.some(p => p.has_color || p.has_colorvu || JSON.stringify(p).toLowerCase().includes("color") || JSON.stringify(p).toLowerCase().includes("colorvu"));
+    const hasMic = matchingCameras.some(p => p.has_mic || p.has_audio || JSON.stringify(p).toLowerCase().includes("mic") || JSON.stringify(p).toLowerCase().includes("audio"));
+    const hasTwoWay = matchingCameras.some(p => p.has_two_way || p.has_speaker || JSON.stringify(p).toLowerCase().includes("two-way") || JSON.stringify(p).toLowerCase().includes("2-way") || JSON.stringify(p).toLowerCase().includes("speaker"));
+    const hasPtz = matchingCameras.some(p => p.has_ptz || JSON.stringify(p).toLowerCase().includes("ptz") || JSON.stringify(p).toLowerCase().includes("pan-tilt") || JSON.stringify(p).toLowerCase().includes("360"));
+
+    const available: { tag: string; label: string; title: string }[] = [];
+    if (hasColor) {
+      available.push({ tag: "color", label: "🌙 24/7 Color", title: "Full color video in darkness (ColorVu / Dual-Light)" });
+    }
+    if (hasMic) {
+      available.push({ tag: "mic", label: "🎙️ Audio Mic", title: "Record spoken voice & sound along with video" });
+    }
+    if (hasTwoWay) {
+      available.push({ tag: "2-way", label: "🗣️ 2-Way Talk", title: "Speak & listen live via mobile phone app" });
+    }
+    if (hasPtz) {
+      available.push({ tag: "ptz", label: "🔄 360° PTZ", title: "Motorized rotation remotely from phone" });
+    }
+    return available;
+  };
+
+  // Prune any bucket features that are not available in the active technology / brand inventory
+  useEffect(() => {
+    setCameraBuckets(prev => prev.map(bucket => {
+      const availableTags = getAvailableFeaturesForBucket(bucket).map(f => f.tag);
+      const validFeatures = (bucket.features || []).filter((f: string) => availableTags.includes(f));
+      if (validFeatures.length !== (bucket.features || []).length) {
+        return { ...bucket, features: validFeatures };
+      }
+      return bucket;
+    }));
+  }, [activeTech, targetBrand]);
+
   const variants = useMemo(() => {
     const results: PricingResult[] = [];
     const brandsToGenerate: { brand: string, brandKey: string }[] = [];
@@ -557,7 +631,7 @@ export function DynamicVariantGenerator({
         {/* Technology Selector */}
         <div className="bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1.5 rounded-full inline-flex relative shadow-inner">
           <button
-            onClick={() => setActiveTech("hd")}
+            onClick={() => { setActiveTech("hd"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
             className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "hd" ? "text-white shadow-md" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"}`}
           >
             {activeTech === "hd" && <span className="absolute inset-0 bg-blue-600 rounded-full shadow-sm -z-10" />}
@@ -565,14 +639,14 @@ export function DynamicVariantGenerator({
             <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'hd' ? 'bg-white/20 text-white backdrop-blur-xs border border-white/25' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200/50'}`}>{t("wz_lowest_price")}</span>
           </button>
           <button
-            onClick={() => setActiveTech("ip")}
+            onClick={() => { setActiveTech("ip"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
             className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "ip" ? "text-white shadow-md" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"}`}
           >
             {activeTech === "ip" && <span className="absolute inset-0 bg-blue-600 rounded-full shadow-sm -z-10" />}
             <span>{t("wz_premium_ip_network")}</span>
           </button>
           <button
-            onClick={() => setActiveTech("wireless")}
+            onClick={() => { setActiveTech("wireless"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: b.connection === "4g" ? "4g" : "wifi" }))); }}
             className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "wireless" ? "text-white shadow-md" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"}`}
           >
             {activeTech === "wireless" && <span className="absolute inset-0 bg-blue-600 rounded-full shadow-sm -z-10" />}
@@ -788,8 +862,12 @@ export function DynamicVariantGenerator({
                         {activeTech === "ip" ? "Wired (CAT6 IP)" : "Wired (Analog HD)"}
                       </option>
                     )}
-                    <option value="wifi">Smart Wi-Fi (Wireless)</option>
-                    <option value="4g">4G SIM (Cellular)</option>
+                    {products.some(p => p.category === "cctv_camera" && (p.has_wifi || (p.technology || "").toUpperCase().includes("WIFI") || (p.technologies || []).some((t: string) => t.toUpperCase().includes("WIFI")))) && (
+                      <option value="wifi">Smart Wi-Fi (Wireless)</option>
+                    )}
+                    {products.some(p => p.category === "cctv_camera" && (p.has_4g_sim || (p.name || "").toLowerCase().includes("4g") || (p.model_number || "").toLowerCase().includes("4g"))) && (
+                      <option value="4g">4G SIM (Cellular)</option>
+                    )}
                   </select>
                   <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
                 </div>
@@ -832,13 +910,8 @@ export function DynamicVariantGenerator({
                     </span>
                   )}
 
-                  {/* Toggleable features */}
-                  {[
-                    { tag: "color", label: "🌙 24/7 Color", title: "Full color video in darkness (ColorVu / Dual-Light)" },
-                    { tag: "mic", label: "🎙️ Audio Mic", title: "Record spoken voice & sound along with video" },
-                    { tag: "2-way", label: "🗣️ 2-Way Talk", title: "Speak & listen live via mobile phone app" },
-                    { tag: "ptz", label: "🔄 360° PTZ", title: "Motorized rotation remotely from phone" },
-                  ].map(feat => {
+                  {/* Toggleable features - Dynamically filtered to only show features available in active product inventory */}
+                  {getAvailableFeaturesForBucket(bucket).map(feat => {
                     const isChecked = (bucket.features || []).includes(feat.tag);
                     return (
                       <button

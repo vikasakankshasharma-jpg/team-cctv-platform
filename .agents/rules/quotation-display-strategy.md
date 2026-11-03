@@ -51,3 +51,8 @@ Never confuse or revert the quotation presentation strategy for this project. Th
    - **Real-Time System Overview Counter:** The catalog header MUST display a live breakdown bar showing total cameras alongside real-time counts for Weatherproof, Indoor, Color Night, Audio Mic, 2-Way Talk, 360° PTZ, 4G SIM, and Wi-Fi.
    - **Immutable Standard Attributes:** Weatherproof IP67 is standard on all outdoor cameras (`🌧️ IP67 Weatherproof Standard`), and 4G SIM is built-in for all 4G cameras (`🛰️ 4G SIM Built-in`).
    - **Layman Technical Education:** The catalog MUST offer easy access to `TagGuideModal.tsx` (`💡 Feature Guide`) with plain-language explanations and practical real-life examples for every technical feature.
+
+## 7. Inventory-Driven Feature Tags & Modal Safety (Layer 37)
+- **Inventory Filtering Invariant:** Feature options on camera cards and modals must be dynamically computed against active inventory (`products`). Never display feature chips or checkboxes for capabilities that lack matching stock in the active technology (e.g. no PTZ in HD/IP, no 2-way in IP).
+- **Separation of Resolution and Features:** 5MP / clarity belongs exclusively to the `RESOLUTION` selector. It must never appear as an add-on feature tag.
+- **Zero Blocking Popups on Page Load:** Let the customer view their quote immediately upon landing. Checklist and Feature Guide modals are accessible on-demand.

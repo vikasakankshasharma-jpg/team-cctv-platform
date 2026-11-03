@@ -150,3 +150,12 @@
 4. **Dynamic Price Synchronization & Fallback Defense:**
    - Add-on cards in `InstantQuotationReview.tsx` resolve unit prices dynamically from `products.find(...)?.unit_price`.
    - `FALLBACK_CATALOG` in `lib/pricing-engine.ts:calculateAddons` matches live Admin database prices (`DISP-19-INCH` @ ₹2,415, `ACC-4G-ROUTER` @ ₹1,885, Racks @ ₹490/₹630), guaranteeing 100% price parity between display cards, BOM line items, and invoice documents.
+
+## 18. Inventory-Driven Feature & Filter Parity Rule (Layer 37)
+- **Principle:** No customer screen or modal may offer a feature tag, resolution, connection, or brand filter for which zero active inventory exists in the product catalog.
+- **Resolution vs Features:** Resolution (2MP, 3MP, 4MP, 5MP, 8MP) is a camera sensor grade configured solely via the `RESOLUTION` dropdown on camera cards. It must NEVER be offered as an add-on feature tag checkbox.
+- **Dynamic Feature Filtering:**
+  - In Standard HD (Analog): Features limited to `IP67 Weatherproof`, `24/7 Color`, `Audio Mic`, and `2-Way Talk`. `360° PTZ` is suppressed (0 in inventory).
+  - In Premium IP (Network): Features limited to `IP67 Weatherproof`, `24/7 Color`, and `Audio Mic`. `2-Way Talk` and `360° PTZ` are suppressed (0 in inventory).
+  - In Smart Wireless (Wi-Fi / 4G): All features (`24/7 Color`, `Audio Mic`, `2-Way Talk`, `360° PTZ`) are supported by inventory and displayed.
+- **Non-Intrusive Modal Standard:** Quoting pages MUST NOT auto-open blocking modals on load. All assistant modals (`TagGuideModal`, `SpecificationChecklistModal`) must be triggered on demand by customer action and render centered (`max-h-[85vh]`).
