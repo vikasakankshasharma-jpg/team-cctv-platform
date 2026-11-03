@@ -1,0 +1,422 @@
+/**
+ * @file scripts/update-megacompu-hd-cameras.ts
+ * @description Syncs the 7 CP Plus HD Cameras from Mega Compu World screenshot
+ *              into Firestore and updates product images with vendor product codes.
+ */
+
+import * as admin from "firebase-admin";
+import * as dotenv from "dotenv";
+import * as path from "path";
+import * as fs from "fs";
+
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+
+function getDb() {
+  if (!admin.apps.length) {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID!,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+        privateKey,
+      }),
+    });
+  }
+  return {
+    db: admin.firestore(),
+    ts: admin.firestore.FieldValue.serverTimestamp(),
+  };
+}
+
+export const MEGA_HD_CAMERAS: Record<string, any> = {
+  "CAM-CPP-HD-TC24PL3C": {
+    display_name: "CP-Plus 2.4MP ECO HD Bullet Camera 3.6mm With Audio (TC24PL3C)",
+    technical_name: "CP-URC-TC24PL3C",
+    internal_sku: "TC24PL3C",
+    vendor_pid: "A0721",
+    vendor_item_code: "1541PMO",
+    brand: "CP PLUS",
+    category: "cctv_camera",
+    technology: "HD",
+    technologies: ["HD"],
+    catalog_path: "cctv_camera/hd/HD Camera",
+    camera_subtype: "outdoor_bullet",
+    form_factor: "bullet",
+    ip_rating: "IP67",
+    body_material: "plastic",
+    resolution: "2.4MP",
+    resolution_mp: 2,
+    resolution_tier: "good",
+    lens_mm: 3.6,
+    night_vision_type: "ir",
+    night_vision_range_m: 30,
+    has_audio: true,
+    has_mic: true,
+    has_speaker: false,
+    has_2way_audio: false,
+    features: ["hd", "bullet", "audio", "mic", "night_vision", "outdoor", "ip67", "dwdr"],
+    base_cost: 1075,
+    margin_percentage: 15,
+    unit_price: 1236,
+    unit_price_budget: 1200,
+    unit_price_premium: 1350,
+    is_active: true,
+    is_deleted: false,
+    is_quotation_eligible: true,
+    is_configurator_visible: true,
+    stock_status: "in_stock",
+    stock_quantity: 25,
+    warranty_years: 2,
+    image_url: "/products/1541PMO.jpg",
+    source_vendor: "Mega Compu World",
+    source_url: "https://megajaipur.com/security/hd-camera-dvr/cp-plus-24mp-eco-hd-bullet-camera-36mm-with-audio-tc24pl3c-a0721",
+    description: "CP Plus 2.4MP Full HD (1080p) ECO Analog Bullet Camera with 3.6mm fixed lens, 30m Smart IR, built-in mic (audio over coax), and IP67 weatherproof housing.",
+  },
+
+  "CAM-CPP-HD-DC24PL3C-L-V2": {
+    display_name: "CP-Plus 2.4MP Regular Hybrid HD Dome 3.6mm With Audio (DC24PL3C-L-V2)",
+    technical_name: "CP-URC-DC24PL3C-L-V2",
+    internal_sku: "DC24PL3C-L-V2",
+    vendor_pid: "A0138",
+    vendor_item_code: "12H3T1C",
+    brand: "CP PLUS",
+    category: "cctv_camera",
+    technology: "HD",
+    technologies: ["HD"],
+    catalog_path: "cctv_camera/hd/HD Camera",
+    camera_subtype: "indoor_dome",
+    form_factor: "dome",
+    ip_rating: "Indoor",
+    body_material: "plastic",
+    resolution: "2.4MP",
+    resolution_mp: 2,
+    resolution_tier: "good",
+    lens_mm: 3.6,
+    night_vision_type: "dual_light",
+    night_vision_range_m: 30,
+    has_audio: true,
+    has_mic: true,
+    has_speaker: false,
+    has_2way_audio: false,
+    features: ["hd", "dome", "hybrid", "dual_light", "audio", "mic", "indoor", "illumax"],
+    base_cost: 1304,
+    margin_percentage: 15,
+    unit_price: 1500,
+    unit_price_budget: 1450,
+    unit_price_premium: 1600,
+    is_active: true,
+    is_deleted: false,
+    is_quotation_eligible: true,
+    is_configurator_visible: true,
+    stock_status: "in_stock",
+    stock_quantity: 25,
+    warranty_years: 2,
+    image_url: "/products/12H3T1C.webp",
+    source_vendor: "Mega Compu World",
+    source_url: "https://megajaipur.com/security/hd-camera-dvr/cp-plus-24mp-regular-hybrid-hd-dome-36mm-with-audio-dc24pl3c-l-v2-a0138",
+    description: "CP Plus 2.4MP Illumax Hybrid HD Dome Camera with Dual Light technology (30m IR + 20m Warm Light), built-in audio microphone, and 3.6mm lens.",
+  },
+
+  "CAM-CPP-HD-TC24PL3C-L-V2": {
+    display_name: "CP-Plus 2.4MP Regular Hybrid HD Bullet 3.6mm With Audio Camera (TC24PL3C-L-V2)",
+    technical_name: "CP-URC-TC24PL3C-L-V2",
+    internal_sku: "TC24PL3C-L-V2",
+    vendor_pid: "A0139",
+    vendor_item_code: "12HMFB4",
+    brand: "CP PLUS",
+    category: "cctv_camera",
+    technology: "HD",
+    technologies: ["HD"],
+    catalog_path: "cctv_camera/hd/HD Camera",
+    camera_subtype: "outdoor_bullet",
+    form_factor: "bullet",
+    ip_rating: "IP67",
+    body_material: "plastic",
+    resolution: "2.4MP",
+    resolution_mp: 2,
+    resolution_tier: "good",
+    lens_mm: 3.6,
+    night_vision_type: "dual_light",
+    night_vision_range_m: 30,
+    has_audio: true,
+    has_mic: true,
+    has_speaker: false,
+    has_2way_audio: false,
+    features: ["hd", "bullet", "hybrid", "dual_light", "audio", "mic", "night_vision", "outdoor", "ip67", "illumax"],
+    base_cost: 1409,
+    margin_percentage: 15,
+    unit_price: 1620,
+    unit_price_budget: 1550,
+    unit_price_premium: 1720,
+    is_active: true,
+    is_deleted: false,
+    is_quotation_eligible: true,
+    is_configurator_visible: true,
+    stock_status: "in_stock",
+    stock_quantity: 25,
+    warranty_years: 2,
+    image_url: "/products/12HMFB4.webp",
+    source_vendor: "Mega Compu World",
+    source_url: "https://megajaipur.com/security/hd-camera-dvr/cp-plus-24mp-regular-hybrid-hd-bullet-36mm-with-audio-camera-tc24pl3c-l-v2-a0139",
+    description: "CP Plus 2.4MP Illumax Hybrid HD Bullet Camera with Dual Light technology (30m IR + 20m Warm Light), IP67 outdoor weather resistance, and built-in mic.",
+  },
+
+  "CAM-CPP-HD-DA24PL2C-SE": {
+    display_name: "CP-Plus 2.4MP ColorVu HD Dome Camera 3.6mm With Audio (DA24PL2C-SE)",
+    technical_name: "CP-GPC-DA24PL2C-SE",
+    internal_sku: "DA24PL2C-SE",
+    vendor_pid: "P7826",
+    vendor_item_code: "0WZ3HTS",
+    brand: "CP PLUS",
+    category: "cctv_camera",
+    technology: "HD",
+    technologies: ["HD"],
+    catalog_path: "cctv_camera/hd/HD Camera",
+    camera_subtype: "indoor_dome",
+    form_factor: "dome",
+    ip_rating: "Indoor",
+    body_material: "plastic",
+    resolution: "2.4MP",
+    resolution_mp: 2,
+    resolution_tier: "good",
+    lens_mm: 3.6,
+    night_vision_type: "color",
+    night_vision_range_m: 20,
+    has_audio: true,
+    has_mic: true,
+    has_speaker: false,
+    has_2way_audio: false,
+    features: ["hd", "dome", "color", "guard_plus", "audio", "mic", "night_vision", "indoor"],
+    base_cost: 1576,
+    margin_percentage: 15,
+    unit_price: 1812,
+    unit_price_budget: 1750,
+    unit_price_premium: 1950,
+    is_active: true,
+    is_deleted: false,
+    is_quotation_eligible: true,
+    is_configurator_visible: true,
+    stock_status: "in_stock",
+    stock_quantity: 20,
+    warranty_years: 2,
+    image_url: "/products/0WZ3HTS.webp",
+    source_vendor: "Mega Compu World",
+    source_url: "https://megajaipur.com/security/hd-camera-dvr/cp-plus-24mp-colorvu-hd-dome-camera-36mm-with-audio-da24pl2c-se-p7826",
+    description: "CP Plus Guard+ 2.4MP Full-Color HD Dome Camera with 24/7 vivid color night vision via warm LEDs (20m), audio-over-coax built-in mic, and 3.6mm lens.",
+  },
+
+  "CAM-CPP-HD-TA24PL2C-SE": {
+    display_name: "CP-Plus 2.4MP ColorVu HD Bullet Camera 3.6mm With Audio (TA24PL2C-SE)",
+    technical_name: "CP-GPC-TA24PL2C-SE",
+    internal_sku: "TA24PL2C-SE",
+    vendor_pid: "P7825",
+    vendor_item_code: "0WYXVK0",
+    brand: "CP PLUS",
+    category: "cctv_camera",
+    technology: "HD",
+    technologies: ["HD"],
+    catalog_path: "cctv_camera/hd/HD Camera",
+    camera_subtype: "outdoor_bullet",
+    form_factor: "bullet",
+    ip_rating: "IP67",
+    body_material: "plastic",
+    resolution: "2.4MP",
+    resolution_mp: 2,
+    resolution_tier: "good",
+    lens_mm: 3.6,
+    night_vision_type: "color",
+    night_vision_range_m: 20,
+    has_audio: true,
+    has_mic: true,
+    has_speaker: false,
+    has_2way_audio: false,
+    features: ["hd", "bullet", "color", "guard_plus", "audio", "mic", "night_vision", "outdoor", "ip67"],
+    base_cost: 1640,
+    margin_percentage: 15,
+    unit_price: 1886,
+    unit_price_budget: 1800,
+    unit_price_premium: 2000,
+    is_active: true,
+    is_deleted: false,
+    is_quotation_eligible: true,
+    is_configurator_visible: true,
+    stock_status: "in_stock",
+    stock_quantity: 20,
+    warranty_years: 2,
+    image_url: "/products/0WYXVK0.webp",
+    source_vendor: "Mega Compu World",
+    source_url: "https://megajaipur.com/security/hd-camera-dvr/cp-plus-24mp-colorvu-hd-bullet-camera-36mm-with-audio-ta24pl2c-se-p7825",
+    description: "CP Plus Guard+ 2.4MP Full-Color HD Bullet Camera with 24/7 full-color night vision (20m warm light), built-in mic, and IP67 weather-resistant enclosure.",
+  },
+
+  "CAM-CPP-HD-DC51PL3C-L": {
+    display_name: "CP-Plus HD Dome Camera 5MP Illumax Hybrid 3.6mm With Audio (DC51PL3C-L)",
+    technical_name: "CP-URC-DC51PL3C-L",
+    internal_sku: "DC51PL3C-L",
+    vendor_pid: "A1334",
+    vendor_item_code: "17RPY4G",
+    brand: "CP PLUS",
+    category: "cctv_camera",
+    technology: "HD",
+    technologies: ["HD"],
+    catalog_path: "cctv_camera/hd/HD Camera",
+    camera_subtype: "indoor_dome",
+    form_factor: "dome",
+    ip_rating: "Indoor",
+    body_material: "plastic",
+    resolution: "5MP",
+    resolution_mp: 5,
+    resolution_tier: "crystal_clear",
+    lens_mm: 3.6,
+    night_vision_type: "dual_light",
+    night_vision_range_m: 30,
+    has_audio: true,
+    has_mic: true,
+    has_speaker: false,
+    has_2way_audio: false,
+    features: ["hd", "dome", "hybrid", "dual_light", "audio", "mic", "indoor", "illumax", "5mp"],
+    base_cost: 1690,
+    margin_percentage: 15,
+    unit_price: 1944,
+    unit_price_budget: 1890,
+    unit_price_premium: 2050,
+    is_active: true,
+    is_deleted: false,
+    is_quotation_eligible: true,
+    is_configurator_visible: true,
+    stock_status: "in_stock",
+    stock_quantity: 15,
+    warranty_years: 2,
+    image_url: "/products/17RPY4G.webp",
+    source_vendor: "Mega Compu World",
+    source_url: "https://megajaipur.com/security/hd-camera-dvr/cp-plus-hd-dome-camera-5mp-illumax-hybrid-36mm-with-audio-dc51pl3c-l-a1334",
+    description: "CP Plus 5MP Illumax Hybrid HD Dome Camera delivering crystal clear 5MP resolution with Dual Light smart switching (30m IR + 20m Warm Light) and built-in audio mic.",
+  },
+
+  "CAM-CPP-HD-DA50PL2C-SE": {
+    display_name: "CP-Plus 5MP ColorVu HD Dome Camera 3.6mm With Audio (CP-GPC-DA50PL2C-SE)",
+    technical_name: "CP-GPC-DA50PL2C-SE",
+    internal_sku: "CP-GPC-DA50PL2C-SE",
+    vendor_pid: "P2142",
+    vendor_item_code: "0SOCDMO",
+    brand: "CP PLUS",
+    category: "cctv_camera",
+    technology: "HD",
+    technologies: ["HD"],
+    catalog_path: "cctv_camera/hd/HD Camera",
+    camera_subtype: "indoor_dome",
+    form_factor: "dome",
+    ip_rating: "Indoor",
+    body_material: "plastic",
+    resolution: "5MP",
+    resolution_mp: 5,
+    resolution_tier: "crystal_clear",
+    lens_mm: 3.6,
+    night_vision_type: "color",
+    night_vision_range_m: 20,
+    has_audio: true,
+    has_mic: true,
+    has_speaker: false,
+    has_2way_audio: false,
+    features: ["hd", "dome", "color", "guard_plus", "audio", "mic", "night_vision", "indoor", "5mp"],
+    base_cost: 1932,
+    margin_percentage: 15,
+    unit_price: 2222,
+    unit_price_budget: 2150,
+    unit_price_premium: 2350,
+    is_active: true,
+    is_deleted: false,
+    is_quotation_eligible: true,
+    is_configurator_visible: true,
+    stock_status: "in_stock",
+    stock_quantity: 15,
+    warranty_years: 2,
+    image_url: "/products/0SOCDMO.webp",
+    source_vendor: "Mega Compu World",
+    source_url: "https://megajaipur.com/security/hd-camera-dvr/cp-plus-5mp-colorvu-hd-dome-camera-36mm-with-audio-cp-gpc-da50pl2c-se-p2142",
+    description: "CP Plus Guard+ 5MP Full-Color HD Dome Camera with 24/7 Color Night Vision via Warm Light LEDs (20m), built-in audio microphone, and 5MP ultra-high definition clarity.",
+  },
+};
+
+// Also update the generic slots so simple/guided flow picks updated prices and codes
+export const GENERIC_SLOT_UPDATES: Record<string, Partial<any>> = {
+  "HDA-CPP-2MP-BW-BULLET": {
+    technical_name: "CP-URC-TC24PL3C",
+    vendor_pid: "A0721",
+    vendor_item_code: "1541PMO",
+    unit_price: 1236,
+    base_cost: 1075,
+    image_url: "/products/1541PMO.jpg",
+    source_vendor: "Mega Compu World",
+  },
+  "HDA-CPP-2MP-COL-BULLET": {
+    technical_name: "CP-GPC-TA24PL2C-SE",
+    vendor_pid: "P7825",
+    vendor_item_code: "0WYXVK0",
+    unit_price: 1886,
+    base_cost: 1640,
+    image_url: "/products/0WYXVK0.webp",
+    source_vendor: "Mega Compu World",
+  },
+  "HDA-CPP-2MP-COL-DOME": {
+    technical_name: "CP-GPC-DA24PL2C-SE",
+    vendor_pid: "P7826",
+    vendor_item_code: "0WZ3HTS",
+    unit_price: 1812,
+    base_cost: 1576,
+    image_url: "/products/0WZ3HTS.webp",
+    source_vendor: "Mega Compu World",
+  },
+  "HDA-CPP-5MP-COL-DOME": {
+    technical_name: "CP-GPC-DA50PL2C-SE",
+    vendor_pid: "P2142",
+    vendor_item_code: "0SOCDMO",
+    unit_price: 2222,
+    base_cost: 1932,
+    image_url: "/products/0SOCDMO.webp",
+    source_vendor: "Mega Compu World",
+  },
+};
+
+async function syncProducts() {
+  const { db, ts } = getDb();
+  console.log("Syncing 7 CP Plus HD Cameras to Firestore products collection...");
+
+  for (const [id, prodData] of Object.entries(MEGA_HD_CAMERAS)) {
+    const docRef = db.collection("products").doc(id);
+    const existing = await docRef.get();
+
+    await docRef.set(
+      {
+        ...prodData,
+        created_at: existing.exists ? existing.data()?.created_at || ts : ts,
+        updated_at: ts,
+      },
+      { merge: true }
+    );
+    console.log(` ✅ Seeded: [${id}] ${prodData.display_name} -> Price: ₹${prodData.unit_price} | Item Code: ${prodData.vendor_item_code} | Img: ${prodData.image_url}`);
+  }
+
+  console.log("\nUpdating generic HDA slots with updated prices & vendor codes...");
+  for (const [id, updates] of Object.entries(GENERIC_SLOT_UPDATES)) {
+    const docRef = db.collection("products").doc(id);
+    const existing = await docRef.get();
+    if (existing.exists) {
+      await docRef.set(
+        {
+          ...updates,
+          updated_at: ts,
+        },
+        { merge: true }
+      );
+      console.log(` 🔄 Updated generic slot [${id}] -> Price: ₹${updates.unit_price} | Vendor Code: ${updates.vendor_item_code}`);
+    }
+  }
+
+  console.log("\n🎉 All 7 Mega Compu World CP Plus HD products successfully synchronized with Firestore!");
+}
+
+syncProducts().catch(err => {
+  console.error("❌ Error syncing products:", err);
+  process.exit(1);
+});

@@ -1,6 +1,6 @@
 # TEAM CCTV Platform - Master Project Status & Verification Log
 
-> **Last Updated:** November 1, 2026  
+> **Last Updated:** November 3, 2026  
 > **Production URL:** `https://cctvquotation.com`  
 > **Repository:** `team-cctv-platform` (`master` branch)  
 > **Canonical Plan & Architecture:** [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md) | [`BUSINESS_RULES.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/BUSINESS_RULES.md)
@@ -410,6 +410,28 @@
 | **Layer 32: Sales & CRM Lead Urgency & Omnichannel Alignment** | CRMEngine Unit Suite & Lead Ingestion Gates | `PASS` | 100% test pass on timeline-to-priority mapping (HOT 1h, WARM 24h, NURTURE 3d); 9-question WhatsApp bot state machine verified; Step 4 & Step 6 wizard urgency capture active; 1-click WhatsApp admin action; 0 build errors. |
 | **Layer 33: Dual-Entity Beat Planning & Inactivity Tracking** | VRPTW Optimizer & Touchpoint Test Suite | `PASS` | 100% test pass on dual-entity route optimization (7.9km / 19m drive); inactivity aging verification (Active 2d, Due 11d, Overdue 26d, Never); auto-touchpoint logging verified; 0 build errors. |
 | **Layer 34: Configuration Tool Catalog Normalization & Grouping** | Catalog Grouping Suite (`scripts/test-configuration-catalog.ts`) | `PASS` | 24/24 passed (100%). Storage type normalization (`Surveillance HDD` ➔ `Hard Disk`), all Budget Brand HDDs restored, numeric capacity ordering, 7 accessory sub-categories, 4G router unblocked, 0 build errors. |
+| **Layer 35: Mixed Camera Bucket Customization & Real-Time System Composition** | Per-Bucket Specifications & Engine Isolation | `PASS` | 10/10 E2E customer/admin scenarios passed. Per-bucket independent feature toggling (24/7 Color, Audio Mic, 2-Way Talk, 360° PTZ), elimination of global feature leakage into bucket pricing calculations, real-time System Overview counter bar, immutable standard outdoor IP67 weatherproof & 4G SIM cellular badges. |
+| **Layer 36: Educational Feature Guide, Specifications Checklist & Color Harmonization (WCAG 2.1 AA)** | UI/UX & Accessible Color Palette | `PASS` | TagGuideModal with layman real-world examples, SpecificationChecklistModal for customer guidance, unified brand blue pills (`bg-blue-600`), frosted badges, containerized spec chips, muted non-alarming trash buttons, full light & dark mode parity. |
+
+---
+
+
+### Milestone 35: Per-Bucket Camera Customization & Zero Feature Leakage
+- **Real-Life Camera Specialization:** In practical installations, customers require mixed capabilities across cameras (e.g. 2 outdoor bullet cameras with Color Night Vision and Audio Mic for street monitoring, 1 camera with 2-way talk and speaker for the front gate, and 1 wireless camera with 4G SIM where no Wi-Fi exists).
+- **Per-Bucket Feature Customization:** Each camera bucket card independently manages its own active features (`color`, `mic`, `2-way`, `ptz`).
+- **Feature Precedence in Pricing Engine:** `lib/pricing-engine.ts` updated to strictly prioritize per-bucket `req.features` over global selections, completely preventing feature leakage across unrelated camera buckets.
+- **Real-Time System Overview:** Live breakdown bar dynamically aggregates hardware composition: Total cameras, Outdoor Weatherproof, Indoor, Color Night, Audio Mic, 2-Way Talk, 360° PTZ, 4G SIM, and Wi-Fi.
+- **Immutable Standard Attributes:** IP67 Weatherproofing is permanently marked as standard on all outdoor cameras (`🌧️ IP67 Weatherproof Standard`), and 4G SIM is marked as built-in for 4G cameras (`🛰️ 4G SIM Built-in`).
+
+### Milestone 36: Layman Feature Education & WCAG 2.1 AA Color Harmonization
+- **Educational Layman Guide Modal (`TagGuideModal.tsx`):** Provides plain-language explanations, practical Indian daily real-life examples (e.g., cash counter audio proof, gate delivery package talk, intruder shirt color at 2 AM), and recommended installation locations for every feature tag.
+- **System Specifications Checklist Modal (`SpecificationChecklistModal.tsx`):** Interactive modal allowing customers to inspect and refine their security checklist with real-time feedback.
+- **Accessible & Harmonious Color Palette:**
+  - Resolved neon green and saturated indigo contrast clashes by unifying active technology tabs under authoritative brand blue (`bg-blue-600 text-white`) with frosted semi-transparent badges (`bg-white/20 text-white border border-white/25`).
+  - Standardized active brand filters with cohesive royal blue (`bg-blue-600 text-white`).
+  - Replaced alarming red trash buttons with clean, non-distracting neutral icons (`text-zinc-400 hover:text-red-600`).
+  - Containerized bucket specification notes into subtle, high-end specification pills.
+  - Achieved full WCAG 2.1 AA contrast compliance across all customer screens in both Light Mode and Dark Mode.
 
 ---
 

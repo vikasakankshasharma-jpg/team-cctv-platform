@@ -491,15 +491,15 @@ function calculateHardware(
         proxySelection.selected_camera_id = undefined;
       }
       
-      const extraFeatures = proxySelection.requested_features 
-        ? proxySelection.requested_features.filter(f => {
-            const fl = f.toLowerCase();
-            return fl !== "bullet" && fl !== "dome" && fl !== "outdoor" && fl !== "indoor";
-          }) 
-        : [];
-      if (req.features && req.features.length > 0) {
-        extraFeatures.push(...req.features);
-      }
+      // If req explicitly defines features, honor the per-bucket features; otherwise fallback to global requested_features
+      const extraFeatures = (req.features && req.features.length > 0)
+        ? [...req.features]
+        : (proxySelection.requested_features 
+            ? proxySelection.requested_features.filter(f => {
+                const fl = f.toLowerCase();
+                return fl !== "bullet" && fl !== "dome" && fl !== "outdoor" && fl !== "indoor";
+              })
+            : []);
       
       const typeLower = req.type.toLowerCase();
       if (typeLower.includes("ptz")) extraFeatures.push("ptz");

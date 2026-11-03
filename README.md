@@ -63,6 +63,15 @@
 - **Admin Deal Desk & Counter-Offer Automation:** `/admin/leads/[leadId]` provides side-by-side catalog vs. competitor economics, variance analysis, counter-strategy selection (Match, Beat by ₹500, Custom), and 1-click WhatsApp counter-pitch messaging highlighting 100% Solid Pure Copper Cable and Genuine Surveillance Storage.
 
 
+### 8. Per-Bucket Camera Customization, Layman Feature Guide & Accessible UI
+- **Per-Bucket Feature Independence:** Eliminates the constraint of uniform camera specifications. Customers can configure specific camera buckets with unique combinations (e.g. 2 outdoor cameras with Color Night Vision and Audio Mic, 1 entrance camera with 2-way talk and speaker, and 1 wireless camera with 4G SIM cellular).
+- **Zero Feature Leakage in Pricing Engine:** `lib/pricing-engine.ts` prioritizes per-bucket `req.features` over global selections, guaranteeing that features chosen for one camera type do not inflate or alter other camera buckets.
+- **Real-Time System Overview Breakdown:** High-visibility dynamic counter bar displaying total cameras alongside real-time counts for Weatherproof, Indoor, Color Night, Audio Mic, 2-Way Talk, 360° PTZ, 4G SIM, and Wi-Fi.
+- **Immutable Standard Attributes:** Weatherproof IP67 is automatically included as standard for outdoor cameras (`🌧️ IP67 Weatherproof Standard`), and 4G SIM connectivity is permanently built-in for 4G units.
+- **Educational Layman Guide Modal (`TagGuideModal.tsx`):** Explains technical terms in simple language with practical Indian daily real-life examples (e.g., cash counter verbal negotiations, gate package delivery instructions, identifying intruder shirt color at 2 AM).
+- **System Specifications Checklist Modal (`SpecificationChecklistModal.tsx`):** Interactive checklist modal to inspect and apply requirements in 1 click.
+- **WCAG 2.1 AA Compliant Color System:** Unified brand blue active states (`bg-blue-600`), frosted badges within active tabs, containerized specification chips, muted non-distracting delete actions, and high contrast ratios across both Light Mode and Dark Mode.
+
 ---
 
 ## 🛠 Tech Stack

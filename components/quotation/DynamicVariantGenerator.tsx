@@ -3,7 +3,8 @@ import { Product, Addon, AppSettings, ConfiguratorSelection, PricingResult } fro
 import { calculatePricing } from "@/lib/pricing-engine";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Check, Filter, Tag, ChevronDown, Plus, Trash2, Info } from "lucide-react";
+import { Sparkles, Check, Filter, Tag, ChevronDown, Plus, Trash2, Info, HelpCircle, ShieldCheck } from "lucide-react";
+import { TagGuideModal } from "./TagGuideModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BookSurveyClient } from "@/components/public/BookSurveyClient";
 import { getCanonicalBrandKey, getCanonicalBrandName } from "@/lib/brand-utils";
@@ -72,6 +73,8 @@ interface DynamicVariantGeneratorProps {
   onToggleCompare: (pricing: PricingResult) => void;
   selectedCompareItems: PricingResult[];
   onPriceMatch?: (pricing: PricingResult, allVariants?: PricingResult[]) => void;
+  onOpenSpecsModal?: () => void;
+  onToggleFeatureTag?: (tag: string) => void;
 }
 
 export function DynamicVariantGenerator({
@@ -87,9 +90,24 @@ export function DynamicVariantGenerator({
   onSelectCheckout,
   onToggleCompare,
   selectedCompareItems,
-  onPriceMatch
+  onPriceMatch,
+  onOpenSpecsModal,
+  onToggleFeatureTag
 }: DynamicVariantGeneratorProps) {
   const { t } = useTranslation();
+  const [showGuideModal, setShowGuideModal] = useState(false);
+
+  const toggleBucketFeature = (bucketId: string, featureTag: string) => {
+    setCameraBuckets(prev => prev.map(b => {
+      if (b.id !== bucketId) return b;
+      const currentFeats: string[] = b.features || [];
+      const exists = currentFeats.includes(featureTag);
+      const newFeats = exists 
+        ? currentFeats.filter((f: string) => f !== featureTag) 
+        : [...currentFeats, featureTag];
+      return { ...b, features: newFeats };
+    }));
+  };
   // Auto-select based on selection.technology, session storage, or default
   const [activeTech, setActiveTech] = useState<"hd" | "ip" | "wireless">(() => {
     const selTech = String(selection.technology || "").toLowerCase();
@@ -154,7 +172,8 @@ export function DynamicVariantGenerator({
           type: tLower.includes("outdoor") ? "outdoor" : "indoor",
           count: req.count || 1,
           resolution: req.resolution || "2MP",
-          connection: conn
+          connection: conn,
+          features: req.features ? [...req.features] : []
         };
       });
     }
@@ -177,18 +196,23 @@ export function DynamicVariantGenerator({
       ? (selection.broadband_status === "independent_4g" ? "4g" : "wifi") 
       : "wired";
 
+    const initFeats = (selection.requested_features || []).filter(f => {
+      const fl = f.toLowerCase();
+      return fl !== "outdoor" && fl !== "indoor" && fl !== "bullet" && fl !== "dome";
+    });
+
     if (outCount > 0) {
-      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: outCount, resolution: "2MP", connection: defaultConn });
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: outCount, resolution: "2MP", connection: defaultConn, features: [...initFeats] });
     }
     if (inCount > 0) {
-      buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", count: inCount, resolution: "2MP", connection: defaultConn });
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "indoor", count: inCount, resolution: "2MP", connection: defaultConn, features: [...initFeats] });
     }
     // If hybrid setup has wifi cameras and we are in wired tab:
     if (!isWirelessMode && wifiCount > 0) {
-      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: wifiCount, resolution: "3MP", connection: "wifi" });
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: wifiCount, resolution: "3MP", connection: "wifi", features: [...initFeats] });
     }
     if (buckets.length === 0 && selection.camera_count) {
-      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: selection.camera_count, resolution: "2MP", connection: defaultConn });
+      buckets.push({ id: Math.random().toString(36).substring(7), type: "outdoor", count: selection.camera_count, resolution: "2MP", connection: defaultConn, features: [...initFeats] });
     }
     return buckets;
   });
@@ -216,6 +240,13 @@ export function DynamicVariantGenerator({
 
   const outdoorCount = cameraBuckets.filter(b => b.type === "outdoor").reduce((sum, b) => sum + b.count, 0);
   const indoorCount = cameraBuckets.filter(b => b.type === "indoor").reduce((sum, b) => sum + b.count, 0);
+  const colorCount = cameraBuckets.filter(b => (b.features || []).includes("color")).reduce((sum, b) => sum + b.count, 0);
+  const micCount = cameraBuckets.filter(b => (b.features || []).includes("mic") || (b.features || []).includes("2-way")).reduce((sum, b) => sum + b.count, 0);
+  const twoWayCount = cameraBuckets.filter(b => (b.features || []).includes("2-way")).reduce((sum, b) => sum + b.count, 0);
+  const ptzCount = cameraBuckets.filter(b => (b.features || []).includes("ptz")).reduce((sum, b) => sum + b.count, 0);
+  const wifiCount = cameraBuckets.filter(b => b.connection === "wifi").reduce((sum, b) => sum + b.count, 0);
+  const cellularCount = cameraBuckets.filter(b => b.connection === "4g").reduce((sum, b) => sum + b.count, 0);
+  const totalHardwareCount = cameraBuckets.reduce((sum, b) => sum + b.count, 0);
   const hasOutdoor = outdoorCount > 0;
   const hasIndoor = indoorCount > 0;
   const isMixed = hasOutdoor && hasIndoor;
@@ -301,37 +332,48 @@ export function DynamicVariantGenerator({
 
     const isWireless = activeTech === "wireless";
     let mixedReqs: any[] = cameraBuckets.filter(b => b.count > 0).map(b => {
-      const conn = isWireless ? (b.connection === "4g" ? "4g" : "wifi") : (b.connection || "wired");
-      const bucketResList = getResolutionsForBucket(b);
-      const res = bucketResList.includes(b.resolution) ? b.resolution : (bucketResList.includes("3MP") ? "3MP" : (bucketResList.includes("2MP") ? "2MP" : (bucketResList[0] || "2MP")));
-      
-      if (conn === "4g") {
-        return {
-          type: b.type === "outdoor" ? "Outdoor 4G SIM Camera" : "Indoor 4G SIM Camera",
-          count: b.count,
-          resolution: res,
-          technology: "Wireless",
-          features: b.type === "outdoor" ? ["outdoor", "4g", "sim"] : ["indoor", "4g", "sim"]
-        };
-      }
-      if (conn === "wifi") {
-        return {
-          type: b.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera",
-          count: b.count,
-          resolution: res,
-          technology: "Wireless",
-          features: b.type === "outdoor" ? ["bullet", "wireless", "wifi"] : ["dome", "wireless", "wifi", "ptz"]
-        };
-      }
-      return {
-        type: b.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera",
-        count: b.count,
-        resolution: res,
-        technology: activeTech === "ip" ? "IP" : "HD",
-        features: b.type === "outdoor" ? ["bullet", "outdoor"] : ["dome", "indoor"]
-      };
-    });
+        const conn = isWireless ? (b.connection === "4g" ? "4g" : "wifi") : (b.connection || "wired");
+        const bucketResList = getResolutionsForBucket(b);
+        const res = bucketResList.includes(b.resolution) ? b.resolution : (bucketResList.includes("3MP") ? "3MP" : (bucketResList.includes("2MP") ? "2MP" : (bucketResList[0] || "2MP")));
 
+        let baseFeatures: string[] = [];
+        if (conn === "4g") {
+          baseFeatures = b.type === "outdoor" ? ["outdoor", "4g", "sim"] : ["indoor", "4g", "sim"];
+        } else if (conn === "wifi") {
+          baseFeatures = b.type === "outdoor" ? ["bullet", "wireless", "wifi"] : ["dome", "wireless", "wifi", "ptz"];
+        } else {
+          baseFeatures = b.type === "outdoor" ? ["bullet", "outdoor"] : ["dome", "indoor"];
+        }
+        // Merge bucket-specific features (e.g., mic, color, 2-way) if any
+        const extra = b.features && Array.isArray(b.features) ? b.features : [];
+        const allFeatures = Array.from(new Set([...baseFeatures, ...extra]));
+
+        if (conn === "4g") {
+          return {
+            type: b.type === "outdoor" ? "Outdoor 4G SIM Camera" : "Indoor 4G SIM Camera",
+            count: b.count,
+            resolution: res,
+            technology: "Wireless",
+            features: allFeatures
+          };
+        }
+        if (conn === "wifi") {
+          return {
+            type: b.type === "outdoor" ? "Outdoor Wi-Fi Camera" : "Indoor Wi-Fi Camera",
+            count: b.count,
+            resolution: res,
+            technology: "Wireless",
+            features: allFeatures
+          };
+        }
+        return {
+          type: b.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera",
+          count: b.count,
+          resolution: res,
+          technology: activeTech === "ip" ? "IP" : "HD",
+          features: allFeatures
+        };
+      });
     const enrich = (pricing: any, brandKey: string, brandName: string) => {
       if (!pricing || pricing.error) return null;
       const camItems = pricing.items?.filter((i: any) => effectiveProducts.find(p => p.id === i.product_id)?.category === "cctv_camera");
@@ -516,26 +558,26 @@ export function DynamicVariantGenerator({
         <div className="bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1.5 rounded-full inline-flex relative shadow-inner">
           <button
             onClick={() => setActiveTech("hd")}
-            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "hd" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
+            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "hd" ? "text-white shadow-md" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"}`}
           >
-            {activeTech === "hd" && <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full -z-10" />}
+            {activeTech === "hd" && <span className="absolute inset-0 bg-blue-600 rounded-full shadow-sm -z-10" />}
             <span>{t("wz_standard_hd_analog")}</span>
-            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'hd' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'}`}>{t("wz_lowest_price")}</span>
+            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'hd' ? 'bg-white/20 text-white backdrop-blur-xs border border-white/25' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200/50'}`}>{t("wz_lowest_price")}</span>
           </button>
           <button
             onClick={() => setActiveTech("ip")}
-            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "ip" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
+            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "ip" ? "text-white shadow-md" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"}`}
           >
-            {activeTech === "ip" && <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full -z-10" />}
+            {activeTech === "ip" && <span className="absolute inset-0 bg-blue-600 rounded-full shadow-sm -z-10" />}
             <span>{t("wz_premium_ip_network")}</span>
           </button>
           <button
             onClick={() => setActiveTech("wireless")}
-            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "wireless" ? "text-white shadow-md" : "text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white"}`}
+            className={`relative z-10 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 ${activeTech === "wireless" ? "text-white shadow-md" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"}`}
           >
-            {activeTech === "wireless" && <span className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full -z-10" />}
+            {activeTech === "wireless" && <span className="absolute inset-0 bg-blue-600 rounded-full shadow-sm -z-10" />}
             <span>Smart Wireless (Wi-Fi / 4G)</span>
-            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'wireless' ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300'}`}>
+            <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${activeTech === 'wireless' ? 'bg-white/20 text-white backdrop-blur-xs border border-white/25' : 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300 border border-teal-200/50'}`}>
               {selection.power_wiring_option === "wire_needed" ? "Zero Video Wire" : "Zero Wiring"}
             </span>
           </button>
@@ -543,16 +585,100 @@ export function DynamicVariantGenerator({
 
         {/* Brand Selector */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
-          <span className="text-sm font-semibold text-[#86868b] mr-2 shrink-0">{t("wz_brand")}</span>
+          <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 mr-2 shrink-0">{t("wz_brand")}</span>
           {availableBrands.map(b => (
             <button
               key={b}
               onClick={() => setActiveBrand(b)}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeBrand === b ? "bg-[#1d1d1f] text-white border-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f]" : "bg-white dark:bg-[#1d1d1f] text-[#86868b] border-[#d2d2d7] dark:border-[#424245] hover:border-blue-500"}`}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all ${activeBrand === b ? "bg-blue-600 text-white border-blue-600 shadow-xs dark:bg-blue-600 dark:text-white" : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-blue-400 hover:text-blue-600"}`}
             >
               {BRAND_DISPLAY[b] || getCanonicalBrandName(b) || b}
             </button>
           ))}
+        </div>
+
+        {/* Real-time System Composition & Specification Breakdown */}
+        <div className="w-full max-w-2xl mx-auto bg-white dark:bg-[#1d1d1f] p-3 sm:p-3.5 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm space-y-2.5">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                System Overview:
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-600 text-white shadow-xs">
+                {totalHardwareCount} {totalHardwareCount === 1 ? t("wz_camera") : t("wz_cameras")} Total
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowGuideModal(true)}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 hover:underline px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 cursor-pointer"
+                title="View plain language explanations and practical real-life examples for every feature"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>💡 Feature Guide</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={onOpenSpecsModal}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:underline px-2 py-1 rounded-lg bg-gray-100 dark:bg-zinc-800 cursor-pointer"
+                title="Open system specifications wizard"
+              >
+                <span>⚙️ Checklist</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Real-time Specification Breakup Tags */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-[11px]">
+            {outdoorCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold shrink-0 flex items-center gap-1">
+                <span>🌧️</span> {outdoorCount} Weatherproof (Outdoor Standard)
+              </span>
+            )}
+            {indoorCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 font-bold shrink-0 flex items-center gap-1">
+                <span>🏠</span> {indoorCount} Indoor
+              </span>
+            )}
+            {colorCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 font-bold shrink-0 flex items-center gap-1">
+                <span>🌙</span> {colorCount} Color Night
+              </span>
+            )}
+            {micCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60 font-bold shrink-0 flex items-center gap-1">
+                <span>🎙️</span> {micCount} Audio
+              </span>
+            )}
+            {twoWayCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 font-bold shrink-0 flex items-center gap-1">
+                <span>🗣️</span> {twoWayCount} 2-Way
+              </span>
+            )}
+            {ptzCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 font-bold shrink-0 flex items-center gap-1">
+                <span>🔄</span> {ptzCount} 360° PTZ
+              </span>
+            )}
+            {cellularCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold shrink-0 flex items-center gap-1">
+                <span>🛰️</span> {cellularCount} 4G SIM
+              </span>
+            )}
+            {wifiCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-bold shrink-0 flex items-center gap-1">
+                <span>📶</span> {wifiCount} Wi-Fi
+              </span>
+            )}
+            {colorCount === 0 && micCount === 0 && twoWayCount === 0 && ptzCount === 0 && (
+              <span className="text-gray-400 dark:text-zinc-500 text-[11px] italic">
+                Tip: Toggle features below on each camera card as needed.
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Camera Buckets UI */}
@@ -562,7 +688,7 @@ export function DynamicVariantGenerator({
               {/* Header row: Camera Type & Actions */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className={`inline-block w-2.5 h-2.5 rounded-full ${bucket.type === 'outdoor' ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                  <span className={`inline-block w-2.5 h-2.5 rounded-full ${bucket.type === 'outdoor' ? 'bg-emerald-500' : 'bg-blue-500'}`} />
                   <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
                     {bucket.type === 'outdoor' ? t("wz_outdoor_cameras") : t("wz_indoor_cameras")}
                   </span>
@@ -574,9 +700,9 @@ export function DynamicVariantGenerator({
                       const index = newBuckets.findIndex(b => b.id === bucket.id);
                       if (bucket.count > 1) {
                         newBuckets[index] = { ...bucket, count: Math.ceil(bucket.count / 2) };
-                        newBuckets.splice(index + 1, 0, { id: Math.random().toString(36).substring(7), type: bucket.type, count: Math.floor(bucket.count / 2), resolution: bucket.resolution });
+                        newBuckets.splice(index + 1, 0, { id: Math.random().toString(36).substring(7), type: bucket.type, count: Math.floor(bucket.count / 2), resolution: bucket.resolution, connection: bucket.connection, features: [...(bucket.features || [])] });
                       } else {
-                        newBuckets.splice(index + 1, 0, { id: Math.random().toString(36).substring(7), type: bucket.type, count: 1, resolution: bucket.resolution });
+                        newBuckets.splice(index + 1, 0, { id: Math.random().toString(36).substring(7), type: bucket.type, count: 1, resolution: bucket.resolution, connection: bucket.connection, features: [...(bucket.features || [])] });
                       }
                       return newBuckets;
                     })}
@@ -589,7 +715,7 @@ export function DynamicVariantGenerator({
                   {cameraBuckets.length > 1 && (
                     <button 
                       onClick={() => setCameraBuckets(prev => prev.filter(b => b.id !== bucket.id))}
-                      className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 transition-colors"
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors"
                       title="Remove this row"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -669,44 +795,105 @@ export function DynamicVariantGenerator({
                 </div>
               </div>
 
+              {/* Per-Bucket Specific Features */}
+              <div className="mt-2.5 pt-2 border-t border-gray-100 dark:border-zinc-800/80">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                    Features for these {bucket.count} cameras:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowGuideModal(true)}
+                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                  >
+                    <span>ℹ️ What do these mean?</span>
+                  </button>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {/* Weatherproof IP67 is standard on all outdoor cameras */}
+                  {bucket.type === 'outdoor' && (
+                    <span 
+                      title="IP67 Weatherproof is standard on all our outdoor cameras (heavy monsoon rain, heat, & dust sealed)"
+                      className="px-2 py-1 text-[11px] font-bold rounded-lg bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1 select-none"
+                    >
+                      <span>🌧️</span>
+                      <span>IP67 Weatherproof</span>
+                      <span className="text-[9px] bg-emerald-600 text-white px-1 rounded-sm font-semibold">Standard</span>
+                    </span>
+                  )}
+
+                  {/* 4G SIM is standard when 4G connection is selected */}
+                  {bucket.connection === '4g' && (
+                    <span className="px-2 py-1 text-[11px] font-bold rounded-lg bg-purple-50 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 flex items-center gap-1 select-none">
+                      <span>🛰️</span>
+                      <span>4G SIM Cellular</span>
+                      <span className="text-[9px] bg-purple-600 text-white px-1 rounded-sm font-semibold">Built-in</span>
+                    </span>
+                  )}
+
+                  {/* Toggleable features */}
+                  {[
+                    { tag: "color", label: "🌙 24/7 Color", title: "Full color video in darkness (ColorVu / Dual-Light)" },
+                    { tag: "mic", label: "🎙️ Audio Mic", title: "Record spoken voice & sound along with video" },
+                    { tag: "2-way", label: "🗣️ 2-Way Talk", title: "Speak & listen live via mobile phone app" },
+                    { tag: "ptz", label: "🔄 360° PTZ", title: "Motorized rotation remotely from phone" },
+                  ].map(feat => {
+                    const isChecked = (bucket.features || []).includes(feat.tag);
+                    return (
+                      <button
+                        key={feat.tag}
+                        type="button"
+                        onClick={() => toggleBucketFeature(bucket.id, feat.tag)}
+                        title={feat.title}
+                        className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 border cursor-pointer ${
+                          isChecked
+                            ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                            : "bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300 dark:bg-zinc-800/80 dark:text-zinc-200 dark:border-zinc-700 hover:text-blue-600"
+                        }`}
+                      >
+                        <span>{feat.label}</span>
+                        {isChecked ? (
+                          <span className="text-[10px] ml-0.5 font-bold">✓</span>
+                        ) : (
+                          <span className="text-[10px] text-gray-400 ml-0.5">+</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Informative feature badge for this bucket */}
-              <div className="mt-2.5 pt-2 border-t border-gray-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px]">
-                {bucket.connection === "wifi" ? (
-                  <span className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
-                    <span>📶</span>
-                    <span>
-                      {bucket.type === "outdoor" ? "Weatherproof Outdoor Wi-Fi Camera" : "Indoor 360° Pan-Tilt Wi-Fi Camera"} • MicroSD Card • Zero Video Cable
-                    </span>
+              <div className="mt-2.5 pt-2 border-t border-gray-100 dark:border-zinc-800/80">
+                <div className="w-full flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800/80 text-[11px] font-medium text-zinc-600 dark:text-zinc-400">
+                  <span className="text-xs">
+                    {bucket.connection === "wifi" ? "📶" : bucket.connection === "4g" ? "🛰️" : "🔌"}
                   </span>
-                ) : bucket.connection === "4g" ? (
-                  <span className="text-purple-700 dark:text-purple-400 font-medium flex items-center gap-1">
-                    <span>🛰️</span>
-                    <span>
-                      {bucket.type === "outdoor" ? "Outdoor 4G SIM Camera (Direct SIM)" : "Indoor 4G SIM Camera"} • MicroSD Card • Zero Router
-                    </span>
+                  <span className="truncate">
+                    {bucket.connection === "wifi" ? (
+                      bucket.type === "outdoor" ? "Weatherproof Outdoor Wi-Fi Bullet • MicroSD Card • Zero Video Cable" : "Indoor 360° Pan-Tilt Wi-Fi Dome • MicroSD Card • Zero Video Cable"
+                    ) : bucket.connection === "4g" ? (
+                      bucket.type === "outdoor" ? "Outdoor 4G SIM Bullet (Direct SIM) • MicroSD Card • Zero Broadband Required" : "Indoor 4G SIM Dome • MicroSD Card • Zero Broadband Required"
+                    ) : (
+                      bucket.type === "outdoor" ? `Outdoor Bullet Camera • Central ${activeTech === "ip" ? "NVR" : "DVR"} + Video Cabling` : `Indoor Dome Camera • Central ${activeTech === "ip" ? "NVR" : "DVR"} + Video Cabling`
+                    )}
                   </span>
-                ) : (
-                  <span className="text-blue-700 dark:text-blue-400 font-medium flex items-center gap-1">
-                    <span>🔌</span>
-                    <span>
-                      {bucket.type === "outdoor" ? "Outdoor Bullet Camera" : "Indoor Dome Camera"} • Central {activeTech === "ip" ? "NVR" : "DVR"} + Video Cable
-                    </span>
-                  </span>
-                )}
+                </div>
               </div>
             </div>
           ))}
           
           <div className="flex gap-3 mt-2">
              <button 
-               onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "outdoor", count: 1, resolution: "2MP", connection: activeTech === "wireless" ? "wifi" : "wired" }])}
-               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-4 py-2 rounded-full transition-colors"
+               onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "outdoor", count: 1, resolution: "2MP", connection: activeTech === "wireless" ? "wifi" : "wired", features: [] }])}
+               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-4 py-2 rounded-full border border-blue-200/60 dark:border-blue-800/50 shadow-xs transition-colors"
              >
                <span>+</span>  {t("wz_add_outdoor")}
                                        </button>
              <button 
-               onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "indoor", count: 1, resolution: "2MP", connection: activeTech === "wireless" ? "wifi" : "wired" }])}
-               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-4 py-2 rounded-full transition-colors"
+               onClick={() => setCameraBuckets(prev => [...prev, { id: Math.random().toString(36).substring(7), type: "indoor", count: 1, resolution: "2MP", connection: activeTech === "wireless" ? "wifi" : "wired", features: [] }])}
+               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-4 py-2 rounded-full border border-blue-200/60 dark:border-blue-800/50 shadow-xs transition-colors"
              >
                <span>+</span>  {t("wz_add_indoor")}
                                        </button>
@@ -769,12 +956,46 @@ export function DynamicVariantGenerator({
               
               <CardContent className="py-4 md:py-8 px-5 flex flex-col items-center justify-center min-h-[180px]">
                 <div className="text-center w-full">
-                  <div className="text-base font-black text-[#6366f1] mb-1.5 flex items-center justify-center gap-1.5 flex-wrap">
+                  <div className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-1.5 flex items-center justify-center gap-1.5 flex-wrap">
                     <span>{variant.camera_device?.brand || "Budget"}</span>
                   </div>
                   <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
                     {variant.camera_device.derivedResolution || "2MP Resolution"}
                   </h3>
+                  
+                  {/* Package Feature Badges */}
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 mb-2.5">
+                    {colorCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 flex items-center gap-1">
+                        <span>🌙</span> 24/7 Color Night
+                      </span>
+                    )}
+                    {micCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60 flex items-center gap-1">
+                        <span>🎙️</span> Audio Mic
+                      </span>
+                    )}
+                    {outdoorCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1">
+                        <span>🌧️</span> IP67 Weatherproof
+                      </span>
+                    )}
+                    {twoWayCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 flex items-center gap-1">
+                        <span>🗣️</span> 2-Way Talk
+                      </span>
+                    )}
+                    {ptzCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 flex items-center gap-1">
+                        <span>🔄</span> 360° PTZ
+                      </span>
+                    )}
+                    {cellularCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 flex items-center gap-1">
+                        <span>🛰️</span> 4G SIM
+                      </span>
+                    )}
+                  </div>
                   {(variant as any).substitution_message && (
                     <p className="text-[11px] text-amber-700 font-medium mb-3 max-w-[95%] mx-auto bg-amber-50 px-2 py-1 rounded-md border border-amber-200 leading-tight">
                       {(variant as any).substitution_message}
@@ -826,6 +1047,12 @@ export function DynamicVariantGenerator({
           );
         })}
       </div>
+
+      {/* Educational Layman Guide Modal */}
+      <TagGuideModal 
+        isOpen={showGuideModal} 
+        onClose={() => setShowGuideModal(false)} 
+      />
     </div>
   );
 }

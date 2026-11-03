@@ -529,3 +529,30 @@ A **Hybrid CCTV System** combines a central wired CCTV setup (Analog HD with DVR
 
 
 
+
+---
+
+## 8. Customer Journey, Quotation Catalog & UI Accessibility Rules
+
+### 8.1 Per-Bucket Specification Allocation & Feature Isolation
+- **Independent Feature Arrays:** Each camera bucket in `mixed_camera_requirements` maintains its own `features: string[]` array (e.g. `["color", "mic"]` for outdoor cameras; `["2-way"]` for entrance cameras).
+- **Feature Precedence in Pricing Engine:** The pricing calculation in `lib/pricing-engine.ts` MUST prioritize per-bucket `req.features` over global `selection.requested_features`.
+- **Zero Cross-Bucket Leakage:** Features configured on one camera bucket must NEVER leak into or alter another camera bucket. Each camera line item must resolve to hardware matching its own specific requirement.
+
+### 8.2 Standard & Immutable Hardware Attributes
+- **Outdoor IP67 Weatherproof Standard:** All outdoor cameras inherently include IP67 weather sealing (rain, heat, and dust sealed). Weatherproof is an immutable standard badge (`🌧️ IP67 Weatherproof Standard`) on outdoor cameras and must NEVER be rendered as an optional checkbox.
+- **4G SIM Cellular Connectivity Built-in:** When a 4G camera connection is selected, cellular capability is marked as an immutable built-in badge (`🛰️ 4G SIM Cellular Built-in`).
+
+### 8.3 Layman Feature Education & Practical Guidance Mandate
+- Technical specifications must be understandable to non-technical property owners without jargon.
+- Every technical tag (`color`, `mic`, `2-way`, `ptz`, `4g`, `5mp`) must provide:
+  1. Plain-language explanation of how the hardware works.
+  2. Practical real-life Indian daily use cases (e.g. cash drawer voice proof, delivery instructions at gate, recognizing intruder clothes at 2 AM).
+  3. Recommended property locations (e.g. cash counters, entrance gate, boundary walls).
+- Accessible via 1-click modal triggers (`💡 Feature Guide` in `TagGuideModal.tsx` and `⚙️ Checklist` in `SpecificationChecklistModal.tsx`).
+
+### 8.4 Color Palette Harmony & WCAG 2.1 AA Accessibility Standards
+- **Authoritative Brand Primary:** Primary interactive selections, active technology tabs, and active brand pills must use brand blue (`#2563eb` / `bg-blue-600 text-white`).
+- **Frosted Badges in Active Containers:** Tags inside active colored buttons must use frosted semi-transparent styling (`bg-white/20 text-white border border-white/25`) to avoid chromatic aberration and visual vibration.
+- **Muted Non-Alarming Action States:** Destructive actions (e.g. bucket deletion) must remain neutral gray (`text-zinc-400 hover:text-red-600 hover:bg-red-50`) when idle to prevent visual clutter and anxiety.
+- **Contrast Ratios:** All body text, dropdown labels, and status badges must meet or exceed the WCAG 2.1 AA standard of 4.5:1 across both Light Mode and Dark Mode.

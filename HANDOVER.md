@@ -74,6 +74,14 @@ This document serves as the master engineering and operational handover for the 
 - **Free Site Visit Booking:** Date & time slot picker (strictly future dates).
 - **Fallback Verification API:** Attached to payment success screen to ensure quotes immediately transition to `PAID` / `BOOKED` even if webhooks fail.
 
+
+### 2.7 Per-Bucket Camera Customization, Educational Modals & UI Palette
+- **Per-Bucket Specification Allocation:** Each bucket card independently manages resolution, quantity, connection type (Wired, Wi-Fi, 4G), and feature tags (`24/7 Color`, `Audio Mic`, `2-Way Talk`, `360° PTZ`).
+- **Real-Time System Overview:** Live breakdown bar dynamically aggregates hardware composition: Total cameras, Outdoor Weatherproof, Indoor, Color Night, Audio Mic, 2-Way Talk, 360° PTZ, 4G SIM, and Wi-Fi.
+- **Educational Layman Guide Modal (`TagGuideModal.tsx`):** Provides plain-language explanations, practical Indian daily real-life examples (e.g., cash counter verbal negotiations, gate package delivery instructions, identifying intruder shirt color at 2 AM), and recommended installation locations for every feature tag.
+- **System Specifications Checklist Modal (`SpecificationChecklistModal.tsx`):** Interactive checklist modal allowing customers to inspect and refine their security checklist with real-time feedback.
+- **WCAG 2.1 AA Compliant Color Harmonization:** Unified brand blue active states (`bg-blue-600`), frosted badges within active tabs, containerized specification chips, muted non-distracting delete actions, and high contrast ratios across both Light Mode and Dark Mode.
+
 ---
 
 ## 3. Operational & Deployment Guide

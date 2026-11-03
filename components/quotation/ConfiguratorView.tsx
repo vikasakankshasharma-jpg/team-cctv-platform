@@ -19,6 +19,7 @@ import { TranslatedText } from "@/components/shared/TranslatedText";
 import dynamic from "next/dynamic";
 import { Shield, ChevronDown, ChevronRight, CheckCircle2, Sparkles, ArrowLeftRight } from "lucide-react";
 import { SiteDetailsModal } from "./SiteDetailsModal";
+import { SpecificationChecklistModal } from "./SpecificationChecklistModal";
 import { ShareDialog } from "./ShareDialog";
 import { CompetitorQuoteUploader, SelectedPackageInfo } from "@/components/shared/CompetitorQuoteUploader";
 import { useRealtimeInventory } from "@/hooks/useRealtimeInventory";
@@ -52,6 +53,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
   const [savedPdfUrl, setSavedPdfUrl] = useState<string | null>(null);
+  const [showSpecsModal, setShowSpecsModal] = useState(false);
 
   // Dynamic Compare UX state
   const [selectedCompareItems, setSelectedCompareItems] = useState<PricingResult[]>([]);
@@ -138,6 +140,33 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
       if (el) el.scrollIntoView({ behavior: "smooth" });
     }, 100);
   }, [getPackageInfoFromPricing, pricing_results, availablePriceMatchPackages.length]);
+
+  // Auto-show Specification Requirements Checklist on first visit
+  useEffect(() => {
+    if (typeof window !== "undefined" && lead?.id) {
+      const hasSeenSpecs = sessionStorage.getItem(`specs_seen_${lead.id}`);
+      if (!hasSeenSpecs) {
+        setShowSpecsModal(true);
+      }
+    }
+  }, [lead?.id]);
+
+  const handleApplySpecs = (newTags: string[]) => {
+    updateSelection({ requested_features: newTags });
+    if (typeof window !== "undefined" && lead?.id) {
+      sessionStorage.setItem(`specs_seen_${lead.id}`, "true");
+    }
+  };
+
+  const handleToggleFeatureTag = (tag: string) => {
+    const current = selection.requested_features || [];
+    const lowerTag = tag.toLowerCase();
+    const exists = current.some(t => t.toLowerCase() === lowerTag);
+    const updated = exists 
+      ? current.filter(t => t.toLowerCase() !== lowerTag)
+      : [...current, tag];
+    updateSelection({ requested_features: updated });
+  };
 
   // Setup manual scroll restoration to prevent Next.js from aggressively restoring scroll position
   useEffect(() => {
@@ -586,6 +615,8 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
               onToggleCompare={handleToggleCompare}
               selectedCompareItems={selectedCompareItems}
               onPriceMatch={handleOpenPriceMatch}
+              onOpenSpecsModal={() => setShowSpecsModal(true)}
+              onToggleFeatureTag={handleToggleFeatureTag}
             />
             <CompareTray
               selectedItems={selectedCompareItems}
@@ -762,6 +793,15 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
           onClose={() => setShowAddressModal(false)}
         />
       )}
+
+      <SpecificationChecklistModal
+        isOpen={showSpecsModal}
+        onClose={() => setShowSpecsModal(false)}
+        onApply={handleApplySpecs}
+        currentTags={selection.requested_features || []}
+        outdoorCount={selection.outdoor_camera_count}
+        indoorCount={selection.indoor_camera_count}
+      />
 
       {showShareDialog && pricing_results.budget && (
         <ShareDialog

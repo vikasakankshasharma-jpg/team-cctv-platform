@@ -50,6 +50,12 @@
 10. **Admin-Gated Cash Collection Guardrail:** Cash collection on site by installers or delivery staff is strictly disabled by default. The cash payment option is active only when `cash_collection_approved: true` has been authorized by Admin staff. Backend rejects unauthorized cash submissions with HTTP 403.
 11. **On-Screen Dynamic UPI QR Standard:** Field collection for delivery handovers (90%), installation handovers (10%), and on-site change orders defaults to an on-screen dynamic Razorpay/UPI QR on the technician's mobile screen (`DynamicOnScreenQRCodeModal`), verified via polling in 2-3s with Web Audio chime and automated WhatsApp receipt delivery.
 
+12. **Per-Bucket Feature Isolation & UI Accessibility Invariant:**
+    - `mixed_camera_requirements` preserves bucket-level `features` (`color`, `mic`, `2-way`, `ptz`).
+    - The pricing engine (`pricing-engine.ts`) strictly processes bucket features independently, preventing feature leakage across unrelated camera buckets.
+    - Outdoor cameras are permanently marked with standard IP67 Weatherproofing (`🌧️ IP67 Weatherproof Standard`); 4G cameras are permanently marked with built-in 4G SIM (`🛰️ 4G SIM Built-in`).
+    - Color contrast across all customer-facing screens must satisfy WCAG 2.1 AA (minimum 4.5:1) in both Light Mode and Dark Mode, with unified brand blue active states and frosted semi-transparent tags inside colored containers.
+
 ---
 
 ## 4. Catalog Integrity & Test Hygiene Guardrails

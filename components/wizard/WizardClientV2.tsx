@@ -1556,7 +1556,7 @@ export function WizardClientV2() {
                         className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${(req.installation_preference || "pro") === "pro" ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Pro Installation Fitting</span>
-                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">₹349/cam</span>
+                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">Full Service</span>
                         </div>
                         <p className="text-[11px] text-gray-500 dark:text-zinc-400">Certified technician visits for physical drill mounting & phone app setup.</p>
                       </button>
@@ -1564,7 +1564,7 @@ export function WizardClientV2() {
                         className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${req.installation_preference === "diy" ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 shadow-sm' : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">DIY Self-Installation</span>
-                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">₹0 FREE</span>
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">Self Setup</span>
                         </div>
                         <p className="text-[11px] text-gray-500 dark:text-zinc-400">Delivered to your doorstep. Plug into power and pair via mobile app.</p>
                       </button>
@@ -1598,7 +1598,7 @@ export function WizardClientV2() {
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Power Socket Nearby</span>
                             <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">
-                              Included (₹0)
+                              No Extra Wire
                             </span>
                           </div>
                           <p className="text-[11px] text-gray-500 dark:text-zinc-400">
@@ -1627,7 +1627,7 @@ export function WizardClientV2() {
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Need Power Cabling</span>
                             <span className="text-[9px] bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 font-bold px-1.5 py-0.5 rounded">
-                              @ ₹10/m
+                              Custom Meters
                             </span>
                           </div>
                           <p className="text-[11px] text-gray-500 dark:text-zinc-400">
@@ -1662,7 +1662,6 @@ export function WizardClientV2() {
                         const wirelessCams = Number(req.camera_count) || 2;
                         const defaultMeters = wirelessCams * 10;
                         const selectedPowerMeters = typeof req.total_power_cable_meters === "number" ? req.total_power_cable_meters : defaultMeters;
-                        const estCost = selectedPowerMeters * 10;
 
                         return (
                           <div className="mt-2.5 p-3 rounded-xl border bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in">
@@ -1671,7 +1670,7 @@ export function WizardClientV2() {
                                 Estimated 2-Core Electrical Power Wire Required
                               </span>
                               <span className="block text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-                                ~{Math.round(selectedPowerMeters / wirelessCams)}m / camera • ₹10/m = <strong className="font-bold text-amber-950 dark:text-amber-200">₹{estCost.toLocaleString("en-IN")} total</strong>
+                                ~{Math.round(selectedPowerMeters / wirelessCams)}m / camera ({selectedPowerMeters}m total power wire)
                               </span>
                             </div>
 
@@ -2080,7 +2079,7 @@ export function WizardClientV2() {
                                 {t("wz_exceeds_free_limit")} (+{excessMeters} {t("wz_meters")})
                               </p>
                               <p className="text-[10px] opacity-90 mt-0.5">
-                                Your base package includes free installation for up to <strong className="font-bold">{freeLimitMeters}{t("wz_m")}</strong> of cabling. Laying extra cable will incur a labor charge of <strong className="font-bold">₹15/meter (+₹{extraCostEstimate} estimated)</strong> on your final quote.
+                                Your base package includes free installation for up to <strong className="font-bold">{freeLimitMeters}{t("wz_m")}</strong> of cabling. Extra cable beyond this limit will be itemized on your final quote.
                               </p>
                             </div>
                           </div>
@@ -2098,7 +2097,6 @@ export function WizardClientV2() {
                     const wifiCount = Number(req.wifi_camera_count);
                     const defaultMeters = wifiCount * 10;
                     const selectedPowerMeters = typeof req.total_power_cable_meters === "number" ? req.total_power_cable_meters : defaultMeters;
-                    const estCost = selectedPowerMeters * 10;
 
                     return (
                       <div className="mt-3 p-3 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/40 dark:bg-amber-950/20 animate-in fade-in">
@@ -2129,7 +2127,7 @@ export function WizardClientV2() {
                             <div className="flex items-center justify-between mb-0.5">
                               <span className="font-bold text-gray-900 dark:text-white text-xs">Socket Nearby</span>
                               <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.2 rounded">
-                                Included (₹0)
+                                No Extra Wire
                               </span>
                             </div>
                             <p className="text-[10px] text-gray-500 dark:text-zinc-400">
@@ -2156,7 +2154,7 @@ export function WizardClientV2() {
                             <div className="flex items-center justify-between mb-0.5">
                               <span className="font-bold text-gray-900 dark:text-white text-xs">Need Power Wire</span>
                               <span className="text-[9px] bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 font-bold px-1.5 py-0.2 rounded">
-                                @ ₹10/m
+                                Custom Meters
                               </span>
                             </div>
                             <p className="text-[10px] text-gray-500 dark:text-zinc-400">
@@ -2194,7 +2192,7 @@ export function WizardClientV2() {
                                 Estimated 2-Core Electrical Power Wire Required
                               </span>
                               <span className="block text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-                                ~{Math.round(selectedPowerMeters / wifiCount)}m / camera • ₹10/m = <strong className="font-bold text-amber-950 dark:text-amber-200">₹{estCost.toLocaleString("en-IN")} total</strong>
+                                ~{Math.round(selectedPowerMeters / wifiCount)}m / camera ({selectedPowerMeters}m total power wire)
                               </span>
                             </div>
 
@@ -2309,7 +2307,7 @@ export function WizardClientV2() {
                               <span>📶</span>
                               <span>Have Wi-Fi (Full Coverage)</span>
                             </span>
-                            <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">₹0 FREE</span>
+                            <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">Included</span>
                           </div>
                           <p className="text-[11px] text-gray-500 dark:text-zinc-400">JioFiber, Airtel, or local Wi-Fi reaches all camera spots clearly.</p>
                         </button>
@@ -2325,7 +2323,7 @@ export function WizardClientV2() {
                               <span>📡</span>
                               <span>Have Wi-Fi, but Far Spots</span>
                             </span>
-                            <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold px-1.5 py-0.5 rounded">+₹1,299 Extender</span>
+                            <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold px-1.5 py-0.5 rounded">Extender Included</span>
                           </div>
                           <p className="text-[11px] text-gray-500 dark:text-zinc-400">Router is inside, but gate/parking has weak signal. Includes Wi-Fi Range Extender.</p>
                         </button>
@@ -2341,7 +2339,7 @@ export function WizardClientV2() {
                               <span>🌐</span>
                               <span>No Wi-Fi (Spots Within 20m)</span>
                             </span>
-                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">+₹1,885 4G Router</span>
+                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">Router Included</span>
                           </div>
                           <p className="text-[11px] text-gray-500 dark:text-zinc-400">Cameras are close together. 1 Central 4G Router connects all cameras (1 SIM recharge).</p>
                         </button>
@@ -2375,21 +2373,21 @@ export function WizardClientV2() {
                         <div className="p-2.5 bg-indigo-50/80 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-900/60 text-[11px] text-indigo-900 dark:text-indigo-200 flex items-start gap-2">
                           <span className="text-sm shrink-0">📡</span>
                           <span>
-                            <strong>Wi-Fi Range Extender Included:</strong> We've included a high-gain Wi-Fi Range Extender (+₹1,299) to repeat your home Wi-Fi signal to distant outdoor spots like your main gate or porch.
+                            <strong>Wi-Fi Range Extender Included:</strong> We've included a high-gain Wi-Fi Range Extender to repeat your home Wi-Fi signal to distant outdoor spots like your main gate or porch.
                           </span>
                         </div>
                       ) : req.broadband_status === "sim_router" ? (
                         <div className="p-2.5 bg-blue-50/80 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900/60 text-[11px] text-blue-900 dark:text-blue-200 flex items-start gap-2">
                           <span className="text-sm shrink-0">🌐</span>
                           <span>
-                            <strong>Central 4G Router Included:</strong> We've included a 4G SIM Wi-Fi Router (+₹1,885). All your cameras will connect to this single Wi-Fi hotspot, so you only have to recharge 1 SIM card per month.
+                            <strong>Central 4G Router Included:</strong> We've included a 4G SIM Wi-Fi Router. All your cameras will connect to this single Wi-Fi hotspot, so you only have to recharge 1 SIM card per month.
                           </span>
                         </div>
                       ) : (
                         <div className="p-2.5 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-900/60 text-[11px] text-emerald-900 dark:text-emerald-200 flex items-start gap-2">
                           <span className="text-sm shrink-0">✓</span>
                           <span>
-                            <strong>Existing Wi-Fi Coverage:</strong> Standard Smart Wi-Fi cameras will connect directly to your home/office Wi-Fi router. ₹0 extra networking hardware cost!
+                            <strong>Existing Wi-Fi Coverage:</strong> Standard Smart Wi-Fi cameras will connect directly to your home/office Wi-Fi router. No extra networking hardware needed!
                           </span>
                         </div>
                       )}
@@ -2406,7 +2404,7 @@ export function WizardClientV2() {
                             <span>📶</span>
                             <span>Have Wi-Fi Router</span>
                           </span>
-                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">FREE</span>
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">Included</span>
                         </div>
                         <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">Connect DVR to your Wi-Fi router via LAN cable for 24/7 mobile live view on phone.</p>
                       </button>
@@ -2421,7 +2419,7 @@ export function WizardClientV2() {
                             <span>🌐</span>
                             <span>Add 4G SIM Router</span>
                           </span>
-                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">+₹1,885</span>
+                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">Router Included</span>
                         </div>
                         <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">No broadband at site. Include 4G SIM Wi-Fi router so you can still view live on mobile.</p>
                       </button>
