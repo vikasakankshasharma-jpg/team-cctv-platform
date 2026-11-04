@@ -333,13 +333,42 @@ function CategorySection({
       let path = p.catalog_path || p.group_path;
       if (!path) {
         const t = (p.technology || p.technologies?.[0] || "").toLowerCase();
+        const name = (p.display_name || p.technical_name || "").toLowerCase();
         if (p.category === "cctv_camera") {
           if (t === "wireless" || t === "wifi" || (p as any).has_wifi) path = "cctv_camera/wifi/WiFi Camera";
           else if (t === "ip") path = "cctv_camera/ip/IP Camera";
           else path = "cctv_camera/hd/HD Camera";
+        } else if (p.category === "recorder") {
+          if (t === "ip" || name.includes("nvr")) path = "recorder/ip/IP NVR";
+          else path = "recorder/hd/HD DVR";
         } else if (p.category === "storage") {
-          if (t === "wireless" || (p as any).storage_type?.toLowerCase().includes("micro")) path = "storage/microsd/MicroSD Card";
-          else path = "storage/hdd/HDD";
+          if (t === "wireless" || (p as any).storage_type?.toLowerCase().includes("micro") || name.includes("microsd") || name.includes("sd card")) {
+            path = "storage/microsd/MicroSD Card";
+          } else {
+            path = "storage/hdd/Surveillance HDD";
+          }
+        } else if (p.category === "power_device") {
+          if (name.includes("poe")) path = "power_device/poe/PoE Switch";
+          else if (name.includes("gigabit") || name.includes("switch")) path = "power_device/network/Network Switch";
+          else path = "power_device/smps/SMPS Power Supply";
+        } else if (p.category === "cable") {
+          if (name.includes("cat6") || name.includes("lan") || name.includes("ethernet") || t === "ip") path = "cable/cat6/CAT6 Network Cable";
+          else path = "cable/coaxial/3+1 Coaxial Cable";
+        } else if (p.category === "connector") {
+          if (name.includes("bnc")) path = "connector/bnc/BNC Video Connector";
+          else if (name.includes("dc")) path = "connector/dc/DC Power Connector";
+          else if (name.includes("rj45")) path = "connector/rj45/RJ45 Connector";
+          else path = "connector/accessories/Connectors and Pins";
+        } else if (p.category === "rack") {
+          path = "rack/cctv_rack/Wall-Mount CCTV Rack";
+        } else if (p.category === "hdmi_cable") {
+          path = "hdmi_cable/display/HDMI Display Cable";
+        } else if (p.category === "network") {
+          if (name.includes("4g") || name.includes("sim") || name.includes("router")) path = "network/router/4G Wireless Router";
+          else path = "network/general/Network Devices";
+        } else if (p.category === "accessories") {
+          if (name.includes("junction") || name.includes("box")) path = "accessories/junction/Waterproof Junction Box";
+          else path = "accessories/general/Installation Accessories";
         } else {
           path = "General";
         }
