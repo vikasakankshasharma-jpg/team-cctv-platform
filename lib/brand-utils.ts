@@ -46,6 +46,19 @@ const CANONICAL_BRAND_NAMES: Record<string, string> = {
   "imou": "Imou",
   "uniview": "Uniview",
   "unv": "Uniview",
+  "hifocus": "Hi-Focus",
+  "hi-focus": "Hi-Focus",
+  "hi focus": "Hi-Focus",
+  "securelink": "Securelink",
+  "secure link": "Securelink",
+  "evm": "EVM",
+  "toshiba": "Toshiba",
+  "multybyte": "Multybyte",
+  "jascom": "Jascom",
+  "bungees": "Bungees",
+  "ranz": "Ranz",
+  "cofe": "Cofe",
+  "comrack": "Comrack",
 };
 
 /**
@@ -104,6 +117,30 @@ export function getCanonicalBrandKey(brand?: string | null): string {
   if (cleaned.includes("imou")) {
     return "imou";
   }
+  if (cleaned.includes("hi-focus") || cleaned.includes("hifocus") || cleaned === "hi focus") {
+    return "hifocus";
+  }
+  if (cleaned.includes("securelink") || cleaned.includes("secure link")) {
+    return "securelink";
+  }
+  if (cleaned.includes("evm")) {
+    return "evm";
+  }
+  if (cleaned.includes("toshiba")) {
+    return "toshiba";
+  }
+  if (cleaned.includes("multybyte")) {
+    return "multybyte";
+  }
+  if (cleaned.includes("jascom")) {
+    return "jascom";
+  }
+  if (cleaned.includes("bungees")) {
+    return "bungees";
+  }
+  if (cleaned.includes("ranz")) {
+    return "ranz";
+  }
 
   // Fallback: strip spaces and punctuation
   return cleaned.replace(/[^a-z0-9]/g, "");
@@ -154,6 +191,14 @@ export function inferBrandFromName(name?: string | null): string | null {
   if (lower.includes("wd purple") || lower.includes("western digital") || /\bwd\b/i.test(name)) return "WD";
   if (lower.includes("d-link") || lower.includes("dlink")) return "D-Link";
   if (lower.includes("tp-link") || lower.includes("tplink")) return "TP-Link";
+  if (lower.includes("hi-focus") || lower.includes("hifocus")) return "Hi-Focus";
+  if (lower.includes("securelink")) return "Securelink";
+  if (lower.includes("evm")) return "EVM";
+  if (lower.includes("toshiba")) return "Toshiba";
+  if (lower.includes("multybyte")) return "Multybyte";
+  if (lower.includes("jascom")) return "Jascom";
+  if (lower.includes("bungees")) return "Bungees";
+  if (lower.includes("ranz")) return "Ranz";
   return null;
 }
 

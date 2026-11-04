@@ -252,7 +252,7 @@ export function DynamicVariantGenerator({
     const resultBrands: string[] = ["all"];
     const orderedKeys = settings.brand_tabs_order && settings.brand_tabs_order.length > 0 
       ? settings.brand_tabs_order 
-      : ["all", "aproducts", "cpplus", "hikvision", "prama", "secureye", "trueview", "budget", "dahua"];
+      : ["all", "aproducts", "cpplus", "hikvision", "prama", "secureye", "trueview", "hifocus", "budget", "dahua"];
       
     orderedKeys.forEach(k => {
       if (k === "all" || brandSet.has(k)) {

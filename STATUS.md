@@ -474,6 +474,26 @@
 
 ---
 
+### Milestone 40: Mega Compu World Full Ecosystem Scan, Brand Tune-Up & 99-SKU Inventory Deployment
+- **Deep Reference Website Scan (`megajaipur.com`)**: Scanned 740 links across 15 surveillance, storage, networking, cable, and accessory categories.
+- **Brand & Vendor Normalization Tune-Up (`lib/brand-utils.ts`)**: Registered canonical mappings, search keys, and name inference for all distributor brands: `Hi-Focus`, `Securelink`, `EVM`, `Toshiba`, `Multybyte`, `Jascom`, `Bungees`, `Ranz`, `Cofe`, and `Comrack`.
+- **Dynamic Variant Sequence Integration (`DynamicVariantGenerator.tsx`)**: Added `hifocus` into the standard brand tab order sequence.
+- **Full Operational Inventory Seeded (99 Genuine SKUs)**:
+  - 45 CCTV Cameras (HD Analog, IP Network, Wi-Fi PT, 4G SIM across CP Plus, Hikvision, Prama, A+ Products, Secureye, Trueview).
+  - 21 Recorders (4Ch, 8Ch, 16Ch DVRs supporting 2MP and 5MP 3K).
+  - 7 Storage Units (WD Purple 2TB/4TB/6TB, Seagate SkyHawk 1TB, SanDisk High Endurance 64GB/128GB, EVM 256GB).
+  - 6 Power & Transmission Devices (CP Plus 8Ch SMPS, Securelink 8Ch SMPS, 16Ch Heavy SMPS, Securelink 4Ch/8Ch PoE Switches, Secureye 16Ch 250W PoE Switch).
+  - 4 Cables (CP Plus 90m 3+1 pure copper, Budget 70m 3+1, EVM CAT6 305m pure copper, Prama CAT6 100m pure copper).
+  - 3 Connectors (A+ Products BNC copper male, DC power pins, Smart Pro RJ45 modular plugs).
+  - 6 HDMI Cables (Bungees/Ranz 1.5M, 3M, 5M, 10M, 15M, 20M with 4K support).
+  - 3 Racks & Enclosures (Ranz 2U folding rack, Comrack 4U heavy rack, Securelink PVC rack with PDU).
+  - 2 Network Devices (High-speed 4G SIM dual-antenna router, D-Link 5-Port Gigabit desktop switch).
+  - 1 Surveillance Display (19-inch LED surveillance monitor).
+  - 1 Accessory (Jascom 5x5x2 waterproof PVC junction box with copper thread).
+- **Zero Mock Policy**: Every single product reflects genuine dealer wholesale pricing and vendor model codes from Mega Compu World.
+
+---
+
 ### Milestone 39: Dual-Collection Product & Addon Deletion Integrity
 - **Root Cause Resolution for Undeletable Inventory Items**: Fixed `/api/admin/products` endpoint which previously queried both `products` and `addons` collections for display, but only deleted from `products` during `DELETE`. Items in the `addons` collection (e.g. `ACC-WIFI-EXTENDER`) silently failed to delete while returning a 200 OK.
 - **Dual-Collection Cascade Delete**: Updated `DELETE /api/admin/products` to delete from both `adminDb.collection("products")` and `adminDb.collection("addons")` in parallel and in batches.
