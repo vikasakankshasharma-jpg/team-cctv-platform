@@ -22,11 +22,14 @@ The `team-cctv-platform` relies on a unified design system powered by **shadcn/u
 
 ## 4. Current UX Debt & Migration Path
 - Phase 0.5 audit reveals that only ~21% of screens (specifically ~20 admin screens) use the standard `components/ui` library. The remaining ~80% across all personas need modernization.
-- **Action items**: 
-  - Remove remnant `confirm()` in `app/(admin)/admin/products/page.tsx` line 93.
-  - Refactor legacy `/operations` and `/sales` screens that circumvent the standard layout.
+- **Completed Remediations:**
+  - Removed remnant native `confirm()` in `app/(admin)/admin/products/page.tsx`. Replaced with in-app confirmation states and direct modal action buttons.
+  - Added direct row-level Trash buttons (`Trash2`) in `ProductInventory.tsx` for single-click deletion with confirmation dialogs.
+  - Eliminated blocking auto-popups on initial quote landing; dialogs are centered, responsive, and opened strictly on-demand.
 
 ## 5. Specialized Interaction Patterns
 - **Quotation Wizard (Catalog-First)**: Following OTP verification, users are presented with a full **Catalog Grid** of quotation variants, equipped with filters for Brand, Resolution, and Technology. Users can select a single quote to proceed to Add-ons, or use the `CompareTray` to select 2-3 quotes for a detailed Side-by-Side Comparison (`CompareCards`) before proceeding. The legacy Single Card variation has been deprecated in favor of this e-commerce style browsing experience.
+- **Dynamic Inventory-Driven Feature Filtering**: Camera cards dynamically query active stock, displaying only feature tags (`24/7 Color`, `Audio Mic`, `2-Way Talk`, `360° PTZ`) that exist for the chosen brand and technology. Resolution is strictly configured via the `RESOLUTION` dropdown.
+- **Non-Intrusive Centered Dialog Architecture**: Modal dialogs (`TagGuideModal`, `SpecificationChecklistModal`) are centered with responsive `max-h-[85vh]` and viewport safety. Zero blocking popups on quotation page load.
 - **Authentication**: Strict reliance on Firebase Phone Auth invisible reCAPTCHA. Custom backend SMS APIs are deprecated to unify trust boundaries.
 - **Universal Full Map View & High-Density Territory Workspaces**: For complex spatial tasks (coverage zone creation, postal boundary inspection, and sales beat distribution), maps provide a synchronized **Full Map View** toggle. This expands constrained dialogs or 380px embedded previews into a panoramic, edge-to-edge workspace (`fixed inset-0 z-[9999]`) with Google Maps road/satellite layer controls, micro-hub halo decluttering (`Halos: ON/OFF`), and 1-click `⚡ Auto-Trace Territory` convex hull generation. Escape key listeners and prominent exit buttons guarantee intuitive navigation back to standard dashboard layouts.

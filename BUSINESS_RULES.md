@@ -17,6 +17,11 @@
 - **Add-on vs. Routine BOM Products:** Products flagged with `is_addon = true` are strictly designated as optional upsell accessories (e.g., display monitors, HDMI splitters, 4G Wi-Fi routers) in "Add-ons & Accessories For Your System" and are excluded from routine automatic BOM generation.
 - **Core BOM (`MUST_HAVE_CATEGORIES`) vs Optional Add-ons (`OPTIONAL_CATEGORIES`):** Core system essentials (`cctv_camera`, `recorder`, `storage`, `connector`, `cable`, `power_device`) are calculated and bundled automatically based on camera count and technology. They are never rendered as confusing optional checkboxes. Optional upsell accessories (`display`, `rack`, `network`, `hdmi_cable`, `accessories`) populate "Add-ons & Accessories For Your System" strictly sourced from active, genuine Admin Panel / Firestore inventory with 100% price synchronization.
 - **Firestore Soft-Deletion Query Invariant:** Firestore query filters must NEVER query `where("is_deleted", "==", false)` on collections containing legacy documents. In Firestore, querying inequality or equality on a field strictly omits all documents where that field is absent/undefined. Queries must fetch active items (`where("is_active", "==", true)`) and filter out soft-deleted items in application memory (`.filter(p => p.is_deleted !== true)`).
+- **Dual-Collection Unified Inventory Operations (`products` and `addons`):**
+  - The Hardware Management dashboard (`/admin/products`) aggregates both `products` and `addons` into a unified inventory view.
+  - Backend mutations (`DELETE /api/admin/products` and `PATCH /api/admin/products`) MUST execute across both `adminDb.collection("products")` and `adminDb.collection("addons")` in parallel.
+  - Deleting an accessory (e.g. Wi-Fi extender, router, rack, monitor) must delete it from `addons`, eliminating orphan persistence.
+  - In `ProductInventory.tsx`, every row under the `ACTIONS` column must provide a direct Trash icon with a confirmation prompt for immediate single-click deletion, alongside the header bulk checkbox.
 
 ### 1.2 Product Specifications & Attributes
 - **Pan-Tilt-Zoom (PTZ) Cameras:** Must explicitly specify Form Factor (`PTZ`), Pan capabilities, Tilt range, Optical Zoom factor (e.g., 4x, 10x, 25x), and Digital Zoom factor.
@@ -556,3 +561,21 @@ A **Hybrid CCTV System** combines a central wired CCTV setup (Analog HD with DVR
 - **Frosted Badges in Active Containers:** Tags inside active colored buttons must use frosted semi-transparent styling (`bg-white/20 text-white border border-white/25`) to avoid chromatic aberration and visual vibration.
 - **Muted Non-Alarming Action States:** Destructive actions (e.g. bucket deletion) must remain neutral gray (`text-zinc-400 hover:text-red-600 hover:bg-red-50`) when idle to prevent visual clutter and anxiety.
 - **Contrast Ratios:** All body text, dropdown labels, and status badges must meet or exceed the WCAG 2.1 AA standard of 4.5:1 across both Light Mode and Dark Mode.
+
+### 8.5 Resolution vs Feature Dropdown Boundary Enforcement
+- **Resolution as Intrinsic Attribute:** Resolution is strictly governed by the `RESOLUTION` dropdown selector (2MP, 3MP, 4MP, 5MP, 8MP) on each camera card.
+- **Exclusion from Feature Tags:** Technical resolution indicators (e.g. `5MP (3K) Ultra High Clarity`, `2MP Full HD`) are strictly prohibited from appearing as optional feature tags, chips, or checklist filters.
+- **Resolution Education:** Clarity, zoom boundaries, and number plate recognition distances are presented in the dedicated Resolution Guide section of `TagGuideModal.tsx`.
+
+### 8.6 Dynamic Inventory-Driven Feature Tag Filtering
+- **Stock-Aware Feature Visibility:** Feature chips on camera cards (`getAvailableFeaturesForBucket`) and in modal checklists (`availableFeatureTags`) dynamically query active catalog inventory (`products`).
+- **Automatic Out-of-Stock Hiding:** If active inventory for a specific technology/brand contains 0 cameras with a given capability, that feature tag is completely hidden:
+  - `360° PTZ` is hidden on Standard HD and IP setups when 0 PTZ cameras exist in catalog.
+  - `2-Way Talk` is hidden on IP setups when 0 two-way IP cameras exist in catalog.
+  - Wi-Fi or 4G SIM connection options are hidden if no matching cameras exist in stock.
+- **Auto-Sanitization on Selection Change:** When a customer switches technology or brand, any previously active feature tags that are unsupported in the new hardware domain are automatically pruned to prevent quote calculation errors.
+
+### 8.7 Centered Non-Intrusive Modal Dialog UX
+- **Zero Blocking Popups on Page Load:** Initial quotation catalog load (`ConfiguratorView.tsx`) must never auto-open blocking or checklist modals. Customers land directly on their quotation catalog.
+- **On-Demand Access:** Feature Guide and Specification Checklist modals are opened exclusively on demand via explicit user click (`💡 Feature Guide` and `⚙️ Checklist`).
+- **Centered Viewport Safety:** Modals are centered on screen (`items-center justify-center max-h-[85vh] rounded-2xl sm:rounded-3xl`) with dedicated internal scrolling and sticky header/footer actions, guaranteeing zero bottom-clipping across all screen sizes.

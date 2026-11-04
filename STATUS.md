@@ -1,6 +1,6 @@
 # TEAM CCTV Platform - Master Project Status & Verification Log
 
-> **Last Updated:** November 3, 2026  
+> **Last Updated:** November 4, 2026  
 > **Production URL:** `https://cctvquotation.com`  
 > **Repository:** `team-cctv-platform` (`master` branch)  
 > **Canonical Plan & Architecture:** [`docs/HARDENING_SPRINT_PLAN.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/HARDENING_SPRINT_PLAN.md) | [`BUSINESS_RULES.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/BUSINESS_RULES.md)
@@ -14,9 +14,9 @@
 | **Commercial Core & Pricing Engine** | `VERIFIED` | 100% parity between Guided Setup & Pro Builder; Recorder (DVR/NVR) resolution compatibility ($\text{recMaxMP} \ge \text{targetMaxMP}$) & best-price tie-break; SMPS best-price rule; Gigabit switch multi-PoE uplink; bundle/per-meter cable logic; ₹0 markup labor rules; 5 site prep flags. |
 | **Mapping & Geographical Coverage** | `VERIFIED` | 100% Google Maps parity via Mappls GeoAnalytics API + 34-vertex fallback `JAIPUR_METRO_BOUNDARY`; CartoDB Voyager CDN tile engine with sub-50ms latency; automated Leaflet modal resize engine (`ResizeObserver` + staggered `invalidateSize`); 1-click delivery halo toggle (`Halos: ON/OFF`); 1-click `⚡ Auto-Trace Territory` convex hull enclosure; 0 legacy compass labels in Firestore. |
 | **Referral & Partner Ecosystem** | `VERIFIED` | B2B Partner Portal with QR codes (2% comm / 3% disc); B2C Refer & Earn (₹500 / ₹500) with festive WhatsApp status EDMs; Financial Dashboard payout tracking. |
-| **Customer Journey & Pro Builder** | `VERIFIED` | WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; iOS Safari auto-zoom patch (`text-base sm:text-sm`); single-filter auto-collapse. |
+| **Customer Journey & Pro Builder** | `VERIFIED` | WhatsApp OTP lead capture before custom build; Mobile slide-over cart drawer; single-filter auto-collapse; Dynamic inventory-driven feature tags; Resolution vs feature boundary enforcement; Centered non-intrusive modal dialogs; Per-bucket feature independence with zero feature leakage. |
 | **Checkout & Payment Pathways** | `VERIFIED` | 4 pathways: Pay Full (2% discount), ₹500 3-step token, EMI option, Free Site Visit calendar (future dates only); Webhook + Fallback Verification API. |
-| **Catalog & Inventory Integrity** | `VERIFIED` | Active-only inventory enforcement; zero fake fallback products; PTZ, 2-way audio, and U-height specs; Add-on vs. BOM separation; Admin Duplicate Product tool. |
+| **Catalog & Inventory Integrity** | `VERIFIED` | Active-only inventory enforcement; zero fake fallback products; Dual-collection (`products` + `addons`) cascade delete and update; Direct row-level trash button in `ProductInventory.tsx`; Edit Modal delete action; 0-orphan clean state; Mega Compu World distributor integration with 66 verified SKUs and wholesale dealer pricing. |
 | **Security & Credential Management** | `VERIFIED` | Hardcoded OTPs removed; exposed test scripts scrubbed; Vercel CLI env var management; Firestore role-based collection rules; HSTS enforced. |
 | **Localization & Language** | `VERIFIED` | Colloquial everyday terminology (replaced "अनुशंसित" with natural options, "कम"/"ज्यादा"); Language selector modal without underscores. |
 

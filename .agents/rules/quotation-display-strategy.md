@@ -56,3 +56,4 @@ Never confuse or revert the quotation presentation strategy for this project. Th
 - **Inventory Filtering Invariant:** Feature options on camera cards and modals must be dynamically computed against active inventory (`products`). Never display feature chips or checkboxes for capabilities that lack matching stock in the active technology (e.g. no PTZ in HD/IP, no 2-way in IP).
 - **Separation of Resolution and Features:** 5MP / clarity belongs exclusively to the `RESOLUTION` selector. It must never appear as an add-on feature tag.
 - **Zero Blocking Popups on Page Load:** Let the customer view their quote immediately upon landing. Checklist and Feature Guide modals are accessible on-demand.
+- **Centered Responsive Dialogs:** All modal dialogs must use centered layouts (`items-center justify-center max-h-[85vh] rounded-2xl sm:rounded-3xl`) with dedicated internal scroll containers to prevent action button clipping on mobile and tablet screens.

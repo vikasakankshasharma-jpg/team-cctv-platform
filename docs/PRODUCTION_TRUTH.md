@@ -1,6 +1,6 @@
 # Production Truth & Credential Tracking
 
-> **Last Updated:** October 13, 2026  
+> **Last Updated:** November 4, 2026  
 > **Production Domain:** `https://cctvquotation.com`  
 > **Vercel Project:** `secure-easy` / `team-cctv-platform`  
 > **Rule:** Never mark a credential as `ROTATED` or `VERIFIED` based solely on local files. Evidence from the actual deployment/environment is mandatory.
@@ -55,6 +55,18 @@
     - The pricing engine (`pricing-engine.ts`) strictly processes bucket features independently, preventing feature leakage across unrelated camera buckets.
     - Outdoor cameras are permanently marked with standard IP67 Weatherproofing (`🌧️ IP67 Weatherproof Standard`); 4G cameras are permanently marked with built-in 4G SIM (`🛰️ 4G SIM Built-in`).
     - Color contrast across all customer-facing screens must satisfy WCAG 2.1 AA (minimum 4.5:1) in both Light Mode and Dark Mode, with unified brand blue active states and frosted semi-transparent tags inside colored containers.
+
+13. **Dual-Collection Cascade Delete & Update Invariant:**
+    - Hardware management (`/admin/products`) unifies `products` and `addons`. All backend mutations (`DELETE`, `PATCH` via `/api/admin/products`) must operate across both collections in parallel to prevent undeletable orphan records.
+    - Table rows in `ProductInventory.tsx` must provide an individual Trash button under `ACTIONS` for direct single-click deletion with confirmation.
+
+14. **Dynamic Inventory-Driven Feature Tag Invariant:**
+    - Feature tags on camera cards (`getAvailableFeaturesForBucket`) and in modal checklists (`availableFeatureTags`) must only display capabilities backed by active, stocked products in that technology and brand.
+    - Resolution is strictly governed by the `RESOLUTION` selector and prohibited from feature tag arrays.
+
+15. **Non-Intrusive Centered Dialog Invariant:**
+    - Landing on quotation catalogs must never trigger auto-opening blocking popups. Modals open strictly on customer click.
+    - Dialogs must be centered with responsive `max-h-[85vh]` and internal scroll containers to prevent viewport clipping on mobile and tablet devices.
 
 ---
 

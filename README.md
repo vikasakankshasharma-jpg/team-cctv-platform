@@ -65,12 +65,21 @@
 
 ### 8. Per-Bucket Camera Customization, Layman Feature Guide & Accessible UI
 - **Per-Bucket Feature Independence:** Eliminates the constraint of uniform camera specifications. Customers can configure specific camera buckets with unique combinations (e.g. 2 outdoor cameras with Color Night Vision and Audio Mic, 1 entrance camera with 2-way talk and speaker, and 1 wireless camera with 4G SIM cellular).
+- **Dynamic Inventory-Driven Feature Tags:** Feature chips on camera cards and in modal checklists dynamically query active catalog inventory (`products`). Tags are only displayed if matching products exist in stock for that specific technology and brand (e.g., `360° PTZ` is automatically hidden on HD/IP setups without PTZ cameras, and `2-Way Talk` is hidden on IP setups without 2-way cameras).
+- **Resolution vs Feature Boundary Enforcement:** Resolution is strictly governed by each camera's `RESOLUTION` dropdown (2MP, 3MP, 4MP, 5MP, 8MP). "5MP (3K) Ultra High Clarity" is excluded from feature tags, avoiding redundant prompts and keeping specifications clean.
+- **Centered, Non-Intrusive Modal Architecture:** Replaced blocking auto-opening popups with centered dialogs accessible on-demand (`💡 Feature Guide` and `⚙️ Checklist`). Viewport-safe styling (`items-center justify-center max-h-[85vh] rounded-2xl sm:rounded-3xl`) guarantees headers, scrollable body text, and footer action buttons are 100% visible on all screen sizes.
 - **Zero Feature Leakage in Pricing Engine:** `lib/pricing-engine.ts` prioritizes per-bucket `req.features` over global selections, guaranteeing that features chosen for one camera type do not inflate or alter other camera buckets.
 - **Real-Time System Overview Breakdown:** High-visibility dynamic counter bar displaying total cameras alongside real-time counts for Weatherproof, Indoor, Color Night, Audio Mic, 2-Way Talk, 360° PTZ, 4G SIM, and Wi-Fi.
 - **Immutable Standard Attributes:** Weatherproof IP67 is automatically included as standard for outdoor cameras (`🌧️ IP67 Weatherproof Standard`), and 4G SIM connectivity is permanently built-in for 4G units.
-- **Educational Layman Guide Modal (`TagGuideModal.tsx`):** Explains technical terms in simple language with practical Indian daily real-life examples (e.g., cash counter verbal negotiations, gate package delivery instructions, identifying intruder shirt color at 2 AM).
-- **System Specifications Checklist Modal (`SpecificationChecklistModal.tsx`):** Interactive checklist modal to inspect and apply requirements in 1 click.
+- **Educational Layman Guide Modal (`TagGuideModal.tsx`):** Explains technical terms in simple language with practical Indian daily real-life examples (e.g., cash counter verbal negotiations, gate package delivery instructions, identifying intruder shirt color at 2 AM) alongside a dedicated resolution comparison guide.
+- **System Specifications Checklist Modal (`SpecificationChecklistModal.tsx`):** Interactive checklist modal to inspect and apply requirements in 1 click, strictly synchronized with available catalog capabilities.
 - **WCAG 2.1 AA Compliant Color System:** Unified brand blue active states (`bg-blue-600`), frosted badges within active tabs, containerized specification chips, muted non-distracting delete actions, and high contrast ratios across both Light Mode and Dark Mode.
+
+### 9. Dual-Collection Product & Addon Management & Row-Level Actions
+- **Dual-Collection Cascade Delete & Update (`/api/admin/products`):** The Hardware Management dashboard seamlessly unifies the `products` and `addons` collections. All mutations (batch delete, updates, status toggles) operate across both collections in parallel, eliminating undeletable orphan records.
+- **Row-Level Direct Delete UX (`ProductInventory.tsx`):** Every product row features a dedicated red Trash icon under the `ACTIONS` column with a confirmation dialog, enabling single-click deletion without requiring bulk header selection.
+- **In-Modal Direct Delete:** The Edit Product modal footer includes an immediate "Delete Product" button for quick removal during specification inspection.
+- **Distributor Inventory Integration (Mega Compu World Jaipur):** Ingestion tooling and verification scripts (`scripts/sync-all-megacompu-catalog.js`) map 66 verified SKUs across CP Plus, Hikvision, Prama, A+ Products (Budget), Secureye, Trueview, and matching DVRs with genuine dealer wholesale pricing and exact distributor Item IDs.
 
 ---
 

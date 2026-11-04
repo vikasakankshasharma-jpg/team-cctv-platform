@@ -81,6 +81,14 @@ This document serves as the master engineering and operational handover for the 
 - **Educational Layman Guide Modal (`TagGuideModal.tsx`):** Provides plain-language explanations, practical Indian daily real-life examples (e.g., cash counter verbal negotiations, gate package delivery instructions, identifying intruder shirt color at 2 AM), and recommended installation locations for every feature tag.
 - **System Specifications Checklist Modal (`SpecificationChecklistModal.tsx`):** Interactive checklist modal allowing customers to inspect and refine their security checklist with real-time feedback.
 - **WCAG 2.1 AA Compliant Color Harmonization:** Unified brand blue active states (`bg-blue-600`), frosted badges within active tabs, containerized specification chips, muted non-distracting delete actions, and high contrast ratios across both Light Mode and Dark Mode.
+- **Dynamic Inventory-Driven Feature Tags & Resolution Boundaries:** Feature chips dynamically query active catalog inventory (`products`). Tags lacking stocked hardware (e.g., PTZ on HD, 2-way audio on IP) are automatically hidden. Resolution is managed strictly via the `RESOLUTION` dropdown and excluded from feature tags.
+- **Centered Non-Intrusive Modal Dialogs:** Modals do not auto-open on quote load. Dialogs are centered (`max-h-[85vh] items-center justify-center`) with scrollable bodies and fixed headers/footers to eliminate viewport clipping.
+
+### 2.8 Dual-Collection Product & Addon Management
+- **Unified Deletion & Update API (`/api/admin/products`):** Operates across both `products` and `addons` collections simultaneously in batch, ensuring accessories like Wi-Fi extenders and routers can be deleted or updated without leaving orphan documents.
+- **Row-Level Direct Delete UX (`ProductInventory.tsx`):** Every table row provides an individual Trash icon (`Trash2`) with a confirmation dialog for single-click deletion.
+- **Edit Modal Direct Delete:** The Edit Product modal footer includes an immediate "Delete Product" button.
+- **Distributor Inventory Integration:** Tools (`scripts/sync-all-megacompu-catalog.js`) map 66 verified SKUs across CP Plus, Hikvision, Prama, A+ Products, Secureye, Trueview, and matching DVRs with genuine dealer wholesale pricing and exact distributor Item IDs.
 
 ---
 
