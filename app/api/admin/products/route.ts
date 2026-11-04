@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) { console.log('GET /api/admin/produc
     
     prodSnap.forEach(doc => {
       const data = doc.data() as any;
+      if (data.is_deleted === true) return;
       if (!Array.isArray(data.technologies)) {
         data.technologies = data.technology ? [data.technology] : ["Common"];
       }
@@ -33,6 +34,7 @@ export async function GET(req: NextRequest) { console.log('GET /api/admin/produc
 
     addonSnap.forEach(doc => {
       const data = doc.data();
+      if (data.is_deleted === true) return;
       // Map Addon to Product-like structure for the dashboard
       items.push({ 
         id: doc.id, 
@@ -157,8 +159,19 @@ export async function PATCH(req: NextRequest) {
 
     updates.updated_at = new Date();
 
-    const docRef = adminDb.collection("products").doc(id);
-    await docRef.update(updates);
+    const prodRef = adminDb.collection("products").doc(id);
+    const prodDoc = await prodRef.get();
+    if (prodDoc.exists) {
+      await prodRef.update(updates);
+    } else {
+      const addonRef = adminDb.collection("addons").doc(id);
+      const addonDoc = await addonRef.get();
+      if (addonDoc.exists) {
+        await addonRef.update(updates);
+      } else {
+        return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
+      }
+    }
 
     // Log the action
     await createAuditLog({
@@ -198,20 +211,24 @@ export async function DELETE(req: NextRequest) {
     const ids = searchParams.get("ids");
     
     if (id) {
-      await adminDb.collection("products").doc(id).delete();
-        // @ts-ignore
+      await Promise.all([
+        adminDb.collection("products").doc(id).delete(),
+        adminDb.collection("addons").doc(id).delete()
+      ]);
+      // @ts-ignore
       revalidateTag("catalog");
-    return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true });
     } else if (ids) {
       const idArray = ids.split(",");
       const batch = adminDb.batch();
       idArray.forEach(docId => {
         batch.delete(adminDb.collection("products").doc(docId));
+        batch.delete(adminDb.collection("addons").doc(docId));
       });
       await batch.commit();
-        // @ts-ignore
+      // @ts-ignore
       revalidateTag("catalog");
-    return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true });
     }
     
     return NextResponse.json({ success: false, error: "Missing id or ids parameter" }, { status: 400 });

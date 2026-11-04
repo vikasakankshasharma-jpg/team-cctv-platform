@@ -33,7 +33,9 @@ const eslintConfig = [
       ".firebase/**",
       "scratch/**",
       "scripts/**",
-      "functions/lib/**"
+      "functions/lib/**",
+      "test-*.js",
+      "test-*.ts"
     ]
   }
 ];

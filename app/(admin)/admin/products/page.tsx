@@ -108,6 +108,29 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleDeleteProduct = async (product: Product) => {
+    if (!product.id) return;
+    if (!confirm(`Are you sure you want to delete "${product.display_name}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/products?id=${product.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`"${product.display_name}" deleted successfully`);
+        setSelectedIds(prev => {
+          const next = new Set(prev);
+          next.delete(product.id!);
+          return next;
+        });
+        fetchProducts();
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete product");
+    }
+  };
+
   const handleToggleActive = async (product: Product) => {
     const id = product.id!;
     const currentStatus = product.is_active;
@@ -481,6 +504,7 @@ export default function AdminProductsPage() {
               onEdit={handleEdit}
                 onDuplicate={handleDuplicate}
               onToggle={handleToggleActive}
+              onDelete={handleDeleteProduct}
               onFiltersChange={setActiveFilters}
               selectedIds={selectedIds}
               onToggleSelect={handleToggleSelect}
@@ -1782,6 +1806,20 @@ export default function AdminProductsPage() {
             
             {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-border bg-card flex justify-end gap-3 shrink-0">
+              {editingProduct.id && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const prod = editingProduct as Product;
+                    setIsModalOpen(false);
+                    handleDeleteProduct(prod);
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-full text-sm font-semibold transition-colors mr-auto"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}

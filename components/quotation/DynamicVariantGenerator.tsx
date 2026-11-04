@@ -275,18 +275,6 @@ export function DynamicVariantGenerator({
 
   const targetBrand = availableBrands.includes(activeBrand) ? activeBrand : (availableBrands[0] || "all");
 
-  // Prune any bucket features that are not available in the active technology / brand inventory
-  useEffect(() => {
-    setCameraBuckets(prev => prev.map(bucket => {
-      const availableTags = getAvailableFeaturesForBucket(bucket).map(f => f.tag);
-      const validFeatures = (bucket.features || []).filter((f: string) => availableTags.includes(f));
-      if (validFeatures.length !== (bucket.features || []).length) {
-        return { ...bucket, features: validFeatures };
-      }
-      return bucket;
-    }));
-  }, [activeTech, targetBrand]);
-
   // Helper to get available resolutions per bucket connection type based on active inventory and selected brand
   const getResolutionsForBucket = (b: any) => {
     const isWirelessConn = b.connection === "wifi" || b.connection === "4g" || activeTech === "wireless";

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { 
   Search, ChevronDown, ChevronRight, Edit2, Copy, Camera, Monitor, Plus, 
   Layers, Zap, Package, HardDrive, Cpu, ShieldCheck,
-  ListFilter, Filter, Wrench, Shield, Tv, Box, Server, Square, CheckSquare
+  ListFilter, Filter, Wrench, Shield, Tv, Box, Server, Square, CheckSquare, Trash2
 } from "lucide-react";
 import type { Product } from "@/types";
 import { getUniqueCanonicalBrands, isBrandMatch } from "@/lib/brand-utils";
@@ -64,6 +64,7 @@ function SubCategoryGroup({
   onEdit,
     onDuplicate,
     onToggle,
+    onDelete,
   selectedIds,
   onToggleSelect,
   onSelectAllGroup,
@@ -74,6 +75,7 @@ function SubCategoryGroup({
   onEdit: (p: Product) => void;
     onDuplicate?: (p: Product) => void;
   onToggle: (p: Product) => void;
+  onDelete?: (p: Product) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
   onSelectAllGroup?: (ids: string[]) => void;
@@ -261,13 +263,23 @@ function SubCategoryGroup({
                     </td>
 
                     <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => onEdit(p)}
+                          title="Edit Product"
                           className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
+                        {onDelete && (
+                          <button
+                            onClick={() => onDelete(p)}
+                            title="Delete Product"
+                            className="p-2 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -289,6 +301,7 @@ function CategorySection({
   onEdit,
     onDuplicate,
     onToggle,
+    onDelete,
   selectedIds,
   onToggleSelect,
   onSelectAllGroup,
@@ -301,6 +314,7 @@ function CategorySection({
   onEdit: (p: Product) => void;
     onDuplicate?: (p: Product) => void;
   onToggle: (p: Product) => void;
+  onDelete?: (p: Product) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
   onSelectAllGroup?: (ids: string[]) => void;
@@ -383,6 +397,7 @@ function CategorySection({
               onEdit={onEdit}
               onDuplicate={onDuplicate}
               onToggle={onToggle}
+              onDelete={onDelete}
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
               onSelectAllGroup={onSelectAllGroup}
@@ -403,6 +418,7 @@ interface ProductInventoryProps {
   onEdit: (p: Product) => void;
     onDuplicate?: (p: Product) => void;
   onToggle: (p: Product) => void;
+  onDelete?: (p: Product) => void;
   onFiltersChange?: (filters: { category: string; technology: string }) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
@@ -416,6 +432,7 @@ export function ProductInventory({
   onEdit,
     onDuplicate,
     onToggle, 
+    onDelete,
   onFiltersChange,
   selectedIds,
   onToggleSelect,
@@ -567,6 +584,7 @@ export function ProductInventory({
               onEdit={onEdit}
               onDuplicate={onDuplicate}
               onToggle={onToggle}
+              onDelete={onDelete}
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
               onSelectAllGroup={onSelectAllGroup}
@@ -595,6 +613,7 @@ export function ProductInventory({
               onEdit={onEdit}
               onDuplicate={onDuplicate}
               onToggle={onToggle}
+              onDelete={onDelete}
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
               onSelectAllGroup={onSelectAllGroup}

@@ -466,6 +466,24 @@
 
 ---
 
+### Milestone 38: Mega Compu World Jaipur Hardware Catalog Verification
+- **Verified 66 SKUs Ingested**: CP Plus (8 HD + 6 Wireless), Hikvision (15 HD), Prama (3 HD), A+ Products (7 HD Budget), Secureye (5 HD), Trueview (1 HD), and 18 matching DVRs (4/8/16ch) synced to Firestore with exact distributor PIDs and Item CDs.
+- **Budget Brand Canonical Mapping**: Added `aproducts` canonical mapping to `"A+ Products (Budget)"` in `lib/brand-utils.ts` and `DynamicVariantGenerator.tsx`.
+- **False-Positive 2-Way Talk Fix**: Replaced substring check with strict boolean evaluation (`p.has_two_way === true || p.has_speaker === true || p.has_2way_audio === true`), completely eliminating false 2-way talk tags on HD analog cameras.
+- **Resolution Boundary Enforcement**: Cleanly constrained analog HD resolution dropdown to 2MP and 5MP (3K).
+
+---
+
+### Milestone 39: Dual-Collection Product & Addon Deletion Integrity
+- **Root Cause Resolution for Undeletable Inventory Items**: Fixed `/api/admin/products` endpoint which previously queried both `products` and `addons` collections for display, but only deleted from `products` during `DELETE`. Items in the `addons` collection (e.g. `ACC-WIFI-EXTENDER`) silently failed to delete while returning a 200 OK.
+- **Dual-Collection Cascade Delete**: Updated `DELETE /api/admin/products` to delete from both `adminDb.collection("products")` and `adminDb.collection("addons")` in parallel and in batches.
+- **Dual-Collection Update Support**: Updated `PATCH /api/admin/products` to seamlessly update records whether they reside in `products` or `addons`.
+- **Row-Level Direct Delete UX (`ProductInventory.tsx`)**: Added a direct Trash icon (`Trash2`) with confirmation dialog in the `ACTIONS` column for every inventory row, eliminating the need to search for the checkbox and bulk header button for single items.
+- **Modal-Level Delete UX (`AdminProductsPage`)**: Added a `Delete Product` button directly within the Edit Product modal footer for quick removal during inspection.
+- **Orphan Cleaned**: Deleted `ACC-WIFI-EXTENDER` from the live database.
+
+---
+
 ## 4. Operational Maintenance & Ongoing Runbooks
 
 1. **Disaster Recovery & Backup:** [`docs/devops/disaster-recovery.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/docs/devops/disaster-recovery.md) and [`runbooks/BACKUP_RESTORE.md`](file:///c:/Users/hp/Documents/TEAM%20Website/secure-easy/runbooks/BACKUP_RESTORE.md).
