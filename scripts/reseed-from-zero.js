@@ -2782,6 +2782,34 @@ const CLEAN_CATALOG = {
   }
 };
 
+function getMarginForProduct(p) {
+  const cat = p.category;
+  const brand = (p.brand || '').toLowerCase();
+  const path = (p.catalog_path || '').toLowerCase();
+  const name = (p.display_name || '').toLowerCase();
+  if (cat === 'storage') {
+    if (path.includes('microsd') || name.includes('sd card')) return 15;
+    return 8;
+  }
+  if (cat === 'cctv_camera') {
+    if (brand.includes('a+') || brand.includes('generic')) return 20;
+    return 15;
+  }
+  if (cat === 'recorder') return 15;
+  if (cat === 'power_device') {
+    if (path.includes('poe') || name.includes('poe')) return 15;
+    return 20;
+  }
+  if (cat === 'cable') return 20;
+  if (cat === 'rack') return 25;
+  if (cat === 'network') return 15;
+  if (cat === 'hdmi_cable') return 25;
+  if (cat === 'display') return 15;
+  if (cat === 'connector') return 30;
+  if (cat === 'camera_mount') return 25;
+  return 15;
+}
+
 async function reseedFromZero() {
   await wipeAllProducts();
 
@@ -2799,9 +2827,14 @@ async function reseedFromZero() {
       throw new Error(`CRITICAL: Project model ${id} leaked into catalog! Aborting.`);
     }
 
+    const margin = getMarginForProduct(data);
+    const baseCost = Math.round(data.unit_price / (1 + margin / 100));
+
     const docRef = db.collection('products').doc(id);
     batch.set(docRef, {
       ...data,
+      base_cost: baseCost,
+      margin_percentage: margin,
       id,
       created_at: ts,
       updated_at: ts

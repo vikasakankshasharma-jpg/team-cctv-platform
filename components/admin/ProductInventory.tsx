@@ -36,10 +36,13 @@ const OPTIONAL_CATEGORIES: Record<string, { label: string; icon: any }> = {
 const CATEGORIES = { ...MUST_HAVE_CATEGORIES, ...OPTIONAL_CATEGORIES };
 
 function sellingPrice(p: Product): number {
+  if (p.unit_price !== undefined && p.unit_price > 0) {
+    return p.unit_price;
+  }
   if (p.base_cost !== undefined && p.margin_percentage !== undefined) {
     return Math.round(p.base_cost + p.base_cost * (p.margin_percentage / 100));
   }
-  return p.unit_price ?? 0;
+  return 0;
 }
 
 // â”€â”€â”€ Stat Chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
