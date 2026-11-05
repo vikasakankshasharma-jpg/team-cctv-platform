@@ -234,6 +234,8 @@ export function DynamicVariantGenerator({
         ? (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD")))
         : activeTech === "ip"
         ? (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")))
+        : activeTech === "hybrid"
+        ? (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD") || pTech === "IP" || pTechs.includes("IP")))
         : (p.category === "cctv_camera" && (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim));
         
       if (isTechMatch && p.brand) {
@@ -401,6 +403,8 @@ export function DynamicVariantGenerator({
         ? (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD")))
         : activeTech === "ip"
         ? (p.category === "cctv_camera" && (pTech === "IP" || pTechs.includes("IP")))
+        : activeTech === "hybrid"
+        ? (p.category === "cctv_camera" && (pTech === "HD" || pTechs.includes("HD") || pTech === "IP" || pTechs.includes("IP")))
         : (p.category === "cctv_camera" && (pTech === "WIRELESS" || pTech === "WIFI" || pTechs.includes("WIRELESS") || pTechs.includes("WIFI") || !!p.has_wifi || !!p.has_4g_sim));
         
       if (isTechMatch && p.brand) {
@@ -915,7 +919,7 @@ export function DynamicVariantGenerator({
               </div>
 
               {/* Controls row: Quantity, Resolution & Connection Dropdowns */}
-              <div className={`grid gap-2 sm:gap-2.5 ${(activeTech === 'wireless' || activeTech === 'hybrid') ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
+              <div className="grid gap-2 sm:gap-2.5 grid-cols-2 sm:grid-cols-3">
                 {/* Quantity Dropdown */}
                 <div className="relative">
                   <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
@@ -960,8 +964,8 @@ export function DynamicVariantGenerator({
                   <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
                 </div>
 
-                {/* Connection Dropdown - Active in Hybrid or Wireless modes */}
-                {(activeTech === 'wireless' || activeTech === 'hybrid') && (
+                {/* Connection Dropdown - Seamless per-camera toggling */}
+                {(
                   <div className="relative col-span-2 sm:col-span-1">
                     <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
                       Connection

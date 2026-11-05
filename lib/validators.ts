@@ -66,7 +66,7 @@ export const CreateLeadSchema = z.object({
   referral_code: ReferralCodeSchema,
   wizard_answers: WizardAnswersSchema,
   property_type: z.enum(["home", "shop", "office", "factory", "warehouse", "bungalow", "residential", "other"]),
-  technology_choice: z.enum(["HD", "IP", "WiFi", "4G", "Analog", "Wireless"]),
+  technology_choice: z.enum(["HD", "IP", "WiFi", "4G", "Analog", "Wireless", "Hybrid", "hybrid"]),
   cabling_done: z.boolean(),
   timeline: z.string().optional(),
   cabling_needed_cameras: z.number().int().nonnegative().optional(),

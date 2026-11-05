@@ -506,7 +506,7 @@ export function WizardClientV2() {
           city 
         },
         property_type: req.property_type || "home",
-        technology_choice: req.technology_preference || "HD",
+        technology_choice: (Number(req.wifi_camera_count) > 0 && (Number(req.outdoor_camera_count) > 0 || Number(req.indoor_camera_count) > 0)) ? "Hybrid" : (req.technology_preference || "HD"),
         cabling_done: req.cabling_done || false,
         camera_count: req.camera_count,
         detected_city: city,

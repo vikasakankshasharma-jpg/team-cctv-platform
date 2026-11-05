@@ -15,9 +15,10 @@ interface QuoteComparisonProps {
 }
 
 export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfiguration }: QuoteComparisonProps) {
+  const isHybridReq = (Number(requirement.wifi_camera_count) > 0 && (Number(requirement.outdoor_camera_count) > 0 || Number(requirement.indoor_camera_count) > 0)) || String(requirement.technology_choice || "").toLowerCase() === "hybrid";
   const lockedTech = requirement.installation_type === "addon" && requirement.existing_technology ? requirement.existing_technology as "HD" | "IP" : null;
-  const defaultTech = (requirement.technology_choice || requirement.technology_preference || "HD") as "HD" | "IP" | "Wireless";
-  const [activeTech, setActiveTech] = useState<"HD" | "IP" | "Wireless">((lockedTech as any) || defaultTech);
+  const defaultTech = isHybridReq ? "Hybrid" : ((requirement.technology_choice || requirement.technology_preference || "HD") as "HD" | "IP" | "Wireless" | "Hybrid");
+  const [activeTech, setActiveTech] = useState<"HD" | "IP" | "Wireless" | "Hybrid">((lockedTech as any) || defaultTech);
   const [activeBrand, setActiveBrand] = useState<string>("All");
   
   // State for side-by-side comparison mode
@@ -29,7 +30,8 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
   const brands = useMemo(() => {
      const bSet = new Set<string>();
      Object.keys(plans).forEach(key => {
-        if (key.includes("_" + activeTech + "_")) {
+        const matchesActiveTech = activeTech === "Hybrid" ? (key.includes("_Hybrid_") || key.includes("_HD_")) : key.includes("_" + activeTech + "_");
+        if (matchesActiveTech) {
            const parts = key.split("_");
            if (parts.length >= 3) {
               bSet.add(parts[0]);
@@ -49,7 +51,8 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
   const uniqueMps = useMemo(() => {
     const mps = new Set<string>();
     Object.keys(plans).forEach(key => {
-      if (key.includes("_" + activeTech + "_")) {
+      const matchesActiveTech = activeTech === "Hybrid" ? (key.includes("_Hybrid_") || key.includes("_HD_")) : key.includes("_" + activeTech + "_");
+      if (matchesActiveTech) {
         if (activeBrand === "All" || key.startsWith(activeBrand + "_")) {
            mps.add(key.split("_")[2]);
         }
@@ -71,20 +74,28 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
   }, [activeBrand, activeResolution, uniqueMps]);
 
   const plansToRender = useMemo(() => {
+    const resolveKey = (b: string, tech: string, mp: string) => {
+      if (tech === "Hybrid") {
+        if (plans[`${b}_Hybrid_${mp}`]) return `${b}_Hybrid_${mp}`;
+        if (plans[`${b}_HD_${mp}`]) return `${b}_HD_${mp}`;
+      }
+      return `${b}_${tech}_${mp}`;
+    };
+
     if (activeBrand === "All" && activeResolution !== "All") {
       return brands.map(b => {
-        const key = `${b}_${activeTech}_${activeResolution}`;
+        const key = resolveKey(b, activeTech, activeResolution);
         return { key, plan: plans[key] };
       }).filter(p => p.plan);
     }
     if (activeBrand !== "All" && activeResolution === "All") {
       return uniqueMps.map(mp => {
-        const key = `${activeBrand}_${activeTech}_${mp}`;
+        const key = resolveKey(activeBrand, activeTech, mp);
         return { key, plan: plans[key] };
       }).filter(p => p.plan);
     }
     if (activeBrand !== "All" && activeResolution !== "All") {
-      const key = `${activeBrand}_${activeTech}_${activeResolution}`;
+      const key = resolveKey(activeBrand, activeTech, activeResolution);
       return plans[key] ? [{ key, plan: plans[key] }] : [];
     }
     return [];
@@ -326,6 +337,10 @@ export function QuoteComparison({ plans, requirement, onSelectPlan, onEditConfig
               </button>
               <button onClick={() => !lockedTech && setActiveTech("Wireless")} disabled={!!lockedTech && (lockedTech as any) !== "Wireless"} className={`px-4 py-3 rounded-lg text-sm font-bold text-left transition-all border ${activeTech === "Wireless" ? 'bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-500' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                 Smart Wireless (Wi-Fi)
+              </button>
+              <button onClick={() => !lockedTech && setActiveTech("Hybrid")} className={`px-4 py-3 rounded-lg text-sm font-bold text-left transition-all border flex items-center justify-between ${activeTech === "Hybrid" ? 'bg-indigo-50 border-indigo-200 text-indigo-700 ring-1 ring-indigo-500' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                <span>⚡ Hybrid Setup</span>
+                <span className="text-[10px] bg-purple-100 text-purple-800 font-extrabold px-1.5 py-0.5 rounded-full uppercase">Wired + Wi-Fi</span>
               </button>
             </div>
           </div>

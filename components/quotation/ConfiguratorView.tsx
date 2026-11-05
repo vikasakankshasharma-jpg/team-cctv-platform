@@ -245,14 +245,21 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
 
     // Normalize "Analog" to "HD"
     const rawTech = (lead.wizard_answers?.["q_tech"] as string) || lead.technology_choice || "HD";
+    const wifiCountVal = Number(lead.wizard_answers?.["wifi_camera_count"]) || 0;
+    const outdoorCountVal = Number(lead.wizard_answers?.["outdoor_camera_count"]) || 0;
+    const indoorCountVal = Number(lead.wizard_answers?.["indoor_camera_count"]) || 0;
+    const isHybridSetup = (wifiCountVal > 0 && (outdoorCountVal > 0 || indoorCountVal > 0)) || String(rawTech).toLowerCase() === "hybrid";
+
     const normalizedTech: "HD" | "IP" | "Wireless" = 
-      (rawTech === "Analog" || rawTech === "analog" || rawTech === "HD" || rawTech === "hd") ? "HD"
+      isHybridSetup ? "HD"
+      : (rawTech === "Analog" || rawTech === "analog" || rawTech === "HD" || rawTech === "hd") ? "HD"
       : (rawTech === "WiFi" || rawTech === "wifi" || rawTech === "Wireless" || rawTech === "wireless") ? "Wireless"
       : "IP";
 
     const initialSelection = {
       ...selection,
-      technology: normalizedTech,
+      technology: isHybridSetup ? "hybrid" : normalizedTech,
+      is_hybrid: isHybridSetup,
       camera_count: initialCamCount,
       indoor_camera_count: lead.wizard_answers?.["indoor_camera_count"] !== undefined ? Number(lead.wizard_answers["indoor_camera_count"]) : undefined,
       outdoor_camera_count: lead.wizard_answers?.["outdoor_camera_count"] !== undefined ? Number(lead.wizard_answers["outdoor_camera_count"]) : undefined,
