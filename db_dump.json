@@ -672,7 +672,7 @@
       "brand": "Budget Brand",
       "category": "storage",
       "capacity": "1TB",
-      "base_cost": 4700,
+      "base_cost": 2400,
       "margin_percent_applied": 40,
       "display_name": "Budget Brand 1TB Surveillance Hard Disk",
       "created_at": "2026-09-10T15:41:26.549Z",
@@ -684,18 +684,25 @@
       "price_updated_at": "2026-09-27T14:45:37.466Z",
       "storage_type": "Surveillance HDD",
       "technologies": [
-        "both"
+        "Common",
+        "HD",
+        "IP"
       ],
       "margin_percentage": 20,
       "group_path": "storage/HDD",
       "technical_name": "budget_brand_1tb_surveillance_hard_disk",
-      "unit_price": 5640,
-      "catalog_path": "storage/HDD",
+      "unit_price": 2880,
+      "catalog_path": "storage/hdd/Surveillance HDD",
       "updated_at": {
         "_seconds": 1790520877,
         "_nanoseconds": 120000000
       },
-      "storage_capacity_tb": 1
+      "storage_capacity_tb": 1,
+      "storage_tb": 1,
+      "technology": "Common",
+      "is_quotation_eligible": true,
+      "stock_status": "in_stock",
+      "warranty_months": 12
     },
     {
       "id": "HDD-BUD-2TB",
@@ -703,7 +710,7 @@
       "brand": "Budget Brand",
       "category": "storage",
       "capacity": "2TB",
-      "base_cost": 7800,
+      "base_cost": 3800,
       "margin_percent_applied": 40,
       "display_name": "Budget Brand 2TB Surveillance Hard Disk",
       "created_at": "2026-09-10T15:41:26.549Z",
@@ -715,7 +722,9 @@
       "price_updated_at": "2026-09-27T14:45:37.466Z",
       "storage_type": "Surveillance HDD",
       "technologies": [
-        "both"
+        "Common",
+        "HD",
+        "IP"
       ],
       "margin_percentage": 20,
       "updated_at": {
@@ -725,8 +734,13 @@
       "storage_capacity_tb": 2,
       "group_path": "storage/HDD",
       "technical_name": "budget_brand_2tb_surveillance_hard_disk",
-      "unit_price": 9360,
-      "catalog_path": "storage/HDD"
+      "unit_price": 4560,
+      "catalog_path": "storage/hdd/Surveillance HDD",
+      "storage_tb": 2,
+      "technology": "Common",
+      "is_quotation_eligible": true,
+      "stock_status": "in_stock",
+      "warranty_months": 12
     },
     {
       "id": "HDD-BUD-4TB",
@@ -734,7 +748,7 @@
       "brand": "Budget Brand",
       "category": "storage",
       "capacity": "4TB",
-      "base_cost": 14500,
+      "base_cost": 6200,
       "margin_percent_applied": 40,
       "display_name": "Budget Brand 4TB Surveillance Hard Disk",
       "created_at": "2026-09-10T15:41:26.549Z",
@@ -745,11 +759,13 @@
       "pricing_rule_ref": "BRAND_RULE",
       "price_updated_at": "2026-09-27T14:45:37.466Z",
       "technologies": [
-        "both"
+        "Common",
+        "HD",
+        "IP"
       ],
       "group_path": "storage/HDD",
       "technical_name": "budget_brand_4tb_surveillance_hard_disk",
-      "catalog_path": "storage/HDD",
+      "catalog_path": "storage/hdd/Surveillance HDD",
       "storage_type": "Surveillance HDD",
       "margin_percentage": 20,
       "updated_at": {
@@ -757,7 +773,12 @@
         "_nanoseconds": 479000000
       },
       "storage_capacity_tb": 4,
-      "unit_price": 17400
+      "unit_price": 7440,
+      "storage_tb": 4,
+      "technology": "Common",
+      "is_quotation_eligible": true,
+      "stock_status": "in_stock",
+      "warranty_months": 12
     },
     {
       "id": "HDD-BUD-500GB",
@@ -765,7 +786,7 @@
       "brand": "Budget Brand",
       "category": "storage",
       "capacity": "500GB",
-      "base_cost": 1800,
+      "base_cost": 1400,
       "margin_percent_applied": 40,
       "display_name": "Budget Brand 500GB Surveillance Hard Disk",
       "created_at": "2026-09-10T15:41:26.549Z",
@@ -777,18 +798,25 @@
       "price_updated_at": "2026-09-27T14:45:37.466Z",
       "storage_type": "Surveillance HDD",
       "technologies": [
-        "both"
+        "Common",
+        "HD",
+        "IP"
       ],
       "margin_percentage": 20,
       "storage_capacity_tb": 0.5,
       "group_path": "storage/HDD",
       "technical_name": "budget_brand_500gb_surveillance_hard_disk",
-      "unit_price": 2160,
-      "catalog_path": "storage/HDD",
+      "unit_price": 1800,
+      "catalog_path": "storage/hdd/Surveillance HDD",
       "updated_at": {
         "_seconds": 1791225245,
         "_nanoseconds": 518000000
-      }
+      },
+      "storage_tb": 0.5,
+      "technology": "Common",
+      "is_quotation_eligible": true,
+      "stock_status": "in_stock",
+      "warranty_months": 12
     },
     {
       "id": "HDD-SEA-1TB",

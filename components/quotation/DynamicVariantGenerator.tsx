@@ -40,24 +40,7 @@ function getRes(p: Product): string {
   return res;
 }
 
-const DEFAULT_500GB_HDD: Product = {
-  id: "budget_hdd_500gb",
-  display_name: "Budget Brand 500GB HDD",
-  technical_name: "Budget Brand 500GB Surveillance HDD",
-  brand: "Budget Brand",
-  category: "storage",
-  storage_type: "Surveillance HDD",
-  storage_capacity_tb: 0.5,
-  storage_tb: 0.5,
-  capacity: "500GB",
-  technologies: ["Common", "HD", "IP"],
-  technology: "Common",
-  unit_price: 2646,
-  base_cost: 1800,
-  is_active: true,
-  is_quotation_eligible: true,
-  stock_status: "in_stock"
-};
+
 
 interface DynamicVariantGeneratorProps {
   products: Product[];
@@ -398,15 +381,8 @@ export function DynamicVariantGenerator({
     const results: PricingResult[] = [];
     const brandsToGenerate: { brand: string, brandKey: string }[] = [];
 
-    // Ensure 500GB HDD is present in effectiveProducts so low-storage quotes can always calculate
+    // Effective products strictly sourced from database catalog (zero fake products)
     const effectiveProducts = [...products];
-    const has500GB = effectiveProducts.some(p => {
-      const text = ((p.display_name || "") + " " + (p.technical_name || "") + " " + (p.capacity || "")).toLowerCase();
-      return p.category === "storage" && (text.includes("500gb") || p.storage_capacity_tb === 0.5 || p.storage_tb === 0.5);
-    });
-    if (!has500GB) {
-      effectiveProducts.push(DEFAULT_500GB_HDD);
-    }
     
     effectiveProducts.forEach(p => {
       const pTech = (p.technology || "").toUpperCase();

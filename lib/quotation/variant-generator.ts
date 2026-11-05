@@ -74,15 +74,8 @@ export function generateAllCatalogVariations(params: {
     rawTech === "wireless" || rawTech === "wifi" ? "wireless" :
     rawTech === "ip" ? "ip" : "hd";
 
-  // Ensure 500GB HDD exists in catalog for Economy Match calculation
+  // Effective products strictly sourced from database catalog (zero fake products)
   const effectiveProducts = [...products];
-  const has500GB = effectiveProducts.some(p => {
-    const text = ((p.display_name || "") + " " + (p.technical_name || "") + " " + (p.capacity || "")).toLowerCase();
-    return p.category === "storage" && (text.includes("500gb") || p.storage_capacity_tb === 0.5 || p.storage_tb === 0.5);
-  });
-  if (!has500GB) {
-    effectiveProducts.push(DEFAULT_500GB_HDD);
-  }
 
   // Find all active brands in this technology
   const brandSet = new Set<string>();
