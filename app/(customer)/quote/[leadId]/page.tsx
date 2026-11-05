@@ -327,7 +327,7 @@ export default async function QuoteResultPage({
            )}
       
       {/* MAIN CONFIGURATOR VIEW */}
-      <div className="w-full animate-in fade-in fill-mode-both delay-300 duration-1000">
+      <div className="w-full">
          {isExpired ? (
            <div className="max-w-2xl mx-auto bg-white dark:bg-[#1d1d1f] rounded-3xl p-4 md:p-8 sm:p-12 text-center shadow-sm">
              <h2 className="text-2xl sm:text-4xl font-semibold text-[#1d1d1f] dark:text-white tracking-tight mb-4"><TranslatedText tKey="quote_exp" defaultText="Quotation Expired" /></h2>

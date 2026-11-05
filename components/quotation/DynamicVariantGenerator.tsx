@@ -655,7 +655,7 @@ export function DynamicVariantGenerator({
   }, [activeTech, targetBrand, cameraBuckets, isMixed, hasOutdoor, hasIndoor, outdoorCount, indoorCount, selection, products, addons, settings, cablingDone, cablingMeters, promoterDiscount, evaluatedAddonRules, activeOffer, availableResolutions]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full max-w-6xl mx-auto space-y-4 sm:space-y-6">
       {/* Quick guide details */}
       <div className="w-full max-w-2xl mx-auto">
         <details className="w-full group bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl overflow-hidden text-xs sm:text-sm">
@@ -677,7 +677,7 @@ export function DynamicVariantGenerator({
       </div>
 
       {/* Sticky Filter Bar: Technology & Brand Selectors */}
-      <div className="sticky top-14 md:top-20 z-30 w-full bg-[#f5f5f7]/95 dark:bg-black/95 backdrop-blur-md pt-1.5 pb-2 px-1 -mx-1 sm:px-3 sm:mx-auto max-w-2xl border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-xs sm:rounded-2xl transition-all space-y-2">
+      <div className="sticky top-14 md:top-20 z-30 w-full max-w-2xl mx-auto bg-[#f5f5f7]/95 dark:bg-black/95 backdrop-blur-md pt-1.5 pb-2 px-2 sm:px-3 border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-xs sm:rounded-2xl transition-all space-y-2">
         {/* Technology Selector - Segmented Switcher */}
         <div className="w-full bg-zinc-100 dark:bg-zinc-800/70 p-1 rounded-2xl sm:rounded-full grid grid-cols-3 gap-1 shadow-inner border border-zinc-200/50 dark:border-zinc-700/50">
           <button
