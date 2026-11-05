@@ -1,5 +1,7 @@
 # Ignore unnecessary files to speed up Vercel deployments and keep artifact size small
+.next/
 .vercel/
+node_modules/
 playwright-report/
 test-results/
 tests/
@@ -14,3 +16,7 @@ scratch/
 lint_output*.txt
 build-log.txt
 extracted_products*.json
+downloaded_megacompu_catalog.json
+clean_retail_megacompu.json
+mega_jaipur_catalog.json
+*.log
