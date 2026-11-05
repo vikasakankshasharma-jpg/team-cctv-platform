@@ -91,15 +91,20 @@ export function DynamicVariantGenerator({
       return { ...b, features: newFeats };
     }));
   };
+  // Check if hybrid setup (both wired and wireless cameras requested)
+  const isHybridInitial = (Number(selection.wifi_camera_count) > 0 && (Number(selection.outdoor_camera_count) > 0 || Number(selection.indoor_camera_count) > 0)) || selection.technology === "hybrid" || (selection as any).is_hybrid;
+
   // Auto-select based on selection.technology, session storage, or default
-  const [activeTech, setActiveTech] = useState<"hd" | "ip" | "wireless">(() => {
+  const [activeTech, setActiveTech] = useState<"hd" | "ip" | "wireless" | "hybrid">(() => {
+    if (isHybridInitial) return "hybrid";
     const selTech = String(selection.technology || "").toLowerCase();
     if (selTech === "wireless" || selTech === "wifi") return "wireless";
+    if (selTech === "hybrid") return "hybrid";
     if (selTech === "ip") return "ip";
     if (selTech === "hd") return "hd";
     if (typeof window !== 'undefined') {
       const saved = sessionStorage.getItem('quote_active_tech');
-      if (saved === 'hd' || saved === 'ip' || saved === 'wireless') return saved as any;
+      if (saved === 'hd' || saved === 'ip' || saved === 'wireless' || saved === 'hybrid') return saved as any;
     }
     return "hd";
   });
@@ -116,14 +121,16 @@ export function DynamicVariantGenerator({
   // Sync activeTech when selection.technology changes externally
   useEffect(() => {
     const selTech = String(selection.technology || "").toLowerCase();
-    if (selTech === "wireless" || selTech === "wifi") {
+    if (isHybridInitial || selTech === "hybrid") {
+      setActiveTech("hybrid");
+    } else if (selTech === "wireless" || selTech === "wifi") {
       setActiveTech("wireless");
     } else if (selTech === "ip") {
       setActiveTech("ip");
     } else if (selTech === "hd") {
       setActiveTech("hd");
     }
-  }, [selection.technology]);
+  }, [selection.technology, isHybridInitial]);
 
   // Persist selections to session storage to remember them when returning from Full Quote view
   useEffect(() => {
@@ -209,6 +216,9 @@ export function DynamicVariantGenerator({
   const wifiCount = cameraBuckets.filter(b => b.connection === "wifi").reduce((sum, b) => sum + b.count, 0);
   const cellularCount = cameraBuckets.filter(b => b.connection === "4g").reduce((sum, b) => sum + b.count, 0);
   const totalHardwareCount = cameraBuckets.reduce((sum, b) => sum + b.count, 0);
+  const isWirelessScope = activeTech === "wireless";
+  const totalWiredCount = cameraBuckets.filter(b => !isWirelessScope && (b.connection === "wired" || !b.connection)).reduce((sum, b) => sum + b.count, 0);
+  const totalWifiCount = cameraBuckets.filter(b => isWirelessScope || b.connection === "wifi" || b.connection === "4g").reduce((sum, b) => sum + b.count, 0);
   const hasOutdoor = outdoorCount > 0;
   const hasIndoor = indoorCount > 0;
   const isMixed = hasOutdoor && hasIndoor;
@@ -568,7 +578,7 @@ export function DynamicVariantGenerator({
       
       return { 
         ...pricing, 
-        technology: activeTech === "wireless" ? "Wireless" : activeTech.toUpperCase(),
+        technology: activeTech === "wireless" ? "Wireless" : activeTech === "hybrid" ? "Hybrid" : activeTech.toUpperCase(),
         camera_device: camera_device ? { ...camera_device, derivedResolution: displayResolution } : { derivedResolution: displayResolution, brand: brandName }, 
         storage_device, 
         camera_count: totalHardwareCount, 
@@ -594,8 +604,8 @@ export function DynamicVariantGenerator({
         technology: (activeTech === "wireless" ? "Wireless" : activeTech === "ip" ? "IP" : "HD") as any,
         brand_preference: b.brand,
         mixed_camera_requirements: mixedReqs,
-        outdoor_camera_count: cameraBuckets.filter(b => b.type === "outdoor").reduce((sum, b) => sum + b.count, 0),
-        indoor_camera_count: cameraBuckets.filter(b => b.type === "indoor").reduce((sum, b) => sum + b.count, 0),
+        outdoor_camera_count: cameraBuckets.filter(b => b.type === "outdoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
+        indoor_camera_count: cameraBuckets.filter(b => b.type === "indoor" && b.connection !== "wifi" && b.connection !== "4g").reduce((sum, b) => sum + b.count, 0),
         wifi_camera_count: totalWifiCount,
         camera_count: totalHardwareCount,
         resolution_preference: uniqueRes.length === 1 ? uniqueRes[0] : "5MP",
@@ -679,11 +689,11 @@ export function DynamicVariantGenerator({
       {/* Sticky Filter Bar: Technology & Brand Selectors */}
       <div className="sticky top-14 md:top-20 z-30 w-full max-w-2xl mx-auto bg-[#f5f5f7]/95 dark:bg-black/95 backdrop-blur-md pt-1.5 pb-2 px-2 sm:px-3 border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-xs sm:rounded-2xl transition-all space-y-2">
         {/* Technology Selector - Segmented Switcher */}
-        <div className="w-full bg-zinc-100 dark:bg-zinc-800/70 p-1 rounded-2xl sm:rounded-full grid grid-cols-3 gap-1 shadow-inner border border-zinc-200/50 dark:border-zinc-700/50">
+        <div className="w-full bg-zinc-100 dark:bg-zinc-800/70 p-1 rounded-2xl sm:rounded-full grid grid-cols-2 sm:grid-cols-4 gap-1 shadow-inner border border-zinc-200/50 dark:border-zinc-700/50">
           <button
             type="button"
             onClick={() => { setActiveTech("hd"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
-            className={`relative z-10 px-1 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "hd" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
+            className={`relative z-10 px-1 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "hd" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
           >
             <span className="truncate">
               <span className="sm:hidden">HD Analog</span>
@@ -697,7 +707,7 @@ export function DynamicVariantGenerator({
           <button
             type="button"
             onClick={() => { setActiveTech("ip"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: "wired" }))); }}
-            className={`relative z-10 px-1 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "ip" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
+            className={`relative z-10 px-1 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "ip" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
           >
             <span className="truncate">
               <span className="sm:hidden">IP Network</span>
@@ -711,14 +721,47 @@ export function DynamicVariantGenerator({
           <button
             type="button"
             onClick={() => { setActiveTech("wireless"); setCameraBuckets(prev => prev.map(b => ({ ...b, connection: b.connection === "4g" ? "4g" : "wifi" }))); }}
-            className={`relative z-10 px-1 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "wireless" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
+            className={`relative z-10 px-1 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "wireless" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
           >
             <span className="truncate">
               <span className="sm:hidden">Wireless</span>
               <span className="hidden sm:inline">Smart Wireless</span>
             </span>
             <span className={`text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider ${activeTech === 'wireless' ? 'bg-white/20 text-white' : 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300'}`}>
-              {selection.power_wiring_option === "wire_needed" ? "No Wire" : "0 Wiring"}
+              {selection.power_wiring_option === "wire_needed" ? "No Video Cable" : "0 Wiring"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTech("hybrid");
+              setCameraBuckets(prev => {
+                const hasW = prev.some(b => b.connection === "wired" || !b.connection);
+                const hasWifi = prev.some(b => b.connection === "wifi" || b.connection === "4g");
+                if (hasW && hasWifi) return prev;
+                if (!hasWifi && prev.length > 1) {
+                  return prev.map((b, idx) => idx === prev.length - 1 ? { ...b, connection: "wifi" } : { ...b, connection: "wired" });
+                } else if (!hasWifi && prev.length === 1 && prev[0].count > 1) {
+                  const half = Math.floor(prev[0].count / 2);
+                  return [
+                    { ...prev[0], count: prev[0].count - half, connection: "wired" },
+                    { id: Math.random().toString(36).substring(7), type: "outdoor", count: half, resolution: prev[0].resolution, connection: "wifi", features: [...(prev[0].features || [])] }
+                  ];
+                } else if (!hasW && prev.length > 1) {
+                  return prev.map((b, idx) => idx === 0 ? { ...b, connection: "wired" } : b);
+                }
+                return prev;
+              });
+            }}
+            className={`relative z-10 px-1 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl sm:rounded-full transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 ${activeTech === "hybrid" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}
+          >
+            <span className="truncate">
+              <span className="sm:hidden">⚡ Hybrid</span>
+              <span className="hidden sm:inline">⚡ Hybrid Setup</span>
+            </span>
+            <span className={`text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-tight sm:tracking-wider ${activeTech === 'hybrid' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300'}`}>
+              Wired + Wi-Fi
             </span>
           </button>
         </div>
@@ -871,8 +914,8 @@ export function DynamicVariantGenerator({
                 </div>
               </div>
 
-              {/* Controls row: Quantity & Resolution Dropdowns (and Connection when Wireless) */}
-              <div className={`grid gap-2 sm:gap-2.5 ${activeTech === 'wireless' ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
+              {/* Controls row: Quantity, Resolution & Connection Dropdowns */}
+              <div className={`grid gap-2 sm:gap-2.5 ${(activeTech === 'wireless' || activeTech === 'hybrid') ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
                 {/* Quantity Dropdown */}
                 <div className="relative">
                   <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
@@ -917,22 +960,35 @@ export function DynamicVariantGenerator({
                   <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
                 </div>
 
-                {/* Connection Dropdown - Only needed when there is a choice (Wireless Wi-Fi vs 4G) */}
-                {activeTech === 'wireless' && (
+                {/* Connection Dropdown - Active in Hybrid or Wireless modes */}
+                {(activeTech === 'wireless' || activeTech === 'hybrid') && (
                   <div className="relative col-span-2 sm:col-span-1">
                     <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
                       Connection
                     </label>
                     <select
-                      value={bucket.connection || "wifi"}
+                      value={bucket.connection || (activeTech === 'wireless' ? 'wifi' : 'wired')}
                       onChange={(e) => {
                         const newConn = e.target.value as "wired" | "wifi" | "4g";
-                        setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, connection: newConn } : b));
+                        setCameraBuckets(prev => {
+                          const next = prev.map(b => b.id === bucket.id ? { ...b, connection: newConn } : b);
+                          const hasW = next.some(b => b.connection === "wired" || !b.connection);
+                          const hasWifi = next.some(b => b.connection === "wifi" || b.connection === "4g");
+                          if (hasW && hasWifi) {
+                            setActiveTech("hybrid");
+                          } else if (hasWifi && !hasW) {
+                            setActiveTech("wireless");
+                          } else if (hasW && !hasWifi) {
+                            setActiveTech("hd");
+                          }
+                          return next;
+                        });
                       }}
                       className="w-full py-2 px-3 text-xs sm:text-sm font-bold bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 transition-all"
                     >
-                      <option value="wifi">Smart Wi-Fi</option>
-                      <option value="4g">4G SIM (Cellular)</option>
+                      <option value="wired">🔌 Wired (Coaxial/CAT6)</option>
+                      <option value="wifi">📶 Smart Wi-Fi</option>
+                      <option value="4g">🛰️ 4G Cellular SIM</option>
                     </select>
                     <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
                   </div>
@@ -1102,6 +1158,14 @@ export function DynamicVariantGenerator({
                   <h3 className="text-2xl font-bold text-[#1d1d1f] dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
                     {variant.camera_device.derivedResolution || "2MP Resolution"}
                   </h3>
+                  
+                  {/* Hybrid Architecture Breakdown Badge */}
+                  {(totalWiredCount > 0 && totalWifiCount > 0) && (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 mb-2 rounded-full bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800/60 text-purple-800 dark:text-purple-300 text-[10px] font-extrabold uppercase tracking-wide">
+                      <span>⚡ Hybrid:</span>
+                      <span>{totalWiredCount} Wired (DVR) + {totalWifiCount} Smart Wi-Fi</span>
+                    </div>
+                  )}
                   
                   {/* Package Feature Badges */}
                   <div className="flex flex-wrap items-center justify-center gap-1.5 mb-2.5">

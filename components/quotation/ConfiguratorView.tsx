@@ -412,7 +412,7 @@ export function ConfiguratorView({ lead: initialLead, pricingCache, promoterDisc
   const customizationDiff = activePricing.total_payable - basePricing.total_payable;
 
   const baseOptionNum = typeof active_checkout_option?.option === "number" ? active_checkout_option.option : (selection.selected_camera_option || 2);
-  const baseTierName = (is_compare_mode && store_base_tier_name) ? store_base_tier_name : (baseOptionNum === 1 ? "Standard" : baseOptionNum === 3 ? "Elite" : "Professional");
+  const baseTierName = (is_compare_mode && store_base_tier_name) ? store_base_tier_name : (activePricing.camera_device?.brand ? `${activePricing.camera_device.brand} Package` : "Selected Package");
 
   const isCustomized = typeof active_checkout_option?.option === "string" 
     || !!selection.selected_camera_id 

@@ -252,17 +252,14 @@ export function CompareCards({
         const isCustom = typeof card.option === 'string' && !["budget", "recommended", "premium"].includes(card.option);
         const isUpgradeSuggestion = customerTechnology === "HD" && card.isIP && !isCustom;
         
-        let tierName = "Standard";
-        if (card.option === 1 || card.option === "budget") tierName = "Standard";
-        else if (card.option === 2 || card.option === "recommended") tierName = "Professional";
-        else if (card.option === 3 || card.option === "premium") tierName = "Elite";
-
-        if (isCustom) tierName = "Custom Built";
-        else if (isUpgradeSuggestion) tierName = "Smart Upgrade";
-        else if (card.isRecommended) tierName = "Recommended";
+        const brandName = normalizeBrand(card.camProduct?.brand || card.recProduct?.brand);
+        const resLabel = card.camProduct?.resolution_mp ? `${card.camProduct.resolution_mp}MP` : "";
+        let tierName = resLabel ? `${resLabel} System` : "Surveillance System";
+        if (isCustom) tierName = "Custom Built System";
+        else if (isUpgradeSuggestion) tierName = "IP Network Upgrade";
+        else if (card.isRecommended) tierName = "Recommended Package";
         
         const pricePerCam = selection.camera_count > 0 ? Math.round(card.pricing.total_payable / selection.camera_count) : 0;
-        const brandName = normalizeBrand(card.camProduct?.brand || card.recProduct?.brand);
 
         const baseBg = isCustom 
           ? "bg-gradient-to-b from-[#f0f7ff] to-white dark:from-[#1a2332] dark:to-[#1d1d1f]" 

@@ -223,10 +223,13 @@ export function SpecCompareTable({
   }, [compareOptions, selection, products, settings, cablingDone]);
 
   const columnHeaders = tableColumns.map((col) => {
+    const brand = col.cam?.brand || col.rec?.brand || "";
+    const res = col.cam?.resolution_mp ? `${col.cam.resolution_mp}MP` : "";
+    if (brand) return `${brand} ${res}`.trim();
     const optValue = col.opt.option;
-    if (optValue === 1 || optValue === "budget") return t('standard', 'Standard');
-    if (optValue === 2 || optValue === "recommended") return t('professional', 'Professional');
-    if (optValue === 3 || optValue === "premium") return t('elite', 'Elite');
+    if (optValue === 1 || optValue === "budget") return "Package 1";
+    if (optValue === 2 || optValue === "recommended") return "Package 2";
+    if (optValue === 3 || optValue === "premium") return "Package 3";
     return t('custom', 'Custom');
   });
 

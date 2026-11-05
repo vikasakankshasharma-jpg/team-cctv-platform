@@ -65,6 +65,6 @@ Never confuse or revert the quotation presentation strategy for this project. Th
 - **Green Trust Badge for Genuine Surveillance Drives:** Standard branded quotes pairing Seagate SkyHawk or WD Purple must display the Green Trust Badge: `100% Genuine 24×7 Surveillance HDD · ~X Days Backup · 3-Yr Warranty`.
 
 ## 9. Sticky Filter Bar Navigation for Catalog Variations
-- **Sticky Technology & Brand Bar:** The Technology Selector (HD Analog, IP Network, Wireless) and Brand Selector pills must remain pinned (sticky top-14 md:top-20 z-30) as customers scroll down to browse and compare Available Packages.
+- **Sticky Technology & Brand Bar:** The Technology Selector (HD Analog, IP Network, Wireless, Hybrid) and Brand Selector pills must remain pinned (sticky top-14 md:top-20 z-30) as customers scroll down to browse and compare Available Packages.
 - **Immediate Context & Zero Friction Switching:** Floating below the site header with ackdrop-blur-md bg-[#f5f5f7]/95 dark:bg-black/95, customers can seamlessly switch technologies or filter by brand anywhere in the catalog without having to scroll all the way back up to the top.
 - **Viewport Height Efficiency:** Designed with compact padding (~75px total height on mobile) to preserve maximum vertical screen space for quotation cards while keeping touch targets comfortably accessible.

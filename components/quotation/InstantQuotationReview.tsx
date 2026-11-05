@@ -550,7 +550,7 @@ export function InstantQuotationReview({
           </button>
           {getUniqueCanonicalBrands(products, "cctv_camera").map(brand => {
             const isSelected = getCanonicalBrandKey(selection.brand_preference) === getCanonicalBrandKey(brand);
-            const brandBadge = brand.toLowerCase().includes("cp plus") ? "Popular" : brand.toLowerCase().includes("hikvision") ? "Global #1" : "Standard";
+            const brandBadge = brand.toLowerCase().includes("cp plus") ? "Popular" : brand.toLowerCase().includes("hikvision") ? "Global #1" : "Verified";
             return (
               <button 
                 key={brand}

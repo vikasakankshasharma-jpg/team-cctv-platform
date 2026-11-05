@@ -1596,7 +1596,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
   });
 
   // ── Specialty Camera Guardrail ──────────────────────────────
-  // Prevent Elite/Premium tiers from accidentally picking highly expensive PTZ/Solar/4G/Wireless cameras
+  // Prevent high specification packages from accidentally picking highly expensive PTZ/Solar/4G/Wireless cameras
   // unless the customer explicitly requested them.
   const requestedSpecialties = (selection.requested_features || []).map(f => f.toLowerCase().trim());
   const hasSpecialtyRequest = requestedSpecialties.some(rf => 
@@ -1793,7 +1793,7 @@ function resolveCamera(selection: ConfiguratorSelection, products: Product[], ad
       // 1. Budget: Absolute lowest price
       return pool[0];
     } else if (opt === 3 || selection.plan_type === "premium") {
-      // 3. Premium/Elite: Absolute highest price / highest specification
+      // 3. Highest resolution / top specification
       return pool[pool.length - 1];
     } else {
       // 2. Recommended / Smart Choice
