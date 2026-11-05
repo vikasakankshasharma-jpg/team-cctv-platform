@@ -747,7 +747,7 @@ export function DynamicVariantGenerator({
                 title="View plain language explanations and practical real-life examples for every feature"
               >
                 <HelpCircle className="w-3.5 h-3.5" />
-                <span>💡 Feature Guide</span>
+                <span>Feature Guide</span>
               </button>
               
               <button
@@ -762,10 +762,10 @@ export function DynamicVariantGenerator({
           </div>
 
           {/* Real-time Specification Breakup Tags */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-[11px]">
+          <div className="flex flex-wrap items-center gap-1.5 py-0.5 text-[11px]">
             {outdoorCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold shrink-0 flex items-center gap-1">
-                <span>🌧️</span> {outdoorCount} Weatherproof (Outdoor Standard)
+                <span>🌧️</span> {outdoorCount} Weatherproof (IP67)
               </span>
             )}
             {indoorCount > 0 && (
@@ -854,8 +854,8 @@ export function DynamicVariantGenerator({
                 </div>
               </div>
 
-              {/* Controls row: Quantity Dropdown, Resolution Dropdown & Connection Dropdown */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
+              {/* Controls row: Quantity & Resolution Dropdowns (and Connection when Wireless) */}
+              <div className={`grid gap-2 sm:gap-2.5 ${activeTech === 'wireless' ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
                 {/* Quantity Dropdown */}
                 <div className="relative">
                   <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
@@ -900,47 +900,41 @@ export function DynamicVariantGenerator({
                   <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
                 </div>
 
-                {/* Connection Dropdown */}
-                <div className="relative col-span-2 sm:col-span-1">
-                  <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
-                    Connection
-                  </label>
-                  <select
-                    value={bucket.connection || (activeTech === "wireless" ? "wifi" : "wired")}
-                    onChange={(e) => {
-                      const newConn = e.target.value as "wired" | "wifi" | "4g";
-                      setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, connection: newConn } : b));
-                    }}
-                    className="w-full py-2 px-3 text-xs sm:text-sm font-bold bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 transition-all"
-                  >
-                    {activeTech !== "wireless" && (
-                      <option value="wired">
-                        {activeTech === "ip" ? "Wired (CAT6 IP)" : "Wired (Analog HD)"}
-                      </option>
-                    )}
-                    {products.some(p => p.category === "cctv_camera" && (p.has_wifi || (p.technology || "").toUpperCase().includes("WIFI") || (p.technologies || []).some((t: string) => t.toUpperCase().includes("WIFI")))) && (
-                      <option value="wifi">Smart Wi-Fi (Wireless)</option>
-                    )}
-                    {products.some(p => p.category === "cctv_camera" && (p.has_4g_sim || (p.name || "").toLowerCase().includes("4g") || (p.model_number || "").toLowerCase().includes("4g"))) && (
+                {/* Connection Dropdown - Only needed when there is a choice (Wireless Wi-Fi vs 4G) */}
+                {activeTech === 'wireless' && (
+                  <div className="relative col-span-2 sm:col-span-1">
+                    <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
+                      Connection
+                    </label>
+                    <select
+                      value={bucket.connection || "wifi"}
+                      onChange={(e) => {
+                        const newConn = e.target.value as "wired" | "wifi" | "4g";
+                        setCameraBuckets(prev => prev.map(b => b.id === bucket.id ? { ...b, connection: newConn } : b));
+                      }}
+                      className="w-full py-2 px-3 text-xs sm:text-sm font-bold bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 transition-all"
+                    >
+                      <option value="wifi">Smart Wi-Fi</option>
                       <option value="4g">4G SIM (Cellular)</option>
-                    )}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
-                </div>
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 bottom-2.5 pointer-events-none" />
+                  </div>
+                )}
               </div>
 
               {/* Per-Bucket Specific Features */}
               <div className="mt-2.5 pt-2 border-t border-gray-100 dark:border-zinc-800/80">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                    Features for these {bucket.count} cameras:
+                <div className="flex items-center justify-between mb-1.5 gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 truncate">
+                    Features ({bucket.count} cameras):
                   </span>
                   <button
                     type="button"
                     onClick={() => setShowGuideModal(true)}
-                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                    className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer shrink-0 whitespace-nowrap"
                   >
-                    <span>ℹ️ What do these mean?</span>
+                    <HelpCircle className="w-3 h-3" />
+                    <span>Feature Guide</span>
                   </button>
                 </div>
                 
@@ -1001,11 +995,11 @@ export function DynamicVariantGenerator({
                   </span>
                   <span className="truncate">
                     {bucket.connection === "wifi" ? (
-                      bucket.type === "outdoor" ? "Weatherproof Outdoor Wi-Fi Bullet • MicroSD Card • Zero Video Cable" : "Indoor 360° Pan-Tilt Wi-Fi Dome • MicroSD Card • Zero Video Cable"
+                      bucket.type === "outdoor" ? "Outdoor Wi-Fi Bullet • MicroSD • Zero Cable" : "Indoor 360° Wi-Fi Dome • MicroSD • Zero Cable"
                     ) : bucket.connection === "4g" ? (
-                      bucket.type === "outdoor" ? "Outdoor 4G SIM Bullet (Direct SIM) • MicroSD Card • Zero Broadband Required" : "Indoor 4G SIM Dome • MicroSD Card • Zero Broadband Required"
+                      bucket.type === "outdoor" ? "Outdoor 4G SIM Bullet • MicroSD • No Broadband" : "Indoor 4G SIM Dome • MicroSD • No Broadband"
                     ) : (
-                      bucket.type === "outdoor" ? `Outdoor Bullet Camera • Central ${activeTech === "ip" ? "NVR" : "DVR"} + Video Cabling` : `Indoor Dome Camera • Central ${activeTech === "ip" ? "NVR" : "DVR"} + Video Cabling`
+                      bucket.type === "outdoor" ? `Outdoor Bullet • Central ${activeTech === "ip" ? "NVR" : "DVR"} + Cabling` : `Indoor Dome • Central ${activeTech === "ip" ? "NVR" : "DVR"} + Cabling`
                     )}
                   </span>
                 </div>
